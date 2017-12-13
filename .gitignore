@@ -1,1 +1,4 @@
+# Ignore the following files (do not commit working files to repository)
+
+# Ignore automatically created compiled python code files, .pyc 
 *.pyc

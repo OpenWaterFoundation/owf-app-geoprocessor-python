@@ -1,10 +1,10 @@
 ## Clip flood polygons by counties and export in both shapefile and geojson
 CreateLayerList("['C:\Users\intern1\Desktop\FEMA_floodplain\fileSizeDecreaseResearch\3_finalLayers_geojsonToShp\shp\I7_Toler0005.shp', 'C:\Users\intern1\Desktop\FEMA_floodplain\fileSizeDecreaseResearch\3_finalLayers_geojsonToShp\shp\I6_Toler0001.shp']", "flood")
-CreateLayerList("['C:\Users\intern1\Desktop\FEMA_floodplain\automatedWorkFlowModel\clipLayers']", "counties")
+CreateLayerList("input_layers = ['C:\Users\intern1\Desktop\FEMA_floodplain\automatedWorkFlowModel\clipLayers']", "layer_list_id = counties")
 QgisSimplifyGeometries("flood", "0.001")
 QgisClip("flood", "counties")
 ExportLayerList("temp_clip", "C:\Users\intern1\Desktop\FEMA_floodplain\automatedWorkFlowModel\data\output_Test", "g", "EPSG:4326", "10")
-ExportLayerList("temp_clip", "C:\Users\intern1\Desktop\FEMA_floodplain\automatedWorkFlowModel\data\output_Test", "s")
+ExportLayerList("output_crs = EPSG:4326",  "output_dir = C:\Users\intern1\Desktop\FEMA_floodplain\automatedWorkFlowModel\data\output_Test", "layer_list_id = temp_clip", "output_format = s")
 
 ## Clip FEMA file geodatabase feature classes by counties. Export as geojson
 # CreateLayerList("['C:\Users\intern1\Desktop\FEMA_floodplain\fileSizeDecreaseResearch\1_orig_files\NFHL_08_20171102.gdb']", "femaGDB")

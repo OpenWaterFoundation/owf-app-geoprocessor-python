@@ -26,33 +26,92 @@ def read_command_file(path):
 
     return content
 
+# Converts the string format of an input parameter value (when in key:value format) into input parameter value and index of that parameter
+def parse_parameter_string_key_value(parameter_string, parameter_names):
+    """The user has the option to input parameter values in a command line with either just the parameter value (in
+    the correct order required by the command class) or they can use key=value format where the parameter name (key)
+    is written out followed by an (=) sign and then the parameter value. This function will parse a parameter string
+    if it is in the key=value format. It will return the parameter value and the index of that parameter in reference
+    to the command class' list of parameters.
+
+    :param parameter_string: A string, a parameter string in key=value format
+    :param parameter_names: A list, the parameter names in order required by the command class"""
+
+    # the parameter name is set on the left side of the = sign whereas the parameter value is set on the right side
+    # of the = sign
+    parameter_string_name = (parameter_string.split('=')[0]).strip()
+    parameter_string_value = (parameter_string.split('=')[1]).strip()
+
+    # get the index of the parameter in reference to the command class' ordered parameter list
+    parameter_index = parameter_names.index(parameter_string_name)
+
+    return parameter_string_value, parameter_index
+
 # Converts the string format of the parameter values into a list (containing strings and lists, if required)
-def parse_parameter_string(parameter_string):
+def parse_parameter_string(parameter_string, command_name):
     """The command file (txt) only contains lines of strings. The parse function will convert the string
     representation of the parameter list into an actual list (each item containing a parameter value). If a parameter
     value requires list format, this function will convert the parameter value string into a parameter value list.
 
-    :param parameter_string: a string representing the parameter values of a command line (the parameter value string
-    is located within the parenthesis of a command line string."""
+    :param parameter_string: A string, the parameter values of a command line (the parameter value string
+    is located within the parenthesis of a command line string.
+    :param command_name: A string, the name of the command called upon in the command string"""
 
     # a list that will hold each parameter value as a separate item
     parameter_list = []
+    parameter_dic = {}
 
     # parses the entire parameter string into separate strings (each representing a parameter value). these parsed
     # strings are included as items in the list, string_list. Note that parameter values that are required to be lists
     # will still be represented as strings in this format.
     string_list = break_parameter_string(parameter_string)
 
+    # get the order of the command class' parameter names
+    parameter_names = command_string_obj_dic[command_name].parameter_names
+    parameter_values = command_string_obj_dic[command_name].parameter_values
+    num_parameters = len(parameter_names)
+
+    # a count that determines which input parameter value (string format) is being processed
+    count = 0
+
     # iterate through each parameter value (string format) of the string_list
     for string in string_list:
 
-        # if the parameter value is supposed to be a list, convert the parameter value string into list format
-        if string.startswith('['):
-            parameter_list.append(parameter_string_to_list(string))
+        # if the string is just a parameter value without a parameter name (without a key = value format)
+        if "=" not in string:
 
-        # if the parameter is supposed to be a string, keep the parameter value string in the same format
+            parameter_value = string
+            parameter_index = count
+
+        # if the parameter string is in the format key = value
         else:
-            parameter_list.append(string)
+
+            # split the key, value pair and return the parameter value and the parameter index of the parameter name
+            #  in the specified command class
+            parameter_value, parameter_index = parse_parameter_string_key_value(string, parameter_names)
+
+        # if the parameter value is supposed to be a list, convert the parameter value string into list format
+        if parameter_value.startswith('['):
+            parameter_value = parameter_string_to_list(parameter_value)
+
+        # add the input parameter value in the correct order in reference to the expected command class parameter order
+        parameter_dic[parameter_index] = parameter_value
+        # parameter_list.insert(parameter_index, parameter_value)
+
+        count += 1
+
+    # iterate over each parameter required by the command class (in expected order)
+    for parameter_index in range(0, num_parameters):
+
+        # if there is an input parameter value for the current parameter, then append that input parameter to the
+        # parameter list
+        if parameter_index in list(parameter_dic.keys()):
+            parameter_list.append(parameter_dic[parameter_index])
+
+        # if there is not an input parameter value for the current parameter, then append the default parameter value
+        #  to the parameter list (as defined in the command class)
+        else:
+            parameter_list.append(parameter_values[parameter_names[parameter_index]])
 
     # return a list with each parameter value as an item. the items will be in string AND list format, if required.
     return parameter_list
@@ -183,6 +242,9 @@ def parse_command(command_string):
         paren_start = command_trimmed.find("(")
         paren_end = command_trimmed.find(")")
 
+        # get command name
+        command_name = command_trimmed[:paren_start]
+
         # throw error if there are missing open or closing parethesis
         if not (paren_start or paren_end):
 
@@ -194,12 +256,9 @@ def parse_command(command_string):
         # if there are parameters to parse, convert the string of parameters into the parameter_values list (made up of
         # strings and lists, if required). Otherwise assign the parameter_values list to None.
         if len(parameter_string) > 0:
-            parameter_values = parse_parameter_string(parameter_string)
+            parameter_values = parse_parameter_string(parameter_string, command_name)
         else:
             parameter_values = None
-
-        # get command name
-        command_name = command_trimmed[:paren_start]
 
     # Return the command name (string foramt) and the paramter_values list (list of strings and lists, if required)
     return command_name, parameter_values
@@ -259,6 +318,10 @@ def process_command_file(path):
 
 
 ####################### WORKING ENVIRONMENT ###############################
+
+
+# parse_parameter_string_key_value("layer_list_id = 'fema'", "ExportLayerList")
+
 
 curr_directory = os.path.dirname(os.path.realpath(__file__))
 cmdFileDir = curr_directory.replace("commandprocessor\core", "command_files")

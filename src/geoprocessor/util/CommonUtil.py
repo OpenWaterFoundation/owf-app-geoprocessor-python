@@ -11,9 +11,9 @@ def to_command_string_list(command_file):
     # iterate over each line in the command file and append the line as a string (remove white spaces on either side of
     # the line) to the command string list
     with open(command_file) as command_file:
-        command_string_list_format = command_file.readlines()
-        command_string = ("".join(command_string_list_format)).strip()
-        command_string_list.append(command_string)
+        content = command_file.readlines()
+        for command_string in content:
+            command_string_list.append(command_string)
 
     # return the command string list
     return command_string_list

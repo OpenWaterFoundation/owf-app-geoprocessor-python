@@ -1,5 +1,7 @@
 import geoprocessor.util.CommonUtil as CommonUtil
-import geoprocessor.commands.layers.CreateLayers as CreateLayers
+import geoprocessor.commands.layers.CreateGeolayers as CreateGeolayers
+import geoprocessor.commands.layers.CreateGeolist as CreateGeolist
+import geoprocessor.commands.util.UnknownCommand as UnknownCommand
 
 
 class GeoProcessorCommandFactory():
@@ -9,7 +11,8 @@ class GeoProcessorCommandFactory():
     # the dictionary of all available commands
     # key: the name of the command as called from the user (converted to all UPPERCASE)
     # value: the command class object to be created
-    command_factory = {"CREATELAYERS": CreateLayers.CreateLayers()}
+    command_factory = {"CREATEGEOLAYERS": CreateGeolayers.CreateGeolayers(),
+                       "CREATEGEOLIST": CreateGeolist.CreateGeolist()}
 
     def __init__(self):
         pass

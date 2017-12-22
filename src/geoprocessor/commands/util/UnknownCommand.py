@@ -7,7 +7,7 @@ class UnknownCommand(AbstractCommand.AbstractCommand):
         # The AbstractCommand.command_string will be used to output the full string
         pass
 
-    def initialize_command(self,command_string,processor,full_initialization):
+    def initialize_command(self, command_string, processor, full_initialization):
         '''Intialize an UnknownCommand.'''
 
         # Handle here instead of the abstract class because it does not have a command name

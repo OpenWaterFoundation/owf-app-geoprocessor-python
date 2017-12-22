@@ -94,4 +94,3 @@ if __name__ == "__main__":
     cmdFileDir = (os.path.dirname(os.path.realpath(__file__))).replace("core", "command_files")
     processor = GeoProcessor()
     processor.process_command_file(os.path.join(cmdFileDir, "create_layers_test.txt"))
-    print processor.geolayers

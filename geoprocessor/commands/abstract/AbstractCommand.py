@@ -1,106 +1,218 @@
-import geoprocessor.util.CommonUtil as CommonUtil
+import geoprocessor.commands.abstract.CommandStatus as CommandStatus
+import geoprocessor.util.command as util_common
 
-class AbstractCommand():
-    """Parent to all other command classes. Stores common data. Provides common functions, which can be overloaded in
-    child classes."""
+class AbstractCommand(object):
+    """
+    Parent to all other command classes. Stores common data. Provides common functions,
+    which can (and in some casts should) be overloaded in child classes.
+    """
 
     def __init__(self):
 
-        # full command string (with indentation)
+        # Full command string (with indentation).
         self.command_string = ""
 
-        # command name as user would see. will be set when command is parsed. will NOT be set if an UnknownCommand.
+        # Command name as user would see. Will be set when command is parsed. Will NOT be set if an UnknownCommand.
         self.command_name = ""
 
-        # command processor, needed to interact with the geoprocessing environment
+        # Command processor, needed to interact with the geoprocessing environment.
         self.command_processor = None
 
-        # command parameters, a dictionary of input parameter names and parameter values
+        # Command parameters, a dictionary of input parameter names and parameter values.
+        # The parameter values are all strings, matching the parsed values from the command string.
+        # This ensures that no internal conversion, decimal round-off, etc. is exhibited.
+        # The parameters are converted to needed non-string values in the command's run_command() function.
         self.command_parameters = {}
 
-    def initialize_command(self, command_string, processor, full_initialization):
-        """Initialize the command by setting the processor and parsing parameters."""
+        # Command parameter metadata, a dictionary of CommandParameterMetadata to
+        # describe parameter names and types used by the command.
+        self.command_parameter_metadata = []
 
-        # sets the command processor
+        # Command status to track issues.
+        self.command_status = CommandStatus.CommandStatus()
+
+    def check_command_parameters(self, command_parameters):
+        """
+        Check the command parameters for validity.
+        This function should be defined in child classes in most cases.
+
+        Args:
+            command_parameters: the dictionary of command parameters to check (key:string_value)
+
+        Returns:
+            Nothing.
+
+        Raises:
+            ValueError if any parameters are invalid or do not have a valid value.
+            The command status messages for initialization are populated with validation messages.
+        """
+        pass
+
+    def get_parameter_metadata(self,parameter_name):
+        """
+        Return the metadata for the requested parameter name.
+        This can also be used to figure out if a parameter name is valid
+        (return value of None indicates invalid).
+
+        Args:
+            parameter_name: Parameter name of interest.
+
+        Returns:  Metadata for the requested parameter name, or None if not found.
+        """
+        # Loop through the list of command pareters and find a matching item.
+        # Ignore case in the comparison.
+        for parameter_metadata in self.command_parameter_metadata:
+            if ( parameter_metadata.parameter_name.upper() == parameter_name.upper() ):
+                return parameter_metadata
+        # Matching parameter not found so return None
+        return None
+
+    def get_parameter_value(self,parameter_name,default_value=None):
+        """
+        Return the value for a parameter name.
+
+        Args:
+            parameter_name: The name of the parameter for which to return the parameter value.
+            default_value: If the parameter is not found, the value to return (None by default).
+                A value of None returned typically indicates that the parameter was not specified
+                and the default value should be used.
+
+        Returns:
+            The parameter value as a string.
+        """
+        try:
+            parameter_value = self.command_parameters.get(parameter_name)
+            return parameter_value
+        except:
+            # Parameter was not found
+            return default_value
+
+    def initialize_command(self, command_string, processor, full_initialization):
+        """
+        Initialize the command by setting the processor and parsing parameters.
+
+        Args:
+            command_string:  The full command string.
+            processor:  The GeoProcessor instance, which is set in the new command.
+            full_initialization:  Indicates whether to
+        """
+        # Set the command string.
+        self.command_string = command_string
+
+        # Set the command processor.
         self.command_processor = processor
 
-        # if full initialization, the input parameters will be parsed and the values will be added to the
+        # If full initialization, the input parameters will be parsed and the values will be added to the
         # command_parameters
         if full_initialization:
 
             # the following will call the AbstractCommand.parse_command by default
             self.parse_command(command_string)
 
-    def is_geolayer_id(self, id):
-        """Checks if the id is a registered geolayer id. Returns TRUE, if it is is and FALSE, if not."""
-
-        # get list of all registered geolayer ids
-        list_of_geolayer_ids = list(self.command_processor.geolayers.keys())
-        if id in list_of_geolayer_ids:
-            return True
-        else:
-            return False
-
-    def is_geolist_id(self, id):
-        """Checks if the id is a registered geolist id. Returns TRUE, if it is is and FALSE, if not."""
-
-        # get list of all registered geolayer ids
-        list_of_geolist_ids = list(self.command_processor.geolists.keys())
-        if id in list_of_geolist_ids:
-            return True
-        else:
-            return False
-
-    def return_geolayer_ids_from_geolist_id(self, geolist_id):
-        """Returns a list of geolayer ids that are inside the specified geolist."""
-
-        if self.is_geolist_id(geolist_id):
-
-            return self.command_processor.geolists[geolist_id]
-
-        else:
-            print "Geolist ID ({}) is not a registered geolist id.".format(geolist_id)
-            return None
-
     def parse_command(self, command_string):
-        """Parse the command string and assign the abstract command command_parameters variable with a dictionary of
-        the input parameter names and values."""
+        """
+        Parse the command string and into self.command_parameters dictionary of
+        command parameter names and values.
+        The self.command_parameters dictionary is populated.
 
-        # get the parameter string from the command string (this is the string within the parenthesis of a command
-        # string)
-        parameter_string = CommonUtil.to_parameter_string(command_string)
+        Args:
+            command_string The full command string as in Command(Param1="Value1",Param2="Value2")
 
-        # parse the single parameter string into a list of parameter items. parameter items are strings that represent
-        # key value pairs for EACH parameter in the parameter string. the parameter items are separated by commas in
-        # the parameter string
-        parameter_items = CommonUtil.to_parameter_items(parameter_string)
+        Returns:
+            Nothing.
+        """
 
-        # parse each parameter item by its key and value. if the parameter value is supposed to be in list format
-        # (rather than string format) convert it to a list. return a dictionary with each parameter as a separate
-        # entry (key: parameter name as entered by the user, value: the parameter value (in either string or list
-        # format) assign the parameter dictionary to the command_parameters variable
-        self.command_parameters = CommonUtil.to_parameter_dic(parameter_items)
+        # Parse more brute force to get the command name and parameter list string.
+        command_string_trimmed = command_string.strip()
+        paren_start_pos = command_string_trimmed.find('(')
+        paren_end_pos = command_string_trimmed.rfind(')')
 
-    def return_parameter_value_required(self, parameter_name):
-        """Returns the user-defined parameter value given a parameter name. Throws error if the parameter name was not
-        entered by the user."""
+        # Get the parameter string from the command string
+        # (this is the string within the parenthesis of a command string).
+        parameter_string = util_common.parse_parameter_string_from_command_string(command_string)
 
-        if parameter_name in list(self.command_parameters.keys()):
-            return self.command_parameters[parameter_name]
-        else:
-            print "ERROR: the required parameter ({}) does not exist in the command string ({}).".format(parameter_name, self.command_string)
-            return None
+        if (len(parameter_string) > 0):
+            # Parameters are available to parse...
+            # Parse the parameter string of form Parameter=Value,Parameter=Value into a list of parameter items.
+            # Parameter items are strings that represent key=value pairs for each parameter in the parameter string.
+            # The parameter items are separated by commas in the parameter string.
+            parameter_items = util_common.parse_parameter_string_into_key_value_pairs(parameter_string)
 
-    def return_parameter_value_optional(self, parameter_name, default_value):
-        """Returns the user-defined parameter value given a parameter name. Returns default value if the parameter name
-        was not entered by the user. """
+            # Parse each parameter key and value pair. If the parameter value is supposed to be in list format
+            # (rather than string format) convert it to a list. Return a dictionary with each parameter as a separate
+            # entry (key: parameter name as entered by the user, value: the parameter value (in either string or list
+            # format) assign the parameter dictionary to self.command_parameters for use by the specific command.
+            self.command_parameters = util_common.parse_key_value_pairs_into_dictionary(parameter_items)
 
-        if parameter_name in list(self.command_parameters.keys()):
-            return self.command_parameters[parameter_name]
-        else:
-            return default_value
+        # Print out the parsed command parameters for debugging
+        debug = True
+        if debug:
+            for parameter_name, parameter_value in self.command_parameters.iteritems():
+                print('After parsing, command parameter name="' + parameter_name + '" value="' + parameter_value + '"')
+
+    def print_for_debug(self):
+        print("Debug information for command")
+        print("Command name=" + self.command_name)
+        print("Command string=" + self.command_string)
+        for parameter_name, parameter_value in self.command_parameters.iteritems():
+            print('Command parameter name ="' + parameter_name + '", value="' + parameter_value + '"')
 
     def run_command(self):
-        '''Run the command. This should always be overwritten by the command class.'''
+        """
+        Run the command. This should always be overridden by the command class.
 
+        Returns:
+        """
         print 'In AbstractCommand.run_command'
+
+    def to_string(self, parameters = None, format_all = False ):
+        """
+        Format the internal command data into the command string that users see.
+        This version of the function should only be used by commands that follow CommandName(Param1="Value1",...)
+        syntax and should otherwise be overloaded in the specific command class.
+        Only parameters that have been specified will be output by default to minimize command length.
+        The order of parameters is given by the get_parameter_metadata() function,
+        which indicates a logical order (input first, group by feature, etc.).
+        Any unknown parameters are output at the end - this should normally not occur but is
+        enabled to help with troubleshooting.
+
+        Args:
+            parameters:  If specified, a dictionary of parameter names and values to format.
+                         If specified as None, all non-empty parameters will be formatted.
+            format_all:  If True, format all command parameters even if not specified, useful for troubleshooting.
+                         If False, only format specified parameters, default for normal functionality.
+
+        Returns:  Formatted command string such as CommandName(Param1="Value1",Param2="Value2",...)
+        """
+        # First part of command is the indent from the original command
+        command_string_formatted = ""
+        for i_command in range[0:len(self.command_string) - 1]:
+            if ( self.command_string[i_command] == " "):
+                command_string_formatted = command_string_formatted + " "
+            else:
+                # No more spaces at front of the command
+                break
+        # Append the command name and starting parenthesis
+        command_string_formatted = command_string_formatted + self.command_name + "("
+        # Loop through all the parameters that are valid for the command.
+        param_output_count = 0
+        for command_parameter_meta in self.command_parameter_metadata:
+            # Determine whether to output
+            do_output = False
+            if ( format_all == True ):
+                do_output = True
+            else:
+                # Only output if the parameter is not None and not a blank string
+                parameter_value = self.getParameterValue(command_parameter_meta.parameter_name)
+                if ( (parameter_value != None) and (str(parameter_value) != "") ):
+                    do_output = True
+            if ( do_output == True ):
+                # If this is not the first parameter, add a comma separator
+                if ( param_output_count > 0 ):
+                    command_string_formatted = command_string_formatted + ","
+                # Append the parameter
+                command_string_formatted = command_string_formatted + command_parameter_meta.parameter_name + '="' + \
+                    str(command_parameter_meta.parameter_value) + '"'
+                # Append the trailing parenthesis
+                command_string_formatted = command_string_formatted + ")"
+        return command_string_formatted

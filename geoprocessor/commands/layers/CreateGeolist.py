@@ -5,7 +5,9 @@ class CreateGeolist(AbstractCommand.AbstractCommand):
     def __init__(self):
         """Initialize the command"""
 
-        AbstractCommand.AbstractCommand.__init__(self)
+        # TODO smalers 2017-12-23 Not sure about this syntax...
+        #AbstractCommand.AbstractCommand.__init__(self)
+        super(CreateGeolist, self).__init__()
         self.command_name = "CreateGeolist"
         self.parameter_list = ["geo_ids", "geolist_id"]
 

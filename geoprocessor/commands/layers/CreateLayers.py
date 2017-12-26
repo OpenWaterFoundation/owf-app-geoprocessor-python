@@ -22,7 +22,9 @@ class CreateLayers(AbstractCommand.AbstractCommand):
     def __init__(self):
         """Initialize the command"""
 
-        AbstractCommand.AbstractCommand.__init__(self)
+        # TODO smalers 2017-12-23 Not sure about this syntax...
+        #AbstractCommand.AbstractCommand.__init__(self)
+        super(CreateLayers, self).__init__()
         self.command_name = "CreateLayers"
         self.parameter_list = ["source_list", "id_list"]
 

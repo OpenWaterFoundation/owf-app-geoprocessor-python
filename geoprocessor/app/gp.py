@@ -14,17 +14,22 @@ if __name__ == '__main__':
     # TODO smalers 2017-12-23 need to enable testing with command files
     command_file_strings = [
         'Message(Message="Start command file")',
-        '# SetProperty(PropertyName="Property1",PropertyType="String",PropertyValue="test property")',
-        '# For(Name="for_outer")',
-        '#     Message(Message="message in outer loop")',
-        '#     For(Name="for_inner")',
-        '#         Message(Message="message in inner loop")',
-        '#     EndFor(Name="for_inner")',
-        '# EndFor(Name="for_outer")',
-        '# If(Name="if1")',
-        '#     JunkXXX()',
-        '# EndIf(Name="if1")',
+        'SetProperty(PropertyName="Property1",PropertyType="str",PropertyValue="test property")',
+        'Message(Message="Test message with Property1=${Property1}")',
+        'For(Name="for_outer",IteratorProperty="ForOuterProperty",SequenceStart="1",SequenceEnd="3",SequenceIncrement="1")',
+        '  Message(Message="In outer loop, ${ForOuterProperty}")',
+        '  For(Name="for_inner",IteratorProperty="ForInnerProperty",SequenceStart="10.0",SequenceEnd="11.5",SequenceIncrement=".5")',
+        '    Message(Message="In inner loop")',
+        '  EndFor(Name="for_inner")',
+        'EndFor(Name="for_outer")',
+        'If(Name="if1")',
+        '  JunkXXX()',
+        'EndIf(Name="if1")',
         'Message(Message="End command file")']
     geoprocessor.set_command_strings(command_file_strings)
     # Run the commands
     geoprocessor.run_commands()
+    # Print some information at the end (will display in UI when that is enabled)
+    # Print the processor properties
+    for property_name in geoprocessor.properties:
+        print('Processor property "' + property_name + '="' + str(geoprocessor.properties[property_name]) + '"')

@@ -6,33 +6,33 @@ Multiple functions may be called if necessary, although as many validator functi
 as necessary can be defined.
 """
 
-def validate_boolean ( boolean_value, none_allowed, empty_string_allowed ):
+def validate_bool ( bool_value, none_allowed, empty_string_allowed ):
     """
     Validate that a boolean value is True or False.
 
     Args:
-        boolean_value: Boolean value to check, can be string or boolean type.
+        bool_value: Boolean value to check, can be string or bool type.
         none_allowed: If the value is None, OK.
         empty_string_allowed: If the value is an empty string, OK.
 
     Returns:
-        True if boolean value is valid, False if invalid.
+        True if bool value is valid, False if invalid.
     """
     # First check some specific cases
-    if boolean_value == None:
+    if bool_value == None:
         if none_allowed:
             return True
         else:
             return False
-    if type(boolean_value) == 'str':
-        if boolean_value == "":
+    if type(bool_value) == 'str':
+        if bool_value == "":
             if ( empty_string_allowed ):
                 return True
             else:
                 return False
-        # Reassign the value as a boolean to check
+        # Reassign the value as a bool to check
         try:
-            boolean_value = bool(boolean_value)
+            bool_value = bool(bool_value)
         except:
             return False
 
@@ -76,6 +76,40 @@ def validate_int_in_range ( int_value, int_min, int_max, none_allowed, empty_str
         return True
     else:
         return False
+
+def validate_number ( number_value, none_allowed, empty_string_allowed ):
+    """
+    Validate that a number value is True or False.
+
+    Args:
+        number_value: Number value to check, can be string or number (int or float) type.
+        none_allowed: If the value is None, OK.
+        empty_string_allowed: If the value is an empty string, OK.
+
+    Returns:
+        True if number value is valid, False if invalid.
+    """
+    # First check some specific cases
+    if number_value == None:
+        if none_allowed:
+            return True
+        else:
+            return False
+    if type(number_value) == 'str':
+        if number_value == "":
+            if ( empty_string_allowed ):
+                return True
+            else:
+                return False
+        # Reassign the value as a number to check - use float since it includes int values
+        try:
+            float_value = float(number_value)
+        except:
+            return False
+    else:
+        # May do more checks later but for now above should be sufficient
+        pass
+    return True
 
 def validate_string ( string_value, none_allowed, empty_string_allowed ):
     """

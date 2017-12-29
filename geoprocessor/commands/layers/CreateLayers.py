@@ -1,9 +1,9 @@
-import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 import os
 import ogr
 from qgis.core import QgsVectorLayer
 
-class CreateLayers(AbstractCommand.AbstractCommand):
+class CreateLayers(AbstractCommand):
     """Creates a geolayer within the geoprocessor. Geolayers are originally stored on a local machine as a spatial data
     file (geojson, shp, feature class, etc). In order for the geoprocessor to use and manipulate spatial data files,
     they must be incorporated into Qgs Vector Object layers. This command will take a single or a list of spatial data
@@ -23,7 +23,7 @@ class CreateLayers(AbstractCommand.AbstractCommand):
         """Initialize the command"""
 
         # TODO smalers 2017-12-23 Not sure about this syntax...
-        #AbstractCommand.AbstractCommand.__init__(self)
+        #AbstractCommand.__init__(self)
         super(CreateLayers, self).__init__()
         self.command_name = "CreateLayers"
         self.parameter_list = ["source_list", "id_list"]

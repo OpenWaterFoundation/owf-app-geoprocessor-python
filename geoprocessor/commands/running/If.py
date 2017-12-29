@@ -1,18 +1,25 @@
 # If command
 
-import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
-import geoprocessor.core.CommandParameterMetadata as CommandParameterMetadata
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+
+from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
+import geoprocessor.core.command_phase_type as command_phase_type
+import geoprocessor.core.command_status_type as command_status_type
+
+import geoprocessor.util.command as command_util
+import geoprocessor.util.validators as validators
 
 # Inherit from AbstractCommand
-class If(AbstractCommand.AbstractCommand):
+class If(AbstractCommand):
     def __init__(self):
         super(If, self).__init__()
         self.condition_eval = True
         self.command_name = "If"
         self.command_parameter_metadata = [
-            CommandParameterMetadata.CommandParameterMetadata("Name",type(""),None),
-            CommandParameterMetadata.CommandParameterMetadata("Condition",type(""),None),
-            CommandParameterMetadata.CommandParameterMetadata("CompareAsStrings",type(True),None)
+            CommandParameterMetadata("Name",type(""),None),
+            CommandParameterMetadata("Condition",type(""),None),
+            CommandParameterMetadata("CompareAsStrings",type(True),None)
         ]
 
     def check_command_parameters(self, command_parameters):

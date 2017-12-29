@@ -1,9 +1,10 @@
 # Useful utility functions for the GeoProcessor.
 
+# Don't import class only because there are additional functions in CommandParameterMetaData
 import geoprocessor.core.CommandParameterMetadata as CommandParameterMetaData
-import geoprocessor.commands.abstract.CommandLogRecord as CommandLogRecord
-import geoprocessor.commands.abstract.command_phase_type as command_phase_type
-import geoprocessor.commands.abstract.command_status_type as command_status_type
+from geoprocessor.core.CommandLogRecord import CommandLogRecord
+import geoprocessor.core.command_phase_type as command_phase_type
+import geoprocessor.core.command_status_type as command_status_type
 
 def parse_command_name_from_command_string(command_string):
     """

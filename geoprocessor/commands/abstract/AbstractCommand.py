@@ -1,4 +1,4 @@
-import geoprocessor.commands.abstract.CommandStatus as CommandStatus
+from geoprocessor.core.CommandStatus import CommandStatus
 import geoprocessor.util.command as util_common
 
 class AbstractCommand(object):
@@ -24,12 +24,12 @@ class AbstractCommand(object):
         # The parameters are converted to needed non-string values in the command's run_command() function.
         self.command_parameters = {}
 
-        # Command parameter metadata, a dictionary of CommandParameterMetadata to
+        # Command parameter metadata, a list of CommandParameterMetadata to
         # describe parameter names and types used by the command.
         self.command_parameter_metadata = []
 
         # Command status to track issues.
-        self.command_status = CommandStatus.CommandStatus()
+        self.command_status = CommandStatus()
 
     def check_command_parameters(self, command_parameters):
         """

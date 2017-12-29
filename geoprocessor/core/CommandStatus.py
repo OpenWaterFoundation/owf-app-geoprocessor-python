@@ -1,5 +1,5 @@
-import geoprocessor.commands.abstract.command_status_type as command_status_type
-import geoprocessor.commands.abstract.command_phase_type as command_phase_type
+import geoprocessor.core.command_status_type as command_status_type
+import geoprocessor.core.command_phase_type as command_phase_type
 
 class CommandStatus(object):
     """
@@ -41,6 +41,26 @@ class CommandStatus(object):
         elif command_phase == command_phase_type.RUN:
             self.run_status = command_status_type.max_severity ( self.run_status, log_record.severity )
             self.run_log_list.append( log_record )
+
+    def clear_log(self, command_phase=None ):
+        """
+        Clear the CommandLogRecord list for the command.
+
+        Args:
+            command_phase: Phase of running a command (see command_phase_type) or None to clear logs for all phases.
+
+        Returns:
+            Nothing.
+        """
+        if command_phase == command_phase_type.INITIALIZATION or command_phase == None:
+            del self.initialization_log_list[:]
+            self.initialization_status = command_status_type.UNKNOWN
+        elif command_phase == command_phase_type.DISCOVERY or command_phase == None:
+            del self.discovery_log_list[:]
+            self.discovery_status = command_status_type.UNKNOWN
+        elif command_phase == command_phase_type.RUN or command_phase == None:
+            del self.run_log_list[:]
+            self.run_status = command_status_type.UNKNOWN
 
     def refresh_phase_severity(self, phase, severity_if_unknown ):
         """

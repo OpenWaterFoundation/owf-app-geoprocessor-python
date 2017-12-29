@@ -1,2 +1,1 @@
-CreateGeolayers("source_list = ['C:\Users\intern1\Desktop\FEMA_floodplain\automatedWorkFlowModel\clipLayers', 'C:\Users\intern1\Desktop\FEMA_floodplain\fileSizeDecreaseResearch\1_orig_files\NFHL_08_20171102.gdb']")
-CreateGeolist("geo_ids = ['CO_Douglas', 'CO_Jefferson', 'CO_Park']", "geolist_id = counties")
+CreateGeolayers(SourceList = "['C:\Users\intern1\Desktop\FEMA_floodplain\automatedWorkFlowModel\clipLayers', 'C:\Users\intern1\Desktop\FEMA_floodplain\fileSizeDecreaseResearch\1_orig_files\NFHL_08_20171102.gdb']")

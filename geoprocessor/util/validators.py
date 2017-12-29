@@ -176,3 +176,47 @@ def validate_string_in_list ( string_value, string_list, none_allowed, empty_str
                 return True
     # No string in the list was matched
     return False
+
+def validate_list ( list_value, none_allowed, empty_string_allowed, brackets_required=True ):
+    """Validate that a list value is a list.
+
+    The list_value can either be a list type or a string that can be converted into a list (checks that the string
+    contains both the '[' and the ']' symbols).
+
+    Args:
+        list_value: List value to check, can be string or list type.
+        none_allowed: If the value is None, OK.
+        empty_string_allowed: If the value is an empty string, OK.
+        brackets_required: If the value requires open and close brackets ([]), validate that the brackets exist
+
+    Returns:
+        True if list value is valid, False if invalid.
+    """
+    # First check some specific cases
+    if list_value == None:
+        if none_allowed:
+            return True
+        else:
+            return False
+
+    if type(list_value) == type(""):
+        if list_value == "":
+            if ( empty_string_allowed ):
+                return True
+            else:
+                return False
+        else:
+            if brackets_required:
+                if '[' in list_value and ']' in list_value:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+
+
+    elif type(list_value) == 'list':
+        return True
+
+    else:
+        return False

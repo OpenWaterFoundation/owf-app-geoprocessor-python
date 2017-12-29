@@ -143,6 +143,7 @@ class AbstractCommand(object):
             # entry (key: parameter name as entered by the user, value: the parameter value (in either string or list
             # format) assign the parameter dictionary to self.command_parameters for use by the specific command.
             self.command_parameters = util_common.parse_key_value_pairs_into_dictionary(parameter_items)
+            print "CMD_PARAM: {}".format(self.command_parameters)
 
         # Print out the parsed command parameters for debugging
         debug = True

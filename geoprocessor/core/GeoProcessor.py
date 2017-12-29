@@ -1,8 +1,14 @@
+# OWF Geoprocessing
 import geoprocessor.core.GeoProcessorCommandFactory as CommandFactory
-import geoprocessor.util.command as util_command
+import geoprocessor.core.command_phase_type as command_phase_type
+import geoprocessor.util.command as command_util
+
+# QGIS Geoprocessing
 from qgis.core import QgsApplication
+# TODO smalers 2017-12-29 is the following QGIS or Emma's initial code?
 from processing.core.Processing import Processing
 
+# General modules
 import os
 import sys
 import traceback
@@ -70,7 +76,8 @@ class GeoProcessor():
         Args:
             parameter_value: Command parameter value as string to expand.
                 The parameter value can include ${Property} notation to indicate a processor property.
-            command:  A command instance (will be used in the future if command property syntax needs to be expanded).
+            command:  A command instance (will be used in the future if command property syntax needs to be expanded,
+                for example using syntax ${c:Property}).
 
         Returns:
             Expanded parameter value string.
@@ -79,6 +86,7 @@ class GeoProcessor():
             # Just return what was provided.
             return parameter_value
 
+        debug = False # For developers
         # First replace escaped characters.
         # TODO smalers 2017-12-25 might need to change this for Python
         parameter_value = parameter_value.replace("\\\"", "\"" )
@@ -88,7 +96,7 @@ class GeoProcessor():
         search_pos = 0 # Position in the "parameter_value" string to search for ${} references
         found_pos = -1 # Position when leading "${" is found
         found_pos_end = -1 # Position when ending "}" is found
-        prop_name = None; # Whether a property is found that matches the "$" symbol
+        prop_name = None # Whether a property is found that matches the "$" character
         delim_start = "${" # Start of property
         delim_end = "}" # End of property
         while search_pos < len(parameter_value):
@@ -99,20 +107,31 @@ class GeoProcessor():
                 return parameter_value
             # Else found the delimiter so continue with the replacement
             # Message.printStatus(2, routine, "Found " + delimStart + " at position [" + foundPos + "]");
+            if debug:
+                print("Found " + delim_start + " at position [" + str(found_pos) + "]")
             # Get the name of the property
             prop_name = parameter_value[(found_pos + 2):found_pos_end]
+            if debug:
+                print('Property name is "' + prop_name + '"')
             # Try to get the property from the processor
             # TODO smalers 2007-12-23 Evaluate whether to skip None.  For now show "None" in result.
-            prop_val = None
+            propval = None
             propval_string = ""
             try:
-                propval = self.get_prop_contents ( prop_name )
+                if debug:
+                    print('Getting property value for "' + prop_name + '"')
+                propval = self.get_property ( prop_name )
+                if debug:
+                    print('Property value is "' + propval + '"')
                 # The following should work for all representations as long as str() does not truncate
-                propval_string = "" + str(prop_val)
+                # TODO smalers 2017-12-28 confirm that Python shows numbers with full decimal, not scientific notation.
+                propval_string = "" + str(propval)
             except:
                 # Keep the original literal value to alert user that property could not be expanded
+                if debug:
+                    print('Exception getting the property value from the processor')
                 propval_string = delim_start + prop_name + delim_end
-            if prop_val == None:
+            if propval == None:
                 # Keep the original literal value to alert user that property could not be expanded
                 propval_string = delim_start + prop_name + delim_end
             # If here have a property
@@ -133,27 +152,32 @@ class GeoProcessor():
             #parameter_value = b.toString()
             parameter_value = b
             search_pos = found_pos + len(propval_string) # Expanded so no need to consider delim *
-            #if (Message.isDebugOn) {
-            #    Message.printDebug( 1, routine, "Expanded parameter value is \"" + parameter_value +
-            #    "\" searchpos is now " + searchPos + " in string \"" + parameter_value + "\"" );
+            if debug:
+                #    Message.printDebug( 1, routine, "Expanded parameter value is \"" + parameter_value +
+                #    "\" searchpos is now " + searchPos + " in string \"" + parameter_value + "\"" );
+                print('Expanded parameter value is "' + parameter_value +
+                    '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"' )
         return parameter_value
 
-    def get_property(self, property_name, if_not_found='ReturnNone'):
+    def get_property(self, property_name, if_not_found_val=None):
         """
         Get a geoprocessor property, case-specific.
 
         Args:
             property_name:  Name of the property for which a value is retrieved.
-            if_not_found:  Behavior if the property is not found ('ReturnNone' or 'Exception').
+            if_not_found_val:  Value to return if the property is not found (None is default or otherwise throw exception).
         """
         try:
-            self.properties[property_name]
+            return self.properties[property_name]
         except:
-            if if_not_found == 'None':
+            if if_not_found_val == None:
                 # Requested that None is returned if not found so do it
+                #print('Property not found so returning None')
                 return None
             else:
                 # Let the exception from not finding a key in the dictionary be raised
+                #print('Property not found so throwing exception')
+                traceback.print_exc(file=sys.stdout)
                 raise
 
     def __lookup_endfor_command_index(self, command_list, for_name ):
@@ -162,14 +186,17 @@ class GeoProcessor():
 
         Args:
             command_list: list of commands to check
-            for_name: the name of the "for" name to find
+            for_name: the name of the "For" name to find
+
+        Returns:
+            The index (0+) of the EndFor() command that matches the specified name.
         """
         i = -1;
         for i_command in range(len(command_list)):
             command = command_list[i_command]
             command_class = command.__class__.__name__
             if ( command_class == 'EndFor' ):
-                if ( command.command_name == for_name ):
+                if ( command.get_name() == for_name ):
                     return i_command
         return -1
 
@@ -179,16 +206,32 @@ class GeoProcessor():
 
         Args:
             command_list: list of commands to check
-            for_name: the name of the "for" name to find
+            for_name: the name of the "For" name to find
         """
         i = -1;
         for i_command in range(len(command_list)):
             command = command_list[i_command]
             command_class = command.__class__.__name__
             if ( command_class == 'For' ):
-                if ( command.command_name == for_name ):
+                if ( command.get_name() == for_name ):
                     return i_command
         return -1
+
+    def __lookup_if_command(self, If_command_stack, if_name ):
+        """
+        Lookup the command for the If() command with requested name.
+
+        Args:
+            If_command_stack: list of If commands that are active.
+            if_name: the name of the "If" command to find
+
+        Returns:
+            The matching If() command instance.
+        """
+        for c in If_command_stack:
+            if c.get_name() == if_name:
+                return c
+        return None
 
     def read_command_file(self, command_file):
         """
@@ -202,7 +245,7 @@ class GeoProcessor():
         command_factory_object = CommandFactory.GeoProcessorCommandFactory()
 
         # Get a list of command file strings (each line of the command file is its own item in the list).
-        command_file_strings = util_command.read_file_into_string_list(command_file)
+        command_file_strings = command_util.read_file_into_string_list(command_file)
 
         # Iterate over each line in the command file.
         for command_file_string in command_file_strings:
@@ -234,13 +277,14 @@ class GeoProcessor():
             command_list: List of command objects to process, or None to process all commands in the processor.
         """
 
+        # TODO smalers 2017-12-29 what happens if this is done more than once?
         # Initialize QGIS resources to utilize QGIS functionality.
         QgsApplication.setPrefixPath(self.get_property("qgis_prefix_path"), True)
         qgs = QgsApplication([], True)
         qgs.initQgis()
         Processing.initialize()
 
-        if ( command_list == None ):
+        if command_list == None:
             print("Running all commands")
             command_list = self.commands
         else:
@@ -261,10 +305,31 @@ class GeoProcessor():
         # Whether the If stack evaluates to True so enclosed commands can run
         If_stack_ok_to_run = True
 
-        # Run all the commands
+        # Loop through the commands and reset any For() commands to make sure they don't think they are complete.
+        # Nested For() loos will be handled when processed by resetting when a For loop is totally complete.
         n_commands = len(command_list)
-        debug = True
         for i_command in range(n_commands):
+            command = command_list[i_command]
+            if command == None:
+                continue
+            command_class = command.__class__.__name__
+            if command_class == 'For':
+                command.reset_command()
+            # Clear the command log.
+            command.command_status.clear_log(command_phase_type.RUN)
+
+        # Run all the commands
+        # Set debug = True to turn on debug messages
+        debug = False
+        # Python does not allow modifying the for loop iterator variable so use a while loop
+        #for i_command in range(n_commands):
+        i_command = -1
+        while i_command < n_commands:
+            i_command = i_command + 1
+            if i_command == n_commands:
+                # Do an extra check on the index to make sure because for loops can modify the index
+                # prior to the increment statement above.
+                break
             command = command_list[i_command]
             if debug:
                 command.print_for_debug()
@@ -273,26 +338,26 @@ class GeoProcessor():
                 print('-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + command.command_string)
 
             command_class = command.__class__.__name__
-            if ( command_class == 'For' ):
+            if command_class == 'For':
                 # Reset the For command
                 command.reset_command
 
             if in_comment and If_stack_ok_to_run == True:
                 pass
 
-            if ( command_class == 'Comment' ):
+            if command_class == 'Comment':
                 # Hash-comment - TODO need to mark as processing successful
                 continue
-            elif ( command_class == 'CommentStart' ):
+            elif command_class == 'CommentStart':
                 # /* comment block start - TODO need to mark as processing successful
                 in_comment = True
                 continue
-            elif ( command_class == 'CommentEnd' ):
+            elif command_class == 'CommentEnd':
                 # */ comment block end - TODO need to mark as processing successful
                 in_comment = False
                 continue
 
-            if ( in_comment == True ):
+            if in_comment:
                 # In a /* */ comment block so set status to successful
                 continue
 
@@ -320,20 +385,23 @@ class GeoProcessor():
                             break
                         elif ( command_class == 'For'):
                             # Initialize or increment the For loop
+                            print('Detected For command')
                             # Use a local variable For_command for clarity
                             For_command = command
                             ok_to_run_for = False
                             try:
                                 ok_to_run_for = For_command.next()
+                                print('ok_to_run_for=' + str(ok_to_run_for))
                                 # If False, the For loop is done.
                                 # However, need to handle the case where the for loop may be nested and need to run again...
-                                if ok_to_run_for:
-                                    For_command.resetCommand()
+                                if not ok_to_run_for:
+                                    For_command.reset_command()
                             except:
                                 # This is serious and can lead to an infinite loop so generate an exception and jump to the
                                 # end of the loop
                                 ok_to_run_for = False
-                                print 'Error going to next iteration.  Check For() command iteration data.'
+                                traceback.print_exc(file=sys.stdout)
+                                print('Error going to next iteration.  Check For() command iteration data.')
                                 # Same logic as ending the loop...
                                 end_for_index = self.__lookup_endfor_command_index(command_list,For_command.get_name())
                                 if ( end_for_index >= 0 ):
@@ -350,7 +418,7 @@ class GeoProcessor():
                                 For_command_stack.append(For_command)
                                 # Run the For() command to set the iterator property and then skip to the next command
                                 # TODO smalers 2017-12-21 equivalent but should the following be For_command?
-                                command.run_command()
+                                For_command.run_command()
                                 continue
                             else:
                                 # Done running the For() loop matching the EndFor() command
@@ -362,7 +430,7 @@ class GeoProcessor():
                                 else:
                                     # Did not match the end of the For() so generate an error and exit
                                     need_to_interrupt = True
-                                    raise Exception('Unable to match For loop name "' + For_command.command_name + '" in EndFor() commands.')
+                                    raise Exception('Unable to match For loop name "' + For_command.get_name() + '" in EndFor() commands.')
                         elif ( command_class == 'EndFor' ):
                             # Jump to the matching For()
                             EndFor_command = command;
@@ -370,11 +438,11 @@ class GeoProcessor():
                                 For_command_stack.remove(For_command)
                             except:
                                 # TODO smalers 2017-12-21 might need to log as mismatched nested loops
-                                pass
-                            for_index = self.__lookup_for_command_index(command_list,EndFor_command.command_name)
+                                print('Error removing For loop from stack for EndFor(Name="' + EndFor_command.get_name() + '"...)')
+                            for_index = self.__lookup_for_command_index(command_list,EndFor_command.get_name())
                             i_command = for_index - 1 # Decrement by one because the main loop will increment
-                            print('Jumping to commmand [' + (i_command + 1) + '] at top of For() loop')
-                            continue;
+                            print('Jumping to commmand [' + str(i_command + 1) + '] at top of For() loop')
+                            continue
                         else:
                             # A typical command - run it
                             command.run_command()
@@ -389,7 +457,7 @@ class GeoProcessor():
                     elif ( command_class == 'EndIf' ):
                         # Remove from the If command stack (generate a warning if the matching If() is not found in the stack
                         EndIf_command = command
-                        If_command = self.__lookup_if_command ( If_command_stack, EndIf_command.command_name )
+                        If_command = self.__lookup_if_command ( If_command_stack, EndIf_command.get_name )
                         if ( If_command == None ):
                             # TODO smalers 2017-12-21 need to log error
                             pass
@@ -398,7 +466,7 @@ class GeoProcessor():
                             EndIf_command.run_command()
                             If_command_stack.remove(If_command)
                         # Reevaluate If stack
-                        iF_stack_ok_to_run = self.__evaluate_if_stack(If_command_stack)
+                        If_stack_ok_to_run = self.__evaluate_if_stack(If_command_stack)
                         print('...back from running command')
                 except:
                     # TODO smalers 2017-12-21 need to expand on error handling

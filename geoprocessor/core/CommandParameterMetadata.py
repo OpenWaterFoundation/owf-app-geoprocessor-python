@@ -2,7 +2,7 @@ class CommandParameterMetadata(object):
     """
     Metadata for the command parameters, a list of which is maintained as
     AbstractCommand.command_parameter_metadata.
-    This information is used to output parameters in the proper order in to_string()
+    This information is used to output parameters in the proper order in AbstractCommand.to_string()
     and also provide basic validation data (valid parameter names, type).
     Validation requires more effort when the allowed value is an enumeration, etc.
     """
@@ -18,7 +18,8 @@ class CommandParameterMetadata(object):
         # Validator function to be called to validate the command parmameter
         self.validator_function = validator_function
 
-# Functions that can be used as static functions outside of the class.
+# Functions that can be used as static functions outside of the class,
+# for example to process the full list of CommandParameterMetadata objects.
 
 def get_parameter_names ( parameter_metadata_list ):
     """

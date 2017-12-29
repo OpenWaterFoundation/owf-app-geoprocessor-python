@@ -1,17 +1,17 @@
 import geoprocessor.util.command as command_util
 
-import geoprocessor.commands.layers.CreateGeolayers as CreateGeolayers
-import geoprocessor.commands.layers.CreateGeolist as CreateGeolist
+from geoprocessor.commands.layers.CreateGeolayers import CreateGeolayers
+from geoprocessor.commands.layers.CreateGeolist import CreateGeolist
 
 from geoprocessor.commands.logging.Message import Message
 
-import geoprocessor.commands.running.EndFor as EndFor
-import geoprocessor.commands.running.EndIf as EndIf
-import geoprocessor.commands.running.For as For
-import geoprocessor.commands.running.If as If
-import geoprocessor.commands.running.SetProperty as SetProperty
+from geoprocessor.commands.running.EndFor import EndFor
+from geoprocessor.commands.running.EndIf import EndIf
+from geoprocessor.commands.running.For import For
+from geoprocessor.commands.running.If import If
+from geoprocessor.commands.running.SetProperty import SetProperty
 
-import geoprocessor.commands.util.UnknownCommand as UnknownCommand
+from geoprocessor.commands.util.UnknownCommand import UnknownCommand
 
 class GeoProcessorCommandFactory(object):
     """
@@ -21,16 +21,19 @@ class GeoProcessorCommandFactory(object):
 
     # The dictionary of all available commands, in alphabetical order.
     # key: the name of the command (converted to all UPPERCASE)
-    # value: the constructure function to create an instance of the command
-    command_factory = {
-        "CREATEGEOLAYERS": CreateGeolayers.CreateGeolayers(),
-        "CREATEGEOLIST": CreateGeolist.CreateGeolist(),
-        "ENDFOR": EndFor.EndFor(),
-        "ENDIF": EndIf.EndIf(),
-        "FOR": For.For(),
-        "IF": If.If(),
+    # value: the constructor (__init__) function to create an instance of the command
+    # This dictionary serves two purposes:
+    # 1) It provides a registry of all commands known to the geoprocessor (via this factory class)
+    # 2) It provides the list of constructor functions to call, to simplify logic
+    registered_commands = {
+        "CREATEGEOLAYERS": CreateGeolayers(),
+        "CREATEGEOLIST": CreateGeolist(),
+        "ENDFOR": EndFor(),
+        "ENDIF": EndIf(),
+        "FOR": For(),
+        "IF": If(),
         "MESSAGE": Message(),
-        "SETPROPERTY": SetProperty.SetProperty()
+        "SETPROPERTY": SetProperty()
     }
 
     def __init__(self):
@@ -39,25 +42,37 @@ class GeoProcessorCommandFactory(object):
     def __is_command_valid(self, command_name):
         """
         Checks if the command is a valid registered command by examining the command name.
+        A valid command can be further processed to create a command instance.
 
         Args:
             command_name: the name of the command
+
         Returns:
             True if the command is registered as recognized, False if not.
         """
 
-        registered_command_names = list(self.command_factory.keys())
+        registered_command_names = list(self.registered_commands.keys())
         if command_name.upper() in registered_command_names:
             return True
         else:
             return False
 
     def new_command(self, command_string, create_unknown_command_if_not_recognized):
-        """Creates the object of a command class called from a command line of the command file.
+        """
+        Creates the object of a command class called from a command line of the command file.
 
-        :param command_string: a string, the command string entered by the user in the command file
-        :param create_unknown_command_if_not_recognized: boolean, if TRUE, create an unknown command when the input
-        command is not recognized, if FALSE, throw an error"""
+        Args:
+            command_string (str): the command string entered by the user in the command file
+            create_unknown_command_if_not_recognized (bool) If TRUE, create an UnknownCommand when the input
+            command is not recognized, if FALSE, throw an error.
+
+        Returns:
+            A command instance of class type that matches the command name.
+            The command is not parsed.
+
+        Raises:
+            ValueError if the command is not recognized and create_unknown_command_if_not_recognized=False.
+        """
 
         # Get command name from the first part of the command.
         command_string_trimmed = command_string.strip()
@@ -81,16 +96,51 @@ class GeoProcessorCommandFactory(object):
             command_name = command_util.parse_command_name_from_command_string(command_string_trimmed)
 
             # Initialize the command class object if it is a valid command.
-            if self.__is_command_valid(command_name):
-                command = self.command_factory[command_name.upper()]
-                return command
-
-            # Don't know the command so create an UnknownCommand.
+            command_name_upper = command_name.upper()
+            init_from_dictionary_constructor = False
+            if init_from_dictionary_constructor:
+                # TODO smalers 2017-12-28 Figure out if the dictionary constructor can be called.
+                # The following is a clever way to initialize instances using a constructor function
+                # from the command dictionary.
+                # However, it does not seem to work.  For example, if multiple Message commands
+                # are initialized, the AbstractCommand.command_parameters dictionary for all Message
+                # command instances will have the values corresponding to the last Message command.
+                if self.__is_command_valid(command_name):
+                    command = self.registered_commands[command_name_upper]
+                    return command
             else:
-                print("Command line is unknown command. Adding UnknownCommand: " + command_string_trimmed)
-                return UnknownCommand.UnknownCommand()
+                # Constructing the following way always seems to work properly
+                if ( command_name_upper == "CREATEGEOLAYERS" ):
+                    return CreateGeolayers()
+                elif ( command_name_upper == "CREATEGEOLIST" ):
+                    return CreateGeolist()
+                elif ( command_name_upper == "ENDFOR" ):
+                    return EndFor()
+                elif ( command_name_upper == "ENDIF" ):
+                    return EndIf()
+                elif ( command_name_upper == "FOR" ):
+                    return For()
+                elif ( command_name_upper == "IF" ):
+                    return If()
+                elif ( command_name_upper == "MESSAGE" ):
+                    return Message()
+                elif ( command_name_upper == "SETPROPERTY" ):
+                    return SetProperty()
 
-        # The syntax is not recognized so create an UnknownCommand.
+            # If here the command name was not matched.
+            # Don't know the command so create an UnknownCommand or throw an exception.
+            if create_unknown_command_if_not_recognized:
+                print("Command line is unknown command. Adding UnknownCommand: " + command_string_trimmed)
+                return UnknownCommand()
+            else:
+                print("Command line is unknown syntax.")
+                raise ValueError('Unrecognized command "' + command_string + '"')
+
+        # The syntax is not recognized so create an UnknownCommand or throw an exception.
         else:
-            print("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
-            return UnknownCommand.UnknownCommand()
+            if create_unknown_command_if_not_recognized:
+                print("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
+                return UnknownCommand()
+            else:
+                print("Command line is unknown syntax.")
+                raise ValueError('Unrecognized command "' + command_string + '"')

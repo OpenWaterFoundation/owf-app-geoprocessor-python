@@ -205,7 +205,7 @@ def read_file_into_string_list(filename):
     return string_list
 
 # converts a parameter value in string format to a parameter value in list format
-def __to_correct_format(parameter_value):
+def to_correct_format(parameter_value):
     """
     The command file (txt) only contains lines of strings. The parameter values within each command line, are,
     initially all string format. However, it is required that some parameter values be list format. This function

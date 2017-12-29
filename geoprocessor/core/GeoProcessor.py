@@ -13,6 +13,8 @@ import os
 import sys
 import traceback
 
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+
 class GeoProcessor():
     """
     Overarching class that performs the work of the geoprocessing tool
@@ -261,6 +263,12 @@ class GeoProcessor():
             # Append the initialized command (object with parameters) to the geoprocessor command list.
             self.commands.append(command_object)
 
+            debug = True
+            if debug:
+                command_object.print_for_debug()
+                print("First command debug:")
+                self.commands[0].print_for_debug()
+
     def reset_data_for_run_start(self):
         """
         Reset the processor data prior to running the commands.
@@ -482,6 +490,7 @@ class GeoProcessor():
 
         Args:
             command_file The name of the command file to read.
+            :rtype: object
         """
 
         self.read_command_file(command_file)

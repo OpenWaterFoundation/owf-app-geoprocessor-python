@@ -15,3 +15,4 @@ if __name__ == "__main__":
     processor = GeoProcessor.GeoProcessor()
     processor.process_command_file(os.path.join(cmdFileDir, "create_layers_test.txt"))
     print processor.geolayers
+    print processor.geolists

@@ -66,7 +66,7 @@ class CreateGeolayers(AbstractCommand):
 
         # Check that parameter SourceList is a non-empty, non-None string.
         if not validators.validate_string(self.get_parameter_value('SourceList'),False,False):
-            message = "SourceList parameter has no value.  Specify a non-empty string."
+            message = "SourceList parameter has no value. Specify a non-empty string."
             warning += "\n" + message
             self.command_status.add_to_log(command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, "Specify text for the SourceList parameter."))
@@ -152,8 +152,8 @@ class CreateGeolayers(AbstractCommand):
             else:
                 layer_id = None
 
-            # If a valid geolayer ID was defined, append the geolayer to the geoprocessor geolayer list. Else, throw
-            # an exception.
+            # If a valid geolayer ID was defined, append the geolayer to the geoprocessor geolayer list. Else, raise
+            # an error.
             if layer_id:
                 self.command_processor.geolayers[layer_id] = v_layer_item
 

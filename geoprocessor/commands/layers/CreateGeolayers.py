@@ -15,6 +15,8 @@ import ogr
 
 from qgis.core import QgsVectorLayer
 
+import logging
+
 # Inherit from AbstractCommand
 class CreateGeolayers(AbstractCommand):
     """Creates (a) geolayer(s) within the geoprocessor.
@@ -62,35 +64,37 @@ class CreateGeolayers(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        # TODO smalers 2017-12-25 need to log the warnings
+        logger = logging.getLogger("gp")
 
         # Check that parameter SourceList is a non-empty, non-None string.
-        if not validators.validate_string(self.get_parameter_value('SourceList'),False,False):
-            message = "SourceList parameter has no value. Specify a non-empty string."
+        pv_SourceList = self.get_parameter_value(parameter_name='SourceList', command_parameters=command_parameters)
+        if not validators.validate_string(pv_SourceList, False, False):
+            message = "SourceList parameter has no value."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, "Specify text for the SourceList parameter."))
-            print(message)
+            logger.warning(message)
 
         # Check that parameter SourceList is a string that can be converted into a list.
-        if not validators.validate_list(self.get_parameter_value('SourceList'), False, False):
-            message = "SourceList parameter is not a valid list. Specify a list for the SourceList parameter."
+        if not validators.validate_list(pv_SourceList, False, False):
+            message = "SourceList parameter is not a valid list."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            "Specify list for the SourceList parameter."))
-            print(message)
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, "Specify list for the SourceList parameter."))
+            logger.warning(message)
 
         # Check that parameter CommandStatus is one of the valid Command Status Types.
-        pv_CommandStatus = self.get_parameter_value('CommandStatus')
-        if not validators.validate_string_in_list(pv_CommandStatus, command_status_type.get_command_status_types(),
-                                                  True, True):
+        pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus', command_parameters=command_parameters)
+        if not validators.validate_string_in_list(pv_CommandStatus,
+                                                  command_status_type.get_command_status_types(), True, True):
             message = 'The requested command status "' + pv_CommandStatus + '"" is invalid.'
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            "Specify a valid command status."))
-            print(message)
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, "Specify a valid command status."))
+            logger.warning(message)
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -99,8 +103,7 @@ class CreateGeolayers(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            # Message.printWarning ( warning_level,
-            #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
+            logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity

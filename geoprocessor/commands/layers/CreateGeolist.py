@@ -11,6 +11,8 @@ import geoprocessor.util.command as command_util
 import geoprocessor.util.geo as geo_util
 import geoprocessor.util.validators as validators
 
+import logging
+
 # Inherit from AbstractCommand
 class CreateGeolist(AbstractCommand):
     """Creates a geolist within the geoprocessor.
@@ -55,45 +57,48 @@ class CreateGeolist(AbstractCommand):
         """
 
         warning = ""
-        # TODO smalers 2017-12-25 need to log the warnings
+        logger = logging.getLogger("gp")
 
         # Check that parameter GeoIdList is a non-empty, non-None string.
-        if not validators.validate_string(self.get_parameter_value('GeoIdList'), False, False):
-            message = "GeoIdList parameter has no value. Specify a non-empty string."
+        pv_GeoIdList = self.get_parameter_value(parameter_name='GeoIdList', command_parameters=command_parameters)
+        if not validators.validate_string(pv_GeoIdList, False, False):
+            message = "GeoIdList parameter has no value."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            "Specify text for the GeoIdList parameter."))
-            print(message)
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, "Specify text for the GeoIdList parameter."))
+            logger.warning(warning)
 
         # Check that parameter GeoIdList is a string that can be converted into a list.
-        if not validators.validate_list(self.get_parameter_value('GeoIdList'), False, False):
-            message = "GeoIdList parameter is not a valid list. Specify a list for the GeoIdList parameter."
+        if not validators.validate_list(pv_GeoIdList, False, False):
+            message = "GeoIdList parameter is not a valid list."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            "Specify list for the GeoIdList parameter."))
-            print(message)
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, "Specify list for the GeoIdList parameter."))
+            logger.warning(warning)
 
         # Check that parameter GeolistId is a non-empty, non-None string.
-        if not validators.validate_string(self.get_parameter_value('GeolistId'), False, False):
-            message = "GeolistId parameter has no value. Specify a non-empty string."
+        pv_GeolistId = self.get_parameter_value(parameter_name='GeolistId', command_parameters=command_parameters)
+        if not validators.validate_string(pv_GeolistId, False, False):
+            message = "GeolistId parameter has no value."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            "Specify text for the GeolistId parameter."))
-            print(message)
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, "Specify text for the GeolistId parameter."))
+            logger.warning(warning)
 
         # Check that parameter CommandStatus is one of the valid Command Status Types.
-        pv_CommandStatus = self.get_parameter_value('CommandStatus')
-        if not validators.validate_string_in_list(pv_CommandStatus, command_status_type.get_command_status_types(),
-                                                  True, True):
+        pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus',
+                                                    command_parameters=command_parameters)
+        if not validators.validate_string_in_list(pv_CommandStatus,
+                                                  command_status_type.get_command_status_types(), True, True):
             message = 'The requested command status "' + pv_CommandStatus + '"" is invalid.'
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            "Specify a valid command status."))
-            print(message)
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, "Specify a valid command status."))
+            logger.warning(warning)
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -102,8 +107,7 @@ class CreateGeolist(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            # Message.printWarning ( warning_level,
-            #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
+            logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity

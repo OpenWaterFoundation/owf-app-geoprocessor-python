@@ -167,6 +167,14 @@ class CreateGeolayers(AbstractCommand):
             raise IOError("Vector file from file ({}) is invalid".format(file_pathname))
 
     def run_command(self):
+        """
+        Run the command. Create (a) Geolayer(s) and register in the GeoProcessor. Print the message to the log file.
+
+        Returns:
+            Nothing
+        """
+        logger = logging.getLogger(__name__)
+        warning_count = 0
 
         # Get the SourceList parameter value in string format. Convert the SourceList paramter value to list format.
         pv_SourceList = self.get_parameter_value("SourceList")
@@ -238,9 +246,20 @@ class CreateGeolayers(AbstractCommand):
                     if v_layer_item:
                         self.command_processor.geolayers[feature_class] = v_layer_item
                     else:
+                        warning_count += 1
                         raise IOError("Vector file from feature class ({}) is invalid".format(feature_class))
 
             # Otherwise, throw a Value Error.
             else:
+                warning_count += 1
                 raise ValueError("The source ({}) is invalid. Enter the full pathname to a spatial data file, a "
                                  "directory containing spatial data files, or a file geodatabase".format(source))
+
+        # If no warnings were thrown, print success message to the log file. Otherwise print fail message to log file
+        # and throw a RuntimeError.
+        if warning_count > 0:
+            message = "There were {} warnings processing the command.".format(warning_count)
+            logger.warning(message)
+            raise RuntimeError(message)
+        else:
+            logger.info("CreateGeolayers command was successfully run without any warnings.")

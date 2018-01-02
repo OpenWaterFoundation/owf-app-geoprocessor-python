@@ -114,6 +114,14 @@ class CreateGeolist(AbstractCommand):
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
     def run_command(self):
+        """
+        Run the command. Create a Geolist and register it in the GeoProcessor. Print the message to the log file.
+
+        Returns:
+            Nothing
+        """
+        logger = logging.getLogger(__name__)
+        warning_count = 0
 
         # Get the GeoIdList in string format. Convert the GeoIdList parameter value to list format.
         pv_GeoIdList = self.get_parameter_value("GeoIdList")
@@ -124,9 +132,6 @@ class CreateGeolist(AbstractCommand):
 
         # A list that will hold the id of each geolayer to be included in the newly create geolist.
         list_of_geolayers_to_include = []
-
-        # Boolean to flag if any error occurs during the run_command function.
-        error_occurred = False
 
         # Iterate through the user-defined geo_ids (can be geolayer or geolist id).
         for geo_id in pv_GeoIdList:
@@ -147,12 +152,19 @@ class CreateGeolist(AbstractCommand):
             # error_occurred flag as TRUE.
             else:
 
-                error_occurred = True
+                warning_count += 1
                 raise ValueError("ID ({}) is not a valid geolayer id or valid geolist id.".format(geo_id))
 
 
         # If no error occurred and there is at least one geolayer id to include in the new geolist, append the geolist
         # to the geoprocessor geolists dictionary with the user-defined geolist id as the key and the list of geolayer
         # ids as the value.
-        if not error_occurred and list_of_geolayers_to_include:
+        if warning_count == 0 and list_of_geolayers_to_include:
             self.command_processor.geolists[pv_GeolistId] = list_of_geolayers_to_include
+            logger.info("CreateGeolist command was successfully run without any warnings. Geolist {} created.".format(
+                pv_GeolistId))
+
+        else:
+            message = "There were {} warnings processing the command.".format(warning_count)
+            logger.warning(message)
+            raise RuntimeError(message)

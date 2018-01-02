@@ -7,6 +7,7 @@
 
 import geoprocessor.core.GeoProcessor as GeoProcessor
 import os
+import geoprocessor.util.geo as geo
 
 
 if __name__ == "__main__":

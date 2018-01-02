@@ -38,9 +38,9 @@ class CreateGeolist(AbstractCommand):
         super(CreateGeolist, self).__init__()
         self.command_name = "CreateGeolist"
         self.command_parameter_metadata = [
-            CommandParameterMetadata("GeoIdList", type([]), None),
-            CommandParameterMetadata("GeolistId", type(""), None),
-            CommandParameterMetadata("CommandStatus", type(""), None)
+            CommandParameterMetadata("GeoIdList", type([])),
+            CommandParameterMetadata("GeolistId", type("")),
+            CommandParameterMetadata("CommandStatus", type(""))
         ]
 
     def check_command_parameters(self, command_parameters):

@@ -46,8 +46,8 @@ class CreateGeolayers(AbstractCommand):
         super(CreateGeolayers, self).__init__()
         self.command_name = "CreateGeolayers"
         self.command_parameter_metadata = [
-            CommandParameterMetadata("SourceList", type([]), None),
-            CommandParameterMetadata("CommandStatus", type(""), None)
+            CommandParameterMetadata("SourceList", type([])),
+            CommandParameterMetadata("CommandStatus", type(""))
         ]
 
     def check_command_parameters(self, command_parameters):

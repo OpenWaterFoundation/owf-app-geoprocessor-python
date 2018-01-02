@@ -1,4 +1,4 @@
-#CreateGeolist command
+# CreateGeolist command
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -13,8 +13,10 @@ import geoprocessor.util.validators as validators
 
 import logging
 
+
 # Inherit from AbstractCommand
 class CreateGeolist(AbstractCommand):
+
     """Creates a geolist within the geoprocessor.
 
     A geolist is a collection of registered geolayers. Geolists are useful when iterating over a group of geolayers in
@@ -22,11 +24,11 @@ class CreateGeolist(AbstractCommand):
     the geolist.
 
     If the item in the GeoIdList is a geolayer id, then that geolayer id is added to the newly created geolist.
-    If the item in the GeoIdList is a geolidy id, then all of the geolayer ids within that geolist are added to the
+    If the item in the GeoIdList is a geolist id, then all of the geolayer ids within that geolist are added to the
     newly created geolist.
 
     Args:
-        GeoIdList (list): a list of registered geolayer ids and registered geolist ids. The relater geolayers will be
+        GeoIdList (list): a list of registered geolayer ids and registered geolist ids. The related geolayers will be
         included in the newly-created geolist (explained above).
         GeolistId (str): a unique id that will be used to identify the geolist"""
 
@@ -154,7 +156,6 @@ class CreateGeolist(AbstractCommand):
 
                 warning_count += 1
                 raise ValueError("ID ({}) is not a valid geolayer id or valid geolist id.".format(geo_id))
-
 
         # If no error occurred and there is at least one geolayer id to include in the new geolist, append the geolist
         # to the geoprocessor geolists dictionary with the user-defined geolist id as the key and the list of geolayer

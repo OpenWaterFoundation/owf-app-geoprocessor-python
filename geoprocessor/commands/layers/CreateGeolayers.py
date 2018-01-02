@@ -17,6 +17,7 @@ from qgis.core import QgsVectorLayer
 
 import logging
 
+
 # Inherit from AbstractCommand
 class CreateGeolayers(AbstractCommand):
     """Creates (a) geolayer(s) within the geoprocessor.
@@ -86,7 +87,8 @@ class CreateGeolayers(AbstractCommand):
             logger.warning(message)
 
         # Check that parameter CommandStatus is one of the valid Command Status Types.
-        pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus', command_parameters=command_parameters)
+        pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus',
+                                                    command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_CommandStatus,
                                                   command_status_type.get_command_status_types(), True, True):
             message = 'The requested command status "' + pv_CommandStatus + '"" is invalid.'
@@ -108,7 +110,6 @@ class CreateGeolayers(AbstractCommand):
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
-
 
     def convert_file_to_v_layer(self, file_pathname, use_filename=True):
         """
@@ -194,15 +195,14 @@ class CreateGeolayers(AbstractCommand):
                 # Geolayer list.
                 CreateGeolayers.convert_file_to_v_layer(self, source, use_filename)
 
-
             # If the source is a full path to a directory, continue. In this scenario, the filename will ALWAYS be used
             # as the layer ID.
             elif os.path.isdir(source) and not source.endswith(".gdb"):
 
                 # Iterate over the files in the source directory, continue if the file is a spatial data file (geojson
                 # or shp extension).
-                for file in os.listdir(source):
-                    if file.endswith(".shp") or file.endswith(".geojson"):
+                for source_file in os.listdir(source):
+                    if source_file.endswith(".shp") or source_file.endswith(".geojson"):
 
                         # Convert the spatial data file into a Geolayer and append the Geolayer object to the
                         # GeoProcessor's Geolayer list.

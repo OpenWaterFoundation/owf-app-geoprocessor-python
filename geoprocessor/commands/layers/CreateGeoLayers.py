@@ -6,6 +6,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
+import geoprocessor.core.GeoLayerMetadata as GeoLayerMetadata
 
 import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
@@ -65,7 +66,7 @@ class CreateGeoLayers(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        logger = logging.getLogger("gp")
+        logger = logging.getLogger(__name__)
 
         # Check that parameter SourceList is a non-empty, non-None string.
         pv_SourceList = self.get_parameter_value(parameter_name='SourceList', command_parameters=command_parameters)
@@ -136,30 +137,25 @@ class CreateGeoLayers(AbstractCommand):
         # Envelop the spatial data file as a QGSVectorLayer object.
         v_layer = QgsVectorLayer(file_pathname, file_wo_ext, 'ogr')
 
-        # If the QGSVectorLayer is valid, return a list, otherwise throw an exception.
-        # In future versions of this software, the QgsVectorLayer will be a class object and the items in the list
-        # (described below) will be properties of that instance
-        # list item 1: the QgsVectorLayer object
-        # list item 2: the source pathname as the second item
+        # If the QGSVectorLayer is valid, continue.
         if v_layer.isValid():
-
-            v_layer_item = [v_layer, file_pathname]
 
             # Define the unique GeoLayer ID.
             # If use_filename is TRUE, use the source filename as the GeoLayer id.
             if use_filename:
 
-                # get the layer id from the source file
+                # Get the layer id from the source file
                 extension = os.path.splitext(file_pathname)[1]
                 layer_id = os.path.basename(file_pathname).replace(extension, "")
 
             else:
                 layer_id = None
 
-            # If a valid GeoLayer ID was defined, append the GeoLayer to the geoprocessor GeoLayer list. Else, raise
-            # an error.
+            # If a valid GeoLayer ID was defined, create a GeoLayer object and add it to the GeoProcessor's
+            # GeoLayer list. Else, throw an exception.
             if layer_id:
-                self.command_processor.GeoLayers[layer_id] = v_layer_item
+                newGeoLayer = GeoLayerMetadata.GeoLayerMetadata(geolayer_id=layer_id, geolayer_qgs_object=v_layer, geolayer_source_path=file_pathname)
+                self.command_processor.GeoLayers.append(newGeoLayer)
 
             else:
                 raise ValueError("Vector file from file ({}) was not appended to the layer list because the GeoLayer "
@@ -241,10 +237,13 @@ class CreateGeoLayers(AbstractCommand):
                         QgsVectorLayer(str(source) + "|layername=" + str(feature_class), feature_class,
                                        'ogr'), os.path.join(source, str(feature_class))]
 
-                    # If a valid GeoLayer ID was defined, append the GeoLayer to the geoprocessor GeoLayer list. Else,
-                    # throw an exception.
+                    # If a valid GeoLayer ID was defined, create a GeoLayer object and add it to the GeoProcessor's
+                    # GeoLayer list. Else, throw an exception.
                     if v_layer_item:
-                        self.command_processor.GeoLayers[feature_class] = v_layer_item
+                        newGeoLayer = GeoLayerMetadata.GeoLayerMetadata(geolayer_id=feature_class,
+                                                                        geolayer_qgs_object=v_layer_item[0],
+                                                                        geolayer_source_path=v_layer_item[1])
+                        self.command_processor.GeoLayers.append(newGeoLayer)
                     else:
                         warning_count += 1
                         message = "Vector file from feature class ({}) is invalid".format(feature_class)

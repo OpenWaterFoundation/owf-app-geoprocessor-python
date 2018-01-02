@@ -46,16 +46,11 @@ class GeoProcessor(object):
         # Property dictionary that holds all geoprocessor properties.
         self.properties = {}
 
-        # Geolayer dictionary that holds all of the geoprocessor GeoLayers results.
-        # key: GeoLayer id
-        # value: list of GeoLayer properties
-        # list item1: the QGSVectorLayer object, list item2: the full pathname to the original source spatial data file
-        self.GeoLayers = {}
+        # GeoLayer list that holds all registered GeoLayer objects.
+        self.GeoLayers = []
 
-        # Geolist dictionary that holds all of the geoprocessor GeoLists.
-        # key: GeoList id
-        # value: list of GeoLayer ids
-        self.GeoLists = {}
+        # GeoList list that holds all registered GeoList objects.
+        self.GeoLists = []
 
         # Set properties for QGIS environment.
         # temp_dir: the full pathname to the folder that will hold all temporary, intermediate files created by the

@@ -6,6 +6,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.GeoListMetadata import GeoListMetadata
 
 import geoprocessor.util.command as command_util
 import geoprocessor.util.geo as geo_util
@@ -59,7 +60,7 @@ class CreateGeoList(AbstractCommand):
         """
 
         warning = ""
-        logger = logging.getLogger("gp")
+        logger = logging.getLogger(__name__)
 
         # Check that parameter GeoIdList is a non-empty, non-None string.
         pv_GeoIdList = self.get_parameter_value(parameter_name='GeoIdList', command_parameters=command_parameters)
@@ -158,11 +159,12 @@ class CreateGeoList(AbstractCommand):
                 warning = "ID ({}) is not a valid GeoLayer id or valid GeoList id.".format(GeoId)
                 raise ValueError(warning)
 
-        # If no error occurred and there is at least one GeoLayer id to include in the new GeoList, append the GeoList
-        # to the geoprocessor GeoLists dictionary with the user-defined GeoList id as the key and the list of GeoLayer
-        # ids as the value.
+        # If no error occurred and there is at least one GeoLayer id to include in the new GeoList, create a GeoList
+        # object and add it to the GeoProcessor's GeoLists list. Else, throw an error.
         if warning_count == 0 and list_of_GeoLayers_to_include:
-            self.command_processor.GeoLists[pv_GeoListId] = list_of_GeoLayers_to_include
+
+            newGeoList = GeoListMetadata(geolist_id=pv_GeoListId, geolayer_id_list=list_of_GeoLayers_to_include)
+            self.command_processor.GeoLists.append(newGeoList)
             logger.info("CreateGeoList command was successfully run without any warnings. GeoList {} created.".format(
                 pv_GeoListId))
 

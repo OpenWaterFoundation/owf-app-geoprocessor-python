@@ -1,5 +1,6 @@
 import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
 
+
 # Inherit from AbstractCommand
 class UnknownCommand(AbstractCommand.AbstractCommand):
     def __init__(self):
@@ -22,7 +23,7 @@ class UnknownCommand(AbstractCommand.AbstractCommand):
 
         # Set data in the parent class, but do not attempt to parse the command since unknown syntax
         full_initialization = False
-        super(UnknownCommand,self).initialize_command(command_string,processor,full_initialization)
+        super(UnknownCommand, self).initialize_command(command_string, processor, full_initialization)
 
     def run_command(self):
         print("In UnknownCommand.run_command")

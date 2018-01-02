@@ -9,7 +9,8 @@ SUCCESS = 'SUCCESS'
 WARNING = 'WARNING'
 FAILURE = 'FAILURE'
 
-__status_list = [ INFO, SUCCESS, WARNING, FAILURE ]
+__status_list = [INFO, SUCCESS, WARNING, FAILURE]
+
 
 def get_command_status_types(sort=False):
     """
@@ -22,14 +23,15 @@ def get_command_status_types(sort=False):
         The list of status types, for example for use in command parameter choice.
 
     """
-    if ( sort ):
+    if sort:
         # Sort alphabetically
-        return [ INFO, FAILURE, SUCCESS, WARNING ]
+        return [INFO, FAILURE, SUCCESS, WARNING]
     else:
         # Return in order of severity (good to bad)
-        return [ INFO, SUCCESS, WARNING, FAILURE ]
+        return [INFO, SUCCESS, WARNING, FAILURE]
 
-def max_severity ( command_status1, command_status2 ):
+
+def max_severity(command_status1, command_status2):
     """
     Return the maximum (most severe) status of the given two status.
 
@@ -47,16 +49,16 @@ def max_severity ( command_status1, command_status2 ):
     pos = 0
     for status in __status_list:
         pos = pos + 1
-        if ( command_status1 == status ):
+        if command_status1 == status:
             pos1 = pos
             break
     pos = 0
     for status in __status_list:
         pos = pos + 1
-        if ( command_status2 == status ):
+        if command_status2 == status:
             pos2 = pos
             break
-    if ( pos1 >= pos2 ):
+    if pos1 >= pos2:
         return command_status1
     else:
         return command_status2

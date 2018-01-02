@@ -10,18 +10,26 @@ import geoprocessor.core.command_status_type as command_status_type
 import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
 
+
 # Inherit from AbstractCommand
 class EndIf(AbstractCommand):
     def __init__(self):
         super(EndIf, self).__init__()
         self.command_name = "EndIf"
         self.command_parameter_metadata = [
-            CommandParameterMetadata("Name",type(""),None)
+            CommandParameterMetadata("Name", type(""))
         ]
 
     def check_command_parameters(self, command_parameters):
-        '''Check the command parameters for validity.'''
-        print('In EndIf.check_command_parameters - need to complete.' )
+        """
+        Check the command parameters for validity.
+        Args:
+            command_parameters:
+
+        Returns:
+
+        """
+        print('In EndIf.check_command_parameters - need to complete.')
 
     def get_name(self):
         """

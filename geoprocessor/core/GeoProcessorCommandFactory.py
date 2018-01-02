@@ -4,6 +4,7 @@ from geoprocessor.commands.layers.CreateGeolayers import CreateGeolayers
 from geoprocessor.commands.layers.CreateGeolist import CreateGeolist
 
 from geoprocessor.commands.logging.Message import Message
+from geoprocessor.commands.logging.StartLog import StartLog
 
 from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.EndIf import EndIf
@@ -11,7 +12,12 @@ from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
 from geoprocessor.commands.running.SetProperty import SetProperty
 
+from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
+
+from geoprocessor.commands.util.CopyFile import CopyFile
+from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
+
 
 class GeoProcessorCommandFactory(object):
     """
@@ -26,14 +32,18 @@ class GeoProcessorCommandFactory(object):
     # 1) It provides a registry of all commands known to the geoprocessor (via this factory class)
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
+        "COPYFILE": CopyFile(),
         "CREATEGEOLAYERS": CreateGeolayers(),
         "CREATEGEOLIST": CreateGeolist(),
+        "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
         "FOR": For(),
         "IF": If(),
         "MESSAGE": Message(),
-        "SETPROPERTY": SetProperty()
+        "REMOVEFILE": RemoveFile(),
+        "SETPROPERTY": SetProperty(),
+        "STARTLOG": StartLog()
     }
 
     def __init__(self):
@@ -57,7 +67,7 @@ class GeoProcessorCommandFactory(object):
         else:
             return False
 
-    def new_command(self, command_string, create_unknown_command_if_not_recognized):
+    def new_command(self, command_string, create_unknown_command_if_not_recognized=True):
         """
         Creates the object of a command class called from a command line of the command file.
 
@@ -80,17 +90,17 @@ class GeoProcessorCommandFactory(object):
 
         # Blank line so insert a BlankCommand command.
         if len(command_string_trimmed) == 0:
-            #return BlankCommand.BlankCommand()
+            # return BlankCommand.BlankCommand()
             pass
 
         # Comment line.
-        #elif command_string_trimmed[:1] == '#':
-            #return CommentCommand.CommentCommand()
+        # elif command_string_trimmed[:1] == '#':
+            # return CommentCommand.CommentCommand()
             pass
 
         # The symbol '(' was found.
         # Assume command of syntax CommandName(Param1="...",Param2="...").
-        elif (paren_pos != -1):
+        elif paren_pos != -1:
 
             # Get command name from command string, command name is before the first open parenthesis.
             command_name = command_util.parse_command_name_from_command_string(command_string_trimmed)
@@ -110,22 +120,30 @@ class GeoProcessorCommandFactory(object):
                     return command
             else:
                 # Constructing the following way always seems to work properly
-                if ( command_name_upper == "CREATEGEOLAYERS" ):
+                if command_name_upper == "COPYFILE":
+                    return CopyFile()
+                elif command_name_upper == "CREATEGEOLAYERS":
                     return CreateGeolayers()
-                elif ( command_name_upper == "CREATEGEOLIST" ):
+                elif command_name_upper == "CREATEGEOLIST":
                     return CreateGeolist()
-                elif ( command_name_upper == "ENDFOR" ):
+                elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
+                    return CreateRegressionTestCommandFile()
+                elif command_name_upper == "ENDFOR":
                     return EndFor()
-                elif ( command_name_upper == "ENDIF" ):
+                elif command_name_upper == "ENDIF":
                     return EndIf()
-                elif ( command_name_upper == "FOR" ):
+                elif command_name_upper == "FOR":
                     return For()
-                elif ( command_name_upper == "IF" ):
+                elif command_name_upper == "IF":
                     return If()
-                elif ( command_name_upper == "MESSAGE" ):
+                elif command_name_upper == "MESSAGE":
                     return Message()
-                elif ( command_name_upper == "SETPROPERTY" ):
+                elif command_name_upper == "REMOVEFILE":
+                    return RemoveFile()
+                elif command_name_upper == "SETPROPERTY":
                     return SetProperty()
+                elif command_name_upper == "STARTLOG":
+                    return StartLog()
 
             # If here the command name was not matched.
             # Don't know the command so create an UnknownCommand or throw an exception.

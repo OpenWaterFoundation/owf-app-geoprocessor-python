@@ -1,4 +1,4 @@
-# CreateGeolayers command
+# CreateGeoLayers command
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -19,32 +19,32 @@ import logging
 
 
 # Inherit from AbstractCommand
-class CreateGeolayers(AbstractCommand):
-    """Creates (a) geolayer(s) within the geoprocessor.
+class CreateGeoLayers(AbstractCommand):
+    """Creates (a) GeoLayer(s) within the geoprocessor.
 
-    Geolayers are originally stored on a local machine as a spatial data file (geojson, shp, feature class, etc). In
+    GeoLayers are originally stored on a local machine as a spatial data file (geojson, shp, feature class, etc). In
     order for the geoprocessor to use and manipulate spatial data files, they must be incorporated into Qgs Vector
     Object layers. This command will take a single or a list of spatial data sources and incorporate the available
-    spatial data files as geoprocessor geolayers (or QgsVectorLayer object). The user can declare any of the following
+    spatial data files as geoprocessor GeoLayers (or QgsVectorLayer object). The user can declare any of the following
     spatial data sources:
 
         a file (geojson or shp): the full pathname to a spatial data file. That spatial data file will be added to the
-        geoprocessor as a single geolayer
+        geoprocessor as a single GeoLayer
 
         a folder: the full pathname to a folder containing one or many spatial data files. All shapefile and geojson
-        spatial data files within the specified folder will be added to the geoprocessor as individual geolayers
+        spatial data files within the specified folder will be added to the geoprocessor as individual GeoLayers
 
         a file geodatabase: the full pathname to a folder that ends in '.gdb'. All feature classes within this file
-        geodatabase will be added to the geoprocessor as individual geolayers
+        geodatabase will be added to the geoprocessor as individual GeoLayers
 
     Args:
-        SourceList: a list of source files, explained above, that will be added to the GeoProcessor as geolayers"""
+        SourceList: a list of source files, explained above, that will be added to the GeoProcessor as GeoLayers"""
 
     def __init__(self):
         """Initialize the command"""
 
-        super(CreateGeolayers, self).__init__()
-        self.command_name = "CreateGeolayers"
+        super(CreateGeoLayers, self).__init__()
+        self.command_name = "CreateGeoLayers"
         self.command_parameter_metadata = [
             CommandParameterMetadata("SourceList", type([])),
             CommandParameterMetadata("CommandStatus", type(""))
@@ -127,7 +127,7 @@ class CreateGeolayers(AbstractCommand):
             Raises:
                 ValueError if the layer ID is None.
                 IOError if the created QGSVectorLayer Object is invalid. If this is the case, the QgsVectorLayer
-                Object will not be appended to the GeoProcessor's Geolayer list
+                Object will not be appended to the GeoProcessor's GeoLayer list
             """
 
         # Get the name of the spatial data file wihtout the extension.
@@ -145,8 +145,8 @@ class CreateGeolayers(AbstractCommand):
 
             v_layer_item = [v_layer, file_pathname]
 
-            # Define the unique Geolayer ID.
-            # If use_filename is TRUE, use the source filename as the geolayer id.
+            # Define the unique GeoLayer ID.
+            # If use_filename is TRUE, use the source filename as the GeoLayer id.
             if use_filename:
 
                 # get the layer id from the source file
@@ -156,20 +156,20 @@ class CreateGeolayers(AbstractCommand):
             else:
                 layer_id = None
 
-            # If a valid geolayer ID was defined, append the geolayer to the geoprocessor geolayer list. Else, raise
+            # If a valid GeoLayer ID was defined, append the GeoLayer to the geoprocessor GeoLayer list. Else, raise
             # an error.
             if layer_id:
-                self.command_processor.geolayers[layer_id] = v_layer_item
+                self.command_processor.GeoLayers[layer_id] = v_layer_item
 
             else:
-                raise ValueError("Vector file from file ({}) was not appended to the layer list because the geolayer "
+                raise ValueError("Vector file from file ({}) was not appended to the layer list because the GeoLayer "
                                  "id ({}) is invalid.".format(file_pathname, layer_id))
         else:
             raise IOError("Vector file from file ({}) is invalid".format(file_pathname))
 
     def run_command(self):
         """
-        Run the command. Create (a) Geolayer(s) and register in the GeoProcessor. Print the message to the log file.
+        Run the command. Create (a) GeoLayer(s) and register in the GeoProcessor. Print the message to the log file.
 
         Returns:
             Nothing
@@ -182,7 +182,7 @@ class CreateGeolayers(AbstractCommand):
         pv_SourceList = command_util.to_correct_format(pv_SourceList)
 
         # For now, use_filename is always set to TRUE. This means that in every scenario, the spatial data file's
-        # filename is used as the Geolayer's ID.
+        # filename is used as the GeoLayer's ID.
         use_filename = True
 
         # Iterate over the sources of the pv_SourceList.
@@ -191,9 +191,9 @@ class CreateGeolayers(AbstractCommand):
             # If the source is a full path to a spatial data file, continue.
             if os.path.isfile(source):
 
-                # Convert the spatial data file into a Geolayer and append the Geolayer object to the GeoProcessor's
-                # Geolayer list.
-                CreateGeolayers.convert_file_to_v_layer(self, source, use_filename)
+                # Convert the spatial data file into a GeoLayer and append the GeoLayer object to the GeoProcessor's
+                # GeoLayer list.
+                CreateGeoLayers.convert_file_to_v_layer(self, source, use_filename)
 
             # If the source is a full path to a directory, continue. In this scenario, the filename will ALWAYS be used
             # as the layer ID.
@@ -204,9 +204,9 @@ class CreateGeolayers(AbstractCommand):
                 for source_file in os.listdir(source):
                     if source_file.endswith(".shp") or source_file.endswith(".geojson"):
 
-                        # Convert the spatial data file into a Geolayer and append the Geolayer object to the
-                        # GeoProcessor's Geolayer list.
-                        CreateGeolayers.convert_file_to_v_layer(self, os.path.join(source, file), True)
+                        # Convert the spatial data file into a GeoLayer and append the GeoLayer object to the
+                        # GeoProcessor's GeoLayer list.
+                        CreateGeoLayers.convert_file_to_v_layer(self, os.path.join(source, source_file), True)
 
             # If the source is a full path to a file geodatabase, continue. In this scenario, the filename will ALWAYS
             # be used as the layer ID.
@@ -241,19 +241,21 @@ class CreateGeolayers(AbstractCommand):
                         QgsVectorLayer(str(source) + "|layername=" + str(feature_class), feature_class,
                                        'ogr'), os.path.join(source, str(feature_class))]
 
-                    # If a valid geolayer ID was defined, append the geolayer to the geoprocessor geolayer list. Else,
+                    # If a valid GeoLayer ID was defined, append the GeoLayer to the geoprocessor GeoLayer list. Else,
                     # throw an exception.
                     if v_layer_item:
-                        self.command_processor.geolayers[feature_class] = v_layer_item
+                        self.command_processor.GeoLayers[feature_class] = v_layer_item
                     else:
                         warning_count += 1
-                        raise IOError("Vector file from feature class ({}) is invalid".format(feature_class))
+                        message = "Vector file from feature class ({}) is invalid".format(feature_class)
+                        raise IOError(message)
 
             # Otherwise, throw a Value Error.
             else:
                 warning_count += 1
-                raise ValueError("The source ({}) is invalid. Enter the full pathname to a spatial data file, a "
-                                 "directory containing spatial data files, or a file geodatabase".format(source))
+                message = "The source ({}) is invalid. Enter the full pathname to a spatial data file, a directory " \
+                          "containing spatial data files, or a file geodatabase".format(source)
+                raise ValueError(message)
 
         # If no warnings were thrown, print success message to the log file. Otherwise print fail message to log file
         # and throw a RuntimeError.
@@ -262,4 +264,4 @@ class CreateGeolayers(AbstractCommand):
             logger.warning(message)
             raise RuntimeError(message)
         else:
-            logger.info("CreateGeolayers command was successfully run without any warnings.")
+            logger.info("CreateGeoLayers command was successfully run without any warnings.")

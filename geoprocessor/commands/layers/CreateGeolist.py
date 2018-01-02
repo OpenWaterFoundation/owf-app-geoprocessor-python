@@ -1,4 +1,4 @@
-# CreateGeolist command
+# CreateGeoList command
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -15,31 +15,31 @@ import logging
 
 
 # Inherit from AbstractCommand
-class CreateGeolist(AbstractCommand):
+class CreateGeoList(AbstractCommand):
 
-    """Creates a geolist within the geoprocessor.
+    """Creates a GeoList within the geoprocessor.
 
-    A geolist is a collection of registered geolayers. Geolists are useful when iterating over a group of geolayers in
-    a for loop. This command takes a list of geolayer ids and geolist ids and adds all of the relevant geolayer ids to
-    the geolist.
+    A GeoList is a collection of registered GeoLayers. GeoLists are useful when iterating over a group of GeoLayers in
+    a for loop. This command takes a list of GeoLayer ids and GeoList ids and adds all of the relevant GeoLayer ids to
+    the GeoList.
 
-    If the item in the GeoIdList is a geolayer id, then that geolayer id is added to the newly created geolist.
-    If the item in the GeoIdList is a geolist id, then all of the geolayer ids within that geolist are added to the
-    newly created geolist.
+    If the item in the GeoIdList is a GeoLayer id, then that GeoLayer id is added to the newly created GeoList.
+    If the item in the GeoIdList is a GeoList id, then all of the GeoLayer ids within that GeoList are added to the
+    newly created GeoList.
 
     Args:
-        GeoIdList (list): a list of registered geolayer ids and registered geolist ids. The related geolayers will be
-        included in the newly-created geolist (explained above).
-        GeolistId (str): a unique id that will be used to identify the geolist"""
+        GeoIdList (list): a list of registered GeoLayer ids and registered GeoList ids. The related GeoLayers will be
+        included in the newly-created GeoList (explained above).
+        GeoListId (str): a unique id that will be used to identify the GeoList"""
 
     def __init__(self):
         """Initialize the command"""
 
-        super(CreateGeolist, self).__init__()
-        self.command_name = "CreateGeolist"
+        super(CreateGeoList, self).__init__()
+        self.command_name = "CreateGeoList"
         self.command_parameter_metadata = [
             CommandParameterMetadata("GeoIdList", type([])),
-            CommandParameterMetadata("GeolistId", type("")),
+            CommandParameterMetadata("GeoListId", type("")),
             CommandParameterMetadata("CommandStatus", type(""))
         ]
 
@@ -80,14 +80,14 @@ class CreateGeolist(AbstractCommand):
                 CommandLogRecord(command_status_type.FAILURE, message, "Specify list for the GeoIdList parameter."))
             logger.warning(warning)
 
-        # Check that parameter GeolistId is a non-empty, non-None string.
-        pv_GeolistId = self.get_parameter_value(parameter_name='GeolistId', command_parameters=command_parameters)
-        if not validators.validate_string(pv_GeolistId, False, False):
-            message = "GeolistId parameter has no value."
+        # Check that parameter GeoListId is a non-empty, non-None string.
+        pv_GeoListId = self.get_parameter_value(parameter_name='GeoListId', command_parameters=command_parameters)
+        if not validators.validate_string(pv_GeoListId, False, False):
+            message = "GeoListId parameter has no value."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify text for the GeolistId parameter."))
+                CommandLogRecord(command_status_type.FAILURE, message, "Specify text for the GeoListId parameter."))
             logger.warning(warning)
 
         # Check that parameter CommandStatus is one of the valid Command Status Types.
@@ -117,7 +117,7 @@ class CreateGeolist(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command. Create a Geolist and register it in the GeoProcessor. Print the message to the log file.
+        Run the command. Create a GeoList and register it in the GeoProcessor. Print the message to the log file.
 
         Returns:
             Nothing
@@ -129,43 +129,44 @@ class CreateGeolist(AbstractCommand):
         pv_GeoIdList = self.get_parameter_value("GeoIdList")
         pv_GeoIdList = command_util.to_correct_format(pv_GeoIdList)
 
-        # Get the GeolistId in string format.
-        pv_GeolistId = self.get_parameter_value("GeolistId")
+        # Get the GeoListId in string format.
+        pv_GeoListId = self.get_parameter_value("GeoListId")
 
-        # A list that will hold the id of each geolayer to be included in the newly create geolist.
-        list_of_geolayers_to_include = []
+        # A list that will hold the id of each GeoLayer to be included in the newly create GeoList.
+        list_of_GeoLayers_to_include = []
 
-        # Iterate through the user-defined geo_ids (can be geolayer or geolist id).
-        for geo_id in pv_GeoIdList:
+        # Iterate through the user-defined GeoIds (can be GeoLayer or GeoList id).
+        for GeoId in pv_GeoIdList:
 
-            # If the id is a geolayer id, add that geolayer id to the list_of_geolayers_to_include list.
-            if geo_util.is_geolayer_id(self, geo_id):
+            # If the id is a GeoLayer id, add that GeoLayer id to the list_of_GeoLayers_to_include list.
+            if geo_util.is_geolayer_id(self, GeoId):
 
-                list_of_geolayers_to_include.append(geo_id)
+                list_of_GeoLayers_to_include.append(GeoId)
 
-            # If the id is a geolist id, add the geolayer ids within that geolist to the list_of_geolayers_to_include
+            # If the id is a GeoList id, add the GeoLayer ids within that GeoList to the list_of_GeoLayers_to_include
             # list.
-            elif geo_util.is_geolist_id(self, geo_id):
+            elif geo_util.is_geolist_id(self, GeoId):
 
-                geolayer_ids = geo_util.return_geolayer_ids_from_geolist_id(self, geo_id)
-                list_of_geolayers_to_include.extend(geolayer_ids)
+                GeoLayer_ids = geo_util.return_geolayer_ids_from_geolist_id(self, GeoId)
+                list_of_GeoLayers_to_include.extend(GeoLayer_ids)
 
-            # If the id is not a registered geolayer id or a registered geolist id, raise an error and mark
+            # If the id is not a registered GeoLayer id or a registered GeoList id, raise an error and mark
             # error_occurred flag as TRUE.
             else:
 
                 warning_count += 1
-                raise ValueError("ID ({}) is not a valid geolayer id or valid geolist id.".format(geo_id))
+                warning = "ID ({}) is not a valid GeoLayer id or valid GeoList id.".format(GeoId)
+                raise ValueError(warning)
 
-        # If no error occurred and there is at least one geolayer id to include in the new geolist, append the geolist
-        # to the geoprocessor geolists dictionary with the user-defined geolist id as the key and the list of geolayer
+        # If no error occurred and there is at least one GeoLayer id to include in the new GeoList, append the GeoList
+        # to the geoprocessor GeoLists dictionary with the user-defined GeoList id as the key and the list of GeoLayer
         # ids as the value.
-        if warning_count == 0 and list_of_geolayers_to_include:
-            self.command_processor.geolists[pv_GeolistId] = list_of_geolayers_to_include
-            logger.info("CreateGeolist command was successfully run without any warnings. Geolist {} created.".format(
-                pv_GeolistId))
+        if warning_count == 0 and list_of_GeoLayers_to_include:
+            self.command_processor.GeoLists[pv_GeoListId] = list_of_GeoLayers_to_include
+            logger.info("CreateGeoList command was successfully run without any warnings. GeoList {} created.".format(
+                pv_GeoListId))
 
         else:
-            message = "There were {} warnings processing the command.".format(warning_count)
-            logger.warning(message)
-            raise RuntimeError(message)
+            warning = "There were {} warnings processing the command.".format(warning_count)
+            logger.warning(warning)
+            raise RuntimeError(warning)

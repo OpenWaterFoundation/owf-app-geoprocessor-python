@@ -1,7 +1,7 @@
 import geoprocessor.util.command as command_util
 
-from geoprocessor.commands.layers.CreateGeolayers import CreateGeolayers
-from geoprocessor.commands.layers.CreateGeolist import CreateGeolist
+from geoprocessor.commands.layers.CreateGeoLayers import CreateGeoLayers
+from geoprocessor.commands.layers.CreateGeoList import CreateGeoList
 
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
@@ -33,8 +33,8 @@ class GeoProcessorCommandFactory(object):
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
         "COPYFILE": CopyFile(),
-        "CREATEGEOLAYERS": CreateGeolayers(),
-        "CREATEGEOLIST": CreateGeolist(),
+        "CREATEGEOLAYERS": CreateGeoLayers(),
+        "CREATEGEOLIST": CreateGeoList(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
@@ -123,9 +123,9 @@ class GeoProcessorCommandFactory(object):
                 if command_name_upper == "COPYFILE":
                     return CopyFile()
                 elif command_name_upper == "CREATEGEOLAYERS":
-                    return CreateGeolayers()
+                    return CreateGeoLayers()
                 elif command_name_upper == "CREATEGEOLIST":
-                    return CreateGeolist()
+                    return CreateGeoList()
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
                     return CreateRegressionTestCommandFile()
                 elif command_name_upper == "ENDFOR":

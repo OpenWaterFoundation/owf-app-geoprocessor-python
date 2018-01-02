@@ -1,6 +1,14 @@
-# Main GeoProcessor application
-# - this is a prototype to explore the design
-# - functionality is stubbed in
+"""
+This module provides access to the Open Water Foundation GeoProcessor tools via
+the gp application, which provides several run modes:
+
+- command shell
+- batch (gp --commands CommandFile)
+- user interface (gp)
+- http server
+
+The initial implementation focuses on batch and command shell.
+"""
 
 from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
 from geoprocessor.core.GeoProcessor import GeoProcessor
@@ -17,6 +25,7 @@ import platform
 import sys
 import traceback
 
+__geoprocessor_app_version = "0.0.1"
 
 class GeoProcessorCmd(cmd.Cmd):
     """
@@ -27,6 +36,8 @@ class GeoProcessorCmd(cmd.Cmd):
     See:  https://pymotw.com/2/cmd/
 
     Example commands:  run command-file.gp
+
+    Because the docstrings are usd for user help, documentation for functions is provided in in-lined comments.
     """
     def __init__(self):
         # Old style cmd.Cmd parent class in Python 2.7 does not inherit from object so be careful calling super().
@@ -55,12 +66,6 @@ class GeoProcessorCmd(cmd.Cmd):
         """
         Print information about the runtime environment.
         Run in the shell with:  printenv
-
-        Args:
-            line:
-
-        Returns:
-            Nothing.
         """
         print("Python version (sys.version) = " + sys.version)
         # Print value of environment variables that impact Python, alphabetized.
@@ -95,12 +100,6 @@ class GeoProcessorCmd(cmd.Cmd):
     def do_run(self, line):
         """
         Run the command file from the command line using syntax:  run command-file
-
-        Args:
-            line:
-
-        Returns:
-            Nothing.
         """
         logger = logging.getLogger("geoprocessor")
         command_file = line
@@ -157,7 +156,10 @@ def run_batch(command_file):
     print('Running command file: ' + command_file)
     working_dir = os.getcwd()
     # Convert the command file to an absolute path if not already.
+    logger.info("Working directory=" + working_dir)
+    logger.info("Command file=" + command_file)
     command_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(working_dir, command_file))
+    logger.info("Command file (absolute)=" + command_file_absolute)
     runner = CommandFileRunner()
     # Read the command file
     try:
@@ -169,7 +171,7 @@ def run_batch(command_file):
         logger.exception(message, e)
         return
     except:
-        message = 'Error reading command file.'
+        message = 'Error reading command file "' + command_file_absolute + '".'
         logger.error(message)
         print(message)
         return
@@ -180,7 +182,7 @@ def run_batch(command_file):
         message = 'Error running command file.'
         print(message)
         traceback.print_exc(file=sys.stdout)
-        logger.error(message)
+        logger.error(message,exc_info=True)
         return
 
     logger.info("GeoProcessor properties after running:")
@@ -197,7 +199,7 @@ def run_http_server():
     Returns:
         Nothing.
     """
-    pass
+    print("The GeoProcessor web server is not implemented.  Exiting...")
 
 
 def run_prompt():
@@ -218,7 +220,7 @@ def run_ui():
 
     """
     # TODO smalers 2018-01-01 need to coordinate with Emma on a class for the UI
-    print("TODO - implement UI")
+    print("The GeoProcessor user interface is not implemented.  Exiting...")
 
 
 def run_steve():
@@ -310,16 +312,36 @@ if __name__ == '__main__':
     # - The log file will be closed and another restarted by the StartLog() command.
     setup_logging(app_session)
 
-    # Parse the command line parameters
-    parser = argparse.ArgumentParser(description='Parse command line arguments')
-    parser.add_argument("-c", "--commands", help="specify command file")
+    # Parse the command line parameters...
+    # - The -h and --help arguments are automatically included so don't need to add below.
+    # - The default action is "store" which will save a variable with the same name as the option.
+    # - The --version option has special behavior, as documented in the argparse module documentation.
+    parser = argparse.ArgumentParser(description='Open Water Foundation (OWF) GeoProcessor Application')
+    # Assigns the command file to args.commands
+    parser.add_argument("-c", "--commands", help="Specify command file.")
+    # Start the http server (will store True in the 'http' variable)
+    parser.add_argument("--http", action='store_true', help="Start the web server.")
+    # Start the user interface (will store True in the 'ui' variable)
+    parser.add_argument("--ui", action='store_true', help="Start the user interface.")
+    # Immediately prints the version using the 'version' value
+    parser.add_argument("--version", help="Print program version.", action="version",
+                        version="gp " + __geoprocessor_app_version)
     args = parser.parse_args()
-
-    command_file = None
 
     # Launch a GeoProcessor based on the command line parameters
     if args.commands:
-        run_batch(command_file)
+        # A command file has been specified so run the batch processor.
+        run_batch(args.commands)
+        exit(0)
+    elif args.http:
+        # Run the http server
+        run_http_server()
+    elif args.ui:
+        # Run the user interface
+        run_ui()
     else:
         # No arguments given to indicate whether batch, UI, etc. so start up the shell.
         run_prompt()
+        exit(0)
+
+    exit(0)

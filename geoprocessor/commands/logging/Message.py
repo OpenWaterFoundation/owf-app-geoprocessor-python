@@ -79,7 +79,15 @@ class Message(AbstractCommand):
             Nothing.
         """
         logger = logging.getLogger(__name__)
+        warning_count = 0
+
         # Message parameter won't be null.
         pv_Message = self.get_parameter_value('Message')
         message_expanded = self.command_processor.expand_parameter_value(pv_Message)
         logger.info(message_expanded)
+
+        if warning_count > 0:
+            message = "There were " + warning_count + " warnings processing the command."
+            raise RuntimeError(message)
+
+        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

@@ -10,6 +10,8 @@ import geoprocessor.core.command_status_type as command_status_type
 import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
 
+import logging
+
 
 # Inherit from AbstractCommand
 class SetProperty(AbstractCommand):
@@ -82,21 +84,40 @@ class SetProperty(AbstractCommand):
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
     def run_command(self):
+        warning_count = 0
+        logger = logging.getLogger(__name__)
+
         pv_PropertyName = self.get_parameter_value('PropertyName')
         pv_PropertyType = self.get_parameter_value('PropertyType')
         pv_PropertyValue = self.get_parameter_value('PropertyValue')
         # Expand the property value string before converting to the requested type
         pv_PropertyValue_expanded = self.command_processor.expand_parameter_value(pv_PropertyValue)
-        # Convert the property value string to the requested type
-        pv_PropertyValue2 = None
-        if pv_PropertyType == 'bool':
-            pv_PropertyValue2 = bool(pv_PropertyValue_expanded)
-        elif pv_PropertyType == 'float':
-            pv_PropertyValue2 = float(pv_PropertyValue_expanded)
-        elif pv_PropertyType == 'int':
-            pv_PropertyValue2 = int(pv_PropertyValue_expanded)
-        elif pv_PropertyType == 'str':
-            pv_PropertyValue2 = str(pv_PropertyValue_expanded)
-        # Now set the object as a property, will be the requested type
-        if pv_PropertyValue2 is not None:
-            self.command_processor.set_property(pv_PropertyName, pv_PropertyValue2)
+
+        try:
+            # Convert the property value string to the requested type
+            pv_PropertyValue2 = None
+            if pv_PropertyType == 'bool':
+                pv_PropertyValue2 = bool(pv_PropertyValue_expanded)
+            elif pv_PropertyType == 'float':
+                pv_PropertyValue2 = float(pv_PropertyValue_expanded)
+            elif pv_PropertyType == 'int':
+                pv_PropertyValue2 = int(pv_PropertyValue_expanded)
+            elif pv_PropertyType == 'str':
+                pv_PropertyValue2 = str(pv_PropertyValue_expanded)
+            # Now set the object as a property, will be the requested type
+            if pv_PropertyValue2 is not None:
+                self.command_processor.set_property(pv_PropertyName, pv_PropertyValue2)
+        except Exception as e:
+            ++warning_count
+            message = 'Unexpected error setting property "' + pv_PropertyName + '"'
+            logger.exception(message, e)
+            self.command_status.add_to_log(
+                command_phase_type.RUN,
+                CommandLogRecord(command_status_type.FAILURE, message,
+                                 "Check the log file for details."))
+
+        if warning_count > 0:
+            message = "There were " + warning_count + " warnings processing the command."
+            raise RuntimeError(message)
+
+        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

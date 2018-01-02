@@ -13,6 +13,8 @@ import geoprocessor.util.log as log_util
 import geoprocessor.util.validators as validators
 
 import logging
+import sys
+import traceback
 
 
 # Inherit from AbstractCommand
@@ -70,6 +72,8 @@ class StartLog(AbstractCommand):
             Nothing.
         """
         logger = logging.getLogger(__name__)
+        warning_count = 0
+
         pv_LogFile = self.get_parameter_value('LogFile')
         log_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(
@@ -79,14 +83,18 @@ class StartLog(AbstractCommand):
         try:
             # Change the GeoProcesssor logger to use the specified file
             # - The initial application log file will be closed.
-            log_util.reset_log_file(log_file_absolute)
+            log_util.reset_log_file_handler(log_file_absolute)
         except Exception as e:
-            message = '\nUnexpected error (re)starting log file "' + log_file_absolute + '"'
+            ++warning_count
+            message = 'Unexpected error (re)starting log file "' + log_file_absolute + '"'
             logger.exception(message, e)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(command_status_type.FAILURE, message,
                                  "Check the old log file or command window for details."))
+
+        if warning_count > 0:
+            message = "There were " + warning_count + " warnings processing the command."
             raise RuntimeError(message)
 
-        self.command_status.refreshPhaseSeverity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

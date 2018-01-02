@@ -1,4 +1,4 @@
-# OWF Geoprocessing
+# OWF GeoProcessor class, which is able to process a workflow of commands described in a command file.
 
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
@@ -118,6 +118,7 @@ class GeoProcessor(object):
         Returns:
             Expanded parameter value string.
         """
+        print('parameter_value=' + str(parameter_value))
         if parameter_value is None or len(parameter_value) == 0:
             # Just return what was provided.
             return parameter_value
@@ -551,8 +552,8 @@ class GeoProcessor(object):
                 logger.info(message)
 
             command_class = command.__class__.__name__
-            #if command_class == 'For':
-            if isinstance(command, For):
+            # if isinstance(command, For):
+            if command_class == 'For':
                 # Reset the For command
                 command.reset_command()
 
@@ -597,8 +598,8 @@ class GeoProcessor(object):
                         if command_class == 'Exit':
                             # Exit command causes hard exit - following commands are ignored
                             break
-                        #elif command_class == 'For':
-                        elif isinstance(command, For):
+                        # elif isinstance(command, For):
+                        elif command_class == 'For':
                             # Initialize or increment the For loop
                             print('Detected For command')
                             # Use a local variable For_command for clarity
@@ -667,8 +668,8 @@ class GeoProcessor(object):
                                         CommandLogRecord(command_status_type.FAILURE, message,
                                                          "Add a matching EndFor() command."))
                                     raise RuntimeError(message)
-                        #elif command_class == 'EndFor':
-                        elif isinstance(command,End For):
+                        # elif isinstance(command,EndFor):
+                        elif command_class == 'EndFor':
                             # Jump to the matching For()
                             EndFor_command = command
                             try:
@@ -688,14 +689,14 @@ class GeoProcessor(object):
                             # If the command generated an output file, add it to the list of output files.
                             # The list is used by the UI to display results.
                             # TODO smalers 2017-12-21 - add the file list generator like TSEngine
-                    #if command_class == 'If':
-                    if isinstance(command, If):
+                    # if isinstance(command, If):
+                    if command_class == 'If':
                         # Add to the If command stack
                         If_command_stack.append(command)
                         # Re-evaluate If stack
                         If_stack_ok_to_run = self.__evaluate_if_stack(If_command_stack)
-                    #elif command_class == 'EndIf':
-                    elif isinstance(command, EndIf):
+                    # elif isinstance(command, EndIf):
+                    elif command_class == 'EndIf':
                         # Remove from the If command stack (generate a warning if the matching If()
                         # is not found in the stack)
                         EndIf_command = command
@@ -718,6 +719,7 @@ class GeoProcessor(object):
                     # TODO smalers 2017-12-21 need to expand error handling by type but for now catch generically
                     # because Python exception handling uses fewer exception classes than Java dode to keep simple
                     message = "Unexpected error processing command - unable to complete command"
+                    traceback.print_exc(file=sys.stdout)
                     logger.exception(message, e)
                     # Don't raise an exception because want all commands to run as best they can, each with
                     # message logging, so that user can troubleshoot all at once rather than first error at a time
@@ -726,6 +728,7 @@ class GeoProcessor(object):
                                          "See the log file for details."))
                 except:
                     message = "Unexpected error processing command - unable to complete command"
+                    traceback.print_exc(file=sys.stdout)
                     logger.error(message, exc_info=True)
                     # Don't raise an exception because want all commands to run as best they can, each with
                     # message logging, so that user can troubleshoot all at once rather than first error at a time

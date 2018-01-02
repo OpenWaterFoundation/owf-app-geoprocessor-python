@@ -11,6 +11,7 @@ INITIALIZATION = 'INITIALIZATION'
 DISCOVERY = 'DISCOVERY'
 RUN = 'RUN'
 
+
 def get_command_status_types(sort=False):
     """
     Return the list of valid command phases.
@@ -22,9 +23,9 @@ def get_command_status_types(sort=False):
         The list of phase types, for example for use in command parameter choice.
 
     """
-    if ( sort ):
+    if sort:
         # Sort alphabetically
-        return [ DISCOVERY, INITIALIZATION, RUN ]
+        return [DISCOVERY, INITIALIZATION, RUN]
     else:
         # Return in order of processing order.
-        return [ INITIALIZATION, DISCOVERY, RUN ]
+        return [INITIALIZATION, DISCOVERY, RUN]

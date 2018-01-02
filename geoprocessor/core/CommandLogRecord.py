@@ -1,9 +1,11 @@
+
+
 class CommandLogRecord(object):
     """
     Command log record, which carries a single message and corresponding status.
     """
 
-    def __init__(self,command_status_type,problem,recommendation,log_record_type=None):
+    def __init__(self, command_status_type, problem, recommendation, log_record_type=None):
         """
         Initialize an instance.
 
@@ -16,3 +18,5 @@ class CommandLogRecord(object):
         self.severity = command_status_type
         self.problem = problem
         self.recommendation = recommendation
+        # Log record type is not currently used
+        self.log_record_type = log_record_type

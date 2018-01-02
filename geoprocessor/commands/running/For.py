@@ -13,6 +13,7 @@ import geoprocessor.util.validators as validators
 import sys
 import traceback
 
+
 # Inherit from AbstractCommand
 class For(AbstractCommand):
     def __init__(self):
@@ -20,16 +21,21 @@ class For(AbstractCommand):
         # AbstractCommand
         self.command_name = "For"
         self.command_parameter_metadata = [
-            CommandParameterMetadata("Name",type(""),None),
-            CommandParameterMetadata("IteratorProperty",type(""),None),
+            CommandParameterMetadata("Name", type("")),
+            CommandParameterMetadata("IteratorProperty", type("")),
             # Use strings for sequence because could be integer, decimal, or string list.
-            CommandParameterMetadata("SequenceStart",type(""),None),
-            CommandParameterMetadata("SequenceEnd",type(""),None),
-            CommandParameterMetadata("SequenceIncrement",type(""),None)
+            CommandParameterMetadata("SequenceStart", type("")),
+            CommandParameterMetadata("SequenceEnd", type("")),
+            CommandParameterMetadata("SequenceIncrement", type(""))
         ]
 
         # Local data
         self.for_initialized = False
+
+        # Iterator core data
+        self.iterator_object = None
+        self.iterator_object_list_index = None
+        self.iterator_property = None
 
         # Utility data to simplify checks for type of iteration (only one should be set to True)
         self.iterator_is_list = False
@@ -57,29 +63,36 @@ class For(AbstractCommand):
         """
         warning = ""
         # TODO smalers 2017-12-25 need to log
-        pv_Name = self.get_parameter_value('Name')
-        if not validators.validate_string(pv_Name,False,False):
+        pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
+        if not validators.validate_string(pv_Name, False, False):
             message = "A name for the For block must be specified"
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, "Specify the Name."))
-        pv_SequenceStart = self.get_parameter_value('SequenceStart')
-        if not validators.validate_number(pv_SequenceStart,False,False):
+        pv_SequenceStart = self.get_parameter_value(
+            parameter_name='SequenceStart', command_parameters=command_parameters)
+        if not validators.validate_number(pv_SequenceStart, False, False):
             message = "The SequenceStart value must be specified"
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, "Specify the SequenceStart as a number."))
-        pv_SequenceEnd = self.get_parameter_value('SequenceEnd')
-        if not validators.validate_number(pv_SequenceEnd,False,False):
+        pv_SequenceEnd = self.get_parameter_value(parameter_name='SequenceEnd', command_parameters=command_parameters)
+        if not validators.validate_number(pv_SequenceEnd, False, False):
             message = "The SequenceEnd value must be specified"
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, "Specify the SequenceEnd as a number."))
-        pv_SequenceIncrement = self.get_parameter_value('SequenceIncrement')
-        if not validators.validate_number(pv_SequenceIncrement,False,False):
+        pv_SequenceIncrement = self.get_parameter_value(
+            parameter_name='SequenceIncrement',
+            command_parameters=command_parameters)
+        if not validators.validate_number(pv_SequenceIncrement, False, False):
             message = "The SequenceIncrement value must be specified"
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, "Specify the SequenceIncrement as a number."))
 
         # Unlike most commands, set internal data here because it is needed by next() before calls to run_command
@@ -113,16 +126,16 @@ class For(AbstractCommand):
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
         # triggers an exception below.
-        warning = command_util.validate_command_parameter_names ( self, warning )
+        warning = command_util.validate_command_parameter_names(self, warning)
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            #Message.printWarning ( warning_level,
+            # Message.printWarning ( warning_level,
             #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION,command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
     def get_name(self):
         """
@@ -158,20 +171,20 @@ class For(AbstractCommand):
                 try:
                     self.iterator_object_list_index = 0
                     self.iterator_object = self.iterator_sequence_start
-                    if self.iterator_sequence_increment == None:
+                    if self.iterator_sequence_increment is None:
                         # Default increment is 1 or 1.0
                         if type(self.iterator_sequence_start) == 'int':
                             self.iterator_sequence_increment = 1
                         elif type(self.iterator_sequence_start) == 'float':
                             self.iterator_sequence_increment = 1.0
                     self.for_initialized = True
-                    #if ( Message.isDebugOn )
+                    # if ( Message.isDebugOn )
                     if debug:
-                        #Message.printDebug(1, routine, "Initialized iterator object to: " + this.iteratorObject );
-                        print("Initialized iterator object to: " + str(self.iterator_object) )
+                        # Message.printDebug(1, routine, "Initialized iterator object to: " + this.iteratorObject );
+                        print("Initialized iterator object to: " + str(self.iterator_object))
                         return True
                 except:
-                    #message = "Error initializing For() iterator to initial value (" + e + ").";
+                    # message = "Error initializing For() iterator to initial value (" + e + ").";
                     message = "Error initializing For() iterator to initial value"
                     traceback.print_exc(file=sys.stdout)
                     raise ValueError(message)
@@ -190,9 +203,9 @@ class For(AbstractCommand):
                 # If the iterator object is already at or will exceed the maximum, then
                 # done iterating
                 # TODO smalers 2017-12-21 verify that Python handles typing automatically for integers and doubles
-                #if (((type(self.iterator_sequence_start) == 'int') &&
+                # if (((type(self.iterator_sequence_start) == 'int') &&
                 if self.iterator_object >= self.iterator_sequence_end or \
-                    (self.iterator_object + self.iterator_sequence_increment) > self.iterator_sequence_end:
+                        (self.iterator_object + self.iterator_sequence_increment) > self.iterator_sequence_end:
                     print("Iterator has reached end value.  Returning False from next().")
                     return False
                 else:
@@ -217,7 +230,7 @@ class For(AbstractCommand):
         print("In For.run_command")
         pv_Name = self.get_parameter_value('Name')
         pv_IteratorProperty = self.get_parameter_value('IteratorProperty')
-        if pv_IteratorProperty == None or pv_IteratorProperty == "":
+        if pv_IteratorProperty is None or pv_IteratorProperty == "":
             # Default to same as Name
             pv_IteratorProperty = pv_Name
         self.iterator_property = pv_IteratorProperty
@@ -251,7 +264,7 @@ class For(AbstractCommand):
         # next() will have been called by the command processor so at this point just set the processor property.
         # Set the basic property as well as the property with 0 and 1 at end of name indicating zero and 1 offset.
 
-        self.command_processor.set_property(pv_IteratorProperty,self.iterator_object)
+        self.command_processor.set_property(pv_IteratorProperty, self.iterator_object)
 
     def __set_iterator_property_value(self, iterator_property_value):
         """

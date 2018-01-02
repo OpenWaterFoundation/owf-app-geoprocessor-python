@@ -7,7 +7,7 @@ class CommandParameterMetadata(object):
     Validation requires more effort when the allowed value is an enumeration, etc.
     """
 
-    def __init__(self,parameter_name,parameter_type,validator_function):
+    def __init__(self, parameter_name, parameter_type, validator_function=None):
         # Parameter name should be in format WordWord
         self.parameter_name = parameter_name
 
@@ -15,13 +15,16 @@ class CommandParameterMetadata(object):
         # Use string for complex types that will require parsing in the command.
         self.parameter_type = parameter_type
 
-        # Validator function to be called to validate the command parmameter
+        # Validator function to be called to validate the command parameter
+        # TODO smalers 2017-12-30 This may be removed since validation is often more complicated
+        # and is implemented by design in each command's check_command_parameters function
         self.validator_function = validator_function
 
 # Functions that can be used as static functions outside of the class,
 # for example to process the full list of CommandParameterMetadata objects.
 
-def get_parameter_names ( parameter_metadata_list ):
+
+def get_parameter_names(parameter_metadata_list):
     """
     Return the list of parameter names in a list, extracted from the metadata list.
 
@@ -31,7 +34,7 @@ def get_parameter_names ( parameter_metadata_list ):
         List of string containing parameter names from metadata.
     """
     parameter_names = []
-    if ( parameter_metadata_list != None ):
+    if parameter_metadata_list is not None:
         for meta in parameter_metadata_list:
             parameter_names.append(meta.parameter_name)
 

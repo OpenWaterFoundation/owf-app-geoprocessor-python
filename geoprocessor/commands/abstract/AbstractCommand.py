@@ -1,6 +1,7 @@
 from geoprocessor.core.CommandStatus import CommandStatus
 import geoprocessor.util.command as util_common
 
+
 class AbstractCommand(object):
     """
     Parent to all other command classes. Stores common data. Provides common functions,
@@ -48,7 +49,7 @@ class AbstractCommand(object):
         """
         pass
 
-    def get_parameter_metadata(self,parameter_name):
+    def get_parameter_metadata(self, parameter_name):
         """
         Return the metadata for the requested parameter name.
         This can also be used to figure out if a parameter name is valid
@@ -62,17 +63,21 @@ class AbstractCommand(object):
         # Loop through the list of command pareters and find a matching item.
         # Ignore case in the comparison.
         for parameter_metadata in self.command_parameter_metadata:
-            if ( parameter_metadata.parameter_name.upper() == parameter_name.upper() ):
+            if parameter_metadata.parameter_name.upper() == parameter_name.upper():
                 return parameter_metadata
         # Matching parameter not found so return None
         return None
 
-    def get_parameter_value(self,parameter_name,default_value=None):
+    def get_parameter_value(self, parameter_name, command_parameters=None, default_value=None):
         """
         Return the value for a parameter name.
 
         Args:
-            parameter_name: The name of the parameter for which to return the parameter value.
+            parameter_name (str): The name of the parameter for which to return the parameter value.
+            command_parameters:  A dictionary of command parameters to search for parameter_name.
+                If None, the command's internal command parameter dictionary is used.
+                Specifying this parameter is helpful, for example, when checking parameters in a
+                temporary dictionary, such as created in a command editor.
             default_value: If the parameter is not found, the value to return (None by default).
                 A value of None returned typically indicates that the parameter was not specified
                 and the default value should be used.
@@ -81,9 +86,14 @@ class AbstractCommand(object):
             The parameter value as a string.
         """
         try:
-            parameter_value = self.command_parameters.get(parameter_name)
+            if command_parameters is None:
+                # Get the parameter from the command's dictionary
+                parameter_value = self.command_parameters.get(parameter_name)
+            else:
+                # Get the parameter from the provided parameter dictionary
+                parameter_value = command_parameters.get(parameter_name)
             return parameter_value
-        except:
+        except KeyError:
             # Parameter was not found
             return default_value
 
@@ -96,8 +106,10 @@ class AbstractCommand(object):
             processor:  The GeoProcessor instance, which is set in the new command.
             full_initialization:  Indicates whether to
         """
-        # Set the command string.
-        self.command_string = command_string
+        # Set the command string
+        # - strip off the whitespace on the right such as newline (may be present if reading from a file)
+        # - do not strip the left side since indent is used for formatting and want to retain
+        self.command_string = command_string.rstrip()
 
         # Set the command processor.
         self.command_processor = processor
@@ -122,16 +134,11 @@ class AbstractCommand(object):
             Nothing.
         """
 
-        # Parse more brute force to get the command name and parameter list string.
-        command_string_trimmed = command_string.strip()
-        paren_start_pos = command_string_trimmed.find('(')
-        paren_end_pos = command_string_trimmed.rfind(')')
-
         # Get the parameter string from the command string
         # (this is the string within the parenthesis of a command string).
         parameter_string = util_common.parse_parameter_string_from_command_string(command_string)
 
-        if (len(parameter_string) > 0):
+        if len(parameter_string) > 0:
             # Parameters are available to parse...
             # Parse the parameter string of form Parameter=Value,Parameter=Value into a list of parameter items.
             # Parameter items are strings that represent key=value pairs for each parameter in the parameter string.
@@ -166,7 +173,7 @@ class AbstractCommand(object):
         """
         print 'In AbstractCommand.run_command'
 
-    def to_string(self, parameters = None, format_all = False ):
+    def to_string(self, command_parameters=None, format_all=False):
         """
         Format the internal command data into the command string that users see.
         This version of the function should only be used by commands that follow CommandName(Param1="Value1",...)
@@ -178,17 +185,20 @@ class AbstractCommand(object):
         enabled to help with troubleshooting.
 
         Args:
-            parameters:  If specified, a dictionary of parameter names and values to format.
-                         If specified as None, all non-empty parameters will be formatted.
+            command_parameters:  If specified, a dictionary of parameter names and values to format.
+                                 If specified as None, all non-empty command parameters will be formatted.
             format_all:  If True, format all command parameters even if not specified, useful for troubleshooting.
                          If False, only format specified parameters, default for normal functionality.
 
         Returns:  Formatted command string such as CommandName(Param1="Value1",Param2="Value2",...)
         """
+        # If the parameters passed in are None, use the command parameters
+        if command_parameters is None:
+            command_parameters = self.command_parameters
         # First part of command is the indent from the original command
         command_string_formatted = ""
         for i_command in range[0:len(self.command_string) - 1]:
-            if ( self.command_string[i_command] == " "):
+            if self.command_string[i_command] == " ":
                 command_string_formatted = command_string_formatted + " "
             else:
                 # No more spaces at front of the command
@@ -200,16 +210,17 @@ class AbstractCommand(object):
         for command_parameter_meta in self.command_parameter_metadata:
             # Determine whether to output
             do_output = False
-            if ( format_all == True ):
+            if format_all:
                 do_output = True
             else:
                 # Only output if the parameter is not None and not a blank string
-                parameter_value = self.getParameterValue(command_parameter_meta.parameter_name)
-                if ( (parameter_value != None) and (str(parameter_value) != "") ):
+                parameter_value = self.get_parameter_value(command_parameter_meta.parameter_name,
+                                                           command_parameters=command_parameters)
+                if (parameter_value is not None) and (str(parameter_value) != ""):
                     do_output = True
-            if ( do_output == True ):
+            if do_output:
                 # If this is not the first parameter, add a comma separator
-                if ( param_output_count > 0 ):
+                if param_output_count > 0:
                     command_string_formatted = command_string_formatted + ","
                 # Append the parameter
                 command_string_formatted = command_string_formatted + command_parameter_meta.parameter_name + '="' + \

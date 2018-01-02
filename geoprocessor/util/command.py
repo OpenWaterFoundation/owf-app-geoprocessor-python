@@ -6,6 +6,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
+
 def parse_command_name_from_command_string(command_string):
     """
     Parses the command name out of the command string.
@@ -26,6 +27,7 @@ def parse_command_name_from_command_string(command_string):
     command_name = command_string[:paren_start_pos].strip()
 
     return command_name
+
 
 def parse_key_value_pairs_into_dictionary(parameter_items):
     """
@@ -53,25 +55,28 @@ def parse_key_value_pairs_into_dictionary(parameter_items):
             # The parameter value is expected to be enclosed in double quotes.
             # The parameter value may include special characters such as '='.
             equal_pos = parameter_item.find('=')
-            if ( equal_pos > 0 ):
+            if equal_pos > 0:
                 parameter_name = parameter_item[:equal_pos].strip()
                 parameter_value = parameter_item[equal_pos + 1:].strip()
                 # Remove the enclosing " from the parameter value, but allow " to remain within the parameter value.
                 # Whitespace directly adjoining the surrounding " are not stripped.
-                if ( parameter_value[0] == '"'):
+                if parameter_value[0] == '"':
                     parameter_value = parameter_value[1:]
-                if ( parameter_value[len(parameter_value) - 1] == '"'):
+                if parameter_value[len(parameter_value) - 1] == '"':
                     parameter_value = parameter_value[:len(parameter_value) - 1]
 
-                # Append the parameter name and the parameter value (in string or list format) to the parameter dictionary.
+                # Append the parameter name and the parameter value (in string or list format) to the
+                # parameter dictionary.
                 parameter_dictionary[parameter_name] = parameter_value
             else:
-                print "ERROR: the parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(parameter_item)
+                print("ERROR: the parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(
+                    parameter_item))
 
         else:
-            print "ERROR: the parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(parameter_item)
+            print("ERROR: the parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(parameter_item))
 
     return parameter_dictionary
+
 
 def parse_parameter_string_from_command_string(command_string):
     """
@@ -95,17 +100,18 @@ def parse_parameter_string_from_command_string(command_string):
     # Find the right-most parenthesis in case one is included in the quoted part of the parameter value
     paren_end_pos = command_string.rfind(")")
 
-    if ( (paren_start_pos <= 0) or (paren_end_pos != (len(command_string) - 1))):
+    if (paren_start_pos <= 0) or (paren_end_pos != (len(command_string) - 1)):
         # Bounding parenthesis are not present.
         message = 'Invalid syntax for "' + command_string + '".  Expecting CommandName(Parameter="Value",...)'
         print(message)
-        #Message.printWarning ( 2, routine, message);
-        #throw new InvalidCommandSyntaxException ( message );
+        # Message.printWarning ( 2, routine, message)
+        # throw new InvalidCommandSyntaxException ( message )
 
     # Get the parameter line from the command string (in between the '(' and the ')' ).
     parameter_string = command_string[paren_start_pos + 1: paren_end_pos]
     print("After parsing, parameter_string=" + parameter_string)
     return parameter_string
+
 
 def parse_parameter_string_into_key_value_pairs(parameter_string):
     """
@@ -128,7 +134,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
     print("Splitting full parameter string into pairs:  " + parameter_string)
 
     # Parse if the parameter line is not empty.
-    if (len(parameter_string) > 0):
+    if len(parameter_string) > 0:
 
         # Boolean to determine if the current character is part of a quoted parameter value.
         in_quoted_string = False
@@ -138,11 +144,11 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
         param_value_end_pos = -1
 
         # Iterate over the characters in the parameter_string.
-        for char_index in range(0,len(parameter_string)):
+        for char_index in range(0, len(parameter_string)):
 
             # Get the current character.
             current_char = parameter_string[char_index]
-            #print("Processing character '" + current_char + "'" )
+            # print("Processing character '" + current_char + "'" )
 
             if not in_quoted_string:
                 # Not in a quoted parameter value string.
@@ -157,7 +163,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
                     comma_found = True
                 else:
                     # Assume that the character is the start of a parameter name
-                    if ( param_name_start_pos < 0 ):
+                    if param_name_start_pos < 0:
                         param_name_start_pos = char_index
                     # Error if there was not a comma found separating parameters
                     # (actually can handle as nonfatal but prefer commas for clarity).
@@ -181,12 +187,14 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
     # Return the list of parameter strings, may be empty.
     return parameter_items
 
+
 def read_file_into_string_list(filename):
     """
     Convert a file into a list of strings (one string for each line of the file).
 
     Args:
-        param: a string, the full pathname to a file
+        filename (str): the full pathname to a file to read.
+
     Returns:
         A list of strings where each string corresponds to a line in the file.
     """
@@ -196,13 +204,14 @@ def read_file_into_string_list(filename):
 
     # Iterate over each line in the file and append the line as a string.
     # Retain indentation to allow formatting of the input.
-    with open(filename) as file:
-        content = file.readlines()
+    with open(filename) as infile:
+        content = infile.readlines()
         for string in content:
             string_list.append(string)
 
     # Return the string list.
     return string_list
+
 
 # converts a parameter value in string format to a parameter value in list format
 def to_correct_format(parameter_value):
@@ -250,8 +259,9 @@ def to_correct_format(parameter_value):
     # return the parameter value list with the items as string values
     return parameter_value_list
 
-def validate_command_parameter_names ( command, warning, deprecated_parameter_names = None,
-    deprecated_parameter_notes = None, remove_invalid = True ):
+
+def validate_command_parameter_names(command, warning, deprecated_parameter_names=None,
+                                     deprecated_parameter_notes=None, remove_invalid=True):
     """
     Validate that the parameter names parsed out of a command and saved in AbstractCommand.command_parmeters
     are recognized by the command.
@@ -263,9 +273,9 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
         command: The command to evaluate.
         warning: The multi-line warning message output by check_command_parameters() function.
             If not None, it will be appended to.
-        deprecated_parameter_names List of string for parameter names that are deprecated (obsolete)
+        deprecated_parameter_names: List of string for parameter names that are deprecated (obsolete)
             (default is not to use).
-        deprecated_parameter_notes Note for deprecated parameter names, for example to indicate new alternative
+        deprecated_parameter_notes: Note for deprecated parameter names, for example to indicate new alternative
             (default is not to use).
         remove_invalid: Boolean indicating whether or not to remove invalid parameters from the command parameters
             (default is True, so as to not pollute the command with old parameter data).
@@ -277,11 +287,11 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
         ValueError if 1) the deprecated parameter names list size is not the same as the deprecated notes list size.
 
     """
-    if command == None:
-		return warning
+    if command is None:
+        return warning
 
-	# Validate the properties and discard any that are invalid (a message will be generated)
-	# and will be displayed once.
+    # Validate the properties and discard any that are invalid (a message will be generated)
+    # and will be displayed once.
     # First generate a simple list of warnings, as per the Java PropList.validateParameterNames() method.
     warning_list = []
 
@@ -291,7 +301,7 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
     valid_parameter_names_size = len(valid_parameter_names)
 
     deprecated_parameter_names_size = 0
-    if deprecated_parameter_names != None:
+    if deprecated_parameter_names is not None:
         deprecated_parameter_names_size = len(deprecated_parameter_names)
 
     # The size of the deprecated_notes list is computed in order to check that its size is the same as the
@@ -299,13 +309,14 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
 
     has_notes = False
     deprecated_notes_size = 0
-    if deprecated_parameter_notes != None:
+    if deprecated_parameter_notes is not None:
         deprecated_parameter_notes_size = len(deprecated_parameter_notes)
         has_notes = True
 
-    if has_notes and deprecated_parameter_names_size != deprecated_parameter_notes_size:
+    if has_notes and (deprecated_parameter_names_size != deprecated_parameter_notes_size):
         raise ValueError("The number of deprecated parameter names (" + deprecated_parameter_names_size +
-            ") is not the same as the number of deprecated parameter notes (" + deprecated_parameter_notes_size + ")")
+                         ") is not the same as the number of deprecated parameter notes (" +
+                         deprecated_parameter_notes_size + ")")
 
     # Iterate through all the parameter names for the command and check whether they are valid, invalid, or deprecated.
 
@@ -324,16 +335,16 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
 
     # Check size dynamically in case props are removed below
     # Because the dictionary size may change during iteration, can't do the following
-    #for parameter_name, parameter_value in command.command_parameters.iteritems():
+    # for parameter_name, parameter_value in command.command_parameters.iteritems():
     # TODO smalers 2017-12-25 need to iterate with for to allow delete from the dictionary
-    for i_parameter in range(0,len(command_parameter_names)):
+    for i_parameter in range(0, len(command_parameter_names)):
         # First make sure that the parameter is in the valid parameter name list.
         # Parameters will only be checked for whether they are deprecated if they are not valid.
         valid = False
         # TODO smalers 2017-12-25 do the following because dictionary does not allow deletion in iterator
         parameter_name = command_parameter_names[i_parameter]
 
-        for i_valid_parameter in range(0,valid_parameter_names_size):
+        for i_valid_parameter in range(0, valid_parameter_names_size):
             if valid_parameter_names[i_valid_parameter] == parameter_name:
                 valid = True
                 break
@@ -342,12 +353,13 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
             # Only check to see if the parameter name is in the deprecated list if it was not already found in
             # the valid parameter names list.
 
-            for i_deprecated_parameter in range(0,deprecated_parameter_names_size):
+            for i_deprecated_parameter in range(0, deprecated_parameter_names_size):
                 if deprecated_parameter_names[i_deprecated_parameter] == parameter_name:
-                    msg = '"' + parameter_name + '" is no longer recognized as a valid parameter.' + remove_invalid_string
+                    msg = '"' + parameter_name + '" is no longer recognized as a valid parameter.' + \
+                          remove_invalid_string
                     if has_notes:
                         msg = msg + "  " + deprecated_parameter_notes[i_deprecated_parameter]
-                    deprecated_parameters.append(msg);
+                    deprecated_parameters.append(msg)
 
                     # Flag valid as True because otherwise this Property will also be reported
                     # as an invalid property below, and that is not technically true.
@@ -359,14 +371,14 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
 
             # Add the error message for invalid properties.
             if not valid:
-                invalid_parameters.append( '"' + parameter_name + '" is not a valid parameter.' + remove_invalid_string)
+                invalid_parameters.append('"' + parameter_name + '" is not a valid parameter.' + remove_invalid_string)
 
             if not valid and remove_invalid:
                 # Remove the parameter from the dictionary and iterator list.  Also decrement the list.
                 try:
                     del command.command_parameters[parameter_name]
                     del command_parameter_names[i_parameter]
-                    --i_parameter
+                    i_parameter = i_parameter - 1
                     # Size of the dictionary will be checked in for statement,
                     # which will reflect the new list size
                 except KeyError:
@@ -374,15 +386,15 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
                     pass
 
     # Now add the warning messages to the list of strings
-    for i_invalid in range(0,len(invalid_parameters)):
+    for i_invalid in range(0, len(invalid_parameters)):
         warning_list.append(invalid_parameters[i_invalid])
 
-    for i_deprecated in range(0,len(deprecated_parameters)):
+    for i_deprecated in range(0, len(deprecated_parameters)):
         warning_list.append(deprecated_parameters[i_deprecated])
 
     if len(warning_list) == 0:
         # No new warnings were generated
-        if warning != None:
+        if warning is not None:
             # Return the original warning string
             return warning
         else:
@@ -392,15 +404,15 @@ def validate_command_parameter_names ( command, warning, deprecated_parameter_na
         # Some new warnings were generated.
         # Add a warning formatted for command logging and UI.
         # Multiple lines are indicated by embedded newline (\n) characters
-		size = len(warning_list)
-		msg = ""
-		for i in range(0,size):
-			warning += "\n" + warning_list[i]
-			msg += warning_list[i]
+        size = len(warning_list)
+        msg = ""
+        for i in range(0, size):
+            warning += "\n" + warning_list[i]
+            msg += warning_list[i]
         # TODO smalers 2017-12-25 All Python commands should use status, right?
-		#    if ( command instanceof CommandStatusProvider ) {
-		status = command.command_status
-		status.add_to_log(command_phase_type.INITIALIZATION,
-			CommandLogRecord.CommandLogRecord(command_status_type.WARNING, msg,
-				"Specify only valid parameters - see documentation."))
+        #    if ( command instanceof CommandStatusProvider ) {
+        status = command.command_status
+        status.add_to_log(
+            command_phase_type.INITIALIZATION,
+            CommandLogRecord(command_status_type.WARNING, msg, "Specify only valid parameters - see documentation."))
     return warning

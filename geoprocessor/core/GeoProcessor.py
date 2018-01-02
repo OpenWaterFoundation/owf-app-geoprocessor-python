@@ -46,16 +46,16 @@ class GeoProcessor(object):
         # Property dictionary that holds all geoprocessor properties.
         self.properties = {}
 
-        # Geolayer dictionary that holds all of the geoprocessor geolayers results.
-        # key: geolayer id
-        # value: list of geolayer properties
+        # Geolayer dictionary that holds all of the geoprocessor GeoLayers results.
+        # key: GeoLayer id
+        # value: list of GeoLayer properties
         # list item1: the QGSVectorLayer object, list item2: the full pathname to the original source spatial data file
-        self.geolayers = {}
+        self.GeoLayers = {}
 
-        # Geolist dictionary that holds all of the geoprocessor geolists.
-        # key: geolist id
-        # value: list of geolayer ids
-        self.geolists = {}
+        # Geolist dictionary that holds all of the geoprocessor GeoLists.
+        # key: GeoList id
+        # value: list of GeoLayer ids
+        self.GeoLists = {}
 
         # Set properties for QGIS environment.
         # temp_dir: the full pathname to the folder that will hold all temporary, intermediate files created by the
@@ -366,11 +366,11 @@ class GeoProcessor(object):
         if append_results:
             # All in-memory lists of results, such as layers, should be cleared.
             # If a list (future design change?)...
-            # del self.geolayers[:]
-            # del self.geolists[:]
+            # del self.GeoLayers[:]
+            # del self.GeoLists[:]
             # ...but currently a dictionary...
-            self.geolayers.clear()
-            self.geolists.clear()
+            self.GeoLayers.clear()
+            self.GeoLists.clear()
 
     def __reset_workflow_properties(self):
         """

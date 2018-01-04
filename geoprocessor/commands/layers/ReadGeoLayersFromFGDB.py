@@ -26,15 +26,15 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     # TODO egiles 2018-01-03 Add Raises section in command documentation
 
     """
-        Reads the GeoLayers within a file geodatabase (FGDB).
+        Reads the GeoLayers (feature classes) within a file geodatabase (FGDB).
 
-        This command reads a the GeoLayers from a file geodatabase and creates GeoLayer objects within the
+        This command reads the GeoLayers from a file geodatabase and creates GeoLayer objects within the
         geoprocessor. The GeoLayers can then be accessed in the geoprocessor by their identifier and further processed.
 
-        GeoLayers are stored on a a computer or are available for download as a spatial data file (GeoJSON, shapefile,
+        GeoLayers are stored on a computer or are available for download as a spatial data file (GeoJSON, shapefile,
         feature class in a file geodatabase, etc.). Each GeoLayer has one feature type (point, line, polygon, etc.) and
-        other data (an identifier, a coordinate reference system, etc). Note that this function only reads GeoLayers
-        from within a file geodatabase.
+        other data (an identifier, a coordinate reference system, etc). Note that this function only reads one or many
+        GeoLayers (feature classes) from within a single file geodatabase.
 
         In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
         `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects. This command will read the GeoLayers
@@ -42,12 +42,13 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         Args:
             SpatialDataFolder (str, required): the relative pathname to the file geodatabase containing spatial data
-            files (feature classes)
-            GeoLayerID_prefix (str, optional): the GeoLayer identifier will, by default, use the filename of the
-            spatial data file that is being read. However, if a value is set for this parameter, the GeoLayerID will
-            take the following format: [GeoLayerID_prefix]_[featureclass]
+                files (feature classes)
+            GeoLayerID_prefix (str, optional): the GeoLayer identifier will, by default, use the name of the feature
+                class that is being read. However, if a value is set for this parameter, the GeoLayerID will follow
+                this format: [GeoLayerID_prefix]_[name_of_feature_class]
             Subset_Pattern (str, optional): the glob-style pattern of the feature class name to determine which feature
-             classes within the file geodatabase are to be processed
+                classes within the file geodatabase are to be processed. More information on creating a glob pattern
+                can be found at `this site <https://docs.python.org/2/library/glob.html>`_.
         """
 
     def __init__(self):
@@ -81,11 +82,11 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         # Check that parameter SpatialDataFolder is a non-empty, non-None string.
         pv_SpatialDataFolder = self.get_parameter_value(parameter_name='SpatialDataFolder',
-                                                      command_parameters=command_parameters)
+                                                        command_parameters=command_parameters)
 
         if not validators.validate_string(pv_SpatialDataFolder, False, False):
-            message = "SpatialDataFile parameter has no value."
-            recommendation = "Specify text for the SpatialDataFile parameter."
+            message = "SpatialDataFolder parameter has no value."
+            recommendation = "Specify text for the SpatialDataFolder parameter."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -105,33 +106,60 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
     @staticmethod
     def glob2re(pat):
-        """Translate a shell PATTERN to a regular expression.
-        https://stackoverflow.com/questions/27726545/python-glob-but-against-a-list-of-strings-rather-than-the-filesystem
+        """
+            Translates a shell PATTERN to a regular expression.
 
-            There is no way to quote meta-characters.
-            """
+            The input parameters of the ReadGeoLayersFromFolder command are the exact same as the input parameters
+            of this command, ReadGeoLayersFromFGDB. This design is for user convenience so that the user only needs
+            to learn the input parameters of one command and will, in turn, know the input parameters for all
+            ReadGeoLayersFrom... commands.
+
+            In the ReadGeoLayersFromFolder command, there is an optional input parameter called Subset_Pattern. Like in
+            the ReadGeoLayersFromFGDB command, this parameter allows the user to select only a subset of the spatial
+            data files within the source (folder, file geodatabase, etc.) to read as GeoLayers into the geoprocessor.
+            This is accomplished by entering a glob-style pattern into the Subset_Pattern parameter value. In the
+            ReadGeoLayerFromFolder command, the glob-style pattern is effective because the run_command code iterates
+            over files on the local machine (glob is designed to find patterns in pathnames). However, in the
+            ReadGeoLayersFromFGDB command, the feature classes in the file geodatabase are first written to a list. The
+            list is then iterated over and only the strings that match the Subset_Pattern are processed. Feature class
+            names are not file pathnames and, for that reason, the glob-style does not work.
+
+            This function converts a glob-style pattern into a regular expression that can be used to iterate over a
+            list of strings. This function was not written by Open Water Foundation but was instead copied from the
+            following source: https://stackoverflow.com/questions/27726545/
+            python-glob-but-against-a-list-of-strings-rather-than-the-filesystem.
+
+            Args:
+                pat (str, required): a pattern in glob-style (shell)
+
+            Returns:
+                A pattern in regular expression.
+
+            Raises:
+                Nothing.
+        """
 
         i, n = 0, len(pat)
         res = ''
         while i < n:
             c = pat[i]
-            i = i + 1
+            i += 1
             if c == '*':
                 # res = res + '.*'
-                res = res + '[^/]*'
+                res += '[^/]*'
             elif c == '?':
                 # res = res + '.'
-                res = res + '[^/]'
+                res += '[^/]'
             elif c == '[':
                 j = i
                 if j < n and pat[j] == '!':
-                    j = j + 1
+                    j += 1
                 if j < n and pat[j] == ']':
-                    j = j + 1
+                    j += 1
                 while j < n and pat[j] != ']':
-                    j = j + 1
+                    j += 1
                 if j >= n:
-                    res = res + '\\['
+                    res += '\\['
                 else:
                     stuff = pat[i:j].replace('\\', '\\\\')
                     i = j + 1
@@ -146,7 +174,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
     def run_command(self):
 
-        # Obtain the SpatialDataFolder parameter value and the Subset_Pattern parameter value
+        # Obtain the required and optional parameter values
         pv_SpatialDataFolder = self.get_parameter_value("SpatialDataFolder")
         pv_Subset_Pattern = self.get_parameter_value("Subset_Pattern")
         pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
@@ -172,62 +200,69 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         # If a file_pattern has been included, update the feature_class_list to only include the desired files. If no
         # file pattern has been included, all feature classes within the file geodatabase will read as GeoLayers
         if pv_Subset_Pattern:
-            glob_filter = (fc for fc in feature_class_list if re.match(ReadGeoLayersFromFGDB.glob2re(pv_Subset_Pattern), fc))
+            glob_filter = (fc for fc in feature_class_list if re.match(ReadGeoLayersFromFGDB.glob2re(pv_Subset_Pattern),
+                                                                       fc))
             updated_feature_class_list = list(glob_filter)
             feature_class_list = updated_feature_class_list
 
         # Iterate through each desired feature class inside the file geodatabase.
         for feature_class in feature_class_list:
 
-            # Envelop the feature class as a QGS object vector layer.
-            # In order for this to work, you must configure ESRI FileGDB Driver in QGIS Installation.
-            # Follow instructions from GetSpatial's post in below reference
-            # REF: https://gis.stackexchange.com/questions/26285/file-geodatabase-gdb-support-in-qgishttps:
-            # //gis.stackexchange.com/questions/26285/file-geodatabase-gdb-support-in-qgis
-            # Must follow file geodatabase input annotation. Follow instructions from nanguna's post in
-            # below reference
-            # REF: https://gis.stackexchange.com/questions/122205/
-            # how-to-add-mdb-geodatabase-layer-feature-class-to-qgis-project-using-python
-            qgs_vector_layer_obj = QgsVectorLayer(str(spatialDataFolder_absolute) + "|layername=" + str(feature_class),
-                                                  feature_class,
-                                                  'ogr')
+            # Get the full pathname to the feature class
+            # TODO egiles 2018-01-04 Need to research how to properly document feature class source path
+            spatialDataFile_absolute = os.path.join(spatialDataFolder_absolute, str(feature_class))
 
-            spatial_data_file_path_absolute = os.path.join(spatialDataFolder_absolute, str(feature_class))
-
-            # A QgsVectorLayer object is almost always created even if it is invalid.
-            # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
-            #   "It is important to check whether the layer has been loaded successfully. If it was not, an invalid
-            #   layer instance is returned."
-            # Check that the newly created QgsVectorLayer object is valid. If so, create a GeoLayer object within the
-            # geoprocessor and add the GeoLayer object to the geoprocessor's GeoLayers list.
-            if qgs_vector_layer_obj.isValid():
-
-                # Determine the GeoLayer identifier.
-                # If an identifier_prefix value was provided, the GeoLayer's identifier will be in the following format:
-                # [identifier_prefix]_[featureclass]. Otherwise, the identifier is set to the feature class.
-                if pv_GeoLayerID_prefix:
-                    GeoLayerID = "{}_{}".format(pv_GeoLayerID_prefix, feature_class)
-                else:
-                    GeoLayerID = feature_class
-
-                # Throw a warning if the pv_GeoLayerID is not unique
-                if geo_util.is_geolist_id(self, GeoLayerID) or geo_util.is_geolayer_id(self, GeoLayerID):
-
-                    # TODO throw a warning
-                    pass
-
-                else:
-                    GeoLayer = GeoLayerMetadata.GeoLayerMetadata(geolayer_id=GeoLayerID,
-                                                             geolayer_qgs_object=qgs_vector_layer_obj,
-                                                             geolayer_source_path=spatial_data_file_path_absolute)
-                    self.command_processor.GeoLayers.append(GeoLayer)
-
-            # The QgsVectorLayer object is invalid. Create a warning.
+            # Determine the GeoLayerID.
+            # If an identifier_prefix value was provided, the GeoLayer's identifier will be in the following format:
+            # [identifier_prefix]_[featureclass]. Otherwise, the identifier is set to the feature class.
+            if pv_GeoLayerID_prefix:
+                GeoLayerID = "{}_{}".format(pv_GeoLayerID_prefix, feature_class)
             else:
-                # TODO egiles 2018-01-03 crate an error handler
+                GeoLayerID = feature_class
+
+            # Throw a warning if the pv_GeoLayerID is not unique.
+            if geo_util.is_geolist_id(self, GeoLayerID) or geo_util.is_geolayer_id(self, GeoLayerID):
+
+                # TODO egiles 2018-01-04 Need to throw a warning
                 pass
 
+            # If the GeoLayerID is unique, create the QGSVectorLayer object and the GeoLayer object. Append the
+            # GeoLayer object to the geoprocessor's GeoLayers list.
+            else:
 
-        # If the SpatialDataFile is not a folder
+                # Envelop the feature class as a QGS object vector layer.
+                # In order for this to work, you must configure ESRI FileGDB Driver in QGIS Installation.
+                # Follow instructions from GetSpatial's post in below reference
+                # REF: https://gis.stackexchange.com/questions/26285/file-geodatabase-gdb-support-in-qgishttps:
+                # //gis.stackexchange.com/questions/26285/file-geodatabase-gdb-support-in-qgis
+                # Must follow file geodatabase input annotation. Follow instructions from nanguna's post in
+                # below reference
+                # REF: https://gis.stackexchange.com/questions/122205/
+                # how-to-add-mdb-geodatabase-layer-feature-class-to-qgis-project-using-python
+                QgsVectorLayer_obj = QgsVectorLayer(str(spatialDataFolder_absolute) + "|layername=" + feature_class,
+                                                    feature_class, 'ogr')
+
+                # A QgsVectorLayer object is almost always created even if it is invalid.
+                # From
+                # `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
+                #   "It is important to check whether the layer has been loaded successfully. If it was not, an invalid
+                #   layer instance is returned."
+                # Check that the newly created QgsVectorLayer object is valid. If so, create a GeoLayer object within
+                # the geoprocessor and add the GeoLayer object to the geoprocessor's GeoLayers list.
+                if QgsVectorLayer_obj.isValid():
+
+                    # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                    GeoLayer = GeoLayerMetadata.GeoLayerMetadata(geolayer_id=GeoLayerID,
+                                                                 geolayer_qgs_object=QgsVectorLayer_obj,
+                                                                 geolayer_source_path=spatialDataFile_absolute)
+                    self.command_processor.GeoLayers.append(GeoLayer)
+
+                # The QgsVectorLayer object is invalid. Create a warning.
+                else:
+                    # TODO egiles 2018-01-03 crate an error handler
+                    pass
+
+        # If the SpatialDataFolder is not a file geodatabase
         else:
+            # TODO egiles 2018-01-04 Need to throw a warning
             print "The SpatialDataFolder {} is not a valid file geodatabase.".format(spatialDataFolder_absolute)

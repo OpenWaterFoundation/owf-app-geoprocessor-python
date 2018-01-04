@@ -27,10 +27,10 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         This command reads a GeoLayer from a GeoJSON file and creates a GeoLayer object within the
         geoprocessor. The GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
 
-        GeoLayers are stored on a a computer or are available for download as a spatial data file (GeoJSON, shapefile,
+        GeoLayers are stored on a computer or are available for download as a spatial data file (GeoJSON, shapefile,
         feature class in a file geodatabase, etc.). Each GeoLayer has one feature type (point, line, polygon, etc.) and
-        other data (an identifier, a coordinate reference system, etc). Note that this function only reads GeoLayers
-        from GeoJSON file format.
+        other data (an identifier, a coordinate reference system, etc). Note that this function only reads a single
+        GeoLayer from a single file in GeoJSON format.
 
         In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
         `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects. This command will read the GeoLayer
@@ -39,7 +39,9 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         Args:
             SpatialDataFile (str, required): the relative pathname to the spatial data file (GeoJSON format)
             GeoLayerID (str, optional): the GeoLayer identifier. If None, the spatial data filename (without the
-            .geojson extension) will be used as the GeoLayer identifier
+            .geojson extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the
+            absolute pathname to the spatial data file is C:/Desktop/Example/example_file.geojson, then the GeoLayerID
+            will be `example_file`.
         """
 
     def __init__(self):
@@ -105,22 +107,26 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_SpatialDataFile, self)))
 
-        # Check that the SpatialDataFile is a GeoJSON file
+        # Check that the SpatialDataFile is a valid file and is in GeoJSON format
         if os.path.isfile(spatialDataFile_absolute) and spatialDataFile_absolute.endswith(".geojson"):
 
             # Obtain the GeoLayerID parameter value
-            filename_wo_ext = (os.path.basename(spatialDataFile_absolute)).replace(".geojson", "")
             pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+
+            # If the pv_GeoLayerID is set to None, assign the filename (without the extension) as the GeoLayerID
             if not pv_GeoLayerID:
-                pv_GeoLayerID = filename_wo_ext
+                pv_GeoLayerID = (os.path.basename(spatialDataFile_absolute)).replace(".geojson", "")
 
             # Throw a warning if the pv_GeoLayerID is not unique
             if geo_util.is_geolist_id(self, pv_GeoLayerID) or geo_util.is_geolayer_id(self, pv_GeoLayerID):
 
-                # TODO throw a warning
+                # TODO egiles 2018-01-04 Need to throw a warning
                 pass
 
+            # If the GeoLayerID is unique, create the QGSVectorLayer object and the GeoLayer object. Append the
+            # GeoLayer object to the geoprocessor's GeoLayers list.
             else:
+
                 # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
                 QgsVectorLayer = command_util.return_qgsvectorlayer_from_spatial_data_file(spatialDataFile_absolute)
 
@@ -130,7 +136,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                                                              geolayer_source_path=spatialDataFile_absolute)
                 self.command_processor.GeoLayers.append(GeoLayer)
 
-
-        # If the SpatialDataFile is not a GeoJSON file
+        # If the SpatialDataFile is not a GeoJSON file, print an error message.
         else:
+            # TODO egiles 2018-01-04 Need to throw a warning
             print "The SpatialDataFile {} is not a valid GeoJSON file.".format(spatialDataFile_absolute)

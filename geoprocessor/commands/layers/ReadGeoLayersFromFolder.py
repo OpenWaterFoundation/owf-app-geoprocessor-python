@@ -30,8 +30,8 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
         GeoLayers are stored on a a computer or are available for download as a spatial data file (GeoJSON, shapefile,
         feature class in a file geodatabase, etc.). Each GeoLayer has one feature type (point, line, polygon, etc.) and
-        other data (an identifier, a coordinate reference system, etc). Note that this function only reads GeoLayers
-        from within a folder.
+        other data (an identifier, a coordinate reference system, etc). Note that this function only reads one or
+        many GeoLayers from within a single folder.
 
         In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
         `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects. This command will read the GeoLayers
@@ -40,10 +40,11 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         Args:
             SpatialDataFolder (str, required): the relative pathname to the folder containing spatial data files
             GeoLayerID_prefix (str, optional): the GeoLayer identifier will, by default, use the filename of the
-            spatial data file that is being read. However, if a value is set for this parameter, the GeoLayerID will
-            take the following format: [GeoLayerID_prefix]_[filename]
+                spatial data file that is being read. However, if a value is set for this parameter, the GeoLayerID
+                will take the following format: [GeoLayerID_prefix]_[filename]
             Subset_Pattern (str, optional): the glob-style pattern of the filename to determine which spatial data
-            file within the folder are to be processed
+                file within the folder are to be processed.  More information on creating a glob pattern can be found
+                at `this site <https://docs.python.org/2/library/glob.html>`_.
         """
 
     def __init__(self):
@@ -77,11 +78,11 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
         # Check that parameter SpatialDataFolder is a non-empty, non-None string.
         pv_SpatialDataFolder = self.get_parameter_value(parameter_name='SpatialDataFolder',
-                                                      command_parameters=command_parameters)
+                                                        command_parameters=command_parameters)
 
         if not validators.validate_string(pv_SpatialDataFolder, False, False):
-            message = "SpatialDataFile parameter has no value."
-            recommendation = "Specify text for the SpatialDataFile parameter."
+            message = "SpatialDataFolder parameter has no value."
+            recommendation = "Specify text for the SpatialDataFolder parameter."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -101,7 +102,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
     def run_command(self):
 
-        # Obtain the SpatialDataFolder parameter value and the Subset_Pattern parameter value
+        # Obtain the SpatialDataFolder parameter value and the Subset_Pattern parameter values
         pv_SpatialDataFolder = self.get_parameter_value("SpatialDataFolder")
         pv_Subset_Pattern = self.get_parameter_value("Subset_Pattern")
 
@@ -115,17 +116,22 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
             # Determine which files within the folder should be processed. All files will be processed if
             # pv_Subset_Pattern is set to None. Otherwise only files that match the given pattern will be processed.
+            # Check that each file in the folder is:
+            #   1. a file
+            #   2. a spatial data file (ends in .shp or .geojson)
+            #   3. follows the given pattern (if Subset_Pattern parameter value does not equal None)
             if pv_Subset_Pattern:
                 spatial_data_files_abs = [os.path.join(spatialDataFolder_absolute, source_file)
-                                    for source_file in glob.glob(os.path.join(spatialDataFolder_absolute, pv_Subset_Pattern))
-                                    if os.path.isfile(os.path.join(spatialDataFolder_absolute, source_file))
-                                    and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
+                                          for source_file in glob.glob(os.path.join(spatialDataFolder_absolute,
+                                                                                    pv_Subset_Pattern))
+                                          if os.path.isfile(os.path.join(spatialDataFolder_absolute, source_file))
+                                          and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
 
             else:
                 spatial_data_files_abs = [os.path.join(spatialDataFolder_absolute, source_file)
-                                    for source_file in os.listdir(spatialDataFolder_absolute)
-                                    if os.path.isfile(os.path.join(spatialDataFolder_absolute, source_file))
-                                    and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
+                                          for source_file in os.listdir(spatialDataFolder_absolute)
+                                          if os.path.isfile(os.path.join(spatialDataFolder_absolute, source_file))
+                                          and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
 
             # Iterate through the desired spatial data files
             for spatial_data_file in spatial_data_files_abs:
@@ -133,17 +139,20 @@ class ReadGeoLayersFromFolder(AbstractCommand):
                 # Get the filename without the extension
                 filename_wo_ext = (os.path.basename(spatial_data_file)).rsplit('.')[0]
 
-                # Get the GeoLayerID
+                # Determine the GeoLayerID.
+                # If an identifier_prefix value was provided, the GeoLayer's identifier will be in the following
+                # format: [identifier_prefix]_[filename_without_ext]. Otherwise, the identifier is set to the filename
+                # without extension.
                 pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
                 if pv_GeoLayerID_prefix:
                     GeoLayerID = "{}_{}".format(pv_GeoLayerID_prefix, filename_wo_ext)
                 else:
                     GeoLayerID = filename_wo_ext
 
-                # Throw a warning if the pv_GeoLayerID is not unique
+                # Throw a warning if the pv_GeoLayerID is not unique.
                 if geo_util.is_geolist_id(self, GeoLayerID) or geo_util.is_geolayer_id(self, GeoLayerID):
 
-                    # TODO throw a warning
+                    # TODO egiles 2018-01-04 Need to throw a warning
                     pass
 
                 else:
@@ -156,7 +165,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
                                                                  geolayer_source_path=spatial_data_file)
                     self.command_processor.GeoLayers.append(GeoLayer)
 
-
-        # If the SpatialDataFile is not a folder
+        # If the SpatialDataFolder is not a folder
         else:
+            # TODO egiles 2018-01-04 Need to throw a warning
             print "The SpatialDataFolder {} is not a valid folder.".format(spatialDataFolder_absolute)

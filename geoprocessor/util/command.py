@@ -6,6 +6,10 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
+from qgis.core import QgsVectorLayer
+
+import os
+
 
 def parse_command_name_from_command_string(command_string):
     """
@@ -416,3 +420,27 @@ def validate_command_parameter_names(command, warning, deprecated_parameter_name
             command_phase_type.INITIALIZATION,
             CommandLogRecord(command_status_type.WARNING, msg, "Specify only valid parameters - see documentation."))
     return warning
+
+def return_qgsvectorlayer_from_spatial_data_file(spatial_data_file_abs):
+
+    # Instantiate the QGSVectorLayer object.
+    # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
+    # to create a QGSVectorLayer object, the following parameters must be entered:
+    #   data_source: string representing the full path the the spatial data file
+    #   layer_name: string representing the layer name that will be used in the QGIS layer list widget
+    #       -- in this function the layer name is defaulted to the spatial data filename (with extension)
+    #   provider_name: string representing the data provider (defaulted within this function to 'ogr')
+    qgs_vector_layer_obj = QgsVectorLayer(spatial_data_file_abs, os.path.basename(spatial_data_file_abs), 'ogr')
+
+    # A QgsVectorLayer object is almost always created even if it is invalid.
+    # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
+    #   "It is important to check whether the layer has been loaded successfully. If it was not, an invalid
+    #   layer instance is returned."
+    # Check that the newly created QgsVectorLayer object is valid. If so, create a GeoLayer object within the
+    # geoprocessor and add the GeoLayer object to the geoprocessor's GeoLayers list.
+    if qgs_vector_layer_obj.isValid():
+        return qgs_vector_layer_obj
+
+    else:
+        print "The QGSVectorLayer object ({}) is invalid.".format(spatial_data_file_abs)
+        return None

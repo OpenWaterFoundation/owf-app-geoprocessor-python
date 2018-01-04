@@ -7,7 +7,6 @@
 
 import geoprocessor.core.GeoProcessor as GeoProcessor
 import os
-import geoprocessor.util.geo as geo
 
 
 if __name__ == "__main__":
@@ -17,3 +16,6 @@ if __name__ == "__main__":
     processor.process_command_file(os.path.join(cmdFileDir, "create_layers_test.txt"))
     print processor.GeoLayers
     print processor.GeoLists
+
+    for GeoLayer in processor.GeoLayers:
+        print GeoLayer.id, GeoLayer.source_path

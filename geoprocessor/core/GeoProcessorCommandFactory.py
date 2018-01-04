@@ -1,7 +1,9 @@
 import geoprocessor.util.command as command_util
 
-from geoprocessor.commands.layers.CreateGeoLayers import CreateGeoLayers
-from geoprocessor.commands.layers.CreateGeoList import CreateGeoList
+from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
+from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
+from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
+from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
@@ -33,8 +35,6 @@ class GeoProcessorCommandFactory(object):
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
         "COPYFILE": CopyFile(),
-        "CREATEGEOLAYERS": CreateGeoLayers(),
-        "CREATEGEOLIST": CreateGeoList(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
@@ -122,10 +122,14 @@ class GeoProcessorCommandFactory(object):
                 # Constructing the following way always seems to work properly
                 if command_name_upper == "COPYFILE":
                     return CopyFile()
-                elif command_name_upper == "CREATEGEOLAYERS":
-                    return CreateGeoLayers()
-                elif command_name_upper == "CREATEGEOLIST":
-                    return CreateGeoList()
+                elif command_name_upper == "READGEOLAYERSFROMFOLDER":
+                    return ReadGeoLayersFromFolder()
+                elif command_name_upper == "READGEOLAYERFROMGEOJSON":
+                    return ReadGeoLayerFromGeoJSON()
+                elif command_name_upper == "READGEOLAYERFROMSHAPEFILE":
+                    return ReadGeoLayerFromShapefile()
+                elif command_name_upper == "READGEOLAYERSFROMFGDB":
+                    return ReadGeoLayersFromFGDB()
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
                     return CreateRegressionTestCommandFile()
                 elif command_name_upper == "ENDFOR":

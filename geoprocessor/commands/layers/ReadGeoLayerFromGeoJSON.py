@@ -19,7 +19,6 @@ import logging
 
 # Inherit from Abstract Command
 class ReadGeoLayerFromGeoJSON(AbstractCommand):
-    # TODO egiles 2018-01-03 Add Raises section in command documentation
 
     """
         Reads a GeoLayer from a GeoJSON spatial data file.
@@ -42,6 +41,15 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             .geojson extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the
             absolute pathname to the spatial data file is C:/Desktop/Example/example_file.geojson, then the GeoLayerID
             will be `example_file`.
+
+        Returns:
+            Nothing
+
+        Raises:
+            ValueError if any parameters are invalid or do not have a valid value.
+            The command status messages for initialization are populated with validation messages.
+            RuntimeError if any errors occurred during run_command method. Warnings within the run_command method do
+            not throw a RuntimeError but instead print a warning to the log.
         """
 
     def __init__(self):
@@ -99,6 +107,11 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
     def run_command(self):
 
+        # Set up logger and warning/error count
+        warning_count = 0
+        error_count = 0
+        logger = logging.getLogger(__name__)
+
         # Obtain the SpatialDataFile parameter value
         pv_SpatialDataFile = self.get_parameter_value("SpatialDataFile")
 
@@ -117,26 +130,62 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             if not pv_GeoLayerID:
                 pv_GeoLayerID = (os.path.basename(spatialDataFile_absolute)).replace(".geojson", "")
 
-            # Throw a warning if the pv_GeoLayerID is not unique
-            if geo_util.is_geolist_id(self, pv_GeoLayerID) or geo_util.is_geolayer_id(self, pv_GeoLayerID):
+            # Mark as an error if the pv_GeoLayerID is the same as a registered GeoLayerList ID
+            if geo_util.is_geolist_id(self, pv_GeoLayerID):
 
-                # TODO egiles 2018-01-04 Need to throw a warning
-                pass
+                error_count += 1
+                message = 'The GeoLayer ID ({}) is already a registered GeoLayerList ID.'.format(pv_GeoLayerID)
+                logger.error(message)
 
-            # If the GeoLayerID is unique, create the QGSVectorLayer object and the GeoLayer object. Append the
-            # GeoLayer object to the geoprocessor's GeoLayers list.
             else:
 
-                # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
-                QgsVectorLayer = command_util.return_qgsvectorlayer_from_spatial_data_file(spatialDataFile_absolute)
+                # Mark as a warning if the pv_GeoLayerID is the same as a registered GeoLayer ID. The registered
+                # GeoLayer will be overwritten with this new GeoLayer.
+                if geo_util.is_geolayer_id(self, pv_GeoLayerID):
 
-                # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                GeoLayer_obj = GeoLayer(geolayer_id=pv_GeoLayerID,
-                                        geolayer_qgs_object=QgsVectorLayer,
-                                        geolayer_source_path=spatialDataFile_absolute)
-                self.command_processor.GeoLayers.append(GeoLayer_obj)
+                    warning_count += 1
+                    message = 'The GeoList ID ({}) is already registered. GeoLayer ID ({}) is being overwritten.'\
+                        .format(pv_GeoLayerID, pv_GeoLayerID)
+                    logger.warning(message)
 
-        # If the SpatialDataFile is not a GeoJSON file, print an error message.
+                # Create the QGSVectorLayer object and the GeoLayer object. Append the
+                # GeoLayer object to the geoprocessor's GeoLayers list.
+                try:
+
+                    # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
+                    QgsVectorLayer = command_util.return_qgsvectorlayer_from_spatial_data_file(spatialDataFile_absolute)
+
+                    # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                    GeoLayer_obj = GeoLayer(geolayer_id=pv_GeoLayerID,
+                                            geolayer_qgs_object=QgsVectorLayer,
+                                            geolayer_source_path=spatialDataFile_absolute)
+                    self.command_processor.GeoLayers.append(GeoLayer_obj)
+
+                # Raise an exception if an unexpected error occurs during the process
+                except Exception as e:
+                    error_count += 1
+                    message = "Unexpected error creating GeoLayer {}.".format(pv_GeoLayerID)
+                    logger.exception(message, e)
+                    self.command_status.add_to_log(command_phase_type.RUN,
+                                                   CommandLogRecord(command_status_type.FAILURE, message,
+                                                                    "Check the log file for details."))
+
+        # If the SpatialDataFile is not a GeoJSON file, log an error message.
         else:
-            # TODO egiles 2018-01-04 Need to throw a warning
-            print "The SpatialDataFile {} is not a valid GeoJSON file.".format(spatialDataFile_absolute)
+            error_count += 1
+            message = 'The SpatialDataFile ({}) is not a valid GeoJSON file.'.format(pv_SpatialDataFile)
+            logger.error(message)
+
+        # Determine success of command processing
+        # Raise Runtime Error if any errors occurred
+        if error_count > 0:
+            message = "There were {} errors and {} warnings proceeding this command.".format(error_count, warning_count)
+            raise RuntimeError(message)
+
+        # Set command status type as SUCCESS if there are no errors. Print warning message to log if any warnings
+        # occurred.
+        else:
+            if warning_count > 0:
+                message = "There were 0 errors and {} warnings proceeding this command.".format(warning_count)
+                logger.warning(message)
+            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

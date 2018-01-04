@@ -1,7 +1,7 @@
-class GeoLayerMetadata(object):
+class GeoLayer(object):
 
     """
-    Metadata for the GeoLayers, a list of which is maintained as GeoProcessor.GeoLayers.
+    GeoLayer, a list of which is maintained as GeoProcessor.GeoLayers.
     This class is used to hold GeoLayer properties for each registered GeoLayer.
     """
 
@@ -22,7 +22,7 @@ class GeoLayerMetadata(object):
         # "geom_type" is a string that represents the GeoLayer's geometry type. The QGIS environment has an enumerator
         # system for each geometry type. The return_geometry_type_from_wkbtype function converts the enumerator with
         # the name of the geometry type.
-        self.geom_type = GeoLayerMetadata.return_geometry_type_from_wkbtype(geolayer_qgs_object.wkbType())
+        self.geom_type = GeoLayer.return_geometry_type_from_wkbtype(geolayer_qgs_object.wkbType())
 
         # "feature_count" is an int that represents the number of features within the GeoLayer
         self.feature_count = geolayer_qgs_object.featureCount()

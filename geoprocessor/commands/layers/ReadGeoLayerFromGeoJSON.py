@@ -6,7 +6,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-import geoprocessor.core.GeoLayerMetadata as GeoLayerMetadata
+from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command as command_util
 import geoprocessor.util.geo as geo_util
@@ -131,10 +131,10 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 QgsVectorLayer = command_util.return_qgsvectorlayer_from_spatial_data_file(spatialDataFile_absolute)
 
                 # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                GeoLayer = GeoLayerMetadata.GeoLayerMetadata(geolayer_id=pv_GeoLayerID,
-                                                             geolayer_qgs_object=QgsVectorLayer,
-                                                             geolayer_source_path=spatialDataFile_absolute)
-                self.command_processor.GeoLayers.append(GeoLayer)
+                GeoLayer_obj = GeoLayer(geolayer_id=pv_GeoLayerID,
+                                        geolayer_qgs_object=QgsVectorLayer,
+                                        geolayer_source_path=spatialDataFile_absolute)
+                self.command_processor.GeoLayers.append(GeoLayer_obj)
 
         # If the SpatialDataFile is not a GeoJSON file, print an error message.
         else:

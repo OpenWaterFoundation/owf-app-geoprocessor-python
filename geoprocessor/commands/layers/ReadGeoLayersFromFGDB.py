@@ -6,7 +6,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-import geoprocessor.core.GeoLayerMetadata as GeoLayerMetadata
+from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command as command_util
 import geoprocessor.util.geo as geo_util
@@ -252,10 +252,10 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 if QgsVectorLayer_obj.isValid():
 
                     # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                    GeoLayer = GeoLayerMetadata.GeoLayerMetadata(geolayer_id=GeoLayerID,
-                                                                 geolayer_qgs_object=QgsVectorLayer_obj,
-                                                                 geolayer_source_path=spatialDataFile_absolute)
-                    self.command_processor.GeoLayers.append(GeoLayer)
+                    GeoLayer_obj = GeoLayer(geolayer_id=GeoLayerID,
+                                            geolayer_qgs_object=QgsVectorLayer_obj,
+                                            geolayer_source_path=spatialDataFile_absolute)
+                    self.command_processor.GeoLayers.append(GeoLayer_obj)
 
                 # The QgsVectorLayer object is invalid. Create a warning.
                 else:

@@ -9,7 +9,14 @@ venv/
 *.py[cod]
 __pycache__/
 
-# VIM editor files
+# MkDocs site
+doc-dev-mkdocs-project/site/
+
+# vim editor files
 
 *.swp
 *.swo
+
+# Microsoft temporary files
+*.tmp
+~$*

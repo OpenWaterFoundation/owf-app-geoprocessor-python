@@ -34,7 +34,7 @@ class CreateGeoList(AbstractCommand):
         GeoListId (str): a unique id that will be used to identify the GeoList"""
 
     def __init__(self):
-        """Initialize the command"""
+        """Initialize the command."""
 
         super(CreateGeoList, self).__init__()
         self.command_name = "CreateGeoList"

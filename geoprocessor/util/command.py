@@ -382,7 +382,7 @@ def validate_command_parameter_names(command, warning, deprecated_parameter_name
                 try:
                     del command.command_parameters[parameter_name]
                     del command_parameter_names[i_parameter]
-                    i_parameter = i_parameter - 1
+                    i_parameter -= 1
                     # Size of the dictionary will be checked in for statement,
                     # which will reflect the new list size
                 except KeyError:
@@ -420,6 +420,7 @@ def validate_command_parameter_names(command, warning, deprecated_parameter_name
             command_phase_type.INITIALIZATION,
             CommandLogRecord(command_status_type.WARNING, msg, "Specify only valid parameters - see documentation."))
     return warning
+
 
 def return_qgsvectorlayer_from_spatial_data_file(spatial_data_file_abs):
 

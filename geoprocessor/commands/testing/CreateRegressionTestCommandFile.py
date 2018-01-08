@@ -13,16 +13,26 @@ import geoprocessor.util.validators as validators
 
 import os
 
-# Inherit from AbstractCommand
 class CreateRegressionTestCommandFile(AbstractCommand):
+    """
+    The CreateRegressionTestCommandFile examines a folder tree and creates a command
+    file with RunCommand commands for all GeoProcessor command files to run.
+    This is used to automate creating the full test suite to test the software.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("SearchFolder", type("")),
+        CommandParameterMetadata("FilenamePattern", type("")),
+        CommandParameterMetadata("OutputFile", type(""))
+    ]
+
     def __init__(self):
+        """
+        Initialize a new instance of the command.
+        """
         super(CreateRegressionTestCommandFile, self).__init__()
         self.command_name = "CreateRegressionTestCommandFile"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("SearchFolder", type("")),
-            CommandParameterMetadata("FilenamePattern", type("")),
-            CommandParameterMetadata("OutputFile", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """

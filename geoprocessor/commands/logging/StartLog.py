@@ -13,18 +13,25 @@ import geoprocessor.util.log as log_util
 import geoprocessor.util.validators as validators
 
 import logging
-import sys
-import traceback
 
 
-# Inherit from AbstractCommand
 class StartLog(AbstractCommand):
+    """
+    The StartLog command (re)starts the log file.
+    This is useful to ensure that a local log file is created with the command file.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("LogFile", type(""))
+    ]
+
     def __init__(self):
+        """
+        Initialize the command instance.
+        """
         super(StartLog, self).__init__()
         self.command_name = "StartLog"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("LogFile", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """
@@ -85,7 +92,7 @@ class StartLog(AbstractCommand):
             # - The initial application log file will be closed.
             log_util.reset_log_file_handler(log_file_absolute)
         except Exception as e:
-            ++warning_count
+            warning_count += 1
             message = 'Unexpected error (re)starting log file "' + log_file_absolute + '"'
             logger.exception(message, e)
             self.command_status.add_to_log(

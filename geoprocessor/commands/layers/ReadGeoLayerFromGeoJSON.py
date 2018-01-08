@@ -17,7 +17,6 @@ import os
 import logging
 
 
-# Inherit from Abstract Command
 class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
     """
@@ -52,16 +51,18 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             not throw a RuntimeError but instead print a warning to the log.
         """
 
-    def __init__(self):
-        """Initialize the command"""
+    __command_parameter_metadata = [
+        CommandParameterMetadata("SpatialDataFile", type("")),
+        CommandParameterMetadata("GeoLayerID", type(""))
+    ]
 
+    def __init__(self):
+        """
+        Initialize the command
+        """
         super(ReadGeoLayerFromGeoJSON, self).__init__()
         self.command_name = "ReadGeoLayerFromGeoJSON"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("SpatialDataFile", type("")),
-            CommandParameterMetadata("GeoLayerID", type("")),
-            CommandParameterMetadata("CommandStatus", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """

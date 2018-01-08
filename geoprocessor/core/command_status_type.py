@@ -62,3 +62,32 @@ def max_severity(command_status1, command_status2):
         return command_status1
     else:
         return command_status2
+
+
+def value_of(str_value, ignore_case=False):
+    """
+    Look up the value of an enumeration given the string value.
+    This is useful for standardizing internal values to the specific enumeration value
+    whereas some code may accept variants, such as 'WARN' and 'FAIL'.
+
+    Args:
+        str_value (str): String value of the enumeration.
+        ignore_case (bool): Whether or not to ignore case (default = False).
+
+    Returns:
+        Value of the enumeration, or None if not matched.
+    """
+    if ignore_case:
+        # Input string can be anything so convert to uppercase for comparison
+        str_value = str_value.upper()
+
+    if str_value == 'UNKNOWN':
+        return UNKNOWN
+    elif str_value == 'INFO':
+        return INFO
+    elif str_value == 'WARNING' or str_value == 'WARN':
+        return WARNING
+    elif str_value == 'FAILURE' or str_value == 'FAIL':
+        return FAILURE
+    else:
+        return None

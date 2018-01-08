@@ -10,17 +10,27 @@ import geoprocessor.core.command_status_type as command_status_type
 import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
 
-# Inherit from AbstractCommand
 class If(AbstractCommand):
+    """
+    The If command starts an If block.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Condition", type("")),
+        CommandParameterMetadata("CompareAsStrings", type(True))
+    ]
+
     def __init__(self):
+        """
+        Initialize the command instance.
+        """
         super(If, self).__init__()
-        self.condition_eval = True
+        # AbstractCommand data
         self.command_name = "If"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("Name",type(""),None),
-            CommandParameterMetadata("Condition",type(""),None),
-            CommandParameterMetadata("CompareAsStrings",type(True),None)
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
+        # Local data
+        self.condition_eval = True
 
     def check_command_parameters(self, command_parameters):
         '''Check the command parameters for validity.'''

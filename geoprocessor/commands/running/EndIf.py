@@ -11,14 +11,22 @@ import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
 
 
-# Inherit from AbstractCommand
 class EndIf(AbstractCommand):
+    """
+    The EndIf command indicates the end of an If block.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("Name", type(""))
+    ]
+
     def __init__(self):
+        """
+        Initialize the command instance.
+        """
         super(EndIf, self).__init__()
         self.command_name = "EndIf"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("Name", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """

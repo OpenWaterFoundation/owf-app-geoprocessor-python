@@ -13,15 +13,24 @@ import geoprocessor.util.validators as validators
 import logging
 
 
-# Inherit from AbstractCommand
 class Message(AbstractCommand):
+    """
+    The Message command prints a message to the log file and optionally sets
+    the command status to alert about an issue.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("Message", type("")),
+        CommandParameterMetadata("CommandStatus", type(""))
+    ]
+
     def __init__(self):
+        """
+        Initialize the command instance.
+        """
         super(Message, self).__init__()
         self.command_name = "Message"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("Message", type("")),
-            CommandParameterMetadata("CommandStatus", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """

@@ -1,9 +1,11 @@
 import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
 
 
-# Inherit from AbstractCommand
 class UnknownCommand(AbstractCommand.AbstractCommand):
     def __init__(self):
+        """
+        Initialize a new instance of the command.
+        """
         # Don't set the command name because don't know that there is one.
         # The AbstractCommand.command_string will be used to output the full string:
         super(UnknownCommand, self).__init__()

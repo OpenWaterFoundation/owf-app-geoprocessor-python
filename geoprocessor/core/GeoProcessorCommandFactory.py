@@ -14,6 +14,7 @@ from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
 from geoprocessor.commands.running.SetProperty import SetProperty
 
+from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
 
 from geoprocessor.commands.util.CopyFile import CopyFile
@@ -34,6 +35,7 @@ class GeoProcessorCommandFactory(object):
     # 1) It provides a registry of all commands known to the geoprocessor (via this factory class)
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
+        "COMPAREFILES": CompareFiles(),
         "COPYFILE": CopyFile(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
         "ENDFOR": EndFor(),
@@ -120,7 +122,9 @@ class GeoProcessorCommandFactory(object):
                     return command
             else:
                 # Constructing the following way always seems to work properly
-                if command_name_upper == "COPYFILE":
+                if command_name_upper == "COMPAREFILES":
+                    return CompareFiles()
+                elif command_name_upper == "COPYFILE":
                     return CopyFile()
                 elif command_name_upper == "READGEOLAYERSFROMFOLDER":
                     return ReadGeoLayersFromFolder()

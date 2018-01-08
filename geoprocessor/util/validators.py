@@ -44,6 +44,76 @@ def validate_bool(bool_value, none_allowed, empty_string_allowed):
     return True
 
 
+def validate_float(float_value, none_allowed, empty_string_allowed):
+    """
+    Validate that a floating point value is valid.
+
+    Args:
+        float_value: Floating point value to check, can be string or floating point (float) type.
+        none_allowed: If the value is None, OK.
+        empty_string_allowed: If the value is an empty string, OK.
+
+    Returns:
+        True if float value is valid, False if invalid.
+    """
+    # First check some specific cases
+    if float_value is None:
+        if none_allowed:
+            return True
+        else:
+            return False
+    if isinstance(float_value, str):
+        if float_value == "":
+            if empty_string_allowed:
+                return True
+            else:
+                return False
+        # Reassign the value as a float to check
+        try:
+            float(float_value)
+        except ValueError:
+            return False
+    else:
+        # May do more checks later but for now above should be sufficient
+        pass
+    return True
+
+
+def validate_int(int_value, none_allowed, empty_string_allowed):
+    """
+    Validate that an integer value is valid.
+
+    Args:
+        int_value: Integer value to check, can be string or integer (int) type.
+        none_allowed: If the value is None, OK.
+        empty_string_allowed: If the value is an empty string, OK.
+
+    Returns:
+        True if integer value is valid, False if invalid.
+    """
+    # First check some specific cases
+    if int_value is None:
+        if none_allowed:
+            return True
+        else:
+            return False
+    if isinstance(int_value, str):
+        if int_value == "":
+            if empty_string_allowed:
+                return True
+            else:
+                return False
+        # Reassign the value as an integer to check
+        try:
+            int(int_value)
+        except ValueError:
+            return False
+    else:
+        # May do more checks later but for now above should be sufficient
+        pass
+    return True
+
+
 def validate_int_in_range(int_value, int_min, int_max, none_allowed, empty_string_allowed):
     """
     Validate that an integer value is in a range.
@@ -85,7 +155,7 @@ def validate_int_in_range(int_value, int_min, int_max, none_allowed, empty_strin
 
 def validate_number(number_value, none_allowed, empty_string_allowed):
     """
-    Validate that a number value is True or False.
+    Validate that a number value is valid.
 
     Args:
         number_value: Number value to check, can be string or number (int or float) type.

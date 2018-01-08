@@ -13,16 +13,25 @@ import geoprocessor.util.validators as validators
 import logging
 
 
-# Inherit from AbstractCommand
 class SetProperty(AbstractCommand):
+    """
+    The SetProperty command sets a processor property.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("PropertyName", type("")),
+        CommandParameterMetadata("PropertyType", type("")),
+        CommandParameterMetadata("PropertyValue", type(""))
+    ]
+
     def __init__(self):
+        """
+        Initialize a command instance.
+        """
+        # AbstractCommand data
         super(SetProperty, self).__init__()
         self.command_name = "SetProperty"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("PropertyName", type("")),
-            CommandParameterMetadata("PropertyType", type("")),
-            CommandParameterMetadata("PropertyValue", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """
@@ -108,7 +117,7 @@ class SetProperty(AbstractCommand):
             if pv_PropertyValue2 is not None:
                 self.command_processor.set_property(pv_PropertyName, pv_PropertyValue2)
         except Exception as e:
-            ++warning_count
+            warning_count += 1
             message = 'Unexpected error setting property "' + pv_PropertyName + '"'
             logger.exception(message, e)
             self.command_status.add_to_log(

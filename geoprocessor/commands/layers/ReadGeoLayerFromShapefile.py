@@ -17,7 +17,6 @@ import os
 import logging
 
 
-# Inherit from Abstract Command
 class ReadGeoLayerFromShapefile(AbstractCommand):
     # TODO egiles 2018-01-03 Add Raises section in command documentation
 
@@ -44,16 +43,18 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             will be `example_file`.
         """
 
-    def __init__(self):
-        """Initialize the command"""
+    __command_parameter_metadata = [
+        CommandParameterMetadata("SpatialDataFile", type("")),
+        CommandParameterMetadata("GeoLayerID", type(""))
+    ]
 
+    def __init__(self):
+        """
+        Initialize the command
+        """
         super(ReadGeoLayerFromShapefile, self).__init__()
         self.command_name = "ReadGeoLayerFromShapefile"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("SpatialDataFile", type("")),
-            CommandParameterMetadata("GeoLayerID", type("")),
-            CommandParameterMetadata("CommandStatus", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """

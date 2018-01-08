@@ -21,7 +21,6 @@ import re
 import ogr
 
 
-# Inherit from Abstract Command
 class ReadGeoLayersFromFGDB(AbstractCommand):
     # TODO egiles 2018-01-03 Add Raises section in command documentation
 
@@ -51,17 +50,19 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 can be found at `this site <https://docs.python.org/2/library/glob.html>`_.
         """
 
-    def __init__(self):
-        """Initialize the command"""
+    __command_parameter_metadata = [
+        CommandParameterMetadata("SpatialDataFolder", type("")),
+        CommandParameterMetadata("GeoLayerID_prefix", type("")),
+        CommandParameterMetadata("Subset_Pattern", type(""))
+    ]
 
+    def __init__(self):
+        """
+        Initialize the command
+        """
         super(ReadGeoLayersFromFGDB, self).__init__()
         self.command_name = "ReadGeoLayersFromFGDB"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("SpatialDataFolder", type("")),
-            CommandParameterMetadata("GeoLayerID_prefix", type("")),
-            CommandParameterMetadata("Subset_Pattern", type("")),
-            CommandParameterMetadata("CommandStatus", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """

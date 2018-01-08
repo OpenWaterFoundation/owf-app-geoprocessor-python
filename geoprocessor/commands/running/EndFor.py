@@ -11,14 +11,22 @@ import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
 
 
-# Inherit from AbstractCommand
 class EndFor(AbstractCommand):
+    """
+    The EndFor command indicates the end of a For block.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("Name", type(""))
+    ]
+
     def __init__(self):
+        """
+        Initialize the command instance.
+        """
         super(EndFor, self).__init__()
         self.command_name = "EndFor"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("Name", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """

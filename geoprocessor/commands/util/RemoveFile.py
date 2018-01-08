@@ -16,17 +16,28 @@ import os
 import sys
 import traceback
 
-# Inherit from AbstractCommand
+
 class RemoveFile(AbstractCommand):
+    """
+    The RemoveFile command removes a file from the computer.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("SourceFile", type("")),
+        CommandParameterMetadata("IfSourceFileNotFound", type(""))
+    ]
+
+    # Choices for IfNotFound, used to validate parameter and display in editor
+    __choices_IfSourceFileNotFound = ["Ignore", "Warn", "Fail"]
+
     def __init__(self):
+        """
+        Initialize a new instance of the command.
+        """
+        # AbstractCommand data
         super(RemoveFile, self).__init__()
         self.command_name = "RemoveFile"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("SourceFile",type(""),None),
-            CommandParameterMetadata("IfSourceFileNotFound",type(""),None)
-        ]
-        # Choices for IfNotFound, used to validate parameter and display in editor
-        self.choices_IfSourceFileNotFound = [ "Ignore", "Warn", "Fail" ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
         """
@@ -49,23 +60,25 @@ class RemoveFile(AbstractCommand):
         if not validators.validate_string(pv_SourceFile, False, False):
             message = "The SourceFile must be specified."
             warning_message += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, "Specify the source file."))
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, "Specify the source file."))
         pv_IfSourceFileNotFound = self.get_parameter_value(parameter_name='IfSourceFileNotFound',
                                                            command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IfSourceFileNotFound,self.choices_IfSourceFileNotFound, True, True):
+        if not validators.validate_string_in_list(pv_IfSourceFileNotFound,
+                                                  self.__choices_IfSourceFileNotFound, True, True):
             message = "IfSourceFileNotFound parameter is invalid."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message,
                                  "Specify the IfSourceFileNotFound parameter as blank or one of " +
-                                 str(self.choices_IfSourceFileNotFound)))
+                                 str(self.__choices_IfSourceFileNotFound)))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
         # triggers an exception below.
-        warning_message = command_util.validate_command_parameter_names ( self, warning_message )
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception
         if len(warning_message) > 0:
@@ -95,7 +108,7 @@ class RemoveFile(AbstractCommand):
 
         pv_SourceFile_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_SourceFile,self)))
+                                     self.command_processor.expand_parameter_value(pv_SourceFile, self)))
 
         if warning_count > 0:
             message = "There were " + warning_count + " warnings about command parameters."
@@ -107,21 +120,21 @@ class RemoveFile(AbstractCommand):
         try:
             input_count = 1
             if not os.path.exists(pv_SourceFile_absolute):
-                ++warning_count
+                warning_count += 1
                 message = 'The source file does not exist: "' + pv_SourceFile_absolute + '"'
                 self.command_status.add_to_log(
                     command_phase_type.RUN,
                     CommandLogRecord(command_status_type.FAILURE, message,
                                      "Verify that the source exists at the time the command is run."))
                 logger.warning(message)
-                --input_count
+                input_count -= 1
 
             if input_count == 1:
                 logger.info('Removing file "' + pv_SourceFile_absolute + '"')
                 os.remove(pv_SourceFile_absolute)
 
         except Exception as e:
-            ++warning_count
+            warning_count += 1
             message = 'Unexpected error removing file "' + pv_SourceFile_absolute + '"'
             traceback.print_exc(file=sys.stdout)
             logger.exception(message, e)

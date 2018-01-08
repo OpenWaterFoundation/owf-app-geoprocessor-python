@@ -14,20 +14,28 @@ import sys
 import traceback
 
 
-# Inherit from AbstractCommand
 class For(AbstractCommand):
+    """
+    The For command starts a For block.
+    """
+
+    __command_parameter_metadata = [
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("IteratorProperty", type("")),
+        # Use strings for sequence because could be integer, decimal, or string list.
+        CommandParameterMetadata("SequenceStart", type("")),
+        CommandParameterMetadata("SequenceEnd", type("")),
+        CommandParameterMetadata("SequenceIncrement", type(""))
+    ]
+
     def __init__(self):
+        """
+        Initialize an instance of the command.
+        """
         super(For, self).__init__()
-        # AbstractCommand
+        # AbstractCommand data
         self.command_name = "For"
-        self.command_parameter_metadata = [
-            CommandParameterMetadata("Name", type("")),
-            CommandParameterMetadata("IteratorProperty", type("")),
-            # Use strings for sequence because could be integer, decimal, or string list.
-            CommandParameterMetadata("SequenceStart", type("")),
-            CommandParameterMetadata("SequenceEnd", type("")),
-            CommandParameterMetadata("SequenceIncrement", type(""))
-        ]
+        self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Local data
         self.for_initialized = False

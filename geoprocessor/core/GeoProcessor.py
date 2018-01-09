@@ -47,11 +47,11 @@ class GeoProcessor(object):
         # Property dictionary that holds all geoprocessor properties.
         self.properties = {}
 
-        # GeoLayer list that holds all registered GeoLayer objects.
-        self.GeoLayers = []
+        # geolayers list that holds all registered GeoLayer objects.
+        self.geolayers = []
 
-        # GeoList list that holds all registered GeoList objects.
-        self.GeoLists = []
+        # geolayerlists list that holds all registered GeoList objects.
+        self.geolayerlists = []
 
         # Set properties for QGIS environment.
         # temp_dir: the full pathname to the folder that will hold all temporary, intermediate files created by the
@@ -80,6 +80,19 @@ class GeoProcessor(object):
         # This check was performed in each command in the Java code but is handled in the processor
         # to simplify command class code.
         # self.__command_should_clear_run_log = True
+
+    def add_geolayer(self, geolayer):
+        """
+        Add a GeoLayer object to the geolayers list.
+
+        Args:
+            geolayer: instance of a GeoLayer object
+
+        Return:
+            Nothing
+        """
+        print "HERE 000000000000000000000000000000000000"
+        self.geolayers.append(geolayer)
 
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):

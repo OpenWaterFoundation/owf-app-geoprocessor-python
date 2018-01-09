@@ -10,6 +10,7 @@ from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command as command_util
 import geoprocessor.util.geo as geo_util
+import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.io as io_util
 import geoprocessor.util.validators as validators
 
@@ -20,46 +21,35 @@ import logging
 class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
     """
-        Reads a GeoLayer from a GeoJSON spatial data file.
+    Reads a GeoLayer from a GeoJSON spatial data file.
 
-        This command reads a GeoLayer from a GeoJSON file and creates a GeoLayer object within the
-        geoprocessor. The GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
+    This command reads a layer from a GeoJSON file and creates a GeoLayer object within the geoprocessor. The
+    GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
 
-        GeoLayers are stored on a computer or are available for download as a spatial data file (GeoJSON, shapefile,
-        feature class in a file geodatabase, etc.). Each GeoLayer has one feature type (point, line, polygon, etc.) and
-        other data (an identifier, a coordinate reference system, etc). Note that this function only reads a single
-        GeoLayer from a single file in GeoJSON format.
+    GeoLayers are stored on a computer or are available for download as a spatial data file (GeoJSON, shapefile,
+    feature class in a file geodatabase, etc.). Each GeoLayer has one feature type (point, line, polygon, etc.) and
+    other data (an identifier, a coordinate reference system, etc). This function reads a single GeoLayer from a single
+    GeoJSON file in GeoJSON format (consistent with the fact that GeoJSON files store one layer).
 
-        In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
-        `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects. This command will read the GeoLayer
-        from a GeoJSON spatial data file and instantiate the data as a geoprocessor GeoLayer object.
+    In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
+    `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects.
+    """
 
-        Args:
-            SpatialDataFile (str, required): the relative pathname to the spatial data file (GeoJSON format)
-            GeoLayerID (str, optional): the GeoLayer identifier. If None, the spatial data filename (without the
-            .geojson extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the
-            absolute pathname to the spatial data file is C:/Desktop/Example/example_file.geojson, then the GeoLayerID
-            will be `example_file`.
-
-        Returns:
-            Nothing
-
-        Raises:
-            ValueError if any parameters are invalid or do not have a valid value.
-            The command status messages for initialization are populated with validation messages.
-            RuntimeError if any errors occurred during run_command method. Warnings within the run_command method do
-            not throw a RuntimeError but instead print a warning to the log.
-        """
-
+    # Command Parameters
+    # SpatialDataFile (str, required): the relative pathname to the spatial data file (GeoJSON format)
+    # GeoLayerID (str, optional): the GeoLayer identifier. If None, the spatial data filename (without the
+    #   .geojson extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the
+    #   absolute pathname to the spatial data file is C:/Desktop/Example/example_file.geojson, then the GeoLayerID
+    #   will be `example_file`.
     __command_parameter_metadata = [
         CommandParameterMetadata("SpatialDataFile", type("")),
-        CommandParameterMetadata("GeoLayerID", type(""))
-    ]
+        CommandParameterMetadata("GeoLayerID", type(""))]
 
     def __init__(self):
         """
-        Initialize the command
+        Initialize the command.
         """
+
         super(ReadGeoLayerFromGeoJSON, self).__init__()
         self.command_name = "ReadGeoLayerFromGeoJSON"
         self.command_parameter_metadata = self.__command_parameter_metadata
@@ -82,13 +72,14 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Check that parameter SpatialDataFile is a non-empty, non-None string.
+        # - existence of the file will also be checked in run_command().
         pv_SpatialDataFile = self.get_parameter_value(parameter_name='SpatialDataFile',
                                                       command_parameters=command_parameters)
 
         if not validators.validate_string(pv_SpatialDataFile, False, False):
 
             message = "SpatialDataFile parameter has no value."
-            recommendation = "Specify text for the SpatialDataFile parameter."
+            recommendation = "Specify the SpatialDataFile parameter to indicate the spatial data layer file."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -107,36 +98,61 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
     def run_command(self):
+        """
+        Run the command. Read the layer file from a GeoJSON file, create a GeoLayer object, and add to the
+        GeoProcessor's geolayer list.
 
-        # Set up logger and warning/error count
+        Args:
+            None.
+
+        Returns:
+            Nothing.
+
+        Raises:
+            RuntimeError if any warnings occurred during run_command method.
+        """
+
+        # Set up logger and warning count
         warning_count = 0
-        error_count = 0
         logger = logging.getLogger(__name__)
 
         # Obtain the SpatialDataFile parameter value
         pv_SpatialDataFile = self.get_parameter_value("SpatialDataFile")
 
-        # Convert the SpatialDataFile parameter value relative path to an absolute path
-        spatialDataFile_absolute = io_util.verify_path_for_os(
+        # Convert the SpatialDataFile parameter value relative path to an absolute path and expand for ${Property}
+        # syntax
+        spatial_data_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_SpatialDataFile, self)))
 
-        # Check that the SpatialDataFile is a valid file and is in GeoJSON format
-        if os.path.isfile(spatialDataFile_absolute) and spatialDataFile_absolute.endswith(".geojson"):
+        # Check that the SpatialDataFile is a valid file
+        if os.path.isfile(spatial_data_file_absolute):
 
-            # Obtain the GeoLayerID parameter value
-            pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+            # Throw a warning if the SpatialDataFile does not end in .geojson
+            if not spatial_data_file_absolute.upper().endswith(".GEOJSON"):
+                warning_count += 1
+                message = 'The SpatialDataFile does not end with the .geojson extension.'
+                logger.warning(message)
 
-            # If the pv_GeoLayerID is set to None, assign the filename (without the extension) as the GeoLayerID
-            if not pv_GeoLayerID:
-                pv_GeoLayerID = (os.path.basename(spatialDataFile_absolute)).replace(".geojson", "")
+            # Obtain the GeoLayerID parameter value. By default, the GeoLayerID is the filename without the extension
+            # (%f formatter).
+            pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
+
+            # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
+            if pv_GeoLayerID in ['%f', '%F', '%E']:
+
+                pv_GeoLayerID = geo_util.expand_formatter(spatial_data_file_absolute, pv_GeoLayerID)
 
             # Mark as an error if the pv_GeoLayerID is the same as a registered GeoLayerList ID
             if geo_util.is_geolist_id(self, pv_GeoLayerID):
 
-                error_count += 1
-                message = 'The GeoLayer ID ({}) is already a registered GeoLayerList ID.'.format(pv_GeoLayerID)
+                warning_count += 1
+                message = 'The GeoLayer ID ({}) value is already in use as a GeoLayerList ID.'.format(pv_GeoLayerID)
+                recommendation = 'Specifiy a new GeoLayerID.'
                 logger.error(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.FAILURE,
+                                                                message, recommendation))
 
             else:
 
@@ -145,48 +161,55 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 if geo_util.is_geolayer_id(self, pv_GeoLayerID):
 
                     warning_count += 1
-                    message = 'The GeoList ID ({}) is already registered. GeoLayer ID ({}) is being overwritten.'\
-                        .format(pv_GeoLayerID, pv_GeoLayerID)
+                    message = 'The GeoList ID ({}) value is already in use as a GeoLayer ID. GeoLayer ID ({}) is ' \
+                              'being overwritten.'.format(pv_GeoLayerID, pv_GeoLayerID)
+                    recommendation = 'Specifiy a new GeoLayerID.'
                     logger.warning(message)
+                    self.command_status.add_to_log(command_phase_type.RUN,
+                                                   CommandLogRecord(command_status_type.WARNING,
+                                                                    message, recommendation))
 
-                # Create the QGSVectorLayer object and the GeoLayer object. Append the
-                # GeoLayer object to the geoprocessor's GeoLayers list.
+                # Create the QGSVectorLayer object and the GeoLayer object. Append the GeoLayer object to the
+                # geoprocessor's geolayers list.
                 try:
 
                     # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
-                    QgsVectorLayer = command_util.return_qgsvectorlayer_from_spatial_data_file(spatialDataFile_absolute)
+                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_spatial_data_file(spatial_data_file_absolute)
 
                     # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                    GeoLayer_obj = GeoLayer(geolayer_id=pv_GeoLayerID,
-                                            geolayer_qgs_object=QgsVectorLayer,
-                                            geolayer_source_path=spatialDataFile_absolute)
-                    self.command_processor.GeoLayers.append(GeoLayer_obj)
+                    geolayer_obj = GeoLayer(geolayer_id=pv_GeoLayerID,
+                                            geolayer_qgs_vector_layer=qgs_vector_layer,
+                                            geolayer_source_path=spatial_data_file_absolute)
+
+                    # TODO egiles 2018-01-09 Need to figure out how to use the add_geolayer function to add the
+                    # TODO GeoLayer object to the GeoProcessor's geolayers list
+                    self.command_processor.geolayers.append(geolayer_obj)
 
                 # Raise an exception if an unexpected error occurs during the process
                 except Exception as e:
-                    error_count += 1
-                    message = "Unexpected error creating GeoLayer {}.".format(pv_GeoLayerID)
+                    warning_count += 1
+                    message = "Unexpected error reading GeoLayer {} from GeoJSON file {}.".format(pv_GeoLayerID,
+                                                                                                  pv_SpatialDataFile)
+                    recommendation = "Check the log file for details."
                     logger.exception(message, e)
                     self.command_status.add_to_log(command_phase_type.RUN,
                                                    CommandLogRecord(command_status_type.FAILURE, message,
-                                                                    "Check the log file for details."))
+                                                                    recommendation))
 
-        # If the SpatialDataFile is not a GeoJSON file, log an error message.
+        # If the SpatialDataFile is not a file, log an error message.
         else:
-            error_count += 1
-            message = 'The SpatialDataFile ({}) is not a valid GeoJSON file.'.format(pv_SpatialDataFile)
+            warning_count += 1
+            message = "The SpatialDataFile ({}) is not a valid file.".format(pv_SpatialDataFile)
+            recommendation = "Specify a valid file."
             logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Determine success of command processing
-        # Raise Runtime Error if any errors occurred
-        if error_count > 0:
-            message = "There were {} errors and {} warnings proceeding this command.".format(error_count, warning_count)
+        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        if warning_count > 0:
+            message = "There were {} warnings proceeding this command.".format(warning_count)
             raise RuntimeError(message)
 
-        # Set command status type as SUCCESS if there are no errors. Print warning message to log if any warnings
-        # occurred.
+        # Set command status type as SUCCESS if there are no errors.
         else:
-            if warning_count > 0:
-                message = "There were 0 errors and {} warnings proceeding this command.".format(warning_count)
-                logger.warning(message)
             self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

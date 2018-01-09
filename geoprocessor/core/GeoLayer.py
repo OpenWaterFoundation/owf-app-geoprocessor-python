@@ -1,66 +1,35 @@
 class GeoLayer(object):
 
     """
-    GeoLayer, a list of which is maintained as GeoProcessor.GeoLayers.
-    This class is used to hold GeoLayer properties for each registered GeoLayer.
+    The GeoLayer class stores geometry and identifier data for a spatial data layer. The core layer data are stored in
+    a QGSVectorLayer object in order to leverage the QGIS data model and functionality. Additional data members are
+    used to store data that are not part of QgsVectorLayer objects and are required by the GeoProcessor, such as source
+    filename and identifier used by the GeoProcessor.
+
+    A list of registered GeoLayer instances are maintained in the GeoProcessor's self.geolayers property (type: list).
+    The GeoProcessor's commands retrieve in-memory GeoLayer instances from the GeoProcessor's self.geolayers property
+    using the GeoProcessor.get_geolayer() function. New GeoLayer instances are added to the GeoProcessor list using the
+    set_geolayer() function.
+
+    There are a number of properties associated with each GeoLayer (id, coordinate reference system, feature count,
+    etc.) The GeoLayer properties stored within each GeoLayer instance are the STATIC properties that will never change
+    (ids, QgsVectorLayer object, source path and geometry type). The DYNAMIC GeoLayer properties (coordinate reference
+    system, feature count, etc.) are created when needed by accessing call functions in the geo.py utility script.
     """
 
-    def __init__(self, geolayer_id, geolayer_qgs_object, geolayer_source_path):
+    def __init__(self, geolayer_id, geolayer_qgs_vector_layer, geolayer_source_path):
 
         # "id" is a string that is the GeoLayer's reference ID. This ID is used to call the GeoLayer into the
         # GeoProcessor for manipulation.
         self.id = geolayer_id
 
-        # "qgs_object" is a QGSVectorLayer object create by the QGIS processor. All spatial manipulations are performed
-        # on the GeoLayer's qgs_object
-        self.qgs_object = geolayer_qgs_object
+        # "qgs_vector_layer" is a QGSVectorLayer object created by the QGIS processor. All spatial manipulations are
+        # performed on the GeoLayer's qgs_vector_layer
+        self.qgs_vector_layer = geolayer_qgs_vector_layer
 
-        # "source_path" is a string that represents the full pathname to the original spatial data file on the user's
-        # local computer
+        # "source_path" (string) is the full pathname to the original spatial data file on the user's local computer
         self.source_path = geolayer_source_path
 
-        # "geom_type" is a string that represents the GeoLayer's geometry type. The QGIS environment has an enumerator
-        # system for each geometry type. The return_geometry_type_from_wkbtype function converts the enumerator with
-        # the name of the geometry type.
-        self.geom_type = GeoLayer.return_geometry_type_from_wkbtype(geolayer_qgs_object.wkbType())
-
-        # "feature_count" is an int that represents the number of features within the GeoLayer
-        self.feature_count = geolayer_qgs_object.featureCount()
-
-        # "field_names" is a string that represents each of the GeoLayer's field names (each separtated by a comma)
-        self.field_names = ', '.join([field.name() for field in geolayer_qgs_object.pendingFields()])
-
-        # "qgs_id" is a string that represents the GeoLayer's id in the QGS environment (this is automatically assigned
-        # by the QGIS GeoProcessor when a GeoLayer is originally created)
-        self.qgs_id = geolayer_qgs_object.id()
-
-        #"crs" is a string that represents the GeoLayer's coordinate reference systems in EPSG format
-        self.crs = geolayer_qgs_object.crs().authid()
-
-    @staticmethod
-    def return_geometry_type_from_wkbtype(wkb_type):
-        """
-
-        Converts the hard-to-understand wkbType id into a more readable string.
-
-        Args:
-            wkbType (str or int): the wkbType id.
-
-        Returns:
-            The corresponding geometry type in easy-to-read terminology."""
-
-        # TODO egiles 2018-01-02 Need to research how to handle (correct naming convention) for WKBType -2147483643
-        wkb_type_dic = {"0": "WKBUnknown", "1": "WKBPoint", "2": "WKBLineString", "3": "WKBPolygon",
-                        "4": "WKBMultiPoint", "5": "WKBMultiLineString", "6": "WKBMultiPolygon",
-                        "100": "WKBNoGeometry",
-                        "0x80000001": "WKBPoint25D", "0x80000002": "WKBLineString25D",
-                        "0x80000003": "WKBPolygon25D",
-                        "0x80000004": "WKBMultiPoint25D", "0x80000005": "WKBMultiLineString25D",
-                        "0x80000006": "WKBMultiPolygon25D", "-2147483643": "WKBUnknown"}
-
-
-       # Only return geometry type (in string format) if the input wkb_type exists in the dictionary. Else return None.
-        if wkb_type in list(wkb_type_dic.keys()):
-            return wkb_type_dic[str(wkb_type)]
-        else:
-            return None
+        # "qgs_id" (string) is the GeoLayer's id in the QGS environment (this is automatically assigned by the QGIS
+        # GeoProcessor when a GeoLayer is originally created)
+        self.qgs_id = geolayer_qgs_vector_layer.id()

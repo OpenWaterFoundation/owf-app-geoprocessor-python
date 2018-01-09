@@ -1,4 +1,4 @@
-# owf-app-geoprocessoor-python #
+# owf-app-geoprocessor-python #
 
 This repository contains the source code and developer documentation for the
 [Open Water Foundation (OWF)](http://openwaterfoundation.org) GeoProcessor software.
@@ -13,10 +13,14 @@ See the following online user and developer documentation:
 The following sections provide a summary of the project repository and getting started:
 
 * [GeoProcessor Repository Folder Structure](#geoprocessor-repository-folder-structure)
-* [Cloning this Repository](#cloning-this-repository)
+* [Development Environment](#development-environment)
+* [Git Workflow](#git-workflow)
+* [Testing](#testing)
 * [Contributing](#contributing)
 * [License](#license)
-* [Contact](#contact)
+* [Maintainers](#maintainers)
+* [Contributors](#contributors)
+* [Release Notes](#release-notes)
 
 -----
 
@@ -30,7 +34,7 @@ product (`GeoProcessor`), repositories for the product (`git-repos`),
 and specific repositories for the product.
 
 ```text
-C:\Users\user\                                   User's home folder, Window's style.
+C:\Users\user\                                   User's home folder, Windows style.
 /c/Users/user/                                   User's home folder, Git Bash style.
 /cygdrive/C/Users/user/                          User's home folder, Cygwin style.
 /home/user/                                      User's home folder, Linux style.
@@ -45,7 +49,8 @@ C:\Users\user\                                   User's home folder, Window's st
 ```
 
 Separate repositories have been created for user documentation and functional tests to facilitate contributions by non-programmers.
-The owf-util-git utilities are being developed to facilitate use of Git.
+The [owf-util-git](https://github.com/OpenWaterFoundation/owf-util-git) utilities are being developed
+to facilitate use of Git, in particular more complex tasks such as diffs and merges.
 
 The following summarizes the folder structure for this (owf-app-geoprocessor-python) repository,
 in this case showing [PyCharm Community Edition IDE](https://www.jetbrains.com/pycharm/download) files.
@@ -85,14 +90,15 @@ and Git client such as Git for Windows.
 
 ## Git Workflow ##
 
-OWF uses a "feature branching Git workflow" as illustrated in the following resources.
+OWF uses a "feature branching Git workflow" for this project, as illustrated in the following resources.
 The `master` branch contains the most current commits, with functionality tested before committing.
 Releases will be indicated with tags and release branches as needed.
 
-* [Jeremy Helms Branching gist, with diagram](https://gist.github.com/digitaljhelms/4287848)
+* [Jeremy Helms "Branching" gist, with diagram](https://gist.github.com/digitaljhelms/4287848)
 * [Git Feature Branch Workflow documentation on Atlassian](https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow)
 
-A small number of committers are responsible for maintaining the integrity of he master branch.
+A small number of committers are responsible for maintaining the integrity of the master branch.
+
 ## Testing ##
 
 Unit testing of module functions has not been a major focus yet but will be implemented using pytest,
@@ -110,7 +116,7 @@ Contributions to this project can be submitted using the following options:
 1. GeoProcessor software developers with commit privileges can write to this repository
 as per normal development Git workflow protocols.
 2. Post an issue on GitHub with suggested change (preferred for small changes).
-3. Email the contact.
+3. Email a maintainer (OK for collaboration but other options are preferred).
 4. Fork the repository, make changes, and do a pull request (preferred for large changes).
 Contents of the current master branch should be merged with the fork to minimize
 code review before committing the pull request.

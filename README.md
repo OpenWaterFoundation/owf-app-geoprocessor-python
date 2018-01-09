@@ -1,49 +1,137 @@
-# owf-app-geoprocessor-python #
+# owf-app-geoprocessoor-python #
 
-Open Water Foundation geoprocessor based on QGIS.
+This repository contains the source code and developer documentation for the
+[Open Water Foundation (OWF)](http://openwaterfoundation.org) GeoProcessor software.
+The GeoProcessor is Python software that leverages [QGIS](https://www.qgis.org) modules to provide
+features to automate processing geospatial data.
 
-## Design Elements ##
+See the following online user and developer documentation:
 
-The OWF GeoProcessor is a Python application similar to TSTool, but for processing spatial data layers and maps.
-The following are basic design elements:
+* [Learn OWF GeoProcessor](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/)
+* [Learn OWF GeoProcessor (for Developers)](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/)
 
-1. The user interface will be similar to TSTool:
-	* Instead of focusing on time series, focus on map layers, each with unique ID.
-	* A layer is a collection of features.
-2. Implement concept of datastores to read/write layers:
-	* Geodatabase and web services allow query of a set of features (as a layer).
-	* GeoJSON and shapefiles are implemented as "file datastore".
-	* Use configuration file for each datastore.
-3. Graphical User Interface (User Interface, UI) implemented in QT or TCL?
-	* Main window.
-	* Menus to select and edit commands.
-	* Tabular area to browse map layers.
-	* Area to display commands.
-	* Tabbed area to display results.
-	* Map window to view maps similar to TSTool time series graphs?
-	* Off-screen map window for creating images.
-3. Provide menus for geoprocessing commands.
-	* See TSTool organization for reading, manipulationg, outputting, etc., but instead
-	of time series, process map layers.
-	* Also include general menus similar to TSTool for performing tasks such as copy file, WebGet(), etc.
-	* Include commands to perform testing, for example CompareMapLayers(), CompareFiles().
-4. Commands are run using a processor, similar to:
-	* [TSCommandProcessor](https://github.com/OpenWaterFoundation/cdss-lib-processor-ts-java/blob/master/src/rti/tscommandprocessor/core/TSCommandProcessor.java)
-	* The above calls [TSEngine](https://github.com/OpenWaterFoundation/cdss-lib-processor-ts-java/blob/master/src/rti/tscommandprocessor/core/TSEngine.java)
-	* The processor keeps in memory a list of global properties to control processing
-	* The processor keeps in memory a list of map layers, which have unique identifiers
-	* Question:  does python library have concept if in-memory layer,
-	or are they always representing in a datastore or file?
-	* Commands have a status and log of messages
-	* Commands should use TSTool-like syntax, text with named-parameter syntax.
-	* Save commands as a file.
-5. Software should be object-oriented
-	* Use parent classes for abstract functionality
-	* Use class for each command
-	* Use class for each command editor.  See TSTool's design.  This keeps UI and computation code separate.
-6. Implement logging:
-	* See TSTool StartLog() command.
-7. Application should run in different modes:
-	* Full UI similar to TSTool.
-	* Batch mode with --commands CommandFile option.
-8. Portable to run on Windows and Linux.
+The following sections provide a summary of the project repository and getting started:
+
+* [GeoProcessor Repository Folder Structure](#geoprocessor-repository-folder-structure)
+* [Cloning this Repository](#cloning-this-repository)
+* [Contributing](#contributing)
+* [License](#license)
+* [Contact](#contact)
+
+-----
+
+## GeoProcessor Repository Folder Structure ##
+
+The following folder structure is recommended for GeoProcessor development.
+Top-level folders should be created as necessary.
+The following folder structure clearly separates user files (as per operating system),
+development area (`owf-dev`),
+product (`GeoProcessor`), repositories for the product (`git-repos`),
+and specific repositories for the product.
+
+```text
+C:\Users\user\                                   User's home folder, Window's style.
+/c/Users/user/                                   User's home folder, Git Bash style.
+/cygdrive/C/Users/user/                          User's home folder, Cygwin style.
+/home/user/                                      User's home folder, Linux style.
+  owf-dev/                                       Work done on Open Water Foundation projects.
+    GeoProcessor/                                GeoProcessor product.
+      git-repos/                                 Git repositories for the GeoProcessor.
+        owf-app-geoprocessor-python/             The GeoProcessor code and documentation repository.
+        owf-app-geoprocessor-python-doc-user/    The user documentation repository.
+        owf-app-geoprocessor-python-test/        The functional test repository.
+        owf-util-git/                            Git utility scripts repository.
+
+```
+
+Separate repositories have been created for user documentation and functional tests to facilitate contributions by non-programmers.
+The owf-util-git utilities are being developed to facilitate use of Git.
+
+The following summarizes the folder structure for this (owf-app-geoprocessor-python) repository,
+in this case showing [PyCharm Community Edition IDE](https://www.jetbrains.com/pycharm/download) files.
+OWF uses PyCharm for development and configures the repository to ignore PyCharm files.
+Other developers can use a different Python development environment tool.
+Everything shown will be automatically created when the repository is cloned
+or when PyCharm is used.
+
+```text
+owf-app-geoprocessor-python/       The GeoProcessor code and documentation repository.
+  .git/                            Standard Git software folder for repository files (DO NOT TOUCH!).
+  .gitattributes/                  Standard Git configuration file for repository (for portability).
+  .gitignore/                      Standard Git configuration file to ignore dynamic working files.
+  .idea/                           PyCharm project files (ignored using .gitignore).
+  build-util/                      Scripts to help in the GeoProcessor development environment.
+  doc-dev-mkdocs-project/          MkDocs project for developer documentation.
+    build-util/                    Scripts to help with MkDocs project.
+  geoprocessor/                    Main module folder for GeoProcessor.
+    app/                           Main GeoProcessor application module.
+    commands/                      Modules containing GeoProcessor commands.
+    core/                          Core GeoProcessor module, containing the processor.
+    util/                          Utility modules.
+  LICENSE.txt                      GeoProcessor license (being determined).
+  README.md                        This README file.
+  scripts/                         Scripts for the deployed application.
+  venv/                            Virtual environment used by PyCharm (ignored using .gitignore).
+```
+
+## Development Environment ##
+
+The development environment consists of QGIS (Python 2 version, and Python is included with QGIS),
+Python 2 (normal install, used with MkDocs documentation and as needed), PyCharm Community Edition,
+and Git client such as Git for Windows.
+
+* See the published [GeoProcessor Developer Documentation](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/)
+(also can view within this project in the `doc-dev-mkdocs-project` folder).
+
+## Git Workflow ##
+
+OWF uses a "feature branching Git workflow" as illustrated in the following resources.
+The `master` branch contains the most current commits, with functionality tested before committing.
+Releases will be indicated with tags and release branches as needed.
+
+* [Jeremy Helms Branching gist, with diagram](https://gist.github.com/digitaljhelms/4287848)
+* [Git Feature Branch Workflow documentation on Atlassian](https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow)
+
+A small number of committers are responsible for maintaining the integrity of he master branch.
+## Testing ##
+
+Unit testing of module functions has not been a major focus yet but will be implemented using pytest,
+consistent with normal Python conventions.
+
+The GeoProcessor contains an internal functional testing framework described in the following resources:
+
+* [Developer documentation for testing tasks](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-tasks/#testing)
+* [owf-app-geoprocessor-python-test functional tests repository](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test)
+
+## Contributing ##
+
+Contributions to this project can be submitted using the following options:
+
+1. GeoProcessor software developers with commit privileges can write to this repository
+as per normal development Git workflow protocols.
+2. Post an issue on GitHub with suggested change (preferred for small changes).
+3. Email the contact.
+4. Fork the repository, make changes, and do a pull request (preferred for large changes).
+Contents of the current master branch should be merged with the fork to minimize
+code review before committing the pull request.
+
+## License ##
+
+A license for the software is being determined.
+
+## Maintainers ##
+
+The lead developers/maintainers for the GeoProcessor are OWF staff:
+
+* Steve Malers, Open Water Foundation, [steve.malers@openwaterfoundation.org](mailto:steve.malers@openwaterfoundation.org), @smalers
+* Emma Giles, Open Water Foundation, [emma.giles@openwaterfoundation.org](mailto:emma.giles@openwaterfoundation.org), @egiles16
+
+## Contributors ##
+
+* Steve Malers, Open Water Foundation (@smalers)
+* Emma Giles, Open Water Foundation (@egiles16)
+
+## Release Notes ##
+
+The software is currently in pre-release development mode.
+Release notes listing GitHub issues will be added.

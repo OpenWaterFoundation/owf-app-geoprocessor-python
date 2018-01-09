@@ -88,10 +88,12 @@ class AbstractCommand(object):
         try:
             if command_parameters is None:
                 # Get the parameter from the command's dictionary
-                parameter_value = self.command_parameters.get(parameter_name)
+                # parameter_value = self.command_parameters.get(parameter_name)
+                parameter_value = self.command_parameters[parameter_name]
             else:
                 # Get the parameter from the provided parameter dictionary
-                parameter_value = command_parameters.get(parameter_name)
+                # parameter_value = command_parameters.get(parameter_name)
+                parameter_value = command_parameters[parameter_name]
             return parameter_value
         except KeyError:
             # Parameter was not found

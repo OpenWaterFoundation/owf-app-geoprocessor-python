@@ -163,7 +163,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                     warning_count += 1
                     message = 'The GeoList ID ({}) value is already in use as a GeoLayer ID. GeoLayer ID ({}) is ' \
                               'being overwritten.'.format(pv_GeoLayerID, pv_GeoLayerID)
-                    recommendation = 'Specifiy a new GeoLayerID.'
+                    recommendation = 'Specify a new GeoLayerID.'
                     logger.warning(message)
                     self.command_status.add_to_log(command_phase_type.RUN,
                                                    CommandLogRecord(command_status_type.WARNING,

@@ -5,6 +5,7 @@ from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFro
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
+from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
 
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
@@ -155,6 +156,8 @@ class GeoProcessorCommandFactory(object):
                     return StartLog()
                 elif command_name_upper == "WRITEGEOLAYERTOGEOJSON":
                     return WriteGeoLayerToGeoJSON()
+                elif command_name_upper == "WRITEGEOLAYERTOSHAPEFILE":
+                    return WriteGeoLayerToShapefile()
 
             # If here the command name was not matched.
             # Don't know the command so create an UnknownCommand or throw an exception.

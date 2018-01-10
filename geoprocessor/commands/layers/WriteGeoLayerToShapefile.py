@@ -1,4 +1,4 @@
-# WriteGeoLayerToGeoJSON
+# WriteGeoLayerToShapefile
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -19,47 +19,42 @@ import os
 import logging
 
 
-class WriteGeoLayerToGeoJSON(AbstractCommand):
-    # TODO egiles 2018-01-04 Need to add information about GeoJSON spatial data files in the docstring.
-    # TODO egiles 2018-01-10 Need to talk to Steve about how to check for OutputPrecision is between 0 and 15 (in more
-    # TODO  general terms, how are optional parameters checked for values)
+class WriteGeoLayerToShapefile(AbstractCommand):
+    # TODO egiles 2018-01-04 Need to add information about Shapefile spatial data files in the docstring.
 
     """
-    Writes a GeoLayer to a spatial data file in GeoJSON format.
+    Writes a GeoLayer to a spatial data file in Shapefile format.
 
-    This command writes a GeoLayer registered within the geoprocessor to a GeoJSON spatial data file. The GeoJSON
-    spatial data file can then be viewed within a GIS, moved within folders on the local computer, packaged for
-    delivery, etc.
+    This command writes a GeoLayer registered within the geoprocessor to a spatial date file in Shapefile format (a
+    suite of multiple files). The Shapefile spatial data files can then be viewed within a GIS, moved within folders on
+    the local computer, packaged for delivery, etc.
 
     Registered GeoLayers are stored as GeoLayer objects within the geoprocessor's GeoLayers list. Each GeoLayer has one
     feature type (point, line, polygon, etc.) and other data (an identifier, a coordinate reference system, etc). This
-    function only writes one single GeoLayer to a single spatial data file in GeoJSON format.
+    function only writes one single GeoLayer to a single spatial data file in Shapefile format.
     """
 
     # Command Parameters
-    # GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in GeoJSON format
-    # OutputFolder (str, required): the relative pathname to the folder where the GeoJSON will be written to
+    # GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in Shapefile
+    #   format
+    # OutputFolder (str, required): the relative pathname to the folder where the Shapefile will be written to
     # OutputFilename (str, optional): the name of the output spatial data file. By default, the output filename will be
     #   the GeoLayer's identifier
     # OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
     #   projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
-    # OutputPrecision (int, 0-15, optional): the precision (number of integers behind the GeoJSON geometry's decimal
-    #   point) of the output spatial data file in GeoJSON format. Must be at or between 0 and 15. By default, the
-    #   precision parameter is set to 5.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFolder", type("")),
         CommandParameterMetadata("OutputFilename", type("")),
-        CommandParameterMetadata("OutputCRS", type("")),
-        CommandParameterMetadata("OutputPrecision", type(2))]
+        CommandParameterMetadata("OutputCRS", type(""))]
 
     def __init__(self):
         """
         Initialize the command.
         """
 
-        super(WriteGeoLayerToGeoJSON, self).__init__()
-        self.command_name = "WriteGeoLayerToGeoJSON"
+        super(WriteGeoLayerToShapefile, self).__init__()
+        self.command_name = "WriteGeoLayerToShapefile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):
@@ -100,8 +95,8 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
         if not validators.validate_string(pv_OutputFolder, False, False):
             message = "OutputFolder parameter has no value."
-            recommendation = "Specify the OutputFolder parameter to indicate the folder that the GeoJSON file will be" \
-                             " written to."
+            recommendation = "Specify the OutputFolder parameter to indicate the folder that the Shapefile filea will" \
+                             " be written to."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -121,7 +116,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command. Write the GeoLayer to a spatial data file in GeoJSON format to the folder OutputFolder.
+        Run the command. Write the GeoLayer to a spatial data file in Shapefile format to the folder OutputFolder.
 
         Args:
             None.
@@ -140,7 +135,6 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # Obtain the parameter values except for the OutputCRS and the OutputFilename
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_OutputFolder = self.get_parameter_value("OutputFolder")
-        pv_OutputPrecision = int(self.get_parameter_value("OutputPrecision", default_value=5))
 
         # Convert the OutputFolder parameter value relative path to an absolute path and expand for ${Property} syntax
         output_folder_absolute = io_util.verify_path_for_os(
@@ -167,10 +161,10 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                     # Get the QGSVectorLayer object for the GeoLayer
                     qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, pv_GeoLayerID)
 
-                    # Get the full pathname of the output spatial data file in GeoJSON format
+                    # Get the full pathname of the output spatial data file in Shapefile format
                     output_full_pathname = os.path.join(pv_OutputFolder, pv_OutputFilename)
 
-                    # Write the GeoLayer to a spatial data file in GeoJSON format
+                    # Write the GeoLayer to a spatial data file in Shapefile format
                     # Reference: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
                     # To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are
                     # defined:
@@ -179,23 +173,21 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                     #   3. output text encoding: always set to "utf-8"
                     #   4. destination coordinate reference system
                     #   5. driver name for the output file
-                    #   6. optional layerOptions (specific to driver name) : for GeoJSON, coordinate precision is
-                    #   defined
                     # Note to developers: IGNORE `Unexpected Argument` error for layerOptions. This value is
                     # appropriate and functions properly.
                     QgsVectorFileWriter.writeAsVectorFormat(qgs_vector_layer,
                                                             output_full_pathname,
                                                             "utf-8",
                                                             QgsCoordinateReferenceSystem(pv_OutputCRS),
-                                                            "GeoJSON",
-                                                            layerOptions=[
-                                                                'COORDINATE_PRECISION={}'.format(pv_OutputPrecision)])
+                                                            "ESRI Shapefile",
+                                                            )
 
                 # Raise an exception if an unexpected error occurs during the process
                 except Exception as e:
                     print "FAILURE ---------------------------"
                     warning_count += 1
-                    message = "Unexpected error writing GeoLayer {} to GeoJSON file.".format(pv_GeoLayerID)
+                    message = "Unexpected error writing GeoLayer {} to spatial data file in Shapefile format.".format(
+                        pv_GeoLayerID)
                     recommendation = "Check the log file for details."
                     logger.exception(message, e)
                     self.command_status.add_to_log(command_phase_type.RUN,

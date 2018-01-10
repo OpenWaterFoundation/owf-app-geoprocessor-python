@@ -1,3 +1,6 @@
+import geoprocessor.util.qgis_util as qgis_util
+
+
 class GeoLayer(object):
 
     """
@@ -33,3 +36,8 @@ class GeoLayer(object):
         # "qgs_id" (string) is the GeoLayer's id in the QGS environment (this is automatically assigned by the QGIS
         # GeoProcessor when a GeoLayer is originally created)
         self.qgs_id = geolayer_qgs_vector_layer.id()
+
+        # "geom_type" (string) is the GeoLayer's geometry type. The QGIS environment has an enumerator
+        # system for each geometry type. The get_geometry_type_from_wkbtype function converts the enumerator with
+        # the name of the geometry type. Return the geom_type variable.
+        self.geom_type = qgis_util.get_geometry_type_from_wkbtype(geolayer_qgs_vector_layer.wkbType())

@@ -1,15 +1,30 @@
+# Utility functions related to QGIS and requires imports from QGIS libraries
+
 import os
+import geoprocessor.util.geo as geo_util
 from qgis.core import QgsVectorLayer
 
+
 def read_qgsvectorlayer_from_spatial_data_file(spatial_data_file_abs):
+
+    """
+    Reads the full pathname of spatial data file and returns a QGSVectorLayerObject.
+
+    Args:
+        spatial_data_file_abs (string): the full pathname to a spatial data file that exsists on the local computer
+
+    Returns:
+        A QGSVectorLayer object containing the data from the input spatial data file.
+
+    """
 
     # Instantiate the QGSVectorLayer object.
     # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
     # to create a QGSVectorLayer object, the following parameters must be entered:
-    #   data_source: string representing the full path the the spatial data file
-    #   layer_name: string representing the layer name that will be used in the QGIS layer list widget
+    #   data_source (first argument): string representing the full path the the spatial data file
+    #   layer_name (second argument): string representing the layer name that will be used in the QGIS layer list widget
     #       -- in this function the layer name is defaulted to the spatial data filename (with extension)
-    #   provider_name: string representing the data provider (defaulted within this function to 'ogr')
+    #   provider_name (third argument): string representing the data provider (defaulted within this function to 'ogr')
     qgs_vector_layer_obj = QgsVectorLayer(spatial_data_file_abs, os.path.basename(spatial_data_file_abs), 'ogr')
 
     # A QgsVectorLayer object is almost always created even if it is invalid.
@@ -21,45 +36,57 @@ def read_qgsvectorlayer_from_spatial_data_file(spatial_data_file_abs):
     if qgs_vector_layer_obj.isValid():
         return qgs_vector_layer_obj
 
+    # If the created QGSVectorLayer object is invalid, print an error message and return None.
     else:
         print "The QGSVectorLayer object ({}) is invalid.".format(spatial_data_file_abs)
         return None
 
+
 def get_feature_count(self, geolayer_id):
 
+    """
+
+    Returns the number of features within a GeoLayer.
+
+    Args:
+        self (obj): the GeoProcessor instance
+        geolayer_id (string): the identifier for the GeoLayer of interest
+
+    Returns:
+        Returns the number of features (int) for the appropriate GeoLayer.
+
+    """
+
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
-    if is_geolayer_id(self, geolayer_id):
+    if geo_util.is_geolayer_id(self, geolayer_id):
 
         # Get the QgsVectorLayer object of the GeoLayer.
-        qgs_vector_layer = get_qgsvectorlayer_from_geolayer(self, geolayer_id)
+        qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, geolayer_id)
 
         # "feature_count" (int) is the number of features within the GeoLayer. Return the feature_count variable.
         feature_count = qgs_vector_layer.featureCount()
         return feature_count
 
 
-def get_geometry_type(self, geolayer_id):
-
-    # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
-    if is_geolayer_id(self, geolayer_id):
-
-        # Get the QgsVectorLayer object of the GeoLayer.
-        qgs_vector_layer = get_qgsvectorlayer_from_geolayer(self, geolayer_id)
-
-        # "geom_type" (string) is the GeoLayer's geometry type. The QGIS environment has an enumerator
-        # system for each geometry type. The get_geometry_type_from_wkbtype function converts the enumerator with
-        # the name of the geometry type. Return the geom_type variable.
-        geom_type = get_geometry_type_from_wkbtype(qgs_vector_layer.wkbType())
-        return geom_type
-
-
 def get_crs(self, geolayer_id):
 
+    """
+
+    Returns the coordinate reference system of a GeoLayer.
+
+    Args:
+        self (obj): the GeoProcessor instance
+        geolayer_id (string): the identifier for the GeoLayer of interest
+
+    Returns:
+        Returns the coordinate reference system (string, EPSG code) for the appropriate GeoLayer.
+    """
+
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
-    if is_geolayer_id(self, geolayer_id):
+    if geo_util.is_geolayer_id(self, geolayer_id):
 
         # Get the QgsVectorLayer object of the GeoLayer.
-        qgs_vector_layer = get_qgsvectorlayer_from_geolayer(self, geolayer_id)
+        qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, geolayer_id)
 
         # "crs" (string) is the GeoLayer's coordinate reference system in
         # <EPSG format 'http://spatialreference.org/ref/epsg/'>_. Return the crs variable.
@@ -68,12 +95,24 @@ def get_crs(self, geolayer_id):
 
 
 def get_attribute_field_names(self, geolayer_id):
+    """
+
+    Returns the a list of attribute field names within a GeoLayer.
+
+    Args:
+        self (obj): the GeoProcessor instance
+        geolayer_id (string): the identifier for the GeoLayer of interest
+
+    Returns:
+         Returns a list of all attribute field names (list of strings) within the appropriate GeoLayer.
+
+    """
 
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
-    if is_geolayer_id(self, geolayer_id):
+    if geo_util.is_geolayer_id(self, geolayer_id):
 
         # Get the QgsVectorLayer object of the GeoLayer.
-        qgs_vector_layer = get_qgsvectorlayer_from_geolayer(self, geolayer_id)
+        qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, geolayer_id)
 
         # Create an empty list that will hold each attribute field name (string).
         attribute_field_names = []
@@ -88,6 +127,7 @@ def get_attribute_field_names(self, geolayer_id):
         # attribute_field_names variable.
         return attribute_field_names
 
+
 def get_geometry_type_from_wkbtype(wkb_type):
     """
 
@@ -97,7 +137,9 @@ def get_geometry_type_from_wkbtype(wkb_type):
         wkb_type (str or int): the wkbType id.
 
     Returns:
-        The corresponding geometry type in easy-to-read terminology."""
+        The corresponding geometry type in easy-to-read terminology.
+
+    """
 
     # TODO egiles 2018-01-02 Need to research how to handle (correct naming convention) for WKBType -2147483643
     wkb_type_dic = {"0": "WKBUnknown",

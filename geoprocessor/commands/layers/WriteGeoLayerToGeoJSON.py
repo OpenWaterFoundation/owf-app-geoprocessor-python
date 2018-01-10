@@ -168,7 +168,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                     qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, pv_GeoLayerID)
 
                     # Get the full pathname of the output spatial data file in GeoJSON format
-                    output_full_pathname = os.path.join(pv_OutputFolder, pv_OutputFilename)
+                    output_full_pathname = os.path.join(output_folder_absolute, pv_OutputFilename)
 
                     # Write the GeoLayer to a spatial data file in GeoJSON format
                     # Reference: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`

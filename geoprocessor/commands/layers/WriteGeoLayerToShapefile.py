@@ -8,8 +8,6 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command as command_util
-import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.geo as geo_util
 import geoprocessor.util.io as io_util
 import geoprocessor.util.validators as validators
 

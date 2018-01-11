@@ -45,7 +45,7 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
     Reads the full pathname of spatial data file and returns a QGSVectorLayerObject.
 
     Args:
-        spatial_data_file_abs (string): the full pathname to a spatial data file that exsists on the local computer
+        spatial_data_file_abs (string): the full pathname to a spatial data file
 
     Returns:
         A QGSVectorLayer object containing the data from the input spatial data file.
@@ -73,4 +73,44 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
     # If the created QGSVectorLayer object is invalid, print an error message and return None.
     else:
         print "The QGSVectorLayer object ({}) is invalid.".format(spatial_data_file_abs)
+        return None
+
+def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
+
+    """
+    Reads a feature class in a file geodatabase and returns a QGSVectorLayerObject.
+
+    Args:
+        file_gdb_path_abs (string): the full pathname to a file geodatabase
+        feature_class (string): the name of the feature class to read
+
+    Returns:
+        A QGSVectorLayer object containing the data from the input feature class.
+    """
+
+    # Instantiate the QGSVectorLayer object.
+    # In order for this to work, you must configure ESRI FileGDB Driver in QGIS Installation.
+    # Follow instructions from GetSpatial's post in below reference
+    # REF: https://gis.stackexchange.com/questions/26285/file-geodatabase-gdb-support-in-qgishttps:
+    # //gis.stackexchange.com/questions/26285/file-geodatabase-gdb-support-in-qgis
+    # Must follow file geodatabase input annotation. Follow instructions from nanguna's post in
+    # below reference
+    # REF: https://gis.stackexchange.com/questions/122205/
+    # how-to-add-mdb-geodatabase-layer-feature-class-to-qgis-project-using-python
+    qgs_vector_layer_obj = QgsVectorLayer(str(file_gdb_path_abs) + "|layername=" + feature_class, feature_class, 'ogr')
+
+    # A QgsVectorLayer object is almost always created even if it is invalid.
+    # From
+    # `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
+    #   "It is important to check whether the layer has been loaded successfully. If it was not, an invalid
+    #   layer instance is returned."
+    # Check that the newly created QgsVectorLayer object is valid. If so, create a GeoLayer object within
+    # the geoprocessor and add the GeoLayer object to the geoprocessor's GeoLayers list.
+    if qgs_vector_layer_obj.isValid():
+        return qgs_vector_layer_obj
+
+    # If the created QGSVectorLayer object is invalid, print an error message and return None.
+    else:
+        print "The QGSVectorLayer object from file geodatabse ({}) feature class ({}) is invalid.".format(
+            file_gdb_path_abs, feature_class)
         return None

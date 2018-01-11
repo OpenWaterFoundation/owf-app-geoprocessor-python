@@ -111,9 +111,9 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         if len(warning) > 0:
             logger.warning(warning)
             raise ValueError(warning)
-
-        # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        else:
+            # Refresh the phase severity
+            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
     def run_command(self):
         """
@@ -184,7 +184,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 if self.command_processor.get_geolayer(pv_GeoLayerID):
 
                     # Warnings/recommendations if the input GeoLayerID is the same as a registered GeoLayerID
-                    message = 'The GeoList ID ({}) value is already in use as a GeoLayer ID.'.format(pv_GeoLayerID)
+                    message = 'The GeoLayer ID ({}) value is already in use as a GeoLayer ID.'.format(pv_GeoLayerID)
                     recommendation = 'Specify a new GeoLayerID.'
 
                     # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).

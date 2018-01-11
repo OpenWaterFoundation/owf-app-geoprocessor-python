@@ -242,7 +242,6 @@ class GeoProcessor(object):
         # Did not find the requested identifier so return None
         return None
 
-
     def get_property(self, property_name, if_not_found_val=None):
         """
         Get a GeoProcessor property, case-specific.

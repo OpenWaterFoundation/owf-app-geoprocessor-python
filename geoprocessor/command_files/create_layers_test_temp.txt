@@ -1,3 +1,0 @@
-ReadGeoLayerFromGeoJSON(SpatialDataFile = "C:\Users\intern1\Desktop\FEMA_floodplain\automatedWorkFlowModel\clipLayers\CO_Park.geojson", GeoLayerID = "Emma")
-WriteGeoLayerToShapefile(GeoLayerID = "Emma", OutputFolder = "C:\Users\intern1\Desktop\Test", OutputFilename="NewShapefile")
-WriteGeoLayerToGeoJSON(GeoLayerID = "Emma", OutputFolder = "C:\Users\intern1\Desktop\Test", OutputFilename="NewGeoJSON05", OutputPrecision="5")

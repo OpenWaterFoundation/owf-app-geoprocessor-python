@@ -1,4 +1,0 @@
-ReadGeoLayersFromFolder(SpatialDataFolder = "..\..\..\..\FEMA_floodplain\automatedWorkFlowModel\clipLayers", GeoLayerID_prefix = "test",  Subset_Pattern = "*Park*")
-ReadGeoLayerFromGeoJSON(SpatialDataFile = "..\..\..\..\FEMA_floodplain\automatedWorkFlowModel\clipLayers\CO_Park.geojson")
-ReadGeoLayerFromShapefile(SpatialDataFile = "..\..\..\..\FEMA_floodplain\fileSizeDecreaseResearch\3_finalLayers_geojsonToShp\shp\I1_S_Fld_Haz_Ar.shp", GeoLayerID = "CO_Park2")
-ReadGeoLayersFromFGDB(SpatialDataFolder = "..\..\..\..\FEMA_floodplain\fileSizeDecreaseResearch\1_orig_files\NFHL_08_20171102.gdb", Subset_Pattern = "L*")

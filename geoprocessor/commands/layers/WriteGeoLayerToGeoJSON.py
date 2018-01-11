@@ -151,12 +151,15 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         if os.path.isdir(output_folder_absolute):
 
             # Check that the GeoLayerID is a valid registered GeoLayer ID in the GeoProcessor
-            if geo_util.is_geolayer_id(self, pv_GeoLayerID):
+            if self.command_processor.get_geolayer(pv_GeoLayerID):
 
                 try:
 
+                    # Get the GeoLayer
+                    geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
+
                     # Get the current coordinate reference system (in EPSG code) of the current GeoLayer
-                    geolayer_crs = qgis_util.get_crs(self, pv_GeoLayerID)
+                    geolayer_crs = geolayer.get_crs()
 
                     # Obtain the parameter value of the OutputCRS
                     pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
@@ -165,7 +168,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                     pv_OutputFilename = self.get_parameter_value("OutputFilename", default_value=pv_GeoLayerID)
 
                     # Get the QGSVectorLayer object for the GeoLayer
-                    qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, pv_GeoLayerID)
+                    qgs_vector_layer = geolayer.qgs_vector_layer
 
                     # Get the full pathname of the output spatial data file in GeoJSON format
                     output_full_pathname = os.path.join(output_folder_absolute, pv_OutputFilename)

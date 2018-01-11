@@ -144,7 +144,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 pv_GeoLayerID = geo_util.expand_formatter(spatial_data_file_absolute, pv_GeoLayerID)
 
             # Mark as an error if the pv_GeoLayerID is the same as a registered GeoLayerList ID
-            if geo_util.is_geolayerlist_id(self, pv_GeoLayerID):
+            if self.command_processor.get_geolayerlist(pv_GeoLayerID):
 
                 warning_count += 1
                 message = 'The GeoLayer ID ({}) value is already in use as a GeoLayerList ID.'.format(pv_GeoLayerID)
@@ -158,7 +158,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
                 # Mark as a warning if the pv_GeoLayerID is the same as a registered GeoLayer ID. The registered
                 # GeoLayer will be overwritten with this new GeoLayer.
-                if geo_util.is_geolayer_id(self, pv_GeoLayerID):
+                if self.command_processor.get_geolayer(pv_GeoLayerID):
 
                     warning_count += 1
                     message = 'The GeoList ID ({}) value is already in use as a GeoLayer ID. GeoLayer ID ({}) is ' \

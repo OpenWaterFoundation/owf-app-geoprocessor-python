@@ -58,31 +58,38 @@ class CopyFile(AbstractCommand):
         warning_message = ""
         logger = logging.getLogger(__name__)
 
+        # SourceFile is required
         pv_SourceFile = self.get_parameter_value(parameter_name='SourceFile', command_parameters=command_parameters)
         if not validators.validate_string(pv_SourceFile, False, False):
             message = "The SourceFile must be specified."
+            recommendation = "Specify the source file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the source file."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # DestinationFile is required
         pv_DestinationFile = self.get_parameter_value(
             parameter_name='DestinationFile', command_parameters=command_parameters)
         if not validators.validate_string(pv_DestinationFile, False, False):
             message = "The DestinationFile must be specified."
+            recommendation = "Specify the destination file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the destination file."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # IfSourceFileNotFound is optional, defaults to Warn at runtime
         pv_IfNotFound = self.get_parameter_value(parameter_name='IfSourceFileNotFound',
                                                  command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_IfNotFound, self.__choices_IfSourceFileNotFound, True, True):
             message = "IfSourceFileNotFound parameter is invalid."
+            recommendation = "Specify the IfSourceFileNotFound parameter as blank or one of " + \
+                             str(self.__choices_IfSourceFileNotFound)
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message,
-                                 "Specify the IfSourceFileNotFound parameter as blank or one of " +
-                                 str(self.__choices_IfSourceFileNotFound)))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -100,6 +107,7 @@ class CopyFile(AbstractCommand):
     def run_command(self):
         """
         Run the command.
+        Copy the source file to the destination.
 
         Returns:
             Nothing.

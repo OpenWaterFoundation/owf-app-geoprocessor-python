@@ -21,6 +21,7 @@ class UnknownCommand(AbstractCommand.AbstractCommand):
             full_initialization: Ignored.  A value of False is passed to AbstractCommand.initialize_command().
 
         Returns:
+            Nothing.
         """
 
         # Set data in the parent class, but do not attempt to parse the command since unknown syntax
@@ -28,4 +29,11 @@ class UnknownCommand(AbstractCommand.AbstractCommand):
         super(UnknownCommand, self).initialize_command(command_string, processor, full_initialization)
 
     def run_command(self):
-        print("In UnknownCommand.run_command")
+        """
+        Run the command.  Does nothing since an unknown command.
+
+        Returns:
+            Nothing.
+        """
+        # print("In UnknownCommand.run_command")
+        pass

@@ -10,6 +10,8 @@ import geoprocessor.core.command_status_type as command_status_type
 import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
 
+import logging
+
 
 class EndFor(AbstractCommand):
     """
@@ -43,14 +45,17 @@ class EndFor(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        # TODO smalers 2017-12-25 need to log
+        logger = logging.getLogger(__name__)
+
+        # Name is required
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
         if not validators.validate_string(pv_Name, False, False):
             message = "A name for the EndFor block must be specified"
+            recommendation = "Specify the Name."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the Name."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -59,8 +64,7 @@ class EndFor(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            # Message.printWarning ( warning_level,
-            #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
+            logger.warn(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity
@@ -76,4 +80,10 @@ class EndFor(AbstractCommand):
         return self.get_parameter_value("Name")
 
     def run_command(self):
-        print("In EndFor.run_command")
+        """
+        Run the command.  Does not do anything since the command is just a place-holder to match For().
+
+        Returns:
+            Nothing.
+        """
+        pass

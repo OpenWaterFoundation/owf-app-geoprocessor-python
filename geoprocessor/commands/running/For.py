@@ -10,6 +10,7 @@ import geoprocessor.core.command_status_type as command_status_type
 import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
 
+import logging
 import sys
 import traceback
 
@@ -70,38 +71,49 @@ class For(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        # TODO smalers 2017-12-25 need to log
+        logger = logging.getLogger(__name__)
+
+        # Name is required
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
         if not validators.validate_string(pv_Name, False, False):
             message = "A name for the For block must be specified"
+            recommendation = "Specify the Name."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the Name."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # SequenceStart is currently required since no other iteration types are implemented
         pv_SequenceStart = self.get_parameter_value(
             parameter_name='SequenceStart', command_parameters=command_parameters)
         if not validators.validate_number(pv_SequenceStart, False, False):
             message = "The SequenceStart value must be specified"
+            recommendation = "Specify the SequenceStart as a number."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the SequenceStart as a number."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # SequenceEnd is currently required since no other iteration types are implemented
         pv_SequenceEnd = self.get_parameter_value(parameter_name='SequenceEnd', command_parameters=command_parameters)
         if not validators.validate_number(pv_SequenceEnd, False, False):
             message = "The SequenceEnd value must be specified"
+            recommendation = "Specify the SequenceEnd as a number."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the SequenceEnd as a number."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # SequenceIncrement is currently required since no other iteration types are implemented
         pv_SequenceIncrement = self.get_parameter_value(
-            parameter_name='SequenceIncrement',
-            command_parameters=command_parameters)
+            parameter_name='SequenceIncrement', command_parameters=command_parameters)
         if not validators.validate_number(pv_SequenceIncrement, False, False):
             message = "The SequenceIncrement value must be specified"
+            recommendation = "Specify the SequenceIncrement as a number."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the SequenceIncrement as a number."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Unlike most commands, set internal data here because it is needed by next() before calls to run_command
 
@@ -138,8 +150,7 @@ class For(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            # Message.printWarning ( warning_level,
-            #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
+            logger.warn(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity
@@ -235,6 +246,12 @@ class For(AbstractCommand):
         self.for_initialized = False
 
     def run_command(self):
+        """
+        Run the command.  This initializes the iterator data for use when next() is called by the processor.
+
+        Returns:
+            Nothing.
+        """
         print("In For.run_command")
         pv_Name = self.get_parameter_value('Name')
         pv_IteratorProperty = self.get_parameter_value('IteratorProperty')

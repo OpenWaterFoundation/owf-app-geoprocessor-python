@@ -140,6 +140,7 @@ class AbstractCommand(object):
         # (this is the string within the parenthesis of a command string).
         parameter_string = util_common.parse_parameter_string_from_command_string(command_string)
 
+        debug = False
         if len(parameter_string) > 0:
             # Parameters are available to parse...
             # Parse the parameter string of form Parameter=Value,Parameter=Value into a list of parameter items.
@@ -152,13 +153,14 @@ class AbstractCommand(object):
             # entry (key: parameter name as entered by the user, value: the parameter value (in either string or list
             # format) assign the parameter dictionary to self.command_parameters for use by the specific command.
             self.command_parameters = util_common.parse_key_value_pairs_into_dictionary(parameter_items)
-            print "CMD_PARAM: {}".format(self.command_parameters)
+            if debug:
+                print "CMD_PARAM: {}".format(self.command_parameters)
 
         # Print out the parsed command parameters for debugging
-        debug = True
         if debug:
             for parameter_name, parameter_value in self.command_parameters.iteritems():
                 print('After parsing, command parameter name="' + parameter_name + '" value="' + parameter_value + '"')
+                pass
 
     def print_for_debug(self):
         print("Debug information for command")

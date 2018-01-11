@@ -6,6 +6,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
+import logging
 
 
 
@@ -41,6 +42,7 @@ def parse_key_value_pairs_into_dictionary(parameter_items):
     Returns:
         A dictionary where the key is the parameter name and value is the parameter value as a string.
     """
+    logger = logging.getLogger(__name__)
 
     # A dictionary that holds each parameter as an entry (key: parameter name, value: parameter value).
     parameter_dictionary = {}
@@ -71,11 +73,11 @@ def parse_key_value_pairs_into_dictionary(parameter_items):
                 # parameter dictionary.
                 parameter_dictionary[parameter_name] = parameter_value
             else:
-                print("ERROR: the parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(
+                logger.warn("The parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(
                     parameter_item))
 
         else:
-            print("ERROR: the parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(parameter_item))
+            logger.warn("The parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(parameter_item))
 
     return parameter_dictionary
 
@@ -91,6 +93,9 @@ def parse_parameter_string_from_command_string(command_string):
     Return:
         Property1="Value1",Property2="Value2"
         An empty string may result if the command has no parameters.
+
+    Raises:
+        ValueError if the command syntax is invalid.
     """
 
     # Remove white spaces on either side of the command line.
@@ -105,13 +110,14 @@ def parse_parameter_string_from_command_string(command_string):
     if (paren_start_pos <= 0) or (paren_end_pos != (len(command_string) - 1)):
         # Bounding parenthesis are not present.
         message = 'Invalid syntax for "' + command_string + '".  Expecting CommandName(Parameter="Value",...)'
-        print(message)
-        # Message.printWarning ( 2, routine, message)
-        # throw new InvalidCommandSyntaxException ( message )
+        # Get logger her instead of top to increase performance, but can move it
+        logger = logging.getLogger(__name__)
+        logger.warn(message)
+        raise ValueError(message)
 
     # Get the parameter line from the command string (in between the '(' and the ')' ).
     parameter_string = command_string[paren_start_pos + 1: paren_end_pos]
-    print("After parsing, parameter_string=" + parameter_string)
+    # print("After parsing, parameter_string=" + parameter_string)
     return parameter_string
 
 
@@ -129,11 +135,12 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
     Returns:
         A list of parameter strings.
     """
+    logger = logging.getLogger(__name__)
 
     # The list of "Parameter=Value" strings, allowed to be an empty list.
     parameter_items = []
 
-    print("Splitting full parameter string into pairs:  " + parameter_string)
+    # print("Splitting full parameter string into pairs:  " + parameter_string)
 
     # Parse if the parameter line is not empty.
     if len(parameter_string) > 0:
@@ -171,7 +178,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
                     # (actually can handle as nonfatal but prefer commas for clarity).
                     if (len(parameter_items) > 0) and not comma_found:
                         # 2nd or greater parameter so need to have found a comma to separate parameters
-                        print("ERROR:  Missing comma between parameter definitions")
+                        logger.warn("Missing comma between parameter definitions")
                         comma_found = False
             else:
                 # In a quoted parameter value string.
@@ -181,7 +188,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
                     param_value_end_pos = char_index
                     # Add the parameter string to the list
                     current_parameter_string = parameter_string[param_name_start_pos:param_value_end_pos+1]
-                    print("Adding parameter item to list:  " + current_parameter_string)
+                    # print("Adding parameter item to list:  " + current_parameter_string)
                     parameter_items.append(current_parameter_string)
                     # Now reset for the next parameter
                     param_name_start_pos = -1

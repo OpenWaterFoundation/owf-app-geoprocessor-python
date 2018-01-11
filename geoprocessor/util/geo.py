@@ -60,34 +60,6 @@ def expand_formatter(absolute_path, formatter):
         return None
 
 
-def get_qgsvectorlayer_from_geolayer(self, geolayer_id):
-
-    """
-    Return the QGSVectorLayer object from the GeoLayer matching the input GeoLayer ID.
-
-    Args:
-        self (obj): the GeoProcessor instance
-        geolayer_id (string): the identifier of the GeoLayer to read
-
-    Return:
-        The QGSVectorLayer object associated with the input GeoLayer ID.
-    """
-
-    # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
-    if is_geolayer_id(self, geolayer_id):
-
-        # Get the appropriate GeoLayer
-        geolayer = self.command_processor.get_geolayer(self, geolayer_id)
-
-        # Return the GeoLayer's QgsVectorLayer object
-        return geolayer.qgs_vector_layer
-
-    # If the provided GeoLayer ID is not registered within the GeoProcessor, return None and print a message.
-    else:
-        print "GeoLayer ID ({}) is not a registered GeoLayer ID.".format(geolayer_id)
-        return None
-
-
 def is_geolayer_id(self, input_id):
 
     """
@@ -109,22 +81,8 @@ def is_geolayer_id(self, input_id):
     if geolayer:
         return True
     else:
+        "ID ({}) is not a valid GeoLayer ID.".format(input_id)
         return False
-
-    # # A list of registered geolayer ids.
-    # list_of_geolayer_ids = []
-    #
-    # # Iterate over the GeoLayers in the GeoProcessor's geolayers list.
-    # for geolayer_obj in self.command_processor.geolayers:
-    #
-    #     # Append the GeoLayer's id to the list of geolayer ids.
-    #     list_of_geolayer_ids.append(geolayer_obj.id)
-    #
-    # # Check if the input id is one of the registered GeoLayer ids. Return the appropriate Boolean.
-    # if input_id in list_of_geolayer_ids:
-    #     return True
-    # else:
-    #     return False
 
 
 def is_geolayerlist_id(self, input_id):
@@ -148,6 +106,7 @@ def is_geolayerlist_id(self, input_id):
     if geolayerlist:
         return True
     else:
+        "ID ({}) is not a valid GeoLayerList ID.".format(input_id)
         return False
 
 

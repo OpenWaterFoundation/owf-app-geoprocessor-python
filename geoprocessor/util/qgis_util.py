@@ -22,8 +22,11 @@ def get_attribute_field_names(self, geolayer_id):
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
     if geo_util.is_geolayer_id(self, geolayer_id):
 
-        # Get the QgsVectorLayer object of the GeoLayer.
-        qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, geolayer_id)
+        # Get the appropriate GeoLayer
+        geolayer = self.command_processor.get_geolayer(self, geolayer_id)
+
+        # Get the QgsVectorLayer object of the GeoLayer
+        qgs_vector_layer = geolayer.get_property("qgs_vector_layer")
 
         # Create an empty list that will hold each attribute field name (string).
         attribute_field_names = []
@@ -56,8 +59,11 @@ def get_crs(self, geolayer_id):
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
     if geo_util.is_geolayer_id(self, geolayer_id):
 
-        # Get the QgsVectorLayer object of the GeoLayer.
-        qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, geolayer_id)
+        # Get the appropriate GeoLayer
+        geolayer = self.command_processor.get_geolayer(self, geolayer_id)
+
+        # Get the QgsVectorLayer object of the GeoLayer
+        qgs_vector_layer = geolayer.get_property("qgs_vector_layer")
 
         # "crs" (string) is the GeoLayer's coordinate reference system in
         # <EPSG format 'http://spatialreference.org/ref/epsg/'>_. Return the crs variable.
@@ -83,8 +89,11 @@ def get_feature_count(self, geolayer_id):
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
     if geo_util.is_geolayer_id(self, geolayer_id):
 
-        # Get the QgsVectorLayer object of the GeoLayer.
-        qgs_vector_layer = geo_util.get_qgsvectorlayer_from_geolayer(self, geolayer_id)
+        # Get the appropriate GeoLayer
+        geolayer = self.command_processor.get_geolayer(self, geolayer_id)
+
+        # Get the QgsVectorLayer object of the GeoLayer
+        qgs_vector_layer = geolayer.get_property("qgs_vector_layer")
 
         # "feature_count" (int) is the number of features within the GeoLayer. Return the feature_count variable.
         feature_count = qgs_vector_layer.featureCount()

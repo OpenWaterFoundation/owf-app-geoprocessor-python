@@ -3,6 +3,7 @@ import geoprocessor.util.command as command_util
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
+from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
 from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
@@ -15,6 +16,7 @@ from geoprocessor.commands.running.EndIf import EndIf
 from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
 from geoprocessor.commands.running.SetProperty import SetProperty
+from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
@@ -23,12 +25,15 @@ from geoprocessor.commands.util.CopyFile import CopyFile
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
 
+import logging
+
 
 class GeoProcessorCommandFactory(object):
     """
     Factory to create command instances by examining command string.
     Only instantiates the command instance but does not parse the command string.
-    The command string is parsed within the command class instance."""
+    The command string is parsed within the command class instance.
+    """
 
     # The dictionary of all available commands, in alphabetical order.
     # key: the name of the command (converted to all UPPERCASE)
@@ -45,9 +50,17 @@ class GeoProcessorCommandFactory(object):
         "FOR": For(),
         "IF": If(),
         "MESSAGE": Message(),
+        "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
+        "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
+        "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
+        "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
         "REMOVEFILE": RemoveFile(),
+        "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
         "SETPROPERTY": SetProperty(),
-        "STARTLOG": StartLog()
+        "SETPROPERTYFROMGEOLAYER": SetPropertyFromGeoLayer(),
+        "STARTLOG": StartLog(),
+        "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
+        "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile()
     }
 
     def __init__(self):
@@ -88,6 +101,8 @@ class GeoProcessorCommandFactory(object):
             ValueError if the command is not recognized and create_unknown_command_if_not_recognized=False.
         """
 
+        logger = logging.getLogger(__name__)
+
         # Get command name from the first part of the command.
         command_string_trimmed = command_string.strip()
         paren_pos = command_string_trimmed.find('(')
@@ -124,18 +139,11 @@ class GeoProcessorCommandFactory(object):
                     return command
             else:
                 # Constructing the following way always seems to work properly
+                # - Alphabetize the commands.
                 if command_name_upper == "COMPAREFILES":
                     return CompareFiles()
                 elif command_name_upper == "COPYFILE":
                     return CopyFile()
-                elif command_name_upper == "READGEOLAYERSFROMFOLDER":
-                    return ReadGeoLayersFromFolder()
-                elif command_name_upper == "READGEOLAYERFROMGEOJSON":
-                    return ReadGeoLayerFromGeoJSON()
-                elif command_name_upper == "READGEOLAYERFROMSHAPEFILE":
-                    return ReadGeoLayerFromShapefile()
-                elif command_name_upper == "READGEOLAYERSFROMFGDB":
-                    return ReadGeoLayersFromFGDB()
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
                     return CreateRegressionTestCommandFile()
                 elif command_name_upper == "ENDFOR":
@@ -148,10 +156,20 @@ class GeoProcessorCommandFactory(object):
                     return If()
                 elif command_name_upper == "MESSAGE":
                     return Message()
+                elif command_name_upper == "READGEOLAYERFROMGEOJSON":
+                    return ReadGeoLayerFromGeoJSON()
+                elif command_name_upper == "READGEOLAYERFROMSHAPEFILE":
+                    return ReadGeoLayerFromShapefile()
+                elif command_name_upper == "READGEOLAYERSFROMFGDB":
+                    return ReadGeoLayersFromFGDB()
+                elif command_name_upper == "READGEOLAYERSFROMFOLDER":
+                    return ReadGeoLayersFromFolder()
                 elif command_name_upper == "REMOVEFILE":
                     return RemoveFile()
                 elif command_name_upper == "SETPROPERTY":
                     return SetProperty()
+                elif command_name_upper == "SETPROPERTYFROMGEOLAYER":
+                    return SetPropertyFromGeoLayer()
                 elif command_name_upper == "STARTLOG":
                     return StartLog()
                 elif command_name_upper == "WRITEGEOLAYERTOGEOJSON":
@@ -162,17 +180,17 @@ class GeoProcessorCommandFactory(object):
             # If here the command name was not matched.
             # Don't know the command so create an UnknownCommand or throw an exception.
             if create_unknown_command_if_not_recognized:
-                print("Command line is unknown command. Adding UnknownCommand: " + command_string_trimmed)
+                logger.warn("Command line is unknown command. Adding UnknownCommand: " + command_string_trimmed)
                 return UnknownCommand()
             else:
-                print("Command line is unknown syntax.")
+                logger.warn("Command line is unknown syntax.")
                 raise ValueError('Unrecognized command "' + command_string + '"')
 
         # The syntax is not recognized so create an UnknownCommand or throw an exception.
         else:
             if create_unknown_command_if_not_recognized:
-                print("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
+                logger.warn("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
                 return UnknownCommand()
             else:
-                print("Command line is unknown syntax.")
+                logger.warn("Command line is unknown syntax.")
                 raise ValueError('Unrecognized command "' + command_string + '"')

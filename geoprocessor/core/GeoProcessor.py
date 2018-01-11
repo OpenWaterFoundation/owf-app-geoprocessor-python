@@ -128,12 +128,13 @@ class GeoProcessor(object):
         Returns:
             Expanded parameter value string.
         """
-        print('parameter_value=' + str(parameter_value))
+        debug = False  # For developers
+        if debug:
+            print('parameter_value=' + str(parameter_value))
         if parameter_value is None or len(parameter_value) == 0:
             # Just return what was provided.
             return parameter_value
 
-        debug = False  # For developers
         # First replace escaped characters.
         # TODO smalers 2017-12-25 might need to change this for Python
         parameter_value = parameter_value.replace("\\\"", "\"")
@@ -205,6 +206,24 @@ class GeoProcessor(object):
                 print('Expanded parameter value is "' + parameter_value +
                       '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"')
         return parameter_value
+
+    def get_geolayer(self, geolayer_id):
+        """
+        Return the GeoLayer that has the requested ID.
+
+        Args:
+            geolayer_id (str):  GeoLayer ID string.
+
+        Returns:
+            The GeoLayer that has the requested ID, or None if not found.
+        """
+        for geolayer in self.geolayers:
+            if geolayer is not None:
+                if geolayer.id == geolayer_id:
+                    # Found the requested identifier
+                    return geolayer
+        # Did not find the requested identifier so return None
+        return None
 
     def get_property(self, property_name, if_not_found_val=None):
         """
@@ -508,10 +527,10 @@ class GeoProcessor(object):
         Processing.initialize()
 
         if command_list is None:
-            print("Running all commands")
+            logger.info("Running all commands")
             command_list = self.commands
         else:
-            print("Running specified command list")
+            logger.info("Running specified command list")
 
         # Reset any properties left over from the previous run that may impact the current run.
         self.__reset_data_for_run_start()

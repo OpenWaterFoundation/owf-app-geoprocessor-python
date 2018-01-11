@@ -70,80 +70,79 @@ class CompareFiles(AbstractCommand):
         pv_InputFile1 = self.get_parameter_value(parameter_name='InputFile1', command_parameters=command_parameters)
         if not validators.validate_string(pv_InputFile1, False, False):
             message = "The InputFile1 parameter must be specified."
+            recommendation = "Specify the first input file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the first input file."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # InputFile2 is required
         pv_InputFile2 = self.get_parameter_value(parameter_name='InputFile2', command_parameters=command_parameters)
         if not validators.validate_string(pv_InputFile2, False, False):
             message = "The InputFile2 parameter must be specified."
+            recommendation = "Specify the second input file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the second input file."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # CommentLineChar is not required, defaults to # at runtime, for now no checks
+        # CommentLineChar is optional, defaults to # at runtime, for now no checks
 
-        # MatchCase is not required, defaults to True at runtime
+        # MatchCase is optional, defaults to True at runtime
         pv_MatchCase = self.get_parameter_value(parameter_name='MatchCase',
                                                 command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_MatchCase, self.__choices_MatchCase, True, True):
             message = "MatchCase parameter is invalid."
+            recommendation = "Specify the MatchCase parameter as blank or one of " + str(self.__choices_MatchCase)
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message,
-                                 "Specify the MatchCase parameter as blank or one of " +
-                                 str(self.__choices_MatchCase)))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # IgnoreWhitespace is not required, defaults to True at runtime
+        # IgnoreWhitespace is optional, defaults to True at runtime
         pv_IgnoreWhitespace = self.get_parameter_value(parameter_name='IgnoreWhitespace',
                                                        command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_IgnoreWhitespace, self.__choices_MatchCase, True, True):
             message = "IgnoreWhitespace parameter is invalid."
+            recommendation = "Specify the IgnoreWhitespace parameter as blank or one of " + \
+                             str(self.__choices_IgnoreWhitespace)
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message,
-                                 "Specify the IgnoreWhitespace parameter as blank or one of " +
-                                 str(self.__choices_IgnoreWhitespace)))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # AllowedDiffCount is optional, defaults to 0 at runtime, but must be a number if specified
         pv_AllowedDiffCount = self.get_parameter_value(parameter_name='AllowedDiffCount',
                                                        command_parameters=command_parameters)
         if not validators.validate_int(pv_AllowedDiffCount, True, True):
             message = "The AllowedDiffCount parameter is invalid."
+            recommendation = "Specify the allowed difference count as an integer."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message,
-                                 "Specify the allowed difference count as an integer."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # IfDifferent is not required, defaults to Ignore at runtime
+        # IfDifferent is optional, defaults to Ignore at runtime
         pv_IfDifferent = self.get_parameter_value(parameter_name='IfDifferent',
                                                   command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_IfDifferent, self.__choices_IfDifferent, True, True):
             message = "IfDifferent parameter is invalid."
+            recommendation = "Specify the IfDifferent parameter as blank or one of " + str(self.__choices_IfDifferent)
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message,
-                                 "Specify the IfDifferent parameter as blank or one of " +
-                                 str(self.__choices_IfDifferent)))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # IfSame is not required, defaults to Ignore at runtime
+        # IfSame is optional, defaults to Ignore at runtime
         pv_IfSame = self.get_parameter_value(parameter_name='IfSame',
                                              command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_IfSame, self.__choices_IfSame, True, True):
             message = "IfSame parameter is invalid."
+            recommendation = "Specify the IfSame parameter as blank or one of " + str(self.__choices_IfSame)
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message,
-                                 "Specify the IfSame parameter as blank or one of " +
-                                 str(self.__choices_IfSame)))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -196,7 +195,7 @@ class CompareFiles(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command.
+        Run the command.  Compare the input files.
 
         Returns:
             Nothing.

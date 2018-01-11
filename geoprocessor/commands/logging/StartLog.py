@@ -48,13 +48,17 @@ class StartLog(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
+        logger = logging.getLogger(__name__)
+
+        # LogFile is required
         pv_LogFile = self.get_parameter_value(parameter_name='LogFile', command_parameters=command_parameters)
         if not validators.validate_string(pv_LogFile, False, False):
             message = "LogFile parameter has no value."
+            recommendation = "Specify the log file."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify the log file."))
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
             print(message)
 
         # Check for unrecognized parameters.
@@ -64,8 +68,7 @@ class StartLog(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            # Message.printWarning ( warning_level,
-            #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
+            logger.warn(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity
@@ -73,10 +76,14 @@ class StartLog(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command.  Print the message to the log file.
+        Run the command.  Restart the lof file with the given name.
+        Subsequent logging messages will go to the file until another StartLog() command is run.
 
         Returns:
             Nothing.
+
+        Raises:
+            RuntimeError if any exception occurs running the command.
         """
         logger = logging.getLogger(__name__)
         warning_count = 0

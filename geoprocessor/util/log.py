@@ -134,7 +134,6 @@ def reset_log_file_handler(logfile_name):
         # Found an old FileHandler so remove it first
         # - the following message will show up in the old log file
         message = 'Closing the old file so new log file can be used: "' + logfile_name + '"'
-        print('Closing the old file so new log file can be used: "' + logfile_name + '"')
         logger.info(message)
         # Remove the old FileHandler
         found_handler.close()

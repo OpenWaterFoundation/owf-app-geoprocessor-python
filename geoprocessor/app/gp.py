@@ -278,6 +278,7 @@ def setup_logging(session):
     # Test some logging messages
     message = 'Opened initial log file: "' + session.get_log_file() + '"'
     logger.info(message)
+    # Also print to the console because normal the console should only have error messages
     print(message)
 
 

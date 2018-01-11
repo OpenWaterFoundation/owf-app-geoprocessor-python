@@ -48,24 +48,26 @@ class Message(AbstractCommand):
         """
         warning = ""
         logger = logging.getLogger("gp")
+
+        # Message is required
         pv_Message = self.get_parameter_value(parameter_name='Message', command_parameters=command_parameters)
         if not validators.validate_string(pv_Message, False, False):
             message = "Message parameter has no value."
+            recommendation = "Specify text for the Message parameter."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify text for the Message parameter."))
-            logger.warning(message)
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
         pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus',
                                                     command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_CommandStatus,
                                                   command_status_type.get_command_status_types(), True, True):
             message = 'The requested command status "' + pv_CommandStatus + '"" is invalid.'
+            recommendation = "Specify a valid command status."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, "Specify a valid command status."))
-            logger.warning(message)
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -86,6 +88,9 @@ class Message(AbstractCommand):
 
         Returns:
             Nothing.
+
+        Raises:
+            RuntimeError if any exception occurs.
         """
         logger = logging.getLogger(__name__)
         warning_count = 0

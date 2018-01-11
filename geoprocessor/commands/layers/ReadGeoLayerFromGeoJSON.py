@@ -9,7 +9,6 @@ import geoprocessor.core.command_status_type as command_status_type
 from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command as command_util
-import geoprocessor.util.geo as geo_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.io as io_util
 import geoprocessor.util.validators as validators
@@ -41,9 +40,13 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
     #   .geojson extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the
     #   absolute pathname to the spatial data file is C:/Desktop/Example/example_file.geojson, then the GeoLayerID
     #   will be `example_file`.
+    # IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the input GeoLayerID
+    #   already exists within the GeoProcessor. Available options are: `Replace`, `Warn` and `Fail` (Refer to user
+    #   documentation for detailed description.) Default value is `Replace`.
     __command_parameter_metadata = [
         CommandParameterMetadata("SpatialDataFile", type("")),
-        CommandParameterMetadata("GeoLayerID", type(""))]
+        CommandParameterMetadata("GeoLayerID", type("")),
+        CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     def __init__(self):
         """
@@ -85,6 +88,21 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
+        # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `Warn`, `Fail` or None.
+        pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
+                                                         command_parameters=command_parameters)
+        acceptable_values = ["Replace", "Warn", "Fail"]
+        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+                                                  empty_string_allowed=True, ignore_case=True):
+
+            message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
+            recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
+                acceptable_values)
+            warning += "\n" + message
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning = command_util.validate_command_parameter_names(self, warning)
@@ -116,8 +134,9 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
-        # Obtain the SpatialDataFile parameter value
+        # Obtain the SpatialDataFile and the IfGeoLayerIDExists parameter values
         pv_SpatialDataFile = self.get_parameter_value("SpatialDataFile")
+        pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
         # Convert the SpatialDataFile parameter value relative path to an absolute path and expand for ${Property}
         # syntax
@@ -139,9 +158,9 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
 
             # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
-            if pv_GeoLayerID in ['%f', '%F', '%E']:
+            if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
 
-                pv_GeoLayerID = geo_util.expand_formatter(spatial_data_file_absolute, pv_GeoLayerID)
+                pv_GeoLayerID = io_util.expand_formatter(spatial_data_file_absolute, pv_GeoLayerID)
 
             # Mark as an error if the pv_GeoLayerID is the same as a registered GeoLayerList ID
             if self.command_processor.get_geolayerlist(pv_GeoLayerID):
@@ -156,45 +175,58 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
             else:
 
-                # Mark as a warning if the pv_GeoLayerID is the same as a registered GeoLayer ID. The registered
-                # GeoLayer will be overwritten with this new GeoLayer.
+                # Boolean to determine if the GeoLayer should be created. Only set to False if the input GeoLayerID is
+                # the same as a registered GeoLayerID and the IfGeoLayerIDExists is set to 'FAIL'
+                create_geolayer = True
+
+                # If the pv_GeoLayerID is the same as an already-registered GeoLayerID, react according to the
+                # pv_IfGeoLayerIDExists value.
                 if self.command_processor.get_geolayer(pv_GeoLayerID):
 
-                    warning_count += 1
-                    message = 'The GeoList ID ({}) value is already in use as a GeoLayer ID. GeoLayer ID ({}) is ' \
-                              'being overwritten.'.format(pv_GeoLayerID, pv_GeoLayerID)
+                    # Warnings/recommendations if the input GeoLayerID is the same as a registered GeoLayerID
+                    message = 'The GeoList ID ({}) value is already in use as a GeoLayer ID.'.format(pv_GeoLayerID)
                     recommendation = 'Specify a new GeoLayerID.'
-                    logger.warning(message)
-                    self.command_status.add_to_log(command_phase_type.RUN,
-                                                   CommandLogRecord(command_status_type.WARNING,
-                                                                    message, recommendation))
 
-                # Create the QGSVectorLayer object and the GeoLayer object. Append the GeoLayer object to the
-                # geoprocessor's geolayers list.
-                try:
+                    # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
+                    if pv_IfGeoLayerIDExists.upper() == "WARN":
+                        warning_count += 1
+                        logger.warning(message)
+                        self.command_status.add_to_log(command_phase_type.RUN,
+                                                       CommandLogRecord(command_status_type.WARNING,
+                                                                        message, recommendation))
+                    # The matching IDs should cause a FAILURE.
+                    elif pv_IfGeoLayerIDExists.upper() == "FAIL":
+                        create_geolayer = False
+                        warning_count += 1
+                        logger.error(message)
+                        self.command_status.add_to_log(command_phase_type.RUN,
+                                                       CommandLogRecord(command_status_type.FAILURE,
+                                                                        message, recommendation))
 
-                    # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
-                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_spatial_data_file(spatial_data_file_absolute)
+                # If set to run, Create the QGSVectorLayer object and the GeoLayer object. Append the GeoLayer object
+                # to the geoprocessor's geolayers list.
+                if create_geolayer:
 
-                    # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                    geolayer_obj = GeoLayer(geolayer_id=pv_GeoLayerID,
-                                            geolayer_qgs_vector_layer=qgs_vector_layer,
-                                            geolayer_source_path=spatial_data_file_absolute)
+                    try:
+                        # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
+                        qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(spatial_data_file_absolute)
 
-                    # TODO egiles 2018-01-09 Need to figure out how to use the add_geolayer function to add the
-                    # TODO GeoLayer object to the GeoProcessor's geolayers list
-                    self.command_processor.geolayers.append(geolayer_obj)
+                        # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                        geolayer_obj = GeoLayer(geolayer_id=pv_GeoLayerID,
+                                                geolayer_qgs_vector_layer=qgs_vector_layer,
+                                                geolayer_source_path=spatial_data_file_absolute)
+                        self.command_processor.add_geolayer(geolayer_obj)
 
-                # Raise an exception if an unexpected error occurs during the process
-                except Exception as e:
-                    warning_count += 1
-                    message = "Unexpected error reading GeoLayer {} from GeoJSON file {}.".format(pv_GeoLayerID,
-                                                                                                  pv_SpatialDataFile)
-                    recommendation = "Check the log file for details."
-                    logger.exception(message, e)
-                    self.command_status.add_to_log(command_phase_type.RUN,
-                                                   CommandLogRecord(command_status_type.FAILURE, message,
-                                                                    recommendation))
+                    # Raise an exception if an unexpected error occurs during the process
+                    except Exception as e:
+                        warning_count += 1
+                        message = "Unexpected error reading GeoLayer {} from GeoJSON file {}.".format(
+                            pv_GeoLayerID, pv_SpatialDataFile)
+                        recommendation = "Check the log file for details."
+                        logger.exception(message, e)
+                        self.command_status.add_to_log(command_phase_type.RUN,
+                                                       CommandLogRecord(command_status_type.FAILURE, message,
+                                                                        recommendation))
 
         # If the SpatialDataFile is not a file, log an error message.
         else:

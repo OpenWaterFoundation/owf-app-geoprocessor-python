@@ -39,7 +39,7 @@ def get_geometry_type_from_wkbtype(wkb_type):
     else:
         return None
 
-def read_qgsvectorlayer_from_spatial_data_file(spatial_data_file_abs):
+def read_qgsvectorlayer_from_file(spatial_data_file_abs):
 
     """
     Reads the full pathname of spatial data file and returns a QGSVectorLayerObject.

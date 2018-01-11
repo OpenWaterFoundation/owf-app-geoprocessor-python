@@ -17,6 +17,9 @@ def get_attribute_field_names(self, geolayer_id):
     Returns:
          Returns a list of all attribute field names (list of strings) within the appropriate GeoLayer.
 
+    Raises:
+        Value Error if the geolayer_id is not a valid GeoLayerID.
+
     """
 
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
@@ -41,6 +44,9 @@ def get_attribute_field_names(self, geolayer_id):
         # attribute_field_names variable.
         return attribute_field_names
 
+    else:
+        raise ValueError
+
 
 def get_crs(self, geolayer_id):
 
@@ -54,6 +60,9 @@ def get_crs(self, geolayer_id):
 
     Returns:
         Returns the coordinate reference system (string, EPSG code) for the appropriate GeoLayer.
+
+    Raises:
+        Value Error if the geolayer_id is not a valid GeoLayerID.
     """
 
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
@@ -70,6 +79,9 @@ def get_crs(self, geolayer_id):
         crs = qgs_vector_layer.crs().authid()
         return crs
 
+    else:
+        raise ValueError
+
 
 def get_feature_count(self, geolayer_id):
 
@@ -83,6 +95,9 @@ def get_feature_count(self, geolayer_id):
 
     Returns:
         Returns the number of features (int) for the appropriate GeoLayer.
+
+    Raises:
+        Value Error if the geolayer_id is not a valid GeoLayerID.
 
     """
 
@@ -98,6 +113,9 @@ def get_feature_count(self, geolayer_id):
         # "feature_count" (int) is the number of features within the GeoLayer. Return the feature_count variable.
         feature_count = qgs_vector_layer.featureCount()
         return feature_count
+
+    else:
+        raise ValueError
 
 
 def get_geometry_type_from_wkbtype(wkb_type):

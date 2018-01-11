@@ -1,18 +1,5 @@
 import geoprocessor.util.qgis_util as qgis_util
 
-
-# TODO smalers 2018-01-10 What about in-memory GeoLayers that are not read from a file?  No file required then.
-# - how is the geolayer_source_path specified in that case?
-# TODO smalers 2018-01-10 If getter functions are needed to return QGIS layer data, they should be here if
-# appropriate, for example the CRS
-# and not in geo.py utility module since the QGIS layer is essentially a part of the GeoLayer.
-# I could see how if the QGIS methods and data really esoteric that having in a separate module is OK so
-# the GeoLayer design does not get cluttered, but basic data should flow through GeoLayer.
-# However, the following in geo, which has "self" as a parameter is a clue that it should be here:
-#    def get_qgsvectorlayer_from_geolayer(self, geolayer_id):
-# Just call it:
-#    def get_qgsvectorlayer(self):
-# Also, why is it "qgs" and not "qgis".  That seems confusing but I guess we should stick with their names.
 class GeoLayer(object):
 
     """
@@ -30,6 +17,11 @@ class GeoLayer(object):
     etc.) The GeoLayer properties stored within each GeoLayer instance are the STATIC properties that will never change
     (ids, QgsVectorLayer object, source path and geometry type). The DYNAMIC GeoLayer properties (coordinate reference
     system, feature count, etc.) are created when needed by accessing call functions in the geo.py utility script.
+
+    GeoLayers can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
+    creates a new GeoLayer (example: Clip). When this occurs, the in-memory GeoLayer is assigned a geolayer_id from
+    within the command, the geolayer_qgs_vector_layer is created from within the command and the geolayer_source_path
+    is set to 'MEMORY'.
     """
 
     def __init__(self, geolayer_id, geolayer_qgs_vector_layer, geolayer_source_path, properties=None):
@@ -44,7 +36,8 @@ class GeoLayer(object):
                 Object created by the QGIS processor. All GeoLayer spatial manipulations are
                 performed on the GeoLayer's qgs_vector_layer.
             geolayer_source_path (str):
-                The full pathname to the original spatial data file on the user's local computer.
+                The full pathname to the original spatial data file on the user's local computer. If the geolayer was
+                made in memory from the GeoProcessor, this value is set to `MEMORY`.
             properties ({}):
                 A dictionary of user (non-built-in) properties that can be assigned to the layer.
                 These properties facilitate processing.

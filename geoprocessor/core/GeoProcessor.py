@@ -60,7 +60,7 @@ class GeoProcessor(object):
         # TODO smalers 2017-12-30 Need to rework to not hard code.
         # - TempDir is now set as a standard processor property when running commands.
         # - Need to pass in QGIS configuration from the startup batch file or script.
-        self.set_property("temp_dir", r"C:\Users\intern1\Desktop\OWF_spatialProcessor\temp")
+        self.set_property("TempDir", r"C:\Users\intern1\Desktop\OWF_spatialProcessor\temp")
         self.set_property("qgis_prefix_path", r"C:\OSGeo4W\apps\qgis")
 
         # Set the initial working directory properties prior to reading a command file.
@@ -204,7 +204,7 @@ class GeoProcessor(object):
                 #    "\" searchpos is now " + searchPos + " in string \"" + parameter_value + "\"" )
                 print('Expanded parameter value is "' + parameter_value +
                       '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"')
-        return parameter_value     
+        return parameter_value
 
     def get_geolayer(self, geolayer_id):
         """

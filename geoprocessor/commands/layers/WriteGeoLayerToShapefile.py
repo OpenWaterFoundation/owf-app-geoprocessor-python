@@ -37,14 +37,11 @@ class WriteGeoLayerToShapefile(AbstractCommand):
     # Command Parameters
     # GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in Shapefile
     #   format
-    # OutputFolder (str, required): the relative pathname to the folder where the Shapefile will be written to
-    # OutputFilename (str, optional): the name of the output spatial data file. By default, the output filename will be
-    #   the GeoLayer's identifier
+    # OutputFilename (str, required): the relative pathname of the output spatial data file.
     # OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
     #   projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
-        CommandParameterMetadata("OutputFolder", type("")),
         CommandParameterMetadata("OutputFilename", type("")),
         CommandParameterMetadata("OutputCRS", type(""))]
 
@@ -88,15 +85,15 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that parameter OutputFolder is a non-empty, non-None string.
+        # Check that parameter OutputFilename is a non-empty, non-None string.
         # - existence of the folder will also be checked in run_command().
-        pv_OutputFolder = self.get_parameter_value(parameter_name='OutputFolder',
-                                                   command_parameters=command_parameters)
+        pv_OutputFilename = self.get_parameter_value(parameter_name='OutputFilename',
+                                                     command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputFolder, False, False):
-            message = "OutputFolder parameter has no value."
-            recommendation = "Specify the OutputFolder parameter to indicate the folder that the Shapefile filea will" \
-                             " be written to."
+        if not validators.validate_string(pv_OutputFilename, False, False):
+            message = "OutputFilename parameter has no value."
+            recommendation = "Specify the OutputFilename parameter (relative or absolute pathname) to indicate the " \
+                             "location and name of the output spatial data file in GeoJSON format."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -132,17 +129,18 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
-        # Obtain the parameter values except for the OutputCRS and the OutputFilename
+        # Obtain the parameter values except for the OutputCRS
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
-        pv_OutputFolder = self.get_parameter_value("OutputFolder")
+        pv_OutputFilename = self.get_parameter_value("OutputFilename")
 
-        # Convert the OutputFolder parameter value relative path to an absolute path and expand for ${Property} syntax
-        output_folder_absolute = io_util.verify_path_for_os(
+        # Convert the OutputFilename parameter value relative path to an absolute path and expand for ${Property} syntax
+        output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_OutputFolder, self)))
+                                     self.command_processor.expand_parameter_value(pv_OutputFilename, self)))
 
         # Check that the output folder is a valid folder
-        if os.path.isdir(output_folder_absolute):
+        output_folder = os.path.dirname(output_file_absolute)
+        if os.path.isdir(output_folder):
 
             # Check that the GeoLayerID is a valid registered GeoLayer ID in the GeoProcessor
             if self.command_processor.get_geolayer(pv_GeoLayerID):
@@ -158,14 +156,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                     # Obtain the parameter value of the OutputCRS
                     pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
 
-                    # Obtain the parameter value of the OutputFilename
-                    pv_OutputFilename = self.get_parameter_value("OutputFilename", default_value=pv_GeoLayerID)
-
                     # Get the QGSVectorLayer object for the GeoLayer
                     qgs_vector_layer = geolayer.qgs_vector_layer
-
-                    # Get the full pathname of the output spatial data file in Shapefile format
-                    output_full_pathname = os.path.join(output_folder_absolute, pv_OutputFilename)
 
                     # Write the GeoLayer to a spatial data file in Shapefile format
                     # Reference: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
@@ -179,7 +171,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                     # Note to developers: IGNORE `Unexpected Argument` error for layerOptions. This value is
                     # appropriate and functions properly.
                     QgsVectorFileWriter.writeAsVectorFormat(qgs_vector_layer,
-                                                            output_full_pathname,
+                                                            output_file_absolute,
                                                             "utf-8",
                                                             QgsCoordinateReferenceSystem(pv_OutputCRS),
                                                             "ESRI Shapefile",
@@ -209,8 +201,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # If the output folder does not exist
         else:
             warning_count += 1
-            message = 'The OutputFolder ({}) value is not a valid folder.'.format(pv_OutputFolder)
-            recommendation = 'Specifiy a valid relative pathname to an output folder.'
+            message = 'The output folder ({}) of the OutputFilename is not a valid folder.'.format(output_folder)
+            recommendation = 'Specifiy a valid relative pathname for the output filename.'
             logger.error(message)
             self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
                                                                                     message, recommendation))

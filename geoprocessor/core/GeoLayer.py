@@ -84,6 +84,37 @@ class GeoLayer(object):
         else:
             self.properties = properties
 
+
+    def get_attribute_field_names(self):
+        """
+        Returns the a list of attribute field names (list of strings) within the GeoLayer.
+        """
+
+        # Get the attribute field names of the GeoLayer
+        # "attribute_field_names" (list of strings) is a list of the GeoLayer's attribute field names. Return the
+        # attribute_field_names variable.
+        attribute_field_names = [attr_field.name() for attr_field in self.qgs_vector_layer.pendingFields()]
+        return attribute_field_names
+
+    def get_crs(self):
+        """
+        Returns the coordinate reference system (string, EPSG code) of a GeoLayer.
+        """
+
+        # "crs" (string) is the GeoLayer's coordinate reference system in
+        # <EPSG format 'http://spatialreference.org/ref/epsg/'>_. Return the crs variable.
+        crs = self.qgs_vector_layer.crs().authid()
+        return crs
+
+    def get_feature_count(self):
+        """
+        Returns the number of features (int) within a GeoLayer.
+        """
+
+        # "feature_count" (int) is the number of features within the GeoLayer. Return the feature_count variable.
+        feature_count = self.qgs_vector_layer.featureCount()
+        return feature_count
+
     def get_property(self, property_name, if_not_found_val=None, if_not_found_except=False):
         """
         Get a GeoLayer property, case-specific.

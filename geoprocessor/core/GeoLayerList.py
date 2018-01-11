@@ -42,3 +42,30 @@ class GeoLayerList(object):
                 raise
             else:
                 return if_not_found_val
+
+    def get_geolayeridlist(self, geolayerlist_id):
+        """
+        Returns a list of GeoLayer ids that are inside the specified GeoLayerList.
+
+        Args:
+            self (obj): the GeoProcessor instance
+            geolayerlist_id (string): the identifier of the GeoLayerList to read
+
+        Return:
+            A list of strings. Each string represents the identifier of each GeoLayer within the GeoLayerList.
+
+        Raises:
+            Value Error if the geolayerlist_id is not a valid GeoLayerListID.
+        """
+
+        # Check that the input GeoLayerList is a registered GeoLayerList within the GeoProcessor.
+        if is_geolayerlist_id(self, geolayerlist_id):
+
+            # Get the appropriate GeoLayerList
+            geolayerlist = self.command_processor.get_geolayerlist(self, geolayerlist_id)
+
+            # Return the GeoLayerLists's list of GeoLayer IDs
+            return geolayerlist.get_property("geolayer_id_list")
+
+        else:
+            raise ValueError

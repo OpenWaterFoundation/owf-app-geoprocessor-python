@@ -204,7 +204,7 @@ class GeoProcessor(object):
                 #    "\" searchpos is now " + searchPos + " in string \"" + parameter_value + "\"" )
                 print('Expanded parameter value is "' + parameter_value +
                       '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"')
-        return parameter_value
+        return parameter_value     
 
     def get_geolayer(self, geolayer_id):
         """
@@ -241,6 +241,7 @@ class GeoProcessor(object):
                     return geolayerlist
         # Did not find the requested identifier so return None
         return None
+
 
     def get_property(self, property_name, if_not_found_val=None):
         """

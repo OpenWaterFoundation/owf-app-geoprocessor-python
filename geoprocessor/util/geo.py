@@ -76,11 +76,11 @@ def get_qgsvectorlayer_from_geolayer(self, geolayer_id):
     # Check that the input GeoLayer is a registered GeoLayer within the GeoProcessor.
     if is_geolayer_id(self, geolayer_id):
 
-        # Iterate over the GeoLayers registered within the GeoProcessor. Return the corresponding QGSVectorLayer object
-        # if the "registered" GeoLayer ID matches the "provided" GeoLayer ID.
-        for geolayer in self.command_processor.geolayers:
-            if geolayer_id == geolayer.id:
-                return geolayer.qgs_vector_layer
+        # Get the appropriate GeoLayer
+        geolayer = self.command_processor.get_geolayer(self, geolayer_id)
+
+        # Return the GeoLayer's QgsVectorLayer object
+        return geolayer.qgs_vector_layer
 
     # If the provided GeoLayer ID is not registered within the GeoProcessor, return None and print a message.
     else:
@@ -102,23 +102,32 @@ def is_geolayer_id(self, input_id):
             the input GeoLayer id is not registered within the GeoProcessor.
     """
 
-    # A list of registered geolayer ids.
-    list_of_geolayer_ids = []
+    # Get the GeoLayer associated with the input_id
+    geolayer = self.command_processor.get_geolayer(self, input_id)
 
-    # Iterate over the GeoLayers in the GeoProcessor's geolayers list.
-    for geolayer_obj in self.command_processor.geolayers:
-
-        # Append the GeoLayer's id to the list of geolayer ids.
-        list_of_geolayer_ids.append(geolayer_obj.id)
-
-    # Check if the input id is one of the registered GeoLayer ids. Return the appropriate Boolean.
-    if input_id in list_of_geolayer_ids:
+    # If the geolayer variable is None, then the input_id is not a valid GeoLayerID
+    if geolayer:
         return True
     else:
         return False
 
+    # # A list of registered geolayer ids.
+    # list_of_geolayer_ids = []
+    #
+    # # Iterate over the GeoLayers in the GeoProcessor's geolayers list.
+    # for geolayer_obj in self.command_processor.geolayers:
+    #
+    #     # Append the GeoLayer's id to the list of geolayer ids.
+    #     list_of_geolayer_ids.append(geolayer_obj.id)
+    #
+    # # Check if the input id is one of the registered GeoLayer ids. Return the appropriate Boolean.
+    # if input_id in list_of_geolayer_ids:
+    #     return True
+    # else:
+    #     return False
 
-def is_geolist_id(self, input_id):
+
+def is_geolayerlist_id(self, input_id):
 
     """
     Checks if the id is a registered GeoLayerList id (within the GeoProcessor's geolayerlists list).
@@ -132,17 +141,11 @@ def is_geolist_id(self, input_id):
             if the input GeoLayerList id is not registered within the GeoProcessor.
     """
 
-    # A list of registered geolayerlist ids.
-    list_of_geolayerlist_ids = []
+    # Get the GeoLayerList associated with the input_id
+    geolayerlist = self.command_processor.get_geolayerlist(self, input_id)
 
-    # Iterate over the GeoLayerLists in the GeoProcessor's geolayerlists list.
-    for geolist_obj in self.command_processor.geolayerlists:
-
-        # Append the GeoLayerList's id to the list of geolayerlist ids.
-        list_of_geolayerlist_ids.append(geolist_obj.id)
-
-    # Check if the input id is one of the registered GeoLayerList ids. Return the appropriate Boolean.
-    if input_id in list_of_geolayerlist_ids:
+    # If the geolayerlist variable is None, then the input_id is not a valid GeoLayerListID
+    if geolayerlist:
         return True
     else:
         return False
@@ -161,15 +164,14 @@ def return_geolayer_ids_from_geolayerlist_id(self, geolayerlist_id):
         A list of strings. Each string represents the identifier of each GeoLayer within the GeoLayerList.
     """
 
-    # Check that the provided GeoLayerList ID is registered within the GeoProcessor. Only continue, if True. Otherwise
-    # print error message and return None.
-    if is_geolist_id(self, geolayerlist_id):
+    # Check that the input GeoLayerList is a registered GeoLayerList within the GeoProcessor.
+    if is_geolayerlist_id(self, geolayerlist_id):
 
-        # Iterate through each of the registered GeoLayerLists. Return the list of GeoLayer IDs if the
-        # "registered" GeoLayerList ID matches the "provided" GeoLayerList ID.
-        for geolayerlist in self.command_processor.geolayerlists:
-            if geolayerlist.id == geolayerlist_id:
-                return geolayerlist.geolayer_id_list
+        # Get the appropriate GeoLayerList
+        geolayerlist = self.command_processor.get_geolayerlist(self, geolayerlist_id)
+
+        # Return the GeoLayerLists's list of GeoLayer IDs
+        return geolayerlist.geolayer_id_list
 
     # If the provided GeoLayerList ID is not registered within the GeoProcessor, return None and print a message.
     else:

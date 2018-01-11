@@ -91,7 +91,6 @@ class GeoProcessor(object):
         Return:
             Nothing
         """
-        print "HERE 000000000000000000000000000000000000"
         self.geolayers.append(geolayer)
 
     @classmethod
@@ -222,6 +221,24 @@ class GeoProcessor(object):
                 if geolayer.id == geolayer_id:
                     # Found the requested identifier
                     return geolayer
+        # Did not find the requested identifier so return None
+        return None
+
+    def get_geolayerlist(self, geolayerlist_id):
+        """
+        Return the GeoLayerList that has the requested ID.
+
+        Args:
+            geolayerlist_id (str):  GeoLayerList ID string.
+
+        Returns:
+            The GeoLayerList that has the requested ID, or None if not found.
+        """
+        for geolayerlist in self.geolayerlists:
+            if geolayerlist is not None:
+                if geolayerlist.id == geolayerlist_id:
+                    # Found the requested identifier
+                    return geolayerlist
         # Did not find the requested identifier so return None
         return None
 

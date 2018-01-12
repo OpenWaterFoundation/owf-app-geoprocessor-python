@@ -36,7 +36,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
     # Command Parameters
     # GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in GeoJSON format
-    # OutputFilename (str, required): the relative pathname of the output spatial data file.
+    # OutputFilen (str, required): the relative pathname of the output spatial data file.
     # OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
     #   projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
     # OutputPrecision (int, 0-15, optional): the precision (number of integers behind the GeoJSON geometry's decimal
@@ -44,7 +44,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
     #   precision parameter is set to 5.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
-        CommandParameterMetadata("OutputFilename", type("")),
+        CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("OutputCRS", type("")),
         CommandParameterMetadata("OutputPrecision", type(2))]
 
@@ -88,14 +88,14 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that parameter OutputFilename is a non-empty, non-None string.
+        # Check that parameter OutputFile is a non-empty, non-None string.
         # - existence of the folder will also be checked in run_command().
-        pv_OutputFilename = self.get_parameter_value(parameter_name='OutputFilename',
+        pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile',
                                                    command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputFilename, False, False):
-            message = "OutputFilename parameter has no value."
-            recommendation = "Specify the OutputFilename parameter (relative or absolute pathname) to indicate the " \
+        if not validators.validate_string(pv_OutputFile, False, False):
+            message = "OutputFile parameter has no value."
+            recommendation = "Specify the OutputFilen parameter (relative or absolute pathname) to indicate the " \
                              "location and name of the output spatial data file in GeoJSON format."
             warning += "\n" + message
             self.command_status.add_to_log(
@@ -135,12 +135,12 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # Obtain the parameter values except for the OutputCRS
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_OutputPrecision = int(self.get_parameter_value("OutputPrecision", default_value=5))
-        pv_OutputFilename = self.get_parameter_value("OutputFilename")
+        pv_OutputFile = self.get_parameter_value("OutputFile")
 
-        # Convert the OutputFilename parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_OutputFilename, self)))
+                                     self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Check that the output folder is a valid folder
         output_folder = os.path.dirname(output_file_absolute)
@@ -206,8 +206,8 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # If the output folder does not exist
         else:
             warning_count += 1
-            message = 'The output folder ({}) of the OutputFilename is not a valid folder.'.format(output_folder)
-            recommendation = 'Specifiy a valid relative pathname for the output filename.'
+            message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
+            recommendation = 'Specifiy a valid relative pathname for the output file.'
             logger.error(message)
             self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
                                                                                     message, recommendation))

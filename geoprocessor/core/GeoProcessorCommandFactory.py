@@ -7,7 +7,7 @@ from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
 from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
-from geoprocessor.commands.layers.Clip import Clip
+from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
@@ -43,7 +43,7 @@ class GeoProcessorCommandFactory(object):
     # 1) It provides a registry of all commands known to the geoprocessor (via this factory class)
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
-        "CLIP": Clip(),
+        "CLIPGEOLAYER": ClipGeoLayer(),
         "COMPAREFILES": CompareFiles(),
         "COPYFILE": CopyFile(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
@@ -142,8 +142,8 @@ class GeoProcessorCommandFactory(object):
             else:
                 # Constructing the following way always seems to work properly
                 # - Alphabetize the commands.
-                if command_name_upper == "CLIP":
-                    return Clip()
+                if command_name_upper == "CLIPGEOLAYER":
+                    return ClipGeoLayer()
                 elif command_name_upper == "COMPAREFILES":
                     return CompareFiles()
                 elif command_name_upper == "COPYFILE":

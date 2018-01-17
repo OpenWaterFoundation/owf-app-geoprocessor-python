@@ -1,5 +1,7 @@
 import geoprocessor.util.command as command_util
 
+from geoprocessor.commands.files.WebGet import WebGet
+
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
@@ -61,6 +63,7 @@ class GeoProcessorCommandFactory(object):
         "SETPROPERTY": SetProperty(),
         "SETPROPERTYFROMGEOLAYER": SetPropertyFromGeoLayer(),
         "STARTLOG": StartLog(),
+        "WEBGET": WebGet(),
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile()
     }
@@ -176,6 +179,8 @@ class GeoProcessorCommandFactory(object):
                     return SetPropertyFromGeoLayer()
                 elif command_name_upper == "STARTLOG":
                     return StartLog()
+                elif command_name_upper == "WEBGET":
+                    return WebGet()
                 elif command_name_upper == "WRITEGEOLAYERTOGEOJSON":
                     return WriteGeoLayerToGeoJSON()
                 elif command_name_upper == "WRITEGEOLAYERTOSHAPEFILE":

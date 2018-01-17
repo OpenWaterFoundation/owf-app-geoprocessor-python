@@ -36,7 +36,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
     # Command Parameters
     # GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in GeoJSON format
-    # OutputFilen (str, required): the relative pathname of the output spatial data file.
+    # OutputFile (str, required): the relative pathname of the output spatial data file.
     # OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
     #   projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
     # OutputPrecision (int, 0-15, optional): the precision (number of integers behind the GeoJSON geometry's decimal
@@ -150,7 +150,6 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
             if self.command_processor.get_geolayer(pv_GeoLayerID):
 
                 try:
-
                     # Get the GeoLayer
                     geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
@@ -207,7 +206,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         else:
             warning_count += 1
             message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
-            recommendation = 'Specifiy a valid relative pathname for the output file.'
+            recommendation = 'Specify a valid relative pathname for the output file.'
             logger.error(message)
             self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
                                                                                     message, recommendation))

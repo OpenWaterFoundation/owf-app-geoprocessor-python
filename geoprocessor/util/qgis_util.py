@@ -3,6 +3,7 @@
 import os
 from qgis.core import QgsVectorLayer
 
+
 def get_geometry_type_from_wkbtype(wkb_type):
     """
 
@@ -39,6 +40,7 @@ def get_geometry_type_from_wkbtype(wkb_type):
     else:
         return None
 
+
 def read_qgsvectorlayer_from_file(spatial_data_file_abs):
 
     """
@@ -74,6 +76,7 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
     else:
         print "The QGSVectorLayer object ({}) is invalid.".format(spatial_data_file_abs)
         return None
+
 
 def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
 
@@ -114,3 +117,39 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
         print "The QGSVectorLayer object from file geodatabse ({}) feature class ({}) is invalid.".format(
             file_gdb_path_abs, feature_class)
         return None
+
+
+def rename_qgsvectorlayer_attribute(qgsvetorlayer, attribute_name, new_attribute_name):
+    # TODO egiles 2018-01-18 Create a warning if the new_attribute_name is longer than 10 characters but do not raise
+    # TODO  an error
+
+    """
+    Renames an attribute of a Qgs Vector Layer object.
+
+    Arg:
+        qgsvectorlayer (object): a Qgs Vector Layer object
+        attribute_name (string): the original attribute name to change
+        new_attribute_name (string): the new attribute name to rename
+
+    Return:
+        None.
+
+    Raises:
+        None.
+    """
+
+    # Iterate over the attributes in the Qgs Vector Layer object.
+    for attribute in qgsvetorlayer.fields():
+
+        # If the Qgs Vector Layer attribute name matches the parameter `attribute
+        if attribute.name() == attribute_name:
+
+            # Start an editing session within QGIS environment. Do not worry about PyCharm error "Unresolved
+            # Reference", this functionality works fine.
+            with edit(qgsvetorlayer):
+
+                # Get the index of the attribute to be renamed.
+                index = qgsvetorlayer.fieldNameIndex(attribute.name())
+
+                # Rename the attribute with the new name (string).
+                qgsvetorlayer.renameAttribute(index, str(new_attribute_name))

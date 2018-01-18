@@ -4,6 +4,7 @@ from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFact
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.GeoLayer import GeoLayer
 
 # Commands that need special handling (all others are handled generically and don't need to be imported)
 # TODO smalers 2018-01-08 Evaluate enabling with `isinstance` syntax but could not get it to work as intended
@@ -16,7 +17,6 @@ import geoprocessor.util.command as command_util
 
 # QGIS Geoprocessing
 from qgis.core import QgsApplication
-# TODO smalers 2017-12-29 is the following QGIS or Emma's initial code?
 from processing.core.Processing import Processing
 
 # General modules
@@ -92,6 +92,32 @@ class GeoProcessor(object):
             Nothing
         """
         self.geolayers.append(geolayer)
+
+    def copy_geolayer(self, existing_geolayer_id, copied_geolayer_id):
+        """
+        Create a copy of an existing GeoLayer within the GeoProcessor's geolayers list.
+
+        Args:
+            existing_geolayer_id(str): The ID of the existing GeoLayer.
+            copied_geolayer_id(str): The ID of the copied GeoLayer.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+
+        # Get the geolayer object to be copied.
+        existing_geolayer = self.get_geolayer(existing_geolayer_id)
+
+        # If the geolayer to be copied exists, continue.
+        if existing_geolayer:
+
+            # Create a new GeoLayer object with the same qgis_vector_layer property as the original GeoLayer. The
+            # source will be an empty string. Add the copied GeoLayer to the GeoProcessor's geolayers list.
+            copied_geolayer = GeoLayer(copied_geolayer_id, existing_geolayer.qgs_vector_layer, "")
+            self.add_geolayer(copied_geolayer)
 
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):

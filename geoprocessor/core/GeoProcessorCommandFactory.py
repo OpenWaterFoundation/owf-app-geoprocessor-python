@@ -3,6 +3,7 @@ import logging
 import geoprocessor.util.command as command_util
 
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
+from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
@@ -47,6 +48,7 @@ class GeoProcessorCommandFactory(object):
         "CLIPGEOLAYER": ClipGeoLayer(),
         "COMPAREFILES": CompareFiles(),
         "COPYFILE": CopyFile(),
+        "COPYGEOLAYER": CopyGeoLayer(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
@@ -150,6 +152,8 @@ class GeoProcessorCommandFactory(object):
                     return CompareFiles()
                 elif command_name_upper == "COPYFILE":
                     return CopyFile()
+                elif command_name_upper == "COPYGEOLAYER":
+                    return CopyGeoLayer()
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
                     return CreateRegressionTestCommandFile()
                 elif command_name_upper == "ENDFOR":

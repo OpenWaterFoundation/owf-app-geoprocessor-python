@@ -1,15 +1,15 @@
+import logging
+
 import geoprocessor.util.command as command_util
 
-from geoprocessor.commands.files.WebGet import WebGet
-
-from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
+from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
+from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
+from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
 from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
-from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
 from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
-from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
@@ -27,8 +27,7 @@ from geoprocessor.commands.testing.CreateRegressionTestCommandFile import Create
 from geoprocessor.commands.util.CopyFile import CopyFile
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
-
-import logging
+from geoprocessor.commands.util.WebGet import WebGet
 
 
 class GeoProcessorCommandFactory(object):

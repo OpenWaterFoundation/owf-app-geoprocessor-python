@@ -122,7 +122,7 @@ class CopyGeoLayer(AbstractCommand):
         if self.command_processor.get_geolayer(pv_GeoLayerID):
 
             # Get the CopiedGeoLayerID parameter value
-            pv_CopiedGeoLayerID = self.get_parameter_value("ClippingGeoLayerID",
+            pv_CopiedGeoLayerID = self.get_parameter_value("CopiedGeoLayerID",
                                                            default_value="{}_copy".format(pv_GeoLayerID))
 
 

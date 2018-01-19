@@ -14,6 +14,7 @@ from geoprocessor.core.GeoLayer import GeoLayer
 # import geoprocessor.commands.running.For as If
 
 import geoprocessor.util.command as command_util
+import geoprocessor.util.qgis_util as qgis_util
 
 # QGIS Geoprocessing
 from qgis.core import QgsApplication
@@ -108,15 +109,26 @@ class GeoProcessor(object):
             None
         """
 
-        # Get the geolayer object to be copied.
-        existing_geolayer = self.get_geolayer(existing_geolayer_id)
+        # Get the GeoLayer object to be copied.
+        geolayer_orig = self.get_geolayer(existing_geolayer_id)
 
-        # If the geolayer to be copied exists, continue.
-        if existing_geolayer:
+        # If the GeoLayer to be copied exists, continue.
+        if geolayer_orig:
 
-            # Create a new GeoLayer object with the same qgis_vector_layer property as the original GeoLayer. The
+            # Get the GeoLayer's geometry (in QGIS format).
+            original_qgis_geom = geolayer_orig.get_geometry_qgis()
+
+            # Get the GeoLayer's CRS (in EPSG format).
+            original_crs = geolayer_orig.get_crs()
+
+            # Create a duplicate qgs_vector_layer.
+            duplicate_qgs_vector_layer = qgis_util.create_qqsvectorlayer_duplicate(geolayer_orig.qgs_vector_layer,
+                                                                                   original_qgis_geom,
+                                                                                   original_crs)
+
+            # Create a new GeoLayer object with the same geometry as the original GeoLayer. The
             # source will be an empty string. Add the copied GeoLayer to the GeoProcessor's geolayers list.
-            copied_geolayer = GeoLayer(copied_geolayer_id, existing_geolayer.qgs_vector_layer, "")
+            copied_geolayer = GeoLayer(copied_geolayer_id, duplicate_qgs_vector_layer, "")
             self.add_geolayer(copied_geolayer)
 
     @classmethod
@@ -231,6 +243,18 @@ class GeoProcessor(object):
                 print('Expanded parameter value is "' + parameter_value +
                       '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"')
         return parameter_value
+
+    def free_geolayer(self, geolayer):
+        """
+        Removes a GeoLayer object from the geolayers list.
+
+        Args:
+            geolayer: instance of a GeoLayer object
+
+        Return:
+            Nothing
+        """
+        self.geolayers.remove(geolayer)
 
     def get_geolayer(self, geolayer_id):
         """

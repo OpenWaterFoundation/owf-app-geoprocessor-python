@@ -221,54 +221,6 @@ def read_file_into_string_list(filename):
     # Return the string list.
     return string_list
 
-
-# converts a parameter value in string format to a parameter value in list format
-def to_correct_format(parameter_value):
-    """
-    The command file (txt) only contains lines of strings. The parameter values within each command line, are,
-    initially all string format. However, it is required that some parameter values be list format. This function
-    converts a string parameter value to a list parameter value and returns the parameter value in list format.
-
-    :param parameter_value: a parameter value in string format that is supposed to be in list format
-    """
-
-    # Boolean to determine if the current character is a part of a string
-    in_string = False
-
-    # A list to hold the items (strings) of the parameter value list.
-    parameter_value_list = []
-
-    # iterate through the characters of the input parameter value string
-    for char in parameter_value:
-
-        # if current character is the apostrophe symbol (') and there is not currently a string defined, then this is
-        # the start of a string that is meant to live as an item in the parameter value list
-        if char == "'" and not in_string:
-            entry = []
-            in_string = True
-
-        # if current character is the apostrophe symbol (') and there is currently a string defined, then this is the
-        # end of a string that is meant to live as an item in the parameter value list. Add the string to the
-        # parameter value list
-        elif char == "'" and in_string:
-            in_string = False
-            entry_string = "".join(entry)
-            parameter_value_list.append(entry_string)
-
-        # if the current character is not the apostrophe symbol (') and there is currently a string defined, then add
-        # this character to the entry list. The entry list will collect all of the characters within each string.
-        elif char != "'" and in_string:
-            entry.append(char)
-
-        # if the current character is not the apostrophe symbol (') and there is not currently a string defined, then
-        # skip this character without adding it to the entry list or changing the status of the in_string variable
-        else:
-            pass
-
-    # return the parameter value list with the items as string values
-    return parameter_value_list
-
-
 def validate_command_parameter_names(command, warning, deprecated_parameter_names=None,
                                      deprecated_parameter_notes=None, remove_invalid=True):
     """

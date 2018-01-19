@@ -15,7 +15,7 @@ class GeoLayer(object):
 
     There are a number of properties associated with each GeoLayer (id, coordinate reference system, feature count,
     etc.) The GeoLayer properties stored within each GeoLayer instance are the STATIC properties that will never change
-    (ids, QgsVectorLayer object, source path and geometry type). The DYNAMIC GeoLayer properties (coordinate reference
+    (ids, QgsVectorLayer object, and source path). The DYNAMIC GeoLayer properties (coordinate reference
     system, feature count, etc.) are created when needed by accessing call functions in the geo.py utility script.
 
     GeoLayers can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
@@ -57,14 +57,6 @@ class GeoLayer(object):
         # "qgs_id" (string) is the GeoLayer's id in the QGS environment (this is automatically assigned by the QGIS
         # GeoProcessor when a GeoLayer is originally created)
         self.qgs_id = geolayer_qgs_vector_layer.id()
-
-        # TODO smalers 2018-01-10 Still need a reference for the values.  As a programmer, what can I expect?
-        # - Can a URL or something be shown so I can see valid values.
-        # - This is a general comment I have - we need to make it easy for developers to know about QGIS.
-        # "geom_type" (string) is the GeoLayer's geometry type. The QGIS environment has an enumerator
-        # system for each geometry type. The get_geometry_type_from_wkbtype function converts the enumerator with
-        # the name of the geometry type. Return the geom_type variable.
-        self.geom_type = qgis_util.get_geometry_type_from_wkbtype(geolayer_qgs_vector_layer.wkbType())
 
         # "properties" (dict) is a dictionary of user (non-built-in) properties that are assigned to the layer.
         # These properties facilitate processing and may or may not be output to to a persistent format,
@@ -108,6 +100,49 @@ class GeoLayer(object):
         feature_count = self.qgs_vector_layer.featureCount()
         return feature_count
 
+    def get_geometry_qgis(self):
+        """
+        Returns the GeoLayer's geometry in QGIS foramat.
+        """
+
+        # Get the wkb geometry type.
+        wkb_type = self.get_geometry_wkb()
+
+        # A dictionary that relates the wkb geometry types with the qgis geometry types.
+        # List of QGIS geometry types included in following REF:
+        #   https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/vector.html#memory-provider
+        wkb_qgis_geometry_dic = {"Point": ["WKBPoint", "WKBPoint25D"],
+                                 "LineString": ["WKBLineString", "WKBLineString25D"],
+                                 "Polygon": ["WKBPolygon", "WKBPolygon25D"],
+                                 "MultiPoint": ["WKBMultiPoint", "WKBMultiPoint25D"],
+                                 "MultiLineString": ["WKBMultiLineString", "WKBMultiLineString25D"],
+                                 "MultiPolygon": ["WKBMultiPolygon25D", "WKBMultiPolygon"]}
+
+        try:
+
+            # Iterate through the wkb-qgis geometry dictionary. If the wkb_type is in the value of an entry, return
+            # the corresponding qgis geometry.
+            for geom_qgis, geom_wkb in wkb_qgis_geometry_dic.iteritems():
+                if wkb_type in geom_wkb:
+                    return geom_qgis
+
+        except:
+            raise ValueError("WKBGeometry ({}) is not recognized in the wkb-qgis-geometry-dictionary.".format(wkb_type))
+
+    def get_geometry_wkb(self):
+        """
+        Returns the GeoLayer's geometry in WKB format.
+        """
+
+        # TODO smalers 2018-01-10 Still need a reference for the values.  As a programmer, what can I expect?
+        # - Can a URL or something be shown so I can see valid values.
+        # - This is a general comment I have - we need to make it easy for developers to know about QGIS.
+        # "geom_type" (string) is the GeoLayer's geometry type. The QGIS environment has an enumerator
+        # system for each geometry type. The get_geometry_type_from_wkbtype function converts the enumerator with
+        # the name of the geometry type. Return the geom_type variable.
+        wkb_geometry = qgis_util.get_geometry_type_from_wkbtype(self.qgs_vector_layer.wkbType())
+        return wkb_geometry
+
     def get_property(self, property_name, if_not_found_val=None, if_not_found_except=False):
         """
         Get a GeoLayer property, case-specific.
@@ -135,3 +170,26 @@ class GeoLayer(object):
                 raise
             else:
                 return if_not_found_val
+
+    def rename_attribute(self, attribute_name, new_attribute_name):
+
+
+        """
+        Renames an attribute.
+
+        Arg:
+            attribute_name (string): the original attribute name to change
+            new_attribute_name (string): the new attribute name to rename
+
+        Return:
+            None.
+
+        Raises:
+            None.
+        """
+
+        # Get the QGSVectorLayer object of the GeoLayer
+        qgs_vector_layer = self.qgs_vector_layer
+
+        # Run processing in qgis utility function
+        qgis_util.rename_qgsvectorlayer_attribute(qgs_vector_layer, attribute_name, new_attribute_name)

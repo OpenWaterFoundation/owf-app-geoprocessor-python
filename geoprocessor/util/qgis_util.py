@@ -4,6 +4,27 @@ import os
 from qgis.core import QgsVectorLayer
 
 
+def create_qqsvectorlayer_duplicate(qgsvetorlayer, qgis_geometry, crs):
+    # REF: https://gis.stackexchange.com/questions/205947/duplicating-layer-in-memory-using-pyqgis
+    # acceptable geometry values: Point, LineString, Polygon, MultiLineString, MultiPolygon
+
+    feats = [feat for feat in qgsvetorlayer.getFeatures()]
+
+    crs_lower = str(crs).lower()
+    uri = "{}?crs={}".format("Point", "epsg:4326")
+    # uri = "{}?crs={}".format(qgis_geometry, crs_lower)
+
+    # memory_layer = QgsVectorLayer(uri, "duplicated_layer", "memory")
+    memory_layer = QgsVectorLayer("Point", "layer", "memory")
+
+    memory_layer_data = memory_layer.dataProvider()
+    attr = qgsvetorlayer.dataProvider().fields().toList()
+    memory_layer_data.addAttributes(attr)
+    memory_layer.updateFields()
+    memory_layer_data.addFeatures(feats)
+
+    return memory_layer
+
 def get_geometry_type_from_wkbtype(wkb_type):
     """
 
@@ -35,7 +56,7 @@ def get_geometry_type_from_wkbtype(wkb_type):
                     "-2147483643": "WKBUnknown"}
 
     # Only return geometry type (in string format) if the input wkb_type exists in the dictionary. Else return None.
-    if wkb_type in list(wkb_type_dic.keys()):
+    if str(wkb_type) in list(wkb_type_dic.keys()):
         return wkb_type_dic[str(wkb_type)]
     else:
         return None
@@ -141,15 +162,19 @@ def rename_qgsvectorlayer_attribute(qgsvetorlayer, attribute_name, new_attribute
     # Iterate over the attributes in the Qgs Vector Layer object.
     for attribute in qgsvetorlayer.fields():
 
-        # If the Qgs Vector Layer attribute name matches the parameter `attribute
+        # If the Qgs Vector Layer attribute name matches the parameter attribute
         if attribute.name() == attribute_name:
 
-            # Start an editing session within QGIS environment. Do not worry about PyCharm error "Unresolved
-            # Reference", this functionality works fine.
-            with edit(qgsvetorlayer):
+            # Start an editing session within QGIS environment.
+            qgsvetorlayer.startEditing()
 
-                # Get the index of the attribute to be renamed.
-                index = qgsvetorlayer.fieldNameIndex(attribute.name())
+            # Get the index of the attribute to be renamed.
+            index = qgsvetorlayer.fieldNameIndex(attribute.name())
 
-                # Rename the attribute with the new name (string).
-                qgsvetorlayer.renameAttribute(index, str(new_attribute_name))
+            # Rename the attribute with the new name (string).
+            qgsvetorlayer.renameAttribute(index, str(new_attribute_name))
+
+            # Commit the changes made to the qgsvectorlayer
+            qgsvetorlayer.commitChanges()
+
+

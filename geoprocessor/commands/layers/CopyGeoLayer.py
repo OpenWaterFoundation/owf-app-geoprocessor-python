@@ -39,6 +39,8 @@ class CopyGeoLayer(AbstractCommand):
         super(CopyGeoLayer, self).__init__()
         self.command_name = "CopyGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
+        self.warning_count = 0
+        self.logger = logging.getLogger(__name__)
 
     def check_command_parameters(self, command_parameters):
         """
@@ -96,6 +98,78 @@ class CopyGeoLayer(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
+    def __should_geolayer_be_created(self, geolayer_id):
+        """
+        Checks that the ID of the GeoLayer to be created is not an existing GeoLayerList ID or an existing GeoLayer ID.
+        The GeoLayer will NOT be created if ID is the same as an existing GeoLayerList ID. Depending on the
+        IfGeoLayerIDExists parameter value, the GeoLayer to be created might be created even if it has the same ID as
+        an existing GeoLayer ID. (See logic or user documentation for more detailed information.)
+
+        Args:
+            geolayer_id: the id of the GeoLayer to be created
+
+        Returns:
+            create_geolayer: Boolean. If TRUE, the GeoLayer should be created. If FALSE, the GeoLayer should not be
+            created.
+
+        Raises:
+            None.
+        """
+
+        # Boolean to determine if the GeoLayer should be created. Set to true until an error occurs.
+        create_geolayer = True
+
+        # If the geolayer_id is the same as as already-existing GeoLayerListID, raise a FAILURE.
+        if self.command_processor.get_geolayerlist(geolayer_id):
+
+            create_geolayer = False
+            self.warning_count += 1
+            message = 'The GeoLayer ID ({}) value is already in use as a GeoLayerList ID.'.format(geolayer_id)
+            recommendation = 'Specifiy a new GeoLayerID.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.FAILURE,
+                                                            message, recommendation))
+
+        # If the geolayer_id is the same as an already-registered GeoLayerID, react according to the
+        # pv_IfGeoLayerIDExists value.
+        elif self.command_processor.get_geolayer(geolayer_id):
+
+            # Get the IfGeoLayerIDExists parameter value.
+            pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
+
+            # Warnings/recommendations if the geolayer_id is the same as a registered GeoLayerID
+            message = 'The GeoLayer ID ({}) value is already in use as a GeoLayer ID.'.format(geolayer_id)
+            recommendation = 'Specify a new GeoLayerID.'
+
+            # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
+            if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+                self.warning_count += 1
+                self.logger.warning(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.WARNING,
+                                                                message, recommendation))
+
+            # The registered GeoLayer should not be replaces. A warning should be logged.
+            if pv_IfGeoLayerIDExists.upper() == "WARN":
+                create_geolayer = False
+                self.warning_count += 1
+                self.logger.warning(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.WARNING,
+                                                                message, recommendation))
+
+            # The matching IDs should cause a FAILURE.
+            elif pv_IfGeoLayerIDExists.upper() == "FAIL":
+                create_geolayer = False
+                self.warning_count += 1
+                self.logger.error(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.FAILURE,
+                                                                message, recommendation))
+
+        return create_geolayer
+
     def run_command(self):
         """
         Run the command. Make a copy of the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
@@ -110,13 +184,8 @@ class CopyGeoLayer(AbstractCommand):
             RuntimeError if any warnings occurred during run_command method.
         """
 
-        # Set up logger and warning count.
-        warning_count = 0
-        logger = logging.getLogger(__name__)
-
         # Obtain the parameter values.
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
-        pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
         # Check that the GeoLayerID is a valid GeoLayer ID.
         if self.command_processor.get_geolayer(pv_GeoLayerID):
@@ -125,90 +194,37 @@ class CopyGeoLayer(AbstractCommand):
             pv_CopiedGeoLayerID = self.get_parameter_value("CopiedGeoLayerID",
                                                            default_value="{}_copy".format(pv_GeoLayerID))
 
+            # Check if the CopiedGeoLayer should be created. Continue if TRUE. Error handling dealt with inside
+            # the `__should_geolayer_be_created` method.
+            if self.__should_geolayer_be_created(pv_CopiedGeoLayerID):
 
-            # Mark as an error if the pv_CopiedGeoLayerID is the same as a registered GeoLayerList ID
-            if self.command_processor.get_geolayerlist(pv_CopiedGeoLayerID):
+                # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
+                try:
+                    self.command_processor.copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID)
 
-                warning_count += 1
-                message = 'The GeoLayer ID ({}) value is already in use as a GeoLayerList ID.'.format(
-                    pv_CopiedGeoLayerID)
-                recommendation = 'Specifiy a new GeoLayerID.'
-                logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE,
-                                                                message, recommendation))
-
-            else:
-
-                # Boolean to determine if the GeoLayer should be created. Only set to False if the CopiedGeoLayerID
-                # is the same as a registered GeoLayerID and the IfGeoLayerIDExists is set to 'FAIL' or `WARN`.
-                create_geolayer = True
-
-                # If the pv_CopiedGeoLayerID is the same as an already-registered GeoLayerID, react according to the
-                # pv_IfGeoLayerIDExists value.
-                if self.command_processor.get_geolayer(pv_CopiedGeoLayerID):
-
-                    # Warnings/recommendations if the CopiedGeoLayerID is the same as a registered GeoLayerID
-                    message = 'The GeoLayer ID ({}) value is already in use as a GeoLayer ID.'.format(
-                        pv_CopiedGeoLayerID)
-                    recommendation = 'Specify a new GeoLayerID.'
-
-                    # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
-                    if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
-                        create_geolayer = False
-                        warning_count += 1
-                        logger.warning(message)
-                        self.command_status.add_to_log(command_phase_type.RUN,
-                                                       CommandLogRecord(command_status_type.WARNING,
-                                                                        message, recommendation))
-
-                    # The registered GeoLayer should not be replaces. A warning should be logged.
-                    if pv_IfGeoLayerIDExists.upper() == "WARN":
-                        create_geolayer = False
-                        warning_count += 1
-                        logger.warning(message)
-                        self.command_status.add_to_log(command_phase_type.RUN,
-                                                       CommandLogRecord(command_status_type.WARNING,
-                                                                        message, recommendation))
-
-                    # The matching IDs should cause a FAILURE.
-                    elif pv_IfGeoLayerIDExists.upper() == "FAIL":
-                        create_geolayer = False
-                        warning_count += 1
-                        logger.error(message)
-                        self.command_status.add_to_log(command_phase_type.RUN,
-                                                       CommandLogRecord(command_status_type.FAILURE,
-                                                                        message, recommendation))
-
-                # If set to run, copy the GeoLayer.
-                if create_geolayer:
-
-                    try:
-                        self.command_processor.copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID)
-
-                    # Raise an exception if an unexpected error occurs during the process
-                    except Exception as e:
-                        warning_count += 1
-                        message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
-                        recommendation = "Check the log file for details."
-                        logger.exception(message, e)
-                        self.command_status.add_to_log(command_phase_type.RUN,
-                                                       CommandLogRecord(command_status_type.FAILURE, message,
-                                                                        recommendation))
+                # Raise an exception if an unexpected error occurs during the process
+                except Exception as e:
+                    self.warning_count += 1
+                    message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
+                    recommendation = "Check the log file for details."
+                    self.logger.exception(message, e)
+                    self.command_status.add_to_log(command_phase_type.RUN,
+                                                   CommandLogRecord(command_status_type.FAILURE, message,
+                                                                    recommendation))
 
         # The GeoLayerID is not a valid GeoLayer ID.
         else:
-            warning_count += 1
+            self.warning_count += 1
             message = 'The GeoLayerID ({}) value is not a valid GeoLayer ID.'.format(pv_GeoLayerID)
             recommendation = 'Specify a valid GeoLayerID.'
-            logger.error(message)
+            self.logger.error(message)
             self.command_status.add_to_log(command_phase_type.RUN,
                                            CommandLogRecord(command_status_type.FAILURE, message,
                                                             recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
-        if warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(warning_count)
+        if self.warning_count > 0:
+            message = "There were {} warnings proceeding this command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

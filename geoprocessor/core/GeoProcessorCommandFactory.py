@@ -4,6 +4,7 @@ import geoprocessor.util.command as command_util
 
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
+from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
@@ -54,6 +55,7 @@ class GeoProcessorCommandFactory(object):
         "ENDIF": EndIf(),
         "FOR": For(),
         "IF": If(),
+        "MERGEGEOLAYERS": MergeGeoLayers(),
         "MESSAGE": Message(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
@@ -164,6 +166,8 @@ class GeoProcessorCommandFactory(object):
                     return For()
                 elif command_name_upper == "IF":
                     return If()
+                elif command_name_upper == "MERGEGEOLAYERS":
+                    return MergeGeoLayers()
                 elif command_name_upper == "MESSAGE":
                     return Message()
                 elif command_name_upper == "READGEOLAYERFROMGEOJSON":

@@ -94,6 +94,7 @@ class GeoProcessor(object):
         """
         self.geolayers.append(geolayer)
 
+    # TODO smalers 2018-01-20 This functionality has been copied to GeoLayer and needs to be removed from here
     def copy_geolayer(self, existing_geolayer_id, copied_geolayer_id):
         """
         Create a copy of an existing GeoLayer within the GeoProcessor's geolayers list.

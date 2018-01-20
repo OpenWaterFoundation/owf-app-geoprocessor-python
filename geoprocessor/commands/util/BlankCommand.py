@@ -1,11 +1,10 @@
 import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
 
 
-class UnknownCommand(AbstractCommand.AbstractCommand):
+class BlankCommand(AbstractCommand.AbstractCommand):
     """
-    General command class used when the GeoProcessorCommandFactory does not recognize the command.
-    This allows the command to exist gracefully in a command file and command list.
-    Running the command has no effect.
+    A BlankCommand is used when the command contains only whitespace.
+    The command does nothing when run.
     """
     def __init__(self):
         """
@@ -13,12 +12,12 @@ class UnknownCommand(AbstractCommand.AbstractCommand):
         """
         # Don't set the command name because don't know that there is one.
         # The AbstractCommand.command_string will be used to output the full string:
-        super(UnknownCommand, self).__init__()
+        super(BlankCommand, self).__init__()
 
     def initialize_command(self, command_string, processor, full_initialization):
         """
         Initialize the command.  This overrides the AbstractCommand.initialize_command function
-        because an UnknownCommand may be ill-formed and no attempt is made to parse it.
+        because there are no command parameters to parse.
 
         Args:
             command_string: Full command string, which may include indentation.
@@ -31,7 +30,7 @@ class UnknownCommand(AbstractCommand.AbstractCommand):
 
         # Set data in the parent class, but do not attempt to parse the command since unknown syntax
         full_initialization = False
-        super(UnknownCommand, self).initialize_command(command_string, processor, full_initialization)
+        super(BlankCommand, self).initialize_command(command_string, processor, full_initialization)
 
     def run_command(self):
         """
@@ -40,5 +39,5 @@ class UnknownCommand(AbstractCommand.AbstractCommand):
         Returns:
             Nothing.
         """
-        # print("In UnknownCommand.run_command")
+        # print("In BlankCommand.run_command")
         pass

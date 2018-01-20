@@ -26,6 +26,7 @@ from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFro
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
 
+from geoprocessor.commands.util.BlankCommand import BlankCommand
 from geoprocessor.commands.util.CopyFile import CopyFile
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
@@ -46,6 +47,7 @@ class GeoProcessorCommandFactory(object):
     # 1) It provides a registry of all commands known to the geoprocessor (via this factory class)
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
+        "BLANKCOMMAND": BlankCommand(),
         "CLIPGEOLAYER": ClipGeoLayer(),
         "COMPAREFILES": CompareFiles(),
         "COPYFILE": CopyFile(),
@@ -115,10 +117,9 @@ class GeoProcessorCommandFactory(object):
         command_string_trimmed = command_string.strip()
         paren_pos = command_string_trimmed.find('(')
 
-        # Blank line so insert a BlankCommand command.
         if len(command_string_trimmed) == 0:
-            # return BlankCommand.BlankCommand()
-            pass
+            # Blank line so insert a BlankCommand command.
+            return BlankCommand()
 
         # Comment line.
         # elif command_string_trimmed[:1] == '#':

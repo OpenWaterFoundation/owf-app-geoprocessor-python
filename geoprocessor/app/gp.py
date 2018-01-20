@@ -172,6 +172,7 @@ def run_batch(command_file):
         return
     except:
         message = 'Error reading command file "' + command_file_absolute + '".'
+        traceback.print_exc(file=sys.stdout)
         logger.error(message)
         print(message)
         return

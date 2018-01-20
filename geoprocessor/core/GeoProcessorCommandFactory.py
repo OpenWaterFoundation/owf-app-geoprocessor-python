@@ -26,7 +26,8 @@ from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFro
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
 
-from geoprocessor.commands.util.BlankCommand import BlankCommand
+from geoprocessor.commands.util.Blank import Blank
+from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CopyFile import CopyFile
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
@@ -47,8 +48,9 @@ class GeoProcessorCommandFactory(object):
     # 1) It provides a registry of all commands known to the geoprocessor (via this factory class)
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
-        "BLANKCOMMAND": BlankCommand(),
+        "BLANKCOMMAND": Blank(),  # Actually has no name, is whitespace only
         "CLIPGEOLAYER": ClipGeoLayer(),
+        "COMMENT": Comment(),  # Actually is line starting with #
         "COMPAREFILES": CompareFiles(),
         "COPYFILE": CopyFile(),
         "COPYGEOLAYER": CopyGeoLayer(),
@@ -119,12 +121,11 @@ class GeoProcessorCommandFactory(object):
 
         if len(command_string_trimmed) == 0:
             # Blank line so insert a BlankCommand command.
-            return BlankCommand()
+            return Blank()
 
         # Comment line.
-        # elif command_string_trimmed[:1] == '#':
-            # return CommentCommand.CommentCommand()
-            pass
+        elif command_string_trimmed[:1] == '#':
+            return Comment()
 
         # The symbol '(' was found.
         # Assume command of syntax CommandName(Param1="...",Param2="...").

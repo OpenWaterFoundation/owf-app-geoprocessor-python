@@ -132,7 +132,7 @@ class CopyFile(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_DestinationFile, self)))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings about command parameters."
+            message = "There were " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
             raise ValueError(message)
 
@@ -177,7 +177,7 @@ class CopyFile(AbstractCommand):
                                  "See the log file for details."))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings processing the command."
+            message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
         self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

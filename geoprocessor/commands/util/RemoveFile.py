@@ -108,6 +108,9 @@ class RemoveFile(AbstractCommand):
 
         # Get data for the command
         pv_SourceFile = self.get_parameter_value('SourceFile')
+        pv_IfSourceFileNotFound = self.get_parameter_value('IfSourceFileNotFound')
+        if pv_IfSourceFileNotFound is None or pv_IfSourceFileNotFound == "":
+            pv_IfSourceFileNotFound = 'Warn'  # Default
 
         # Runtime checks on input
 
@@ -116,7 +119,7 @@ class RemoveFile(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_SourceFile, self)))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings about command parameters."
+            message = "There were " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
             raise ValueError(message)
 
@@ -125,13 +128,21 @@ class RemoveFile(AbstractCommand):
         try:
             input_count = 1
             if not os.path.exists(pv_SourceFile_absolute):
-                warning_count += 1
                 message = 'The source file does not exist: "' + pv_SourceFile_absolute + '"'
-                self.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, message,
-                                     "Verify that the source exists at the time the command is run."))
-                logger.warning(message)
+                if pv_IfSourceFileNotFound == 'Warn':
+                    warning_count += 1
+                    self.command_status.add_to_log(
+                        command_phase_type.RUN,
+                        CommandLogRecord(command_status_type.WARNING, message,
+                                         "Verify that the source exists at the time the command is run."))
+                    logger.warning(message)
+                elif pv_IfSourceFileNotFound == 'Fail':
+                    warning_count += 1
+                    self.command_status.add_to_log(
+                        command_phase_type.RUN,
+                        CommandLogRecord(command_status_type.FAILURE, message,
+                                         "Verify that the source exists at the time the command is run."))
+                    logger.warning(message)
                 input_count -= 1
 
             if input_count == 1:
@@ -149,7 +160,7 @@ class RemoveFile(AbstractCommand):
                                  "See the log file for details."))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings processing the command."
+            message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
         self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

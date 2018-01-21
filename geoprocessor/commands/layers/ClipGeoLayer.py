@@ -62,10 +62,11 @@ class ClipGeoLayer(AbstractCommand):
         """
         Initialize the command.
         """
-
+        # AbstractCommand data
         super(ClipGeoLayer, self).__init__()
-        self.command_name = "Clip"
+        self.command_name = "ClipGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
+        # Class data
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 

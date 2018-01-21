@@ -256,7 +256,7 @@ class CompareFiles(AbstractCommand):
             if not os.path.exists(pv_InputFile1_absolute):
                 warning_count += 1
                 message = 'The first input file does not exist: "' + pv_InputFile1_absolute + '"'
-                self.command_status.addToLog(
+                self.command_status.add_to_log(
                     command_phase_type.RUN,
                     CommandLogRecord(command_status_type.FAILURE, message,
                                      "Verify that the first input file exists at the time the command is run."))
@@ -266,7 +266,7 @@ class CompareFiles(AbstractCommand):
             if not os.path.exists(pv_InputFile2_absolute):
                 warning_count += 1
                 message = 'The second input file does not exist: "' + pv_InputFile2_absolute + '"'
-                self.command_status.addToLog(
+                self.command_status.add_to_log(
                     command_phase_type.RUN,
                     CommandLogRecord(command_status_type.FAILURE, message,
                                      "Verify that the second input file exists at the time the command is run."))
@@ -306,7 +306,7 @@ class CompareFiles(AbstractCommand):
                         # Compare by ignoring case
                         if iline1.upper() != iline2.upper():
                             diff_count += 1
-                    logger.debug('Compared:\n"' + iline1 + '"\n"' + iline2 + '"\ndiff_count=' + str(diff_count))
+                    # logger.debug('Compared:\n"' + iline1 + '"\n"' + iline2 + '"\ndiff_count=' + str(diff_count))
                 in1.close()
                 in2.close()
                 if line_count_compared == 0:

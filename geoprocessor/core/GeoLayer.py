@@ -215,20 +215,15 @@ class GeoLayer(object):
                 return if_not_found_val
 
     def rename_attribute(self, attribute_name, new_attribute_name):
-
-
         """
         Renames an attribute.
 
         Arg:
-            attribute_name (string): the original attribute name to change
-            new_attribute_name (string): the new attribute name to rename
+            attribute_name (str):  The original attribute name.
+            new_attribute_name (str): The new attribute name.
 
-        Return:
-            None.
-
-        Raises:
-            None.
+        Returns:
+            None
         """
 
         # Get the QGSVectorLayer object of the GeoLayer
@@ -236,3 +231,13 @@ class GeoLayer(object):
 
         # Run processing in qgis utility function
         qgis_util.rename_qgsvectorlayer_attribute(qgs_vector_layer, attribute_name, new_attribute_name)
+
+    def set_property(self, property_name, property_value):
+        """
+        Set a GeoLayer property
+
+        Args:
+            property_name (str):  Property name.
+            property_value (object):  Value of property, can be any built-in Python type or class instance.
+        """
+        self.properties[property_name] = property_value

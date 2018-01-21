@@ -153,6 +153,28 @@ def string_to_dictionary(string):
                          "bracket ({{) and the last character must be a closed curly bracket (}})".format(string))
 
 
+def pattern_count(s, pattern):
+    """
+    Count the number of unique (non-overlapping) instances of a pattern in a string.
+
+    Args:
+        s (str): String to search.
+        pattern (str): Pattern to search for.  Currently this can only be a one-character string.
+
+    Returns:
+        The count of the unique instances.
+    """
+    count = 0
+    if s is None or pattern is None or len(pattern) < 1:
+        return count
+    size = len(s)
+    c = pattern[0]
+    for i in range(0, size):
+        if s[i] == c:
+            count += 1
+    return count
+
+
 def __string_to_dictionary_properlistformat(string):
     """
     A private function to be used in the string_to_dictionary. A dictionary in string format can have a list as an

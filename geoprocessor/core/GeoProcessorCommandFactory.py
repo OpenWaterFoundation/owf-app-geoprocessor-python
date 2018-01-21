@@ -10,6 +10,7 @@ from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerF
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
 from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
+from geoprocessor.commands.layers.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
 from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
 
@@ -72,6 +73,7 @@ class GeoProcessorCommandFactory(object):
         "SETPROPERTYFROMGEOLAYER": SetPropertyFromGeoLayer(),
         "STARTLOG": StartLog(),
         "WEBGET": WebGet(),
+        "WRITEGEOLAYERPROPERTIESTOFILE": WriteGeoLayerPropertiesToFile(),
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
         "WRITEPROPERTIESTOFILE": WritePropertiesToFile()
@@ -194,6 +196,8 @@ class GeoProcessorCommandFactory(object):
                     return StartLog()
                 elif command_name_upper == "WEBGET":
                     return WebGet()
+                elif command_name_upper == "WRITEGEOLAYERPROPERTIESTOFILE":
+                    return WriteGeoLayerPropertiesToFile()
                 elif command_name_upper == "WRITEGEOLAYERTOGEOJSON":
                     return WriteGeoLayerToGeoJSON()
                 elif command_name_upper == "WRITEGEOLAYERTOSHAPEFILE":

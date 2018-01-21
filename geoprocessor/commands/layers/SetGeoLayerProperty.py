@@ -11,6 +11,8 @@ import geoprocessor.util.command as command_util
 import geoprocessor.util.validators as validators
 
 import logging
+import sys
+import traceback
 
 
 class SetGeoLayerProperty(AbstractCommand):
@@ -153,14 +155,16 @@ class SetGeoLayerProperty(AbstractCommand):
             if geolayer is None:
                 message = 'Unable to find GeoLayer for GeoLayerID="' + pv_GeoLayerID + '"'
                 warning_count += 1
+                logger.error(message)
                 self.command_status.add_to_log(
                     command_phase_type.RUN,
                     CommandLogRecord(command_status_type.FAILURE, message, "Check the log file for details."))
             else:
-                geolayer.set_property(pv_PropertyName,pv_PropertyValue2)
+                geolayer.set_property(pv_PropertyName, pv_PropertyValue2)
         except Exception as e:
             warning_count += 1
             message = 'Unexpected error setting GeoLayer property "' + pv_PropertyName + '"'
+            traceback.print_exc(file=sys.stdout)
             logger.exception(message, e)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
@@ -168,7 +172,7 @@ class SetGeoLayerProperty(AbstractCommand):
                                  "Check the log file for details."))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings processing the command."
+            message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
         self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

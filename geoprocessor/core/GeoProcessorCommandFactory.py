@@ -22,6 +22,7 @@ from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
+from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
 
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
@@ -72,7 +73,8 @@ class GeoProcessorCommandFactory(object):
         "STARTLOG": StartLog(),
         "WEBGET": WebGet(),
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
-        "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile()
+        "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
+        "WRITEPROPERTIESTOFILE": WritePropertiesToFile()
     }
 
     def __init__(self):
@@ -182,6 +184,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayersFromFolder()
                 elif command_name_upper == "REMOVEFILE":
                     return RemoveFile()
+                elif command_name_upper == "SETGEOLAYERPROPERTY":
+                    return SetGeoLayerProperty()
                 elif command_name_upper == "SETPROPERTY":
                     return SetProperty()
                 elif command_name_upper == "SETPROPERTYFROMGEOLAYER":
@@ -194,6 +198,8 @@ class GeoProcessorCommandFactory(object):
                     return WriteGeoLayerToGeoJSON()
                 elif command_name_upper == "WRITEGEOLAYERTOSHAPEFILE":
                     return WriteGeoLayerToShapefile()
+                elif command_name_upper == "WRITEPROPERTIESTOFILE":
+                    return WritePropertiesToFile()
 
             # If here the command name was not matched.
             # Don't know the command so create an UnknownCommand or throw an exception.

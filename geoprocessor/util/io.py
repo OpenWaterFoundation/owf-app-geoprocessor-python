@@ -1,8 +1,13 @@
 # Input/output functions
 # - some are ported from Java IOUtil.java class
 
+import geoprocessor.util.string as string_util
+
+import logging
 import os
+import re
 import sys
+import traceback
 
 
 def to_absolute_path(parent_dir, path):
@@ -167,251 +172,171 @@ def expand_formatter(absolute_path, formatter):
         return None
 
 
+# TODO smalers 2018-01-20 Need to fully move this to util.string
+# - I copied and redirect to there
 def string_to_list(string):
-    """
-    Parses a string in proper list format to a list of strings.
+    return string_util.string_to_list(string)
 
-    Proper list format:
-        (1) String starts and ends in open and closed brackets.
-        (2) The items of the list are required to be enclosed in apostrophes.
+
+def __write_property(fout, property_name, property_object, format_type):
+    """
+    Write a single property to the output file, called by the write_property_file() function.
 
     Args:
-        string (string): a string to be parsed into a list
+        fout:  Open file object.
+        property_name:  Name of property to write.
+        property_object:  Property object to write.
+        format_type (str):  File format type: 'NameTypeValue', 'NameTypeValuePython', 'NameValue',
+            as per the GeoProcessor WritePropertiesToFile command.
 
     Returns:
-        A list, the parsed input string.
-
-    Raises:
-        Value Error. Raised if input string is not in proper list format.
+        None.
     """
-
-    # Continue if the string is in proper list format (starts with an open bracket and ends with a closed bracket).
-    if string.startswith("[") and string.endswith("]"):
-
-        # Return an empty list if the string represents an empty list.
-        if len(string) == 2:
-            return []
-
-        # Continue if the string is not empty and both the second and the second-to-last characters are apostrophes.
-        elif string[1] == "'" and string[-2] == "'":
-
-            # Continue if there are an even number of apostrophes in the string.
-            if string.count("'") % 2 == 0:
-
-                # Boolean to determine if the current character is an item within the list.
-                in_item = False
-
-                # A list to hold the parsed items (strings).
-                output_parsed_list = []
-
-                # Iterate through the characters of the input string.
-                for char in string:
-
-                    # If the current character is the apostrophe symbol (') and there is not currently a string defined,
-                    # then this is the start of a string that is meant to be a list item.
-                    if char == "'" and not in_item:
-                        entry = []
-                        in_item = True
-
-                    # If the current character is the apostrophe symbol (') and there is currently a string defined,
-                    # then this is the end of a string that is meant to be a list item. Add the string to the
-                    # output_parsed_list.
-                    elif char == "'" and in_item:
-                        in_item = False
-                        entry_string = "".join(entry)
-                        output_parsed_list.append(entry_string)
-
-                    # If the current character is not the apostrophe symbol (') and there is currently a string defined,
-                    # then add this character to the entry list. The entry list will collect all of the characters
-                    # within each item.
-                    elif char != "'" and in_item:
-                        entry.append(char)
-
-                    # If the current character is not the apostrophe symbol (') and there is not currently a string
-                    # defined, then skip this character without adding it to the entry list or changing the status of
-                    # the in_string variable.
-                    else:
-                        pass
-
-                # Return the output_parsed_list with the items as string values
-                return output_parsed_list
-
-            # The string is in improper list format. Uneven number of apostrophes.
-            else:
-                raise ValueError(
-                    "The string ({}) is in improper list format. There is not an EVEN number of apostrophes.".format(
-                        string))
-
-        # The string is in improper list format. Second or second-to-last character is not an apostrophe.
+    # Write the output...
+    quote = ""
+    do_date_time = False
+    # Only use double quotes around String and DateTime objects
+    # TODO smalers 2018-01-20 make this complete
+    # if isinstance(property_object, DateTime):
+    #   do_date_time = True
+    if isinstance(property_object, str) or do_date_time:
+        # Quote the output
+        quote = '"'
+    # TODO SAM 2016-09-19 Evaluate whether more complex objects should be quoted
+    nl = os.linesep  # newline character for operating system
+    if format_type == 'NameValue':
+        fout.write(property_name + "=" + quote + str(property_object) + quote + nl)
+    elif format_type == 'NameTypeValue':
+        if do_date_time:
+            fout.write(property_name + "=DateTime(" + quote + str(property_object) + quote + ")" + nl)
         else:
-            raise ValueError("The string ({}) is in improper list format. The second and second to last characters"
-                             " must be apostrophes.".format(string))
-
-    # The string is in improper list format. First of last character is not a closed/open bracket.
-    else:
-        raise ValueError("The string ({}) is in improper list format. The first character must be an open bracket ([)"
-                         "and the last character must be a closed bracket (])".format(string))
-
-
-def string_to_dictionary(string):
-    """
-        Parses a string in proper dictionary format to a dictionary.
-
-        Proper dictionary format:
-            (1) String starts and ends in open and closed curly brackets.
-            (2) The entries of the dictionary are required to be enclosed in apostrophes.
-            (3) The entry key is on the left side of an equals sign.
-            (4) The entry value is on the right side of an equals sign.
-
-        Args:
-            string (string): a string to be parsed into a dictionary
-
-        Returns:
-            A dictionary, the parsed input string.
-
-        Raises:
-            Value Error. Raised if input string is not in proper dictionary format.
-        """
-
-    # Continue if the string is in proper dictionary format (starts with an open curly bracket and ends with a closed
-    #  curly bracket).
-    if string.startswith("{") and string.endswith("}"):
-
-        # Return an empty dictionary if the string represents an empty dictionary.
-        if len(string) == 2:
-            return {}
-
-        # Continue if the string is not empty and both the second and the second-to-last characters are apostrophes.
-        elif string[1] == "'" and string[-2] == "'":
-
-            # Continue if there are an even number of apostrophes in the string.
-            if string.count("'") % 2 == 0:
-
-                # A dictionary to hold the parsed entries.
-                output_parsed_dic = {}
-
-                # Boolean to determine if the current character is an item within the list.
-                in_entry = False
-
-                # A list to hold the parsed entries.
-                entry_list = []
-
-                # Iterate through the characters of the input string.
-                for char in string:
-
-                    # If the current character is the apostrophe symbol (') and there is not currently an item defined,
-                    # then this is the start of an item that is meant to be a dictionary entry.
-                    if char == "'" and not in_entry:
-                        entry = []
-                        in_entry = True
-
-                    # If the current character is the apostrophe symbol (') and there is currently an item defined,
-                    # then this is the end of an item that is meant to be a dictionary entry. Add the item to the
-                    # entry_list.
-                    elif char == "'" and in_entry:
-                        in_entry = False
-                        entry_string = "".join(entry)
-                        entry_list.append(entry_string)
-
-                    # If the current character is not the apostrophe symbol (') and there is currently an item defined,
-                    # then add this character to the entry list. The entry list will collect all of the characters
-                    # within each item.
-                    elif char != "'" and in_entry:
-                        entry.append(char)
-
-                    # If the current character is not the apostrophe symbol (') and there is not currently an item
-                    # defined, then skip this character without adding it to the entry list or changing the status of
-                    # the in_entry variable.
-                    else:
-                        pass
-
-                # Iterate through the entries of the entry_list.
-                for entry in entry_list:
-
-                    # Continue if the string is in proper dictionary form.
-                    if entry.count("=") == 1:
-
-                        entry_key = entry.split("=")[0]
-                        entry_value = entry.split("=")[1]
-
-                        # If the entry value is in list format, convert the entry value string into a list.
-                        if entry_value.startswith('[') and entry_value.endswith(']'):
-
-                            in_proper_list_format = __string_to_dictonary_properlistforamt(entry_value)
-                            entry_value = string_to_list(in_proper_list_format)
-
-                        # Add the entry to the output_parsed_dic dictionary.
-                        output_parsed_dic[entry_key] = entry_value
-
-                    # The string is in improper list format. There should one equals sign in each entry.
-                    else:
-                        raise ValueError(
-                            "The string ({}) is in improper dictionary format. There should be 1 equals sign in each "
-                            "dictionary parameter. Entry ({}) does not only have 1 equals sign.".format(string, entry))
-
-                # Return the output_parsed_dic
-                return output_parsed_dic
-
-            # The string is in improper dictionary format. There should be an even number of apostrophes.
-            else:
-                raise ValueError("The string ({}) is in improper dictionary format. There is not an EVEN number of"
-                                 " apostrophes.".format(string))
-
-        # The string is in improper dictionary format. Second or second-to-last character is not an apostrophe.
-        else:
-            raise ValueError(
-                "The string ({}) is in improper dictionary format. The second and second to last characters must "
-                "be apostrophes.".format(string))
-
-    # The string is in improper dictionary format. First of last character is not a closed/open curly bracket.
-    else:
-        raise ValueError("The string ({}) is in improper dictionary format. The first character must be an open curly "
-                         "bracket ({{) and the last character must be a closed curly bracket (}})".format(string))
-
-
-def __string_to_dictonary_properlistforamt(string):
-    """
-    A private function to be used in the string_to_dictionary. A dictionary in string format can have a list as an
-    entry value. The entry value list does not have apostrophes around each entry (not in the proper string format for
-    the string_to_list function). This function will convert the dictionary entry value string to proper string format
-    so that the dictionary value can be converted to list format using the string_to_list function.
-
-    Args:
-        string: the string of the dictionary entry value that is meant to be a list
-
-    Returns:
-        output_string: the converted string of the dictionary entry value (input) in proper string format for the
-        string_to_list function
-
-    Raises:
-        None
-    """
-
-    # Create an empty string. Characters will be added to this string as the function processes the input.
-    output_string = ""
-
-    # Iterate over each character in the input string.
-    for char in string:
-
-        # If the character is an open bracket, append an open bracket and an apostrophe to the output_string.
-        if char == "[":
-            output_string += "['"
-
-        # If the character is a comma, append a comma surrounded by two apostrophes to the output_string.
-        elif char == ',':
-            output_string += "','"
-
-        # If the character is a space, do not append anything to the output_string.
-        elif char == ' ':
+            # Same as NameValue
+            fout.write(property_name + "=" + quote + str(property_object) + quote + nl)
+    elif format_type == 'NameTypeValuePython':
+        if do_date_time:
             pass
-
-        # If the character is a closed bracket, append an apostrophe and a closed bracket to the output_string.
-        elif char == ']':
-            output_string += "']"
-
-        # If the character is anything other than the above listed, append that character to the output_string.
+            # TODO smalers 2018-01-20 need to finish
+            """
+            DateTime dt = (DateTime)propertyObject
+            StringBuffer dtBuffer = new StringBuffer()
+            dtBuffer.append("" + dt.getYear() )
+            if ( dt.getPrecision() <= DateTime.PRECISION_MONTH ) {
+                dtBuffer.append("," + dt.getMonth() )
+            if ( dt.getPrecision() <= DateTime.PRECISION_DAY ) {
+                dtBuffer.append("," + dt.getDay() )
+            if ( dt.getPrecision() <= DateTime.PRECISION_HOUR ) {
+                dtBuffer.append("," + dt.getHour() )
+            if ( dt.getPrecision() <= DateTime.PRECISION_MINUTE ) {
+                dtBuffer.append("," + dt.getMinute() )
+            if ( dt.getPrecision() <= DateTime.PRECISION_SECOND ) {
+                dtBuffer.append("," + dt.getSecond() )
+            # TODO SAM 2012-07-30 Evaluate time zone
+            fout.println ( property_name + "=DateTime(" + dtBuffer + ")")
+            """
         else:
-            output_string += char
+            # Same as NAME_VALUE
+            fout.write(property_name + "=" + quote + str(property_object) + quote + nl)
 
-    # Return the processed output string.
-    return output_string
+
+def write_property_file(output_file_absolute, all_properties,
+                        include_properties, write_mode, format_type, sort_order, problems):
+    """
+    Write a dictionary of properties to a file, using the specified format.
+    This function is useful for saving property lists for in configuration file formats,
+    simple data exchange between programs, and for automated testing.
+
+    Args:
+        output_file_absolute (str):  Path for the output file.
+        all_properties (dict):  Dictionary of properties to write.
+        include_properties ([str]):  List of properties to write or empty list to write all.
+        write_mode (str):  Write mode: 'Overwrite' (default) or 'Append'.
+        format_type (str):  File format type: 'NameTypeValue', 'NameTypeValuePython', 'NameValue',
+            as per the GeoProcessor WritePropertiesToFile command.
+        sort_order (int): Sort order -1 (descending), 0 (none), 1 (ascending)
+        problems ([String]):  List of strings with problem messages, use in calling code for error-handling.
+
+    Returns:
+        None.
+    """
+    fout = None
+    # logger = logging.getLogger(__name__)
+    try:
+        # Open the file...
+        if write_mode == 'Append':
+            fout = open(output_file_absolute, "a")
+        else:
+            fout = open(output_file_absolute, "w")
+        # Get the list of all processor property names from the property dictionary
+        prop_name_list = all_properties.keys()
+        # logger.info("Have " + str(len(prop_name_list)) + " properties to write")
+        if sort_order == 0:
+            # Want to output in the order of the properties that were requested, not the order from the dictionary
+            # Rearrange the full list to make sure the requested properties are at the front
+            found_count = 0
+            for i in range(0, len(include_properties)):
+                for j in range(0, len(prop_name_list)):
+                    if include_properties[i] == prop_name_list[j]:
+                        # Move to the front of the list and remove the original
+                        prop_name_list.append(found_count, include_properties[i])
+                        found_count += 1
+                        del prop_name_list[j + 1]
+        elif sort_order > 0:
+            # Ascending
+            prop_name_list = sorted(prop_name_list)
+        else:
+            # Descending
+            prop_name_list = sorted(prop_name_list, reverse=True)
+
+        # Loop through property names retrieved from the properties dictionary
+        # - if no specific properties were requested, write them all
+        # - otherwise, if property names were requested, only write those properties no
+        do_write = False
+        # Whether the include_properties were each matched
+        include_properties_matched = [False]*len(include_properties)
+
+        for prop_name in prop_name_list:
+            do_write = False
+            # logger.info('Checking property "' + prop_name + '"')
+            if len(include_properties) == 0:
+                # Always write
+                do_write = True
+            else:
+                # Loop through the properties to include and see if there is a match
+                for i in range(0, len(include_properties)):
+                    # logger.info('Writing property "' + include_properties[i] + '"')
+                    if include_properties[i].find("*") >= 0:
+                        # Includes glob-style wildcards.  Check the user-specified properties
+                        # - first translate the glob-style syntax that uses * to internal regex
+                        # - see:  https://stackoverflow.com/questions/27726545/python-glob-but-against-a-list-of-strings-rather-than-the-filesystem
+                        include_properties_regex = include_properties[i].replace("*", "[^/]*")
+                        include_properties_regex_compiled = re.compile(include_properties_regex)
+                        if include_properties_regex_compiled.match(prop_name):
+                            do_write = True
+                            include_properties_matched[i] = True
+                    else:
+                        # Match exactly
+                        if prop_name == include_properties[i]:
+                            do_write = True
+                            include_properties_matched[i] = True
+            # logger.info('After checking, do_write=' + str(do_write))
+            if do_write:
+                try:
+                    __write_property(fout, prop_name, all_properties[prop_name], format_type)
+                except Exception as e2:
+                    problems.append('Error writing property "' + prop_name + '" (' + str(e2) + ').')
+                except:
+                    problems.append('Error writing property "' + prop_name + '"')
+
+        for i in range(0, len(include_properties_matched)):
+            if not include_properties_matched[i]:
+                problems.append('Unable to match property "' + include_properties[i] + '" to write.')
+    except Exception as e:
+        problems.append('Error writing properties to file "' + output_file_absolute + '" (' + str(e) + ').')
+        traceback.print_exc(file=sys.stdout)
+    except:
+        problems.append('Error writing properties to file "' + output_file_absolute + '.')
+        traceback.print_exc(file=sys.stdout)
+    finally:
+        if fout is not None:
+            fout.close()
+    return problems

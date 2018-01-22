@@ -9,7 +9,7 @@ import geoprocessor.core.command_status_type as command_status_type
 from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.io as io_util
+import geoprocessor.util.string as string_util
 
 import logging
 
@@ -166,12 +166,12 @@ class MergeGeoLayers(AbstractCommand):
 
         # Convert the MappingDictionary parameter from string format to dictionary format.
         if pv_MappingDictionary:
-            mapping_dictionary = io_util.string_to_dictionary(pv_MappingDictionary)
+            mapping_dictionary = string_util.string_to_dictionary(pv_MappingDictionary)
         else:
             mapping_dictionary = {"": []}
 
         # Convert the GeoLayerIDs parameter from string format to list format.
-        list_of_geolayer_ids = io_util.string_to_list(pv_GeoLayerIDs)
+        list_of_geolayer_ids = string_util.string_to_list(pv_GeoLayerIDs)
 
         # Place holder lists
         # TODO need to explain these placeholders
@@ -179,6 +179,7 @@ class MergeGeoLayers(AbstractCommand):
         list_of_geom = []
         copied_geolayer_ids = []
         copied_geolayer_qgsvectorlayers = []
+        copied_geolayer_memory_layers = []
 
         # Iterate over the GeoLayers to be merged.
         for geolayer_id in list_of_geolayer_ids:
@@ -193,23 +194,21 @@ class MergeGeoLayers(AbstractCommand):
                 list_of_crs.append(geolayer.get_crs())
 
                 # Get the GeoLayer's geometry
-                list_of_geom.append(geolayer.get_geometry_qgis())
+                list_of_geom.append(geolayer.get_geometry())
 
                 # Get list of output attributes
                 attribute_dictionary = self.__return_output_attributes(geolayer, mapping_dictionary)
 
                 # Make a copy of the GeoLayer
-                copied_geolayer_id = "{}_copyForMerge".format(geolayer_id)
-                self.command_processor.copy_geolayer(existing_geolayer_id=geolayer_id,
-                                                     copied_geolayer_id=copied_geolayer_id)
+                copied_geolayer = geolayer.deepcopy("{}_copyForMerge".format(geolayer_id))
+
+                # Add the new copied GeoLayer to the GeoProcessor
+                self.command_processor.add_geolayer(copied_geolayer)
 
                 # Add the copied GeoLayer ID to the copied geolayer list.
-                copied_geolayer_ids.append(copied_geolayer_id)
+                copied_geolayer_ids.append(copied_geolayer.id)
 
-                # Get the copied GeoLayer based on the GeoLayer ID.
-                copied_geolayer = self.command_processor.get_geolayer(copied_geolayer_id)
-
-                # Iterate over the attribute dictionary
+                # Iterate over the attribute dictionary.
                 for input_attribute, output_attribute in attribute_dictionary.iteritems():
 
                     # If the output attribute should be different than the input attribute, rename the attribute to
@@ -217,43 +216,48 @@ class MergeGeoLayers(AbstractCommand):
                     if not input_attribute == output_attribute:
                         copied_geolayer.rename_attribute(input_attribute, output_attribute)
 
-                # Add the qgsvectorlayer objects of the renamed copied GeoLayers to a master list.
+                # Add the qgsvectorlayer object of the renamed copied GeoLayers to a master list.
+                copied_geolayer_memory_layers.append("memory:{}".format(copied_geolayer.qgs_id))
                 copied_geolayer_qgsvectorlayers.append(copied_geolayer.qgs_vector_layer)
 
         # Check if the OutputGeoLayer should be created. Continue if TRUE. Error handling dealt with inside
         # the `__should_geolayer_be_created` method.
         if self.__should_geolayer_be_created(pv_OutputGeoLayerID):
 
-            try:
-                # Merge all of the copied GeoLayers (the GeoLayers with the new attribute names)
-                # saga:mergelayers documentation at http://www.saga-gis.org/saga_tool_doc/2.3.0/shapes_tools_2.html
-                merged_output = general.runalg("saga:mergelayers", copied_geolayer_qgsvectorlayers, True, False, False)
+            print copied_geolayer_memory_layers
+            print copied_geolayer_qgsvectorlayers
 
-                # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-                # merged_output["MERGED"] returns the full file pathname of the memory output layer (saved
-                # in a QGIS temporary folder)
-                qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(merged_output["MERGED"])
-                new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
-                self.command_processor.add_geolayer(new_geolayer)
+            # try:
+            # Merge all of the copied GeoLayers (the GeoLayers with the new attribute names)
+            # saga:mergelayers documentation at http://www.saga-gis.org/saga_tool_doc/2.3.0/shapes_tools_2.html
+            merged_output = general.runalg("qgis:mergevectorlayers", copied_geolayer_qgsvectorlayers, None)
 
-                # Release the copied GeoLayers from the GeoProcessor's geolayers list.
-                for copied_geolayer_id in copied_geolayer_ids:
+            # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
+            # merged_output["OUTPUT"] returns the full file pathname of the memory output layer (saved
+            # in a QGIS temporary folder)
+            print merged_output["OUTPUT"]
+            qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(merged_output["OUTPUT"])
+            new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+            self.command_processor.add_geolayer(new_geolayer)
 
-                    # Get the copied GeoLayer based on the GeoLayer ID.
-                    copied_geolayer = self.command_processor.get_geolayer(copied_geolayer_id)
+            # Release the copied GeoLayers from the GeoProcessor's geolayers list.
+            for copied_geolayer_id in copied_geolayer_ids:
 
-                    # Remove the copied GeoLayer from the GeoProcessor
-                    self.command_processor.free_geolayer(copied_geolayer)
+                # Get the copied GeoLayer based on the GeoLayer ID.
+                copied_geolayer = self.command_processor.get_geolayer(copied_geolayer_id)
 
-            # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
-                self.warning_count += 1
-                message = "Unexpected error merging the following GeoLayers {}.".format(copied_geolayer_ids)
-                recommendation = "Check the log file for details."
-                self.logger.exception(message, e)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message,
-                                                                recommendation))
+                # Remove the copied GeoLayer from the GeoProcessor
+                self.command_processor.free_geolayer(copied_geolayer)
+
+            # # Raise an exception if an unexpected error occurs during the process
+            # except Exception as e:
+            #     self.warning_count += 1
+            #     message = "Unexpected error merging the following GeoLayers {}.".format(copied_geolayer_ids)
+            #     recommendation = "Check the log file for details."
+            #     self.logger.exception(message, e)
+            #     self.command_status.add_to_log(command_phase_type.RUN,
+            #                                    CommandLogRecord(command_status_type.FAILURE, message,
+            #                                                     recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

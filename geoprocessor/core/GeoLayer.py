@@ -1,10 +1,6 @@
 import geoprocessor.util.qgis_util as qgis_util
 
 
-from qgis.core import QgsApplication, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateReferenceSystem
-from copy import deepcopy
-
-
 class GeoLayer(object):
 
     """

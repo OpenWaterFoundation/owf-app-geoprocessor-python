@@ -112,6 +112,21 @@ class GeoLayer(object):
         """
         pass
 
+    def add_attribute(self, attribute_name, attribute_type):
+        """
+        Adds an attribute to the GeoLayer.
+
+        Args:
+            attribute_name (string): the name of the attribute to add.
+            attribute_type (string): the attribute field type.
+                Can be int (integer), double (real number), string (text) or date.
+
+        Return:
+            None.
+        """
+
+        # Run processing in the qgis utility function.
+        qgis_util.add_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, attribute_type)
 
     def get_attribute_field_names(self):
         """
@@ -214,6 +229,20 @@ class GeoLayer(object):
             else:
                 return if_not_found_val
 
+    def remove_attribute(self, attribute_name):
+        """
+        Removes an attribute of the GeoLayer.
+
+        Arg:
+            attribute_name: the name of the attribute to remove.
+
+        Returns:
+            None
+        """
+
+        # Run processing in the qgis utility function.
+        qgis_util.remove_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name)
+
     def rename_attribute(self, attribute_name, new_attribute_name):
         """
         Renames an attribute.
@@ -226,11 +255,8 @@ class GeoLayer(object):
             None
         """
 
-        # Get the QGSVectorLayer object of the GeoLayer
-        qgs_vector_layer = self.qgs_vector_layer
-
-        # Run processing in qgis utility function
-        qgis_util.rename_qgsvectorlayer_attribute(qgs_vector_layer, attribute_name, new_attribute_name)
+        # Run processing in the qgis utility function.
+        qgis_util.rename_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, new_attribute_name)
 
     def set_property(self, property_name, property_value):
         """

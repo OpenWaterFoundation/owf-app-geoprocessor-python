@@ -1,10 +1,13 @@
 # Utility functions related to QGIS and requires imports from QGIS libraries
 
 import os
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateReferenceSystem, QgsApplication, QgsField
+from PyQt4.QtCore import QVariant
 
 
 def create_qqsvectorlayer_duplicate(qgsvetorlayer, qgis_geometry, crs):
+    # TODO egiles 2018-01-22 Need to clean up this function
+
     # REF: https://gis.stackexchange.com/questions/205947/duplicating-layer-in-memory-using-pyqgis
     # acceptable geometry values: Point, LineString, Polygon, MultiLineString, MultiPolygon
 
@@ -24,6 +27,7 @@ def create_qqsvectorlayer_duplicate(qgsvetorlayer, qgis_geometry, crs):
     memory_layer_data.addFeatures(feats)
 
     return memory_layer
+
 
 def get_geometry_type_from_wkbtype(wkb_type):
     """
@@ -140,41 +144,108 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
         return None
 
 
-def rename_qgsvectorlayer_attribute(qgsvetorlayer, attribute_name, new_attribute_name):
+def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribute_name):
     # TODO egiles 2018-01-18 Create a warning if the new_attribute_name is longer than 10 characters but do not raise
     # TODO  an error
 
     """
     Renames an attribute of a Qgs Vector Layer object.
 
-    Arg:
+    Args:
         qgsvectorlayer (object): a Qgs Vector Layer object
         attribute_name (string): the original attribute name to change
         new_attribute_name (string): the new attribute name to rename
 
     Return:
         None.
+    """
 
-    Raises:
+    # Iterate over the attributes in the Qgs Vector Layer object.
+    for attribute in qgsvectorlayer.fields():
+
+        # If the Qgs Vector Layer attribute name matches the parameter attribute_name, continue.
+        if attribute.name().upper() == attribute_name.upper():
+
+            # Start an editing session within QGIS environment.
+            qgsvectorlayer.startEditing()
+
+            # Get the index of the attribute to be renamed.
+            index = qgsvectorlayer.fieldNameIndex(attribute.name())
+
+            # Rename the attribute with the new name (string).
+            qgsvectorlayer.renameAttribute(index, str(new_attribute_name))
+
+            # Commit the changes made to the qgsvectorlayer
+            qgsvectorlayer.commitChanges()
+
+
+def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
+    """
+    Deletes an attribute of a Qgs Vector Layer object.
+
+    Args:
+        qgsvectorlayer (object): a Qgs Vector Layer object
+        attribute_name (string): the name of the attribute to delete
+
+    Return:
         None.
     """
 
     # Iterate over the attributes in the Qgs Vector Layer object.
-    for attribute in qgsvetorlayer.fields():
+    for attribute in qgsvectorlayer.fields():
 
-        # If the Qgs Vector Layer attribute name matches the parameter attribute
-        if attribute.name() == attribute_name:
+        # If the Qgs Vector Layer attribute name matches the parameter attribute_name, continue.
+        if attribute.name().upper() == attribute_name.upper():
 
-            # Start an editing session within QGIS environment.
-            qgsvetorlayer.startEditing()
+            # Get the index of the attribute to be deleted.
+            index = qgsvectorlayer.fieldNameIndex(attribute.name())
 
-            # Get the index of the attribute to be renamed.
-            index = qgsvetorlayer.fieldNameIndex(attribute.name())
+            # Delete the attribute.
+            qgsvectorlayer.dataProvider().deleteAttributes([index])
 
-            # Rename the attribute with the new name (string).
-            qgsvetorlayer.renameAttribute(index, str(new_attribute_name))
-
-            # Commit the changes made to the qgsvectorlayer
-            qgsvetorlayer.commitChanges()
+            # Update the layer's fields.
+            qgsvectorlayer.updateFields()
 
 
+def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
+    # TODO egiles 2018-01-22 Need to create a warning if the attribute_name is longer than 10 characters but do not
+    # TODO raise an error
+
+    """
+    Adds an attribute to a Qgs Vector Layer object.
+
+    Args:
+        qgsvectorlayer (object): a Qgs Vector Layer object
+        attribute_name (string): the name of the attribute to add
+        attribute_type (string): the attribute field type. Can be int (integer), double (real number), string (text) or
+         date.
+
+    Return:
+        None.
+    """
+
+    # A dictionary that relates the input parameter (attribute_type) with the QGIS field type.
+    attribute_type_dic = {"int": QVariant.Int,
+                          "double": QVariant.Double,
+                          "string": QVariant.String,
+                          "date": QVariant.Date}
+
+    # Check that the attribute name is not already a name in the qgsvectorlayer.
+    field_names = [field.name() for field in qgsvectorlayer.pendingFields()]
+    if attribute_name not in field_names:
+
+        # Check that the attribute type is a valid type.
+        if attribute_type.lower() in list(attribute_type_dic.keys()):
+
+            # Add the attribute to the qgsvectorlayer.
+            qgs_field_to_add = QgsField(attribute_name, attribute_type_dic[attribute_type.lower()])
+            qgsvectorlayer.dataProvider().addAttributes([qgs_field_to_add])
+
+        # Print an error message if the attribute type is not valid.
+        else:
+            print "Error message: The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
+                  "include: {}".format(attribute_type, list(attribute_type_dic.keys()))
+
+    # Print an error message if the input attribute name is already an existing attribute name.
+    else:
+        print "Error message: The attribute_name ({}) is an already existing attribute name.".format(attribute_name)

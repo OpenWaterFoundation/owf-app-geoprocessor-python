@@ -1,5 +1,10 @@
 import geoprocessor.util.qgis_util as qgis_util
 
+
+from qgis.core import QgsApplication, QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateReferenceSystem
+from copy import deepcopy
+
+
 class GeoLayer(object):
 
     """
@@ -69,49 +74,6 @@ class GeoLayer(object):
         else:
             self.properties = properties
 
-    # TODO smalers 2018-01-20 This functionality needs to be tested out
-    # - this functionality should have nothing to do with the GeoProcessor
-    # - just copy the GeoLayer to a new instance
-    def deepcopy(self, orig):
-        """
-        Create a copy of an existing GeoLayer.
-
-        Args:
-            existing_geolayer_id(str): The ID of the existing GeoLayer.
-            copied_geolayer_id(str): The ID of the copied GeoLayer.
-
-        Returns:
-            None
-
-        Raises:
-            None
-        """
-
-        # Get the GeoLayer object to be copied.
-        """
-        geolayer_orig = self.get_geolayer(existing_geolayer_id)
-
-        # If the GeoLayer to be copied exists, continue.
-        if geolayer_orig:
-
-            # Get the GeoLayer's geometry (in QGIS format).
-            original_qgis_geom = geolayer_orig.get_geometry_qgis()
-
-            # Get the GeoLayer's CRS (in EPSG format).
-            original_crs = geolayer_orig.get_crs()
-
-            # Create a duplicate qgs_vector_layer.
-            duplicate_qgs_vector_layer = qgis_util.create_qqsvectorlayer_duplicate(geolayer_orig.qgs_vector_layer,
-                                                                                   original_qgis_geom,
-                                                                                   original_crs)
-
-            # Create a new GeoLayer object with the same geometry as the original GeoLayer. The
-            # source will be an empty string. Add the copied GeoLayer to the GeoProcessor's geolayers list.
-            copied_geolayer = GeoLayer(copied_geolayer_id, duplicate_qgs_vector_layer, "")
-            self.add_geolayer(copied_geolayer)
-        """
-        pass
-
     def add_attribute(self, attribute_name, attribute_type):
         """
         Adds an attribute to the GeoLayer.
@@ -127,6 +89,25 @@ class GeoLayer(object):
 
         # Run processing in the qgis utility function.
         qgis_util.add_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, attribute_type)
+
+    def deepcopy(self, copied_geolayer_id):
+        """
+        Create a copy of the GeoLayer.
+
+        Arg:
+            copied_geolayer_id(str): The ID of the output copied GeoLayer.
+
+        Returns:
+            The copied GeoLayer object.
+        """
+
+
+        # Create a deep copy of the qgs vecotor layer.
+        duplicate_qgs_vector_layer = qgis_util.deepcopy_qqsvectorlayer(self.qgs_vector_layer)
+
+        # Create and return a new GeoLayer object with the copied qgs vector layer. The source will be an empty string.
+        # The GeoLayer ID is provided by the argument parameter `copied_geolayer_id`.
+        return GeoLayer(copied_geolayer_id, duplicate_qgs_vector_layer, "")
 
     def get_attribute_field_names(self):
         """
@@ -158,48 +139,36 @@ class GeoLayer(object):
         feature_count = self.qgs_vector_layer.featureCount()
         return feature_count
 
-    def get_geometry_qgis(self):
+    def get_geometry(self, geom_format="qgis"):
         """
-        Returns the GeoLayer's geometry in QGIS foramat.
-        """
+        Returns the GeoLayer's geometry in desired format.
 
-        # Get the wkb geometry type.
-        wkb_type = self.get_geometry_wkb()
+        Arg:
+            geom_format: the desired geometry format. QGIS format by default.
 
-        # A dictionary that relates the wkb geometry types with the qgis geometry types.
-        # List of QGIS geometry types included in following REF:
-        #   https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/vector.html#memory-provider
-        wkb_qgis_geometry_dic = {"Point": ["WKBPoint", "WKBPoint25D"],
-                                 "LineString": ["WKBLineString", "WKBLineString25D"],
-                                 "Polygon": ["WKBPolygon", "WKBPolygon25D"],
-                                 "MultiPoint": ["WKBMultiPoint", "WKBMultiPoint25D"],
-                                 "MultiLineString": ["WKBMultiLineString", "WKBMultiLineString25D"],
-                                 "MultiPolygon": ["WKBMultiPolygon25D", "WKBMultiPolygon"]}
+        Returns:
+            The GeoLayer's geometry in desired format (returns text version, not enumerator version).
 
-        try:
-
-            # Iterate through the wkb-qgis geometry dictionary. If the wkb_type is in the value of an entry, return
-            # the corresponding qgis geometry.
-            for geom_qgis, geom_wkb in wkb_qgis_geometry_dic.iteritems():
-                if wkb_type in geom_wkb:
-                    return geom_qgis
-
-        except:
-            raise ValueError("WKBGeometry ({}) is not recognized in the wkb-qgis-geometry-dictionary.".format(wkb_type))
-
-    def get_geometry_wkb(self):
-        """
-        Returns the GeoLayer's geometry in WKB format.
+        Raises:
+            Value Error if the geom_foramt is not a valid format.
         """
 
-        # TODO smalers 2018-01-10 Still need a reference for the values.  As a programmer, what can I expect?
-        # - Can a URL or something be shown so I can see valid values.
-        # - This is a general comment I have - we need to make it easy for developers to know about QGIS.
-        # "geom_type" (string) is the GeoLayer's geometry type. The QGIS environment has an enumerator
-        # system for each geometry type. The get_geometry_type_from_wkbtype function converts the enumerator with
-        # the name of the geometry type. Return the geom_type variable.
-        wkb_geometry = qgis_util.get_geometry_type_from_wkbtype(self.qgs_vector_layer.wkbType())
-        return wkb_geometry
+        # Check that the format is a valid format.
+        valid_geom_formats = ["QGIS", "WKB"]
+        if geom_format.upper() in valid_geom_formats:
+
+            # Return the geometry in QGIS format.
+            if geom_format.upper() == "QGIS":
+                return qgis_util.get_geometrytype_qgis(self.qgs_vector_layer)
+
+            # Otherwise return the geometry in WKB format
+            else:
+                return qgis_util.get_geometrytype_wkb(self.qgs_vector_layer)
+
+        # The geometry is not a valid format. Raise ValueError
+        else:
+            raise ValueError("Geom_format ({}) is not a valid geometry format. Valid geometry formats are:"
+                             " {}".format(geom_format, valid_geom_formats))
 
     def get_property(self, property_name, if_not_found_val=None, if_not_found_except=False):
         """

@@ -94,44 +94,6 @@ class GeoProcessor(object):
         """
         self.geolayers.append(geolayer)
 
-    # TODO smalers 2018-01-20 This functionality has been copied to GeoLayer and needs to be removed from here
-    def copy_geolayer(self, existing_geolayer_id, copied_geolayer_id):
-        """
-        Create a copy of an existing GeoLayer within the GeoProcessor's geolayers list.
-
-        Args:
-            existing_geolayer_id(str): The ID of the existing GeoLayer.
-            copied_geolayer_id(str): The ID of the copied GeoLayer.
-
-        Returns:
-            None
-
-        Raises:
-            None
-        """
-
-        # Get the GeoLayer object to be copied.
-        geolayer_orig = self.get_geolayer(existing_geolayer_id)
-
-        # If the GeoLayer to be copied exists, continue.
-        if geolayer_orig:
-
-            # Get the GeoLayer's geometry (in QGIS format).
-            original_qgis_geom = geolayer_orig.get_geometry_qgis()
-
-            # Get the GeoLayer's CRS (in EPSG format).
-            original_crs = geolayer_orig.get_crs()
-
-            # Create a duplicate qgs_vector_layer.
-            duplicate_qgs_vector_layer = qgis_util.create_qqsvectorlayer_duplicate(geolayer_orig.qgs_vector_layer,
-                                                                                   original_qgis_geom,
-                                                                                   original_crs)
-
-            # Create a new GeoLayer object with the same geometry as the original GeoLayer. The
-            # source will be an empty string. Add the copied GeoLayer to the GeoProcessor's geolayers list.
-            copied_geolayer = GeoLayer(copied_geolayer_id, duplicate_qgs_vector_layer, "")
-            self.add_geolayer(copied_geolayer)
-
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):
         """

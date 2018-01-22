@@ -200,7 +200,11 @@ class CopyGeoLayer(AbstractCommand):
 
                 # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
                 try:
-                    self.command_processor.copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID)
+
+                    # Get the input GeoLayer
+                    input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
+                    copied_geolayer = input_geolayer.deepcopy(pv_CopiedGeoLayerID)
+                    self.command_processor.add_geolayer(copied_geolayer)
 
                 # Raise an exception if an unexpected error occurs during the process
                 except Exception as e:

@@ -2,68 +2,54 @@
 
 import os
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsCoordinateReferenceSystem, QgsApplication, QgsField
+from qgis.core import QgsApplication
 from PyQt4.QtCore import QVariant
 
 
-def create_qqsvectorlayer_duplicate(qgsvetorlayer, qgis_geometry, crs):
-    # TODO egiles 2018-01-22 Need to clean up this function
+
+def deepcopy_qqsvectorlayer(qgsvetorlayer):
+    """
+    Creates a deep copy (separate instance) of a QgsVectorLayer object. Spatial features, attributes, and the
+    coordinate reference system from the input QgsVectorLayer object will be retained in the output copied
+    QgsVectorLayer object.
+
+    Args:
+        qgsvectorlayer (object): the QgsVectorLayer object to deep copy.
+
+    Returns:
+         The deep copied QgsVectorLater object.
+    """
 
     # REF: https://gis.stackexchange.com/questions/205947/duplicating-layer-in-memory-using-pyqgis
     # acceptable geometry values: Point, LineString, Polygon, MultiLineString, MultiPolygon
 
+    # Get the features of the input QgsVectorLayer.
     feats = [feat for feat in qgsvetorlayer.getFeatures()]
 
-    crs_lower = str(crs).lower()
-    uri = "{}?crs={}".format("Point", "epsg:4326")
-    # uri = "{}?crs={}".format(qgis_geometry, crs_lower)
+    # Get the geometry of the input QgsVectorLayer (qgis format).
+    qgis_geometry = get_geometrytype_qgis(qgsvetorlayer)
 
-    # memory_layer = QgsVectorLayer(uri, "duplicated_layer", "memory")
-    memory_layer = QgsVectorLayer("Point", "layer", "memory")
+    # Get the coordinate reference system of teh input QgsVectorLayer (string epsg code).
+    crs = qgsvetorlayer.crs().authid()
 
-    memory_layer_data = memory_layer.dataProvider()
+    # Create a new in-memory QgsVectorLayer with same feature geometry type and CRS as the input QgsVectorLayer.
+    copied_qgsvectorlayer = QgsVectorLayer("{}?crs={}".format(qgis_geometry, crs), "layer", "memory")
+
+    # Start the data provider for the in-memory copied QgsVectorLayer.
+    copied_qgsvectorlayer_data = copied_qgsvectorlayer.dataProvider()
+
+    # Get a list of the input QgsVectorLayer's attributes.
     attr = qgsvetorlayer.dataProvider().fields().toList()
-    memory_layer_data.addAttributes(attr)
-    memory_layer.updateFields()
-    memory_layer_data.addFeatures(feats)
 
-    return memory_layer
+    # Add the attributes of the input QgsVectorLayer to the copied QgsVectorLayer.
+    copied_qgsvectorlayer_data.addAttributes(attr)
+    copied_qgsvectorlayer.updateFields()
 
+    # Add the features of the input QgsVectorLayer to the copied QgsVectorLayer.
+    copied_qgsvectorlayer_data.addFeatures(feats)
 
-def get_geometry_type_from_wkbtype(wkb_type):
-    """
-
-    Converts the hard-to-understand wkbType id into a more readable string.
-
-    Args:
-        wkb_type (str or int): the wkbType id.
-
-    Returns:
-        The corresponding geometry type in easy-to-read terminology.
-
-    """
-
-    # TODO egiles 2018-01-02 Need to research how to handle (correct naming convention) for WKBType -2147483643
-    wkb_type_dic = {"0": "WKBUnknown",
-                    "1": "WKBPoint",
-                    "2": "WKBLineString",
-                    "3": "WKBPolygon",
-                    "4": "WKBMultiPoint",
-                    "5": "WKBMultiLineString",
-                    "6": "WKBMultiPolygon",
-                    "100": "WKBNoGeometry",
-                    "0x80000001": "WKBPoint25D",
-                    "0x80000002": "WKBLineString25D",
-                    "0x80000003": "WKBPolygon25D",
-                    "0x80000004": "WKBMultiPoint25D",
-                    "0x80000005": "WKBMultiLineString25D",
-                    "0x80000006": "WKBMultiPolygon25D",
-                    "-2147483643": "WKBUnknown"}
-
-    # Only return geometry type (in string format) if the input wkb_type exists in the dictionary. Else return None.
-    if str(wkb_type) in list(wkb_type_dic.keys()):
-        return wkb_type_dic[str(wkb_type)]
-    else:
-        return None
+    # Return the deep copied QgsVectorLayer.
+    return copied_qgsvectorlayer
 
 
 def read_qgsvectorlayer_from_file(spatial_data_file_abs):
@@ -230,16 +216,16 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
                           "string": QVariant.String,
                           "date": QVariant.Date}
 
-    # Check that the attribute name is not already a name in the qgsvectorlayer.
+    # Check that the attribute name is not already a name in the QgsVectorLayer.
     field_names = [field.name() for field in qgsvectorlayer.pendingFields()]
     if attribute_name not in field_names:
 
-        # Check that the attribute type is a valid type.
-        if attribute_type.lower() in list(attribute_type_dic.keys()):
+        # Check that the attribute type is valid.
+        if attribute_type in list(attribute_type_dic.keys()):
 
             # Add the attribute to the qgsvectorlayer.
-            qgs_field_to_add = QgsField(attribute_name, attribute_type_dic[attribute_type.lower()])
-            qgsvectorlayer.dataProvider().addAttributes([qgs_field_to_add])
+            qgsvectorlayer.dataProvider().addAttributes([QgsField(attribute_name, attribute_type_dic[attribute_type])])
+            qgsvectorlayer.updateFields()
 
         # Print an error message if the attribute type is not valid.
         else:
@@ -249,3 +235,59 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
     # Print an error message if the input attribute name is already an existing attribute name.
     else:
         print "Error message: The attribute_name ({}) is an already existing attribute name.".format(attribute_name)
+
+
+def get_geometrytype_wkb(qgsvectorlayer):
+    """
+    Returns the input QgsVectorLayer's geometry in WKB format (returns text, not enumerator).
+    REF: https://qgis.org/api/1.8/classQGis.html
+
+    Arg:
+        qgsvectorlayer (object): a Qgs Vector Layer object
+
+    Returns:
+        Appropriate geometry in WKB format (returns text, not enumerator).
+    """
+
+    # The WKB geometry type enumerator dictionary.
+    enumerator_dic = {0: "WKBUnknown",
+                      1: "WKBPoint",
+                      2: "WKBLineString",
+                      3: "WKBPolygon",
+                      4: "WKBMultiPoint",
+                      5: "WKBMultiLineString",
+                      6: "WKBMultiPolygon",
+                      100: "WKBNoGeometry",
+                      0x80000001: "WKBPoint25D",
+                      0x80000002: "WKBLineString25D",
+                      0x80000003: "WKBPolygon25D",
+                      0x80000004: "WKBMultiPoint25D",
+                      0x80000005: "WKBMultiLineString25D",
+                      0x80000006: "WKBMultiPolygon25D",
+                      -2147483643: "WKBUnknown"}
+
+    # Return the WKB geometry type (in text form) of the input QgsVectorLayer.
+    return enumerator_dic[qgsvectorlayer.wkbType()]
+
+
+def get_geometrytype_qgis(qgsvectorlayer):
+    """
+    Returns the input QgsVectorLayer's geometry in QGIS format (returns text, not enumerator).
+    REF: https://qgis.org/api/1.8/classQGis.html
+
+    Arg:
+        qgsvectorlayer (object): a Qgs Vector Layer object
+
+    Returns:
+        Appropriate geometry in QGIS format (returns text, not enumerator).
+    """
+
+    # The QGIS geometry type enumerator dictionary.
+    enumerator_dic = {0: "Point",
+                      1: "Line",
+                      2: "Polygon",
+                      3: "UnknownGeometry",
+                      4: "NoGeometry"}
+
+    # Return the QGIS geometry type (in text form) of the input QgsVectorLayer.
+    return enumerator_dic[qgsvectorlayer.geometryType()]

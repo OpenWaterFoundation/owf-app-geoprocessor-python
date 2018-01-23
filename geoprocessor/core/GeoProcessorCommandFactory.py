@@ -2,6 +2,7 @@ import logging
 
 import geoprocessor.util.command as command_util
 
+from geoprocessor.commands.layers.AddGeoLayerAttribute import AddGeoLayerAttribute
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
@@ -9,6 +10,8 @@ from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFro
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
+from geoprocessor.commands.layers.RemoveGeoLayerAttribute import RemoveGeoLayerAttribute
+from geoprocessor.commands.layers.RenameGeoLayerAttribute import RenameGeoLayerAttribute
 from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
 from geoprocessor.commands.layers.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
@@ -50,6 +53,7 @@ class GeoProcessorCommandFactory(object):
     # 1) It provides a registry of all commands known to the geoprocessor (via this factory class)
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
+        "ADDGEOLAYERATTRIBUTE": AddGeoLayerAttribute(),
         "BLANKCOMMAND": Blank(),  # Actually has no name, is whitespace only
         "CLIPGEOLAYER": ClipGeoLayer(),
         "COMMENT": Comment(),  # Actually is line starting with #
@@ -68,6 +72,8 @@ class GeoProcessorCommandFactory(object):
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
         "REMOVEFILE": RemoveFile(),
+        "REMOVEGEOLAYERATTRIBUTE": RemoveGeoLayerAttribute(),
+        "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
         "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
         "SETPROPERTY": SetProperty(),
         "SETPROPERTYFROMGEOLAYER": SetPropertyFromGeoLayer(),
@@ -154,7 +160,9 @@ class GeoProcessorCommandFactory(object):
             else:
                 # Constructing the following way always seems to work properly
                 # - Alphabetize the commands.
-                if command_name_upper == "CLIPGEOLAYER":
+                if command_name_upper == "ADDGEOLAYERATTRIBUTE":
+                    return AddGeoLayerAttribute()
+                elif command_name_upper == "CLIPGEOLAYER":
                     return ClipGeoLayer()
                 elif command_name_upper == "COMPAREFILES":
                     return CompareFiles()
@@ -186,6 +194,10 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayersFromFolder()
                 elif command_name_upper == "REMOVEFILE":
                     return RemoveFile()
+                elif command_name_upper == "REMOVEGEOLAYERATTRIBUTE":
+                    return RemoveGeoLayerAttribute()
+                elif command_name_upper == "RENAMEGEOLAYERATTRIBUTE":
+                    return RenameGeoLayerAttribute()
                 elif command_name_upper == "SETGEOLAYERPROPERTY":
                     return SetGeoLayerProperty()
                 elif command_name_upper == "SETPROPERTY":

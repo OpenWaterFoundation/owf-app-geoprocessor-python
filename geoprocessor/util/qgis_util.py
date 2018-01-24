@@ -1,12 +1,13 @@
 # Utility functions related to QGIS and requires imports from QGIS libraries
 
-from datetime import datetime
-
 import os
+
+from qgis.core import QgsVectorLayer, QgsField, QgsApplication, QgsVectorFileWriter, QgsCoordinateReferenceSystem
 
 from PyQt4.QtCore import QVariant
 
-from qgis.core import QgsVectorLayer, QgsField
+from datetime import datetime
+
 
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
@@ -26,27 +27,31 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
         None.
     """
 
-    # A dictionary that relates the input parameter (attribute_type) with the QGIS field type.
-    attribute_type_dic = {"int": QVariant.Int,
-                          "double": QVariant.Double,
-                          "string": QVariant.String,
-                          "date": QVariant.Date}
+    qgsvectorlayer_data = qgsvectorlayer.dataProvider()
 
     # Check that the attribute name is not already a name in the QgsVectorLayer.
-    field_names = [field.name() for field in qgsvectorlayer.pendingFields()]
-    if attribute_name not in field_names:
+    if attribute_name not in [attribute.name() for attribute in qgsvectorlayer_data.fields()]:
 
-        # Check that the attribute type is valid.
-        if attribute_type in list(attribute_type_dic.keys()):
+        try:
 
-            # Add the attribute to the qgsvectorlayer.
-            qgsvectorlayer.dataProvider().addAttributes([QgsField(attribute_name, attribute_type_dic[attribute_type])])
+            if attribute_type.upper() == "INT":
+                qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Int)])
+            elif attribute_type.upper() == "DOUBLE":
+                qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Double)])
+            elif attribute_type.upper() == "STRING":
+                print "HERE: {}".format(QgsField(attribute_name, QVariant.String))
+                qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.String)])
+            elif attribute_type.upper() == "DATE":
+                qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Date)])
+            else:
+                valid_attribute_types = ["int", "double", "string", "date"]
+                print "Error message: The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
+                      "include: {}".format(attribute_type, valid_attribute_types)
+
             qgsvectorlayer.updateFields()
 
-        # Print an error message if the attribute type is not valid.
-        else:
-            print "Error message: The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
-                  "include: {}".format(attribute_type, list(attribute_type_dic.keys()))
+        except:
+            print "An error occurred."
 
     # Print an error message if the input attribute name is already an existing attribute name.
     else:
@@ -91,6 +96,7 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
 
     # Get a list of the input QgsVectorLayer's attributes.
     attr = qgsvectorlayer.dataProvider().fields().toList()
+    print attr
 
     # Add the attributes of the input QgsVectorLayer to the copied QgsVectorLayer.
     copied_qgsvectorlayer_data.addAttributes(attr)

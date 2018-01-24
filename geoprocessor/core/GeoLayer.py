@@ -71,6 +71,7 @@ class GeoLayer(object):
             self.properties = properties
 
     def add_attribute(self, attribute_name, attribute_type):
+        # TODO egiles 2018-01-23 Need to make this work for copied/memory layers.
         """
         Adds an attribute to the GeoLayer.
 
@@ -85,6 +86,9 @@ class GeoLayer(object):
 
         # Run processing in the qgis utility function.
         qgis_util.add_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, attribute_type)
+
+        # Update the layer's fields.
+        self.qgs_vector_layer.updateFields()
 
     def deepcopy(self, copied_geolayer_id):
         """
@@ -101,6 +105,9 @@ class GeoLayer(object):
         # Create a deep copy of the qgs vecotor layer.
         duplicate_qgs_vector_layer = qgis_util.deepcopy_qqsvectorlayer(self.qgs_vector_layer)
 
+        # Update the layer's fields.
+        self.qgs_vector_layer.updateFields()
+
         # Create and return a new GeoLayer object with the copied qgs vector layer. The source will be an empty string.
         # The GeoLayer ID is provided by the argument parameter `copied_geolayer_id`.
         return GeoLayer(copied_geolayer_id, duplicate_qgs_vector_layer, "")
@@ -114,6 +121,17 @@ class GeoLayer(object):
         # "attribute_field_names" (list of strings) is a list of the GeoLayer's attribute field names. Return the
         # attribute_field_names variable.
         attribute_field_names = [attr_field.name() for attr_field in self.qgs_vector_layer.pendingFields()]
+        return attribute_field_names
+
+    def get_attribute_field_names_nonpending(self):
+        """
+        Returns the a list of attribute field names (list of strings) within the GeoLayer.
+        """
+
+        # Get the attribute field names of the GeoLayer
+        # "attribute_field_names" (list of strings) is a list of the GeoLayer's attribute field names. Return the
+        # attribute_field_names variable.
+        attribute_field_names = [attr_field.name() for attr_field in self.qgs_vector_layer.fields()]
         return attribute_field_names
 
     def get_crs(self):

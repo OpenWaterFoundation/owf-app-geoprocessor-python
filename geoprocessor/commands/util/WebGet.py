@@ -30,8 +30,8 @@ class WebGet(AbstractCommand):
     * FileURL (str, required): the URL of the file to be downloaded.
     * OutputFile (str, required): the relative pathname of the output file.
     * IfZipFile (str, optional): This parameter determines the action that occurs if the downloaded file is a .zip file.
-        Available options are: `UnzipAndRemove`, `UnzipAndSave` and `Ignore` (Refer to user documentation for detailed
-        description.) Default value is `UnzipAndSave`.
+        Available options are: `UnzipAndRemove`, `UnzipAndSave` and `KeepZipped` (Refer to user documentation for
+         detailed description.) Default value is `KeepZipped`.
     """
 
     # Define the command paramters.
@@ -95,9 +95,9 @@ class WebGet(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that optional parameter IfZipFile is either `UnzipAndRemove`, `UnzipAndSave`, `Ignore` or None.
+        # Check that optional parameter IfZipFile is either `UnzipAndRemove`, `UnzipAndSave`, `KeepZipped` or None.
         pv_IfZipFile = self.get_parameter_value(parameter_name="IfZipFile", command_parameters=command_parameters)
-        acceptable_values = ["UnzipAndRemove", "UnzipAndSave", "Ignore"]
+        acceptable_values = ["UnzipAndRemove", "UnzipAndSave", "KeepZipped"]
         if not validators.validate_string_in_list(pv_IfZipFile, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
 
@@ -268,7 +268,7 @@ class WebGet(AbstractCommand):
         # Obtain the parameter values
         pv_FileURL = self.get_parameter_value("FileURL")
         pv_OutputFile = self.get_parameter_value("OutputFile")
-        pv_IfZipFile = self.get_parameter_value("IfZipFile", default_value="UnzipAndSave")
+        pv_IfZipFile = self.get_parameter_value("IfZipFile", default_value="KeepZipped")
 
         # Convert the OutputFile parameter value relative path to an absolute path. Expand for ${Property} syntax.
         output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
@@ -318,7 +318,7 @@ class WebGet(AbstractCommand):
                             downloaded_zip_file.write(r.content)
                         downloaded_files.append("{}.zip".format(url_filename))
 
-                    # If the `IfZipFile` parameter is set to Ignore, only download the .zip file.
+                    # If the `IfZipFile` parameter is set to KeepZipped, only download the .zip file.
                     else:
                         with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
                             downloaded_zip_file.write(r.content)

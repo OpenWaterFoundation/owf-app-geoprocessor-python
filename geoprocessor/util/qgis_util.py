@@ -76,6 +76,7 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
 
     # Get the features of the input QgsVectorLayer.
     feats = [feat for feat in qgsvectorlayer.getFeatures()]
+    print "feats: {}".format(feats)
 
     # Get the geometry of the input QgsVectorLayer (qgis format).
     qgis_geometry = get_geometrytype_qgis(qgsvectorlayer)
@@ -96,14 +97,15 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
 
     # Get a list of the input QgsVectorLayer's attributes.
     attr = qgsvectorlayer.dataProvider().fields().toList()
-    print attr
 
     # Add the attributes of the input QgsVectorLayer to the copied QgsVectorLayer.
     copied_qgsvectorlayer_data.addAttributes(attr)
     copied_qgsvectorlayer.updateFields()
 
     # Add the features of the input QgsVectorLayer to the copied QgsVectorLayer.
-    copied_qgsvectorlayer_data.addFeatures(feats)
+    copied_qgsvectorlayer.startEditing()
+    copied_qgsvectorlayer.addFeatures(feats)
+    copied_qgsvectorlayer.commitChanges()
 
     # Return the deep copied QgsVectorLayer.
     return copied_qgsvectorlayer
@@ -123,7 +125,7 @@ def get_geometrytype_qgis(qgsvectorlayer):
 
     # The QGIS geometry type enumerator dictionary.
     enumerator_dic = {0: "Point",
-                      1: "Line",
+                      1: "LineString",
                       2: "Polygon",
                       3: "UnknownGeometry",
                       4: "NoGeometry"}

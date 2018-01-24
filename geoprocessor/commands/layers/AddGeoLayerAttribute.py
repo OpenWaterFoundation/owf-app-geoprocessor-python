@@ -27,14 +27,15 @@ class AddGeoLayerAttribute(AbstractCommand):
         3. int: A whole number field. Can hold negative values.
         4. double: A real (decimal) number field. Can hold negative values.
 
+    Command Parameters
+    * GeoLayerID (str, required): the ID of the input GeoLayer, the layer to add the attribute
+    * AttributeName (str, required): the name of the attribute to add. Must be a unique attribute name to the GeoLayer.
+        If working with Esri Shapefiles, it is highly recommended that the string is 10 characters or less.
+    * AttributeType (str, required): the attribute's data type. Options include 'string', 'date', 'int' and 'double'.
+        Read the user documentation or the docstring for a more detailed parameter description.
     """
 
-    # Command Parameters
-    # GeoLayerID (str, required): the ID of the input GeoLayer, the layer to add the attribute
-    # AttributeName (str, required): the name of the attribute to add. Must be a unique attribute name to the
-    #    GeoLayer. If working with Esri Shapefiles, it is highly recommended that the string is 10 characters or less.
-    # AttributeType (str, required): the attribute's data type. Options include 'string', 'date', 'int' and 'double'.
-    #   Read the user documentation or the docstring for a more detailed parameter description.
+    # Define command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("AttributeName", type("")),
@@ -44,6 +45,7 @@ class AddGeoLayerAttribute(AbstractCommand):
         """
         Initialize the command.
         """
+
         # AbstractCommand data
         super(AddGeoLayerAttribute, self).__init__()
         self.command_name = "AddGeoLayerAttribute"
@@ -68,7 +70,6 @@ class AddGeoLayerAttribute(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        logger = logging.getLogger(__name__)
 
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
@@ -114,7 +115,7 @@ class AddGeoLayerAttribute(AbstractCommand):
 
         # If any warnings were generated, throw an exception.
         if len(warning) > 0:
-            logger.warning(warning)
+            self.logger.warning(warning)
             raise ValueError(warning)
         else:
             # Refresh the phase severity
@@ -148,8 +149,7 @@ class AddGeoLayerAttribute(AbstractCommand):
             recommendation = 'Specify a valid GeoLayerID.'
             self.logger.error(message)
             self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # If the input GeoLayer does exist, continue with the checks.
         else:
@@ -169,8 +169,7 @@ class AddGeoLayerAttribute(AbstractCommand):
                 recommendation = 'Specify a unique attribute name.'
                 self.logger.error(message)
                 self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE,
-                                                                message, recommendation))
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
             # If the input attribute name is longer than 10 characters, raise a WARNING.
             if len(attribute_name) > 10:
@@ -182,8 +181,7 @@ class AddGeoLayerAttribute(AbstractCommand):
                                  ' only include 10 or less characters.'
                 self.logger.warning(message)
                 self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
-                                                                message, recommendation))
+                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
 
         # Return the Boolean to determine if the attribute should be added. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.
@@ -193,11 +191,8 @@ class AddGeoLayerAttribute(AbstractCommand):
         """
         Run the command. Add the attribute to the GeoLayer.
 
-        Args:
-            None.
-
         Returns:
-            Nothing.
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
@@ -228,8 +223,7 @@ class AddGeoLayerAttribute(AbstractCommand):
                 recommendation = "Check the log file for details."
                 self.logger.exception(message, e)
                 self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message,
-                                                                recommendation))
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

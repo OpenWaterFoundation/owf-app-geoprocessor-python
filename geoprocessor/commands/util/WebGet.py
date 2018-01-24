@@ -25,14 +25,16 @@ class WebGet(AbstractCommand):
 
     This command downloads a file on the web and saves it on the local computer. There is a parameter that allows zip
     files to be downloaded and automatically unzipped.
+
+    Command Parameters:
+    * FileURL (str, required): the URL of the file to be downloaded.
+    * OutputFile (str, required): the relative pathname of the output file.
+    * IfZipFile (str, optional): This parameter determines the action that occurs if the downloaded file is a .zip file.
+        Available options are: `UnzipAndRemove`, `UnzipAndSave` and `Ignore` (Refer to user documentation for detailed
+        description.) Default value is `UnzipAndSave`.
     """
 
-    # Command Parameters
-    # FileURL (str, required): the URL of the file to be downloaded
-    # OutputFile (str, required): the relative pathname of the output file
-    # IfZipFile (str, optional): This parameter determines the action that occurs if the downloaded file is a .zip file.
-    #   Available options are: `UnzipAndRemove`, `UnzipAndSave` and `KeepZipped` (Refer to user documentation for
-    #   detailed description.) Default value is `UnzipAndSave`.
+    # Define the command paramters.
     __command_parameter_metadata = [
         CommandParameterMetadata("FileURL", type("")),
         CommandParameterMetadata("OutputFile", type("")),
@@ -43,9 +45,14 @@ class WebGet(AbstractCommand):
         Initialize the command.
         """
 
+        # AbstractCommand data
         super(WebGet, self).__init__()
         self.command_name = "WebGet"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Class data
+        self.warning_count = 0
+        self.logger = logging.getLogger(__name__)
 
     def check_command_parameters(self, command_parameters):
         """
@@ -54,20 +61,17 @@ class WebGet(AbstractCommand):
         Args:
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
-        Returns:
-            Nothing.
+        Returns: None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        logger = logging.getLogger(__name__)
 
         # Check that parameter FileURL is a non-empty, non-None string.
         # - existence of the url will also be checked in run_command().
-        pv_FileURL = self.get_parameter_value(parameter_name='FileURL',
-                                              command_parameters=command_parameters)
+        pv_FileURL = self.get_parameter_value(parameter_name='FileURL', command_parameters=command_parameters)
 
         if not validators.validate_string(pv_FileURL, False, False):
 
@@ -80,8 +84,7 @@ class WebGet(AbstractCommand):
 
         # Check that parameter OutputFile is a non-empty, non-None string.
         # - existence of the flder will also be checked in run_command().
-        pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile',
-                                                 command_parameters=command_parameters)
+        pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
         if not validators.validate_string(pv_OutputFile, False, False):
 
@@ -92,10 +95,9 @@ class WebGet(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that optional parameter IfZipFile is either `UnzipAndRemove`, `UnzipAndSave`, `KeepZipped` or None.
-        pv_IfZipFile = self.get_parameter_value(parameter_name="IfZipFile",
-                                                command_parameters=command_parameters)
-        acceptable_values = ["UnzipAndRemove", "UnzipAndSave", "KeepZipped"]
+        # Check that optional parameter IfZipFile is either `UnzipAndRemove`, `UnzipAndSave`, `Ignore` or None.
+        pv_IfZipFile = self.get_parameter_value(parameter_name="IfZipFile", command_parameters=command_parameters)
+        acceptable_values = ["UnzipAndRemove", "UnzipAndSave", "Ignore"]
         if not validators.validate_string_in_list(pv_IfZipFile, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
 
@@ -113,11 +115,56 @@ class WebGet(AbstractCommand):
 
         # If any warnings were generated, throw an exception.
         if len(warning) > 0:
-            logger.warning(warning)
+            self.logger.warning(warning)
             raise ValueError(warning)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+
+    def __should_run_webget(self, file_url, output_file_abs):
+        """
+       Checks the following:
+       * the FileURL points to a file that is downloadable
+       * the output folder is a valid folder
+
+
+       Args:
+           file_url: the url to the file to download
+           output_file_abs: the full pathname to the output file
+
+       Returns:
+           run_webget: Boolean. If TRUE, the webget process should be run. If FALSE, it should not be run.
+       """
+
+        # Boolean to determine if the webget process should be run. Set to true until an error occurs.
+        run_webget = True
+
+        # If the FileURL does not point to a file that is downloadable, raise a FAILURE.
+        if not self.__is_downloadable(file_url):
+
+            run_webget = False
+            self.warning_count += 1
+            message = 'The FileURL ({}) does not refer to a downloadable file.'.format(file_url)
+            recommendation = 'Specify a valid URL for a file that can be downloaded.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                    message, recommendation))
+
+        # If the OutputFolder is not a valid folder, raise a FAILURE.
+        output_folder = os.path.dirname(output_file_abs)
+        if not os.path.isdir(output_folder):
+
+            run_webget = False
+            self.warning_count += 1
+            message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
+            recommendation = 'Specify a valid relative pathname for the output file.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                    message, recommendation))
+
+        # Return the Boolean to determine if the webget process should be run. If TRUE, all checks passed. If FALSE,
+        # one or many checks failed.
+        return run_webget
 
     @staticmethod
     def __is_downloadable(url):
@@ -212,131 +259,105 @@ class WebGet(AbstractCommand):
         Run the command. Download the file from the web and save it on the local computer. Handle zip files as
         pre-determined by the IfZipFile parameter value.
 
-        Args:
-            None.
-
-        Returns:
-            Nothing.
+        Returns: None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
-
-        # Set up logger and warning count
-        warning_count = 0
-        logger = logging.getLogger(__name__)
 
         # Obtain the parameter values
         pv_FileURL = self.get_parameter_value("FileURL")
         pv_OutputFile = self.get_parameter_value("OutputFile")
         pv_IfZipFile = self.get_parameter_value("IfZipFile", default_value="UnzipAndSave")
 
-        # Check if the provided URL is a file that is downloadable.
-        if self.__is_downloadable(pv_FileURL):
+        # Convert the OutputFile parameter value relative path to an absolute path. Expand for ${Property} syntax.
+        output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
+            self.command_processor.get_property('WorkingDir'),
+            self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
-            # Convert the OutputFile parameter value relative path to an absolute path. Expand for ${Property} syntax.
-            output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
-                self.command_processor.get_property('WorkingDir'),
-                self.command_processor.expand_parameter_value(pv_OutputFile, self)))
+        # Run the checks on the parameter values. Only continue if the checks passed.
+        if self.__should_run_webget(pv_FileURL, output_file_absolute):
 
-            # Get the output folder for the output file
-            output_folder = os.path.dirname(output_file_absolute)
+            try:
 
-            # Check that the output folder is a valid folder
-            if os.path.isdir(output_folder):
+                # Get the output folder.
+                output_folder = os.path.dirname(pv_OutputFile)
 
-                try:
-                    # Get the URL file and convert it into a request Response object
-                    r = requests.get(pv_FileURL)
+                # Get the URL file and convert it into a request Response object
+                r = requests.get(pv_FileURL)
 
-                    # Get the filename and the extension of the file URL
-                    url_filename, url_extension = os.path.splitext(os.path.basename(pv_FileURL))
+                # Get the filename and the extension of the file URL
+                url_filename, url_extension = os.path.splitext(os.path.basename(pv_FileURL))
 
-                    # Get the filename and the extension for the output file
-                    output_filename, output_extension = os.path.splitext(os.path.basename(pv_OutputFile))
+                # Get the filename and the extension for the output file
+                output_filename, output_extension = os.path.splitext(os.path.basename(pv_OutputFile))
 
-                    # If the URL file is a zip file, process as a zip file.
-                    if self.__is_zipfile(r):
+                # If the URL file is a zip file, process as a zip file.
+                if self.__is_zipfile(r):
 
-                        # Read in the url file as a zip file object.
-                        zipfile_obj = zipfile.ZipFile(StringIO.StringIO(r.content))
+                    # Read in the url file as a zip file object.
+                    zipfile_obj = zipfile.ZipFile(StringIO.StringIO(r.content))
 
-                        # Create an empty list to hold the files that were downloaded/extracted to the output folder.
-                        downloaded_files = []
+                    # Create an empty list to hold the files that were downloaded/extracted to the output folder.
+                    downloaded_files = []
 
-                        # If the `IfZipFile` parameter is set to UnzipAndRemove, extract all of the archived members
-                        # within the URL zip file and save the contents to the specified output folder. Do not save the
-                        # .zip file to the output folder.
-                        if pv_IfZipFile.upper() == "UNZIPANDREMOVE":
-                            zipfile_obj.extractall(output_folder)
-                            downloaded_files.extend(zipfile_obj.namelist())
+                    # If the `IfZipFile` parameter is set to UnzipAndRemove, extract all of the archived members
+                    # within the URL zip file and save the contents to the specified output folder. Do not save the
+                    # .zip file to the output folder.
+                    if pv_IfZipFile.upper() == "UNZIPANDREMOVE":
+                        zipfile_obj.extractall(output_folder)
+                        downloaded_files.extend(zipfile_obj.namelist())
 
-                        # If the `IfZipFile` parameter is set to UnzipAndSave, extract all of the archived members
-                        # within the URL zip file and save the contents to the specified output folder. Also, save the
-                        # .zip file to the output folder.
-                        elif pv_IfZipFile.upper() == "UNZIPANDSAVE":
-                            zipfile_obj.extractall(output_folder)
-                            downloaded_files.extend(zipfile_obj.namelist())
-                            with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
-                                downloaded_zip_file.write(r.content)
-                            downloaded_files.append("{}.zip".format(url_filename))
+                    # If the `IfZipFile` parameter is set to UnzipAndSave, extract all of the archived members
+                    # within the URL zip file and save the contents to the specified output folder. Also, save the
+                    # .zip file to the output folder.
+                    elif pv_IfZipFile.upper() == "UNZIPANDSAVE":
+                        zipfile_obj.extractall(output_folder)
+                        downloaded_files.extend(zipfile_obj.namelist())
+                        with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
+                            downloaded_zip_file.write(r.content)
+                        downloaded_files.append("{}.zip".format(url_filename))
 
-                        # If the `IfZipFile` parameter is set to KeepZipped, only download the .zip file.
-                        else:
-                            with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
-                                downloaded_zip_file.write(r.content)
-                            downloaded_files.append("{}.zip".format(url_filename))
-
-                        # Determine if the downloaded zip file(s) should be renamed. If the filename is %f then the
-                        # filenames of the downloaded products should be the same as the url filenames
-                        if not output_filename == '%f':
-                            self.__rename_files_in_a_folder(list_of_files=downloaded_files, folder_path=output_folder,
-                                                            new_filename=output_filename)
-
-                    # If the URL file is a single file (a non-zip file), process accordingly.
+                    # If the `IfZipFile` parameter is set to Ignore, only download the .zip file.
                     else:
+                        with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
+                            downloaded_zip_file.write(r.content)
+                        downloaded_files.append("{}.zip".format(url_filename))
 
-                        # Download the file to the output folder.
-                        with open(os.path.join(output_folder, os.path.basename(pv_FileURL)), "wb") as downloaded_file:
-                            downloaded_file.write(r.content)
+                    # Determine if the downloaded zip file(s) should be renamed. If the filename is %f then the
+                    # filenames of the downloaded products should be the same as the url filenames
+                    if not output_filename == '%f':
+                        self.__rename_files_in_a_folder(list_of_files=downloaded_files, folder_path=output_folder,
+                                                        new_filename=output_filename)
 
-                        # Determine if the downloaded file should be renamed. If the filename is %f then the filename
-                        # of the downloaded product should be the same as the url filename
-                        if not output_filename == '%f':
-                            self.__rename_files_in_a_folder(list_of_files=[os.path.basename(pv_FileURL)],
-                                                            folder_path=output_folder,
-                                                            new_filename=output_filename)
+                # If the URL file is a single file (a non-zip file), process accordingly.
+                else:
 
-                # Raise an exception if an unexpected error occurs during the process
-                except Exception as e:
-                    warning_count += 1
-                    message = "Unexpected error downloading file from URL {}.".format(pv_FileURL)
-                    recommendation = "Check the log file for details."
-                    logger.exception(message, e)
-                    self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                            message, recommendation))
+                    # Download the file to the output folder.
+                    with open(os.path.join(output_folder, os.path.basename(pv_FileURL)), "wb") as downloaded_file:
+                        downloaded_file.write(r.content)
 
-            # If the output folder is not a valid folder, log error message.
-            else:
-                warning_count += 1
-                message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
-                recommendation = 'Specify a valid relative pathname for the output file.'
-                logger.error(message)
+                    # Determine if the downloaded file should be renamed. If the filename is %f then the filename
+                    # of the downloaded product should be the same as the url filename
+                    if not output_filename == '%f':
+                        self.__rename_files_in_a_folder(list_of_files=[os.path.basename(pv_FileURL)],
+                                                        folder_path=output_folder,
+                                                        new_filename=output_filename)
+
+            # Raise an exception if an unexpected error occurs during the process
+            except Exception as e:
+
+                self.warning_count += 1
+                message = "Unexpected error downloading file from URL {}.".format(pv_FileURL)
+                recommendation = "Check the log file for details."
+                self.logger.exception(message, e)
                 self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
                                                                                         message, recommendation))
 
-        # If the provided URL is not a downloadable file, print an error message.
-        else:
-            warning_count += 1
-            message = 'The FileURL ({}) does not refer to a downloadable file.'.format(pv_OutputFile)
-            recommendation = 'Specifiy a valid URL for a file that can be downloaded.'
-            logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                    message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
-        if warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(warning_count)
+        if self.warning_count > 0:
+            message = "There were {} warnings proceeding this command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

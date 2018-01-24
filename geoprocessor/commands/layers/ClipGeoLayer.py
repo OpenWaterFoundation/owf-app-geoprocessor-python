@@ -19,21 +19,6 @@ from processing.tools import general
 
 class ClipGeoLayer(AbstractCommand):
 
-    # TODO egiles 2018-01-16 Need to discuss the following with Steve and implement code design from the discussion:
-    #   TODO Explained in detail in issue #22 of owf-app-geoprocessor-python GitHub repo
-    #   TODO (1) Should there be another command function called check_command_parameters_during_run where the command
-    #   TODO parameter values that cannot be checked in the current check_command_parameters are checked before running.
-    #   TODO The benefit of this would be that the run_command function would ONLY be concerned with the running of the
-    #   TODO process rather than checking the parameter values. The following TODO items are parameter checks that need
-    #   TODO to be written for the ClipGeoLayer command (either in the run_command function or a
-    #   TODO new check_command_parameters_during_run function)
-    #   TODO (2) Check that the clipping GeoLayer contains features with polygon geometries. (not in current code)
-    #   TODO (3) Check that the input GeoLayer and the clipping GeoLayer are in the same CRS (not in current code)
-    #   TODO (4) Check that the input GeoLayer ID is a valid ID (in current code under run_command function)
-    #   TODO (5) Check that the clipping GeoLayer ID is a valid ID (in current code under run_command function)
-    #   TODO (6) Check that the OutputGeoLayer ID is not an already existing GeoLayer ID (in current code ...)
-    #   TODO (7) Check that the OutputGeoLayer ID is not an already existing GeoLayerList ID (in current code ...)
-
     """
     Clips a GeoLayer by another GeoLayer.
 
@@ -41,17 +26,20 @@ class ClipGeoLayer(AbstractCommand):
     GeoLayer are retained in the output clipped layer if they intersect with the boundary of the clipping GeoLayer.
     The output clipped layer will become a new GeoLayer. The attribute fields and values of the input GeoLayer are
     retained within the output clipped GeoLayer.
+
+    Command Parameters
+
+    * InputGeoLayerID (str, required): the ID of the input GeoLayer, the layer to be clipped
+    * ClippingGeoLayerID (str, required): the ID of the clipping GeoLayer. This GeoLayer must have polygon geometry.
+    * OutputGeoLayerID (str, optional): the ID of the GeoLayer created as the output clipped layer. By default the
+        GeoLayerID of the output layer will be {}_clippedBy_{} where the first variable is the InputGeoLayerID and the
+        second variable is that ClippingGeoLayerID.
+    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
+        already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
+        (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
 
-    # Command Parameters
-    # InputGeoLayerID (str, required): the ID of the input GeoLayer, the layer to be clipped
-    # ClippingGeoLayerID (str, required): the ID of the clipping GeoLayer. This GeoLayer must have polygon geometry.
-    # OutputGeoLayerID (str, optional): the ID of the GeoLayer created as the output clipped layer. By default the
-    #   GeoLayerID of the output layer will be {}_clippedBy_{} where the first variable is the InputGeoLayerID and the
-    #   second variable is that ClippingGeoLayerID
-    # IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
-    #   already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
-    #   (Refer to user documentation for detailed description.) Default value is `Replace`.
+    # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("InputGeoLayerID", type("")),
         CommandParameterMetadata("ClippingGeoLayerID", type("")),
@@ -62,10 +50,12 @@ class ClipGeoLayer(AbstractCommand):
         """
         Initialize the command.
         """
+
         # AbstractCommand data
         super(ClipGeoLayer, self).__init__()
         self.command_name = "ClipGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
         # Class data
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
@@ -85,7 +75,6 @@ class ClipGeoLayer(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        logger = logging.getLogger(__name__)
 
         # Check that parameter InputGeoLayerID is a non-empty, non-None string.
         pv_InputGeoLayerID = self.get_parameter_value(parameter_name='InputGeoLayerID',
@@ -132,94 +121,150 @@ class ClipGeoLayer(AbstractCommand):
 
         # If any warnings were generated, throw an exception.
         if len(warning) > 0:
-            logger.warning(warning)
+            self.logger.warning(warning)
             raise ValueError(warning)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_geolayer_be_created(self, geolayer_id):
+    def __should_clip_geolayer(self, input_geolayer_id, clipping_geolayer_id, output_geolayer_id):
         """
-        Checks that the ID of the GeoLayer to be created is not an existing GeoLayerList ID or an existing GeoLayer ID.
-        The GeoLayer will NOT be created if ID is the same as an existing GeoLayerList ID. Depending on the
-        IfGeoLayerIDExists parameter value, the GeoLayer to be created might be created even if it has the same ID as
-        an existing GeoLayer ID. (See logic or user documentation for more detailed information.)
+        Checks the following:
+        * the ID of the input GeoLayer is an existing GeoLayer ID
+        * the ID of the clipping GeoLayer is an existing GeoLayer ID
+        * the clipping GeoLayer contains features with POLYGON geometry
+        * the input GeoLayer and the clipping GeoLayer are in the same coordinate reference system (warning, not error)
+        * the ID of the output GeoLayer is unique (not an existing GeoLayerList ID)
+        * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
         Args:
-            geolayer_id: the id of the GeoLayer to be created
+            input_geolayer_id: the ID of the input GeoLayer
+            clipping_geolayer_id: the ID of the clipping GeoLayer
+            output_geolayer_id: the ID of the output, clipped GeoLayer
 
         Returns:
-            create_geolayer: Boolean. If TRUE, the GeoLayer should be created. If FALSE, the GeoLayer should not be
-            created.
-
-        Raises:
-            None.
+            run_clip: Boolean. If TRUE, the clipping process should be run. If FALSE, the clipping process should not
+            be run.
         """
 
-        # Boolean to determine if the GeoLayer should be created. Set to true until an error occurs.
-        create_geolayer = True
+        # Boolean to determine if the clipping process should be run. Set to true until an error occurs.
+        run_clip = True
 
-        # If the geolayer_id is the same as as already-existing GeoLayerListID, raise a FAILURE.
-        if self.command_processor.get_geolayerlist(geolayer_id):
+        # Boolean to determine if the input GeoLayers (input and clipping) exist. Set to TRUE until proven FALSE.
+        input_geolayers_exist = True
 
-            create_geolayer = False
+        # If the input GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
+        if not self.command_processor.get_geolayer(input_geolayer_id):
+
+            run_clip = False
+            input_geolayers_exist = False
             self.warning_count += 1
-            message = 'The GeoLayer ID ({}) value is already in use as a GeoLayerList ID.'.format(geolayer_id)
-            recommendation = 'Specifiy a new GeoLayerID.'
+            message = 'The InputGeoLayerID ({}) is not a valid GeoLayer ID.'.format(input_geolayer_id)
+            recommendation = 'Specify a valid GeoLayerID.'
             self.logger.error(message)
             self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # If the geolayer_id is the same as an already-registered GeoLayerID, react according to the
+        # If the clipping GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
+        if not self.command_processor.get_geolayer(clipping_geolayer_id):
+
+            run_clip = False
+            input_geolayers_exist = False
+            self.warning_count += 1
+            message = 'The ClippingGeoLayerID ({}) value is not a valid GeoLayer ID.'.format(clipping_geolayer_id)
+            recommendation = 'Specify a valid GeoLayerID.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # If the clipping GeoLayerID does not contain features of polygon type, raise a FAILURE
+        elif not self.command_processor.get_geolayer(clipping_geolayer_id).get_geometry() == "Polygon":
+
+            run_clip = False
+            self.warning_count += 1
+            message = 'The ClippingGeoLayerID ({}) does not have POLYGON geometry.'.format(clipping_geolayer_id)
+            recommendation = 'Specify a GeoLayerID of a GeoLayer with POLYGON geometry.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # If the input GeoLayer and the clipping GeoLayer do not have the same CRS, raise a WARNING.
+        if input_geolayers_exist:
+
+            # Get the CRS of the input GeoLayer and the clipping GeoLayer
+            crs_input = self.command_processor.get_geolayer(input_geolayer_id).get_crs()
+            crs_clipping = self.command_processor.get_geolayer(clipping_geolayer_id).get_crs()
+
+            if not crs_input == crs_clipping:
+
+                self.warning_count += 1
+                message = 'The InputGeoLayerID ({}) and the ClippingGeoLayerID ({}) do not have the same coordinate' \
+                          '\ reference system.'.format(crs_input, crs_clipping)
+                recommendation = 'Specify a GeoLayers that have the same coordinate reference system.'
+                self.logger.warning(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
+
+        # If the output GeoLayer ID is the same as as already-existing GeoLayerListID, raise a FAILURE.
+        if self.command_processor.get_geolayerlist(output_geolayer_id):
+
+            run_clip = False
+            self.warning_count += 1
+            message = 'The OutputGeoLayerID ({}) value is already in use as a GeoLayerList ID.'.format(
+                output_geolayer_id)
+            recommendation = 'Specify a new GeoLayerID.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # If the output GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
-        elif self.command_processor.get_geolayer(geolayer_id):
+        elif self.command_processor.get_geolayer(output_geolayer_id):
 
             # Get the IfGeoLayerIDExists parameter value.
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
-            # Warnings/recommendations if the geolayer_id is the same as a registered GeoLayerID
-            message = 'The GeoLayer ID ({}) value is already in use as a GeoLayer ID.'.format(geolayer_id)
+            # Warnings/recommendations if the OutputGeolayerID is the same as a registered GeoLayerID.
+            message = 'The OutputGeoLayerID ({}) value is already in use as a GeoLayer ID.'.format(output_geolayer_id)
             recommendation = 'Specify a new GeoLayerID.'
 
             # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
             if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
-                self.warning_count += 1
-                self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
-                                                                message, recommendation))
 
-            # The registered GeoLayer should not be replaces. A warning should be logged.
-            if pv_IfGeoLayerIDExists.upper() == "WARN":
-                create_geolayer = False
                 self.warning_count += 1
                 self.logger.warning(message)
                 self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
-                                                                message, recommendation))
+                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
+
+            # The registered GeoLayer should not be replaced. A warning should be logged.
+            if pv_IfGeoLayerIDExists.upper() == "WARN":
+
+                run_clip = False
+                self.warning_count += 1
+                self.logger.warning(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
 
             # The matching IDs should cause a FAILURE.
             elif pv_IfGeoLayerIDExists.upper() == "FAIL":
-                create_geolayer = False
+
+                run_clip = False
                 self.warning_count += 1
                 self.logger.error(message)
                 self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE,
-                                                                message, recommendation))
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        return create_geolayer
+        # Return the Boolean to determine if the clip process should be run. If TRUE, all checks passed. If FALSE,
+        # one or many checks failed.
+        return run_clip
 
     def run_command(self):
         """
         Run the command. Clip the input GeoLayer by the clipping GeoLayer. Create a new GeoLayer with the clipped
         output layer.
 
-        Args:
-            None.
-
         Returns:
-            Nothing.
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
@@ -231,73 +276,40 @@ class ClipGeoLayer(AbstractCommand):
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID", default_value="{}_clippedBy_{}".format(
             pv_InputGeoLayerID, pv_ClippingGeoLayerID))
 
+        # Run the checks on the parameter values. Only continue if the checks passed.
+        if self.__should_clip_geolayer(pv_InputGeoLayerID, pv_ClippingGeoLayerID, pv_OutputGeoLayerID):
 
-        # Check that the InputGeoLayerID is a valid GeoLayer ID.
-        if self.command_processor.get_geolayer(pv_InputGeoLayerID):
+            try:
 
-            # Check that the ClippingGeoLayerID is a valid GeoLayer ID.
-            if self.command_processor.get_geolayer(pv_ClippingGeoLayerID):
+                # Get the Input GeoLayer and the Clipping GeoLayer.
+                input_geolayer = self.command_processor.get_geolayer(pv_InputGeoLayerID)
+                clipping_geolayer = self.command_processor.get_geolayer(pv_ClippingGeoLayerID)
 
-                # Check if the OutputGeoLayer should be created. Continue if TRUE. Error handling dealt with inside
-                # the `__should_geolayer_be_created` method.
-                if self.__should_geolayer_be_created(pv_OutputGeoLayerID):
+                # Perform the QGIS clip function. Refer to the reference below for parameter descriptions.
+                # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_overlay_tools/clip.html
+                clipped_output = general.runalg("qgis:clip",
+                                                input_geolayer.qgs_vector_layer,
+                                                clipping_geolayer.qgs_vector_layer,
+                                                None)
 
-                    # Get the Input GeoLayer and the Clipping GeoLayer.
-                    input_geolayer = self.command_processor.get_geolayer(pv_InputGeoLayerID)
-                    clipping_geolayer = self.command_processor.get_geolayer(pv_ClippingGeoLayerID)
+                # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
+                # clipped_output["OUTPUT"] returns the full file pathname of the memory output layer (saved
+                # in a QGIS temporary folder)
+                qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
+                new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+                self.command_processor.add_geolayer(new_geolayer)
 
-                    try:
-                        # Perform the QGIS clip function
-                        # Arg1: the qgis algorithm
-                        # Arg2: the QgsVectorLayer containing the features to be clipped.
-                        # Arg3: the QgsVectorLayer  containing the features that are used to clip the features in
-                        #   the input layer.
-                        # Arg4: the full file pathname of the output product. If None, output product is saved in
-                        #   memory within the QGIS environment. That memory layer is then saved to the
-                        #   clipped_output variable.
-                        clipped_output = general.runalg("qgis:clip",
-                                                        input_geolayer.qgs_vector_layer,
-                                                        clipping_geolayer.qgs_vector_layer,
-                                                        None)
-
-                        # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-                        # clipped_output["OUTPUT"] returns the full file pathname of the memory output layer (saved
-                        # in a QGIS temporary folder)
-                        qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
-                        new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
-                        self.command_processor.add_geolayer(new_geolayer)
-
-                    # Raise an exception if an unexpected error occurs during the process
-                    except Exception as e:
-                        self.warning_count += 1
-                        message = "Unexpected error clipping GeoLayer {} from GeoLayer {}.".format(
-                            pv_InputGeoLayerID,
-                            pv_ClippingGeoLayerID)
-                        recommendation = "Check the log file for details."
-                        self.logger.exception(message, e)
-                        self.command_status.add_to_log(command_phase_type.RUN,
-                                                       CommandLogRecord(command_status_type.FAILURE, message,
-                                                                        recommendation))
-
-            # The ClippingGeoLayerID is not a valid GeoLayer ID.
-            else:
+            # Raise an exception if an unexpected error occurs during the process
+            except Exception as e:
                 self.warning_count += 1
-                message = 'The ClippingGeoLayerID ({}) value is not a valid GeoLayer ID.'.format(pv_ClippingGeoLayerID)
-                recommendation = 'Specify a valid GeoLayerID.'
-                self.logger.error(message)
+                message = "Unexpected error clipping GeoLayer {} from GeoLayer {}.".format(
+                    pv_InputGeoLayerID,
+                    pv_ClippingGeoLayerID)
+                recommendation = "Check the log file for details."
+                self.logger.exception(message, e)
                 self.command_status.add_to_log(command_phase_type.RUN,
                                                CommandLogRecord(command_status_type.FAILURE, message,
                                                                 recommendation))
-
-        # The InputGeoLayerID is not a valid GeoLayer ID.
-        else:
-            self.warning_count += 1
-            message = 'The InputGeoLayerID ({}) is not a valid GeoLayer ID.'.format(pv_InputGeoLayerID)
-            recommendation = 'Specify a valid GeoLayerID.'
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

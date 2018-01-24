@@ -18,8 +18,6 @@ import logging
 
 
 class WriteGeoLayerToShapefile(AbstractCommand):
-    # TODO egiles 2018-01-04 Need to add information about Shapefile spatial data files in the docstring.
-
     """
     Writes a GeoLayer to a spatial data file in Shapefile format.
 
@@ -30,14 +28,16 @@ class WriteGeoLayerToShapefile(AbstractCommand):
     Registered GeoLayers are stored as GeoLayer objects within the geoprocessor's GeoLayers list. Each GeoLayer has one
     feature type (point, line, polygon, etc.) and other data (an identifier, a coordinate reference system, etc). This
     function only writes one single GeoLayer to a single spatial data file in Shapefile format.
+
+    Command Parameters
+    * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in Shapefile
+        format
+    * OutputFile (str, required): the relative pathname of the output spatial data file.
+    * OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
+        projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
     """
 
-    # Command Parameters
-    # GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in Shapefile
-    #   format
-    # OutputFile (str, required): the relative pathname of the output spatial data file.
-    # OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
-    #   projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
+    # Define the command parameters/
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
@@ -48,9 +48,14 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         Initialize the command.
         """
 
+        # AbstractCommand data
         super(WriteGeoLayerToShapefile, self).__init__()
         self.command_name = "WriteGeoLayerToShapefile"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Class data
+        self.warning_count = 0
+        self.logger = logging.getLogger(__name__)
 
     def check_command_parameters(self, command_parameters):
         """
@@ -59,8 +64,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         Args:
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
-        Returns:
-            Nothing.
+        Returns: None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -68,12 +72,10 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         """
 
         warning = ""
-        logger = logging.getLogger(__name__)
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
         # - existence of the GeoLayer will also be checked in run_command().
-        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
-                                                 command_parameters=command_parameters)
+        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validators.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
@@ -85,8 +87,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
 
         # Check that parameter OutputFile is a non-empty, non-None string.
         # - existence of the folder will also be checked in run_command().
-        pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile',
-                                                     command_parameters=command_parameters)
+        pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
         if not validators.validate_string(pv_OutputFile, False, False):
             message = "OutputFile parameter has no value."
@@ -103,29 +104,65 @@ class WriteGeoLayerToShapefile(AbstractCommand):
 
         # If any warnings were generated, throw an exception.
         if len(warning) > 0:
-            logger.warning(warning)
+            self.logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
+    def __should_write_geolayer(self, geolayer_id, output_file_abs):
+        """
+       Checks the following:
+       * the ID of the GeoLayer is an existing GeoLayer ID
+       * the output folder is a valid folder
+
+       Args:
+           geolayer_id: the ID of the GeoLayer to be written
+           output_file_abs: the full pathname to the output file
+
+       Returns:
+           run_write: Boolean. If TRUE, the writing process should be run. If FALSE, it should not be run.
+       """
+
+        # Boolean to determine if the writing process should be run. Set to true until an error occurs.
+        run_write = True
+
+        # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
+        if not self.command_processor.get_geolayer(geolayer_id):
+
+            run_write = False
+            self.warning_count += 1
+            message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
+            recommendation = 'Specify a valid GeoLayerID.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # If the OutputFolder is not a valid folder, raise a FAILURE.
+        output_folder = os.path.dirname(output_file_abs)
+        if not os.path.isdir(output_folder):
+
+            run_write = False
+            self.warning_count += 1
+            message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
+            recommendation = 'Specify a valid relative pathname for the output file.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                    message, recommendation))
+
+        # Return the Boolean to determine if the write process should be run. If TRUE, all checks passed. If FALSE,
+        # one or many checks failed.
+        return run_write
+
     def run_command(self):
         """
         Run the command. Write the GeoLayer to a spatial data file in Shapefile format to the folder OutputFolder.
 
-        Args:
-            None.
-
-        Returns:
-            Nothing.
+        Returns: None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
-
-        # Set up logger and warning count
-        warning_count = 0
-        logger = logging.getLogger(__name__)
 
         # Obtain the parameter values except for the OutputCRS
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
@@ -136,78 +173,51 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
-        # Check that the output folder is a valid folder
-        output_folder = os.path.dirname(output_file_absolute)
-        if os.path.isdir(output_folder):
+        # Run the checks on the parameter values. Only continue if the checks passed.
+        if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute):
 
-            # Check that the GeoLayerID is a valid registered GeoLayer ID in the GeoProcessor
-            if self.command_processor.get_geolayer(pv_GeoLayerID):
+            try:
 
-                try:
+                # Get the GeoLayer
+                geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                    # Get the GeoLayer
-                    geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
+                # Get the current coordinate reference system (in EPSG code) of the current GeoLayer
+                geolayer_crs = geolayer.get_crs()
 
-                    # Get the current coordinate reference system (in EPSG code) of the current GeoLayer
-                    geolayer_crs = geolayer.get_crs()
+                # Obtain the parameter value of the OutputCRS
+                pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
 
-                    # Obtain the parameter value of the OutputCRS
-                    pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
+                # Get the QGSVectorLayer object for the GeoLayer
+                qgs_vector_layer = geolayer.qgs_vector_layer
 
-                    # Get the QGSVectorLayer object for the GeoLayer
-                    qgs_vector_layer = geolayer.qgs_vector_layer
+                # Write the GeoLayer to a spatial data file in Shapefile format
+                # Reference: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
+                # To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are
+                # defined:
+                #   1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
+                #   2. path to new file: the full pathname (including filename) of the output file
+                #   3. output text encoding: always set to "utf-8"
+                #   4. destination coordinate reference system
+                #   5. driver name for the output file
+                QgsVectorFileWriter.writeAsVectorFormat(qgs_vector_layer,
+                                                        output_file_absolute,
+                                                        "utf-8",
+                                                        QgsCoordinateReferenceSystem(pv_OutputCRS),
+                                                        "ESRI Shapefile")
 
-                    # Write the GeoLayer to a spatial data file in Shapefile format
-                    # Reference: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
-                    # To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are
-                    # defined:
-                    #   1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
-                    #   2. path to new file: the full pathname (including filename) of the output file
-                    #   3. output text encoding: always set to "utf-8"
-                    #   4. destination coordinate reference system
-                    #   5. driver name for the output file
-                    # Note to developers: IGNORE `Unexpected Argument` error for layerOptions. This value is
-                    # appropriate and functions properly.
-                    QgsVectorFileWriter.writeAsVectorFormat(qgs_vector_layer,
-                                                            output_file_absolute,
-                                                            "utf-8",
-                                                            QgsCoordinateReferenceSystem(pv_OutputCRS),
-                                                            "ESRI Shapefile",
-                                                            )
-
-                # Raise an exception if an unexpected error occurs during the process
-                except Exception as e:
-                    print "FAILURE ---------------------------"
-                    warning_count += 1
-                    message = "Unexpected error writing GeoLayer {} to spatial data file in Shapefile format.".format(
-                        pv_GeoLayerID)
-                    recommendation = "Check the log file for details."
-                    logger.exception(message, e)
-                    self.command_status.add_to_log(command_phase_type.RUN,
-                                                   CommandLogRecord(command_status_type.FAILURE, message,
-                                                                    recommendation))
-
-            # If the GeoLayerID is not a valid registered GeoLayer ID in the GeoProcessor, then throw an error.
-            else:
-                warning_count += 1
-                message = 'The GeoLayer ID ({}) value is not a valid GeoLayerID.'.format(pv_GeoLayerID)
-                recommendation = 'Specifiy a valid GeoLayerID.'
-                logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                        message, recommendation))
-
-        # If the output folder does not exist
-        else:
-            warning_count += 1
-            message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
-            recommendation = 'Specifiy a valid relative pathname for the output file.'
-            logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                    message, recommendation))
+            # Raise an exception if an unexpected error occurs during the process
+            except Exception as e:
+                self.warning_count += 1
+                message = "Unexpected error writing GeoLayer {} to spatial data file in Shapefile format.".format(
+                    pv_GeoLayerID)
+                recommendation = "Check the log file for details."
+                self.logger.exception(message, e)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
-        if warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(warning_count)
+        if self.warning_count > 0:
+            message = "There were {} warnings proceeding this command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

@@ -17,10 +17,12 @@ class FreeGeoLayer(AbstractCommand):
 
     """
     Removes a GeoLayer from the GeoProcessor.
+
+    Command Parameters
+    * GeoLayerID (str, required): The ID of the existing GeoLayer to copy.
     """
 
-    # Command Parameters
-    # GeoLayerID (str, required): The ID of the existing GeoLayer to copy.
+    # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type(""))]
 
@@ -29,9 +31,12 @@ class FreeGeoLayer(AbstractCommand):
         Initialize the command.
         """
 
+        # AbstractCommand data
         super(FreeGeoLayer, self).__init__()
-        self.command_name = "CopyGeoLayer"
+        self.command_name = "FreeGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Class data
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -43,14 +48,13 @@ class FreeGeoLayer(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        logger = logging.getLogger(__name__)
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
@@ -70,7 +74,7 @@ class FreeGeoLayer(AbstractCommand):
 
         # If any warnings were generated, throw an exception.
         if len(warning) > 0:
-            logger.warning(warning)
+            self.logger.warning(warning)
             raise ValueError(warning)
         else:
             # Refresh the phase severity
@@ -78,7 +82,8 @@ class FreeGeoLayer(AbstractCommand):
 
     def __should_geolayer_be_deleted(self, geolayer_id):
         """
-        Checks that the ID of the GeoLayer to be deleted is existing.
+        Checks the following:
+        * the ID of the input GeoLayer is an existing GeoLayer ID
 
         Args:
             geolayer_id: the id of the GeoLayer to be removed
@@ -91,13 +96,13 @@ class FreeGeoLayer(AbstractCommand):
         # Boolean to determine if the GeoLayer should be removed. Set to TRUE until one or many checks fail.
         remove_geolayer = True
 
-        # If the geolayer_id is the same as as already-existing GeoLayerListID, raise a FAILURE.
-        if self.command_processor.get_geolayerlist(geolayer_id):
+        # If the geolayer_id is not a valid GeoLayer ID, raise a FAILURE.
+        if not self.command_processor.get_geolayer(geolayer_id):
 
             remove_geolayer = False
             self.warning_count += 1
-            message = 'The GeoLayer ID ({}) value is already in use as a GeoLayerList ID.'.format(geolayer_id)
-            recommendation = 'Specifiy a new GeoLayerID.'
+            message = 'The GeoLayer ID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
+            recommendation = 'Specify a new GeoLayerID.'
             self.logger.error(message)
             self.command_status.add_to_log(command_phase_type.RUN,
                                            CommandLogRecord(command_status_type.FAILURE,
@@ -126,15 +131,19 @@ class FreeGeoLayer(AbstractCommand):
 
             try:
 
-                # Remove the GeoLayer from the command processor.
-                geolayer_to_remove = self.command_processor.geolayers.pop(pv_GeoLayerID)
-                print geolayer_to_remove
+                # Get GeoLayer to remove.
+                geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                # Delete the GeoLayer instance.
-                del geolayer_to_remove
+                # Remove the GeoLayer from the GeoProcessor's geolayers list.
+                index = self.command_processor.geolayers.index(geolayer)
+                del self.command_processor.geolayers[index]
+
+                # Delete the GeoLayer.
+                del geolayer
 
             # Raise an exception if an unexpected error occurs during the process.
             except Exception as e:
+
                 self.warning_count += 1
                 message = "Unexpected error removing GeoLayer ({}).".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

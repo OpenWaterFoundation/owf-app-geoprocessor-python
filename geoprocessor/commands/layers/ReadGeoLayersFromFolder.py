@@ -34,19 +34,21 @@ class ReadGeoLayersFromFolder(AbstractCommand):
     In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
     `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects. This command will read the GeoLayers
     from spatial data files within a folder and instantiate them as geoprocessor GeoLayer objects.
+
+    Command Parameters
+    * SpatialDataFolder (str, required): the relative pathname to the folder containing spatial data files
+    * GeoLayerID_prefix (str, optional): the GeoLayer identifier will, by default, use the filename of the spatial data
+        file that is being read. However, if a value is set for this parameter, the GeoLayerID will take the following
+        format: [GeoLayerID_prefix]_[filename]
+    * Subset_Pattern (str, optional): the glob-style pattern of the file name to determine which files within the
+        folder are to be processed. More information on creating a glob pattern can be found at:
+         REF: <https://docs.python.org/2/library/glob.html>.
+    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
+        already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
+        Refer to user documentation for detailed description.) Default value is `Replace`.
     """
 
-    # Command Parameters
-    # SpatialDataFolder (str, required): the relative pathname to the folder containing spatial data files
-    # GeoLayerID_prefix (str, optional): the GeoLayer identifier will, by default, use the filename of the spatial data
-    #   file that is being read. However, if a value is set for this parameter, the GeoLayerID will take the following
-    #   format: [GeoLayerID_prefix]_[filename]
-    # Subset_Pattern (str, optional): the glob-style pattern of the feature class name to determine which feature
-    #   classes within the file geodatabase are to be processed. More information on creating a glob pattern can be
-    #   found at `this site <https://docs.python.org/2/library/glob.html>`_.
-    # IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the input GeoLayerID
-    #   already exists within the GeoProcessor. Available options are: `Replace`, `Warn` and `Fail` (Refer to user
-    #   documentation for detailed description.) Default value is `Replace`.
+    # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("SpatialDataFolder", type("")),
         CommandParameterMetadata("GeoLayerID_prefix", type("")),
@@ -58,9 +60,14 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         Initialize the command.
         """
 
+        # AbstractCommand data
         super(ReadGeoLayersFromFolder, self).__init__()
         self.command_name = "ReadGeoLayersFromFolder"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Class data
+        self.warning_count = 0
+        self.logger = logging.getLogger(__name__)
 
     def check_command_parameters(self, command_parameters):
         """
@@ -69,15 +76,13 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         Args:
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
-        Returns:
-            Nothing.
+        Returns: None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        logger = logging.getLogger(__name__)
 
         # Check that parameter SpatialDataFolder is a non-empty, non-None string.
         pv_SpatialDataFolder = self.get_parameter_value(parameter_name='SpatialDataFolder',
@@ -91,10 +96,10 @@ class ReadGeoLayersFromFolder(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `Warn`, `Fail` or None.
+        # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
-        acceptable_values = ["Replace", "Warn", "Fail"]
+        acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
         if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
@@ -111,11 +116,114 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
         # If any warnings were generated, throw an exception.
         if len(warning) > 0:
-            logger.warning(warning)
+            self.logger.warning(warning)
             raise ValueError(warning)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+
+    def __should_read_folder(self, spatial_data_folder_abs):
+
+        """
+        Checks the following:
+        * the SpatialDataFolder (absolute) is a valid folder
+
+        Args:
+            spatial_data_folder_abs: the full pathname to the input spatial data folder
+
+        Returns:
+            run_read: Boolean. If TRUE, the folder read process should be run. If FALSE, it should not be run.
+        """
+
+        # Boolean to determine if the read process should be run. Set to true until an error occurs.
+        run_read = True
+
+        # If the input spatial data folder is not a valid file path, raise a FAILURE.
+        if not os.path.isdir(spatial_data_folder_abs):
+
+            run_read = False
+            self.warning_count += 1
+            message = "The SpatialDataFolder ({}) is not a valid folder.".format(spatial_data_folder_abs)
+            recommendation = "Specify a valid folder."
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed. If FALSE,
+        # one or many checks failed.
+        return run_read
+
+    def __should_read_geolayer(self, geolayer_id):
+        """
+        Checks the following:
+        * the ID of the output GeoLayer is unique (not an existing GeoLayerList ID)
+        * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
+
+        Args:
+            geolayer_id: the ID of the output GeoLayer
+
+        Returns:
+            run_read: Boolean. If TRUE, the GeoLayer read process should be run. If FALSE, the read process should
+             not be run.
+        """
+
+        # Boolean to determine if the read process should be run. Set to true until an error occurs.
+        run_read = True
+
+        # If the GeoLayer ID is the same as as already-existing GeoLayerListID, raise a FAILURE.
+        if self.command_processor.get_geolayerlist(geolayer_id):
+
+            run_read = False
+            self.warning_count += 1
+            message = 'The GeoLayerID ({}) value is already in use as a GeoLayerList ID.'.format(geolayer_id)
+            recommendation = 'Specify a new GeoLayerID.'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.FAILURE,
+                                                            message, recommendation))
+
+        # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
+        # pv_IfGeoLayerIDExists value.
+        elif self.command_processor.get_geolayer(geolayer_id):
+
+            # Get the IfGeoLayerIDExists parameter value.
+            pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
+
+            # Warnings/recommendations if the GeolayerID is the same as a registered GeoLayerID.
+            message = 'The GeoLayerID ({}) value is already in use as a GeoLayer ID.'.format(geolayer_id)
+            recommendation = 'Specify a new GeoLayerID.'
+
+            # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
+            if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+                self.warning_count += 1
+                self.logger.warning(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.WARNING,
+                                                                message, recommendation))
+
+            # The registered GeoLayer should not be replaced. A warning should be logged.
+            if pv_IfGeoLayerIDExists.upper() == "WARN":
+
+                run_read = False
+                self.warning_count += 1
+                self.logger.warning(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.WARNING,
+                                                                message, recommendation))
+
+            # The matching IDs should cause a FAILURE.
+            elif pv_IfGeoLayerIDExists.upper() == "FAIL":
+
+                run_read = False
+                self.warning_count += 1
+                self.logger.error(message)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.FAILURE,
+                                                                message, recommendation))
+
+        # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed. If FALSE,
+        # one or many checks failed.
+        return run_read
 
     def run_command(self):
         """
@@ -123,32 +231,24 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         specified by the Subset_Pattern parameter), create a GeoLayer object, and add to the GeoProcessor's geolayer
         list.
 
-        Args:
-            None.
-
-        Returns:
-            Nothing.
+        Returns: None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
 
-        # Set up logger and warning count
-        warning_count = 0
-        logger = logging.getLogger(__name__)
-
-        # Obtain all parameter values except for the GeoLayerID_prefix parameter
+        # Obtain the parameter values.
         pv_SpatialDataFolder = self.get_parameter_value("SpatialDataFolder")
         pv_Subset_Pattern = self.get_parameter_value("Subset_Pattern")
-        pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
+        pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
 
         # Convert the SpatialDataFolder parameter value relative path to an absolute path
-        spatialDataFolder_absolute = io_util.verify_path_for_os(
+        sd_folder_abs = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_SpatialDataFolder, self)))
 
-        # Check that the SpatialDataFolder is a folder
-        if os.path.isdir(spatialDataFolder_absolute):
+        # Run the initial checks on the parameter values. Only continue if the checks passed.
+        if self.__should_read_folder(sd_folder_abs):
 
             # Determine which files within the folder should be processed. All files will be processed if
             # pv_Subset_Pattern is set to None. Otherwise only files that match the given pattern will be processed.
@@ -157,98 +257,52 @@ class ReadGeoLayersFromFolder(AbstractCommand):
             #   2. a spatial data file (ends in .shp or .geojson)
             #   3. follows the given pattern (if Subset_Pattern parameter value does not equal None)
             if pv_Subset_Pattern:
-                spatial_data_files_abs = [os.path.join(spatialDataFolder_absolute, source_file)
-                                          for source_file in glob.glob(os.path.join(spatialDataFolder_absolute,
-                                                                                    pv_Subset_Pattern))
-                                          if os.path.isfile(os.path.join(spatialDataFolder_absolute, source_file))
+                spatial_data_files_abs = [os.path.join(sd_folder_abs, source_file)
+                                          for source_file in glob.glob(os.path.join(sd_folder_abs, pv_Subset_Pattern))
+                                          if os.path.isfile(os.path.join(sd_folder_abs, source_file))
                                           and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
 
             else:
-                spatial_data_files_abs = [os.path.join(spatialDataFolder_absolute, source_file)
-                                          for source_file in os.listdir(spatialDataFolder_absolute)
-                                          if os.path.isfile(os.path.join(spatialDataFolder_absolute, source_file))
+                spatial_data_files_abs = [os.path.join(sd_folder_abs, source_file)
+                                          for source_file in os.listdir(sd_folder_abs)
+                                          if os.path.isfile(os.path.join(sd_folder_abs, source_file))
                                           and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
 
             # Iterate through the desired spatial data files
             for spatial_data_file_absolute in spatial_data_files_abs:
 
                 # Determine the GeoLayerID.
-                # If an identifier_prefix value was provided, the GeoLayer's identifier will be in the following
-                # format: [identifier_prefix]_[filename_without_ext]. Otherwise, the identifier is set to the filename
-                # without extension.
-                pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
                 if pv_GeoLayerID_prefix:
-                    GeoLayerID = "{}_{}".format(pv_GeoLayerID_prefix,
-                                                io_util.expand_formatter(spatial_data_file_absolute, '%f'))
+                    geolayer_id = "{}_{}".format(pv_GeoLayerID_prefix,
+                                                 io_util.expand_formatter(spatial_data_file_absolute, '%f'))
                 else:
-                    GeoLayerID = io_util.expand_formatter(spatial_data_file_absolute, '%f')
+                    geolayer_id = io_util.expand_formatter(spatial_data_file_absolute, '%f')
 
-                # Boolean to determine if the GeoLayer should be created. Only set to False if the input GeoLayerID is
-                # the same as a registered GeoLayerID and the IfGeoLayerIDExists is set to 'FAIL'
-                create_geolayer = True
-
-                # If the pv_GeoLayerID is the same as an already-registered GeoLayerID, react according to the
-                # pv_IfGeoLayerIDExists value.
-                if self.command_processor.get_geolayer(GeoLayerID):
-
-                    # Warnings/recommendations if the input GeoLayerID is the same as a registered GeoLayerID
-                    message = 'The GeoLayer ID ({}) value is already in use as a GeoLayer ID.'.format(GeoLayerID)
-                    recommendation = 'Specify a new GeoLayerID.'
-
-                    # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
-                    if pv_IfGeoLayerIDExists.upper() == "WARN":
-                        warning_count += 1
-                        logger.warning(message)
-                        self.command_status.add_to_log(command_phase_type.RUN,
-                                                       CommandLogRecord(command_status_type.WARNING,
-                                                                        message, recommendation))
-                    # The matching IDs should cause a FAILURE.
-                    elif pv_IfGeoLayerIDExists.upper() == "FAIL":
-                        create_geolayer = False
-                        warning_count += 1
-                        logger.error(message)
-                        self.command_status.add_to_log(command_phase_type.RUN,
-                                                       CommandLogRecord(command_status_type.FAILURE,
-                                                                        message, recommendation))
-
-                # If set to run, Create the QGSVectorLayer object and the GeoLayer object. Append the GeoLayer object
-                # to the geoprocessor's geolayers list.
-                if create_geolayer:
+                # Run the secondary checks on the parameter values. Only continue if the checks passed.
+                if self.__should_read_geolayer(geolayer_id):
 
                     try:
                         # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
                         qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(spatial_data_file_absolute)
 
                         # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                        geolayer_obj = GeoLayer(geolayer_id=GeoLayerID,
-                                                geolayer_qgs_vector_layer=qgs_vector_layer,
-                                                geolayer_source_path=spatial_data_file_absolute)
+                        geolayer_obj = GeoLayer(geolayer_id, qgs_vector_layer, spatial_data_file_absolute)
                         self.command_processor.add_geolayer(geolayer_obj)
 
                     # Raise an exception if an unexpected error occurs during the process
                     except Exception as e:
-                        warning_count += 1
-                        message = "Unexpected error reading GeoLayer {} from file {}.".format(
-                            GeoLayerID, spatial_data_file_absolute)
+                        self.warning_count += 1
+                        message = "Unexpected error reading GeoLayer {} from" \
+                                  " file {}.".format(geolayer_id, spatial_data_file_absolute)
                         recommendation = "Check the log file for details."
-                        logger.exception(message, e)
+                        self.logger.exception(message, e)
                         self.command_status.add_to_log(command_phase_type.RUN,
                                                        CommandLogRecord(command_status_type.FAILURE, message,
                                                                         recommendation))
 
-        # If the SpatialDataFolder is not a valid folder, log an error message.
-        else:
-            warning_count += 1
-            message = "The SpatialDataFolder ({}) is not a valid folder.".format(pv_SpatialDataFolder)
-            recommendation = "Specify a valid folder."
-            logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            recommendation))
-
         # Determine success of command processing. Raise Runtime Error if any errors occurred
-        if warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(warning_count)
+        if self.warning_count > 0:
+            message = "There were {} warnings proceeding this command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

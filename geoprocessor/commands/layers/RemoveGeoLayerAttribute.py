@@ -20,12 +20,14 @@ class RemoveGeoLayerAttribute(AbstractCommand):
 
     * This command removes a single attribute from a single GeoLayer.
     * The name of the attribute to remove is specified.
+
+    Command Parameters
+    * GeoLayerID (str, required): the ID of the input GeoLayer, the layer to remove the attribute from
+    * AttributeName (str, required): the name of the attribute to remove. Must be a valid attribute field to the
+        GeoLayer. This parameter is case specific.
     """
 
-    # Command Parameters
-    # GeoLayerID (str, required): the ID of the input GeoLayer, the layer to remove the attribute from
-    # AttributeName (str, required): the name of the attribute to remove. Must be a valid attribute field to the
-    #    GeoLayer. This parameter is case specific.
+    # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("AttributeName", type(""))]
@@ -34,6 +36,7 @@ class RemoveGeoLayerAttribute(AbstractCommand):
         """
         Initialize the command.
         """
+
         # AbstractCommand data
         super(RemoveGeoLayerAttribute, self).__init__()
         self.command_name = "RemoveGeoLayerAttribute"
@@ -50,15 +53,13 @@ class RemoveGeoLayerAttribute(AbstractCommand):
         Args:
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
-        Returns:
-            None.
+        Returns: None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
         warning = ""
-        logger = logging.getLogger(__name__)
 
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
@@ -90,7 +91,7 @@ class RemoveGeoLayerAttribute(AbstractCommand):
 
         # If any warnings were generated, throw an exception.
         if len(warning) > 0:
-            logger.warning(warning)
+            self.logger.warning(warning)
             raise ValueError(warning)
         else:
             # Refresh the phase severity
@@ -124,8 +125,7 @@ class RemoveGeoLayerAttribute(AbstractCommand):
             recommendation = 'Specify a valid GeoLayerID.'
             self.logger.error(message)
             self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # If the input GeoLayer does exist, continue with the checks.
         else:
@@ -145,8 +145,7 @@ class RemoveGeoLayerAttribute(AbstractCommand):
                                  '{}'.format(list_of_existing_attributes)
                 self.logger.error(message)
                 self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE,
-                                                                message, recommendation))
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Return the Boolean to determine if the attribute should be removed. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.
@@ -156,11 +155,7 @@ class RemoveGeoLayerAttribute(AbstractCommand):
         """
         Run the command. Remove the attribute from the GeoLayer.
 
-        Args:
-            None.
-
-        Returns:
-            Nothing.
+        Returns: None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
@@ -184,14 +179,14 @@ class RemoveGeoLayerAttribute(AbstractCommand):
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:
+
                 self.warning_count += 1
                 message = "Unexpected error removing attribute ({}) from GeoLayer {}.".format(pv_AttributeName,
                                                                                               pv_GeoLayerID)
                 recommendation = "Check the log file for details."
                 self.logger.exception(message, e)
                 self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message,
-                                                                recommendation))
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

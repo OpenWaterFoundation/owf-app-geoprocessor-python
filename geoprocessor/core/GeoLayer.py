@@ -1,6 +1,4 @@
-import geoprocessor.util.io as io_util
 import geoprocessor.util.qgis_util as qgis_util
-
 
 
 class GeoLayer(object):
@@ -54,10 +52,10 @@ class GeoLayer(object):
         # performed on the GeoLayer's qgs_vector_layer
         self.qgs_vector_layer = geolayer_qgs_vector_layer
 
-        # "source_path" (string) is the full pathname to the original spatial data file on the user's local computer
+        # "source_path" (str) is the full pathname to the original spatial data file on the user's local computer
         self.source_path = geolayer_source_path
 
-        # "qgs_id" (string) is the GeoLayer's id in the QGS environment (this is automatically assigned by the QGIS
+        # "qgs_id" (str) is the GeoLayer's id in the QGS environment (this is automatically assigned by the QGIS
         # GeoProcessor when a GeoLayer is originally created)
         self.qgs_id = geolayer_qgs_vector_layer.id()
 
@@ -73,17 +71,15 @@ class GeoLayer(object):
             self.properties = properties
 
     def add_attribute(self, attribute_name, attribute_type):
-        # TODO egiles 2018-01-23 Need to make this work for copied/memory layers.
         """
         Adds an attribute to the GeoLayer.
 
         Args:
-            attribute_name (string): the name of the attribute to add.
-            attribute_type (string): the attribute field type.
-                Can be int (integer), double (real number), string (text) or date.
+            attribute_name (str): the name of the attribute to add.
+            attribute_type (str): the attribute field type.
+                Can be int (int), double (real number), string (text) or date.
 
-        Return:
-            None.
+        Return: None.
         """
 
         # Run processing in the qgis utility function.
@@ -102,7 +98,6 @@ class GeoLayer(object):
         Returns:
             The copied GeoLayer object.
         """
-
 
         # Create a deep copy of the qgs vecotor layer.
         duplicate_qgs_vector_layer = qgis_util.deepcopy_qqsvectorlayer(self.qgs_vector_layer)
@@ -125,26 +120,14 @@ class GeoLayer(object):
         attribute_field_names = [attr_field.name() for attr_field in self.qgs_vector_layer.pendingFields()]
         return attribute_field_names
 
-    def get_attribute_field_names_nonpending(self):
-        """
-        Returns the a list of attribute field names (list of strings) within the GeoLayer.
-        """
-
-        # Get the attribute field names of the GeoLayer
-        # "attribute_field_names" (list of strings) is a list of the GeoLayer's attribute field names. Return the
-        # attribute_field_names variable.
-        attribute_field_names = [attr_field.name() for attr_field in self.qgs_vector_layer.fields()]
-        return attribute_field_names
-
     def get_crs(self):
         """
-        Returns the coordinate reference system (string, EPSG code) of a GeoLayer.
+        Returns the coordinate reference system (str, EPSG code) of a GeoLayer.
         """
 
-        # "crs" (string) is the GeoLayer's coordinate reference system in
+        # "crs" (str) is the GeoLayer's coordinate reference system in
         # <EPSG format 'http://spatialreference.org/ref/epsg/'>_. Return the crs variable.
-        crs = self.qgs_vector_layer.crs().authid()
-        return crs
+        return self.qgs_vector_layer.crs().authid()
 
     def get_feature_count(self):
         """
@@ -152,8 +135,7 @@ class GeoLayer(object):
         """
 
         # "feature_count" (int) is the number of features within the GeoLayer. Return the feature_count variable.
-        feature_count = self.qgs_vector_layer.featureCount()
-        return feature_count
+        return self.qgs_vector_layer.featureCount()
 
     def get_geometry(self, geom_format="qgis"):
         """
@@ -221,8 +203,7 @@ class GeoLayer(object):
         Arg:
             attribute_name: the name of the attribute to remove.
 
-        Returns:
-            None
+        Returns: None
         """
 
         # Run processing in the qgis utility function.
@@ -236,8 +217,7 @@ class GeoLayer(object):
             attribute_name (str):  The original attribute name.
             new_attribute_name (str): The new attribute name.
 
-        Returns:
-            None
+        Returns: None
         """
 
         # Run processing in the qgis utility function.
@@ -267,15 +247,8 @@ class GeoLayer(object):
             current GeoLayer.
         """
 
-        print "HERE"
-        print self.id
-        print self.qgs_vector_layer
-        print self.get_crs()
-
         # Write the GeoLayer (generally an in-memory GeoLayer) to a GeoJSON on disk (with the input absolute path).
-        qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_vector_layer,
-                                                  output_file_absolute,
-                                                  self.get_crs())
+        qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_vector_layer, output_file_absolute, self.get_crs())
 
         # Read a QGSVectorLayer object from the on disk spatial data file (GeoJSON)
         qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(output_file_absolute + ".shp")
@@ -284,4 +257,3 @@ class GeoLayer(object):
         # Return the new on-disk GeoLayer object.
         geolayer_on_disk = GeoLayer(self.id, qgs_vector_layer, output_file_absolute + ".shp")
         return geolayer_on_disk
-

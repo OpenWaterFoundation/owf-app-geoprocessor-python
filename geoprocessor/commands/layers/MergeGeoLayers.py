@@ -312,10 +312,10 @@ class MergeGeoLayers(AbstractCommand):
         pv_MappingDictionary = self.get_parameter_value("MappingDictionary", default_value="{'=[]'}")
 
         # Convert the MappingDictionary parameter from string to dictionary format.
-        mapping_dictionary = string_util.string_to_dictionary(pv_MappingDictionary)
+        mapping_dictionary = string_util.delimited_string_to_dictionary_list_value(pv_MappingDictionary)
 
         # Convert the GeoLayerIDs parameter from string to list format.
-        list_of_geolayer_ids = string_util.string_to_list(pv_GeoLayerIDs)
+        list_of_geolayer_ids = string_util.delimited_string_to_list(pv_GeoLayerIDs)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_merge(list_of_geolayer_ids, pv_OutputGeoLayerID):

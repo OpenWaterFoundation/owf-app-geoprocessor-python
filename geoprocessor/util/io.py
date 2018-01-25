@@ -361,12 +361,6 @@ def print_standard_file_header(ofp, comment_line_prefix='#', max_width=120, prop
     ofp.flush()
 
 
-# TODO smalers 2018-01-20 Need to fully move this to util.string
-# - I copied and redirect to there
-def string_to_list(string):
-    return string_util.string_to_list(string)
-
-
 def to_relative_path(root_path, rel_path):
     """
     Convert a path "path" and an absolute directory "dir" to a relative path.

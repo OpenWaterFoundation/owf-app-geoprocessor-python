@@ -9,9 +9,8 @@ import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command as command_util
 import geoprocessor.util.io as io_util
+import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validators as validators
-
-from qgis.core import QgsVectorFileWriter, QgsCoordinateReferenceSystem
 
 import os
 import logging
@@ -204,28 +203,11 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                 # Obtain the parameter value of the OutputCRS
                 pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
 
-                # Get the QGSVectorLayer object for the GeoLayer
-                qgs_vector_layer = geolayer.qgs_vector_layer
-
-                # Write the GeoLayer to a spatial data file in GeoJSON format
-                # Reference: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
-                # To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are
-                # defined:
-                #   1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
-                #   2. path to new file: the full pathname (including filename) of the output file
-                #   3. output text encoding: always set to "utf-8"
-                #   4. destination coordinate reference system
-                #   5. driver name for the output file
-                #   6. optional layerOptions (specific to driver name) : for GeoJSON, coordinate precision is defined
-                # Note to developers: IGNORE `Unexpected Argument` error for layerOptions. This value is appropriate
-                #   and functions properly.
-                QgsVectorFileWriter.writeAsVectorFormat(qgs_vector_layer,
-                                                        output_file_absolute,
-                                                        "utf-8",
-                                                        QgsCoordinateReferenceSystem(pv_OutputCRS),
-                                                        "GeoJSON",
-                                                        layerOptions=[
-                                                            'COORDINATE_PRECISION={}'.format(pv_OutputPrecision)])
+                # Write the GeoLayer to a spatial data file in GeoJSONformat
+                qgis_util.write_qgsvectorlayer_to_geojson(geolayer.qgs_vector_layer,
+                                                          output_file_absolute,
+                                                          pv_OutputCRS,
+                                                          pv_OutputPrecision)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

@@ -9,6 +9,7 @@ import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command as command_util
 import geoprocessor.util.io as io_util
+import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validators as validators
 
 from qgis.core import QgsVectorFileWriter, QgsCoordinateReferenceSystem
@@ -187,23 +188,10 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 # Obtain the parameter value of the OutputCRS
                 pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
 
-                # Get the QGSVectorLayer object for the GeoLayer
-                qgs_vector_layer = geolayer.qgs_vector_layer
-
                 # Write the GeoLayer to a spatial data file in Shapefile format
-                # Reference: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
-                # To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are
-                # defined:
-                #   1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
-                #   2. path to new file: the full pathname (including filename) of the output file
-                #   3. output text encoding: always set to "utf-8"
-                #   4. destination coordinate reference system
-                #   5. driver name for the output file
-                QgsVectorFileWriter.writeAsVectorFormat(qgs_vector_layer,
-                                                        output_file_absolute,
-                                                        "utf-8",
-                                                        QgsCoordinateReferenceSystem(pv_OutputCRS),
-                                                        "ESRI Shapefile")
+                qgis_util.write_qgsvectorlayer_to_shapefile(geolayer.qgs_vector_layer,
+                                                            output_file_absolute,
+                                                            pv_OutputCRS)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

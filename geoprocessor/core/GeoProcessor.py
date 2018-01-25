@@ -84,14 +84,24 @@ class GeoProcessor(object):
 
     def add_geolayer(self, geolayer):
         """
-        Add a GeoLayer object to the geolayers list.
+        Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
+        existing GeoLayer will be overwritten with the input GeoLayer.
 
         Args:
             geolayer: instance of a GeoLayer object
 
-        Return:
-            Nothing
+        Return: None
         """
+
+        # Iterate over the existing GeoLayers.
+        for existing_geolayer in self.geolayers:
+
+            # If an existing GeoLayer has the same ID as the input GeoLayer, remove the existing GeoLayer from the
+            # geolayers list.
+            if existing_geolayer.id == geolayer.id:
+                self.free_geolayer(existing_geolayer)
+
+        # Add the input GeoLayer to the geolayers list.
         self.geolayers.append(geolayer)
 
     @classmethod

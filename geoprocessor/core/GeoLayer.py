@@ -1,4 +1,6 @@
+import geoprocessor.util.io as io_util
 import geoprocessor.util.qgis_util as qgis_util
+
 
 
 class GeoLayer(object):
@@ -250,3 +252,36 @@ class GeoLayer(object):
             property_value (object):  Value of property, can be any built-in Python type or class instance.
         """
         self.properties[property_name] = property_value
+
+    def write_to_disk(self, output_file_absolute):
+        """
+        Write the GeoLayer to a file on disk. The in-memory GeoLayer will be replaced by the on-disk GeoLayer. This
+        utility method is useful when running a command that requires the input of a source path rather than a
+        QGSVectorLayer object. For example, teh "qgis:mergevectorlayers" requires source paths as inputs.
+
+        Args:
+            output_file_absolute: the full file path for the on-disk GeoLayer
+
+        Returns:
+            geolayer_on_disk: GeoLayer object of on-disk file. The id of the returned GeoLayer in the same as the
+            current GeoLayer.
+        """
+
+        print "HERE"
+        print self.id
+        print self.qgs_vector_layer
+        print self.get_crs()
+
+        # Write the GeoLayer (generally an in-memory GeoLayer) to a GeoJSON on disk (with the input absolute path).
+        qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_vector_layer,
+                                                  output_file_absolute,
+                                                  self.get_crs())
+
+        # Read a QGSVectorLayer object from the on disk spatial data file (GeoJSON)
+        qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(output_file_absolute + ".shp")
+
+        # Create a new GeoLayer object with the same ID as the current object. The data however is not written to disk.
+        # Return the new on-disk GeoLayer object.
+        geolayer_on_disk = GeoLayer(self.id, qgs_vector_layer, output_file_absolute + ".shp")
+        return geolayer_on_disk
+

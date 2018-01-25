@@ -3,7 +3,6 @@
 
 import geoprocessor.util.string as string_util
 
-import logging
 import os
 import re
 import sys

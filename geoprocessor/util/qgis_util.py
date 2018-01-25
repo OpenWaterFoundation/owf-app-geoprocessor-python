@@ -2,12 +2,11 @@
 
 import os
 
-from qgis.core import QgsVectorLayer, QgsField, QgsApplication, QgsVectorFileWriter, QgsCoordinateReferenceSystem
+from qgis.core import QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateReferenceSystem
 
 from PyQt4.QtCore import QVariant
 
 from datetime import datetime
-
 
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
@@ -76,7 +75,6 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
 
     # Get the features of the input QgsVectorLayer.
     feats = [feat for feat in qgsvectorlayer.getFeatures()]
-    print "feats: {}".format(feats)
 
     # Get the geometry of the input QgsVectorLayer (qgis format).
     qgis_geometry = get_geometrytype_qgis(qgsvectorlayer)
@@ -103,9 +101,8 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
     copied_qgsvectorlayer.updateFields()
 
     # Add the features of the input QgsVectorLayer to the copied QgsVectorLayer.
-    copied_qgsvectorlayer.startEditing()
-    copied_qgsvectorlayer.addFeatures(feats)
-    copied_qgsvectorlayer.commitChanges()
+
+    copied_qgsvectorlayer_data.addFeatures(feats)
 
     # Return the deep copied QgsVectorLayer.
     return copied_qgsvectorlayer
@@ -306,3 +303,65 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribut
 
             # Commit the changes made to the qgsvectorlayer
             qgsvectorlayer.commitChanges()
+
+
+def write_qgsvectorlayer_to_geojson(qgsvectorlayer, output_file, crs, precision):
+    """
+    Write the QgsVectorLayer object to a spatial data file in GeoJSON format.
+    REF: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
+
+    To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are defined:
+        1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
+        2. path to new file: the full pathname (including filename) of the output file
+        3. output text encoding: always set to "utf-8"
+        4. destination coordinate reference system
+        5. driver name for the output file
+        6. 6. optional layerOptions (specific to driver name) : for GeoJSON, coordinate precision is defined
+
+    Args:
+        * qgsvectorlayer (object): the QGSVectorLayer object
+        * output_file (string): the full pathname to the output file (do not include .shp extension)
+        * crs (string): the output coordinate reference system in EPSG code
+        * precision (int): a integer at or between 0 and 15 that determines the number of decimal places to include
+            in the output geometry
+
+    Returns: None
+    """
+
+    # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
+    # Note to developers:
+    #   IGNORE `Unexpected Argument` error for layerOptions. This value is appropriate and functions properly.
+    QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
+                                            output_file,
+                                            "utf-8",
+                                            QgsCoordinateReferenceSystem(crs),
+                                            "GeoJSON",
+                                            layerOptions=['COORDINATE_PRECISION={}'.format(precision)])
+
+
+def write_qgsvectorlayer_to_shapefile(qgsvectorlayer, output_file, crs):
+    """
+    Write the QgsVectorLayer object to a spatial data file in Esri Shapefile format.
+    REF: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
+
+    To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are defined:
+        1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
+        2. path to new file: the full pathname (including filename) of the output file
+        3. output text encoding: always set to "utf-8"
+        4. destination coordinate reference system
+        5. driver name for the output file
+
+    Args:
+        * qgsvectorlayer (object): the QGSVectorLayer object
+        * output_file (string): the full pathname to the output file (do not include .shp extension)
+        * crs (string): the output coordinate reference system in EPSG code
+
+    Return: None
+    """
+
+    # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
+    QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
+                                            output_file,
+                                            "utf-8",
+                                            QgsCoordinateReferenceSystem(crs),
+                                            "ESRI Shapefile")

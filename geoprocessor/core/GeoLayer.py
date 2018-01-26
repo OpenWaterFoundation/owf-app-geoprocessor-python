@@ -85,8 +85,6 @@ class GeoLayer(object):
         # Run processing in the qgis utility function.
         qgis_util.add_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, attribute_type)
 
-        # Update the layer's fields.
-        self.qgs_vector_layer.updateFields()
 
     def deepcopy(self, copied_geolayer_id):
         """

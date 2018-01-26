@@ -55,8 +55,7 @@ class CopyGeoLayer(AbstractCommand):
         Args:
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
-        Returns:
-            None.
+        Returns: None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -193,8 +192,7 @@ class CopyGeoLayer(AbstractCommand):
         """
         Run the command. Make a copy of the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
 
-        Returns:
-            None.
+        Returns: None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.

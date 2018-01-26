@@ -30,14 +30,14 @@ class MergeGeoLayers(AbstractCommand):
     * Attributes that are unique to an input GeoLayer are included in the output GeoLayer attribute table - features
         from GeoLayers that don't have that unique attribute will have an attribute value of '0' for that unique field.
     * Attributes from different input GeoLayers (with different names) that are meant to be converged in the output
-        GeoLayer can be managed with the MappingDictionary.
+        GeoLayer can be managed with the AttributeMap.
 
     Command Parameters
     * GeoLayerIDs (list of strings, required): a list of the IDs of the GeoLayers to be merged.
-    * OutputGeoLayerID (string): the ID of the output GeoLayer, the merged GeoLayer.
-    * MappingDictionary (dictionary, optional): a dictionary containing attribute mapping information. Key: the
+    * OutputGeoLayerID (string, required): the ID of the output GeoLayer, the merged GeoLayer.
+    * AttributeMap (dictionary, optional): a dictionary containing attribute mapping information. Key: the
         output attribute name. Value: a list of the corresponding input attribute names. By default, the
-        MappingDictionary is an empty dictionary {"":[]}. All of the input attribute fields will be included in the
+        AttributeMap is an empty dictionary {"":[]}. All of the input attribute fields will be included in the
         Output GeoLayer's attribute table.
     * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the OutputGeoLayerID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
@@ -48,7 +48,7 @@ class MergeGeoLayers(AbstractCommand):
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerIDs", type([])),
         CommandParameterMetadata("OutputGeoLayerID", type("")),
-        CommandParameterMetadata("MappingDictionary", type({})),
+        CommandParameterMetadata("AttributeMap", type({})),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     def __init__(self):
@@ -121,7 +121,7 @@ class MergeGeoLayers(AbstractCommand):
         Checks the following:
         * the input GeoLayer IDs are existing GeoLayer IDs
         * the input GeoLayers are all the same CRS (warning)
-        * the input GeoLayers are all the same geometry (warning)
+        * the input GeoLayers are all the same geometry.
         * the ID of the output GeoLayer is unique (not an existing GeoLayerList ID)
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
@@ -249,7 +249,7 @@ class MergeGeoLayers(AbstractCommand):
         return run_merge
 
     @ staticmethod
-    def __create_attribute_dictionary(geolayer, mapping_dictionary):
+    def __create_attribute_dictionary(geolayer, attribute_map):
         """
         Create an attribute dictionary for the GeoLayer.
 
@@ -258,8 +258,8 @@ class MergeGeoLayers(AbstractCommand):
             Each entry represents one of the GeoLayer's attributes.
             Key: the name of the existing GeoLayer attribute.
             Value: the name that the GeoLayer attribute should be renamed to.
-        * The values of the attribute dictionary are determined by the logic within the mapping_dictionary.
-        * The mapping dictionary is a user-defined dictionary that determines how the input GeoLayers' attributes
+        * The values of the attribute dictionary are determined by the logic within the attribute_map.
+        * The attribute map is a user-defined dictionary that determines how the input GeoLayers' attributes
          should be manipulated in the merged output GeoLayer.
             Each entry represents one of the output GeoLayer's attributes.
             Key: the name of the attribute in output GeoLayer
@@ -267,7 +267,7 @@ class MergeGeoLayers(AbstractCommand):
 
         Args:
             geolayer (object): the input GeoLayer
-            mapping_dictionary (dictionary): a dictionary of how/if the input GeoLayer's attributes should be renamed
+            attribute_map (dictionary): a dictionary of how/if the input GeoLayer's attributes should be renamed
 
         Returns:
             attribute_dictionary (dictionary). Read description above.
@@ -285,8 +285,8 @@ class MergeGeoLayers(AbstractCommand):
             # Boolean to determine if the existing_attribute_name should be renamed. Set to FALSE until proven TRUE.
             should_be_renamed = False
 
-            # Iterate over the mapping dictionary.
-            for new_attr_name, list_of_existing_attr_names_to_rename in mapping_dictionary.iteritems():
+            # Iterate over the attribute map.
+            for new_attr_name, list_of_existing_attr_names_to_rename in attribute_map.iteritems():
 
                 # If the existing attribute name should be renamed then return the new name.
                 if existing_attribute_name in list_of_existing_attr_names_to_rename:
@@ -309,10 +309,10 @@ class MergeGeoLayers(AbstractCommand):
         # Get the command parameter values.
         pv_GeoLayerIDs = self.get_parameter_value("GeoLayerIDs")
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID")
-        pv_MappingDictionary = self.get_parameter_value("MappingDictionary", default_value="{'=[]'}")
+        pv_AttributeMap = self.get_parameter_value("AttributeMap", default_value="{'=[]'}")
 
-        # Convert the MappingDictionary parameter from string to dictionary format.
-        mapping_dictionary = string_util.delimited_string_to_dictionary_list_value(pv_MappingDictionary)
+        # Convert the AttributeMap parameter from string to dictionary format.
+        attribute_map = string_util.delimited_string_to_dictionary_list_value(pv_AttributeMap)
 
         # Convert the GeoLayerIDs parameter from string to list format.
         list_of_geolayer_ids = string_util.delimited_string_to_list(pv_GeoLayerIDs)
@@ -340,7 +340,7 @@ class MergeGeoLayers(AbstractCommand):
 
                     # Get an attribute dictionary mapping the GeoLayer attributes that are to be renamed.
                     # Key: Existing attribute name. Value: New attribute name.
-                    attribute_dictionary = self.__create_attribute_dictionary(geolayer, mapping_dictionary)
+                    attribute_dictionary = self.__create_attribute_dictionary(geolayer, attribute_map)
 
                     # Make a copy of the GeoLayer and add it to the GeoProcessor. Renaming of attributes will occur on
                     # a copy of the GeoLayer so that the original GeoLayer's attribute values are not affected.

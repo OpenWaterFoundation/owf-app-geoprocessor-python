@@ -10,8 +10,6 @@ from datetime import datetime
 
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
-    # TODO egiles 2018-01-22 Need to create a warning if the attribute_name is longer than 10 characters but do not
-    # TODO raise an error
 
     """
     Adds an attribute to a Qgs Vector Layer object.
@@ -22,10 +20,10 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
         attribute_type (string): the attribute field type. Can be int (integer), double (real number), string (text) or
          date.
 
-    Return:
-        None.
+    Return: None.
     """
 
+    # Start the data provider for the input QgsVectorLayer.
     qgsvectorlayer_data = qgsvectorlayer.dataProvider()
 
     # Check that the attribute name is not already a name in the QgsVectorLayer.
@@ -33,12 +31,12 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
 
         try:
 
+            # Add the attribute field to the GeoLater
             if attribute_type.upper() == "INT":
                 qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Int)])
             elif attribute_type.upper() == "DOUBLE":
                 qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Double)])
             elif attribute_type.upper() == "STRING":
-                print "HERE: {}".format(QgsField(attribute_name, QVariant.String))
                 qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.String)])
             elif attribute_type.upper() == "DATE":
                 qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Date)])
@@ -101,7 +99,6 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
     copied_qgsvectorlayer.updateFields()
 
     # Add the features of the input QgsVectorLayer to the copied QgsVectorLayer.
-
     copied_qgsvectorlayer_data.addFeatures(feats)
 
     # Return the deep copied QgsVectorLayer.

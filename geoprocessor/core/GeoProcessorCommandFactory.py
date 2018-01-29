@@ -11,7 +11,7 @@ from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFro
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
-from geoprocessor.commands.layers.RemoveGeoLayerAttribute import RemoveGeoLayerAttribute
+from geoprocessor.commands.layers.RemoveGeoLayerAttributes import RemoveGeoLayerAttributes
 from geoprocessor.commands.layers.RenameGeoLayerAttribute import RenameGeoLayerAttribute
 from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
 from geoprocessor.commands.layers.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
@@ -77,7 +77,7 @@ class GeoProcessorCommandFactory(object):
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
         "REMOVEFILE": RemoveFile(),
-        "REMOVEGEOLAYERATTRIBUTE": RemoveGeoLayerAttribute(),
+        "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
         "RUNCOMMANDS": RunCommands(),
         "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
@@ -204,8 +204,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayersFromFolder()
                 elif command_name_upper == "REMOVEFILE":
                     return RemoveFile()
-                elif command_name_upper == "REMOVEGEOLAYERATTRIBUTE":
-                    return RemoveGeoLayerAttribute()
+                elif command_name_upper == "REMOVEGEOLAYERATTRIBUTES":
+                    return RemoveGeoLayerAttributes()
                 elif command_name_upper == "RENAMEGEOLAYERATTRIBUTE":
                     return RenameGeoLayerAttribute()
                 elif command_name_upper == "RUNCOMMANDS":

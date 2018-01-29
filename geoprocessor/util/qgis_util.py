@@ -124,6 +124,7 @@ def exit_qgis():
     if qgs is not None:
         qgs.exit()
 
+
 def get_geometrytype_qgis(qgsvectorlayer):
     """
     Returns the input QgsVectorLayer's geometry in QGIS format (returns text, not enumerator).
@@ -191,11 +192,41 @@ def initialize_qgis(qgis_prefix_path):
     Returns:
         None.
     """
+
     # Open QGIS environment
     QgsApplication.setPrefixPath(qgis_prefix_path, True)
     qgs = QgsApplication([], True)
     qgs.initQgis()
     Processing.initialize()
+
+
+def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_value):
+
+    """
+    Populates an attribute of a QgsVectorLayer with a single attribute value. If the attribute already has a value,
+    the value will be overwritten with the new input attribute value. All features will have the same attribute value.
+
+    Args:
+        qgsvectorlayer (object): a Qgs Vector Layer object
+        attribute_name (string): the name of the attribute to populate
+        attribute_value (string): the string to populate as the attributes' values
+
+    Returns: None.
+    """
+
+    # Get the index of the attribute to populate.
+    attr_index = qgsvectorlayer.fieldNameIndex(attribute_name)
+
+    # Create an attribute dictionary.
+    # Key: the index of the attribute to populate
+    # Value: the string to populate as the attribute's values
+    attr = {attr_index: attribute_value}
+
+    # Iterate over the features of the QgsVectorLayer
+    for feature in qgsvectorlayer.getFeatures():
+
+        # Rename/populate the features attribute with the desired input attribute value.
+        qgsvectorlayer.dataProvider().changeAttributeValues({feature.id():attr})
 
 
 def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
@@ -284,8 +315,7 @@ def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
         qgsvectorlayer (object): a Qgs Vector Layer object
         attribute_name (string): the name of the attribute to delete
 
-    Return:
-        None.
+    Return: None.
     """
 
     # Iterate over the attributes in the Qgs Vector Layer object.

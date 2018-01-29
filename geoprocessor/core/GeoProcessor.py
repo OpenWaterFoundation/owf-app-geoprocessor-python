@@ -54,13 +54,9 @@ class GeoProcessor(object):
         self.geolayerlists = []
 
         # Set properties for QGIS environment.
-        # temp_dir: the full pathname to the folder that will hold all temporary, intermediate files created by the
-        # geoprocessor
         # qgis_prefix_path: the full pathname to the qgis install folder (often C:\OSGeo4W\apps\qgis)
         # TODO smalers 2017-12-30 Need to rework to not hard code.
-        # - TempDir is now set as a standard processor property when running commands.
         # - Need to pass in QGIS configuration from the startup batch file or script.
-        self.set_property("TempDir", r"C:\Users\intern1\Desktop\OWF_spatialProcessor\temp")
         self.set_property("qgis_prefix_path", r"C:\OSGeo4W\apps\qgis")
 
         # Set the initial working directory properties prior to reading a command file.

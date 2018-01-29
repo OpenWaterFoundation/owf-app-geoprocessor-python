@@ -85,7 +85,6 @@ class GeoLayer(object):
         # Run processing in the qgis utility function.
         qgis_util.add_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, attribute_type)
 
-
     def deepcopy(self, copied_geolayer_id):
         """
         Create a copy of the GeoLayer.
@@ -193,6 +192,22 @@ class GeoLayer(object):
                 raise
             else:
                 return if_not_found_val
+
+    def populate_attribute(self, attribute_name, attribute_value):
+        # TODO egiles 2018-01-29 Add sophistication to this function.
+
+        """
+        Populates the attribute of all features with a common attribute value (string value).
+
+        Arg:
+            attribute_name: the name of the attribute to populate.
+            attribute_value: the string to populate as the attributes' values
+
+        Returns: None
+        """
+
+        # Run processing in the qgis utility function.
+        qgis_util.populate_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, attribute_value)
 
     def remove_attribute(self, attribute_name):
         """

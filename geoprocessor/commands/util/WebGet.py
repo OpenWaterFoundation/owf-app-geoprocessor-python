@@ -121,15 +121,12 @@ class WebGet(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_run_webget(self, file_url, output_file_abs):
+    def __should_run_webget(self, output_file_abs):
         """
        Checks the following:
-       * the FileURL points to a file that is downloadable
        * the output folder is a valid folder
 
-
        Args:
-           file_url: the url to the file to download
            output_file_abs: the full pathname to the output file
 
        Returns:
@@ -138,17 +135,6 @@ class WebGet(AbstractCommand):
 
         # Boolean to determine if the webget process should be run. Set to true until an error occurs.
         run_webget = True
-
-        # If the FileURL does not point to a file that is downloadable, raise a FAILURE.
-        if not self.__is_downloadable(file_url):
-
-            run_webget = False
-            self.warning_count += 1
-            message = 'The FileURL ({}) does not refer to a downloadable file.'.format(file_url)
-            recommendation = 'Specify a valid URL for a file that can be downloaded.'
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                    message, recommendation))
 
         # If the OutputFolder is not a valid folder, raise a FAILURE.
         output_folder = os.path.dirname(output_file_abs)
@@ -165,37 +151,6 @@ class WebGet(AbstractCommand):
         # Return the Boolean to determine if the webget process should be run. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.
         return run_webget
-
-    @staticmethod
-    def __is_downloadable(url):
-        """
-        Does the url contain a downloadable resource. This code was copied from the following resource:
-            https://www.codementor.io/aviaryan/downloading-files-from-urls-in-python-77q3bs0un
-
-        Args:
-            url: the url to a file that is to be checked for downloading capabilities
-
-        Returns:
-            Boolean.
-                Returns True if the file can be downloaded with the requests library.
-                Returns False if the file cannot be downloaded with the requests library.
-
-        Raises:
-            None.
-        """
-
-        h = requests.head(url, allow_redirects=True)
-        header = h.headers
-        content_type = header.get('content-type')
-        if content_type:
-            if 'text' in content_type.lower():
-                return False
-            if 'html' in content_type.lower():
-                return False
-            return True
-        else:
-            return False
-
 
     @ staticmethod
     def __is_zipfile(response_object):
@@ -285,7 +240,7 @@ class WebGet(AbstractCommand):
             try:
 
                 # Get the output folder.
-                output_folder = os.path.dirname(pv_OutputFile)
+                output_folder = os.path.dirname(output_file_absolute)
 
                 # Get the URL file and convert it into a request Response object
                 r = requests.get(pv_FileURL)
@@ -357,7 +312,6 @@ class WebGet(AbstractCommand):
                 self.logger.exception(message, e)
                 self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
                                                                                         message, recommendation))
-
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

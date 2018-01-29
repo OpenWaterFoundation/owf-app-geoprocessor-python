@@ -33,13 +33,17 @@ class AddGeoLayerAttribute(AbstractCommand):
         If working with Esri Shapefiles, it is highly recommended that the string is 10 characters or less.
     * AttributeType (str, required): the attribute's data type. Options include 'string', 'date', 'int' and 'double'.
         Read the user documentation or the docstring for a more detailed parameter description.
+    * InitialValue (str, optional): a string value used to populate the added attribute for each feature. All
+        features will have the same attribute value. This parameter is used mainly for testing. If not specified,
+        the attribute values are set to NULL.
     """
 
     # Define command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("AttributeName", type("")),
-        CommandParameterMetadata("AttributeType", type(""))]
+        CommandParameterMetadata("AttributeType", type("")),
+        CommandParameterMetadata("InitialValue", type(""))]
 
     def __init__(self):
         """
@@ -202,6 +206,7 @@ class AddGeoLayerAttribute(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_AttributeName = self.get_parameter_value("AttributeName")
         pv_AttributeType = self.get_parameter_value("AttributeType")
+        pv_InitialValue = self.get_parameter_value("InitialValue", default_value=None)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_attribute_be_added(pv_GeoLayerID, pv_AttributeName):
@@ -214,6 +219,10 @@ class AddGeoLayerAttribute(AbstractCommand):
 
                 # Add the attribute to the GeoLayer.
                 input_geolayer.add_attribute(pv_AttributeName, pv_AttributeType)
+
+                # If the InitialValue parameter has been set, populate the added attribute with the given value.
+                if pv_InitialValue:
+                    input_geolayer.populate_attribute(pv_AttributeName, pv_InitialValue)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

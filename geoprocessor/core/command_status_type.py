@@ -41,27 +41,41 @@ def max_severity(command_status1, command_status2):
 
     Returns:
         The maximum (most severe) status of the given two status.
+        For example, FAILURE is more severe than WARNING.
     """
     # If a true enumeration were used, then the comparisons could be simple numeric.
-    # However, since Python just defines the strings, find the position in the array and then compare.
-    pos1 = -1
-    pos2 = -1
-    pos = 0
-    for status in __status_list:
-        pos = pos + 1
-        if command_status1 == status:
-            pos1 = pos
-            break
-    pos = 0
-    for status in __status_list:
-        pos = pos + 1
-        if command_status2 == status:
-            pos2 = pos
-            break
-    if pos1 >= pos2:
+    # However, since Python just defines the strings, use the number_value function to help.
+    value1 = number_value(command_status1)
+    value2 = number_value(command_status2)
+    if value1 > value2:
         return command_status1
-    else:
+    elif value2 > value1:
         return command_status2
+    else:
+        # They are the same
+        return command_status1
+
+
+def number_value(command_status):
+    """
+    Lookup a numeric value for the status, to allow comparison.
+
+    Args:
+        command_status:  Command status string (e.g., 'FAILURE').
+
+    Returns:
+        Integer value corresponding to the status
+    """
+    if command_status == UNKNOWN:
+        return -1
+    elif command_status == INFO:
+        return 0
+    elif command_status == SUCCESS:
+        return 1
+    elif command_status == WARNING:
+        return 2
+    elif command_status == FAILURE:
+        return 3
 
 
 def value_of(str_value, ignore_case=False):

@@ -4,7 +4,6 @@ from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFact
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-from geoprocessor.core.GeoLayer import GeoLayer
 
 # Commands that need special handling (all others are handled generically and don't need to be imported)
 # TODO smalers 2018-01-08 Evaluate enabling with `isinstance` syntax but could not get it to work as intended
@@ -14,8 +13,8 @@ from geoprocessor.core.GeoLayer import GeoLayer
 # import geoprocessor.commands.running.For as If
 
 import geoprocessor.util.command as command_util
-import geoprocessor.util.qgis_util as qgis_util
 
+# TODO smalers 2018-01-28 remove this ASAP if recent changes to move QGIS setup/shutdown work OK.
 # QGIS Geoprocessing
 from qgis.core import QgsApplication
 from processing.core.Processing import Processing
@@ -440,8 +439,9 @@ class GeoProcessor(object):
             # del self.GeoLayers[:]
             # del self.GeoLists[:]
             # ...but currently a dictionary...
-            self.GeoLayers.clear()
-            self.GeoLists.clear()
+            self.geolayers.clear()
+            # TODO smalers 2018-01-27 Need to decide whether to remove lists since not currently used
+            self.geolayerlists.clear()
 
     def __reset_workflow_properties(self):
         """
@@ -551,20 +551,22 @@ class GeoProcessor(object):
         except:
             # Use default value from above
             pass
-        # TODO smalers 2017-12-30 need to log this
-        # Message.printStatus(2, routine,"Recursive=" + __processor_PropList.getValue("Recursive") +
-        #    " => " + Recursive_boolean )
-        print("recursive=" + str(recursive) + " append_results=" + str(append_results))
-        # Message.printStatus(2, routine,"AppendResults=" + __processor_PropList.getValue("AppendResults") +
-        #    " => " + AppendResults_boolean )
+
+        logger.info("Recursive=" + str(recursive) + " AppendResults=" + str(append_results))
 
         # TODO smalers 2017-12-29 what happens if this is done more than once?
         # - should QGIS initialization occur when the application starts or each command workflow run?
         # Initialize QGIS resources to utilize QGIS functionality.
-        QgsApplication.setPrefixPath(self.get_property("qgis_prefix_path"), True)
-        qgs = QgsApplication([], True)
-        qgs.initQgis()
-        Processing.initialize()
+        # TODO smalers 2018-01-27
+        # - Moved this to gp main application calling qgis_util to avoid issues opening/closing between processor runs
+        # - Remove this code ASAP
+        handle_qgis_app_here = False
+        if handle_qgis_app_here:
+            logger.info("Before QGS initialization")
+            QgsApplication.setPrefixPath(self.get_property("qgis_prefix_path"), True)
+            qgs = QgsApplication([], True)
+            qgs.initQgis()
+            Processing.initialize()
 
         if command_list is None:
             logger.info("Running all commands")
@@ -575,7 +577,7 @@ class GeoProcessor(object):
         # Reset any properties left over from the previous run that may impact the current run.
         self.__reset_data_for_run_start()
 
-        # Whether or no the command is whethin a /*   */ comment block
+        # Whether or no the command is within a /*   */ comment block
         in_comment = False
 
         # Initialize the If() command stack that is in effect, needed to nest If() commands
@@ -619,7 +621,7 @@ class GeoProcessor(object):
             if not in_comment and If_stack_ok_to_run:
                 message='-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
                       command.command_string
-                print(message)
+                # print(message)
                 logger.info(message)
 
             command_class = command.__class__.__name__
@@ -672,13 +674,13 @@ class GeoProcessor(object):
                         # elif isinstance(command, For):
                         elif command_class == 'For':
                             # Initialize or increment the For loop
-                            print('Detected For command')
+                            logger.info('Detected For command')
                             # Use a local variable For_command for clarity
                             For_command = command
                             ok_to_run_for = False
                             try:
                                 ok_to_run_for = For_command.next()
-                                print('ok_to_run_for=' + str(ok_to_run_for))
+                                # print('ok_to_run_for=' + str(ok_to_run_for))
                                 # If False, the For loop is done.
                                 # However, need to handle the case where the for loop may be nested and
                                 # need to run again...
@@ -815,11 +817,16 @@ class GeoProcessor(object):
 
         # TODO smalers 2017-12-29 what happens if this is done more than once?
         # - should QGIS shutdown occur when the application exits or each command workflow run?
+        # - This has been moved to the qp app calling qgis_util
+        # - Remove this code ASAP
         # Close QGIS resources
-        qgs.exit()
+        if handle_qgis_app_here:
+            logger.info("Before QGS cleanup")
+            qgs.exit()
 
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough
+        logger.info("At end of run_commands")
 
     def set_command_strings(self, command_strings):
         """
@@ -849,8 +856,9 @@ class GeoProcessor(object):
             # Append the initialized command (object with parameters) to the geoprocessor command list.
             self.commands.append(command_object)
 
-            # TODO smalers 2017-12-30 the following icluded because of troubleshooting bug in GeoProcessorCommandFactory
-            debug = True
+            # TODO smalers 2017-12-30 the following included because of troubleshooting bug in
+            # GeoProcessorCommandFactory
+            debug = False
             if debug:
                 command_object.print_for_debug()
                 print("First command debug:")

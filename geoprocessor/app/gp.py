@@ -10,12 +10,17 @@ the gp application, which provides several run modes:
 The initial implementation focuses on batch and command shell.
 """
 
+# GeoProcessor modules
 from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
 from geoprocessor.core.GeoProcessor import GeoProcessor
 from geoprocessor.core.CommandFileRunner import CommandFileRunner
+from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
+import geoprocessor.util.app as app_util
 import geoprocessor.util.io as io_util
 import geoprocessor.util.log as log_util
+import geoprocessor.util.qgis_util as qgis_util
 
+# General Python modules
 import argparse
 import cmd
 import getpass
@@ -26,6 +31,7 @@ import sys
 import traceback
 
 __geoprocessor_app_version = "0.0.1"
+
 
 class GeoProcessorCmd(cmd.Cmd):
     """
@@ -179,12 +185,15 @@ def run_batch(command_file):
     # Run the command file
     try:
         runner.run_commands()
+        logger.info("At end of gp.run_batch")
     except:
         message = 'Error running command file.'
         print(message)
         traceback.print_exc(file=sys.stdout)
-        logger.error(message,exc_info=True)
+        logger.error(message, exc_info=True)
         return
+    finally:
+        StartRegressionTestResultsReport.close_regression_test_report_file()
 
     logger.info("GeoProcessor properties after running:")
     for property_name, property_value in runner.get_processor().properties.iteritems():
@@ -224,39 +233,17 @@ def run_ui():
     print("The GeoProcessor user interface is not implemented.  Exiting...")
 
 
-def run_steve():
+def set_global_data():
     """
-    Hard-coded test for Steve.  Will remove once testing framework is in place.
+    Set global data that is useful in library code but is difficult to pass into deep code.
+    This may evolve as greater understanding is gained about how to use standard Python modules
+    to retrieve application data.
 
     Returns:
-
+        None
     """
-    # Simulate case where a command file is opened via the command line.
-    # First declare a processor.
-    geoprocessor = GeoProcessor()
-    # For initial development hard-code a command file in memory.
-    # TODO smalers 2017-12-23 need to enable testing with command files
-    command_file_strings = [
-        'Message(Message="Start command file")',
-        'SetProperty(PropertyName="Property1",PropertyType="str",PropertyValue="test property")',
-        'Message(Message="Test message with Property1=${Property1}")',
-        'For(Name="for_outer",IteratorProperty="ForOuterProperty",SequenceStart="1",SequenceEnd="3",SequenceIncrement="1")',
-        '  Message(Message="In outer loop, ${ForOuterProperty}")',
-        '  For(Name="for_inner",IteratorProperty="ForInnerProperty",SequenceStart="10.0",SequenceEnd="11.5",SequenceIncrement=".5")',
-        '    Message(Message="In inner loop")',
-        '  EndFor(Name="for_inner")',
-        'EndFor(Name="for_outer")',
-        'If(Name="if1")',
-        '  JunkXXX()',
-        'EndIf(Name="if1")',
-        'Message(Message="End command file")']
-    geoprocessor.set_command_strings(command_file_strings)
-    # Run the commands
-    geoprocessor.run_commands()
-    # Print some information at the end (will display in UI when that is enabled)
-    # Print the processor properties
-    for property_name in geoprocessor.properties:
-        print('Processor property "' + property_name + '="' + str(geoprocessor.properties[property_name]) + '"')
+    app_util.program_name = "gp"
+    app_util.program_version = __geoprocessor_app_version
 
 
 def setup_logging(session):
@@ -330,11 +317,18 @@ if __name__ == '__main__':
                         version="gp " + __geoprocessor_app_version)
     args = parser.parse_args()
 
+    # Set global environment data that will be used by library code
+    set_global_data()
+
+    # If handling QGIS environment here, rather than in GeoProcessor
+    # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once
+    # TODO smalers 2018-01-28 Need to handle the QGIS prefix path dynamically or with software configuration.
+    qgis_util.initialize_qgis(r"C:\OSGeo4W\apps\qgis")
+
     # Launch a GeoProcessor based on the command line parameters
     if args.commands:
         # A command file has been specified so run the batch processor.
         run_batch(args.commands)
-        exit(0)
     elif args.http:
         # Run the http server
         run_http_server()
@@ -344,6 +338,13 @@ if __name__ == '__main__':
     else:
         # No arguments given to indicate whether batch, UI, etc. so start up the shell.
         run_prompt()
-        exit(0)
 
+    # Exit QGIS environment
+    qgis_util.exit_qgis()
+
+    # Close the regression test file
+    # - If none is used then nothing is done
+    StartRegressionTestResultsReport.close_regression_test_report_file()
+
+    # Application exit
     exit(0)

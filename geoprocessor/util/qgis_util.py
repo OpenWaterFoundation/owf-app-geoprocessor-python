@@ -2,11 +2,19 @@
 
 import os
 
+from qgis.core import QgsApplication
 from qgis.core import QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateReferenceSystem
+
+from processing.core.Processing import Processing
 
 from PyQt4.QtCore import QVariant
 
 from datetime import datetime
+
+# TODO smalers 2018-01-28 Evaluate whether to make this private via Pythonic underscore naming
+# QGIS application environment instance
+# "qgs" is used to match QGIS conventions (rather than "qgis")
+qgs = None
 
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
@@ -105,6 +113,17 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
     return copied_qgsvectorlayer
 
 
+def exit_qgis():
+    """
+    Exit QGIS environment.
+    This is expected to be called once when an application exits.
+
+    Returns:
+        None.
+    """
+    if qgs is not None:
+        qgs.exit()
+
 def get_geometrytype_qgis(qgsvectorlayer):
     """
     Returns the input QgsVectorLayer's geometry in QGIS format (returns text, not enumerator).
@@ -159,6 +178,24 @@ def get_geometrytype_wkb(qgsvectorlayer):
 
     # Return the WKB geometry type (in text form) of the input QgsVectorLayer.
     return enumerator_dic[qgsvectorlayer.wkbType()]
+
+
+def initialize_qgis(qgis_prefix_path):
+    """
+    Initialize the QGIS environment.  This typically needs to be done only once when the application starts.
+    This is expected to be called once when an application starts, before any geoprocessing tasks.
+
+    Args:
+        qgis_prefix_path (str) the installation folder for the QGIS that is being used.
+
+    Returns:
+        None.
+    """
+    # Open QGIS environment
+    QgsApplication.setPrefixPath(qgis_prefix_path, True)
+    qgs = QgsApplication([], True)
+    qgs.initQgis()
+    Processing.initialize()
 
 
 def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):

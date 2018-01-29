@@ -9,6 +9,100 @@ import geoprocessor.core.command_status_type as command_status_type
 import logging
 
 
+def append_command_status_log_records(command_status, commands):
+    """
+    Append log records from a list of commands to a status.  For example, this is used
+    when running a list of commands with a "runner" command like RunCommands to get a full list of logs.
+    The command associated with the individual logs is set to the original command so that
+    the "runner" is not associated with the log.
+
+    Args:
+        command_status (CommandStatus):  CommandStatus object for a command.
+        commands: List of Command from which to get commands status.
+
+    Returns:
+        None.
+    """
+    if command_status is None:
+        return
+
+    if commands is None:
+        return
+
+    # Loop through the commands
+    for command in commands:
+        # Transfer the command log records from each command to the given command_status.
+        status2 = command.command_status
+        # Append command log records for each run mode...
+        # logs = status2.get_command_log(command_phase_type.INITIALIZATION)
+        logs = status2.initialization_log_list
+        for log_record in logs:
+            # log_record.setCommandStatusProvider(csp)
+            command_status.add_to_log(command_phase_type.INITIALIZATION, log_record)
+        # logs = status2.get_command_log(command_phase_type.DISCOVERY)
+        logs = status2.discovery_log_list
+        for log_record in logs:
+            # log_record.setCommandStatusProvider(csp);
+            command_status.add_to_log(command_phase_type.DISCOVERY, log_record)
+        # logs = status2.getCommandLog(command_phase_type.RUN)
+        logs = status2.run_log_list
+        for log_record in logs:
+            # logRecord.setCommandStatusProvider(csp);
+            command_status.add_to_log(command_phase_type.RUN, log_record)
+
+
+def get_command_status_max_severity(processor):
+    """
+    Get the maximum command status severity for the processor.  This is used, for example, when
+    determining an overall status for a RunCommands() command.
+
+    Args:
+        processor:  Command processor, needed to get all commands.
+
+    Returns:
+        Most severe command status from all commands in a processor.
+    """
+    most_severe_command_status = command_status_type.UNKNOWN
+    for command in processor.commands:
+        status_from_command = get_highest_command_status_severity(command.command_status)
+        # Message.printStatus (2,"", "Highest severity \"" + command.toString() + "\"=" + from_command.toString());
+        most_severe_command_status = command_status_type.max_severity(most_severe_command_status, status_from_command)
+    return most_severe_command_status
+
+
+def get_highest_command_status_severity(command_status):
+    """
+    Returns the highest status severity of all phases, to indicate the most severe problem with a command.
+
+    Args:
+        command_status (CommandStatus):  Command status object.
+
+    Returns:
+        the highest status severity of all phases, to indicate the most severe problem with a command.
+    """
+    status_severity = command_status_type.UNKNOWN
+    if command_status is None:
+        return status_severity  # Default is UNKNOWN
+
+    # Python 2 does not have enumerations like Java code so do comparisons brute force
+    phase_status = command_status.get_command_status_for_phase(command_phase_type.INITIALIZATION)
+    if command_status_type.number_value(phase_status) > command_status_type.number_value(status_severity):
+        status_severity = phase_status
+
+    phase_status = command_status.get_command_status_for_phase(command_phase_type.DISCOVERY)
+    if command_status_type.number_value(phase_status) > command_status_type.number_value(status_severity):
+        status_severity = phase_status
+
+    phase_status = command_status.get_command_status_for_phase(command_phase_type.RUN)
+    # TODO sam 2017-04-13 This can be problematic if the discovery mode had a warning or failure
+    # and run mode was success.  This may occur due to dynamic files being created, etc.
+    # The overall status in this case should be success.
+    # Need to evaluate how this method gets called and what intelligence is used.
+    if command_status_type.number_value(phase_status) > command_status_type.number_value(status_severity):
+        status_severity = phase_status
+
+    return status_severity
+
 
 def parse_command_name_from_command_string(command_string):
     """
@@ -220,6 +314,7 @@ def read_file_into_string_list(filename):
 
     # Return the string list.
     return string_list
+
 
 def validate_command_parameter_names(command, warning, deprecated_parameter_names=None,
                                      deprecated_parameter_notes=None, remove_invalid=True):

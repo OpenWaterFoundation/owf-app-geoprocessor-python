@@ -31,7 +31,7 @@ class CommandStatus(object):
             log_record: A CommandLogRecord instance.
 
         Returns:
-            Nothing.
+            None.
         """
         if command_phase == command_phase_type.INITIALIZATION:
             self.initialization_status = command_status_type.max_severity(
@@ -47,12 +47,13 @@ class CommandStatus(object):
     def clear_log(self, command_phase=None):
         """
         Clear the CommandLogRecord list for the command.
+        The run status for all phases is set to command_status_type.UNKNOWN.
 
         Args:
             command_phase: Phase of running a command (see command_phase_type) or None to clear logs for all phases.
 
         Returns:
-            Nothing.
+            None.
         """
         if command_phase == command_phase_type.INITIALIZATION or command_phase is None:
             del self.initialization_log_list[:]
@@ -64,19 +65,40 @@ class CommandStatus(object):
             del self.run_log_list[:]
             self.run_status = command_status_type.UNKNOWN
 
+    def get_command_status_for_phase(self, command_phase):
+        """
+        Return the command status for a phase of command processing.
+
+        Args:
+            command_phase:  Command phase for which to get the status.
+
+        Returns:
+            Command status for the specified command phase.
+        """
+        if command_phase == command_phase_type.INITIALIZATION:
+            return self.initialization_status
+        elif command_phase == command_phase_type.DISCOVERY:
+            return self.discovery_status
+        elif command_phase == command_phase_type.RUN:
+            return self.run_status
+        else:  # This should never happen.
+            return command_status_type.UNKNOWN
+
     def refresh_phase_severity(self, phase, severity_if_unknown):
         """
         Refresh the command status for a phase.  This should normally only be called when
         initializing a status or setting to success.  Otherwise, addToLog() should be
         used and the status determined from the CommandLogRecord status values.
+        This ensures that the command has a status even if no log messages were generated.
+
         Args:
-            phase: Command phase, such s from command_phase_type.RUN.
-            severity_if_unknown: The severity to set for the phase if it is currently
-                unknown.  For example, specify as command_status_type.SUCCESS to override the
+            phase: Command phase, such as command_phase_type.RUN.
+            severity_if_unknown: The severity to set for the phase if it is currently UNKNOWN.
+                For example, specify as command_status_type.SUCCESS to override the
                 initial command_status_type.UNKNOWN value.
 
         Returns:
-            Nothing.
+            None.
         """
         if phase == command_phase_type.INITIALIZATION:
             if self.initialization_status == command_status_type.UNKNOWN:

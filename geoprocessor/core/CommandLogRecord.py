@@ -20,3 +20,8 @@ class CommandLogRecord(object):
         self.recommendation = recommendation
         # Log record type is not currently used
         self.log_record_type = log_record_type
+
+        # Only used when accumulating logs such as with RunCommands
+        # - in that case the log record is used to point to the original command,
+        #   because multiple commands are executed within the RunCommands command file
+        self.command = None

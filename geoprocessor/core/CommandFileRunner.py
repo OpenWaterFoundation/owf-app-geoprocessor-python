@@ -1,5 +1,7 @@
 from geoprocessor.core.GeoProcessor import GeoProcessor
 
+import logging
+
 
 class CommandFileRunner(object):
     """
@@ -30,24 +32,24 @@ class CommandFileRunner(object):
         """
         Determine whether the command file is enabled.
         This is used in the RunCommands() command to determine if a command file is enabled.
+        Loop through the commands and look for @enabled False (ignore case)
 
         Returns:
             True if the command file is enabled, and False if not (comments with #@enabled False).
         """
         commands = self.command_processor.commands
         for command in commands:
-            command_string = command.to_string().upper_case()
+            command_string = command.command_string.upper()
             pos = command_string.find("@ENABLED")
             if pos >= 0:
                 # Message.printStatus(2, "", "Detected tag: " + C)
                 # Check the token following @ enabled
-                if command_string.length() > (pos + 8):
+                if len(command_string) > (pos + 8):
                     # Have trailing characters
-                    parts = command_string[pos:].split(" ")
-                    if len(parts) > 1:
-                        if parts[1].trim().equals("FALSE"):
-                            # Message.printStatus(2, "", "Detected false")
-                            return False
+                    value = command_string[pos + len("@ENABLED"):].strip()
+                    if value.upper() == "FALSE":
+                        # Message.printStatus(2, "", "Detected false")
+                        return False
         # No #@enabled False found so command file is enabled
         return True
 
@@ -63,7 +65,7 @@ class CommandFileRunner(object):
                 avoid out of memory issues)
 
         Returns:
-            Nothing.
+            None.
 
         Raises:
             FileNotFoundError:  If the command file is not found.
@@ -82,11 +84,14 @@ class CommandFileRunner(object):
             run_properties:  properties to pass to the processor.
 
         Returns:
-            Nothing.
+            None.
 
         Raises:
             RuntimeError:  If there is an error running the commands.
         """
+        logger = logging.getLogger(__name__)
+        logger.info("Before calling run_commands")
         self.command_processor.run_commands(
             None,  # Subset of Command instances to run - just run all commands
             run_properties)  # Properties to control run
+        logger.info("Back from calling run_commands")

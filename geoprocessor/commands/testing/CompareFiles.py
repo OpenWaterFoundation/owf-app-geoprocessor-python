@@ -312,7 +312,7 @@ class CompareFiles(AbstractCommand):
                 if line_count_compared == 0:
                     line_count_compared = 1  # to avoid divide by zero below.
                 logger.info("There are " + str(diff_count) + " lines that are different, " +
-                            str(100.0*float(diff_count)/float(line_count_compared)) +
+                            '{:4f}'.format(100.0*float(diff_count)/float(line_count_compared)) +
                             '% (compared ' + str(line_count_compared) + ' lines).')
 
         except Exception as e:
@@ -330,9 +330,12 @@ class CompareFiles(AbstractCommand):
             ((pv_IfDifferent_command_status_type == command_status_type.WARNING) or
              (pv_IfDifferent_command_status_type == command_status_type.FAILURE)):
             message = "" + str(diff_count) + " lines were different, " + \
-                str(100.0*float(diff_count)/float(line_count_compared)) + \
+                '{:4f}'.format(100.0*float(diff_count)/float(line_count_compared)) + \
                 "% (compared " + str(line_count_compared) + " lines)."
-            logger.warning(message)
+            if pv_IfDifferent_command_status_type == command_status_type.WARNING:
+                logger.warning(message)
+            else:
+                logger.error(message)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(pv_IfDifferent_command_status_type,
@@ -342,7 +345,10 @@ class CompareFiles(AbstractCommand):
             ((pv_IfSame_command_status_type == command_status_type.WARNING) or
              (pv_IfSame_command_status_type == command_status_type.FAILURE)):
             message = "No lines were different (the files are the same)."
-            logger.warning(message)
+            if pv_IfDifferent_command_status_type == command_status_type.WARNING:
+                logger.warning(message)
+            else:
+                logger.error(message)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(pv_IfSame_command_status_type,

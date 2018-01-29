@@ -25,12 +25,14 @@ from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.EndIf import EndIf
 from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
+from geoprocessor.commands.running.RunCommands import RunCommands
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
 
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
+from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
 
 from geoprocessor.commands.util.Blank import Blank
 from geoprocessor.commands.util.Comment import Comment
@@ -38,6 +40,7 @@ from geoprocessor.commands.util.CopyFile import CopyFile
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
 from geoprocessor.commands.util.WebGet import WebGet
+from geoprocessor.commands.util.WriteCommandSummaryToFile import WriteCommandSummaryToFile
 
 
 class GeoProcessorCommandFactory(object):
@@ -76,11 +79,14 @@ class GeoProcessorCommandFactory(object):
         "REMOVEFILE": RemoveFile(),
         "REMOVEGEOLAYERATTRIBUTE": RemoveGeoLayerAttribute(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
+        "RUNCOMMANDS": RunCommands(),
         "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
         "SETPROPERTY": SetProperty(),
         "SETPROPERTYFROMGEOLAYER": SetPropertyFromGeoLayer(),
         "STARTLOG": StartLog(),
+        "STARTREGRESSIONTESTRESULTSREPORT": StartRegressionTestResultsReport(),
         "WEBGET": WebGet(),
+        "WRITECOMMANDSUMMARYTOFILE": WriteCommandSummaryToFile(),
         "WRITEGEOLAYERPROPERTIESTOFILE": WriteGeoLayerPropertiesToFile(),
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
@@ -202,6 +208,8 @@ class GeoProcessorCommandFactory(object):
                     return RemoveGeoLayerAttribute()
                 elif command_name_upper == "RENAMEGEOLAYERATTRIBUTE":
                     return RenameGeoLayerAttribute()
+                elif command_name_upper == "RUNCOMMANDS":
+                    return RunCommands()
                 elif command_name_upper == "SETGEOLAYERPROPERTY":
                     return SetGeoLayerProperty()
                 elif command_name_upper == "SETPROPERTY":
@@ -210,8 +218,12 @@ class GeoProcessorCommandFactory(object):
                     return SetPropertyFromGeoLayer()
                 elif command_name_upper == "STARTLOG":
                     return StartLog()
+                elif command_name_upper == "STARTREGRESSIONTESTRESULTSREPORT":
+                    return StartRegressionTestResultsReport()
                 elif command_name_upper == "WEBGET":
                     return WebGet()
+                elif command_name_upper == "WRITECOMMANDSUMMARYTOFILE":
+                    return WriteCommandSummaryToFile()
                 elif command_name_upper == "WRITEGEOLAYERPROPERTIESTOFILE":
                     return WriteGeoLayerPropertiesToFile()
                 elif command_name_upper == "WRITEGEOLAYERTOGEOJSON":

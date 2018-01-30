@@ -59,12 +59,13 @@ def max_severity(command_status1, command_status2):
 def number_value(command_status):
     """
     Lookup a numeric value for the status, to allow comparison.
+    Less severe status is lower number and most severe is higher number.
 
     Args:
         command_status:  Command status string (e.g., 'FAILURE').
 
     Returns:
-        Integer value corresponding to the status
+        Integer value corresponding to the status (highest number is most severe status).
     """
     if command_status == UNKNOWN:
         return -1

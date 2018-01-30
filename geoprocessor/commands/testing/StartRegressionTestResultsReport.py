@@ -13,8 +13,6 @@ import geoprocessor.util.validators as validators
 
 import logging
 import os
-import sys
-import traceback
 
 
 class StartRegressionTestResultsReport(AbstractCommand):
@@ -294,8 +292,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
         except Exception as e:
             warning_count += 1
             message = 'Unexpected error opening file "' + pv_OutputFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.exception(message, e)
+            logger.error(message, exc_info=True)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(command_status_type.FAILURE, message,
@@ -304,8 +301,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
         except:
             warning_count += 1
             message = 'Unexpected error opening file "' + pv_OutputFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.exception(message)
+            logger.error(message, exc_info=True)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(command_status_type.FAILURE, message,

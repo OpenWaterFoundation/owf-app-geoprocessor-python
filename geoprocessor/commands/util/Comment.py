@@ -1,5 +1,8 @@
 import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
 
+import geoprocessor.core.command_phase_type as command_phase_type
+import geoprocessor.core.command_status_type as command_status_type
+
 
 class Comment(AbstractCommand.AbstractCommand):
     """
@@ -12,6 +15,10 @@ class Comment(AbstractCommand.AbstractCommand):
         # Don't set the command name because there is not one.
         # The AbstractCommand.command_string will be used to output the full string:
         super(Comment, self).__init__()
+        # Set the command status to success so that testing reports look better
+        self.command_status.initialization_status = command_status_type.SUCCESS
+        self.command_status.discovery_status = command_status_type.SUCCESS
+        self.command_status.run_status = command_status_type.SUCCESS
 
     def initialize_command(self, command_string, processor, full_initialization):
         """
@@ -24,7 +31,7 @@ class Comment(AbstractCommand.AbstractCommand):
             full_initialization: Ignored.  A value of False is passed to AbstractCommand.initialize_command().
 
         Returns:
-            Nothing.
+            None.
         """
 
         # Set data in the parent class, but do not attempt to parse the command since unknown syntax
@@ -36,7 +43,6 @@ class Comment(AbstractCommand.AbstractCommand):
         Run the command.  Does nothing since comments cause no action.
 
         Returns:
-            Nothing.
+            None.
         """
-        # print("In Comment.run_command")
-        pass
+        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

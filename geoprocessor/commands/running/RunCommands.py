@@ -118,7 +118,7 @@ class RunCommands(AbstractCommand):
         pv_ExpectedStatus = self.get_parameter_value('ExpectedStatus')
         expected_status = pv_ExpectedStatus
         if pv_ExpectedStatus == "":
-            expected_status = None  # Default - was not specified in the command
+            pv_ExpectedStatus = None  # Default - was not specified in the command
 
         # Runtime checks on input
 
@@ -146,6 +146,9 @@ class RunCommands(AbstractCommand):
             # TODO SAM 2013-04-20 Even if disabled, will still run discovery above
             # - need to disable discovery in this case
             is_enabled = runner.is_command_file_enabled()
+            expected_status = command_status_type.SUCCESS
+            if pv_ExpectedStatus is not None:
+                expected_status = pv_ExpectedStatus
 
             if is_enabled:
                 # TODO smalers, 2018-01-26 Java code set datastores here
@@ -163,7 +166,7 @@ class RunCommands(AbstractCommand):
                 max_severity = command_util.get_command_status_max_severity(runner.command_processor)
                 logger.info("Max severity from commands = " + max_severity)
                 test_pass_fail = "????"  # Status for the test, which is not always the same as max_severity
-                if expected_status is not None:
+                if pv_ExpectedStatus is not None:
                     # Do the following to avoid case issues
                     if max_severity.upper() == expected_status.upper():
                         # Expected status matches the actual so consider this a success.

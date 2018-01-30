@@ -23,7 +23,7 @@ class CommandStatus(object):
     def add_to_log(self, command_phase, log_record):
         """
         Add a CommandLogRecord instance to the command status, for the specific command phase.
-        The overall status for the command is also set to the maximum severity,
+        The overall status for the command phase is also set to the maximum severity,
         which is the previous maximum severity and that of the new log record.
 
         Args:

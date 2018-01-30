@@ -13,8 +13,6 @@ import geoprocessor.util.validators as validators
 
 import logging
 import os
-import sys
-import traceback
 
 
 class WriteCommandSummaryToFile(AbstractCommand):
@@ -45,7 +43,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -117,14 +115,13 @@ class WriteCommandSummaryToFile(AbstractCommand):
             self.write_file_header(fp)
             self.write_command_summary(fp)
             self.write_file_footer(fp)
-            # Close
+            # Close the file
             fp.close()
 
         except Exception as e:
             warning_count += 1
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.exception(message, e)
+            logger.error(message, exc_info=True)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(command_status_type.FAILURE, message,
@@ -133,8 +130,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
         except:
             warning_count += 1
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.exception(message)
+            logger.error(message, exc_info=True)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(command_status_type.FAILURE, message,
@@ -172,19 +168,25 @@ class WriteCommandSummaryToFile(AbstractCommand):
         fp.write('</tr>' + nl)
         fp.write('</thead>' + nl)
 
-        # Output a list of all commands with the most severe status
+        # Output a list of all commands with the most severe status shown
 
         i = 0
         for command in self.command_processor.commands:
             i += 1
             fp.write('<tr>' + nl)
             fp.write('<td><a href="#' + str(i) + '">' + str(i) + '</a></td>' + nl)
-            status = command_util.get_highest_command_status_severity(self.command_status)
-            fp.write('<td class="' + status + '">' + status + '</td>' + nl)
-            status = self.command_status.get_command_status_for_phase(command_phase_type.INITIALIZATION)
-            fp.write('<td class="' + status + '">' + status + '</td>' + nl)
-            status = self.command_status.get_command_status_for_phase(command_phase_type.RUN)
-            fp.write('<td class="' + status + '">' + status + '</td>' + nl)
+            # TODO smalers 2018-01-29 Why don't the commented calls work?
+            # overall_status = command_util.get_highest_command_status_severity(self.command_status)
+            # initialization_status = self.command_status.get_command_status_for_phase(command_phase_type.INITIALIZATION)
+            initialization_status = command.command_status.initialization_status
+            # run_status = self.command_status.get_command_status_for_phase(command_phase_type.RUN)
+            run_status = command.command_status.run_status
+            overall_status = initialization_status
+            if command_status_type.number_value(run_status) > command_status_type.number_value(overall_status):
+                overall_status = run_status
+            fp.write('<td class="' + overall_status + '">' + overall_status + '</td>' + nl)
+            fp.write('<td class="' + initialization_status + '">' + initialization_status + '</td>' + nl)
+            fp.write('<td class="' + run_status + '">' + run_status + '</td>' + nl)
             fp.write('<td><code>' + command.command_string + '<code></td>' + nl)
             fp.write('</tr>' + nl + nl)
         fp.write('</table>' + nl)
@@ -195,7 +197,13 @@ class WriteCommandSummaryToFile(AbstractCommand):
         for command in self.command_processor.commands:
             i += 1
             fp.write('<p>' + nl)
-            fp.write('<a name="' + str(i) + '"></a><code>' + str(i) + ': ' + command.command_string + '</code>' + nl)
+            initialization_status = command.command_status.initialization_status
+            run_status = command.command_status.run_status
+            fp.write('<a name="' + str(i) + '"></a>' +
+                     str(i) + ":" +
+                     '<span class="' + initialization_status + '" style="border: solid; border-width: 1px;">' +
+                     'Initialization</span> <span class="' + run_status + '" style="border: solid; border-width: 1px;">'
+                     + 'Run</span><code> ' + command.command_string + '</code>' + nl)
 
             fp.write('<table class="table-style-hover">' + nl)
             fp.write('<thead>' + nl)
@@ -288,8 +296,14 @@ class WriteCommandSummaryToFile(AbstractCommand):
         fp.write('  html * {' + nl)
         fp.write('    font-family:  "Arial", Helvetica, sans-serif;' + nl)
         fp.write('  }' + nl)
+        fp.write('  code {' + nl)
+        fp.write('    font-family:  monospace;' + nl)
+        fp.write('    font-style:  normal;' + nl)
+        fp.write('    font-size:  large;' + nl)
+        fp.write('  }' + nl)
         fp.write('  table.table-style-hover {' + nl)
-        fp.write('     border-width: 1px; border-style: solid; border-color: #3A3A3A; border-collapse: collapse; padding: 4px' + nl)
+        fp.write('     border-width: 1px; border-style: solid; border-color: #3A3A3A; ' +
+                 'border-collapse: collapse; padding: 4px' + nl)
         fp.write('  }' + nl)
         fp.write('  table.table-style-hover th {' + nl)
         fp.write('     border-width: 1px; border-style: solid; border-color: #3A3A3A; padding: 4px' + nl)

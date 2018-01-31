@@ -1,4 +1,4 @@
-import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.qgisUtil as qgis_util
 
 
 class GeoLayer(object):

@@ -7,9 +7,9 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
-import geoprocessor.util.command as command_util
-import geoprocessor.util.io as io_util
-import geoprocessor.util.validators as validators
+import geoprocessor.util.commandUtil as command_util
+import geoprocessor.util.ioUtil as io_util
+import geoprocessor.util.validatorsUtil as validators
 
 import logging
 import os
@@ -235,7 +235,7 @@ class WebGet(AbstractCommand):
             self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_run_webget(pv_FileURL, output_file_absolute):
+        if self.__should_run_webget(output_file_absolute):
 
             try:
 

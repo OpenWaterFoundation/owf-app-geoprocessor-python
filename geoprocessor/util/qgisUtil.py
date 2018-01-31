@@ -400,7 +400,7 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer, output_file, crs, precision)
                                             "utf-8",
                                             QgsCoordinateReferenceSystem(crs),
                                             "GeoJSON",
-                                            layerOptions=['COORDINATE_PRECISION={}'.format(precision)])
+                                            layerOptions=['COORDINATE_PRECISION={}'.format(precision), 'WRITE_NAME=NO'])
 
 
 def write_qgsvectorlayer_to_shapefile(qgsvectorlayer, output_file, crs):

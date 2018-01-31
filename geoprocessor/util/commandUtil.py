@@ -472,4 +472,3 @@ def validate_command_parameter_names(command, warning, deprecated_parameter_name
             command_phase_type.INITIALIZATION,
             CommandLogRecord(command_status_type.WARNING, msg, "Specify only valid parameters - see documentation."))
     return warning
-

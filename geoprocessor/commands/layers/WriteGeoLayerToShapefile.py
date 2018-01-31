@@ -7,12 +7,12 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
-import geoprocessor.util.command as command_util
-import geoprocessor.util.io as io_util
-import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.validators as validators
-
-from qgis.core import QgsVectorFileWriter, QgsCoordinateReferenceSystem
+import geoprocessor.util.commandUtil as command_util
+import geoprocessor.util.fileUtil as file_util
+import geoprocessor.util.ioUtil as io_util
+import geoprocessor.util.qgisUtil as qgis_util
+import geoprocessor.util.stringUtil as string_util
+import geoprocessor.util.validatorsUtil as validators
 
 import os
 import logging
@@ -36,13 +36,19 @@ class WriteGeoLayerToShapefile(AbstractCommand):
     * OutputFile (str, required): the relative pathname of the output spatial data file.
     * OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
         projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
+    * ExtendedOutput(boolean, optional): If TRUE, the individual shapefile component files will be written. If FALSE,
+        the individual shapefile component files will not be written. Default: TRUE.
+    * CompressedOutput(boolean, optional): If TRUE, a zip file with the shapefile component files will be written.
+        If FALSE, a zip file with the shapefile component files will not be written. Default: FALSE.
     """
 
     # Define the command parameters/
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
-        CommandParameterMetadata("OutputCRS", type(""))]
+        CommandParameterMetadata("OutputCRS", type("")),
+        CommandParameterMetadata("ExtendedOutput", type(True)),
+        CommandParameterMetadata("CompressedOutput", type(True))]
 
     def __init__(self):
         """
@@ -111,15 +117,22 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_write_geolayer(self, geolayer_id, output_file_abs):
+    def __should_write_geolayer(self, geolayer_id, output_file_abs, extended_output_bool, compressed_output_bool):
         """
        Checks the following:
        * the ID of the GeoLayer is an existing GeoLayer ID
        * the output folder is a valid folder
+       * the provided ExtendedOutput command parameter value is a valid Boolean value
+       * the provided CompressedOutput command parameter value is a valid Boolean value.
+       * one of the desired output formats is set to TRUE
 
        Args:
            geolayer_id: the ID of the GeoLayer to be written
            output_file_abs: the full pathname to the output file
+           extended_output_bool: Boolean value (or None) to determine if the shapefile (extended format) should be
+            written
+           compressed_output_bool:  Boolean value (or None) to determine if the shapefile (compressed format) should be
+            written
 
        Returns:
            run_write: Boolean. If TRUE, the writing process should be run. If FALSE, it should not be run.
@@ -128,9 +141,11 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # Boolean to determine if the writing process should be run. Set to true until an error occurs.
         run_write = True
 
+        # Boolean to determine if the output format parameters have valid bool values. Set to true until proven false.
+        valid_output_bool = True
+
         # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
         if not self.command_processor.get_geolayer(geolayer_id):
-
             run_write = False
             self.warning_count += 1
             message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
@@ -142,7 +157,6 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # If the OutputFolder is not a valid folder, raise a FAILURE.
         output_folder = os.path.dirname(output_file_abs)
         if not os.path.isdir(output_folder):
-
             run_write = False
             self.warning_count += 1
             message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
@@ -151,9 +165,63 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
                                                                                     message, recommendation))
 
+        # If the input ExtendedOutput parameter value is not a valid Boolean value, raise a FAILURE.
+        if extended_output_bool is None:
+            run_write = False
+            valid_output_bool = False
+            self.warning_count += 1
+            message = 'The ExtendedOutput parameter value ({}) is not valid.'.format(extended_output_bool)
+            recommendation = 'Specify a valid Boolean value (True or False).'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                    message, recommendation))
+
+        # If the input CompressedOutput parameter value is not a valid Boolean value, raise a FAILURE.
+        if compressed_output_bool is None:
+            run_write = False
+            valid_output_bool = False
+            self.warning_count += 1
+            message = 'The CompressedOutput parameter value ({}) is not valid.'.format(extended_output_bool)
+            recommendation = 'Specify a valid Boolean value (True or False).'
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                    message, recommendation))
+
+        # If both of the output foramt parameters have a valid Boolean parameter value, check that at least one of
+        # them is set to TRUE. If not, raise a warning.
+        if valid_output_bool and not (extended_output_bool or compressed_output_bool):
+            run_write = False
+            self.warning_count += 1
+            message = 'Both output format (ExtendedOutput and CompressedOutput) have been set to FALSE. The ' \
+                      'shapefile will not be wrtten.'
+            recommendation = 'Set one or both of the output format parameters (ExtendedOutput and CompressedOutput)' \
+                             ' to TRUE.'
+            self.logger.warning(message)
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.WARNING,
+                                                                                    message, recommendation))
+
         # Return the Boolean to determine if the write process should be run. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.
         return run_write
+
+    @staticmethod
+    def __zip_shapefile(output_file_abs, keep_archive_files):
+
+        # Get the output folder
+        output_folder = os.path.dirname(output_file_abs)
+        output_filename = os.path.basename(output_file_abs)
+
+        # Files to archive
+        files_to_archive = []
+
+        for extension in ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg']:
+
+            output_file_full_path = os.path.join(output_folder, output_filename + extension)
+
+            if os.path.exists(output_file_full_path):
+                files_to_archive.append(output_file_full_path)
+
+        file_util.zip_files(files_to_archive, output_file_abs, keep_archive_files)
 
     def run_command(self):
         """
@@ -168,6 +236,12 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # Obtain the parameter values except for the OutputCRS
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_OutputFile = self.get_parameter_value("OutputFile")
+        pv_ExtendedOutput = self.get_parameter_value("ExtendedOutput", default_value='True')
+        pv_CompressedOutput = self.get_parameter_value("CompressedOutput", default_value='False')
+
+        # Convert the ExtendedOutput and the CompressedOutput parameters from strings to Booleans
+        extended_output_bool = string_util.string_to_boolean(pv_ExtendedOutput)
+        compressed_output_bool = string_util.string_to_boolean(pv_CompressedOutput)
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -175,7 +249,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute):
+        if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute, extended_output_bool,
+                                        compressed_output_bool):
 
             try:
 
@@ -192,6 +267,10 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 qgis_util.write_qgsvectorlayer_to_shapefile(geolayer.qgs_vector_layer,
                                                             output_file_absolute,
                                                             pv_OutputCRS)
+
+                # Zip the shapefiles, if configured to do so.
+                if compressed_output_bool:
+                    self.__zip_shapefile(output_file_absolute, extended_output_bool)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

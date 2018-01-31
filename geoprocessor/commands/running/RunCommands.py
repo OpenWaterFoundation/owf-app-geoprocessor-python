@@ -9,9 +9,9 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
-import geoprocessor.util.command as command_util
-import geoprocessor.util.io as io_util
-import geoprocessor.util.validators as validators
+import geoprocessor.util.commandUtil as command_util
+import geoprocessor.util.ioUtil as io_util
+import geoprocessor.util.validatorsUtil as validators
 
 import logging
 import sys

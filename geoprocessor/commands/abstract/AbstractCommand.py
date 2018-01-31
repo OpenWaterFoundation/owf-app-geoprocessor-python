@@ -1,5 +1,5 @@
 from geoprocessor.core.CommandStatus import CommandStatus
-import geoprocessor.util.command as util_common
+import geoprocessor.util.commandUtil as util_common
 
 
 class AbstractCommand(object):

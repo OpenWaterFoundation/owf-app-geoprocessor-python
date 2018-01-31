@@ -178,3 +178,26 @@ def pattern_count(s, pattern):
         if s[i] == c:
             count += 1
     return count
+
+def string_to_boolean(string):
+    """
+    Convert a string into a Boolean value.
+
+    Args:
+        string (str): String to convert.
+
+    Returns:
+        The associated Boolean value. If the input string does not correspond with a Boolean value, None is returned.
+    """
+
+    # If the string is 'True', return TRUE.
+    if string.upper() == "TRUE":
+        return True
+
+    # If the string is 'False', return FALSE.
+    elif string.upper() == "FALSE":
+        return False
+
+    # If the input string does not correspond with a Boolean value, return None.
+    else:
+        return None

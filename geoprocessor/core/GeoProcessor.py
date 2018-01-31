@@ -12,7 +12,7 @@ import geoprocessor.core.command_status_type as command_status_type
 # import geoprocessor.commands.running.For as For
 # import geoprocessor.commands.running.For as If
 
-import geoprocessor.util.command as command_util
+import geoprocessor.util.commandUtil as command_util
 
 # TODO smalers 2018-01-28 remove this ASAP if recent changes to move QGIS setup/shutdown work OK.
 # QGIS Geoprocessing

@@ -8,10 +8,10 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 from geoprocessor.core.GeoLayer import GeoLayer
 
-import geoprocessor.util.command as command_util
-import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.string as string_util
-import geoprocessor.util.validators as validators
+import geoprocessor.util.commandUtil as command_util
+import geoprocessor.util.qgisUtil as qgis_util
+import geoprocessor.util.stringUtil as string_util
+import geoprocessor.util.validatorsUtil as validators
 
 import logging
 import os

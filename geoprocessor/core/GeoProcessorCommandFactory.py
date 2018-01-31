@@ -13,6 +13,7 @@ from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFrom
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
 from geoprocessor.commands.layers.RemoveGeoLayerAttributes import RemoveGeoLayerAttributes
 from geoprocessor.commands.layers.RenameGeoLayerAttribute import RenameGeoLayerAttribute
+from geoprocessor.commands.layers.SetGeoLayerCRS import SetGeoLayerCRS
 from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
 from geoprocessor.commands.layers.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
@@ -80,6 +81,7 @@ class GeoProcessorCommandFactory(object):
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
         "RUNCOMMANDS": RunCommands(),
+        "SETGEOLAYERCRS": SetGeoLayerCRS(),
         "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
         "SETPROPERTY": SetProperty(),
         "SETPROPERTYFROMGEOLAYER": SetPropertyFromGeoLayer(),
@@ -210,6 +212,8 @@ class GeoProcessorCommandFactory(object):
                     return RenameGeoLayerAttribute()
                 elif command_name_upper == "RUNCOMMANDS":
                     return RunCommands()
+                elif command_name_upper == "SETGEOLAYERCRS":
+                    return SetGeoLayerCRS()
                 elif command_name_upper == "SETGEOLAYERPROPERTY":
                     return SetGeoLayerProperty()
                 elif command_name_upper == "SETPROPERTY":

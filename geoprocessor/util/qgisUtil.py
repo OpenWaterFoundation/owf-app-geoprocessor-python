@@ -181,6 +181,28 @@ def get_geometrytype_wkb(qgsvectorlayer):
     return enumerator_dic[qgsvectorlayer.wkbType()]
 
 
+def get_qgscoordinatereferencesystem_obj(crs_code):
+    """
+    Checks if the crs_code create a valid and usable QgsCoordinateReferenceSystem object. If so, return
+    the QgsCoordinateReferenceSystem object. If not, return None.
+    REF: https://qgis.org/api/2.18/classQgsCoordinateReferenceSystem.html#aa88613351434eeefdbdfbbd77ff33025
+
+    Args:
+        crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
+
+    Returns: The QgsCoordinateReferenceSystem object. If not valid, returns None.
+
+    """
+
+    # Check if the crs_code is valid. If so, return the QgsCoordinateReferenceSystem object.
+    if QgsCoordinateReferenceSystem(crs_code).isValid():
+        return QgsCoordinateReferenceSystem(crs_code)
+
+    # If not, return None.
+    else:
+        return None
+
+
 def initialize_qgis(qgis_prefix_path):
     """
     Initialize the QGIS environment.  This typically needs to be done only once when the application starts.
@@ -429,3 +451,5 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer, output_file, crs):
                                             "utf-8",
                                             QgsCoordinateReferenceSystem(crs),
                                             "ESRI Shapefile")
+
+

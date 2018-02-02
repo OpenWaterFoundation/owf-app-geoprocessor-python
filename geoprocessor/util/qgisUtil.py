@@ -251,6 +251,71 @@ def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_
         qgsvectorlayer.dataProvider().changeAttributeValues({feature.id():attr})
 
 
+def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs, delimiter, crs, wkt_col_name):
+    """
+    Reads a delimited file (with WKT column) and returns a QGSVectorLayerObject.
+
+    Args:
+        delimited_file_abs (string): the full pathname to a delimited file
+        delimiter (string): the delimiter symbol (often times is a comma)
+        crs (string): the coordinate reference system (in EPSG code)
+        wkt_col_name (string): the name of the field/column containing the WKT geometry data
+
+    Returns:
+        A QGSVectorLayer object containing the data from the input delimited file. If the QgsVectorLayer is not
+         valid, return None.
+    """
+
+    # Instantiate the QGSVectorLayer object. Must include the following:
+    #   (1) full path to the delimited file
+    #   (2) the delimiter symbol
+    #   (3) the coordinate reference system (EPSG code)
+    #   (4) the name of the field containing the wkt geometry data
+    # REF: https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html
+    uri = "file:///{}?delimiter={}&crs={}&wktField={}".format(delimited_file_abs, delimiter, crs, wkt_col_name)
+    qgsvectorlayer = QgsVectorLayer(uri, os.path.basename(delimited_file_abs), "delimitedtext")
+
+    # If the QgsVectorLayer is valid, return it. Otherwise return None.
+    if qgsvectorlayer.isValid():
+        return qgsvectorlayer
+    else:
+        return None
+
+
+def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs, delimiter, crs, x_col_name, y_col_name):
+    """
+    Reads a delimited file (with X and Y coordinates) and returns a QGSVectorLayerObject.
+
+    Args:
+        delimited_file_abs (string): the full pathname to a delimited file
+        delimiter (string): the delimiter symbol (often times is a comma)
+        crs (string): the coordinate reference system (in EPSG code)
+        x_col_name (string): the name of the field containing the x coordinates
+        y_col_name(string): the name of the filed containing the y coordinates
+
+    Returns:
+        A QGSVectorLayer object containing the data from the input delimited file. If the QgsVectorLayer is not
+         valid, return None.
+    """
+
+    # Instantiate the QGSVectorLayer object. Must include the following:
+    #   (1) full path to the delimited file
+    #   (2) the delimiter symbol
+    #   (3) the coordinate reference system (EPSG code)
+    #   (4) the name of the field containing the x coordinates
+    #   (5) the name of the field containing the y coordinates
+    # REF: https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html
+    uri = "file:///{}?delimiter={}&crs={}&xField={}&yField={}".format(delimited_file_abs,
+                                                                      delimiter, crs, x_col_name, y_col_name)
+    qgsvectorlayer = QgsVectorLayer(uri, os.path.basename(delimited_file_abs), "delimitedtext")
+
+    # If the QgsVectorLayer is valid, return it. Otherwise return None.
+    if qgsvectorlayer.isValid():
+        return qgsvectorlayer
+    else:
+        return None
+
+
 def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
 
     """
@@ -391,6 +456,42 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribut
             qgsvectorlayer.commitChanges()
 
 
+def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer, output_file, crs, geometry_type, separator="COMMA"):
+    """
+    Write the QgsVectorLayer object to a spatial data file in CSV format.
+    REF: QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>
+
+    To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are defined:
+        1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
+        2. path to new file: the full pathname (including filename) of the output file
+        3. output text encoding: always set to "utf-8"
+        4. destination coordinate reference system
+        5. driver name for the output file
+        6. optional layerOptions (specific to driver name) REF: http://www.gdal.org/drv_csv.html
+
+    Args:
+        * qgsvectorlayer (object): the QGSVectorLayer object
+        * output_file (string): the full pathname to the output file (do not include .csv extension)
+        * crs (string): the output coordinate reference system in EPSG code
+        * geometry_type (string): the type of geometry to export ( `AS_WKT`, `AS_XYZ`, `AS_XY` or `AS_YX`)
+        * separator (string): the symbol to use as the delimiter of the output delimited file (`COMMA`, `SEMICOLON`,
+           `TAB` or `SPACE`)
+
+    Returns: None
+    """
+
+    # Write the QgsVectorLayer object to a spatial data file in CSV format.
+    # Note to developers: IGNORE `Unexpected Argument` error for layerOptions. This value is appropriate and
+    #   functions properly.
+    QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
+                                            output_file,
+                                            "utf-8",
+                                            QgsCoordinateReferenceSystem(crs),
+                                            "CSV",
+                                            layerOptions=['GEOMETRY={}'.format(geometry_type),
+                                                          'SEPARATOR={}'.format(separator)])
+
+
 def write_qgsvectorlayer_to_geojson(qgsvectorlayer, output_file, crs, precision):
     """
     Write the QgsVectorLayer object to a spatial data file in GeoJSON format.
@@ -402,7 +503,7 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer, output_file, crs, precision)
         3. output text encoding: always set to "utf-8"
         4. destination coordinate reference system
         5. driver name for the output file
-        6. 6. optional layerOptions (specific to driver name) : for GeoJSON, coordinate precision is defined
+        6. optional layerOptions (specific to driver name) : for GeoJSON, coordinate precision is defined
 
     Args:
         * qgsvectorlayer (object): the QGSVectorLayer object
@@ -451,5 +552,3 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer, output_file, crs):
                                             "utf-8",
                                             QgsCoordinateReferenceSystem(crs),
                                             "ESRI Shapefile")
-
-

@@ -5,6 +5,200 @@ of commands to validate a parameter value.
 Multiple functions may be called if necessary, although as many validator functions
 as necessary can be defined.
 """
+import os
+import geoprocessor.util.fileUtil as file_util
+import geoprocessor.util.qgisUtil as qgis_util
+import geoprocessor.core.command_phase_type as command_phase_type
+import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandLogRecord import CommandLogRecord
+
+def run_check(self, condition, parameter_name, parameter_value, fail_response, other_values=None):
+    """
+    The run_check utility function is used to store all of the checks done within the command classes. There are
+    many types of checks that are performed on the command parameter values before a command can be run. Initially,
+    the GeoProcessor was designed in a way that the checks for each command class (including messages and
+    recommendations) were within each command class. This new design allows for all of the messages and recommendations
+    (quite clunky and ugly code) to be pulled away from the command class and placed in this utility function.
+
+    A benefit to this design is that popular checks that are called on many commands (for example: is the CRS_code, the
+    coordinate reference code, valid) are only written out once. Then the same check can be called from however many
+    command classes necessary. If the message and recommendation strings are changed for a given check, those messages
+    only have to be changed once here in this utility command rather than in multiple command classes.
+
+    Each check has a name called the condition. The checks are alphabatized below by their condition statement. In
+    the developer documentation there is explanation for each available check. This way, when there are additional
+    parameters required (entered by the other_values parameter), the developer knows exactly what the check requires.
+    Before utilizing a check in the command class, it is highly recommended that the developer documentation for that
+    check if read.
+
+    Each check condition statement is written in a way that answers YES (or TRUE) if the check passes. This makes it
+    easy for checks to be written and standardized by multiple developers.
+
+    Args:
+        self: the class object of the command being checked
+        condition: the condition statement (or name) of the check that is to be run
+        parameter_name: the command parameter being checked (the name, not the value)
+        parameter_value: the command parameter value being checked (the value, not the name)
+        fail_responses: the action that occurs if the check fails. The available options are as follows:
+            (1) FAIL: a FAIL message is logged and the function returns FALSE for run_the_command Boolean
+            (2) WARN: a WARN message is logged and the function returns TRUE for run_the_command Boolean
+            (3) WARNBUTDONOTRUN: a WARN message is logged and the function returns FALSE for run_the_command Boolean
+        other_values: an optional argument that allows the checks to take in more than one parameter_value for the check
+            refer to the developer documentation for each individual check to determine if the other_values argument is
+            used for that check.
+
+    Returns:
+        run_the_command: Boolean. If True, the check has determined that it is ok for the command to run. If False, the
+        check has determined that it is not ok for the command to run.
+    """
+
+    # Boolean to determine if the check failed. Set to FALSE until the check FAILS.
+    check_failed = False
+
+    # Check if the parameter value (absolute file path) has a valid and existing folder.
+    if condition.upper() == "DOESFILEPATHHAVEAVALIDFOLER":
+
+        message = 'The folder of the {} ({}) is not a valid folder.'.format(parameter_name, parameter_value)
+        recommendation = "Specify a valid folder for the {} parameter.".format(parameter_name)
+
+        output_folder = os.path.dirname(parameter_value)
+        if not os.path.isdir(output_folder):
+            check_failed = True
+
+    # Check if the GeoLayer of the parameter value (GeoLayer ID) has the correct geometry type.
+    elif condition.upper() == "DOESGEOLAYERIDHAVECORRECTGEOMETRY":
+        desired_geom_type = other_values[0]
+
+        message = 'The {} ({}) does not have {} geometry.'.format(parameter_name, parameter_value,
+                                                                  desired_geom_type)
+        recommendation = 'Specify a GeoLayerID of a GeoLayer with {} geometry.'.format(desired_geom_type)
+
+        if not self.command_processor.get_geolayer(
+                parameter_value).get_geometry().upper() == desired_geom_type.upper():
+            check_failed = True
+
+    # Check if the GeoLayer of the parameter value (GeoLayer ID) has a different CRS than another GeoLayer (referenced
+    # by its GeoLayer ID)
+    elif condition.upper() == "DOGEOLAYERIDSHAVEMATCHINGCRS":
+        second_parameter_name = other_values[0]
+        second_parameter_value = other_values[1]
+
+        message = 'The {} ({}) and the {} ({}) do not have the same coordinate reference' \
+                  ' system.'.format(parameter_name, parameter_value, second_parameter_name, second_parameter_value)
+        recommendation = 'Specify GeoLayers that have the same coordinate reference system.'
+
+        input_crs = self.command_processor.get_geolayer(parameter_value).get_crs()
+        second_crs = self.command_processor.get_geolayer(second_parameter_value).get_crs()
+
+        if not input_crs == second_crs:
+            check_failed = True
+
+    # Check if the parameter value (column name) is a valid column name of a delimited file.
+    elif condition.upper() == "ISDELIMITEDFILECOLUMNNAMEVALID":
+
+        delimited_file_abs = other_values[0]
+        delimiter = other_values[1]
+
+        message = "The {} ({}) is not a valid column name in the delimited file ({}).".format(parameter_name,
+                                                                                              parameter_value,
+                                                                                              delimited_file_abs)
+        recommendation = "Specify an existing and valid {}.".format(parameter_name)
+
+        if parameter_value not in file_util.get_col_names_from_delimited_file(delimited_file_abs, delimiter):
+            check_failed = True
+
+    # Check if the parameter value (crs code)is a valid CRS code usable in the QGIS environment.
+    elif condition.upper() == "ISCRSCODEVALID":
+
+        message = 'The {} ({}) is not a valid CRS code.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a valid CRS code (EPSG codes are an approved format).'
+
+        if qgis_util.get_qgscoordinatereferencesystem_obj(parameter_value) is None:
+            check_failed = True
+
+    # Check if the parameter value (absolute file path) is a valid and existing file.
+    elif condition.upper() == "ISFILEPATHVALID":
+
+        message = "The {} ({}) is not a valid file.".format(parameter_name, parameter_value)
+        recommendation = "Specify a valid file for the {} parameter.".format(parameter_name)
+
+        if not os.path.isfile(parameter_value):
+            check_failed = True
+
+    # Check if the parameter value (GeoLayerID) is an existing GeoLayerID.
+    elif condition.upper() == "ISGEOLAYERIDEXISTING":
+
+        message = 'The {} ({}) is not a valid GeoLayer ID.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a valid GeoLayer ID.'
+
+        if not self.command_processor.get_geolayer(parameter_value):
+            check_failed = True
+
+    # Check if the parameter value (GeoLayer ID) is a unique GeoLayerID.
+    elif condition.upper() == "ISGEOLAYERIDUNIQUE":
+        message = 'The {} ({}) value is already in use as a GeoLayer ID.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a new {}.'.format(parameter_name)
+
+        if self.command_processor.get_geolayer(parameter_value):
+            check_failed = True
+            pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
+
+            if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+                fail_response = "WARN"
+            elif pv_IfGeoLayerIDExists.upper() == "WARN":
+                fail_response = "WARNBUTDONOTRUN"
+            elif pv_IfGeoLayerIDExists.upper() == "FAIL":
+                fail_response = "FAIL"
+            else:
+                check_failed = False
+
+    # Check if the parameter value (integer) is between or at two values/numbers.
+    elif condition.upper() == "ISINTBETWEENRANGE":
+        int_min = other_values[0]
+        int_max = other_values[1]
+
+        message = 'The {} ({}) must be at or between {} & {}'.format(parameter_name, parameter_value, int_min, int_max)
+        recommendation = 'Specify a valid {} value.'.format(parameter_name)
+
+        if not validate_int_in_range(parameter_value, int_min, int_max, False, False):
+            check_failed = True
+
+
+    # If the check failed, increase the warning count of the command instance by one.
+    if check_failed:
+        self.warning_count += 1
+
+        # If configured, log a FAILURE message about the failed check. Set the run_the_command boolean to False.
+        if fail_response.upper() == "FAIL":
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                    message, recommendation))
+            run_the_command = False
+
+        # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to True.
+        elif fail_response.upper() == "WARN":
+
+            self.logger.warning(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.WARNING,
+                                                            message, recommendation))
+            run_the_command = True
+
+        # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to False.
+        elif fail_response.upper() == "WARNBUTDONOTRUN":
+
+            self.logger.warning(message)
+            self.command_status.add_to_log(command_phase_type.RUN,
+                                           CommandLogRecord(command_status_type.WARNING,
+                                                            message, recommendation))
+            run_the_command = False
+
+    # If the check passed, set the run_the_command boolean to True.
+    else:
+        run_the_command = True
+
+    # Return the run_the_command boolean.
+    return run_the_command
 
 
 def validate_bool(bool_value, none_allowed, empty_string_allowed):

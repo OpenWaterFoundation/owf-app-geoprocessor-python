@@ -7,6 +7,7 @@ from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
 from geoprocessor.commands.layers.FreeGeoLayer import FreeGeoLayer
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
+from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
@@ -16,6 +17,7 @@ from geoprocessor.commands.layers.RenameGeoLayerAttribute import RenameGeoLayerA
 from geoprocessor.commands.layers.SetGeoLayerCRS import SetGeoLayerCRS
 from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
 from geoprocessor.commands.layers.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
+from geoprocessor.commands.layers.WriteGeoLayerToDelimitedFile import WriteGeoLayerToDelimitedFile
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
 from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
 
@@ -73,6 +75,7 @@ class GeoProcessorCommandFactory(object):
         "IF": If(),
         "MERGEGEOLAYERS": MergeGeoLayers(),
         "MESSAGE": Message(),
+        "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
@@ -90,6 +93,7 @@ class GeoProcessorCommandFactory(object):
         "WEBGET": WebGet(),
         "WRITECOMMANDSUMMARYTOFILE": WriteCommandSummaryToFile(),
         "WRITEGEOLAYERPROPERTIESTOFILE": WriteGeoLayerPropertiesToFile(),
+        "WRITEGEOLAYERTODELIMITEDFILE": WriteGeoLayerToDelimitedFile(),
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
         "WRITEPROPERTIESTOFILE": WritePropertiesToFile()
@@ -196,6 +200,8 @@ class GeoProcessorCommandFactory(object):
                     return MergeGeoLayers()
                 elif command_name_upper == "MESSAGE":
                     return Message()
+                elif command_name_upper == "READGEOLAYERFROMDELIMITEDFILE":
+                    return ReadGeoLayerFromDelimitedFile()
                 elif command_name_upper == "READGEOLAYERFROMGEOJSON":
                     return ReadGeoLayerFromGeoJSON()
                 elif command_name_upper == "READGEOLAYERFROMSHAPEFILE":
@@ -230,6 +236,8 @@ class GeoProcessorCommandFactory(object):
                     return WriteCommandSummaryToFile()
                 elif command_name_upper == "WRITEGEOLAYERPROPERTIESTOFILE":
                     return WriteGeoLayerPropertiesToFile()
+                elif command_name_upper == "WRITEGEOLAYERTODELIMITEDFILE":
+                    return WriteGeoLayerToDelimitedFile()
                 elif command_name_upper == "WRITEGEOLAYERTOGEOJSON":
                     return WriteGeoLayerToGeoJSON()
                 elif command_name_upper == "WRITEGEOLAYERTOSHAPEFILE":

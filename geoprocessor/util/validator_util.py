@@ -6,8 +6,8 @@ Multiple functions may be called if necessary, although as many validator functi
 as necessary can be defined.
 """
 import os
-import geoprocessor.util.fileUtil as file_util
-import geoprocessor.util.qgisUtil as qgis_util
+import geoprocessor.util.file_util as file_util
+import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
@@ -25,7 +25,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
     command classes necessary. If the message and recommendation strings are changed for a given check, those messages
     only have to be changed once here in this utility command rather than in multiple command classes.
 
-    Each check has a name called the condition. The checks are alphabatized below by their condition statement. In
+    Each check has a name called the condition. The checks are alphabetized below by their condition statement. In
     the developer documentation there is explanation for each available check. This way, when there are additional
     parameters required (entered by the other_values parameter), the developer knows exactly what the check requires.
     Before utilizing a check in the command class, it is highly recommended that the developer documentation for that
@@ -55,8 +55,35 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
     # Boolean to determine if the check failed. Set to FALSE until the check FAILS.
     check_failed = False
 
+    # Check if the attributes in a list exist in a GeoLayer based off of its attribute name.
+    if condition.upper() == "DOATTRIBUTESEXIST":
+        geolayer_id = other_values[0]
+
+        # Get the GeoLayer.
+        input_geolayer = self.command_processor.get_geolayer(geolayer_id)
+
+        # Get the existing attribute names of the input GeoLayer.
+        list_of_existing_attributes = input_geolayer.get_attribute_field_names()
+
+        # Create a list of invalid input attribute names. An invalid attribute name is an input attribute name
+        # that is not matching any of the existing attribute names of the GeoLayer.
+        invalid_attrs = []
+        for attr in parameter_value:
+            if attr not in list_of_existing_attributes:
+                invalid_attrs.append(attr)
+
+        # The message is dependent on the invalid_attrs varaible. Assign message AFTER invalid_attrs variable has been
+        # created.
+        message = "The following attributes ({}) of the {} parameter do" \
+                  " not exist within the GeoLayer ({}).".format(invalid_attrs, parameter_name, geolayer_id)
+        recommendation = "Specify valid attribute names."
+
+        # If there are invalid attributes, the check failed.
+        if invalid_attrs:
+            check_failed = True
+
     # Check if the parameter value (absolute file path) has a valid and existing folder.
-    if condition.upper() == "DOESFILEPATHHAVEAVALIDFOLER":
+    elif condition.upper() == "DOESFILEPATHHAVEAVALIDFOLDER":
 
         message = 'The folder of the {} ({}) is not a valid folder.'.format(parameter_name, parameter_value)
         recommendation = "Specify a valid folder for the {} parameter.".format(parameter_name)
@@ -163,6 +190,14 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if not validate_int_in_range(parameter_value, int_min, int_max, False, False):
             check_failed = True
 
+    # Check if the input string is a valid QGSExpression.
+    elif condition.upper() == "ISQGSEXPRESSIONVALID":
+
+        message = "{} ({}) is not a valid QgsExpression.".format(parameter_name, parameter_value)
+        recommendation = "Specify a valid QgsExpression for {}.".format(parameter_name)
+
+        if qgis_util.get_qgsexpression_obj(parameter_value) is None:
+            check_failed = True
 
     # If the check failed, increase the warning count of the command instance by one.
     if check_failed:

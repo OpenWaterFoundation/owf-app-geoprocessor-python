@@ -34,6 +34,37 @@ def get_col_names_from_delimited_file(delimited_file_abs, delimiter):
     except:
         return None
 
+def unzip_all_files(zip_file_path, output_folder):
+    """
+    Extracts all of the archived files from a .zip file and saves them to the output folder.
+
+    Args:
+        zip_file_path: the full pathname to the zip file that is to be unzipped
+        output_folder: the full pathname to the folder where the archived files will be saved to
+
+    Return: None.
+    """
+
+    # Create a .zip file object from the input zip file.
+    zip_file = ZipFile(zip_file_path, 'r')
+
+    # Extract all of the archived files within the zip file to the output_folder.
+    zip_file.extractall(output_folder)
+
+    # Close the .zip file object.
+    zip_file.close()
+
+
+def unzip_one_file(zip_file_path, input_filename, output_folder):
+
+    # Create a .zip file object from the input zip file.
+    zip_file = ZipFile(zip_file_path, 'r')
+
+    # Extract one of the archived files within the zip file to the output_folder.
+    zip_file.extractall(input_filename, output_folder)
+
+    # Close the .zip file object.
+    zip_file.close()
 
 def zip_files(list_of_files_to_archive, output_filename, keep_originals=True):
     """

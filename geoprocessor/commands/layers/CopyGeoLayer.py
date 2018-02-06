@@ -7,8 +7,10 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
-import geoprocessor.util.commandUtil as command_util
-import geoprocessor.util.validatorsUtil as validators
+import geoprocessor.util.command_util as command_util
+import geoprocessor.util.string_util as string_util
+import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.validator_util as validators
 
 import logging
 
@@ -22,6 +24,13 @@ class CopyGeoLayer(AbstractCommand):
     Command Parameters
 
     * GeoLayerID (str, required): The ID of the existing GeoLayer to copy.
+    * IncludeAttributes (str, optional): A list of attribute names to include in the copied GeoLayer. If configured,
+        ExcludeAttributes parameter must not be configured. Default: all attributes are copied to the new GeoLayer.
+    * ExcludeAttributes (str, optional): A list of attribute names to exclude in the copied GeoLayer. If configured,
+        IncludeAttributes parameter must not be configured. Default: all attributes are copied to the new GeoLayer.
+    * IncludeFeaturesIf (str, optional): a valid qgis expression determining which features to keep in the
+        copied GeoLayer. Default: all features are copied to the new GeoLayer. See the following reference:
+        https://docs.qgis.org/2.14/en/docs/user_manual/working_with_vector/expression.html#fields-and-values
     * CopiedGeoLayerID (str, optional): The ID of the copied GeoLayer. Default "{}_copy".format(GeoLayerID)
     * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
@@ -31,6 +40,9 @@ class CopyGeoLayer(AbstractCommand):
     # Define command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
+        CommandParameterMetadata("IncludeAttributes", type("")),
+        CommandParameterMetadata("ExcludeAttributes", type("")),
+        CommandParameterMetadata("IncludeFeaturesIf", type("")),
         CommandParameterMetadata("CopiedGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
@@ -101,92 +113,73 @@ class CopyGeoLayer(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_copy_geolayer(self, input_geolayer_id, output_geolayer_id):
+    def __should_copy_geolayer(self, input_geolayer_id, output_geolayer_id, attrs_to_include, attrs_to_exclude,
+                               include_feats_if_expression):
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
-        * the ID of the output GeoLayer is unique (not an existing GeoLayerList ID)
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
+        * the attributes to include in the copied GeoLayer are existing
+        * the attributes to exclude in the copied GeoLayer are existing (raise a warning, not a failure)
+        * only IncludeAttributes or ExcludeAttributes (or None) are configured
+        * the IncludeFeaturesIf parameter, if configured, supplies a valid QgsExpression
 
         Args:
             input_geolayer_id: the ID of the input GeoLayer
             output_geolayer_id: the ID of the output, copied GeoLayer
 
         Returns:
-            run_copy: Boolean. If TRUE, the copy process should be run. If FALSE, the copy process should not be run.
+             Boolean. If TRUE, the GeoLayer should be copied If FALSE, at least one check failed and the GeoLayer
+                should not be copied.
         """
 
-        # Boolean to determine if the copy process should be run. Set to true until an error occurs.
-        run_copy = True
+        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
+        # test confirms that the command should be run.
+        should_run_command = []
 
-        # If the input GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        if not self.command_processor.get_geolayer(input_geolayer_id):
+        # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
+        should_run_command.append(validators.run_check(self, "IsGeoLayerExisting", "GeoLayerID", input_geolayer_id,
+                                                       "FAIL"))
 
-            run_copy = False
-            self.warning_count += 1
-            message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(input_geolayer_id)
-            recommendation = 'Specify a valid GeoLayerID.'
+        # If the input GeoLayer exists, continue with the checks.
+        if False not in should_run_command:
+
+            # If any attributes in the list of attributes to be included are non-existing, raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "DoAttributesExist", "IncludeAttributes",
+                                                           attrs_to_include, "FAIL", other_values=[input_geolayer_id]))
+
+            # If any attributes in the list of attributes to be excluded are non-existing, raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "DoAttributesExist", "ExcludeAttributes",
+                                                           attrs_to_exclude, "FAIL", other_values=[input_geolayer_id]))
+
+        # If both the IncludeAttributes and the ExcludeAttributes parameters are configured, raise a FAILURE.
+        if attrs_to_exclude and attrs_to_include:
+
+            message = "The IncludeAttributes parameter and the ExcludeAttributes parameter cannot both be enabled."
+            recommendation = 'Either configure the IncludeAttributes parameter, the ExcludeAttributes parameter or' \
+                             'neither parameter.'
+
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
-                                                            recommendation))
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                    message, recommendation))
 
-        # If the output GeoLayer ID is the same as as already-existing GeoLayerListID, raise a FAILURE.
-        if self.command_processor.get_geolayerlist(output_geolayer_id):
+        # If the IncludeFeaturesIf parameter is defined, continue with the checks.
+        if not include_feats_if_expression is None:
 
-            run_copy = False
-            self.warning_count += 1
-            message = 'The CopiedGeoLayerID ({}) value is already in use as a GeoLayerList ID.'.format(
-                output_geolayer_id)
-            recommendation = 'Specify a new GeoLayerID.'
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
+            # If the IncludeFeaturesIf parameter value is not a valid QgsExpression, raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "IsQgsExpressionValid", "IncludeFeaturesIf",
+                                                           include_feats_if_expression, "FAIL"))
 
-        # If the output GeoLayer ID is the same as an already-registered GeoLayerID, react according to the
-        # pv_IfGeoLayerIDExists value.
-        elif self.command_processor.get_geolayer(output_geolayer_id):
+        # If the CopiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
+        # on the value of the IfGeoLayerIDExists parameter.)
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "CopiedGeoLayerID",
+                                                       output_geolayer_id, None))
 
-            # Get the IfGeoLayerIDExists parameter value.
-            pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
-
-            # Warnings/recommendations if the OutputGeolayerID is the same as a registered GeoLayerID.
-            message = 'The CopiedGeoLayerID ({}) value is already in use as a GeoLayer ID.'.format(output_geolayer_id)
-            recommendation = 'Specify a new GeoLayerID.'
-
-            # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
-            if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
-
-                self.warning_count += 1
-                self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
-                                                                message, recommendation))
-
-            # The registered GeoLayer should not be replaced. A warning should be logged.
-            if pv_IfGeoLayerIDExists.upper() == "WARN":
-
-                run_copy = False
-                self.warning_count += 1
-                self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
-                                                                message, recommendation))
-
-            # The matching IDs should cause a FAILURE.
-            elif pv_IfGeoLayerIDExists.upper() == "FAIL":
-
-                run_copy = False
-                self.warning_count += 1
-                self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE,
-                                                                message, recommendation))
-
-        # Return the Boolean to determine if the copy process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
-        return run_copy
+        # Return the Boolean to determine if the process should be run.
+        if False in should_run_command:
+            return False
+        else:
+            return True
 
     def run_command(self):
         """
@@ -202,27 +195,89 @@ class CopyGeoLayer(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_CopiedGeoLayerID = self.get_parameter_value("CopiedGeoLayerID",
                                                        default_value="{}_copy".format(pv_GeoLayerID))
+        pv_IncludeAttributes = self.get_parameter_value("IncludeAttributes")
+        pv_ExcludeAttributes = self.get_parameter_value("ExcludeAttributes")
+        pv_IncludeFeaturesIf = self.get_parameter_value("IncludeFeaturesIf")
+
+        # If the IncludeAttributes is not None, convert it from string to list of strings.
+        if pv_IncludeAttributes:
+            attrs_to_include = string_util.delimited_string_to_list(pv_IncludeAttributes)
+        else:
+            attrs_to_include = []
+
+        # If the ExcludeAttributes is not None, convert it from string to list of strings.
+        if pv_ExcludeAttributes:
+            attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeAttributes)
+        else:
+            attrs_to_exclude = []
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID):
+        if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID, attrs_to_include, attrs_to_exclude,
+                                       pv_IncludeFeaturesIf):
 
-            # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
-            try:
+            # # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
+            # try:
 
                 # Get the input GeoLayer
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
                 copied_geolayer = input_geolayer.deepcopy(pv_CopiedGeoLayerID)
+
+                # If the features are configured to be removed, continue.
+                if pv_IncludeFeaturesIf:
+
+                    # Get the QGSExpression object.
+                    exp = qgis_util.get_qgsexpression_obj(pv_IncludeFeaturesIf)
+
+                    # Get a list of Qgs Feature objects that do not match the IncludeFeaturesIf parameter criteria.
+                    non_matching_features = qgis_util.get_features_not_matching_expression(
+                        copied_geolayer.qgs_vector_layer, exp)
+
+                    # Get the ids of the matching features.
+                    non_matching_feats_ids = []
+                    for feat in non_matching_features:
+                        non_matching_feats_ids.append(feat.id())
+
+                    # Delete the non-matching features.
+                    qgis_util.remove_qgsvectorlayer_features(copied_geolayer.qgs_vector_layer, non_matching_feats_ids)
+
+                # If attributes are configured to be removed, continue.
+                if attrs_to_exclude or attrs_to_include:
+
+                    # If the user configured the ExcludeAttributes parameter, the attributes to remove are those
+                    # listed by the user.
+                    if attrs_to_exclude:
+                        attrs_to_remove = attrs_to_exclude
+
+                    # If the user configured the IncludeAttributes parameter, the attributes to remove are those
+                    # not listed by the user.
+                    else:
+
+                        # Get the existing attribute names of the input GeoLayer.
+                        list_of_existing_attributes = input_geolayer.get_attribute_field_names()
+
+                        # Get a list of the existing attribute names not listed in the user-defined IncludeAttributes
+                        # parameter.
+                        attrs_to_remove = []
+                        for attr in list_of_existing_attributes:
+                            if attr not in attrs_to_include:
+                                attrs_to_remove.append(attr)
+
+                    # Remove the desired attributes from the copied geolayer.
+                    for attr_to_remove in attrs_to_remove:
+                        copied_geolayer.remove_attribute(attr_to_remove)
+
+                # Add the copied GeoLayer to the GeoProcessor's geolayers list.
                 self.command_processor.add_geolayer(copied_geolayer)
 
-            # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
-                self.warning_count += 1
-                message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
-                recommendation = "Check the log file for details."
-                self.logger.exception(message, e)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message,
-                                                                recommendation))
+            # # Raise an exception if an unexpected error occurs during the process
+            # except Exception as e:
+            #     self.warning_count += 1
+            #     message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
+            #     recommendation = "Check the log file for details."
+            #     self.logger.error(message, exc_info=True)
+            #     self.command_status.add_to_log(command_phase_type.RUN,
+            #                                    CommandLogRecord(command_status_type.FAILURE, message,
+            #                                                     recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

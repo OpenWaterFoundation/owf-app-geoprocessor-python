@@ -1,8 +1,8 @@
 # Input/output functions
 # - some are ported from Java IOUtil.java class
 
-import geoprocessor.util.stringUtil as string_util
-import geoprocessor.util.appUtil as app_util
+import geoprocessor.util.string_util as string_util
+import geoprocessor.util.app_util as app_util
 
 import datetime
 import getpass

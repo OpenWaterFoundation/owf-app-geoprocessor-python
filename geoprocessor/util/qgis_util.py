@@ -2,7 +2,7 @@
 
 import os
 
-from qgis.core import QgsApplication
+from qgis.core import QgsApplication, QgsExpression
 from qgis.core import QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateReferenceSystem
 
 from processing.core.Processing import Processing
@@ -125,6 +125,68 @@ def exit_qgis():
         qgs.exit()
 
 
+def get_features_matching_expression(qgsvectorlayer, qgs_expression):
+    """
+    Returns the QgsFeature objects of the features that match the input QgsExpression.
+
+    Args:
+        qgsvectorlayer (object): the QgsVectorLayer object to evaluate.
+        qgs_expression (object): the QgsExpression object to filter the QgsVectorLayer's features.
+
+    Returns: A list of QgsFeature objects of features that match the input qgs_expression. If no features match the
+    input expression, return an empty list.
+    """
+
+    # A list to hold the QgsFeature objects that match the QgsExpression.
+    matching_features = []
+
+    # The QgsExpression.prepare is used to increase the speed that the evaluation takes to run when evaluating multiple
+    # feature of a QgsVectorLayer object.
+    # REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/expressions.html
+    qgs_expression.prepare(qgsvectorlayer.pendingFields())
+
+    # Iterate over the features of the QgsVectorLayer
+    for feature in qgsvectorlayer.getFeatures():
+
+        # If the evaluation of the feature is TRUE, append the feature to the matching_features list.
+        if qgs_expression.evaluate(feature):
+            matching_features.append(feature)
+
+    # Return the list of QgsFeatures that match the input QgsExpression.
+    return matching_features
+
+
+def get_features_not_matching_expression(qgsvectorlayer, qgs_expression):
+    """
+    Returns the QgsFeature objects of the features that do not match the input QgsExpression.
+
+    Args:
+        qgsvectorlayer (object): the QgsVectorLayer object to evaluate.
+        qgs_expression (object): the QgsExpression object to filter the QgsVectorLayer's features.
+
+    Returns: A list of QgsFeature objects of features that do not match the input qgs_expression. If all features
+     match the input expression, return an empty list.
+    """
+
+    # A list to hold the QgsFeature objects that do not match the QgsExpression.
+    non_matching_features = []
+
+    # The QgsExpression.prepare is used to increase the speed that the evaluation takes to run when evaluating multiple
+    # feature of a QgsVectorLayer object.
+    # REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/expressions.html
+    qgs_expression.prepare(qgsvectorlayer.pendingFields())
+
+    # Iterate over the features of the QgsVectorLayer
+    for feature in qgsvectorlayer.getFeatures():
+
+        # If the evaluation of the feature is FALSE, append the feature to the non_matching_features list.
+        if not qgs_expression.evaluate(feature):
+            non_matching_features.append(feature)
+
+    # Return the list of QgsFeatures that do not match the input QgsExpression.
+    return non_matching_features
+
+
 def get_geometrytype_qgis(qgsvectorlayer):
     """
     Returns the input QgsVectorLayer's geometry in QGIS format (returns text, not enumerator).
@@ -197,6 +259,28 @@ def get_qgscoordinatereferencesystem_obj(crs_code):
     # Check if the crs_code is valid. If so, return the QgsCoordinateReferenceSystem object.
     if QgsCoordinateReferenceSystem(crs_code).isValid():
         return QgsCoordinateReferenceSystem(crs_code)
+
+    # If not, return None.
+    else:
+        return None
+
+
+def get_qgsexpression_obj(expression_as_string):
+    """
+    Checks if the expression_as_string creates a valid and usable QgsExpression object. If so, return
+    the QgsExpression object. If not, return None.
+    REF: https://qgis.org/api/2.18/classQgsExpression.html#a16dd130caadca19158673b8a8c1ea251
+
+    Args:
+        expression_as_string (str): a string representing a QgsExpression
+        REF: https://docs.qgis.org/2.8/en/docs/user_manual/working_with_vector/expression.html
+
+    Returns: The QgsExpression object. If not valid, returns None.
+  """
+
+    # Check if the expression_as_string is valid. If so, return the QgsExpression object.
+    if QgsExpression(expression_as_string).isValid():
+        return QgsExpression(expression_as_string)
 
     # If not, return None.
     else:
@@ -420,6 +504,20 @@ def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
             # Update the layer's fields.
             qgsvectorlayer.updateFields()
 
+
+def remove_qgsvectorlayer_features(qgsvectorlayer, list_of_feature_ids):
+    """
+    Removes features from a QgsVectorLayer.
+
+    Args:
+        qgsvectorlayer (object): a Qgs Vector Layer object
+        list_of_feature_ids (list of ints): a list of ids of the features to remove
+
+    Return: None
+    """
+
+    # Delete the features from the QgsVectorLayer object.
+    qgsvectorlayer.dataProvider().deleteFeatures(list_of_feature_ids)
 
 def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribute_name):
     # TODO egiles 2018-01-18 Create a warning if the new_attribute_name is longer than 10 characters but do not raise

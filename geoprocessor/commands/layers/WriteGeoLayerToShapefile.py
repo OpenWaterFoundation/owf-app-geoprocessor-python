@@ -7,12 +7,12 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
-import geoprocessor.util.commandUtil as command_util
-import geoprocessor.util.fileUtil as file_util
-import geoprocessor.util.ioUtil as io_util
-import geoprocessor.util.qgisUtil as qgis_util
-import geoprocessor.util.stringUtil as string_util
-import geoprocessor.util.validatorsUtil as validators
+import geoprocessor.util.command_util as command_util
+import geoprocessor.util.file_util as file_util
+import geoprocessor.util.io_util as io_util
+import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.string_util as string_util
+import geoprocessor.util.validator_util as validators
 
 import os
 import logging
@@ -278,7 +278,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 message = "Unexpected error writing GeoLayer {} to spatial data file in Shapefile format.".format(
                     pv_GeoLayerID)
                 recommendation = "Check the log file for details."
-                self.logger.exception(message, e)
+                self.logger.error(message, exc_info=True)
                 self.command_status.add_to_log(command_phase_type.RUN,
                                                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 

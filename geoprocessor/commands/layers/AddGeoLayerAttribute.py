@@ -7,8 +7,8 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
-import geoprocessor.util.commandUtil as command_util
-import geoprocessor.util.validatorsUtil as validators
+import geoprocessor.util.command_util as command_util
+import geoprocessor.util.validator_util as validators
 
 import logging
 
@@ -230,7 +230,7 @@ class AddGeoLayerAttribute(AbstractCommand):
                 message = "Unexpected error adding attribute ({}) to GeoLayer {}.".format(pv_AttributeName,
                                                                                           pv_GeoLayerID)
                 recommendation = "Check the log file for details."
-                self.logger.exception(message, e)
+                self.logger.error(message, exc_info=True)
                 self.command_status.add_to_log(command_phase_type.RUN,
                                                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 

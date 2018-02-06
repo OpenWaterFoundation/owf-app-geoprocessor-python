@@ -15,10 +15,10 @@ from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
 from geoprocessor.core.GeoProcessor import GeoProcessor
 from geoprocessor.core.CommandFileRunner import CommandFileRunner
 from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
-import geoprocessor.util.appUtil as app_util
-import geoprocessor.util.ioUtil as io_util
-import geoprocessor.util.logUtil as log_util
-import geoprocessor.util.qgisUtil as qgis_util
+import geoprocessor.util.app_util as app_util
+import geoprocessor.util.io_util as io_util
+import geoprocessor.util.log_util as log_util
+import geoprocessor.util.qgis_util as qgis_util
 
 # General Python modules
 import argparse

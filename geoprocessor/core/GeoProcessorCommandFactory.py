@@ -1,6 +1,6 @@
 import logging
 
-import geoprocessor.util.commandUtil as command_util
+import geoprocessor.util.command_util as command_util
 
 from geoprocessor.commands.layers.AddGeoLayerAttribute import AddGeoLayerAttribute
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer

@@ -8,9 +8,9 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 from geoprocessor.core.GeoListMetadata import GeoListMetadata
 
-import geoprocessor.util.commandUtil as command_util
+import geoprocessor.util.command_util as command_util
 import geoprocessor.util.geo as geo_util
-import geoprocessor.util.validatorsUtil as validators
+import geoprocessor.util.validator_util as validators
 
 import logging
 

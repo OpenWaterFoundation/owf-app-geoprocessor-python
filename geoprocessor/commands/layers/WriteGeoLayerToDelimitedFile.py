@@ -179,7 +179,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
                 # If the GeoLayer does not have POINT geometry, raise a FAILURE.
                 should_run_command.append(validators.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
                                                                "GeoLayerID", geolayer_id,
-                                                               "FAIL", other_values=["Point"]))
+                                                               "FAIL", other_values=[["Point"]]))
 
             # Get the CRS of the input GeoLayer, if the parameter value for OutputCRS is None.
             if crs is None:

@@ -126,7 +126,8 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
            output_precision (int): the precision of the output GeoJSON file
 
        Returns:
-           run_write: Boolean. If TRUE, the writing process should be run. If FALSE, it should not be run.
+             Boolean. If TRUE, the GeoLayer should be written. If FALSE, at least one check failed and the GeoLayer
+                should not be written.
        """
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
@@ -149,47 +150,6 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
             return False
         else:
             return True
-
-        # # Boolean to determine if the writing process should be run. Set to true until an error occurs.
-        # run_write = True
-        #
-        # # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        # if not self.command_processor.get_geolayer(geolayer_id):
-        #
-        #     run_write = False
-        #     self.warning_count += 1
-        #     message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
-        #     recommendation = 'Specify a valid GeoLayerID.'
-        #     self.logger.error(message)
-        #     self.command_status.add_to_log(command_phase_type.RUN,
-        #                                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
-        #
-        # # If the OutputFolder is not a valid folder, raise a FAILURE.
-        # output_folder = os.path.dirname(output_file_abs)
-        # if not os.path.isdir(output_folder):
-        #
-        #     run_write = False
-        #     self.warning_count += 1
-        #     message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
-        #     recommendation = 'Specify a valid relative pathname for the output file.'
-        #     self.logger.error(message)
-        #     self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-        #                                                                             message, recommendation))
-        #
-        # # If the output precision is not at or between 0 and 15, raise a FAILURE.
-        # if output_precision < 0 or output_precision > 15:
-        #
-        #     run_write = False
-        #     self.warning_count += 1
-        #     message = 'The OutputPrecision ({}) must be at or between 0 and 15'.format(output_precision)
-        #     recommendation = 'Specify a valid OutputPrecision value.'
-        #     self.logger.error(message)
-        #     self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-        #                                                                             message, recommendation))
-        #
-        # # Return the Boolean to determine if the write process should be run. If TRUE, all checks passed. If FALSE,
-        # # one or many checks failed.
-        # return run_write
 
     def run_command(self):
         """

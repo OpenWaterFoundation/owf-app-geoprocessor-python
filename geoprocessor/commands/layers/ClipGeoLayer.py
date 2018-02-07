@@ -14,6 +14,8 @@ import geoprocessor.util.qgis_util as qgis_util
 
 import logging
 
+import os
+
 from processing.tools import general
 
 
@@ -164,7 +166,7 @@ class ClipGeoLayer(AbstractCommand):
             # If the clipping GeoLayerID does not contain features of polygon type, raise a FAILURE.
             should_run_command.append(validators.run_check(self, "DoesGeoLayerIDHaveCorrectGeometry",
                                                            "ClippingGeoLayerID", clipping_geolayer_id,
-                                                           "FAIL", other_values=["Polygon"]))
+                                                           "FAIL", other_values=[["Polygon"]]))
 
             # If the input GeoLayer and the clipping GeoLayer do not have the same CRS, raise a WARNING.
             should_run_command.append(validators.run_check(self, "DoGeoLayerIDsHaveMatchingCRS", "InputGeoLayerID",
@@ -208,6 +210,27 @@ class ClipGeoLayer(AbstractCommand):
                 # Get the Input GeoLayer and the Clipping GeoLayer.
                 input_geolayer = self.command_processor.get_geolayer(pv_InputGeoLayerID)
                 clipping_geolayer = self.command_processor.get_geolayer(pv_ClippingGeoLayerID)
+
+                # If the input GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
+                if input_geolayer.source_path is None or input_geolayer.source_path == "" or input_geolayer.source_path.upper() == "MEMORY":
+                    # Get the absolute path of the GeoLayer to write to disk.
+                    geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'), input_geolayer.id)
+
+                    # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
+                    # on-disk GeoLayer.
+                    input_geolayer = input_geolayer.write_to_disk(geolayer_disk_abs_path)
+                    self.command_processor.add_geolayer(input_geolayer)
+
+                # If the clipping GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
+                if clipping_geolayer.source_path is None or clipping_geolayer.source_path == "" or clipping_geolayer.source_path.upper() == "MEMORY":
+                    # Get the absolute path of the GeoLayer to write to disk.
+                    geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
+                                                          input_geolayer.id)
+
+                    # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
+                    # on-disk GeoLayer.
+                    clipping_geolayer = clipping_geolayer.write_to_disk(geolayer_disk_abs_path)
+                    self.command_processor.add_geolayer(clipping_geolayer)
 
                 # Perform the QGIS clip function. Refer to the reference below for parameter descriptions.
                 # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_overlay_tools/clip.html

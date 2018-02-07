@@ -2,7 +2,7 @@
 
 import os
 
-from qgis.core import QgsApplication, QgsExpression
+from qgis.core import QgsApplication, QgsExpression, QgsPoint, QgsFeature, QgsGeometry
 from qgis.core import QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateReferenceSystem
 
 from processing.core.Processing import Processing
@@ -16,6 +16,16 @@ from datetime import datetime
 # "qgs" is used to match QGIS conventions (rather than "qgis")
 qgs = None
 
+
+def add_polygon_feature_to_qgsvectorlayer_from_points(qgsvectorlayer, list_of_qgs_points):
+    # TODO egiles 20185-02-06 document and comment
+    # REF: https://gis.stackexchange.com/questions/86812/how-to-draw-polygons-from-the-python-console/86901
+
+    provider = qgsvectorlayer.dataProvider()
+    poly = QgsFeature()
+    poly.setGeometry(QgsGeometry.fromPolygon([list_of_qgs_points]))
+    provider.addFeatures([poly])
+    qgsvectorlayer.updateExtents()
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
 
@@ -111,6 +121,16 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
 
     # Return the deep copied QgsVectorLayer.
     return copied_qgsvectorlayer
+
+
+def create_qgsvectorlayer(geometry, crs_code, layer_name):
+    # TODO egiles 20185-02-06 document and comment
+
+    layer = QgsVectorLayer("{}?crs={}".format(geometry, crs_code), layer_name, "memory")
+    if layer.isValid():
+        return layer
+    else:
+        return None
 
 
 def exit_qgis():
@@ -285,6 +305,12 @@ def get_qgsexpression_obj(expression_as_string):
     # If not, return None.
     else:
         return None
+
+
+def get_qgspoint_obj(x_coordinate, y_coordinate):
+    # TODO egiles 2018-02-06 Need to document and comment.
+
+    return QgsPoint(x_coordinate, y_coordinate)
 
 
 def initialize_qgis(qgis_prefix_path):

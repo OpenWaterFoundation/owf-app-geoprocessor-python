@@ -14,7 +14,6 @@ import geoprocessor.util.qgis_util as qgis_util
 
 import logging
 import os
-
 from processing.tools import general
 
 
@@ -27,8 +26,11 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
     Command Parameters
 
     * GeoLayerID (str, required): the ID of the input GeoLayer, the layer to be clipped
-    * Tolerance (double, required): a float representing to what extent the geometry should be simplified. The larger
-     the number, the more simple the geometries.
+    * Tolerance (float, required): a float representing to what extent the geometry should be simplified. The larger
+        the number, the more simple the geometries and the smaller the output file size. According to this reference,
+        https://gis.stackexchange.com/questions/148585/what-is-simplify-tolerance-in-qgiss-simplify-geometries-tool,
+        "points are removed if the distance with the tentative simplified line is smaller than the tolerance". The
+        units are the same at the CRS of the layer.
     """
 
     # Define the command parameters.
@@ -165,13 +167,13 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                     self.command_processor.add_geolayer(geolayer)
 
                 # Perform the QGIS simplify geometries function. Refer to the reference below for parameter descriptions.
-                # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_geometry_tools/simplifygeometries.html
+                # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/
+                #       vector_geometry_tools/simplifygeometries.html
                 simple_output = general.runalg("qgis:simplifygeometries", geolayer.qgs_vector_layer, pv_Tolerance, None)
 
                 # Create a new GeoLayer with the input GeoLayer's ID. The new simplified GeoLayer will overwrite the
-                # older version.
-                # simple_output["OUTPUT"] returns the full file pathname of the memory output layer (saved
-                # in a QGIS temporary folder)
+                # older version. simple_output["OUTPUT"] returns the full file pathname of the memory output layer
+                # (saved in a QGIS temporary folder)
                 qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(simple_output["OUTPUT"])
                 new_geolayer = GeoLayer(geolayer.id, qgs_vector_layer, "MEMORY")
                 self.command_processor.add_geolayer(new_geolayer)
@@ -183,8 +185,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
                 self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message,
-                                                                recommendation))
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

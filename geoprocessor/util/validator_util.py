@@ -97,7 +97,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         desired_geom_type_list = [item.upper() for item in other_values[0]]
 
         message = 'The {} ({}) does not have geometry in the correct ' \
-                  'format ({})  geometry.'.format(parameter_name, parameter_value, desired_geom_type_list)
+                  'format ({}).'.format(parameter_name, parameter_value, desired_geom_type_list)
         recommendation = 'Specify a GeoLayerID of a GeoLayer with geometry in' \
                          ' correct format ({}).'.format(desired_geom_type_list)
 

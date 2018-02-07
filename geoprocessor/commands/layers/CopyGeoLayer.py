@@ -164,7 +164,7 @@ class CopyGeoLayer(AbstractCommand):
                                                                                     message, recommendation))
 
         # If the IncludeFeaturesIf parameter is defined, continue with the checks.
-        if not include_feats_if_expression is None:
+        if include_feats_if_expression is not None:
 
             # If the IncludeFeaturesIf parameter value is not a valid QgsExpression, raise a FAILURE.
             should_run_command.append(validators.run_check(self, "IsQgsExpressionValid", "IncludeFeaturesIf",
@@ -215,8 +215,8 @@ class CopyGeoLayer(AbstractCommand):
         if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID, attrs_to_include, attrs_to_exclude,
                                        pv_IncludeFeaturesIf):
 
-            # # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
-            # try:
+            # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
+            try:
 
                 # Get the input GeoLayer
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
@@ -269,15 +269,15 @@ class CopyGeoLayer(AbstractCommand):
                 # Add the copied GeoLayer to the GeoProcessor's geolayers list.
                 self.command_processor.add_geolayer(copied_geolayer)
 
-            # # Raise an exception if an unexpected error occurs during the process
-            # except Exception as e:
-            #     self.warning_count += 1
-            #     message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
-            #     recommendation = "Check the log file for details."
-            #     self.logger.error(message, exc_info=True)
-            #     self.command_status.add_to_log(command_phase_type.RUN,
-            #                                    CommandLogRecord(command_status_type.FAILURE, message,
-            #                                                     recommendation))
+            # Raise an exception if an unexpected error occurs during the process
+            except Exception as e:
+                self.warning_count += 1
+                message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
+                recommendation = "Check the log file for details."
+                self.logger.error(message, exc_info=True)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.FAILURE, message,
+                                                                recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

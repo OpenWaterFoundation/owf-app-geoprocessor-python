@@ -36,7 +36,7 @@ class ClipGeoLayer(AbstractCommand):
     * OutputGeoLayerID (str, optional): the ID of the GeoLayer created as the output clipped layer. By default the
         GeoLayerID of the output layer will be {}_clippedBy_{} where the first variable is the InputGeoLayerID and the
         second variable is that ClippingGeoLayerID.
-    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
+    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the OutputGeoLayerID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
     """

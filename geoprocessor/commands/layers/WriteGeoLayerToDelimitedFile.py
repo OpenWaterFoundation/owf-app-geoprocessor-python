@@ -225,7 +225,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         # Get the filename of the OutputFile with the path but without the extension.
         path, filename= os.path.split(output_file_absolute)
         path = os.path.split(output_file_absolute)[0]
-        filename_wo_ext_path = path + os.path.splitext(filename)[0]
+        filename_wo_ext_path = os.path.join(path, os.path.splitext(filename)[0])
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_write_geolayer(pv_GeoLayerID, filename_wo_ext_path, pv_OutputCRS, pv_OutputGeometryFormat):

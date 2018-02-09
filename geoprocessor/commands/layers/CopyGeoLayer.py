@@ -12,7 +12,9 @@ import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validator_util as validators
 
+import glob
 import logging
+import os
 
 
 class CopyGeoLayer(AbstractCommand):
@@ -138,7 +140,7 @@ class CopyGeoLayer(AbstractCommand):
         should_run_command = []
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerExisting", "GeoLayerID", input_geolayer_id,
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", input_geolayer_id,
                                                        "FAIL"))
 
         # If the input GeoLayer exists, continue with the checks.

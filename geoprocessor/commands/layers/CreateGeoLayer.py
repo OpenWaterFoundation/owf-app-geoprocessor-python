@@ -20,17 +20,27 @@ import logging
 class CreateGeoLayer(AbstractCommand):
 
     """
-    Removes a GeoLayer from the GeoProcessor.
+    Creates a new GeoLayer. The feature geometry is provided by the parameters.
 
     Command Parameters
-    * GeoLayerID (str, required): The ID of the existing GeoLayer to copy.
+    * GeoLayerID (str, required): The ID of the new GeoLayer.
+    * GeometryFormat (str, required): The format of the input geometry. Can be `BoundingBox`, `WKT` or `WKB`. Refer
+        to user documentation for descriptions of each geometry format.
+    * GeometryInput (str, required): The geometry data in the format specified by the GeometryFormat parameter.
+    * CRS (str, required): The coordinate reference system of the new GeoLayer. The units of the GeometryInput must
+        match the units of the CRS.
+    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the GeoLayerID
+        already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
+        (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
 
     # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
-        CommandParameterMetadata("GeometryType", type(str),
-        CommandParameterMetadata("XYPoints", type([])))]
+        CommandParameterMetadata("GeometryFormat", type(str)),
+        CommandParameterMetadata("GeometryInput", type(str)),
+        CommandParameterMetadata("CRS", type(str)),
+        CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     def __init__(self):
         """
@@ -61,29 +71,111 @@ class CreateGeoLayer(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        pass
+        warning = ""
 
-    def __should_geolayer_be_created(self, geolayer_id):
+        parameters = ["GeoLayerID", "GeometryInput", "CRS"]
+
+        # Check that the parameters are non-empty, non-None strings.
+        for parameter in parameters:
+
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+
+            if not validators.validate_string(parameter_value, False, False):
+                message = "{} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Check that GeometryFormat parameter is either `BoundingBox`, `WKT` or `WKB`.
+        pv_GeometryFormat = self.get_parameter_value(parameter_name="GeometryFormat",
+                                                     command_parameters=command_parameters)
+        acceptable_values = ["BoundingBox", "WKT", "WKB"]
+        if not validators.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
+                                                  empty_string_allowed=False, ignore_case=True):
+            message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
+            recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
+                acceptable_values)
+            warning += "\n" + message
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Check that optional IfGeoLayerIDExists param is either `Replace`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
+        pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
+                                                         command_parameters=command_parameters)
+        acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
+        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+                                                  empty_string_allowed=True, ignore_case=True):
+            message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
+            recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
+                acceptable_values)
+            warning += "\n" + message
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Check for unrecognized parameters.
+        # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
+        warning = command_util.validate_command_parameter_names(self, warning)
+
+        # If any warnings were generated, throw an exception.
+        if len(warning) > 0:
+            self.logger.warning(warning)
+            raise ValueError(warning)
+        else:
+            # Refresh the phase severity
+            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+
+    def __should_geolayer_be_created(self, geolayer_id, crs, geometry_format, geometry_input):
         """
         Checks the following:
-        * the ID of the input GeoLayer is an existing GeoLayer ID
+        * the CRS is a valid CRS
+        * the ID of the new GeoLayer is unique (not an existing GeoLayer ID)
+        * if the GeometryFormat is BoundingBox, check that the string has 4 items
 
         Args:
-            geolayer_id: the id of the GeoLayer to be removed
+            geolayer_id: the id of the GeoLayer to be created
+            crs: the crs code of the GeoLayer to be created
+            geometry_format: the format that the geometry data is delivered
+            geometry_input: the geometry data (as a string)
 
         Returns:
-            remove_geolayer: Boolean. If TRUE, the GeoLayer should be removed. If FALSE, one or more checks have failed
-             and the GeoLayer should not be removed.
+             Boolean. If TRUE, the GeoLayer should be simplified If FALSE, at least one check failed and the GeoLayer
+                should not be simplified.
         """
 
-        pass
+        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
+        # test confirms that the command should be run.
+        should_run_command = []
+
+        # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
+        should_run_command.append(validators.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
+
+        # If the SimplifiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+        # (depends on the value of the IfGeoLayerIDExists parameter.)
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
+
+        # If the GeometryFormat is BoundingBox, continue with the checks.
+        if geometry_format.upper() == "BOUNDINGBOX":
+
+            # If the GeometryInput string does not contain 4 items when converted to a list, raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "IsListLengthCorrect", "GeometryInput",
+                                                           geometry_input, "FAIL", other_values=[",", 4]))
+
+        # Return the Boolean to determine if the process should be run.
+        if False in should_run_command:
+            return False
+        else:
+            return True
 
     def run_command(self):
         """
-        Run the command. Remove the GeoLayer object from the GeoProcessor. Delete the GeoLayer instance.
+        Run the command. Create the GeoLayer with the input geometries. Add GeoLayer to the GeoProcessor's geolayers
+         list.
 
-        Returns:
-            None.
+        Returns: None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
@@ -91,55 +183,81 @@ class CreateGeoLayer(AbstractCommand):
 
         # Obtain the parameter values.
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
-        pv_GeometryType = self.get_parameter_value("GeometryType")
-        pv_XYPoints = self.get_parameter_value("XYPoints")
+        pv_GeometryFormat = self.get_parameter_value("GeometryFormat").upper()
+        pv_GeometryInput = self.get_parameter_value("GeometryInput")
+        pv_CRS = self.get_parameter_value("CRS")
 
-        points = []
+        if self.__should_geolayer_be_created(pv_GeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryInput):
 
-        xy_point_list = string_util.delimited_string_to_list(pv_XYPoints, delimiter=';')
-        for point in xy_point_list:
-            coordinate_list = string_util.delimited_string_to_list(point, delimiter=',')
-            point_x_coord = float(coordinate_list[0])
-            point_y_coord = float(coordinate_list[1])
+            try:
 
-            points.append(qgis_util.get_qgspoint_obj(point_x_coord, point_y_coord))
+                # If the geometry format is bounding box, continue.
+                if pv_GeometryFormat == "BOUNDINGBOX":
 
-        layer = qgis_util.create_qgsvectorlayer("Polygon", "EPSG:4326", "new_layer")
-        qgis_util.add_polygon_feature_to_qgsvectorlayer_from_points(layer, points)
-        new_geolayer = GeoLayer(pv_GeoLayerID, layer, "MEMORY")
-        self.command_processor.add_geolayer(new_geolayer)
+                    # Convert the geometry input from a string to a list of strings.
+                    # Items are in the following order:
+                    #   1. Left (West) bound coordinate
+                    #   2. Bottom (South) bound coordinate
+                    #   3. Right (East) bound coordinate
+                    #   4. Top (North) bound coordinate
+                    NSWE_extents = string_util.delimited_string_to_list(pv_GeometryInput)
+                    NW = "{} {}".format(NSWE_extents[0], NSWE_extents[3])
+                    NE = "{} {}".format(NSWE_extents[2], NSWE_extents[3])
+                    SE = "{} {}".format(NSWE_extents[2], NSWE_extents[1])
+                    SW = "{} {}".format(NSWE_extents[0], NSWE_extents[1])
+                    wkt_conversion = "POLYGON(({}, {}, {}, {}))".format(NW, NE, SE, SW)
 
-        # # Run the checks on the parameter values. Only continue if the checks passed.
-        # if self.__should_geolayer_be_deleted(pv_GeoLayerID):
-        #
-        #     try:
-        #
-        #         points = []
-        #
-        #         xy_point_list = string_util.delimited_string_to_list(pv_XYPoints, delimiter=';')
-        #         for point in xy_point_list:
-        #
-        #             coordinate_list = string_util.delimited_string_to_list(point, delimiter=',')
-        #             point_x_coord = float(coordinate_list[0])
-        #             point_y_coord = float(coordinate_list[1])
-        #
-        #             points.append(qgis_util.get_qgspoint_obj(point_x_coord, point_y_coord))
-        #
-        #         layer = qgis_util.create_qgsvectorlayer("Polygon", "EPSG:4326", "new_layer")
-        #         qgis_util.add_polygon_feature_to_qgsvectorlayer_from_points(layer, points)
-        #         new_geolayer = GeoLayer(pv_GeoLayerID, layer, "MEMORY")
-        #         self.command_processor.add_geolayer(new_geolayer)
-        #
-        #     # Raise an exception if an unexpected error occurs during the process.
-        #     except Exception as e:
-        #
-        #         self.warning_count += 1
-        #         message = "Unexpected error removing GeoLayer ({}).".format(pv_GeoLayerID)
-        #         recommendation = "Check the log file for details."
-        #         self.logger.error(message, exc_info=True)
-        #         self.command_status.add_to_log(command_phase_type.RUN,
-        #                                        CommandLogRecord(command_status_type.FAILURE, message,
-        #                                                         recommendation))
+                    # Create the QgsVectorLayer. BoundingBox will always create a POLYGON layer.
+                    layer = qgis_util.create_qgsvectorlayer("Polygon", pv_CRS, "layer")
+
+                    # Create the QgsGeometry object for the bounding box geometry.
+                    qgs_geometry = qgis_util.create_qgsgeometry("WKT", wkt_conversion)
+
+                # If the geometry format is Well-Known Text, continue.
+                elif pv_GeometryFormat == "WKT":
+
+                    # Get the equivalent QGS geometry type to the input WKT geometry.
+                    # Ex: MultiLineString is converted to LineString.
+                    qgsvectorlayer_geom_type = qgis_util.get_geometrytype_qgis_from_wkt(pv_GeometryInput)
+
+                    # Create the QgsVectorLayer. The geometry type will be determined from the WKT specifications.
+                    layer = qgis_util.create_qgsvectorlayer(qgsvectorlayer_geom_type, pv_CRS, "layer")
+
+                    # Create the QgsGeometry object for the Well-Known Text geometry.
+                    qgs_geometry = qgis_util.create_qgsgeometry("WKT", pv_GeometryInput)
+
+                # If the geometry format is Well-Known Binary, continue.
+                elif pv_GeometryFormat == "WKB":
+
+                    # Create the QgsGeometry object for the Well-Known Binary geometry.
+                    qgs_geometry = qgis_util.create_qgsgeometry("WKB", pv_GeometryInput)
+
+                    # Get the equivalent Well-Known Text for the geometry.
+                    qgs_geometry_as_wkt = qgs_geometry.exportToWkt()
+
+                    # Get the equivalent QGS geometry type to the input WKT geometry.
+                    # Ex: MultiLineString is converted to LineString.
+                    qgsvectorlayer_geom_type = qgis_util.get_geometrytype_qgis_from_wkt(qgs_geometry_as_wkt)
+
+                    # Create the QgsVectorLayer. The geometry type will be determined from the WKB specifications.
+                    layer = qgis_util.create_qgsvectorlayer(qgsvectorlayer_geom_type, pv_CRS, "layer")
+
+                # Add the feature (with the appropriate geometry) to the Qgs Vector Layer.
+                qgis_util.add_feature_to_qgsvectorlayer(layer, qgs_geometry)
+
+                # Create a new GeoLayer with the QgsVectorLayer and add it to the GeoProcesor's geolayers list.
+                new_geolayer = GeoLayer(pv_GeoLayerID, layer, "MEMORY")
+                self.command_processor.add_geolayer(new_geolayer)
+
+            # Raise an exception if an unexpected error occurs during the process.
+            except Exception as e:
+
+                self.warning_count += 1
+                message = "Unexpected error creating GeoLayer ({}).".format(pv_GeoLayerID)
+                recommendation = "Check the log file for details."
+                self.logger.error(message, exc_info=True)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

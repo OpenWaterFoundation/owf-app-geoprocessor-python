@@ -153,11 +153,11 @@ class ClipGeoLayer(AbstractCommand):
         should_run_command = []
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerExisting", "InputGeoLayerID",
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIDExisting", "InputGeoLayerID",
                                                        input_geolayer_id, "FAIL"))
 
         # If the clipping GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerExisting", "ClippingGeoLayerID",
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIDExisting", "ClippingGeoLayerID",
                                                        clipping_geolayer_id, "FAIL"))
 
         # If the input GeoLayer and the clipping GeoLayer both exist, continue with the checks.

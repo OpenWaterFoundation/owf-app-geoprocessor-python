@@ -6,11 +6,14 @@ Multiple functions may be called if necessary, although as many validator functi
 as necessary can be defined.
 """
 import os
-import geoprocessor.util.file_util as file_util
-import geoprocessor.util.qgis_util as qgis_util
+
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+
+import geoprocessor.util.file_util as file_util
+import geoprocessor.util.string_util as string_util
+import geoprocessor.util.qgis_util as qgis_util
 
 def run_check(self, condition, parameter_name, parameter_value, fail_response, other_values=None):
     """
@@ -190,6 +193,19 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if not validate_int_in_range(parameter_value, int_min, int_max, False, False):
             check_failed = True
 
+    # Check if the length of a list is correct.
+    elif condition.upper() == "ISLISTLENGTHCORRECT":
+        delimiter = other_values[0]
+        correct_length = other_values[1]
+
+        message = 'The {} ({}) must have {} number of items.'.format(parameter_name, parameter_value, correct_length)
+        recommendation = 'Specify a list of {} items for the {} parameter.'.format(correct_length, parameter_name)
+
+        # Convert the string into a list.
+        list = string_util.delimited_string_to_list(parameter_value, delimiter)
+        if len(list) != correct_length:
+            check_failed = True
+
     # Check if the input string is a valid QGSExpression.
     elif condition.upper() == "ISQGSEXPRESSIONVALID":
 
@@ -198,6 +214,13 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
 
         if qgis_util.get_qgsexpression_obj(parameter_value) is None:
             check_failed = True
+
+    else:
+
+        message = "Check {} is not a valid check in the validators library.".format(condition)
+        recommendation = "Contact the maintainers of the GeoProcessor software."
+        check_failed = True
+        fail_response = "FAIL"
 
     # If the check failed, increase the warning count of the command instance by one.
     if check_failed:

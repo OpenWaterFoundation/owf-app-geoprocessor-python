@@ -10,6 +10,7 @@ from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
+import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 import geoprocessor.util.qgis_util as qgis_util
 
@@ -125,74 +126,6 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
-
-    @staticmethod
-    def __glob2re(pat):
-        """
-        Translates a shell PATTERN to a regular expression.
-
-        The input parameters of the ReadGeoLayersFromFolder command are the exact same as the input parameters
-        of this command, ReadGeoLayersFromFGDB. This design is for user convenience so that the user only needs
-        to learn the input parameters of one command and will, in turn, know the input parameters for all
-        ReadGeoLayersFrom... commands.
-
-        In the ReadGeoLayersFromFolder command, there is an optional input parameter called Subset_Pattern. Like in
-        the ReadGeoLayersFromFGDB command, this parameter allows the user to select only a subset of the spatial
-        data files within the source (folder, file geodatabase, etc.) to read as GeoLayers into the geoprocessor.
-        This is accomplished by entering a glob-style pattern into the Subset_Pattern parameter value. In the
-        ReadGeoLayerFromFolder command, the glob-style pattern is effective because the run_command code iterates
-        over files on the local machine (glob is designed to find patterns in pathnames). However, in the
-        ReadGeoLayersFromFGDB command, the feature classes in the file geodatabase are first written to a list. The
-        list is then iterated over and only the strings that match the Subset_Pattern are processed. Feature class
-        names are not file pathnames and, for that reason, the glob-style does not work.
-
-        This function converts a glob-style pattern into a regular expression that can be used to iterate over a
-        list of strings. This function was not written by Open Water Foundation but was instead copied from the
-        following source: https://stackoverflow.com/questions/27726545/
-        python-glob-but-against-a-list-of-strings-rather-than-the-filesystem.
-
-        Args:
-            pat (str, required): a pattern in glob-style (shell)
-
-        Returns:
-            A pattern in regular expression.
-
-        Raises:
-            Nothing.
-        """
-
-        i, n = 0, len(pat)
-        res = ''
-        while i < n:
-            c = pat[i]
-            i += 1
-            if c == '*':
-                # res = res + '.*'
-                res += '[^/]*'
-            elif c == '?':
-                # res = res + '.'
-                res += '[^/]'
-            elif c == '[':
-                j = i
-                if j < n and pat[j] == '!':
-                    j += 1
-                if j < n and pat[j] == ']':
-                    j += 1
-                while j < n and pat[j] != ']':
-                    j += 1
-                if j >= n:
-                    res += '\\['
-                else:
-                    stuff = pat[i:j].replace('\\', '\\\\')
-                    i = j + 1
-                    if stuff[0] == '!':
-                        stuff = '^' + stuff[1:]
-                    elif stuff[0] == '^':
-                        stuff = '\\' + stuff
-                    res = '%s[%s]' % (res, stuff)
-            else:
-                res = res + re.escape(c)
-        return res + '\Z(?ms)'
 
     def __should_read_gdb(self, spatial_data_folder_abs):
 
@@ -350,7 +283,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             # no file pattern has been included, all feature classes within the file geodatabase will read as GeoLayers
             if pv_Subset_Pattern:
                 glob_filter = (fc for fc in feature_class_list if
-                               re.match(ReadGeoLayersFromFGDB.__glob2re(pv_Subset_Pattern), fc))
+                               re.match(string_util.glob2re(pv_Subset_Pattern), fc))
                 updated_feature_class_list = list(glob_filter)
                 feature_class_list = updated_feature_class_list
 

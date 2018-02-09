@@ -16,16 +16,33 @@ from datetime import datetime
 # "qgs" is used to match QGIS conventions (rather than "qgis")
 qgs = None
 
+def add_feature_to_qgsvectorlayer(qgsvectorlayer, qgsgeometry):
+    """
+    Add a feature to the input QGSVectorLayer.
+    * Adds the geometry of the feature with the QgsGeometry object.
+    * Can add feature ID (not yet built into this function).
+    * Can add attributes (not yet built into this function).
 
-def add_polygon_feature_to_qgsvectorlayer_from_points(qgsvectorlayer, list_of_qgs_points):
-    # TODO egiles 20185-02-06 document and comment
-    # REF: https://gis.stackexchange.com/questions/86812/how-to-draw-polygons-from-the-python-console/86901
+    Args:
+        qgsvectorlayer (object): the QgsVectorLayer object that the feature will be added to
+        qgsgeometry (object): the QgsGeometry of the feature to be added
 
+    Return: None
+    """
+
+    # Get the data provider of the QgsVectorLayer object.
     provider = qgsvectorlayer.dataProvider()
-    poly = QgsFeature()
-    poly.setGeometry(QgsGeometry.fromPolygon([list_of_qgs_points]))
-    provider.addFeatures([poly])
+
+    # Instantiate a new QgsFeature object.
+    new_feature = QgsFeature()
+
+    # Set the geometry of the new QgsFeature object with the QgsGeometry object.
+    new_feature.setGeometry(qgsgeometry)
+
+    # Add the new feature to the QgsVectorLayer. Update the extent of the QgsVectorLayer.
+    provider.addFeatures([new_feature])
     qgsvectorlayer.updateExtents()
+
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
 
@@ -121,6 +138,25 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
 
     # Return the deep copied QgsVectorLayer.
     return copied_qgsvectorlayer
+
+
+def create_qgsgeometry(geometry_format, geometry_input_as_string):
+    """
+    REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
+    """
+
+    if geometry_format.upper() == "WKT":
+
+        return QgsGeometry.fromWkt(geometry_input_as_string)
+
+    elif geometry_format.upper() == "WKB":
+
+        wkb = bytes.fromhex(float(geometry_input_as_string))
+        return QgsGeometry.fromWkb(wkb)
+
+    else:
+
+       return None
 
 
 def create_qgsvectorlayer(geometry, crs_code, layer_name):
@@ -228,6 +264,22 @@ def get_geometrytype_qgis(qgsvectorlayer):
 
     # Return the QGIS geometry type (in text form) of the input QgsVectorLayer.
     return enumerator_dic[qgsvectorlayer.geometryType()]
+
+
+def get_geometrytype_qgis_from_wkt(wkt_string):
+
+    WKT_qgis_geom_coversion_dic = {"Point": ["POINT", "MULTIPOINT"],
+                                   "Polygon": ["POLYGON", "MULTIPOLYGON"],
+                                   "LineString": ["LINESTRING", "MULTILINESTRING"]}
+
+    wkt_geometry_type = (wkt_string.split('(')[0]).strip().upper()
+
+    for qgis_geometry_type, wkt_geometry_types in WKT_qgis_geom_coversion_dic.iteritems():
+
+        if wkt_geometry_type in wkt_geometry_types:
+            return qgis_geometry_type
+
+    return None
 
 
 def get_geometrytype_wkb(qgsvectorlayer):

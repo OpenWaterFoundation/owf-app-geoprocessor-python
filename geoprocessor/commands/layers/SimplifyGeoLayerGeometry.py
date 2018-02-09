@@ -142,11 +142,11 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         should_run_command = []
 
         # If the GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerExisting", "GeoLayerID", geolayer_id,
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIDExisting", "GeoLayerID", geolayer_id,
                                                        "FAIL"))
 
         # If the GeoLayer does not have POLYGON or LINE geometry, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "DOESGEOLAYERIDHAVECORRECTGEOMETRY", "GeoLayerID",
+        should_run_command.append(validators.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry", "GeoLayerID",
                                                        geolayer_id, "FAIL", other_values=[["Polygon", "LineString"]]))
 
         # If the SimplifiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends

@@ -12,9 +12,8 @@ import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validator_util as validators
 
-import glob
 import logging
-import os
+import re
 
 
 class CopyGeoLayer(AbstractCommand):
@@ -26,10 +25,10 @@ class CopyGeoLayer(AbstractCommand):
     Command Parameters
 
     * GeoLayerID (str, required): The ID of the existing GeoLayer to copy.
-    * IncludeAttributes (str, optional): A list of attribute names to include in the copied GeoLayer. If configured,
-        ExcludeAttributes parameter must not be configured. Default: all attributes are copied to the new GeoLayer.
-    * ExcludeAttributes (str, optional): A list of attribute names to exclude in the copied GeoLayer. If configured,
-        IncludeAttributes parameter must not be configured. Default: all attributes are copied to the new GeoLayer.
+    * IncludeAttributes (str, optional): A list of glob-style patterns to determine the attributes to include in the
+        copied GeoLayer. Default: * (All attributes are copied to the new GeoLayer).
+    * ExcludeAttributes (str, optional): A list of glob-style patterns to determine the attributes to exclude in the
+        copied GeoLayer. Default: '' (All attributes are copied to the new GeoLayer).
     * IncludeFeaturesIf (str, optional): a valid qgis expression determining which features to keep in the
         copied GeoLayer. Default: all features are copied to the new GeoLayer. See the following reference:
         https://docs.qgis.org/2.14/en/docs/user_manual/working_with_vector/expression.html#fields-and-values
@@ -115,20 +114,17 @@ class CopyGeoLayer(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_copy_geolayer(self, input_geolayer_id, output_geolayer_id, attrs_to_include, attrs_to_exclude,
-                               include_feats_if_expression):
+    def __should_copy_geolayer(self, input_geolayer_id, output_geolayer_id, include_feats_if_expression):
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
-        * the attributes to include in the copied GeoLayer are existing
-        * the attributes to exclude in the copied GeoLayer are existing (raise a warning, not a failure)
-        * only IncludeAttributes or ExcludeAttributes (or None) are configured
         * the IncludeFeaturesIf parameter, if configured, supplies a valid QgsExpression
 
         Args:
             input_geolayer_id: the ID of the input GeoLayer
             output_geolayer_id: the ID of the output, copied GeoLayer
+            include_feats_if_expression: the QGSexpression string that determines which features to copy
 
         Returns:
              Boolean. If TRUE, the GeoLayer should be copied If FALSE, at least one check failed and the GeoLayer
@@ -142,28 +138,6 @@ class CopyGeoLayer(AbstractCommand):
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
         should_run_command.append(validators.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", input_geolayer_id,
                                                        "FAIL"))
-
-        # If the input GeoLayer exists, continue with the checks.
-        if False not in should_run_command:
-
-            # If any attributes in the list of attributes to be included are non-existing, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "DoAttributesExist", "IncludeAttributes",
-                                                           attrs_to_include, "FAIL", other_values=[input_geolayer_id]))
-
-            # If any attributes in the list of attributes to be excluded are non-existing, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "DoAttributesExist", "ExcludeAttributes",
-                                                           attrs_to_exclude, "FAIL", other_values=[input_geolayer_id]))
-
-        # If both the IncludeAttributes and the ExcludeAttributes parameters are configured, raise a FAILURE.
-        if attrs_to_exclude and attrs_to_include:
-
-            message = "The IncludeAttributes parameter and the ExcludeAttributes parameter cannot both be enabled."
-            recommendation = 'Either configure the IncludeAttributes parameter, the ExcludeAttributes parameter or' \
-                             'neither parameter.'
-
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                    message, recommendation))
 
         # If the IncludeFeaturesIf parameter is defined, continue with the checks.
         if include_feats_if_expression is not None:
@@ -183,6 +157,52 @@ class CopyGeoLayer(AbstractCommand):
         else:
             return True
 
+
+    @ staticmethod
+    def __get_list_of_attributes_to_remove(geolayer, include_patterns, exclude_patterns):
+
+        # Get the existing attribute names of the input GeoLayer.
+        existing_attrs = geolayer.get_attribute_field_names()
+
+        # An empty list to hold the attributes that should be INCLUDED based upon the input "include" patterns.
+        attrs_to_include = []
+
+        # Iterate over the glob-style patterns determining the attributes to include.
+        for pattern in include_patterns:
+
+            # Get a list of the attributes determined to include by this pattern. Add the matching attributes to the
+            # attrs_to_include list.
+            matching_attrs = list(attr for attr in existing_attrs if re.match(string_util.glob2re(pattern), attr))
+            attrs_to_include.extend(matching_attrs)
+
+        # Remove any duplicate values from the attrs_to_include list.
+        attrs_to_include = list(set(attrs_to_include))
+
+        # Get a list of attributes to be removed. Attributes to be removed are any attributes from the list of existing
+        # attributes that are not included in the attrs_to_include list.
+        attrs_to_remove = [attr for attr in existing_attrs if attr not in attrs_to_include]
+
+        # An empty list to hold the attribute that should be EXCLUDED based upon the given attrs_to_exclude PATTERNS.
+        attrs_to_exclude = []
+
+        # Iterate over the glob-style patterns determining the attributes to exclude.
+        for pattern in exclude_patterns:
+
+            # Get a list of the attributes determined to be excluded by this pattern. (Select from the attributes
+            # already selected to be included.) Add the matching attributes to the attrs_to_exclude list.
+            matching_attrs = list(attr for attr in attrs_to_include if re.match(string_util.glob2re(pattern), attr))
+            attrs_to_exclude.extend(matching_attrs)
+
+        # Remove any duplicate values from the attrs_to_exclude list.
+        attrs_to_exclude = list(set(attrs_to_exclude))
+
+        # Extend the attributes to remove with the new attributes to exclude.
+        attrs_to_remove.extend(attrs_to_exclude)
+
+        # Return the list of attributes determined to be removed (remove duplicates).
+        return list(set(attrs_to_remove))
+
+
     def run_command(self):
         """
         Run the command. Make a copy of the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
@@ -197,25 +217,16 @@ class CopyGeoLayer(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_CopiedGeoLayerID = self.get_parameter_value("CopiedGeoLayerID",
                                                        default_value="{}_copy".format(pv_GeoLayerID))
-        pv_IncludeAttributes = self.get_parameter_value("IncludeAttributes")
-        pv_ExcludeAttributes = self.get_parameter_value("ExcludeAttributes")
+        pv_IncludeAttributes = self.get_parameter_value("IncludeAttributes", default_value="*")
+        pv_ExcludeAttributes = self.get_parameter_value("ExcludeAttributes", default_value="''")
         pv_IncludeFeaturesIf = self.get_parameter_value("IncludeFeaturesIf")
 
-        # If the IncludeAttributes is not None, convert it from string to list of strings.
-        if pv_IncludeAttributes:
-            attrs_to_include = string_util.delimited_string_to_list(pv_IncludeAttributes)
-        else:
-            attrs_to_include = []
-
-        # If the ExcludeAttributes is not None, convert it from string to list of strings.
-        if pv_ExcludeAttributes:
-            attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeAttributes)
-        else:
-            attrs_to_exclude = []
+        # Convert the IncludeAttributes and ExcludeAttributes to lists.
+        attrs_to_include = string_util.delimited_string_to_list(pv_IncludeAttributes)
+        attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeAttributes)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID, attrs_to_include, attrs_to_exclude,
-                                       pv_IncludeFeaturesIf):
+        if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID, pv_IncludeFeaturesIf):
 
             # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
             try:
@@ -242,31 +253,13 @@ class CopyGeoLayer(AbstractCommand):
                     # Delete the non-matching features.
                     qgis_util.remove_qgsvectorlayer_features(copied_geolayer.qgs_vector_layer, non_matching_feats_ids)
 
-                # If attributes are configured to be removed, continue.
-                if attrs_to_exclude or attrs_to_include:
+                # Get a list of the attributes configured to be excluded in the copied GeoLayer.
+                attrs_to_remove = self.__get_list_of_attributes_to_remove(input_geolayer, attrs_to_include,
+                                                                          attrs_to_exclude)
 
-                    # If the user configured the ExcludeAttributes parameter, the attributes to remove are those
-                    # listed by the user.
-                    if attrs_to_exclude:
-                        attrs_to_remove = attrs_to_exclude
-
-                    # If the user configured the IncludeAttributes parameter, the attributes to remove are those
-                    # not listed by the user.
-                    else:
-
-                        # Get the existing attribute names of the input GeoLayer.
-                        list_of_existing_attributes = input_geolayer.get_attribute_field_names()
-
-                        # Get a list of the existing attribute names not listed in the user-defined IncludeAttributes
-                        # parameter.
-                        attrs_to_remove = []
-                        for attr in list_of_existing_attributes:
-                            if attr not in attrs_to_include:
-                                attrs_to_remove.append(attr)
-
-                    # Remove the desired attributes from the copied geolayer.
-                    for attr_to_remove in attrs_to_remove:
-                        copied_geolayer.remove_attribute(attr_to_remove)
+                # Remove the desired attributes from the copied geolayer.
+                for attr_to_remove in attrs_to_remove:
+                    copied_geolayer.remove_attribute(attr_to_remove)
 
                 # Add the copied GeoLayer to the GeoProcessor's geolayers list.
                 self.command_processor.add_geolayer(copied_geolayer)

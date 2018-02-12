@@ -31,6 +31,7 @@ from geoprocessor.commands.running.EndIf import EndIf
 from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
 from geoprocessor.commands.running.RunCommands import RunCommands
+from geoprocessor.commands.running.RunProgram import RunProgram
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
@@ -87,6 +88,7 @@ class GeoProcessorCommandFactory(object):
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
         "RUNCOMMANDS": RunCommands(),
+        "RUNPROGRAM": RunProgram(),
         "SETGEOLAYERCRS": SetGeoLayerCRS(),
         "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
         "SETPROPERTY": SetProperty(),
@@ -224,6 +226,8 @@ class GeoProcessorCommandFactory(object):
                     return RenameGeoLayerAttribute()
                 elif command_name_upper == "RUNCOMMANDS":
                     return RunCommands()
+                elif command_name_upper == "RUNPROGRAM":
+                    return RunProgram()
                 elif command_name_upper == "SETGEOLAYERCRS":
                     return SetGeoLayerCRS()
                 elif command_name_upper == "SETGEOLAYERPROPERTY":

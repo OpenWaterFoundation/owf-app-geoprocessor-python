@@ -84,3 +84,37 @@ def zip_files(list_of_files_to_archive, output_filename, keep_originals=True):
             # Delete the folder if it is a valid folder.
             else:
                 shutil.rmtree(to_archive_file)
+
+
+def zip_shapefile(output_file_abs, keep_archive_files=False):
+    """
+    Compresses a shapefile.
+
+    Args:
+       output_file_abs: the full pathname to the output shapefile
+       keep_archive_files (boolean): If set to TRUE, the orginal files will be saved. If set to FALSE, the original
+            files will be deleted (leaving only the zip file and its archived components). Default: False.
+
+    Return: None
+    """
+
+    # Get the output folder.
+    output_folder = os.path.dirname(output_file_abs)
+    output_filename = os.path.basename(output_file_abs)
+
+    # A list of files to archive
+    files_to_archive = []
+
+    # Iterate over the possible extensions of a shapefile.
+    for extension in ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg']:
+
+        # Get the full pathname of the shapefile component file.
+        output_file_full_path = os.path.join(output_folder, output_filename + extension)
+
+        # If the shapefile component file exists, add it' s absolute path to the files_to_archive list. Note that not
+        # all shapefile component files are required -- some may not exist.
+        if os.path.exists(output_file_full_path):
+            files_to_archive.append(output_file_full_path)
+
+    # Zip the files to archive (the zip file will have the same name as the orginal .shp file.
+    zip_files(files_to_archive, output_file_abs, keep_archive_files)

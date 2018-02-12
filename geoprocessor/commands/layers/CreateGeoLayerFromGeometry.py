@@ -188,8 +188,8 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         pv_CRS = self.get_parameter_value("CRS")
 
         if self.__should_geolayer_be_created(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
-            #
-            # try:
+
+            try:
 
                 # If the geometry format is bounding box, continue.
                 if pv_GeometryFormat == "BOUNDINGBOX":
@@ -249,15 +249,15 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
                 new_geolayer = GeoLayer(pv_NewGeoLayerID, layer, "MEMORY")
                 self.command_processor.add_geolayer(new_geolayer)
 
-            # # Raise an exception if an unexpected error occurs during the process.
-            # except Exception as e:
-            #
-            #     self.warning_count += 1
-            #     message = "Unexpected error creating GeoLayer ({}).".format(pv_NewGeoLayerID)
-            #     recommendation = "Check the log file for details."
-            #     self.logger.error(message, exc_info=True)
-            #     self.command_status.add_to_log(command_phase_type.RUN,
-            #                                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            # Raise an exception if an unexpected error occurs during the process.
+            except Exception as e:
+
+                self.warning_count += 1
+                message = "Unexpected error creating GeoLayer ({}).".format(pv_NewGeoLayerID)
+                recommendation = "Check the log file for details."
+                self.logger.error(message, exc_info=True)
+                self.command_status.add_to_log(command_phase_type.RUN,
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

@@ -1,6 +1,23 @@
 # Learn GeoProcessor (Dev) / Resources #
 
-The following are useful resources.
+The following are useful resources by major topic:
+
+
+* [Python](#python)
+* [QGIS](#qgis)
+* [MkDocs](#mkdocs)
+* [Markdown](#markdown)
+
+-----------------
+
+## Python ##
+
+* [Python 2 reference](https://docs.python.org/2/index.html)
+* [Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/)
+* [Python's @classmethod and @staticmethod Explained](http://stackabuse.com/pythons-classmethod-and-staticmethod-explained/)
+* Pipenv - package dependency manager and installer (recommended for Python 3)
+	+ [Pipenv on GitHub](https://github.com/pypa/pipenv)
+	+ [pipenv.org](https://docs.pipenv.org/)
 
 ## QGIS ##
 

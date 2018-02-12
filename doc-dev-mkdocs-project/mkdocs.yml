@@ -16,7 +16,9 @@ pages:
 # Use Material theme
 # - installation notes:  https://github.com/squidfunk/mkdocs-material
 theme: material
-repo_url:  https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python
+# Don't specify the repository because doing show shows irritating edit
+# icons on every page - instead, edit the documentation in the developer environment.
+#repo_url:  https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python
 site_description:  Open Water Foundation Learn GeoProcessor (for Developers)
 site_author:  Open Water Foundation
 site_favicon:  'images/OWF-Logo-Favicon-32x32.png'

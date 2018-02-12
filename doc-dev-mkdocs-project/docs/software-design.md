@@ -40,13 +40,17 @@ there are differences between Java and Python, in particular:
 * Java provides enumerations and Python 2 does not (Python 3 does).
 * Java provides private and public levels whereas Python relies more on convention,
 such as using `__` prefix on data and functions to indicate private data.
+* Java concepts of static classes is paralleled by Python `@classmethod`, `@staticmethod` and module functions.
 
 Consequently, the TSTool design has been adapted from Java to Python.
 In many cases, the Java code has been simplified in order to streamline GeoProcessor development
-and to evaluate options.  For example, simplifications include:
+and to evaluate options to improve/simplify the original Java design.  For example, simplifications include:
 
-* Specific exceptions in Java code have been simplified to use built-in `ValueError` and `RuntimeError` in Python.
-* Java class setter/getter methods have been omitted in favor of python direct-access to data.
+* Specific exceptions in Java code have been simplified to use built-in Python `ValueError` for checking input
+and `RuntimeError` for run-time errors.
+Additional exception classes may be used but a simple design that works will win out.
+* Java class setter/getter methods have been omitted in favor of Pythonic direct-access to data
+(exceptions are cases when more robust error checks are needed).
 Class constructors with instance data are used to create object instances.
 
 The following sections describe specific components by explaining GeoProcessor classes.
@@ -57,15 +61,14 @@ of the documentation and code at the same time.
 ## Command File and Command Syntax ##
 
 The GeoProcessor performs its work by interpreting a workflow of commands.
-A command file is text file containing lines with one command per line, for example:
-
-```text
-Need a good example.
-```
+A command file is text file containing lines with one command per line.
+For example, see any of the command files with names ending in `.gp` in the
+[automated tests](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/tree/master/test/commands).
 
 The command file lines include:
 
 * One-line comments starting with `#` character.
+* Indentation is OK.
 * Blank lines.
 * Control commands including `For` and `If`.
 * Commands that follow syntax:
@@ -74,7 +77,8 @@ The command file lines include:
 CommandName(Parameter1="Value1",Parameter2="Value2",...)
 ```
 
-Conventions for commands and command files are described in the GeoProcessor user documentation.
+Conventions for commands and command files are described in the
+[GeoProcessor user documentation](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/).
 
 ## QGIS Environment ##
 
@@ -82,12 +86,14 @@ The GeoProcessor relies on the QGIS environment and Python libraries.
 In particular, the following are used:
 
 * QGIS runtime environment, as initialized before running applications such as the [gp application](#gp-application) (discussed below).
-* QGIS processor modules, as initialized in the [GeoProcessor class](#geoprocessor-class) (discussed below).
-* QGIS Python processing modules, as used in [Command classes](#abstractcommand-class-and-command-classes) (discussed below).
+* QGIS Python processing algorithms and plugins, as used in [Command classes](#abstractcommand-class-and-command-classes) (discussed below).
 * QGIS user interface features, as used in the [Graphical User Interface](#graphical-user-interface) (discussed below).
 
-In order to use the QGIS environment, the GeoProcessor runs the Python software distributed with QGIS,
-with `PYTHONPATH` configured to find QGIS Python modules as well as GeoProcessor modules.
+In order to use the QGIS environment in the deployed environment (including `gp` application),
+the GeoProcessor runs the Python software distributed with QGIS,
+with `PYTHONPATH` configured to find GeoProcessor modules.
+In the PyCharm development environment, PyCharm uses the project Python interpreter and
+relies on `PYTHONPATH` to find QGIS libraries.
 **The following configuration scripts have been created for initial prototyping and will
 be made more robust for general use.**
 
@@ -104,8 +110,8 @@ The script runs similar setup steps as the develop environment script.
 This script can be used to run GeoProcessor command files in the test framework.
 For example, see the test runner that has been manually created:
 [`run-tests-steve.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-tests-steve.bat).
-This script will be replaced by an auto-generated command file that runs `RunCommand` commands, similar to TSTool,
- when the test framework is fully developed.
+The automated test framework that uses `RunCommands` commands, similar to TSTool, is also available and is
+described in [Development Tasks / Testing](dev-tasks#testing).
 
 ## GeoProcessor Class ##
 
@@ -178,7 +184,7 @@ Design elements of this class include:
 		- strings are converted to necessary object representations when running commands
 	+ `command_parameter_metadata` is a list of
 	[`CommandParameterMetadata`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/core/CommandParameterMetadata.py),
-	which provides information that allows checking for valid parameter names and types.
+	which provides information that allows checking for valid parameter names and types, shared between class instances.
 	+ `command_status` is an instance of `CommandStatus`, which maintains a list of `CommandLogRecord`,
 	used to track issues in initializing and running commands (see discussion below).
 * Functions: 
@@ -188,9 +194,9 @@ Design elements of this class include:
 	+ `get_parameter_value` - is a utility function to return a parameter string value from the parameter dictionary,
 	gracefully handles missing parameters (which is OK because default values will be used at runtime)
 	+ `initialize_command` - utility function that is called to
-		- sets the GeoProcessor instance
-		- sets the command string
-		- optionally parses the command string into parameter string dictionary
+		- set the GeoProcessor instance
+		- set the command string
+		- optionally parse the command string into parameter string dictionary
 	+ `parse_command` - utility function to parse the command string into parameter string dictionary
 	+ `run_command` - is expected to be defined in child command class to run the command
 	+ `to_string` - utility function to convert the internal parameter string dictionary
@@ -199,10 +205,9 @@ Design elements of this class include:
 The `AbstractCommand` class is the parent class from which all other commands are derived.
 Specific commands are organized in groups under the `geoprocessor.commands` package,
 for example, the `geoprocessor.commands.running` package contains commands that are associated with
-controlling running commands.  Examples of commands are:
+controlling running commands.
 
-* [`SetProperty`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/running/SetProperty.py)
-* Need to add more commands that illustrate different code patterns
+* See the [Command Reference Overview](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/overview/)
 
 Command class design considerations include:
 
@@ -210,9 +215,9 @@ Command class design considerations include:
 * Instances are created for each line in a command file
 	+ [`UnknownCommand`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/util/UnknownCommand.py)
 	is used when the command name is not recognized by the `GeoProcessorCommandFactory`
-	+ [`BlankCommand`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/util/BlankCommand.py)
+	+ [`Blank`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/util/Blank.py)
 	is used as a place-holder for blank lines
-	+ [`CommentCommand`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/util/CommentCommand.py)
+	+ [`Comment`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/util/Comment.py)
 	is used for `#` comments
 * Data
 	+ Private data values should be defined as needed; however, in most cases data local to functions may be adequate
@@ -220,16 +225,20 @@ Command class design considerations include:
 	+ `command_name` from `AbstractCommand` is set to the command name
 	+ `command_parameter_metadata` from `AbstractCommand` is set to the command parameter metadata 
 * Functions
-	+ `check_command_parameters` - checks command parameter values for valid values
+	+ `check_command_parameters` - checks command parameter values at initialization for valid values
 		- required parameters must be defined
 		- parameter string values are checked for validity using `geoprocessor.util.validators` module functions.
 		- adds `CommandStatus` messages for `command_phase_type.INITIALIZATION` run phase
+		- **DOES NOT** do checks at runtime
 	+ `run_command` - executes the functionality of the command
 		- file/folder parameters are converted to absolute paths using the processor `WorkingDir` property
 		using `geoprocessor.util.io.to_absolute_path` function
 		- parameters containing `${Property}` notation are expanded to full values prior to use using the
 		GeoProcessor `expand_parameter_value` function.
 		- converts string parameter dictionary values into object types needed for run-time, raising `ValueError` if any issues
+		- performs run-time parameter checks to reflect that parameter values and data are dynamic
+		(see for example the check functions found in the `run_command` method in
+		[CopyGeoLayer](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/layers/CopyGeoLayer.py) command).
 		- performs the processing
 		- saves results back to the GeoProcessor if appropriate
 		- raises `RuntimeError` if an error
@@ -240,10 +249,13 @@ Command class design considerations include:
 The
 [`AbstractCommand`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/abstract/AbstractCommand.py)
 class includes the `command_status` data object, which is an instance of
-[`CommandStatus`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/core/CommandStatus.py).
+[`CommandStatus`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/core/CommandStatus.py).
 This object maintains a list of 
-[`CommandStatus`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/core/CommandLogRecord.py),
+[`CommandLogRecord`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/core/CommandLogRecord.py),
 which allows tracking issues with command initialization and running.
+Populating log messages at a command level is key to providing pinpoint diagnostics used in the UI and
+creating command file run reports with
+[WriteCommandSummaryToFile](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/WriteCommandSummaryToFile/WriteCommandSummaryToFile).
 
 The resulting messages can be output to a file to pinpoint command issues during troubleshooting and
 can also be displayed by the user interface.
@@ -281,11 +293,14 @@ The following is an example of setting the command status in the `run_command` f
 The `geoprocessor.util` package includes utility modules with functions that can be called from
 classes and other code to perform useful tasks:
 
-* `command` - command parsing, etc.
-* `geo` - geoprocessing
-* `io` - input/output
-* `log` - log file handling
-* `validators` - validators for command parameters
+* [`app_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/app_util.py) - application global data
+* [`command_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/command_util.py) - command parsing, etc.
+* [`file_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/file_util.py) - file handling (**May need to combine with `io_util`**)
+* [`io_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/io_util.py) - input/output
+* [`log_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/log_util.py) - log file handling
+* [`qgis_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/qgis_util.py) - code specific to QGIS
+* [`string_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/string_util.py) - string processing
+* [`validator_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/validator_util.py) - validators for command parameters
 
 These modules and additional utility modules will be enhanced over time.
 
@@ -294,7 +309,9 @@ These modules and additional utility modules will be enhanced over time.
 The GeoProcessor modules uses standard Python `logging` module features
 in order to support troubleshooting.
 However, the log file is not simple for users to interpret and the final software user interface
-will provide features to view command status using the `CommandStatus` data.
+will provide features to view command status using the
+[`CommandStatus`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/core/CommandStatus.py) data.
+Additional guidance on logging topics is provided below.
 
 ### Log File ###
 
@@ -302,11 +319,12 @@ The `geoprocessor.app.gp` module contains a main program to run the GeoProcessor
 This program starts an initial log file at `INFO` level in the user's home folder,
 for example on Windows `C:\Users\user\.owf-gp\log\gp_user.log`.
 
-The `StartLog` command restarts the log file using a specified file.
+The [`StartLog`](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/StartLog/StartLog)
+command restarts the log file using a specified file.
 For example, a log file in the same folder as the command file is typically used
 to record processing progress.
 
-The [`geoprocessor.util.log`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/log.py)
+The [`geoprocessor.util.log_util`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/util/log_util.py)
 module contains functions that start the initial log file and reset.
 The logging handler is setup with name `geoprocessor` so as to be in effect for all subpackages.
 
@@ -330,14 +348,42 @@ The formatter for log messages provides useful data for troubleshooting.
 Care should be taken to minimize logging once initial development is complete
 so that the log file size is kept as small as possible.
 
+### Logger Exception Handling ###
+
+Python exception handling can be painful given transition of the language in implementing
+specific exception classes, and lack of exceptions that might be expected, such as FileNotFoundException.
+Python 3 provides more exception classes.
+The following illustrates how to catch exceptions and log the trace stack to the log file
+(note the use of `exc_info=True`):
+
+```python
+try:
+    # Some code here...
+except Exception as e:
+    warning_count += 1
+    message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
+    logger.error(message, exc_info=True)
+    self.command_status.add_to_log(
+        command_phase_type.RUN,
+        CommandLogRecord(command_status_type.FAILURE, message,
+                         "See the log file for details."))
+```
+
+PyCharm will complain that generic Exception is being caught but this is the only way to
+ensure catching all exceptions as a fall-through.
+More specific exceptions can also be caught and handled.
+
 ## GeoLayer Class ##
 
-The `GeoLayer` class is used to store spatial data layers.
+The [`GeoLayer`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/core/GeoLayer.py)
+class is used to store spatial data layers.
 Design elements of the class include:
 
-* Identifier...
-* GQIS layer...
-* **Emma complete this.**
+* `id` (GeoLayerID) provide a unique identifier for the layer, used by commands to retrieve layers from the GeoProcessor for processing
+* `qgs_vector_layer` - QGISVectorLayer instance
+* `source_path` - path to file on operating system, if file is read (not used for in-memory layers)
+* `qgs_id` - QGIS layer identifier
+* `properties` - dictionary of properties, similar to GeoProcessor properties, but for the specific layer, used to transfer data and control processing logic
 
 ## gp Application ##
 
@@ -351,11 +397,16 @@ module contains a main program to run the GeoProcessor in multiple modes:
 * http server (future feature to support web service functionality)
 
 This module is expected to be enhanced over time and serve as the primary tool for running the GeoProcessor.
+The Python module is run using one of the following command-line scripts:
+
+* [gp.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.bat) - Windows batch file
+* [gp.sh](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.sh) - Linux shell script
 
 ## Graphical User Interface ##
 
-The graphical user interface for the GeoProcessor has not yet been developed.
+The graphical user interface (UI) for the GeoProcessor has not yet been developed.
 Ideally the interface will be similar to TSTool but with features to view spatial data.
+The UI is run from the `run_ui` function in the `gp` module.
 
 ## Built-in Test Framework ##
 
@@ -365,20 +416,23 @@ The benefit of this approach is that tests validate the software using test case
 comparable to those of users and tests can be added in the operational environment.
 Developers and users can therefore add tests.
 
-A [separate repository (owf-app-geoprocessor-python-test)](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test)
+The separate repository [owf-app-geoprocessor-python-test](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test)
 is used to maintain functional tests.
 This allows non-developers to create tests.
 
 GeoProcessor software developers should clone the above repository parallel to the GeoProcessor code repository.
 Tests can be added with a test editor (and in the future the user interface).
-The tests can then be run with a script, similar to:
+The tests can then be run one at a time with a script, similar to:
 
 * [run-tests-steve.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-tests-steve.bat)
 
-The test framework will be improved over time to implement features similar to TSTool.
+Tests can also be run run by creating a test suite, similar to TSTool (see [Development Tasks / Testing](dev-tasks#testing)).
+
 Dynamic test files should not be committed to the repository.
 
-Tests should be created by following the standards documented in the test repository README files.
+Tests should be created by following the standards documented in the test repository main
+[README](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test) file
+and [Development Tasks / Testing](dev-tasks#testing).
 
 ## Future Design Elements ##
 
@@ -392,4 +446,4 @@ provided in editors for later commands, to streamline command parameter
 selection and provide improved user experience.
 * Add useful commands comparable to TSTool, such as `WebGet`.
 * Add table data objects to facilitate data manipulation.
-* Implement unit tests via `pytest`.
+* Implement unit tests via `pytest` to test at the function level.

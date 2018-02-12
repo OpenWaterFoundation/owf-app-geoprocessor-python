@@ -11,7 +11,7 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 
-import geoprocessor.util.file_util as file_util
+import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
 
@@ -134,7 +134,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
                                                                                               delimited_file_abs)
         recommendation = "Specify an existing and valid {}.".format(parameter_name)
 
-        if parameter_value not in file_util.get_col_names_from_delimited_file(delimited_file_abs, delimiter):
+        if parameter_value not in io_util.get_col_names_from_delimited_file(delimited_file_abs, delimiter):
             check_failed = True
 
     # Check if the parameter value (crs code)is a valid CRS code usable in the QGIS environment.

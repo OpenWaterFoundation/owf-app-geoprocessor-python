@@ -8,11 +8,11 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.file_util as file_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
+import geoprocessor.util.zip_util as zip_util
 
 import os
 import logging
@@ -221,7 +221,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             if os.path.exists(output_file_full_path):
                 files_to_archive.append(output_file_full_path)
 
-        file_util.zip_files(files_to_archive, output_file_abs, keep_archive_files)
+        zip_util.zip_files(files_to_archive, output_file_abs, keep_archive_files)
 
     def run_command(self):
         """

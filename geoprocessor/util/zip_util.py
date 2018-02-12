@@ -1,38 +1,8 @@
-# Useful utility functions for file manipulations.
+# Useful utility functions for zip file manipulations.
 
 import os
 import shutil
 from zipfile import ZipFile
-
-
-def get_col_names_from_delimited_file(delimited_file_abs, delimiter):
-    """
-
-    Reads a delimited file and returns the column names in list format.
-
-    Args:
-        delimited_file_abs (string): the full pathname to a delimited file to read.
-        delimiter (string): the delimiter used in the delimited file.
-
-    Returns:
-        A list of strings. Each string represents a column name. If an error occurs within the function, None is
-         returned.
-    """
-
-    try:
-
-        # Open the delimited file and iterate through the lines of the file.
-        with open(delimited_file_abs) as in_file:
-            for lineNum, line in enumerate(in_file):
-
-                # Return the column names of the header line in the delimited file. The column names are items of a
-                # list and the column names are striped of whitespaces on either side.
-                if lineNum == 0:
-                    return map(str.strip, line.split(delimiter))
-
-    # If an error occurs within the process, return None.
-    except:
-        return None
 
 
 def unzip_all_files(zip_file_path, output_folder):

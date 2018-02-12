@@ -142,20 +142,34 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
 
 def create_qgsgeometry(geometry_format, geometry_input_as_string):
     """
-    REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
+    Create a QGSGeometry object from input data. Can create an object from data in well-known text (WKT) and
+    well-known binary (WKB). REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
+
+    Args:
+        geometry_format (str): the type of geometry that the data is in. Can be either of the following:
+            WKT: well-known text
+            WKB: well-known binary
+        geometry_input_as_string (str): the geometry data to convert to QGSGeometry object. Data must match the
+            correct syntax for the geometry format value.
+
+    Returns: If geometry_format is valid, returns QgsGeometry. If not, returns None.
     """
 
+    # If the geometry format is well-known text, return the corresponding QgsGeometry object.
     if geometry_format.upper() == "WKT":
-
         return QgsGeometry.fromWkt(geometry_input_as_string)
 
+    # If the geometry format is well-known binary, continue.
     elif geometry_format.upper() == "WKB":
 
-        wkb = bytes.fromhex(float(geometry_input_as_string))
-        return QgsGeometry.fromWkb(wkb)
+        # Convert the WKB string into a a binary input. Return the corresponding QgsGeometry object.
+        # This feature is only available for Python 3 upgrade. See reference below:
+        # https://stackoverflow.com/questions/5901706/the-bytes-type-in-python-2-7-and-pep-358
+        wkb = bytes.fromhex(geometry_input_as_string)
+        return QgsGeometry().fromWkb(wkb)
 
+    # If the geometry format is unknown, return None.
     else:
-
        return None
 
 
@@ -357,12 +371,6 @@ def get_qgsexpression_obj(expression_as_string):
     # If not, return None.
     else:
         return None
-
-
-def get_qgspoint_obj(x_coordinate, y_coordinate):
-    # TODO egiles 2018-02-06 Need to document and comment.
-
-    return QgsPoint(x_coordinate, y_coordinate)
 
 
 def initialize_qgis(qgis_prefix_path):
@@ -596,6 +604,7 @@ def remove_qgsvectorlayer_features(qgsvectorlayer, list_of_feature_ids):
 
     # Delete the features from the QgsVectorLayer object.
     qgsvectorlayer.dataProvider().deleteFeatures(list_of_feature_ids)
+
 
 def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribute_name):
     # TODO egiles 2018-01-18 Create a warning if the new_attribute_name is longer than 10 characters but do not raise

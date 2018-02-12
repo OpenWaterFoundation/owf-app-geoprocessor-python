@@ -5,7 +5,7 @@ import geoprocessor.util.command_util as command_util
 from geoprocessor.commands.layers.AddGeoLayerAttribute import AddGeoLayerAttribute
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
-from geoprocessor.commands.layers.CreateGeoLayer import CreateGeoLayer
+from geoprocessor.commands.layers.CreateGeoLayerFromGeometry import CreateGeoLayerFromGeometry
 from geoprocessor.commands.layers.FreeGeoLayer import FreeGeoLayer
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
@@ -70,7 +70,7 @@ class GeoProcessorCommandFactory(object):
         "COMPAREFILES": CompareFiles(),
         "COPYFILE": CopyFile(),
         "COPYGEOLAYER": CopyGeoLayer(),
-        "CREATEGEOLAYER": CreateGeoLayer(),
+        "CREATEGEOLAYERFROMGEOMETRY": CreateGeoLayerFromGeometry(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
@@ -190,8 +190,8 @@ class GeoProcessorCommandFactory(object):
                     return CopyFile()
                 elif command_name_upper == "COPYGEOLAYER":
                     return CopyGeoLayer()
-                elif command_name_upper == "CREATEGEOLAYER":
-                    return CreateGeoLayer()
+                elif command_name_upper == "CREATEGEOLAYERFROMGEOMETRY":
+                    return CreateGeoLayerFromGeometry()
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
                     return CreateRegressionTestCommandFile()
                 elif command_name_upper == "ENDFOR":

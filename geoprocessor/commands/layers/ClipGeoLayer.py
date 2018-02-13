@@ -212,7 +212,8 @@ class ClipGeoLayer(AbstractCommand):
                 clipping_geolayer = self.command_processor.get_geolayer(pv_ClippingGeoLayerID)
 
                 # If the input GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
-                if input_geolayer.source_path is None or input_geolayer.source_path == "" or input_geolayer.source_path.upper() == "MEMORY":
+                if input_geolayer.source_path is None or input_geolayer.source_path.upper() in ["", "MEMORY"]:
+
                     # Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'), input_geolayer.id)
 
@@ -222,10 +223,11 @@ class ClipGeoLayer(AbstractCommand):
                     self.command_processor.add_geolayer(input_geolayer)
 
                 # If the clipping GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
-                if clipping_geolayer.source_path is None or clipping_geolayer.source_path == "" or clipping_geolayer.source_path.upper() == "MEMORY":
-                    # Get the absolute path of the GeoLayer to write to disk.
+                if clipping_geolayer.source_path is None or clipping_geolayer.source_path.upper() in ["", "MEMORY"]:
+
+                    #  Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
-                                                          input_geolayer.id)
+                                                          clipping_geolayer.id)
 
                     # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
                     # on-disk GeoLayer.

@@ -31,7 +31,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
     feature type (point, line, polygon, etc.) and other data (an identifier, a coordinate reference system, etc). This
     function only writes one single GeoLayer to a single spatial data file in delimited file format. If the GeoLayer
     is anything other than 'POINT' data, the delimited file must hold the geometry data in WKT format
-    (OutputGeometryFormat = `AS_WKT`, see below).
+    (OutputGeometryFormat = `WKT`, see below).
 
     Command Parameters
     * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in CSV format.
@@ -40,14 +40,14 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
     * OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
         projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
     * OutputGeometryFormat (str, optional): how the geometry will be displayed in the output CSV file. Default is
-        `AS_XY`. Available options are as follows:
-        (1) `AS_WKT`: the geometry will be held in one column in its Well Known Text (WKT) representation. This format
+        `XY`. Available options are as follows:
+        (1) `WKT`: the geometry will be held in one column in its Well Known Text (WKT) representation. This format
             can represent `POINT`, `LINE` or `POLYGON` data.
-        (2) `AS_XYZ`: the geometry will be held in the X, Y and Z representation (in multiple columns). This format can
+        (2) `XYZ`: the geometry will be held in the X, Y and Z representation (in multiple columns). This format can
             only represent `POINT` data.
-        (3) `AS_XY`: the geometry will be held in the X, and Y representation (in multiple columns). This format can
+        (3) `XY`: the geometry will be held in the X, and Y representation (in multiple columns). This format can
             only represent `POINT` data. The X column is first and then the Y column.
-        (4) `AS_YX`: the geometry will be held in the X, and Y representation (in multiple columns). This format can
+        (4) `YX`: the geometry will be held in the X, and Y representation (in multiple columns). This format can
         only represent `POINT` data. The Y column is first and then the X column.
     * OutputDelimiter (str, optional): the delimiter of the output CSV file. Default is `COMMA`.
         Available options are as follows:
@@ -106,10 +106,10 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
                 self.command_status.add_to_log(command_phase_type.INITIALIZATION,
                                                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that optional parameter OutputGeometryFormat is either `AS_WKT`, `AS_XYZ`, `AS_XY`, `AS_YX` or None.
+        # Check that optional parameter OutputGeometryFormat is either `WKT`, `XYZ`, `XY`, `YX` or None.
         pv_OutputGeometryFormat = self.get_parameter_value(parameter_name="OutputGeometryFormat",
                                                      command_parameters=command_parameters)
-        acceptable_values = ["AS_WKT", "AS_XYZ", "AS_XY", "AS_YZ"]
+        acceptable_values = ["WKT", "XYZ", "XY", "YZ"]
         if not validators.validate_string_in_list(pv_OutputGeometryFormat, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "OutputGeometryFormat parameter value ({}) is not recognized.".format(pv_OutputGeometryFormat)
@@ -151,7 +151,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         Checks the following:
         * the ID of the GeoLayer is an existing GeoLayer ID
         * the output folder is a valid folder
-        * the feature geometry is "POINT" if the geometry format parameter format is not "AS_WKT"
+        * the feature geometry is "POINT" if the geometry format parameter format is not "WKT"
         * the CRS is a valid CRS code
 
         Args:
@@ -175,8 +175,8 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         # If the GeoLayerID exists, continue with the checks.
         if False not in should_run_command:
 
-            # If the output_geometry_format is not 'AS_WKT', continue with the checks.
-            if not output_geom_format.upper() == "AS_WKT":
+            # If the output_geometry_format is not 'WKT', continue with the checks.
+            if not output_geom_format.upper() == "WKT":
 
                 # If the GeoLayer does not have POINT geometry, raise a FAILURE.
                 should_run_command.append(validators.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
@@ -214,7 +214,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_OutputFile = self.get_parameter_value("OutputFile")
         pv_OutputCRS = self.get_parameter_value("OutputCRS")
-        pv_OutputGeometryFormat = self.get_parameter_value("OutputGeometryFormat", default_value="AS_XY").upper()
+        pv_OutputGeometryFormat = self.get_parameter_value("OutputGeometryFormat", default_value="XY").upper()
         pv_OutputDelimiter = self.get_parameter_value("OutputDelimiter", default_value="COMMA").upper()
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax

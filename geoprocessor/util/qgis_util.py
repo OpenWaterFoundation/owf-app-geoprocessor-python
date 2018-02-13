@@ -1,15 +1,17 @@
 # Utility functions related to QGIS and requires imports from QGIS libraries
 
+from datetime import datetime
+
 import os
 
-from qgis.core import QgsApplication, QgsExpression, QgsPoint, QgsFeature, QgsGeometry
-from qgis.core import QgsVectorLayer, QgsField, QgsVectorFileWriter, QgsCoordinateReferenceSystem
+from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
+from qgis.core import QgsGeometry, QgsVectorFileWriter, QgsVectorLayer
 
 from processing.core.Processing import Processing
 
 from PyQt4.QtCore import QVariant
 
-from datetime import datetime
+
 
 # TODO smalers 2018-01-28 Evaluate whether to make this private via Pythonic underscore naming
 # QGIS application environment instance
@@ -45,14 +47,13 @@ def add_feature_to_qgsvectorlayer(qgsvectorlayer, qgsgeometry):
 
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
-
     """
     Adds an attribute to a Qgs Vector Layer object.
 
     Args:
         qgsvectorlayer (object): a Qgs Vector Layer object
-        attribute_name (string): the name of the attribute to add
-        attribute_type (string): the attribute field type. Can be int (integer), double (real number), string (text) or
+        attribute_name (str): the name of the attribute to add
+        attribute_type (str): the attribute field type. Can be int (integer), double (real number), string (text) or
          date.
 
     Return: None.
@@ -90,6 +91,61 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
         print "Error message: The attribute_name ({}) is an already existing attribute name.".format(attribute_name)
 
 
+def create_qgsgeometry(geometry_format, geometry_input_as_string):
+    """
+    Create a QGSGeometry object from input data. Can create an object from data in well-known text (WKT) and
+    well-known binary (WKB). REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
+
+    Args:
+        geometry_format (str): the type of geometry that the data is in. Can be either of the following:
+            WKT: well-known text
+            WKB: well-known binary
+        geometry_input_as_string (str): the geometry data to convert to QGSGeometry object. Data must match the
+            correct syntax for the geometry format value.
+
+    Returns: If geometry_format is valid, returns QgsGeometry. If not, returns None.
+    """
+
+    # If the geometry format is well-known text, return the corresponding QgsGeometry object.
+    if geometry_format.upper() == "WKT":
+        return QgsGeometry.fromWkt(geometry_input_as_string)
+
+    # If the geometry format is well-known binary, continue.
+    elif geometry_format.upper() == "WKB":
+
+        # Convert the WKB string into a a binary input. Return the corresponding QgsGeometry object.
+        # This feature is only available for Python 3 upgrade. See reference below:
+        # https://stackoverflow.com/questions/5901706/the-bytes-type-in-python-2-7-and-pep-358
+        wkb = bytes.fromhex(geometry_input_as_string)
+        return QgsGeometry().fromWkb(wkb)
+
+    # If the geometry format is unknown, return None.
+    else:
+       return None
+
+
+def create_qgsvectorlayer(geometry, crs_code, layer_name):
+    """
+    Creates a new QgsVectorLayer from scratch (in memory QgsVectorLayer object).
+
+    Args:
+        geometry (str): the geometry type of the new QgsVectorLayer. Can be `Point`, `Polygon` or `LineString`
+        crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
+        layer_name (str): the name of the new QgsVectorLayer (this is not the GeoLayer ID)
+
+    Return:
+        If the new QgsVectorLayer object is valid, return the QgsVectorLayer object. If it is not valid, return None.
+    """
+
+
+    # Create the QgsVectorLayer object with the geometry, the CRS and the layer name information.
+    layer = QgsVectorLayer("{}?crs={}".format(geometry, crs_code), layer_name, "memory")
+
+    # If the QgsVectorLayer object is valid, return it.
+    if layer.isValid():
+        return layer
+
+
 def deepcopy_qqsvectorlayer(qgsvectorlayer):
     """
     Creates a deep copy (separate instance) of a QgsVectorLayer object. Spatial features, attributes, and the
@@ -99,8 +155,7 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
     Args:
         qgsvectorlayer (object): the QgsVectorLayer object to deep copy.
 
-    Returns:
-         The deep copied QgsVectorLater object.
+    Returns: The deep copied QgsVectorLater object.
     """
 
     # REF: https://gis.stackexchange.com/questions/205947/duplicating-layer-in-memory-using-pyqgis
@@ -138,49 +193,6 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
 
     # Return the deep copied QgsVectorLayer.
     return copied_qgsvectorlayer
-
-
-def create_qgsgeometry(geometry_format, geometry_input_as_string):
-    """
-    Create a QGSGeometry object from input data. Can create an object from data in well-known text (WKT) and
-    well-known binary (WKB). REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
-
-    Args:
-        geometry_format (str): the type of geometry that the data is in. Can be either of the following:
-            WKT: well-known text
-            WKB: well-known binary
-        geometry_input_as_string (str): the geometry data to convert to QGSGeometry object. Data must match the
-            correct syntax for the geometry format value.
-
-    Returns: If geometry_format is valid, returns QgsGeometry. If not, returns None.
-    """
-
-    # If the geometry format is well-known text, return the corresponding QgsGeometry object.
-    if geometry_format.upper() == "WKT":
-        return QgsGeometry.fromWkt(geometry_input_as_string)
-
-    # If the geometry format is well-known binary, continue.
-    elif geometry_format.upper() == "WKB":
-
-        # Convert the WKB string into a a binary input. Return the corresponding QgsGeometry object.
-        # This feature is only available for Python 3 upgrade. See reference below:
-        # https://stackoverflow.com/questions/5901706/the-bytes-type-in-python-2-7-and-pep-358
-        wkb = bytes.fromhex(geometry_input_as_string)
-        return QgsGeometry().fromWkb(wkb)
-
-    # If the geometry format is unknown, return None.
-    else:
-       return None
-
-
-def create_qgsvectorlayer(geometry, crs_code, layer_name):
-    # TODO egiles 20185-02-06 document and comment
-
-    layer = QgsVectorLayer("{}?crs={}".format(geometry, crs_code), layer_name, "memory")
-    if layer.isValid():
-        return layer
-    else:
-        return None
 
 
 def exit_qgis():
@@ -265,8 +277,7 @@ def get_geometrytype_qgis(qgsvectorlayer):
     Arg:
         qgsvectorlayer (object): a Qgs Vector Layer object
 
-    Returns:
-        Appropriate geometry in QGIS format (returns text, not enumerator).
+    Returns: Appropriate geometry in QGIS format (returns text, not enumerator).
     """
 
     # The QGIS geometry type enumerator dictionary.
@@ -281,19 +292,33 @@ def get_geometrytype_qgis(qgsvectorlayer):
 
 
 def get_geometrytype_qgis_from_wkt(wkt_string):
+    """
+    Returns the QGIS geometry equivalent of the WKT geometry provided by a Well Known Text string.
 
-    WKT_qgis_geom_coversion_dic = {"Point": ["POINT", "MULTIPOINT"],
+    Args:
+        wkt_string (str): a Well-Known Text string
+        REF: https://en.wikipedia.org/wiki/Well-known_text
+
+    Return:
+        If the WKT geometry is recognized, return the QGIS geometry equivalent. Otherwise, return None.
+    """
+
+    # A dictionary of QGIS geometry types and their corresponding WKT geometry types.
+    # Key: the QGIS geometry types
+    # Value: a list of corresponding WKT geometry types (all uppercase)
+    QGIS_WKT_geom_conversion_dic = {"Point": ["POINT", "MULTIPOINT"],
                                    "Polygon": ["POLYGON", "MULTIPOLYGON"],
                                    "LineString": ["LINESTRING", "MULTILINESTRING"]}
 
+    # Get the WKT geometry type from a Well-Known Text string. Capitalize the characters of the geometry type.
     wkt_geometry_type = (wkt_string.split('(')[0]).strip().upper()
 
-    for qgis_geometry_type, wkt_geometry_types in WKT_qgis_geom_coversion_dic.iteritems():
+    # Iterate over the entries in the QGIS/WKT geometry type conversion dictionary (QGIS_WKT_geom_conversion_dic).
+    for qgis_geometry_type, wkt_geometry_types in QGIS_WKT_geom_conversion_dic.iteritems():
 
+        # If the WKT geometry of the input WKT string is recognized, return the equivalent QGIS geometry.
         if wkt_geometry_type in wkt_geometry_types:
             return qgis_geometry_type
-
-    return None
 
 
 def get_geometrytype_wkb(qgsvectorlayer):
@@ -304,8 +329,7 @@ def get_geometrytype_wkb(qgsvectorlayer):
     Arg:
         qgsvectorlayer (object): a Qgs Vector Layer object
 
-    Returns:
-        Appropriate geometry in WKB format (returns text, not enumerator).
+    Returns: Appropriate geometry in WKB format (returns text, not enumerator).
     """
 
     # The WKB geometry type enumerator dictionary.
@@ -339,7 +363,6 @@ def get_qgscoordinatereferencesystem_obj(crs_code):
         crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
 
     Returns: The QgsCoordinateReferenceSystem object. If not valid, returns None.
-
     """
 
     # Check if the crs_code is valid. If so, return the QgsCoordinateReferenceSystem object.
@@ -381,8 +404,7 @@ def initialize_qgis(qgis_prefix_path):
     Args:
         qgis_prefix_path (str) the installation folder for the QGIS that is being used.
 
-    Returns:
-        None.
+    Returns: None.
     """
 
     # Open QGIS environment
@@ -400,8 +422,8 @@ def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_
 
     Args:
         qgsvectorlayer (object): a Qgs Vector Layer object
-        attribute_name (string): the name of the attribute to populate
-        attribute_value (string): the string to populate as the attributes' values
+        attribute_name (str): the name of the attribute to populate
+        attribute_value (str): the string to populate as the attributes' values
 
     Returns: None.
     """
@@ -426,10 +448,10 @@ def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs, delimiter, c
     Reads a delimited file (with WKT column) and returns a QGSVectorLayerObject.
 
     Args:
-        delimited_file_abs (string): the full pathname to a delimited file
-        delimiter (string): the delimiter symbol (often times is a comma)
-        crs (string): the coordinate reference system (in EPSG code)
-        wkt_col_name (string): the name of the field/column containing the WKT geometry data
+        delimited_file_abs (str): the full pathname to a delimited file
+        delimiter (str): the delimiter symbol (often times is a comma)
+        crs (str): the coordinate reference system (in EPSG code)
+        wkt_col_name (str): the name of the field/column containing the WKT geometry data
 
     Returns:
         A QGSVectorLayer object containing the data from the input delimited file. If the QgsVectorLayer is not
@@ -457,11 +479,11 @@ def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs, delimiter, cr
     Reads a delimited file (with X and Y coordinates) and returns a QGSVectorLayerObject.
 
     Args:
-        delimited_file_abs (string): the full pathname to a delimited file
-        delimiter (string): the delimiter symbol (often times is a comma)
-        crs (string): the coordinate reference system (in EPSG code)
-        x_col_name (string): the name of the field containing the x coordinates
-        y_col_name(string): the name of the filed containing the y coordinates
+        delimited_file_abs (str): the full pathname to a delimited file
+        delimiter (str): the delimiter symbol (often times is a comma)
+        crs (str): the coordinate reference system (in EPSG code)
+        x_col_name (str): the name of the field containing the x coordinates
+        y_col_name(str): the name of the filed containing the y coordinates
 
     Returns:
         A QGSVectorLayer object containing the data from the input delimited file. If the QgsVectorLayer is not
@@ -492,11 +514,10 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
     Reads a feature class in a file geodatabase and returns a QGSVectorLayerObject.
 
     Args:
-        file_gdb_path_abs (string): the full pathname to a file geodatabase
-        feature_class (string): the name of the feature class to read
+        file_gdb_path_abs (str): the full pathname to a file geodatabase
+        feature_class (str): the name of the feature class to read
 
-    Returns:
-        A QGSVectorLayer object containing the data from the input feature class.
+    Returns: A QGSVectorLayer object containing the data from the input feature class.
     """
 
     # Instantiate the QGSVectorLayer object.
@@ -533,10 +554,9 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
     Reads the full pathname of spatial data file and returns a QGSVectorLayerObject.
 
     Args:
-        spatial_data_file_abs (string): the full pathname to a spatial data file
+        spatial_data_file_abs (str): the full pathname to a spatial data file
 
-    Returns:
-        A QGSVectorLayer object containing the data from the input spatial data file.
+    Returns: A QGSVectorLayer object containing the data from the input spatial data file.
 
     """
 
@@ -570,7 +590,7 @@ def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
 
     Args:
         qgsvectorlayer (object): a Qgs Vector Layer object
-        attribute_name (string): the name of the attribute to delete
+        attribute_name (str): the name of the attribute to delete
 
     Return: None.
     """
@@ -615,11 +635,10 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribut
 
     Args:
         qgsvectorlayer (object): a Qgs Vector Layer object
-        attribute_name (string): the original attribute name to change
-        new_attribute_name (string): the new attribute name to rename
+        attribute_name (str): the original attribute name to change
+        new_attribute_name (str): the new attribute name to rename
 
-    Return:
-        None.
+    Return: None.
     """
 
     # Iterate over the attributes in the Qgs Vector Layer object.
@@ -655,11 +674,11 @@ def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer, output_file, crs, geo
         6. optional layerOptions (specific to driver name) REF: http://www.gdal.org/drv_csv.html
 
     Args:
-        * qgsvectorlayer (object): the QGSVectorLayer object
-        * output_file (string): the full pathname to the output file (do not include .csv extension)
-        * crs (string): the output coordinate reference system in EPSG code
-        * geometry_type (string): the type of geometry to export ( `AS_WKT`, `AS_XYZ`, `AS_XY` or `AS_YX`)
-        * separator (string): the symbol to use as the delimiter of the output delimited file (`COMMA`, `SEMICOLON`,
+        qgsvectorlayer (object): the QGSVectorLayer object
+        output_file (str): the full pathname to the output file (do not include .csv extension)
+        crs (str): the output coordinate reference system in EPSG code
+        geometry_type (str): the type of geometry to export ( `AS_WKT`, `AS_XYZ`, `AS_XY` or `AS_YX`)
+        separator (str): the symbol to use as the delimiter of the output delimited file (`COMMA`, `SEMICOLON`,
            `TAB` or `SPACE`)
 
     Returns: None
@@ -691,10 +710,10 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer, output_file, crs, precision)
         6. optional layerOptions (specific to driver name) : for GeoJSON, coordinate precision is defined
 
     Args:
-        * qgsvectorlayer (object): the QGSVectorLayer object
-        * output_file (string): the full pathname to the output file (do not include .shp extension)
-        * crs (string): the output coordinate reference system in EPSG code
-        * precision (int): a integer at or between 0 and 15 that determines the number of decimal places to include
+        qgsvectorlayer (object): the QGSVectorLayer object
+        output_file (str): the full pathname to the output file (do not include .shp extension)
+        crs (str): the output coordinate reference system in EPSG code
+        precision (int): a integer at or between 0 and 15 that determines the number of decimal places to include
             in the output geometry
 
     Returns: None
@@ -724,9 +743,9 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer, output_file, crs):
         5. driver name for the output file
 
     Args:
-        * qgsvectorlayer (object): the QGSVectorLayer object
-        * output_file (string): the full pathname to the output file (do not include .shp extension)
-        * crs (string): the output coordinate reference system in EPSG code
+        qgsvectorlayer (object): the QGSVectorLayer object
+        output_file (str): the full pathname to the output file (do not include .shp extension)
+        crs (str): the output coordinate reference system in EPSG code
 
     Return: None
     """

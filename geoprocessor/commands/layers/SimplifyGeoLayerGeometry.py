@@ -31,6 +31,9 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         https://gis.stackexchange.com/questions/148585/what-is-simplify-tolerance-in-qgiss-simplify-geometries-tool,
         "points are removed if the distance with the tentative simplified line is smaller than the tolerance". The
         units are the same at the CRS of the layer.
+    * SimplifyMethod (str, optional): the method used to simplify the GeoLayer. Options are as follows:
+        DouglasPeucker: use the Douglas-Peucker algorithm to simplify the GeoLayer
+        Default: DouglasPeuker
     * SimplifiedGeoLaterID (str, optional): the ID of the simplified GeoLayer. By default, the simplified geolayer id
         is geolayerid_simple_tolerance where geolayerid is the GeoLayerID value and tolerance is the Tolerance value.
     * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the SimplifiedGeoLayerID
@@ -42,6 +45,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("Tolerance", type(2.5)),
+        CommandParameterMetadata("SimplifyMethod", type(str)),
         CommandParameterMetadata("SimplifiedGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
@@ -91,6 +95,20 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         if not validators.validate_string(pv_Tolerance, False, False):
             message = "Tolerance parameter has no value."
             recommendation = "Specify the Tolerance parameter to indicate the simplification extent."
+            warning += "\n" + message
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Check that optional parameter SimplifyMethod is either `DouglasPeucker` or None.
+        pv_SimplifyMethod = self.get_parameter_value(parameter_name="SimplifyMethod",
+                                                     command_parameters=command_parameters)
+        acceptable_values = ["DouglasPeucker"]
+        if not validators.validate_string_in_list(pv_SimplifyMethod, acceptable_values, none_allowed=True,
+                                                  empty_string_allowed=True, ignore_case=True):
+            message = "SimplifyMethod parameter value ({}) is not recognized.".format(pv_SimplifyMethod)
+            recommendation = "Specify one of the acceptable values ({}) for the SimplifyMethod parameter.".format(
+                acceptable_values)
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -173,6 +191,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         # Obtain the parameter values.
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_Tolerance = float(self.get_parameter_value("Tolerance"))
+        pv_SimplifyMethod = self.get_parameter_value("SimplifyMethod", default_value="DouglasPeucker").upper()
         default_simple_id = "{}_simple_{}".format(pv_GeoLayerID, str(pv_Tolerance))
         pv_SimplifiedGeoLayerID = self.get_parameter_value("SimplifiedGeoLayerID", default_value=default_simple_id)
 
@@ -195,17 +214,21 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                     geolayer = geolayer.write_to_disk(geolayer_disk_abs_path)
                     self.command_processor.add_geolayer(geolayer)
 
-                # Perform the QGIS simplify geometries function. Refer to the REF below for parameter descriptions.
-                # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/
-                #       vector_geometry_tools/simplifygeometries.html
-                simple_output = general.runalg("qgis:simplifygeometries", geolayer.qgs_vector_layer, pv_Tolerance, None)
+                # If the SimplifyMethod is DouglasPeucker, continue.
+                if pv_SimplifyMethod == "DOUGLASPEUCKER":
 
-                # Create a new GeoLayer with the input GeoLayer's ID. The new simplified GeoLayer will be assigned the
-                # value of the SimplifiedGeoLayerID parameter. simple_output["OUTPUT"] returns the full file pathname
-                # of the memory output layer (saved in a QGIS temporary folder)
-                qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(simple_output["OUTPUT"])
-                new_geolayer = GeoLayer(pv_SimplifiedGeoLayerID, qgs_vector_layer, "MEMORY")
-                self.command_processor.add_geolayer(new_geolayer)
+                    # Perform the QGIS simplify geometries function. Refer to the REF below for parameter descriptions.
+                    # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/
+                    #       vector_geometry_tools/simplifygeometries.html
+                    simple_output = general.runalg("qgis:simplifygeometries", geolayer.qgs_vector_layer,
+                                                   pv_Tolerance, None)
+
+                    # Create a new GeoLayer with the input GeoLayer's ID. The new simplified GeoLayer will be
+                    # assigned the value of the SimplifiedGeoLayerID parameter. simple_output["OUTPUT"] returns the
+                    # full file pathname of the memory output layer (saved in a QGIS temporary folder)
+                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(simple_output["OUTPUT"])
+                    new_geolayer = GeoLayer(pv_SimplifiedGeoLayerID, qgs_vector_layer, "MEMORY")
+                    self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process.
             except Exception as e:

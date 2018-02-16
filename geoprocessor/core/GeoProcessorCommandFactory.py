@@ -10,6 +10,7 @@ from geoprocessor.commands.layers.FreeGeoLayer import FreeGeoLayer
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
+from geoprocessor.commands.layers.ReadGeoLayerFromRaster import ReadGeoLayerFromRaster
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder

@@ -275,16 +275,16 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
 
         # Convert the DelimitedFile parameter value relative path to an absolute path and expand for ${Property}
         # syntax
-        delimited_fileolute = io_util.verify_path_for_os(io_util.to_absolute_path(
+        delimited_file_abs = io_util.verify_path_for_os(io_util.to_absolute_path(
             self.command_processor.get_property('WorkingDir'),
             self.command_processor.expand_parameter_value(pv_DelimitedFile, self)))
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
         if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
-            pv_GeoLayerID = io_util.expand_formatter(delimited_fileolute, pv_GeoLayerID)
+            pv_GeoLayerID = io_util.expand_formatter(delimited_file_abs, pv_GeoLayerID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_geolayer(delimited_fileolute, pv_Delimiter, pv_GeometryFormat, pv_XColumn,
+        if self.__should_read_geolayer(delimited_file_abs, pv_Delimiter, pv_GeometryFormat, pv_XColumn,
                                        pv_YColumn, pv_WKTColumn, pv_CRS, pv_GeoLayerID):
 
             try:
@@ -292,19 +292,19 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
                 if pv_GeometryFormat.upper() == "XY":
 
                     # Create a QGSVectorLayer object with the delimited file.
-                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_xy(delimited_fileolute,
+                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs,
                                                                                             pv_Delimiter, pv_CRS,
                                                                                             pv_XColumn,
                                                                                             pv_YColumn)
 
                 else:
                     # Create a QGSVectorLayer object with the delimited file.
-                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_wkt(delimited_fileolute,
+                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs,
                                                                                              pv_Delimiter, pv_CRS,
                                                                                              pv_WKTColumn)
 
                 # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
-                geolayer_obj = GeoLayer(pv_GeoLayerID, qgs_vector_layer, delimited_fileolute)
+                geolayer_obj = GeoLayer(pv_GeoLayerID, qgs_vector_layer, delimited_file_abs)
                 self.command_processor.add_geolayer(geolayer_obj)
 
             # Raise an exception if an unexpected error occurs during the process.

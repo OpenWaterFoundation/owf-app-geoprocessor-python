@@ -260,6 +260,47 @@ def get_col_names_from_delimited_file(delimited_file_abs, delimiter):
         return None
 
 
+def get_extension(full_path):
+    """
+    Returns the extension of a full path.
+
+    Args:
+        full_path (str): the input full path
+
+    Returns: The extension as a string.
+    """
+
+    filename, extension = os.path.splitext(os.path.basename(full_path))
+    return extension
+
+
+def get_filename(full_path):
+    """
+    Returns the filename of a full path (without the extension).
+
+    Args:
+        full_path (str): the input full path
+
+    Returns: The filename as a string.
+    """
+
+    filename, extension = os.path.splitext(os.path.basename(full_path))
+    return filename
+
+
+def get_path(full_path):
+    """
+    Returns the directory path of a full path (without the filename or extension).
+
+    Args:
+        full_path (str): the input full path
+
+    Returns: The directory path as a string.
+    """
+
+    return os.path.dirname(full_path)
+
+
 def print_standard_file_header(ofp, comment_line_prefix='#', max_width=120, properties=None):
     """
     Print a standard header to a file.  See __format_standard_file_header for an example of the header.

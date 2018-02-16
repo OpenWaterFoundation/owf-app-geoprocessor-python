@@ -160,6 +160,47 @@ def delimited_string_to_dictionary_list_value(delimited_string, entry_delimiter=
         return dictionary
 
 
+def filter_list_of_strings(input_list, include_glob_patterns=['*'], exclude_glob_patterns=['']):
+    """
+    Filters a list of strings by glob patterns.
+
+    Args:
+        input_list (list): a list of strings to filter
+        include_glob_patterns (list): a list of glob-style patterns corresponding to the items in the input_list that
+            are to be included. Default is ['*']. All items from the input_list are included.
+        exclude_glob_patterns (list): a list of glob-style patterns corresponding to the items in the input_list that
+            are to be excluded. Default is ['']. All items from the input_list are included.
+
+    Return:
+        A filtered list of strings.
+    """
+
+    master_items_to_include = []
+    master_items_to_exclude = []
+
+    # Iterate over the include glob patterns.
+    for pattern in include_glob_patterns:
+        # Get the items from the input_list that match the pattern. Add the items to the master_items_to_include list.
+        items_to_include = list(i for i in input_list if re.match(glob2re(pattern), i))
+        master_items_to_include.extend(items_to_include)
+
+    # Remove any duplicates from the master_items_to_include list.
+    master_items_to_include = list(set(master_items_to_include))
+
+    # Iterate over the exclude glob patterns.
+    for pattern in exclude_glob_patterns:
+        # Get the items from the input_list that match the pattern. Add the items to the master_items_to_exclude list.
+        items_to_exclude = list(i for i in input_list if re.match(glob2re(pattern), i))
+        master_items_to_exclude.extend(items_to_exclude)
+
+    # Remove any duplicates from the master_items_to_exclude list.
+    master_items_to_exclude = list(set(master_items_to_exclude))
+
+    # Remove any items in the master_items_to_include if the same items is in the master_items_to_exclude. Return
+    # the final list.
+    return [i for i in master_items_to_include if i not in master_items_to_exclude]
+
+
 def glob2re(pat):
     """
     Translates a shell PATTERN to a regular expression.
@@ -272,3 +313,6 @@ def string_to_boolean(string):
     # If the input string does not correspond with a Boolean value, return None.
     else:
         return None
+
+
+

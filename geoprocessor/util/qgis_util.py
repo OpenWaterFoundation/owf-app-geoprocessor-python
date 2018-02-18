@@ -5,11 +5,11 @@ from datetime import datetime
 import os
 
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
-from qgis.core import QgsGeometry, QgsVectorFileWriter, QgsVectorLayer
+from qgis.core import QgsGeometry, QgsRasterLayer, QgsVectorFileWriter, QgsVectorLayer
 
 from processing.core.Processing import Processing
 
-from PyQt4.QtCore import QVariant
+from PyQt4.QtCore import QVariant, QFileInfo
 
 
 
@@ -443,6 +443,33 @@ def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_
         qgsvectorlayer.dataProvider().changeAttributeValues({feature.id():attr})
 
 
+def read_qgsrasterlayer_from_file(spatial_data_file_abs):
+    """
+    Reads the full pathname of spatial data file and returns a QGSRasterLayer object.
+
+    Args:
+        spatial_data_file_abs (str): the full pathname to a spatial data file
+
+    Returns: A QGSRasterLayer object containing the data from the input spatial data file.
+    """
+
+    # Get the filename and basename of the input raster file.
+    fileInfo = QFileInfo(spatial_data_file_abs)
+    path = fileInfo.filePath()
+    baseName = fileInfo.baseName()
+
+    # Create the QgsRasterLayer object.
+    qgs_raster_layer_obj = QgsRasterLayer(path, baseName)
+
+    # Return the QgsRasterLayer if it is valid.
+    if qgs_raster_layer_obj.isValid():
+        return qgs_raster_layer_obj
+
+    # If the created QGSRasterLayer object is invalid, print an error message and return None.
+    else:
+        print "The QGSRasterLayer object ({}) is invalid.".format(spatial_data_file_abs)
+
+
 def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs, delimiter, crs, wkt_col_name):
     """
     Reads a delimited file (with WKT column) and returns a QGSVectorLayerObject.
@@ -551,7 +578,7 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
 def read_qgsvectorlayer_from_file(spatial_data_file_abs):
 
     """
-    Reads the full pathname of spatial data file and returns a QGSVectorLayerObject.
+    Reads the full pathname of spatial data file and returns a QGSVectorLayer object.
 
     Args:
         spatial_data_file_abs (str): the full pathname to a spatial data file
@@ -581,7 +608,6 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
     # If the created QGSVectorLayer object is invalid, print an error message and return None.
     else:
         print "The QGSVectorLayer object ({}) is invalid.".format(spatial_data_file_abs)
-        return None
 
 
 def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):

@@ -10,7 +10,7 @@ from geoprocessor.commands.layers.FreeGeoLayer import FreeGeoLayer
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
-from geoprocessor.commands.layers.ReadGeoLayerFromRaster import ReadGeoLayerFromRaster
+# from geoprocessor.commands.layers.ReadGeoLayerFromRaster import ReadGeoLayerFromRaster
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
@@ -43,6 +43,8 @@ from geoprocessor.commands.testing.StartRegressionTestResultsReport import Start
 
 from geoprocessor.commands.util.Blank import Blank
 from geoprocessor.commands.util.Comment import Comment
+from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
+from geoprocessor.commands.util.CommentBlockStart import CommentBlockStart
 from geoprocessor.commands.util.CopyFile import CopyFile
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
@@ -67,7 +69,9 @@ class GeoProcessorCommandFactory(object):
         "ADDGEOLAYERATTRIBUTE": AddGeoLayerAttribute(),
         "BLANKCOMMAND": Blank(),  # Actually has no name, is whitespace only
         "CLIPGEOLAYER": ClipGeoLayer(),
-        "COMMENT": Comment(),  # Actually is line starting with #
+        "COMMENT": Comment(),
+        "COMMENTBLOCKEND": CommentBlockEnd(),
+        "COMMENTBLOCKSTART": CommentBlockStart(),
         "COMPAREFILES": CompareFiles(),
         "COPYFILE": CopyFile(),
         "COPYGEOLAYER": CopyGeoLayer(),
@@ -155,8 +159,14 @@ class GeoProcessorCommandFactory(object):
             return Blank()
 
         # Comment line.
-        elif command_string_trimmed[:1] == '#':
+        elif command_string_trimmed.startswith('#'):
             return Comment()
+
+        elif command_string_trimmed.startswith('/*'):
+            return CommentBlockStart()
+
+        elif command_string_trimmed.endswith('*/'):
+            return CommentBlockEnd()
 
         # The symbol '(' was found.
         # Assume command of syntax CommandName(Param1="...",Param2="...").
@@ -185,6 +195,8 @@ class GeoProcessorCommandFactory(object):
                     return AddGeoLayerAttribute()
                 elif command_name_upper == "CLIPGEOLAYER":
                     return ClipGeoLayer()
+                # Comment, CommentBlockStart, and CommentBlockEnd are checked for above
+                # - might be able to treat similar to other commands but need to confirm out parsing is done
                 elif command_name_upper == "COMPAREFILES":
                     return CompareFiles()
                 elif command_name_upper == "COPYFILE":

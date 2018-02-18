@@ -510,6 +510,9 @@ def validate_string_in_list(string_value, string_list, none_allowed=False,
     return False
 
 
+# TODO smaler 2018-02-18 The following needs work
+# - it allows brackets anywhere in the string
+# - it does not actually check for comma-separated values
 def validate_list(list_value, none_allowed, empty_string_allowed, brackets_required=True):
     """
     Validate that a list value is a list.

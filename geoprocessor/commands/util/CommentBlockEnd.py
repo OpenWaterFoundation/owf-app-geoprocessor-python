@@ -1,4 +1,4 @@
-# Single line comment starting with #
+# */ comment block end
 
 import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
 
@@ -6,18 +6,18 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
 
-class Comment(AbstractCommand.AbstractCommand):
+class CommentBlockEnd(AbstractCommand.AbstractCommand):
     """
-    # comment.
+    */ comment block end.
     """
     def __init__(self):
         """
         Initialize a new instance of the command.
         """
-        # Use hash for the command name
-        self.command_name = "#"
+        # Command name is the comment block end.
+        self.command_name = "*/"
         # The AbstractCommand.command_string will be used to output the full string:
-        super(Comment, self).__init__()
+        super(CommentBlockEnd, self).__init__()
         # Set the command status to success so that testing reports look better
         self.command_status.initialization_status = command_status_type.SUCCESS
         self.command_status.discovery_status = command_status_type.SUCCESS
@@ -39,11 +39,12 @@ class Comment(AbstractCommand.AbstractCommand):
 
         # Set data in the parent class, but do not attempt to parse the command since unknown syntax
         full_initialization = False
-        super(Comment, self).initialize_command(command_string, processor, full_initialization)
+        super(CommentBlockEnd, self).initialize_command(command_string, processor, full_initialization)
 
     def run_command(self):
         """
         Run the command.  Does nothing since comments cause no action.
+        The command type is examined in the processor to know when a comment block is ending.
 
         Returns:
             None.

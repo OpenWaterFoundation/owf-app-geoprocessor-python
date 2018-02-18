@@ -611,11 +611,11 @@ class GeoProcessor(object):
                 if command_class == 'Comment':
                     # Hash-comment - TODO need to mark as processing successful - confirm when UI in place
                     continue
-                elif command_class == 'CommentStart':
+                elif command_class == 'CommentBlockStart':
                     # /* comment block start - TODO need to mark as processing successful - confirm when UI in place
                     in_comment = True
                     continue
-                elif command_class == 'CommentEnd':
+                elif command_class == 'CommentBlockEnd':
                     # */ comment block end - TODO need to mark as processing successful - confirm when UI in place
                     in_comment = False
                     continue

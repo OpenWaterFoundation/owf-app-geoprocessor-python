@@ -8,6 +8,7 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command_util as command_util
+import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
 import logging
@@ -21,7 +22,8 @@ class SetProperty(AbstractCommand):
     __command_parameter_metadata = [
         CommandParameterMetadata("PropertyName", type("")),
         CommandParameterMetadata("PropertyType", type("")),
-        CommandParameterMetadata("PropertyValue", type(""))
+        CommandParameterMetadata("PropertyValue", type("")),
+        CommandParameterMetadata("PropertyValues", type(""))
     ]
 
     def __init__(self):
@@ -71,13 +73,37 @@ class SetProperty(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # PropertyValue is Required
+        # TODO smalers 2017-12-28 add other parameters similar to TSTool to set special values
+
+        property_value_parameter_count = 0  # increment for PropertyValue or PropertyValues, only one is allowed
+        # PropertyValue or PropertyValues are required
         pv_PropertyValue = self.get_parameter_value(
             parameter_name='PropertyValue', command_parameters=command_parameters)
-        if not validators.validate_string(pv_PropertyValue, False, False):
-            # TODO smalers 2017-12-28 add other parameters similar to TSTool to set special values
-            message = "PropertyValue parameter is not specified."
-            recommendation = "Specify a property value."
+        if pv_PropertyValue is not None and pv_PropertyValue != "":
+            property_value_parameter_count += 1
+            if not validators.validate_string(pv_PropertyValue, True, True):
+                message = "PropertyValue parameter is not specified."
+                recommendation = "Specify a property value."
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        pv_PropertyValues = self.get_parameter_value(
+            parameter_name='PropertyValues', command_parameters=command_parameters)
+        if pv_PropertyValues is not None and pv_PropertyValues != "":
+            property_value_parameter_count += 1
+            if not validators.validate_list(pv_PropertyValues, True, True, brackets_required=False):
+                message = "PropertyValues parameter is not valid."
+                recommendation = "Specify a list of values separated by commas and optional spaces."
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        if property_value_parameter_count != 1:
+            message = "PropertyValue (single value) or PropertyValues (for list) parameter must be specified."
+            recommendation = "Specify a single value with PropertyValue or list of values with PropertyValues."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -115,34 +141,73 @@ class SetProperty(AbstractCommand):
         pv_PropertyName = self.get_parameter_value('PropertyName')
         pv_PropertyType = self.get_parameter_value('PropertyType')
         pv_PropertyValue = self.get_parameter_value('PropertyValue')
+        pv_PropertyValues = self.get_parameter_value('PropertyValues')
         # Expand the property value string before converting to the requested type
         pv_PropertyValue_expanded = self.command_processor.expand_parameter_value(pv_PropertyValue)
+        pv_PropertyValues_expanded = self.command_processor.expand_parameter_value(pv_PropertyValues)
+        do_list = False  # Single property is the default
+        if pv_PropertyValues is not None and pv_PropertyValues != "":
+            # Doing a list
+            do_list = True
 
         try:
-            # Convert the property value string to the requested type
-            pv_PropertyValue2 = None
-            if pv_PropertyType == 'bool':
-                pv_PropertyValue2 = bool(pv_PropertyValue_expanded)
-            elif pv_PropertyType == 'float':
-                pv_PropertyValue2 = float(pv_PropertyValue_expanded)
-            elif pv_PropertyType == 'int':
-                pv_PropertyValue2 = int(pv_PropertyValue_expanded)
-            elif pv_PropertyType == 'str':
-                pv_PropertyValue2 = str(pv_PropertyValue_expanded)
-            # Now set the object as a property, will be the requested type
-            if pv_PropertyValue2 is not None:
-                self.command_processor.set_property(pv_PropertyName, pv_PropertyValue2)
+            parameter_value_as_list = []
+            parameter_value_to_parse = ""
+            if do_list:
+                parameter_value_to_parse = pv_PropertyValues_expanded
+            else:
+                # Single property - add to a list as if a single-value list
+                parameter_value_to_parse = pv_PropertyValue_expanded
+            # logger.info('Parsing parameter "' + str(parameter_value_to_parse) + "'")
+            # Parse the list into a string list
+            # - Remove leading [ and trailing ] so only have simple string list
+            parameter_value_to_parse = parameter_value_to_parse.strip()  # First strip whitespace
+            if parameter_value_to_parse.startswith("["):
+                parameter_value_to_parse = parameter_value_to_parse[1:]
+            if parameter_value_to_parse.endswith("]"):
+                parameter_value_to_parse = parameter_value_to_parse[0:len(parameter_value_to_parse) - 1]
+            parameter_value_as_string_list = string_util.delimited_string_to_list(parameter_value_to_parse, trim=True)
+            # logger.info('Parsed parameter "' + str(parameter_value_as_string_list) + "'")
+            # Loop through the list
+            parameter_value2 = None
+            for parameter_value in parameter_value_as_string_list:
+                # Convert the property value string to the requested type
+                parameter_value2 = None
+                if pv_PropertyType == 'bool':
+                    parameter_value2 = bool(parameter_value)
+                elif pv_PropertyType == 'float':
+                    parameter_value2 = float(parameter_value)
+                elif pv_PropertyType == 'int':
+                    parameter_value2 = int(parameter_value)
+                elif pv_PropertyType == 'str':
+                    parameter_value2 = str(parameter_value)
+                # Now set the object as a property, will be the requested type
+                if do_list:
+                    # The property is a list
+                    # - for now avoid adding None - later For command should process only valid values
+                    if parameter_value2 is not None:
+                        parameter_value_as_list.append(parameter_value2)
+            if do_list:
+                # Doing a list so set the property value to the list
+                # - list could be empty - is this an issue?
+                self.command_processor.set_property(pv_PropertyName, parameter_value_as_list)
+                # logger.info('Setting parameter "' + str(pv_PropertyName) + '"="' + str(parameter_value_as_list) + '"')
+            else:
+                # The property value is a single object and will have been processed in the loop's only iteration
+                if parameter_value2 is not None:
+                    self.command_processor.set_property(pv_PropertyName, parameter_value2)
+                    # logger.info('Setting parameter "' + str(pv_PropertyName) + '"="' + str(parameter_value2) + '"')
         except Exception as e:
             warning_count += 1
-            message = 'Unexpected error setting property "' + pv_PropertyName + '"'
-            logger.exception(message, e)
+            message = 'Unexpected error setting property "' + str(pv_PropertyName) + '"'
+            logger.error(message, e, exc_info=True)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(command_status_type.FAILURE, message,
                                  "Check the log file for details."))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings processing the command."
+            message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
         self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

@@ -182,17 +182,23 @@ class AbstractCommand(object):
         Format the internal command data into the command string that users see.
         This version of the function should only be used by commands that follow CommandName(Param1="Value1",...)
         syntax and should otherwise be overloaded in the specific command class.
-        Only parameters that have been specified will be output by default to minimize command length.
+        Only parameters that have been specified (values are not None and not empty strings)
+        will be output by default to minimize command length.
         The order of parameters is given by the get_parameter_metadata() function,
         which indicates a logical order (input first, group by feature, etc.).
         Any unknown parameters are output at the end - this should normally not occur but is
         enabled to help with troubleshooting.
+        A parameter value that is a list will be output with surrounding [ ].
+        If brackets are optional, they should be handled in parsing and command editor dialogs can display
+        without brackets.
 
         Args:
-            command_parameters:  If specified, a dictionary of parameter names and values to format.
-                                 If specified as None, all non-empty command parameters will be formatted.
-            format_all:  If True, format all command parameters even if not specified, useful for troubleshooting.
-                         If False, only format specified parameters, default for normal functionality.
+            command_parameters (dict):
+                If specified, a dictionary of parameter names and values to format.
+                If specified as None, all non-empty command parameters will be formatted.
+            format_all (bool):
+                If True, format all command parameters even if not specified, useful for troubleshooting.
+                If False, only format specified parameters, default for normal functionality.
 
         Returns:  Formatted command string such as CommandName(Param1="Value1",Param2="Value2",...)
         """
@@ -226,9 +232,11 @@ class AbstractCommand(object):
                 # If this is not the first parameter, add a comma separator
                 if param_output_count > 0:
                     command_string_formatted = command_string_formatted + ","
-                # Append the parameter
+                # Append the parameter using syntax ParameterName="ParameterValue"
+                # - simple objects will output with no formatting
+                # - lists will be output as ['a', 'b', 'c'] or [1, 2, 3], OK for now but will have to handle parsing
                 command_string_formatted = command_string_formatted + command_parameter_meta.parameter_name + '="' + \
-                    str(command_parameter_meta.parameter_value) + '"'
-                # Append the trailing parenthesis
-                command_string_formatted = command_string_formatted + ")"
+                    str(parameter_value) + '"'
+        # Append the trailing parenthesis
+        command_string_formatted = command_string_formatted + ")"
         return command_string_formatted

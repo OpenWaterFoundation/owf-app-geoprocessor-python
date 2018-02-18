@@ -26,7 +26,9 @@ class For(AbstractCommand):
         # Use strings for sequence because could be integer, decimal, or string list.
         CommandParameterMetadata("SequenceStart", type("")),
         CommandParameterMetadata("SequenceEnd", type("")),
-        CommandParameterMetadata("SequenceIncrement", type(""))
+        CommandParameterMetadata("SequenceIncrement", type("")),
+        # Specify the list property to use for iteration
+        CommandParameterMetadata("ListProperty", type(""))
     ]
 
     def __init__(self):
@@ -39,12 +41,13 @@ class For(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Local data
-        self.for_initialized = False
+        self.for_initialized = False  # For loop is not initialized, will be initialized in first next() call
 
         # Iterator core data
-        self.iterator_object = None
-        self.iterator_object_list_index = None
-        self.iterator_property = None
+        # - used with all iterator types
+        self.iterator_object = None  # The current object for the iterator
+        self.iterator_object_list_index = None  # The index in the iterator object list, 0-reference
+        self.iterator_property = None  # The name of the property that set for the iterator variable
 
         # Utility data to simplify checks for type of iteration (only one should be set to True)
         self.iterator_is_list = False
@@ -55,6 +58,9 @@ class For(AbstractCommand):
         self.iterator_sequence_start = None
         self.iterator_sequence_end = None
         self.iterator_sequence_increment = None
+
+        # Used with list iterator
+        self.iterator_list = None  # The list of objects, typically str, being iterated over
 
     def check_command_parameters(self, command_parameters):
         """
@@ -73,6 +79,15 @@ class For(AbstractCommand):
         warning = ""
         logger = logging.getLogger(__name__)
 
+        # Unlike most commands, set internal data here because it is needed by initial call to next()
+        # before calls to run_command
+
+        # Options for iterating, will be changed based on parameters that are set
+        self.iterator_is_list = False
+        self.iterator_is_sequence = False
+        self.iterator_is_table = False
+        option_count = 0  # How many iteration options are specified (should only be 1)
+
         # Name is required
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
         if not validators.validate_string(pv_Name, False, False):
@@ -83,65 +98,84 @@ class For(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
+        # --------------------------------
+        # Iterator option 1 - use a sequence
         # SequenceStart is currently required since no other iteration types are implemented
         pv_SequenceStart = self.get_parameter_value(
             parameter_name='SequenceStart', command_parameters=command_parameters)
-        if not validators.validate_number(pv_SequenceStart, False, False):
-            message = "The SequenceStart value must be specified"
-            recommendation = "Specify the SequenceStart as a number."
+        if pv_SequenceStart is not None and pv_SequenceStart != "":
+            self.iterator_is_sequence = True  # Will be checked below to make sure only one option is used
+            option_count += 1
+            if not validators.validate_number(pv_SequenceStart, False, False):
+                message = "The SequenceStart value must be specified as a number"
+                recommendation = "Specify the SequenceStart as a number."
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            else:
+                if pv_SequenceStart.find(".") >= 0:
+                    # Decimal
+                    self.iterator_sequence_start = float(pv_SequenceStart)
+                else:
+                    # Assume integer
+                    self.iterator_sequence_start = int(pv_SequenceStart)
+
+            # The other sequence parameters only make sense if the start is specified
+            # SequenceEnd is currently required since no other iteration types are implemented
+            pv_SequenceEnd = self.get_parameter_value(parameter_name='SequenceEnd', command_parameters=command_parameters)
+            if not validators.validate_number(pv_SequenceEnd, False, False):
+                message = "The SequenceEnd value must be specified as a number"
+                recommendation = "Specify the SequenceEnd as a number."
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            else:
+                if pv_SequenceEnd.find(".") >= 0:
+                    # Decimal
+                    self.iterator_sequence_end = float(pv_SequenceEnd)
+                else:
+                    # Assume integer
+                    self.iterator_sequence_end = int(pv_SequenceEnd)
+
+            # SequenceIncrement is currently required since no other iteration types are implemented
+            pv_SequenceIncrement = self.get_parameter_value(
+                parameter_name='SequenceIncrement', command_parameters=command_parameters)
+            if not validators.validate_number(pv_SequenceIncrement, False, False):
+                message = "The SequenceIncrement value must be specified as a number"
+                recommendation = "Specify the SequenceIncrement as a number."
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            else:
+                if pv_SequenceIncrement.find(".") >= 0:
+                    # Decimal
+                    self.iterator_sequence_increment = float(pv_SequenceIncrement)
+                else:
+                    # Assume integer
+                    self.iterator_sequence_increment = int(pv_SequenceIncrement)
+
+        # --------------------------------
+        # Iterator option 2 - use a processor property that contains a list
+        pv_ListProperty = self.get_parameter_value(parameter_name='ListProperty', command_parameters=command_parameters)
+        if pv_ListProperty is not None and pv_ListProperty != "":
+            self.iterator_is_list = True  # Will be checked below to make sure only one option is used
+            option_count += 1
+            # No further validation is done - ListProperty property must be defined at run time
+        # --------------------------------
+
+        # Only allow one of the iteration properties to be specified because otherwise the command will be confused.
+        if option_count > 1:
+            message = "Parameters for multiple iterator types have been specified."
+            recommendation = "Specify parameters for only one iteration type."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
-
-        # SequenceEnd is currently required since no other iteration types are implemented
-        pv_SequenceEnd = self.get_parameter_value(parameter_name='SequenceEnd', command_parameters=command_parameters)
-        if not validators.validate_number(pv_SequenceEnd, False, False):
-            message = "The SequenceEnd value must be specified"
-            recommendation = "Specify the SequenceEnd as a number."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
-
-        # SequenceIncrement is currently required since no other iteration types are implemented
-        pv_SequenceIncrement = self.get_parameter_value(
-            parameter_name='SequenceIncrement', command_parameters=command_parameters)
-        if not validators.validate_number(pv_SequenceIncrement, False, False):
-            message = "The SequenceIncrement value must be specified"
-            recommendation = "Specify the SequenceIncrement as a number."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
-
-        # Unlike most commands, set internal data here because it is needed by next() before calls to run_command
-
-        if pv_SequenceStart.find(".") >= 0:
-            # Decimal
-            self.iterator_sequence_start = float(pv_SequenceStart)
-        else:
-            # Assume integer
-            self.iterator_sequence_start = int(pv_SequenceStart)
-
-        if pv_SequenceEnd.find(".") >= 0:
-            # Decimal
-            self.iterator_sequence_end = float(pv_SequenceEnd)
-        else:
-            # Assume integer
-            self.iterator_sequence_end = int(pv_SequenceEnd)
-
-        if pv_SequenceIncrement.find(".") >= 0:
-            # Decimal
-            self.iterator_sequence_increment = float(pv_SequenceIncrement)
-        else:
-            # Assume integer
-            self.iterator_sequence_increment = int(pv_SequenceIncrement)
-
-        # TODO smalers 2017-12-29 for now hard code sequence
-        self.iterator_is_list = False
-        self.iterator_is_sequence = True
-        self.iterator_is_table = False
+            # Allow multiple iteration types to be set since they will be processed in order when running
+            # and the preferred approach will take precedent
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -175,15 +209,44 @@ class For(AbstractCommand):
             If the increment will go past the end, return False.  Otherwise, return True.
         """
         debug = True
+        logger = logging.getLogger(__name__)
         if not self.for_initialized:
             # Initialize the loop
-            print("Initializing For() command")
+            logger.info("Initializing For() command")
+            # Set the initialization here because exceptions could cause it to not get set and then
+            # an infinite loop results
+            self.for_initialized = True
             if self.iterator_is_list:
-                # TODO smalers 2017-12-21 see TSTool command to fill out layer list
-                pass
+                logger.info("Initializing For() command for a list.")
+                # Initialize the loop
+                self.__set_iterator_property_value(None)
+                self.command_status.clear_log(command_phase_type.RUN)
+                try:
+                    # This would normally be done in run_command(), but that function is not called like other commands
+                    self.iterator_object_list_index = 0
+                    pv_ListProperty = self.get_parameter_value('ListProperty')
+                    self.iterator_list = self.command_processor.get_property(pv_ListProperty)
+                    if self.iterator_list is None:
+                        message = 'For command iterator list property "' + pv_ListProperty + '" is not defined.'
+                        recommendation = "Confirm that the list property has values."
+                        logger.warning(message)
+                        self.command_status.add_to_log(
+                            command_phase_type.RUN,
+                            CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    else:
+                        self.iterator_object = self.iterator_list[self.iterator_object_list_index]
+                    # if ( Message.isDebugOn )
+                    if debug:
+                        logger.info("Initialized iterator object to first item in list: " + str(self.iterator_object))
+                        return True
+                except:
+                    # message = "Error initializing For() iterator to initial value in list (" + e + ").";
+                    message = "Error initializing For() iterator initial value to first item in list"
+                    logger.warning(message, exc_info=True)
+                    raise ValueError(message)
             elif self.iterator_is_sequence:
                 # Iterating on a sequence
-                print("Initializing For() command for a sequence.")
+                logger.info("Initializing For() command for a sequence.")
                 # Initialize the loop
                 self.__set_iterator_property_value(None)
                 self.command_status.clear_log(command_phase_type.RUN)
@@ -196,16 +259,14 @@ class For(AbstractCommand):
                             self.iterator_sequence_increment = 1
                         elif type(self.iterator_sequence_start) == 'float':
                             self.iterator_sequence_increment = 1.0
-                    self.for_initialized = True
                     # if ( Message.isDebugOn )
                     if debug:
-                        # Message.printDebug(1, routine, "Initialized iterator object to: " + this.iteratorObject );
-                        print("Initialized iterator object to: " + str(self.iterator_object))
+                        logger.info("Initialized iterator object to sequence start: " + str(self.iterator_object))
                         return True
                 except:
                     # message = "Error initializing For() iterator to initial value (" + e + ").";
-                    message = "Error initializing For() iterator to initial value"
-                    traceback.print_exc(file=sys.stdout)
+                    message = "Error initializing For() iterator initial value to sequence start"
+                    logger.warning(message, exc_info=True)
                     raise ValueError(message)
             elif self.iterator_is_table:
                 # TODO smalers 2017-12-21 see TSTool command to fill out table
@@ -214,10 +275,21 @@ class For(AbstractCommand):
                 # TODO smalers 2017-12-21 need to throw exception
                 pass
         else:
-            # Increment the property and optional set properties from table columns
-            if self.iterator_is_list or self.iterator_is_table:
-                # TODO smalers 2017-12-21 see TSTool command to fill out layer list, table
-                pass
+            # Increment the iterator property
+            # - optionally set additional properties from other table columns (tables not yet supported)
+            if self.iterator_is_list:
+                # If the iterator object is already at or will exceed the list length if incremented,
+                # then done iterating
+                # - len() is 1-based, index is 0-based
+                if self.iterator_object_list_index >= (len(self.iterator_list) - 1):
+                    logger.info("Iterator has reached list end.  Returning False from next().")
+                    return False
+                else:
+                    # Iterate by incrementing list index and returning corresponding list object
+                    self.iterator_object_list_index += 1
+                    self.iterator_object = self.iterator_list[self.iterator_object_list_index]
+                    logger.info("Iterator value is now " + str(self.iterator_object) + ".  Returning True from next().")
+                    return True
             elif self.iterator_is_sequence:
                 # If the iterator object is already at or will exceed the maximum, then
                 # done iterating
@@ -225,14 +297,17 @@ class For(AbstractCommand):
                 # if (((type(self.iterator_sequence_start) == 'int') &&
                 if self.iterator_object >= self.iterator_sequence_end or \
                         (self.iterator_object + self.iterator_sequence_increment) > self.iterator_sequence_end:
-                    print("Iterator has reached end value.  Returning False from next().")
+                    logger.info("Iterator has reached end value.  Returning False from next().")
                     return False
                 else:
                     # Iterate by adding increment to iterator object
                     # TODO smalers 2017-12-21 verify that Python handles typing automatically for integers and doubles
                     self.iterator_object = self.iterator_object + self.iterator_sequence_increment
-                    print("Iterator value is now " + str(self.iterator_object) + ".  Returning True from next().")
+                    logger.info("Iterator value is now " + str(self.iterator_object) + ".  Returning True from next().")
                     return True
+            elif self.iterator_is_table:
+                # Not yet implemented
+                pass
             else:
                 # Iteration type not recognized so jump out right away to avoid infinite loop
                 return True
@@ -243,7 +318,9 @@ class For(AbstractCommand):
         This is needed to ensure that re-executing commands will
         restart the loop on the first call to next().
         """
+        logger = logging.getLogger(__name__)
         self.for_initialized = False
+        logger.info('Reset For loop to uninitialized')
 
     def run_command(self):
         """
@@ -252,39 +329,61 @@ class For(AbstractCommand):
         Returns:
             Nothing.
         """
-        print("In For.run_command")
+        logger = logging.getLogger(__name__)
+        logger.info("In For.run_command")
         pv_Name = self.get_parameter_value('Name')
         pv_IteratorProperty = self.get_parameter_value('IteratorProperty')
         if pv_IteratorProperty is None or pv_IteratorProperty == "":
             # Default to same as Name
             pv_IteratorProperty = pv_Name
         self.iterator_property = pv_IteratorProperty
+        # -------------------------------------------------------------------------------
+        # Properties used when iterating over a sequence of integers or decimal numbers
         pv_SequenceStart = self.get_parameter_value('SequenceStart')
-        if pv_SequenceStart.find(".") >= 0:
-            # Decimal
-            self.iterator_sequence_start = float(pv_SequenceStart)
-        else:
-            # Assume integer
-            self.iterator_sequence_start = int(pv_SequenceStart)
-        pv_SequenceEnd = self.get_parameter_value('SequenceEnd')
-        if pv_SequenceEnd.find(".") >= 0:
-            # Decimal
-            self.iterator_sequence_end = float(pv_SequenceEnd)
-        else:
-            # Assume integer
-            self.iterator_sequence_end = int(pv_SequenceEnd)
-        pv_SequenceIncrement = self.get_parameter_value('SequenceIncrement')
-        if pv_SequenceIncrement.find(".") >= 0:
-            # Decimal
-            self.iterator_sequence_increment = float(pv_SequenceIncrement)
-        else:
-            # Assume integer
-            self.iterator_sequence_increment = int(pv_SequenceIncrement)
-
-        # Currently the iteration is always over a sequence
-        self.iterator_is_list = False
-        self.iterator_is_sequence = True
-        self.iterator_is_table = False
+        if pv_SequenceStart is not None and pv_SequenceStart != "":
+            if pv_SequenceStart.find(".") >= 0:
+                # Decimal
+                self.iterator_sequence_start = float(pv_SequenceStart)
+            else:
+                # Assume integer
+                self.iterator_sequence_start = int(pv_SequenceStart)
+            pv_SequenceEnd = self.get_parameter_value('SequenceEnd')
+            if pv_SequenceEnd.find(".") >= 0:
+                # Decimal
+                self.iterator_sequence_end = float(pv_SequenceEnd)
+            else:
+                # Assume integer
+                self.iterator_sequence_end = int(pv_SequenceEnd)
+            pv_SequenceIncrement = self.get_parameter_value('SequenceIncrement')
+            if pv_SequenceIncrement is None or pv_SequenceIncrement == "":
+                pv_SequenceIncrement = "1"  # Default
+            if pv_SequenceIncrement.find(".") >= 0:
+                # Decimal
+                self.iterator_sequence_increment = float(pv_SequenceIncrement)
+            else:
+                # Assume integer
+                self.iterator_sequence_increment = int(pv_SequenceIncrement)
+            self.iterator_is_list = False
+            self.iterator_is_sequence = True
+            self.iterator_is_table = False
+        # -------------------------------------------------------------------------------
+        # Properties used when iterating over a list of values
+        # - initially str is used in testing but may support list of numbers
+        # -------------------------------------------------------------------------------
+        pv_ListProperty = self.get_parameter_value('ListProperty')
+        if pv_ListProperty is not None:
+            # Iterating over a list, given by the property
+            self.iterator_list = self.command_processor.get_property(pv_ListProperty)
+            if self.iterator_list is None:
+                message = 'For command iterator list property "' + pv_ListProperty + '" is not defined.'
+                recommendation = "Confirm that the list property has values."
+                logger.warning(message)
+                self.command_status.add_to_log(
+                    command_phase_type.RUN,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.iterator_is_list = True
+            self.iterator_is_sequence = False
+            self.iterator_is_table = False
 
         # next() will have been called by the command processor so at this point just set the processor property.
         # Set the basic property as well as the property with 0 and 1 at end of name indicating zero and 1 offset.

@@ -14,9 +14,6 @@ import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command_util as command_util
 
-# TODO smalers 2018-01-28 remove this ASAP if recent changes to move QGIS setup/shutdown work OK.
-# QGIS Geoprocessing
-from qgis.core import QgsApplication
 from processing.core.Processing import Processing
 
 # General modules
@@ -550,20 +547,6 @@ class GeoProcessor(object):
 
         logger.info("Recursive=" + str(recursive) + " AppendResults=" + str(append_results))
 
-        # TODO smalers 2017-12-29 what happens if this is done more than once?
-        # - should QGIS initialization occur when the application starts or each command workflow run?
-        # Initialize QGIS resources to utilize QGIS functionality.
-        # TODO smalers 2018-01-27
-        # - Moved this to gp main application calling qgis_util to avoid issues opening/closing between processor runs
-        # - Remove this code ASAP
-        handle_qgis_app_here = False
-        if handle_qgis_app_here:
-            logger.info("Before QGS initialization")
-            QgsApplication.setPrefixPath(self.get_property("qgis_prefix_path"), True)
-            qgs = QgsApplication([], True)
-            qgs.initQgis()
-            Processing.initialize()
-
         if command_list is None:
             logger.info("Running all commands")
             command_list = self.commands
@@ -599,226 +582,209 @@ class GeoProcessor(object):
             command.command_status.clear_log(command_phase_type.RUN)
 
         # Run all the commands
-        # Set debug = True to turn on debug messages
+        # - set debug = True to turn on debug messages
         debug = False
         # Python does not allow modifying the for loop iterator variable so use a while loop
         # for i_command in range(n_commands):
         i_command = -1
         while i_command < n_commands:
-            i_command = i_command + 1
-            if i_command == n_commands:
-                # Do an extra check on the index to make sure because for loops can modify the index
-                # prior to the increment statement above.
-                break
-            command = command_list[i_command]
-            if debug:
-                command.print_for_debug()
+            try:
+                # Catch exceptions in any command, to make sure all commands can run through
+                # - hopefully nothing is amiss with main controlling commands - otherwise need to bulletproof code
+                i_command = i_command + 1
+                if i_command == n_commands:
+                    # Do an extra check on the index to make sure because for loops can modify the index
+                    # prior to the increment statement above.
+                    break
+                command = command_list[i_command]
+                if debug:
+                    command.print_for_debug()
 
-            if not in_comment and If_stack_ok_to_run:
-                message='-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
-                      command.command_string
-                # print(message)
-                logger.info(message)
+                if not in_comment and If_stack_ok_to_run:
+                    message='-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
+                        command.command_string
+                    # print(message)
+                    logger.info(message)
 
-            command_class = command.__class__.__name__
-            # if isinstance(command, For):
-            if command_class == 'For':
-                # Reset the For command
-                command.reset_command()
+                command_class = command.__class__.__name__
 
-            if in_comment and If_stack_ok_to_run:
-                pass
+                if command_class == 'Comment':
+                    # Hash-comment - TODO need to mark as processing successful - confirm when UI in place
+                    continue
+                elif command_class == 'CommentStart':
+                    # /* comment block start - TODO need to mark as processing successful - confirm when UI in place
+                    in_comment = True
+                    continue
+                elif command_class == 'CommentEnd':
+                    # */ comment block end - TODO need to mark as processing successful - confirm when UI in place
+                    in_comment = False
+                    continue
 
-            if command_class == 'Comment':
-                # Hash-comment - TODO need to mark as processing successful
-                continue
-            elif command_class == 'CommentStart':
-                # /* comment block start - TODO need to mark as processing successful
-                in_comment = True
-                continue
-            elif command_class == 'CommentEnd':
-                # */ comment block end - TODO need to mark as processing successful
-                in_comment = False
-                continue
+                if in_comment:
+                    # In a /* */ comment block so set status to successful
+                    continue
 
-            if in_comment:
-                # In a /* */ comment block so set status to successful
-                continue
+                # TODO smalers 2017-12-21 this is in TSTool but need to confirm if really need - redundant?
+                # - probably need for the UI since the processor will be re-run multiple times
+                # - comment out of the geoprocessor
+                # Initialize the command for running
+                # - this reparses the commands and parameters
+                # - this clears out previous results
+                # command.initialize_command( command.command_string, self, True )
 
-            else:
-                try:
-                    # TODO smalers 2017-12-21 this is in TSTool but need to confirm if really need - redundant?
-                    # - comment out of the geoprocessor
-                    # Initialize the command for running
-                    # - this reparses the commands and parameters
-                    # - this clears out previous results
-                    # command.initialize_command( command.command_string, self, True )
+                # Check the command parameters
+                # - this is called when editing the command but also need to check here when running
+                # - the list of parameters is passed because the code is reused with editors that check
+                #   parameters before saving the edits
+                command.check_command_parameters(command.command_parameters)
 
-                    # Check the command parameters
-                    # - this is called when editing the command but also need to check here when running
-                    # - the list of parameters is passed because the code is reused with editors that check
-                    #   parameters before saving the edits
-                    command.check_command_parameters(command.command_parameters)
-
-                    # Check to see whether the If stack evaluates to True and can run the command
-                    # - evaluation of the stack only occurs when an If() is encountered
-                    if If_stack_ok_to_run:
-                        # Run the command
-                        if command_class == 'Exit':
-                            # Exit command causes hard exit - following commands are ignored
-                            break
-                        # elif isinstance(command, For):
-                        elif command_class == 'For':
-                            # Initialize or increment the For loop
-                            logger.info('Detected For command')
-                            # Use a local variable For_command for clarity
-                            For_command = command
+                # Check to see whether the If stack evaluates to True and can run the command
+                # - evaluation of the stack only occurs when an If() is encountered
+                if If_stack_ok_to_run:
+                    # Run the command
+                    if command_class == 'Exit':
+                        # Exit command causes hard exit from processing - following commands are ignored
+                        break
+                    # elif isinstance(command, For):
+                    elif command_class == 'For':
+                        # Initialize or increment the For loop
+                        logger.info('Detected For command')
+                        # Use a local variable For_command for clarity
+                        For_command = command
+                        ok_to_run_for = False
+                        try:
+                            ok_to_run_for = For_command.next()
+                            # print('ok_to_run_for=' + str(ok_to_run_for))
+                            # If False, the For loop is done.
+                            # However, need to handle the case where the for loop may be nested and need to run again...
+                            if not ok_to_run_for:
+                                For_command.reset_command()
+                        except:
+                            # This is serious and can lead to an infinite loop so generate an exception and
+                            # jump to the end of the loop
                             ok_to_run_for = False
-                            try:
-                                ok_to_run_for = For_command.next()
-                                # print('ok_to_run_for=' + str(ok_to_run_for))
-                                # If False, the For loop is done.
-                                # However, need to handle the case where the for loop may be nested and
-                                # need to run again...
-                                if not ok_to_run_for:
-                                    For_command.reset_command()
-                            except:
-                                # This is serious and can lead to an infinite loop so generate an exception and
-                                # jump to the end of the loop
-                                ok_to_run_for = False
-                                traceback.print_exc(file=sys.stdout)
-                                message = 'Error going to next iteration.'
-                                command.command_status.add_to_log(
-                                    command_phase_type.RUN,
-                                    CommandLogRecord(
-                                        command_status_type.FAILURE, message,
-                                        "Check For() command iteration data."))
-                                logger.warning('Error going to next iteration.  Check For() command iteration data.')
-                                # Same logic as ending the loop...
-                                end_for_index = GeoProcessor.__lookup_endfor_command_index(
-                                    command_list, For_command.get_name())
-                                if end_for_index >= 0:
-                                    # OK because don't want to trigger EndFor() going back to the top
-                                    i_command = end_for_index
-                                    continue
-                                else:
-                                    # Did not match the end of the For() so generate an error and exit
-                                    need_to_interrupt = True
-                                    message = 'Unable to match For loop name "' + For_command.get_name() + \
-                                              '" in EndFor() commands.'
-                                    command.command_status.add_to_log(
-                                        command_phase_type.RUN,
-                                        CommandLogRecord(command_status_type.FAILURE, message,
-                                                         "Add a matching EndFor() command."))
-                                    raise RuntimeError(message)
-                            if ok_to_run_for:
-                                # Continue running commands that are after the For() command
-                                # Add to the For stack - if in any For loops, commands should by default NOT reset the
-                                # command logging so that message will accumulate and help users troubleshoot errors
-                                For_command_stack.append(For_command)
-                                # Run the For() command to set the iterator property and then skip to the next command
-                                # TODO smalers 2017-12-21 equivalent but should the following be For_command?
-                                For_command.run_command()
-                                continue
-                            else:
-                                # Done running the For() loop matching the EndFor() command
-                                end_for_index = GeoProcessor.__lookup_endfor_command_index(
-                                    command_list, For_command.get_name())
-                                # Modify the main command loop index and continue - the command after the end
-                                # will be executed (or done).
-                                if end_for_index >= 0:
-                                    # Loop will increment so EndFor will be skipped, which is OK
-                                    # - otherwise infinite loop
-                                    i_command = end_for_index
-                                    continue
-                                else:
-                                    # Did not match the end of the For() so generate an error and exit
-                                    need_to_interrupt = True
-                                    message = 'Unable to match For loop name "' + For_command.get_name() + \
-                                              '" in EndFor() commands.'
-                                    command.command_status.add_to_log(
-                                        command_phase_type.RUN,
-                                        CommandLogRecord(command_status_type.FAILURE, message,
-                                                         "Add a matching EndFor() command."))
-                                    raise RuntimeError(message)
-                        # elif isinstance(command,EndFor):
-                        elif command_class == 'EndFor':
-                            # Jump to the matching For()
-                            EndFor_command = command
-                            try:
-                                For_command_stack.remove(For_command)
-                            except:
-                                # TODO smalers 2017-12-21 might need to log as mismatched nested loops
-                                # print('Error removing For loop from stack for EndFor(Name="' +
-                                #      EndFor_command.get_name() + '"...)')
-                                pass
-                            for_index = GeoProcessor.__lookup_for_command_index(
-                                command_list, EndFor_command.get_name())
-                            i_command = for_index - 1  # Decrement by one because the main loop will increment
-                            logger.debug('Jumping to commmand [' + str(i_command + 1) + '] at top of For() loop')
-                            continue
-                        else:
-                            # A typical command - run it
-                            command.run_command()
-                            # If the command generated an output file, add it to the list of output files.
-                            # The list is used by the UI to display results.
-                            # TODO smalers 2017-12-21 - add the file list generator like TSEngine
-                    # if isinstance(command, If):
-                    if command_class == 'If':
-                        # Add to the If command stack
-                        If_command_stack.append(command)
-                        # Re-evaluate If stack
-                        If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
-                    # elif isinstance(command, EndIf):
-                    elif command_class == 'EndIf':
-                        # Remove from the If command stack (generate a warning if the matching If()
-                        # is not found in the stack)
-                        EndIf_command = command
-                        If_command = GeoProcessor.__lookup_if_command(If_command_stack, EndIf_command.get_name)
-                        if If_command is None:
-                            # TODO smalers 2017-12-21 need to log error
-                            message = 'Unable to find matching If() command for Endif(Name="' + \
-                                      EndIf_command.get_name() + '")'
+                            message = 'Error going to next iteration.'
+                            logger.warning(message, exc_info=True)
                             command.command_status.add_to_log(
                                 command_phase_type.RUN,
-                                CommandLogRecord(command_status_type.FAILURE, message,
-                                                 "Confirm that matching If() and EndIf() commands are specified."))
+                                CommandLogRecord(
+                                    command_status_type.FAILURE, message,
+                                    "Check For() command iteration data."))
+                            logger.warning('Error going to next iteration.  Check For() command iteration data.')
+                            # Same logic as ending the loop...
+                            end_for_index = GeoProcessor.__lookup_endfor_command_index(
+                                command_list, For_command.get_name())
+                            if end_for_index >= 0:
+                                # OK because don't want to trigger EndFor() going back to the top
+                                i_command = end_for_index
+                                continue
+                            else:
+                                # Did not match the end of the For() so generate an error and exit
+                                need_to_interrupt = True
+                                message = 'Unable to match For loop name "' + For_command.get_name() + \
+                                    '" in EndFor() commands.'
+                                command.command_status.add_to_log(
+                                    command_phase_type.RUN,
+                                    CommandLogRecord(command_status_type.FAILURE, message,
+                                                     "Add a matching EndFor() command."))
+                                raise RuntimeError(message)
+                        if ok_to_run_for:
+                            # Continue running commands that are after the For() command
+                            # Add to the For stack - if in any For loops, commands should by default NOT reset the
+                            # command logging so that message will accumulate and help users troubleshoot errors
+                            For_command_stack.append(For_command)
+                            # Run the For() command to set the iterator property and then skip to the next command
+                            # TODO smalers 2017-12-21 equivalent but should the following be For_command?
+                            For_command.run_command()
+                            continue
                         else:
-                            # Run the command so the status is set to success
-                            EndIf_command.run_command()
-                            If_command_stack.remove(If_command)
-                        # Reevaluate If stack
-                        If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
-                        logger.debug('...back from running command')
-                except Exception as e:
-                    # TODO smalers 2017-12-21 need to expand error handling by type but for now catch generically
-                    # because Python exception handling uses fewer exception classes than Java dode to keep simple
-                    message = "Unexpected error processing command - unable to complete command"
-                    traceback.print_exc(file=sys.stdout)
-                    logger.exception(message, e)
-                    # Don't raise an exception because want all commands to run as best they can, each with
-                    # message logging, so that user can troubleshoot all at once rather than first error at a time
-                    command.command_status.add_to_log(
-                        command_phase_type.RUN,
+                            # Done running the For() loop matching the EndFor() command
+                            end_for_index = GeoProcessor.__lookup_endfor_command_index(
+                                command_list, For_command.get_name())
+                            # Modify the main command loop index and continue - the command after the end
+                            # will be executed (or done).
+                            if end_for_index >= 0:
+                                # Loop will increment so EndFor will be skipped, which is OK
+                                # - otherwise infinite loop
+                                i_command = end_for_index
+                                continue
+                            else:
+                                # Did not match the end of the For() so generate an error and exit
+                                need_to_interrupt = True
+                                message = 'Unable to match For loop name "' + For_command.get_name() + \
+                                    '" in EndFor() commands.'
+                                command.command_status.add_to_log(
+                                    command_phase_type.RUN,
+                                    CommandLogRecord(command_status_type.FAILURE, message,
+                                                     "Add a matching EndFor() command."))
+                                raise RuntimeError(message)
+                    # elif isinstance(command,EndFor):
+                    elif command_class == 'EndFor':
+                        # Jump to the matching For()
+                        EndFor_command = command
+                        try:
+                            For_command_stack.remove(For_command)
+                        except:
+                            # TODO smalers 2017-12-21 might need to log as mismatched nested loops
+                            # print('Error removing For loop from stack for EndFor(Name="' +
+                            #      EndFor_command.get_name() + '"...)')
+                            pass
+                        for_index = GeoProcessor.__lookup_for_command_index(command_list, EndFor_command.get_name())
+                        i_command = for_index - 1  # Decrement by one because the main loop will increment
+                        logger.debug('Jumping to commmand [' + str(i_command + 1) + '] at top of For() loop')
+                        continue
+                    else:
+                        # A typical command - run it
+                        command.run_command()
+                        # If the command generated an output file, add it to the list of output files.
+                        # The list is used by the UI to display results.
+                        # TODO smalers 2017-12-21 - add the file list generator like TSEngine
+                # if isinstance(command, If):
+                if command_class == 'If':
+                    # Add to the If command stack
+                    If_command_stack.append(command)
+                    # Re-evaluate If stack
+                    If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
+                # elif isinstance(command, EndIf):
+                elif command_class == 'EndIf':
+                    # Remove from the If command stack (generate a warning if the matching If()
+                    # is not found in the stack)
+                    EndIf_command = command
+                    If_command = GeoProcessor.__lookup_if_command(If_command_stack, EndIf_command.get_name)
+                    if If_command is None:
+                        # TODO smalers 2017-12-21 need to log error
+                        message = 'Unable to find matching If() command for Endif(Name="' + \
+                            EndIf_command.get_name() + '")'
+                        command.command_status.add_to_log(
+                            command_phase_type.RUN,
+                            CommandLogRecord(command_status_type.FAILURE, message,
+                                             "Confirm that matching If() and EndIf() commands are specified."))
+                    else:
+                        # Run the command so the status is set to success
+                        EndIf_command.run_command()
+                        If_command_stack.remove(If_command)
+                    # Reevaluate If stack
+                    If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
+                    logger.debug('...back from running command')
+            except Exception as e:
+                # TODO smalers 2017-12-21 need to expand error handling by type but for now catch generically
+                # because Python exception handling uses fewer exception classes than Java dode to keep simple
+                traceback.print_exc(file=sys.stdout)  # Formatting of error seems to have issue
+                message = "Unexpected error processing command - unable to complete command"
+                logger.error(message, e, exc_info=True)
+                # Don't raise an exception because want all commands to run as best they can, each with
+                # message logging, so that user can troubleshoot all at once rather than first error at a time
+                command.command_status.add_to_log(
+                    command_phase_type.RUN,
                         CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
-                except:
-                    message = "Unexpected error processing command - unable to complete command"
-                    traceback.print_exc(file=sys.stdout)
-                    logger.error(message, exc_info=True)
-                    # Don't raise an exception because want all commands to run as best they can, each with
-                    # message logging, so that user can troubleshoot all at once rather than first error at a time
-                    command.command_status.add_to_log(
-                        command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
-
-        # TODO smalers 2017-12-29 what happens if this is done more than once?
-        # - should QGIS shutdown occur when the application exits or each command workflow run?
-        # - This has been moved to the qp app calling qgis_util
-        # - Remove this code ASAP
-        # Close QGIS resources
-        if handle_qgis_app_here:
-            logger.info("Before QGS cleanup")
-            qgs.exit()
+            except:
+               message = "Unexpected error processing command - unable to complete command"
+               logger.error(message, exc_info=True)
+               # Don't raise an exception because want all commands to run as best they can, each with
+               # message logging, so that user can troubleshoot all at once rather than first error at a time
+               command.command_status.add_to_log(
+                   command_phase_type.RUN,
+                   CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
 
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough

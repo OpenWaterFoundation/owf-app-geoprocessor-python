@@ -9,6 +9,8 @@ import re
 # - quoted strings
 # - whitespace that is literal (need \ escape?)
 # - adjoining delimiters
+# - bounding [ ] as per Python list
+# - strings surrounded with single quotes, which could work within a parameter value surrounded by double quotes
 def delimited_string_to_list(delimited_string, delimiter=",", trim=True):
     """
     Split a string in delimited format into a list of strings.

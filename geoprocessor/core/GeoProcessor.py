@@ -14,8 +14,6 @@ import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command_util as command_util
 
-from processing.core.Processing import Processing
-
 # General modules
 import getpass
 import logging
@@ -494,7 +492,7 @@ class GeoProcessor(object):
         Args:
             command_list: List of command objects to process, or None to process all commands in the processor.
                 A list is typically provided when a subset of commands has been selected in the UI.
-            run_properties:  Properties used to control the run.
+            run_properties:  Dictionary of properties used to control the run.
                 This function only acts on the following properties:
                     ResetWorkflowProperties:  Global properties such as run period should be reset before running.
                         The default is True.  This property is used with the RunCommands command to preserve properties.
@@ -509,10 +507,10 @@ class GeoProcessor(object):
             # Reset to an empty dictionary to simplify error handling below
             run_properties = {}
         try:
-            prop_value = run_properties.getValue("ResetWorkflowProperties")
+            prop_value = run_properties["ResetWorkflowProperties"]
             if prop_value is not None and prop_value == "False":
                 reset_workflow_properties = False
-        except:
+        except KeyError:
             # Property not set so use default value
             pass
         if reset_workflow_properties:
@@ -601,7 +599,7 @@ class GeoProcessor(object):
                     command.print_for_debug()
 
                 if not in_comment and If_stack_ok_to_run:
-                    message='-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
+                    message = '-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
                         command.command_string
                     # print(message)
                     logger.info(message)
@@ -731,7 +729,7 @@ class GeoProcessor(object):
                             pass
                         for_index = GeoProcessor.__lookup_for_command_index(command_list, EndFor_command.get_name())
                         i_command = for_index - 1  # Decrement by one because the main loop will increment
-                        logger.debug('Jumping to commmand [' + str(i_command + 1) + '] at top of For() loop')
+                        logger.debug('Jumping to command [' + str(i_command + 1) + '] at top of For() loop')
                         continue
                     else:
                         # A typical command - run it
@@ -750,7 +748,7 @@ class GeoProcessor(object):
                     # Remove from the If command stack (generate a warning if the matching If()
                     # is not found in the stack)
                     EndIf_command = command
-                    If_command = GeoProcessor.__lookup_if_command(If_command_stack, EndIf_command.get_name)
+                    If_command = GeoProcessor.__lookup_if_command(If_command_stack, EndIf_command.get_name())
                     if If_command is None:
                         # TODO smalers 2017-12-21 need to log error
                         message = 'Unable to find matching If() command for Endif(Name="' + \
@@ -776,15 +774,15 @@ class GeoProcessor(object):
                 # message logging, so that user can troubleshoot all at once rather than first error at a time
                 command.command_status.add_to_log(
                     command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
+                    CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
             except:
-               message = "Unexpected error processing command - unable to complete command"
-               logger.error(message, exc_info=True)
-               # Don't raise an exception because want all commands to run as best they can, each with
-               # message logging, so that user can troubleshoot all at once rather than first error at a time
-               command.command_status.add_to_log(
-                   command_phase_type.RUN,
-                   CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
+                message = "Unexpected error processing command - unable to complete command"
+                logger.error(message, exc_info=True)
+                # Don't raise an exception because want all commands to run as best they can, each with
+                # message logging, so that user can troubleshoot all at once rather than first error at a time
+                command.command_status.add_to_log(
+                    command_phase_type.RUN,
+                    CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
 
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough

@@ -70,7 +70,7 @@ class For(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -192,10 +192,10 @@ class For(AbstractCommand):
 
     def get_name(self):
         """
-        Return the name of the EndIf (will match name of corresponding For).
+        Return the name of the For (will match name of corresponding EndFor).
 
         Returns:
-            The name of the EndIf (will match name of corresponding For).
+            The name of the For (will match name of corresponding EndFor).
         """
         return self.get_parameter_value("Name")
 
@@ -327,7 +327,7 @@ class For(AbstractCommand):
         Run the command.  This initializes the iterator data for use when next() is called by the processor.
 
         Returns:
-            Nothing.
+            None.
         """
         logger = logging.getLogger(__name__)
         logger.info("In For.run_command")
@@ -398,6 +398,6 @@ class For(AbstractCommand):
             iterator_property_value:
 
         Returns:
-            Nothing.
+            None.
         """
         self.iterator_object = iterator_property_value

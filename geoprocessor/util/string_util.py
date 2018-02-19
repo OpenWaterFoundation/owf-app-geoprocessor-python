@@ -271,6 +271,62 @@ def glob2re(pat):
     return res + '\Z(?ms)'
 
 
+def is_bool(s):
+    """
+    Determine whether a string can evaluate to a bool, must be "true" or "false"
+
+    Args:
+        s: A string that is checked.
+
+    Returns:
+        True if the string is "true" or "false" in any case, False if not.
+
+    """
+    # Boolean is tricky since bool(s) returns False if "" and True if anything else
+    # - could use bool(distutils.util.strtobool(s)) but does not reject integers
+    s_up = s.upper()
+    if s_up == "TRUE" or s_up == "FALSE":
+        return True
+    else:
+        return False
+
+
+def is_float(s):
+    """
+    Determine whether a string can evaluate to a float.
+
+    Args:
+        s: A string that is checked.
+
+    Returns:
+        True if the string evaluates to a float, False if not.
+
+    """
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+def is_int(s):
+    """
+    Determine whether a string can evaluate to an int.
+
+    Args:
+        s: A string that is checked.
+
+    Returns:
+        True if the string evaluates to an int, False if not.
+
+    """
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
 def pattern_count(s, pattern):
     """
     Count the number of unique (non-overlapping) instances of a pattern in a string.
@@ -293,7 +349,16 @@ def pattern_count(s, pattern):
     return count
 
 
+# TODO smalers 2018-02-18 need to phase this version out
 def string_to_boolean(string):
+    """
+    Convert a string into a Boolean value.
+    This version is deprecated - use str_to_bool().
+    """
+    return str_to_bool(string)
+
+
+def str_to_bool(string):
     """
     Convert a string into a Boolean value.
 
@@ -315,6 +380,3 @@ def string_to_boolean(string):
     # If the input string does not correspond with a Boolean value, return None.
     else:
         return None
-
-
-

@@ -13,6 +13,8 @@ import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
 import logging
+import sys
+import traceback
 
 
 class WritePropertiesToFile(AbstractCommand):
@@ -150,7 +152,7 @@ class WritePropertiesToFile(AbstractCommand):
         pv_FileFormat = self.get_parameter_value('FileFormat')
         file_format = pv_FileFormat
         if pv_FileFormat is None or pv_FileFormat == "":
-            file_format = 'NameValueType'  # Default
+            file_format = 'NameTypeValue'  # Default
         pv_SortOrder = self.get_parameter_value('SortOrder')
         sort_order = 0  # no sort
         if pv_SortOrder is not None:
@@ -187,6 +189,7 @@ class WritePropertiesToFile(AbstractCommand):
 
         except Exception as e:
             warning_count += 1
+            traceback.print_exc(file=sys.stdout)  # Formatting of error seems to have issue
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
             logger.error(message, e, exc_info=True)
             self.command_status.add_to_log(
@@ -196,6 +199,7 @@ class WritePropertiesToFile(AbstractCommand):
 
         except:
             warning_count += 1
+            traceback.print_exc(file=sys.stdout)  # Formatting of error seems to have issue
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(

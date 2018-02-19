@@ -632,13 +632,14 @@ def write_property_file(output_file_absolute, all_properties,
         format_type (str):  File format type: 'NameTypeValue', 'NameTypeValuePython', 'NameValue',
             as per the GeoProcessor WritePropertiesToFile command.
         sort_order (int): Sort order -1 (descending), 0 (none), 1 (ascending)
-        problems ([String]):  List of strings with problem messages, use in calling code for error-handling.
+        problems ([str]):  List of strings with problem messages, use in calling code for error-handling.
 
     Returns:
         None.
     """
     fout = None
     logger = logging.getLogger(__name__)
+    debug = True
     try:
         # Open the file...
         if write_mode.upper() == 'APPEND':
@@ -682,7 +683,9 @@ def write_property_file(output_file_absolute, all_properties,
             else:
                 # Loop through the properties to include and see if there is a match
                 for i in range(0, len(include_properties)):
-                    # logger.info('Writing property "' + include_properties[i] + '"')
+                    if debug:
+                        logger.info('Checking property "' + prop_name + '" if matched for output "' +
+                                    include_properties[i] + '"')
                     if include_properties[i].find("*") >= 0:
                         # Includes glob-style wildcards.  Check the user-specified properties
                         # - first translate the glob-style syntax that uses * to internal regex
@@ -697,7 +700,8 @@ def write_property_file(output_file_absolute, all_properties,
                         if prop_name == include_properties[i]:
                             do_write = True
                             include_properties_matched[i] = True
-            # logger.info('After checking, do_write=' + str(do_write))
+            if debug:
+                logger.info('After checking, do_write=' + str(do_write))
             if do_write:
                 try:
                     __write_property(fout, prop_name, all_properties[prop_name], format_type)

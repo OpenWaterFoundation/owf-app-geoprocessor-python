@@ -26,6 +26,9 @@ class SetProperty(AbstractCommand):
         CommandParameterMetadata("PropertyValues", type(""))
     ]
 
+    # Choices for PropertType valid values
+    __choices_PropertyType = ["bool", "float", "int", "long", "str"]
+
     def __init__(self):
         """
         Initialize a command instance.
@@ -64,8 +67,7 @@ class SetProperty(AbstractCommand):
 
         # PropertyType is required
         pv_PropertyType = self.get_parameter_value(parameter_name='PropertyType', command_parameters=command_parameters)
-        property_types = ["bool", "float", "int", "long", "str"]
-        if not validators.validate_string_in_list(pv_PropertyType, property_types, False, False):
+        if not validators.validate_string_in_list(pv_PropertyType, self.__choices_PropertyType, False, False):
             message = 'The requested property type "' + pv_PropertyType + '"" is invalid.'
             recommendation = "Specify a valid property type:  " + str(property_types)
             warning += "\n" + message
@@ -174,7 +176,8 @@ class SetProperty(AbstractCommand):
                 # Convert the property value string to the requested type
                 parameter_value2 = None
                 if pv_PropertyType == 'bool':
-                    parameter_value2 = bool(parameter_value)
+                    # Use the following because conversion of strings to booleans is tricky, too many unexpected True
+                    parameter_value2 = string_util.str_to_bool(parameter_value)
                 elif pv_PropertyType == 'float':
                     parameter_value2 = float(parameter_value)
                 elif pv_PropertyType == 'int':

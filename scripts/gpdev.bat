@@ -1,12 +1,12 @@
 @echo off
-rem gp.bat
+rem gpdev.bat
 rem
 rem Windows batch file to run the Open Water Foundation GeoProcessor application
-rem - This script should work on a normal Windows 7/10 computer.
-rem - The geoprocessor package must be installed in a normal location, such as
-rem   Python site-packages folder.
-rem - This script should be installed in the QGIS bin folder or other location
-rem   that is in the PATH or otherwise can be executed.
+rem - This uses the QGIS Python as the interpreter, but development geoprocessor module via PYTHONPATH.
+rem - Paths to files are assumed based on standard OWF development environment.
+rem - The current focus is to run on a Windows 7/10 development environment.
+rem - Use gp.bat for production environment.
+rem - Use gptest.sh for Linux functional testing tool.
 
 rem Set the Python environment to find the correct run-time libraries
 rem - The GEOPROCESSOR_ENV_SETUP environment variable is set to YES
@@ -61,11 +61,10 @@ set PYTHON_EXE=python
 
 rem  Set the PYTHONPATH to include the geoprocessor module
 rem  - Folder for libraries must contain "geoprocessor" since modules being searched for will start with that.
-rem  - The following commented examples are for development environment but should not be needed
-rem    if the geoprocessor has been installed in site-packages.
 rem GEOPROCESSOR_HOME="/cygdrive/C/Users/${USERNAME}/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python/geoprocessor"
-rem set GEOPROCESSOR_HOME=C:\Users\%USERNAME%\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python
-rem set PYTHONPATH=%GEOPROCESSOR_HOME%;%PYTHONPATH%
+set GEOPROCESSOR_HOME=C:\Users\%USERNAME%\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python
+
+set PYTHONPATH=%GEOPROCESSOR_HOME%;%PYTHONPATH%
 
 echo PYTHONPATH=%PYTHONPATH%
 

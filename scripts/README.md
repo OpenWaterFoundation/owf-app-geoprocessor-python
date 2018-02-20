@@ -1,9 +1,14 @@
 # Scripts #
 
-This folder contains scripts used to run the geoprocessor in the deployed environment.
+This folder contains scripts used to run the GeoProcessor in the deployed environment.
 
-* `gp.bat` - Windows batch file to run Open Water Foundation geoprocessor application
-* `gp.sh` - Linux shell script to run Open Water Foundation geoprocessor application
+* Windows:
+	+ `gp.bat` - batch file to run the GeoProcessor application in deployed environment
+	+ `gpdev.bat` - batch file to run the GeoProcessor application in the development environment
+* Linux/Cygwin:
+	+ `gp.sh` - shell script to run the GeoProcessor application in deployed environment
+	+ `gptest.sh` - shell script to run the GeoProcessor application as a test framework
+	(QGIS code is stubbed out)
 
-See the `build-util` folder for scripts used in the development environment
-to build and test the software.
+See the `../build-util` folder for scripts used in the development environment
+to build the software.

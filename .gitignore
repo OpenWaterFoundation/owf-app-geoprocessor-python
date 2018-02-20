@@ -3,11 +3,16 @@
 # Ignore user-specific files in PyCharm environment
 # - based on experience, it is easy enough to set up a PyCharm dev environment
 #   so don't hand off any PyCharm files in the repository
-
 .idea/
 venv/
 *.py[cod]
 __pycache__/
+
+# Ignore build folder files, used to create installers
+build/*.tar
+build/*.gz
+build/tmp-gp/
+build/tmp-gptest/
 
 # MkDocs site
 doc-dev-mkdocs-project/site/

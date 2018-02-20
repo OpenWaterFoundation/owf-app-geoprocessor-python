@@ -8,6 +8,10 @@
 # Might need to handle different operating systems
 # cygwinUname=`uname -a | grep -i cygwin`
 
+# Save all the arguments so they can be used as a global argument in the function
+# - might be a way to pass to the runProcessor function
+allArgs=$@
+
 # Function to run Python version 2.7
 runProcessor () {
 	# python or python2 can be used for Python 2.
@@ -15,7 +19,7 @@ runProcessor () {
 	pythonExe="python2"
         # First try the general Python launcher
         pythonVersion=`${pythonExe} --version 2>&1 | cut -d ' ' -f 2 | cut -d . -f 1`
-        if [ "${pythonVersion}" == "2" ]
+        if [ "${pythonVersion}" = "2" ]
 		then
 		# Python 2 version was found
 		# - run geoprocessor/app/gp.py
@@ -25,7 +29,7 @@ runProcessor () {
 		#export PYTHONPATH="$PYTHONPATH:$OSGEO4W_ROOT/apps/Python27/Lib/site-packages"
 		echo ""
 		echo "Running the geoprocessor..."
-		${pythonExe} -m geoprocessor.app.gp 
+		${pythonExe} -m geoprocessor.app.gp ${allArgs}
 	else
 		# Python 2 version was not found
                 echo ""

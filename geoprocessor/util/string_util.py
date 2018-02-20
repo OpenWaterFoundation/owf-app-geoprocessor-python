@@ -162,7 +162,7 @@ def delimited_string_to_dictionary_list_value(delimited_string, entry_delimiter=
         return dictionary
 
 
-def filter_list_of_strings(input_list, include_glob_patterns=['*'], exclude_glob_patterns=['']):
+def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_patterns=None):
     """
     Filters a list of strings by glob patterns.
 
@@ -171,13 +171,22 @@ def filter_list_of_strings(input_list, include_glob_patterns=['*'], exclude_glob
         include_glob_patterns (list): a list of glob-style patterns corresponding to the items in the input_list that
             are to be included. Default is ['*']. All items from the input_list are included.
         exclude_glob_patterns (list): a list of glob-style patterns corresponding to the items in the input_list that
-            are to be excluded. Default is ['']. All items from the input_list are included.
+            are to be excluded. Default is ['']. No items from the input_list are excluded.
 
     Return:
         A filtered list of strings.
     """
 
+    # Assign the default values to the include_glob_patterns and the exclude_glob_patterns.
+    if include_glob_patterns is None:
+        include_glob_patterns = ['*']
+    if exclude_glob_patterns is None:
+        exclude_glob_patterns = ['']
+
+    # A list to hold all of the item to include.
     master_items_to_include = []
+
+    # A list to hold all of the item to exclude.
     master_items_to_exclude = []
 
     # Iterate over the include glob patterns.
@@ -207,21 +216,6 @@ def glob2re(pat):
     """
     Translates a shell PATTERN to a regular expression.
 
-    The input parameters of the ReadGeoLayersFromFolder command are the exact same as the input parameters
-    of this command, ReadGeoLayersFromFGDB. This design is for user convenience so that the user only needs
-    to learn the input parameters of one command and will, in turn, know the input parameters for all
-    ReadGeoLayersFrom... commands.
-
-    In the ReadGeoLayersFromFolder command, there is an optional input parameter called Subset_Pattern. Like in
-    the ReadGeoLayersFromFGDB command, this parameter allows the user to select only a subset of the spatial
-    data files within the source (folder, file geodatabase, etc.) to read as GeoLayers into the geoprocessor.
-    This is accomplished by entering a glob-style pattern into the Subset_Pattern parameter value. In the
-    ReadGeoLayerFromFolder command, the glob-style pattern is effective because the run_command code iterates
-    over files on the local machine (glob is designed to find patterns in pathnames). However, in the
-    ReadGeoLayersFromFGDB command, the feature classes in the file geodatabase are first written to a list. The
-    list is then iterated over and only the strings that match the Subset_Pattern are processed. Feature class
-    names are not file pathnames and, for that reason, the glob-style does not work.
-
     This function converts a glob-style pattern into a regular expression that can be used to iterate over a
     list of strings. This function was not written by Open Water Foundation but was instead copied from the
     following source: https://stackoverflow.com/questions/27726545/
@@ -232,9 +226,6 @@ def glob2re(pat):
 
     Returns:
         A pattern in regular expression.
-
-    Raises:
-        Nothing.
     """
 
     i, n = 0, len(pat)

@@ -46,6 +46,7 @@ from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
 from geoprocessor.commands.util.CommentBlockStart import CommentBlockStart
 from geoprocessor.commands.util.CopyFile import CopyFile
+from geoprocessor.commands.util.ListFiles import ListFiles
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
 from geoprocessor.commands.util.WebGet import WebGet
@@ -82,6 +83,7 @@ class GeoProcessorCommandFactory(object):
         "FOR": For(),
         "FREEGEOLAYER": FreeGeoLayer(),
         "IF": If(),
+        "LISTFILES": ListFiles(),
         "MERGEGEOLAYERS": MergeGeoLayers(),
         "MESSAGE": Message(),
         "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
@@ -217,6 +219,8 @@ class GeoProcessorCommandFactory(object):
                     return FreeGeoLayer()
                 elif command_name_upper == "IF":
                     return If()
+                elif command_name_upper == "LISTFILES":
+                    return ListFiles()
                 elif command_name_upper == "MERGEGEOLAYERS":
                     return MergeGeoLayers()
                 elif command_name_upper == "MESSAGE":

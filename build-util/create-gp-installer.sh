@@ -5,6 +5,7 @@
 # - Create installer for the "gptest" version used for functional testing
 # - This approach does not yet use setup.py given some packaging complexities and need
 #   to learn how to use setup.py
+# - Create tar.gz and .zip installer files.
 
 #------------------------------------------------------------------------------------------
 # Step 0. Setup.
@@ -138,15 +139,15 @@ sed -i 's/qgis_util.initialize_qgis/# qgis_util.initialize_qgis/g' ${buildTmpGpt
 sed -i 's/qgis_util.exit_qgis/# qgis_util.exit_qgis/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
 
 #------------------------------------------------------------------------------------------
-# Step 4. Tar up all the *.py files in the geoprocessor folder
+# Step 4a. Tar up all the *.py files in the geoprocessor folder
 
 gptestSitePackageBuildFile="${buildFolder}/gptest-site-package.tar"
-gptestSitePackageBuildFileZ="${buildFolder}/gptest-site-package.tar.gz"
+gptestSitePackageBuildFileGz="${buildFolder}/gptest-site-package.tar.gz"
 
-if [ -e "${gptestSitePackageBuildFileZ}" ]
+if [ -e "${gptestSitePackageBuildFileGz}" ]
 	then
-	echo "Removing existing build file ${gptestSitePackageBuildFileZ}"
-	rm ${gptestSitePackageBuildFileZ}
+	echo "Removing existing build file ${gptestSitePackageBuildFileGz}"
+	rm ${gptestSitePackageBuildFileGz}
 fi
 
 echo "Creating tar file containing *.py files ..."
@@ -157,8 +158,28 @@ if [ "$?" -ne 0 ]
 	echo "Error in script.  Exiting."
 	exit $?
 fi
-echo "Zipping file ${gptestSitePackageBuildFile} into ${gptestSitePackageBuildFileZ}"
+echo "Gzipping file ${gptestSitePackageBuildFile} into ${gptestSitePackageBuildFileGz}"
 gzip ${gptestSitePackageBuildFile}
+if [ "$?" -ne 0 ]
+	then
+	echo "Error in script.  Exiting."
+	exit $?
+fi
+
+#------------------------------------------------------------------------------------------
+# Step 4b. Zip up all the *.py files in the geoprocessor folder
+
+gptestSitePackageBuildFileZip="${buildFolder}/gptest-site-package.zip"
+
+if [ -e "${gptestSitePackageBuildFileZip}" ]
+	then
+	echo "Removing existing build file ${gptestSitePackageBuildFileZip}"
+	rm ${gptestSitePackageBuildFileZip}
+fi
+
+echo "Creating zip file containing *.py files ${gptestSitePackageBuildFileZip} ..."
+cd "${buildTmpGptestFolder}"
+zip -r ${gptestSitePackageBuildFileZip} geoprocessor -x '*.pyc'
 if [ "$?" -ne 0 ]
 	then
 	echo "Error in script.  Exiting."
@@ -197,12 +218,12 @@ cp -rp ${projectFolder}/scripts ${buildTmpGpFolder}
 # Step 4. Tar up all the *.py files in the geoprocessor folder
 
 gpSitePackageBuildFile="${buildFolder}/gp-site-package.tar"
-gpSitePackageBuildFileZ="${buildFolder}/gp-site-package.tar.gz"
+gpSitePackageBuildFileGz="${buildFolder}/gp-site-package.tar.gz"
 
-if [ -e "${gpSitePackageBuildFileZ}" ]
+if [ -e "${gpSitePackageBuildFileGz}" ]
 	then
-	echo "Removing existing build file ${gpSitePackageBuildFileZ}"
-	rm ${gpSitePackageBuildFileZ}
+	echo "Removing existing build file ${gpSitePackageBuildFileGz}"
+	rm ${gpSitePackageBuildFileGz}
 fi
 
 echo "Creating tar file containing *.py files ..."
@@ -213,13 +234,36 @@ if [ "$?" -ne 0 ]
 	echo "Error in script.  Exiting."
 	exit $?
 fi
-echo "Zipping file ${gpSitePackageBuildFile} into ${gpSitePackageBuildFileZ}"
+echo "Gzipping file ${gpSitePackageBuildFile} into ${gpSitePackageBuildFileGz}"
 gzip ${gpSitePackageBuildFile}
 if [ "$?" -ne 0 ]
 	then
 	echo "Error in script.  Exiting."
 	exit $?
 fi
+
+#------------------------------------------------------------------------------------------
+# Step 4b. Zip up all the *.py files in the geoprocessor folder
+
+gpSitePackageBuildFileZip="${buildFolder}/gp-site-package.zip"
+
+if [ -e "${gpSitePackageBuildFileZip}" ]
+	then
+	echo "Removing existing build file ${gpSitePackageBuildFileZip}"
+	rm ${gpSitePackageBuildFileZip}
+fi
+
+echo "Creating zip file containing *.py files ${gpSitePackageBuildFileZip} ..."
+cd "${buildTmpGpFolder}"
+zip -r ${gpSitePackageBuildFileZip} geoprocessor -x '*.pyc'
+if [ "$?" -ne 0 ]
+	then
+	echo "Error in script.  Exiting."
+	exit $?
+fi
+
+#------------------------------------------------------------------------------------------
+# Final comment to software developer
 
 echo "Install the files in the site-packages folder of the target Python 2.7 environment"
 echo "- Remove the existing folder before installing to make sure the latest files are installed."

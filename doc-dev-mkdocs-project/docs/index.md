@@ -9,6 +9,14 @@ The PyCharm Community Edition is used by the Open Water Foundation as the Integr
 although other tools can be used.
 PyCharm project files are not included in the repository.
 
+The primary development environment at the Open Water Foundation
+is currently Windows 10 using the latest stable QGIS 2.x release.
+Support for QGIS 3.x will be added after sufficient vetting.
+The primary deployment environments are Windows 7/10, and Ubuntu/Debian Linux.
+A non-QGIS distribution is also available,
+in order to use the GeoProcessor workflow as a "function test" framework.
+Additional environments may be supported depending on funding and developer resources.
+
 **The GeoProcessor software is currently under development at the Open Water Foundation.
 Documentation and tests are being published to facilitate collaboration and evaluation by potential software users.
 The software will be published as an open source software project once a critical mass of initial functionality is
@@ -35,6 +43,9 @@ The navigation menus may not be displayed if the web browser window is narrow or
 in which case look for a menu icon to access the menus.
 Use the search feature to find documentation matching the search words.
 
+See also the [OWF / Learn GeoProcessor](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/)
+documentation for users, which provides documentation for installing and using the GeoProcessor.
+
 ## License ##
 
 The OWF GeoProcessor developer documentation is licensed under the
@@ -42,8 +53,9 @@ The OWF GeoProcessor developer documentation is licensed under the
 
 ## Source Repository on GitHub ##
 
-The source files for this documentation are maintained in a GitHub repository:
-[owf-app-geoprocessor-python in the `doc-dev-mkdocs-project` folder](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/tree/master/doc-dev-mkdocs-project/).
+The source files for this documentation are maintained in the [OWF GeoProcessor GitHub repository
+(owf-app-geoprocessor-python)](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/tree/master/doc-dev-mkdocs-project/)
+in the `doc-dev-mkdocs-project` folder.
 
 ## Release Notes ##
 

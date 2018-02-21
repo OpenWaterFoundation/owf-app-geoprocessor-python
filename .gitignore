@@ -11,6 +11,7 @@ __pycache__/
 # Ignore build folder files, used to create installers
 build/*.tar
 build/*.gz
+build/*.zip
 build/tmp-gp/
 build/tmp-gptest/
 

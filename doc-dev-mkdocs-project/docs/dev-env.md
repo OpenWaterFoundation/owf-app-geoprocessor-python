@@ -5,7 +5,7 @@ Some of the information looks ahead (to after development environment setup) to 
 
 * [Python](#python) - system and user version
 * [QGIS](#qgis) - includes Python 2.7 and QGIS packages for Python
-* [PyCharm](#pycharm) - integrated development environment (IDE), uses QGIS packages via `PYTHONPATH
+* [PyCharm](#pycharm) - integrated development environment (IDE), uses QGIS packages via `PYTHONPATH`
 * [MkDocs](#mkdocs) - for documentation, uses system/user Python
 * [Git](#git) - for version control
 * [Running the GeoProcessor](#running-the-geoprocessor) - for testing and deployed version

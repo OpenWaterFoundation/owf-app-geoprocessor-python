@@ -10,7 +10,7 @@ There is a need for tools that can automate spatial data processing without requ
 ## GeoProcessor Features ##
 
 See the [OWF / Learn GeoProcessor](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/)
-documentation for users, which explains the product.
+documentation for users, which explains the GeoProcessor features.
 
 ## GeoProcessor Open Source Project ##
 
@@ -24,11 +24,16 @@ supporting ongoing and new OWF projects.
 Demonstrating the software to the water resources community will hopefully result in streamlined
 data processing and analysis, allowing the community to focus on solutions to difficult problems.
 Through application, OWF hopes to enhance the software over time to address more and more water resources problems.
+OWF accepts funding to enhance the software, provide training,
+and implement the software on projects.
 
-The GeoProcessor design and features are similar to the TSTool software.
+The GeoProcessor design and features are similar to the
+[TSTool software](http://openwaterfoundation.org/software-tools/tstool),
+although the GeoProcessor is written in Python and TSTool is written in Java.
 TSTool has proven to be a powerful tool for automating time series analysis.
 A goal for the GeoProcessor is to provide similar features for spatial data processing.
 If successful, the combination of TSTool and GeoProcessor will provide significant capabilities
 for water resources data analysis.
+TSTool is currently being migrated to an open source software project.
 
 Use the repository issues page or contact project maintainers to provide input.

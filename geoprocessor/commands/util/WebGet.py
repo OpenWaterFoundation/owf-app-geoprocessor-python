@@ -229,6 +229,9 @@ class WebGet(AbstractCommand):
         pv_OutputFile = self.get_parameter_value("OutputFile")
         pv_IfZipFile = self.get_parameter_value("IfZipFile", default_value="KeepZipped")
 
+        # Convert the pv_FileURL parameter to expand for ${Property} syntax.
+        url_abs = self.command_processor.expand_parameter_value(pv_FileURL, self)
+
         # Convert the OutputFile parameter value relative path to an absolute path. Expand for ${Property} syntax.
         output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
             self.command_processor.get_property('WorkingDir'),
@@ -243,10 +246,10 @@ class WebGet(AbstractCommand):
                 output_folder = os.path.dirname(output_file_absolute)
 
                 # Get the URL file and convert it into a request Response object
-                r = requests.get(pv_FileURL)
+                r = requests.get(url_abs)
 
                 # Get the filename and the extension of the file URL
-                url_filename, url_extension = os.path.splitext(os.path.basename(pv_FileURL))
+                url_filename, url_extension = os.path.splitext(os.path.basename(url_abs))
 
                 # Get the filename and the extension for the output file
                 output_filename, output_extension = os.path.splitext(os.path.basename(pv_OutputFile))
@@ -293,13 +296,13 @@ class WebGet(AbstractCommand):
                 else:
 
                     # Download the file to the output folder.
-                    with open(os.path.join(output_folder, os.path.basename(pv_FileURL)), "wb") as downloaded_file:
+                    with open(os.path.join(output_folder, os.path.basename(url_abs)), "wb") as downloaded_file:
                         downloaded_file.write(r.content)
 
                     # Determine if the downloaded file should be renamed. If the filename is %f then the filename
                     # of the downloaded product should be the same as the url filename
                     if not output_filename == '%f':
-                        self.__rename_files_in_a_folder(list_of_files=[os.path.basename(pv_FileURL)],
+                        self.__rename_files_in_a_folder(list_of_files=[os.path.basename(url_abs)],
                                                         folder_path=output_folder,
                                                         new_filename=output_filename)
 
@@ -307,7 +310,7 @@ class WebGet(AbstractCommand):
             except Exception as e:
 
                 self.warning_count += 1
-                message = "Unexpected error downloading file from URL {}.".format(pv_FileURL)
+                message = "Unexpected error downloading file from URL {}.".format(url_abs)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
                 self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,

@@ -15,6 +15,8 @@ import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
 
+import urllib2
+
 def run_check(self, condition, parameter_name, parameter_value, fail_response, other_values=None):
     """
     The run_check utility function is used to store all of the checks done within the command classes. There are
@@ -155,6 +157,15 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if not os.path.isfile(parameter_value):
             check_failed = True
 
+    # Check if the parameter value (absolute folder path) is a valid and existing folder.
+    elif condition.upper() == "ISFOLDERPATHVALID":
+
+        message = "The {} ({}) is not a valid folder.".format(parameter_name, parameter_value)
+        recommendation = "Specify a valid folder for the {} parameter.".format(parameter_name)
+
+        if not os.path.isdir(parameter_value):
+            check_failed = True
+
     # Check if the parameter value (GeoLayerID) is an existing GeoLayerID.
     elif condition.upper() == "ISGEOLAYERIDEXISTING":
 
@@ -206,6 +217,25 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if len(list) != correct_length:
             check_failed = True
 
+    # Check if the property name is a unique property name
+    elif condition.upper() == "ISPROPERTYUNIQUE":
+
+        message = 'The {} ({}) value is already in use.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a new {}.'.format(parameter_name)
+
+        if self.command_processor.get_property(parameter_value):
+            check_failed = True
+            pv_IfPropertyExists = self.get_parameter_value("IfPropertyExists", default_value="Replace")
+
+            if pv_IfPropertyExists.upper() == "REPLACEANDWARN":
+                fail_response = "WARN"
+            elif pv_IfPropertyExists.upper() == "WARN":
+                fail_response = "WARNBUTDONOTRUN"
+            elif pv_IfPropertyExists.upper() == "FAIL":
+                fail_response = "FAIL"
+            else:
+                check_failed = False
+
     # Check if the input string is a valid QGSExpression.
     elif condition.upper() == "ISQGSEXPRESSIONVALID":
 
@@ -213,6 +243,17 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         recommendation = "Specify a valid QgsExpression for {}.".format(parameter_name)
 
         if qgis_util.get_qgsexpression_obj(parameter_value) is None:
+            check_failed = True
+
+    # Check if the input string is a valid URL.
+    elif condition.upper() == "ISURLVALID":
+
+        message = "{} ({}) is not a valid URL.".format(parameter_name, parameter_value)
+        recommendation = "Specify a valid URL for {}.".format(parameter_name)
+
+        try:
+            urllib2.urlopen(parameter_value)
+        except:
             check_failed = True
 
     else:
@@ -287,7 +328,7 @@ def validate_bool(bool_value, none_allowed, empty_string_allowed):
         # Dangerous to use bool(bool_value) because True is returned for all sorts of things.
         # Therefore do a bit more work.
         bool_value_upper = bool_value.upper()
-        if bool_value_upper == 'TRUE':
+        if bool_value_upper == 'TRUE' or bool_value_upper == 'FALSE':
             return True
         else:
             return False

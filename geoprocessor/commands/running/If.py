@@ -364,17 +364,19 @@ class If(AbstractCommand):
                 if debug:
                     logger.info("Condition evaluated to: " + str(condition_eval))
 
+                # For now leave the following two messages in to reinforce to user the evaluation
+                # - may only output when in debug mode in the future
                 if pv_Condition.find("${") >= 0:
                     # Show the original
                     message = pv_Condition + " (showing ${Property} notation) evaluates to " + str(condition_eval)
-                    recommendation = "See also matching EndIf()"
+                    recommendation = "Informational message."
                     self.command_status.add_to_log(
                         command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                        CommandLogRecord(command_status_type.SUCCESS, message, recommendation))
 
                 # Always also show the expanded
                 message = str(value1) + " " + op + " " + str(value2) + " evaluates to " + str(condition_eval)
-                recommendation = "See also matching EndIf()"
+                recommendation = "Informational message."
                 self.command_status.add_to_log(
                     command_phase_type.RUN,
                     CommandLogRecord(command_status_type.SUCCESS, message, recommendation))

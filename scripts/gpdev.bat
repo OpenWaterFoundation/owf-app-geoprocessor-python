@@ -90,6 +90,9 @@ rem %QGIS_PYTHON_EXE% --version
 rem Normal (non-QGIS) Python
 rem %PYTHON_EXE% -m geoprocessor.app.gp %*
 
+rem Print the PYTHONPATH to help with troubleshootingech
+echo PYTHONPATH=%PYTHONPATH%
+
 rem Exit with the error level of the Python command
 exit /b %ERRORLEVEL%
 

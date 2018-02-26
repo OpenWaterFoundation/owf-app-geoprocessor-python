@@ -195,11 +195,56 @@ with tags and stable release branches made as necessary for releases.
 
 ## Running the GeoProcessor ##
 
-The GeoProcessor is run in the development environment using the same script that is deployed in the operational environment:
+### Running in the Development Environment ###
 
-* Windows 10: [`gp.bat` batch file](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.bat)
-* Linux: [`gp.sh` script](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.sh)
+The GeoProcessor is typically run in the development environment using a script that uses Python 2
+and sets `PYTHONPATH` to include the development GeoProcessor files:
+
+* ![Windows](images/windows-32.png) Windows 10: [`gpdev.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gpdev.bat) batch file.
+* ![Linux](images/linux-32.png) Linux:
+[`gpdev.sh`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gpdev.sh) shell script. **Not yet developed.**
 
 The above checks to see whether the runtime environment needs to be set up.
 If so it runs the QGIS setup batch file (script) similar to what is run for PyCharm environment setup
 and then runs the GeoProcessor by passing command line arguments that were provided.
+This approach ensures that the most recent code is being used.
+It is common to run this version on [functional tests during development](dev-tasks#functional-tests).
+
+**The above is run from a command shell window.
+A variation on this approach will need to be implemented when the UI is implemented.**
+
+### Running in the Operational Environment ###
+
+The GeoProcessor can be run using the operational mode: 
+
+* ![Windows](images/windows-32.png) Windows 10: [`gp.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.bat) batch file.
+* ![Linux](images/linux-32.png) Linux: [`gp.sh`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.sh) shell script.
+
+The above checks to see whether the runtime environment needs to be set up.
+If so it runs the QGIS setup batch file (script) similar to what is run for PyCharm environment setup
+and then runs the GeoProcessor by passing command line arguments that were provided.
+This approach depends on the geoprocessor packing being installed in a location that Python can find it.
+It does not run the most recent code being edited and therefore has limited use in the development environment,
+other than testing deployment (such as confirming dependencies).
+
+**The above is run from a command shell window.
+A variation on this approach will need to be implemented when the UI is implemented.**
+
+### Running in the Limited Test Environment ###
+
+The GeoProcessor can be run in a limited test environment that does not use the QGIS software,
+using a script that uses Python 2:
+
+* ![Windows](images/windows-32.png) Windows 10:
+[`gptest.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gptest.bat) batch file. **Not yet developed.**
+* ![Linux](images/linux-32.png) Linux:
+[`gptest.sh`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gptest.sh) shell script.
+
+The above has minimal environment setup because normal Python 2 is used with no QGIS setup.
+The GeoProcessor test distribution package must have been installed in a location that will be found by Python 2.
+This approach can use the GeoProcessor as a functional test framework independent of QGIS.
+It is common to run this version on [functional tests for a software product](dev-tasks#functional-tests),
+in which case the functional tests may be managed in a separate repository from code.
+
+**The above is run from a command shell window.
+A variation on this approach will need to be implemented when the UI is implemented.**

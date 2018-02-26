@@ -2,8 +2,8 @@
 
 # Script to run the Open Water Foundation GeoProcessor application
 # - This script should eventually work for Cygwin, Git Bash (MinGW), and Linux
-# - Current focus is Cygwin development environment and Linux.
 # - This requires a Python 2.7 interpreter but does not require QGIS.
+# - The geoprocessor package is expected to be found in the chosen Python 2.7
 
 # Might need to handle different operating systems
 # cygwinUname=`uname -a | grep -i cygwin`

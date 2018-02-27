@@ -190,9 +190,10 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
 
         # Obtain the parameter values.
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
-        pv_Tolerance = float(self.get_parameter_value("Tolerance"))
+        pv_Tolerance = self.get_parameter_value("Tolerance")
+        tolerance_float = float(pv_Tolerance)
         pv_SimplifyMethod = self.get_parameter_value("SimplifyMethod", default_value="DouglasPeucker").upper()
-        default_simple_id = "{}_simple_{}".format(pv_GeoLayerID, str(pv_Tolerance))
+        default_simple_id = "{}_simple_{}".format(pv_GeoLayerID, pv_Tolerance)
         pv_SimplifiedGeoLayerID = self.get_parameter_value("SimplifiedGeoLayerID", default_value=default_simple_id)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
@@ -221,7 +222,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                     # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/
                     #       vector_geometry_tools/simplifygeometries.html
                     simple_output = general.runalg("qgis:simplifygeometries", geolayer.qgs_vector_layer,
-                                                   pv_Tolerance, None)
+                                                   tolerance_float, None)
 
                     # Create a new GeoLayer with the input GeoLayer's ID. The new simplified GeoLayer will be
                     # assigned the value of the SimplifiedGeoLayerID parameter. simple_output["OUTPUT"] returns the

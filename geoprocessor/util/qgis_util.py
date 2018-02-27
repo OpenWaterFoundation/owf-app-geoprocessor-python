@@ -718,7 +718,7 @@ def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer, output_file, crs, geo
                                             "utf-8",
                                             QgsCoordinateReferenceSystem(crs),
                                             "CSV",
-                                            layerOptions=['GEOMETRY={}'.format(geometry_type),
+                                            layerOptions=['GEOMETRY=AS_{}'.format(geometry_type),
                                                           'SEPARATOR={}'.format(separator)])
 
 

@@ -193,7 +193,7 @@ class ListFiles(AbstractCommand):
             should_run_command.append(validators.run_check(self, "IsUrlValid", "URL", url_abs, "FAIL"))
 
         # If both the ListFiles and the ListFolders are set to FALSE, raise a WARNING.
-        if not(list_files_bool and list_dirs_bool):
+        if not list_files_bool and not list_dirs_bool:
 
             message = "Both ListFiles and ListFolders are set to FALSE. There will be no output."
             recommendation = "Set at lease one of the parameters to TRUE."

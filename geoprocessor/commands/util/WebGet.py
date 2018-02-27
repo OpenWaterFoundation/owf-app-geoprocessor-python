@@ -23,22 +23,17 @@ class WebGet(AbstractCommand):
     """
     Downloads a file from a web url.
 
-    This command downloads a file on the web and saves it on the local computer. There is a parameter that allows zip
-    files to be downloaded and automatically unzipped.
+    This command downloads a file on the web and saves it on the local computer.
 
     Command Parameters:
-    * FileURL (str, required): the URL of the file to be downloaded.
+    * URL (str, required): the URL of the file to be downloaded.
     * OutputFile (str, required): the relative pathname of the output file.
-    * IfZipFile (str, optional): This parameter determines the action that occurs if the downloaded file is a .zip file.
-        Available options are: `UnzipAndRemove`, `UnzipAndSave` and `KeepZipped` (Refer to user documentation for
-         detailed description.) Default value is `KeepZipped`.
     """
 
-    # Define the command paramters.
+    # Define the command parameters.
     __command_parameter_metadata = [
-        CommandParameterMetadata("FileURL", type("")),
-        CommandParameterMetadata("OutputFile", type("")),
-        CommandParameterMetadata("IfZipFile", type(""))]
+        CommandParameterMetadata("URL", type("")),
+        CommandParameterMetadata("OutputFile", type(""))]
 
     def __init__(self):
         """
@@ -69,14 +64,14 @@ class WebGet(AbstractCommand):
         """
         warning = ""
 
-        # Check that parameter FileURL is a non-empty, non-None string.
+        # Check that parameter URL is a non-empty, non-None string.
         # - existence of the url will also be checked in run_command().
-        pv_FileURL = self.get_parameter_value(parameter_name='FileURL', command_parameters=command_parameters)
+        pv_URL = self.get_parameter_value(parameter_name='URL', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_FileURL, False, False):
+        if not validators.validate_string(pv_URL, False, False):
 
-            message = "FileURL parameter has no value."
-            recommendation = "Specify the FileURL parameter to indicate the URL of the file to download."
+            message = "URL parameter has no value."
+            recommendation = "Specify the URL parameter to indicate the URL of the file to download."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -90,20 +85,6 @@ class WebGet(AbstractCommand):
 
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter to indicate the output file."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
-
-        # Check that optional parameter IfZipFile is either `UnzipAndRemove`, `UnzipAndSave`, `KeepZipped` or None.
-        pv_IfZipFile = self.get_parameter_value(parameter_name="IfZipFile", command_parameters=command_parameters)
-        acceptable_values = ["UnzipAndRemove", "UnzipAndSave", "KeepZipped"]
-        if not validators.validate_string_in_list(pv_IfZipFile, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
-
-            message = "IfZipFile parameter value ({}) is not recognized.".format(pv_IfZipFile)
-            recommendation = "Specify one of the acceptable values ({}) for the IfZipFile parameter.".format(
-                acceptable_values)
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -152,19 +133,16 @@ class WebGet(AbstractCommand):
         # one or many checks failed.
         return run_webget
 
-    @ staticmethod
+    @staticmethod
     def __is_zipfile(response_object):
         """
         Checks if a request response object is of zip file format.
-
         Args:
             response_object: the request response object to check. For more information on request response objects,
                 refer to `http://docs.python-requests.org/en/master/api/`
-
         Returns:
             Boolean. True if request response object is a zip file format. False if request response object is not a
             zip file format.
-
         Raises:
             None.
         """
@@ -205,8 +183,8 @@ class WebGet(AbstractCommand):
             # Get the full path of the existing file
             existing_path = os.path.join(folder_path, existing_file)
 
-            # Get the filename and the file extension of the existing file
-            existing_filename, existing_extension = os.path.splitext(existing_file)
+            # Get the file extension of the existing file
+            existing_extension = io_util.get_extension(existing_path)
 
             # Create the full path of the renamed file. If an extension was included in the original filename, then that
             # same extension is included in the new filename.
@@ -215,8 +193,7 @@ class WebGet(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command. Download the file from the web and save it on the local computer. Handle zip files as
-        pre-determined by the IfZipFile parameter value.
+        Run the command. Download the file from the web and save it on the local computer.
 
         Returns: None.
 
@@ -225,12 +202,11 @@ class WebGet(AbstractCommand):
         """
 
         # Obtain the parameter values
-        pv_FileURL = self.get_parameter_value("FileURL")
+        pv_URL = self.get_parameter_value("URL")
         pv_OutputFile = self.get_parameter_value("OutputFile")
-        pv_IfZipFile = self.get_parameter_value("IfZipFile", default_value="KeepZipped")
 
-        # Convert the pv_FileURL parameter to expand for ${Property} syntax.
-        url_abs = self.command_processor.expand_parameter_value(pv_FileURL, self)
+        # Convert the pv_URL parameter to expand for ${Property} syntax.
+        url_abs = self.command_processor.expand_parameter_value(pv_URL, self)
 
         # Convert the OutputFile parameter value relative path to an absolute path. Expand for ${Property} syntax.
         output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
@@ -246,13 +222,11 @@ class WebGet(AbstractCommand):
                 output_folder = os.path.dirname(output_file_absolute)
 
                 # Get the URL file and convert it into a request Response object
-                r = requests.get(url_abs)
+                r = requests.get(url_abs, verify=False)
 
-                # Get the filename and the extension of the file URL
-                url_filename, url_extension = os.path.splitext(os.path.basename(url_abs))
-
-                # Get the filename and the extension for the output file
-                output_filename, output_extension = os.path.splitext(os.path.basename(pv_OutputFile))
+                # Get the filename of the URL and the output file
+                url_filename = io_util.get_filename(url_abs)
+                output_filename = io_util.get_filename(pv_OutputFile)
 
                 # If the URL file is a zip file, process as a zip file.
                 if self.__is_zipfile(r):
@@ -263,28 +237,9 @@ class WebGet(AbstractCommand):
                     # Create an empty list to hold the files that were downloaded/extracted to the output folder.
                     downloaded_files = []
 
-                    # If the `IfZipFile` parameter is set to UnzipAndRemove, extract all of the archived members
-                    # within the URL zip file and save the contents to the specified output folder. Do not save the
-                    # .zip file to the output folder.
-                    if pv_IfZipFile.upper() == "UNZIPANDREMOVE":
-                        zipfile_obj.extractall(output_folder)
-                        downloaded_files.extend(zipfile_obj.namelist())
-
-                    # If the `IfZipFile` parameter is set to UnzipAndSave, extract all of the archived members
-                    # within the URL zip file and save the contents to the specified output folder. Also, save the
-                    # .zip file to the output folder.
-                    elif pv_IfZipFile.upper() == "UNZIPANDSAVE":
-                        zipfile_obj.extractall(output_folder)
-                        downloaded_files.extend(zipfile_obj.namelist())
-                        with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
-                            downloaded_zip_file.write(r.content)
-                        downloaded_files.append("{}.zip".format(url_filename))
-
-                    # If the `IfZipFile` parameter is set to KeepZipped, only download the .zip file.
-                    else:
-                        with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
-                            downloaded_zip_file.write(r.content)
-                        downloaded_files.append("{}.zip".format(url_filename))
+                    with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
+                        downloaded_zip_file.write(r.content)
+                    downloaded_files.append("{}.zip".format(url_filename))
 
                     # Determine if the downloaded zip file(s) should be renamed. If the filename is %f then the
                     # filenames of the downloaded products should be the same as the url filenames
@@ -292,7 +247,6 @@ class WebGet(AbstractCommand):
                         self.__rename_files_in_a_folder(list_of_files=downloaded_files, folder_path=output_folder,
                                                         new_filename=output_filename)
 
-                # If the URL file is a single file (a non-zip file), process accordingly.
                 else:
 
                     # Download the file to the output folder.

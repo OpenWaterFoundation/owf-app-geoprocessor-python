@@ -14,6 +14,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.zip_util as zip_util
 
 import urllib2
 
@@ -245,6 +246,15 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if qgis_util.get_qgsexpression_obj(parameter_value) is None:
             check_failed = True
 
+    # Check if the file is a valid tar file.
+    elif condition.upper() == "ISTARFILE":
+
+        message = "{} ({}) is not a valid TAR file.".format(parameter_name, parameter_value)
+        recommendation = "Specify a valid TAR file for {}.".format(parameter_name)
+
+        if not zip_util.is_tar_file(parameter_value):
+            check_failed = True
+
     # Check if the input string is a valid URL.
     elif condition.upper() == "ISURLVALID":
 
@@ -254,6 +264,15 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         try:
             urllib2.urlopen(parameter_value)
         except:
+            check_failed = True
+
+    # Check if the file is a valid zip file.
+    elif condition.upper() == "ISZIPFILE":
+
+        message = "{} ({}) is not a valid ZIP file.".format(parameter_name, parameter_value)
+        recommendation = "Specify a valid ZIP file for {}.".format(parameter_name)
+
+        if not zip_util.is_zip_file(parameter_value):
             check_failed = True
 
     else:

@@ -10,12 +10,11 @@ import geoprocessor.core.command_status_type as command_status_type
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.validator_util as validators
+import geoprocessor.util.zip_util as zip_util
 
 import logging
 import os
 import requests
-import StringIO
-import zipfile
 
 
 class WebGet(AbstractCommand):
@@ -133,30 +132,6 @@ class WebGet(AbstractCommand):
         # one or many checks failed.
         return run_webget
 
-    @staticmethod
-    def __is_zipfile(response_object):
-        """
-        Checks if a request response object is of zip file format.
-        Args:
-            response_object: the request response object to check. For more information on request response objects,
-                refer to `http://docs.python-requests.org/en/master/api/`
-        Returns:
-            Boolean. True if request response object is a zip file format. False if request response object is not a
-            zip file format.
-        Raises:
-            None.
-        """
-
-        # The following comment is in place to make PyCharm skip review of the exception clause. Without this comment,
-        # PyCharm raises error "Too broad exception clause"
-        # noinspection PyBroadException
-        try:
-            zipfile.ZipFile(StringIO.StringIO(response_object.content))
-            return True
-
-        except:
-            return False
-
     @ staticmethod
     def __rename_files_in_a_folder(list_of_files, folder_path, new_filename):
         """
@@ -229,10 +204,7 @@ class WebGet(AbstractCommand):
                 output_filename = io_util.get_filename(pv_OutputFile)
 
                 # If the URL file is a zip file, process as a zip file.
-                if self.__is_zipfile(r):
-
-                    # Read in the url file as a zip file object.
-                    zipfile_obj = zipfile.ZipFile(StringIO.StringIO(r.content))
+                if zip_util.is_zip_file_request(r):
 
                     # Create an empty list to hold the files that were downloaded/extracted to the output folder.
                     downloaded_files = []

@@ -46,7 +46,7 @@ from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
 from geoprocessor.commands.util.CommentBlockStart import CommentBlockStart
 from geoprocessor.commands.util.CopyFile import CopyFile
-from geoprocessor.commands.util.ExtractFile import ExtractFile
+from geoprocessor.commands.util.UnzipFile import ExtractFile
 from geoprocessor.commands.util.ListFiles import ListFiles
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand

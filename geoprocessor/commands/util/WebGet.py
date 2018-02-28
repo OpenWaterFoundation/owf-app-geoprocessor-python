@@ -198,8 +198,6 @@ class WebGet(AbstractCommand):
                 self.command_processor.get_property('WorkingDir'),
                 self.command_processor.expand_parameter_value(original_filename, self)))
 
-        print output_file_absolute
-
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_run_webget(output_file_absolute):
 

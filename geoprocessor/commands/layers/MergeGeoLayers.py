@@ -35,10 +35,11 @@ class MergeGeoLayers(AbstractCommand):
     Command Parameters
     * GeoLayerIDs (list of strings, required): a list of the IDs of the GeoLayers to be merged.
     * OutputGeoLayerID (string, required): the ID of the output GeoLayer, the merged GeoLayer.
-    * AttributeMap (dictionary, optional): a dictionary containing attribute mapping information. Key: the
-        output attribute name. Value: a list of the corresponding input attribute names. By default, the
-        AttributeMap is an empty dictionary {"":[]}. All of the input attribute fields will be included in the
-        Output GeoLayer's attribute table.
+    * AttributeMap (string, optional): a string that can convert to a list. Each item is separated by a comma.
+        Each item is an entry pair separated by a ':'.
+        The key of the pair is the old attribute name to be renamed.
+        The value of the pair is the new name that the old attribute will be mapped to in the merged output GeoLayer.
+        Default = ""
     * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the OutputGeoLayerID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
@@ -309,10 +310,53 @@ class MergeGeoLayers(AbstractCommand):
         # Get the command parameter values.
         pv_GeoLayerIDs = self.get_parameter_value("GeoLayerIDs")
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID")
-        pv_AttributeMap = self.get_parameter_value("AttributeMap", default_value="{'=[]'}")
+        pv_AttributeMap = self.get_parameter_value("AttributeMap", default_value="")
 
-        # Convert the AttributeMap parameter from string to dictionary format.
-        attribute_map = string_util.delimited_string_to_dictionary_list_value(pv_AttributeMap)
+        # Convert the AttributeMap parameter from string to a list of mapping entries.
+        attribute_map_entry_list = string_util.delimited_string_to_list(pv_AttributeMap, delimiter=',')
+
+        # The attribute map dictionary contains the attributes of the output merged GeoLayer and the corresponding
+        # attributes of the input GeoLayers.
+        # key (str): an attribute of the output, merged GeoLayer
+        # value (list): a list of attributes from the input GeoLayers that should be mapped to the output attribute
+        attribute_map_dic = {}
+
+        # Iterate over each attribute mapping entry.
+        for attribute_map_entry in attribute_map_entry_list:
+
+            # Get a list of the keys (merged attributes) currently in the attribute map dictionary.
+            curr_merged_attributes = attribute_map_dic.keys()
+
+            # If the attribute map entry has the correct format, continue.
+            if ':' in attribute_map_entry:
+
+                # Get the output merged attribute name from the entry.
+                merged_attr = attribute_map_entry.split(':')[1].strip()
+
+                # Get the input attribute name from the entry.
+                input_attr = attribute_map_entry.split(':')[0].strip()
+
+            # If the attribute map entry does has the correct format, the merged_attr and the input_attr variables
+            # are set to empty strings.
+            else:
+                merged_attr = ''
+                input_attr = ''
+
+            # If the merged attribute name is already registered in the attribute mapping dictionary.
+            if merged_attr in curr_merged_attributes:
+
+                # Add the input attribute to the list of input attributes within the dictionary (associated with
+                # the corresponding merged_attribute).
+                curr_input_attrs = attribute_map_dic[merged_attr]
+                curr_input_attrs.append(input_attr)
+                attribute_map_dic[merged_attr] = curr_input_attrs
+
+            # If the merged attribute is not already registered in the attribute mapping dictionary, add the input
+            # attribute (as a one-item list) to the dictionary (associated with the corresponding merged_attribute).
+            else:
+                attribute_map_dic[merged_attr] = [input_attr]
+
+        print attribute_map_dic
 
         # Convert the GeoLayerIDs parameter from string to list format.
         list_of_geolayer_ids = string_util.delimited_string_to_list(pv_GeoLayerIDs)
@@ -340,7 +384,7 @@ class MergeGeoLayers(AbstractCommand):
 
                     # Get an attribute dictionary mapping the GeoLayer attributes that are to be renamed.
                     # Key: Existing attribute name. Value: New attribute name.
-                    attribute_dictionary = self.__create_attribute_dictionary(geolayer, attribute_map)
+                    attribute_dictionary = self.__create_attribute_dictionary(geolayer, attribute_map_dic)
 
                     # Make a copy of the GeoLayer and add it to the GeoProcessor. Renaming of attributes will occur on
                     # a copy of the GeoLayer so that the original GeoLayer's attribute values are not affected.

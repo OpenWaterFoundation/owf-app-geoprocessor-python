@@ -23,13 +23,14 @@ class UnzipFile(AbstractCommand):
 
     Command Parameters
     * File (str, required): the path to the file to extract relative or absolute)
-    * FileType (str, optional): the type of compressed file. Defaulted to 'zip'. Must be one of the following:
+    * FileType (str, optional): the type of compressed file.  Must be one of the following:
         `zip`: ZIP file (.zip)
         `tar`: Tape archive (.tar)
+        Default: determined by the files extension.
     * OutputFolder (str, optional): the folder that will hold the extracted contents of the compressed file.
         Default: The parent folder of the compressed file.
     * DeleteFile (boolean, optional): If TRUE, the compressed file will be deleted after the extraction takes place.
-        If FALSE, the compressed file will remain. Default: TRUE
+        If FALSE, the compressed file will remain. Default: FALSE
     """
 
     # Define the command parameters.
@@ -145,10 +146,19 @@ class UnzipFile(AbstractCommand):
         should_run_command.append(validators.run_check(self, "IsFolderPathValid", "OutputFolder", output_folder_abs,
                                                        "FAIL"))
 
+        # If the File Type is not recognized, raise a FAILURE.
+        if file_type is None:
+            message = "A valid FileType cannot be determined from the file ({}).".format(file_abs)
+            recommendation = "Use the FileType parameter to assign the appropriate file type."
+            should_run_command.append(False)
+            self.logger.error(message)
+            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                    message, recommendation))
+
         # If the File Type is not actually recognized by the input File, raise a FAILURE.
-        if file_type == "ZIP":
+        if file_type.upper() == "ZIP":
             should_run_command.append(validators.run_check(self, "IsZipFile", "File", file_abs, "FAIL"))
-        elif file_type == "TAR":
+        elif file_type.upper() == "TAR":
             should_run_command.append(validators.run_check(self, "IsTarFile", "File", file_abs, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
@@ -156,6 +166,31 @@ class UnzipFile(AbstractCommand):
             return False
         else:
             return True
+
+    @staticmethod
+    def __get_default_file_type(file_path):
+        """
+        Helper function to get the default FileType parameter value.
+
+        Arg:
+            file_path: the absolute path to the input File parameter
+
+        Returns: The default FileType parameter value. Returns None if the file extension does not correlate with
+            a compatible FileType.
+        """
+
+        # A dictionary of compatible file extensions and their corresponding FileType.
+        # key: Uppercase file extension.
+        # value: Uppercase file type.
+        dic = {".TAR": "TAR", ".ZIP": "ZIP"}
+
+        # Iterate over the dictionary and return the FileType that corresponds to the the input file's extension.
+        for ext, file_type in dic.iteritems():
+            if io_util.get_extension(file_path).upper() == ext:
+                return file_type
+
+        # If the file extension is not recognized, return None.
+        return None
 
     def run_command(self):
         """
@@ -167,15 +202,18 @@ class UnzipFile(AbstractCommand):
             RuntimeError if any warnings occurred during run_command method.
         """
 
-        # Obtain the parameter values.
+        # Obtain the File and the DeleteFile parameter values.
         pv_File = self.get_parameter_value("File")
-        pv_FileType = self.get_parameter_value("FileType", default_value="zip").upper()
-        pv_DeleteFile = self.get_parameter_value("DeleteFile", default_value="True")
+        pv_DeleteFile = self.get_parameter_value("DeleteFile", default_value="False")
 
         # Convert the File parameter value relative path to an absolute path. Expand for ${Property} syntax.
         file_abs = io_util.verify_path_for_os(io_util.to_absolute_path(
             self.command_processor.get_property('WorkingDir'),
             self.command_processor.expand_parameter_value(pv_File, self)))
+
+        # Get the FileType parameter value.
+        default_file_ext = self.__get_default_file_type(file_abs)
+        pv_FileType = self.get_parameter_value("FileType", default_value=default_file_ext)
 
         # Get the OutputFolder parameter value.
         parent_folder = io_util.get_path(file_abs)
@@ -192,12 +230,12 @@ class UnzipFile(AbstractCommand):
             try:
 
                 # If the file is a .zip file, extract the zip file.
-                if pv_FileType == "ZIP":
+                if pv_FileType.upper() == "ZIP":
 
                     zip_util.unzip_all_files(file_abs, output_folder_abs)
 
                 # If the file is a .tar file, extract the tar file.
-                elif pv_FileType == "TAR":
+                elif pv_FileType.upper() == "TAR":
 
                     zip_util.untar_all_files(file_abs, output_folder_abs)
 

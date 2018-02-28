@@ -46,7 +46,7 @@ from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
 from geoprocessor.commands.util.CommentBlockStart import CommentBlockStart
 from geoprocessor.commands.util.CopyFile import CopyFile
-from geoprocessor.commands.util.UnzipFile import ExtractFile
+from geoprocessor.commands.util.UnzipFile import UnzipFile
 from geoprocessor.commands.util.ListFiles import ListFiles
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
@@ -81,7 +81,6 @@ class GeoProcessorCommandFactory(object):
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
-        "EXTRACTFILE": ExtractFile(),
         "FOR": For(),
         "FREEGEOLAYER": FreeGeoLayer(),
         "IF": If(),
@@ -105,6 +104,7 @@ class GeoProcessorCommandFactory(object):
         "SIMPLIFYGEOLAYERGEOMETRY": SimplifyGeoLayerGeometry(),
         "STARTLOG": StartLog(),
         "STARTREGRESSIONTESTRESULTSREPORT": StartRegressionTestResultsReport(),
+        "UNZIPFILE": UnzipFile(),
         "WEBGET": WebGet(),
         "WRITECOMMANDSUMMARYTOFILE": WriteCommandSummaryToFile(),
         "WRITEGEOLAYERPROPERTIESTOFILE": WriteGeoLayerPropertiesToFile(),
@@ -215,8 +215,6 @@ class GeoProcessorCommandFactory(object):
                     return EndFor()
                 elif command_name_upper == "ENDIF":
                     return EndIf()
-                elif command_name_upper == "EXTRACTFILE":
-                    return ExtractFile()
                 elif command_name_upper == "FOR":
                     return For()
                 elif command_name_upper == "FREEGEOLAYER":
@@ -263,6 +261,8 @@ class GeoProcessorCommandFactory(object):
                     return StartLog()
                 elif command_name_upper == "STARTREGRESSIONTESTRESULTSREPORT":
                     return StartRegressionTestResultsReport()
+                elif command_name_upper == "UNZIPFILE":
+                    return UnzipFile()
                 elif command_name_upper == "WEBGET":
                     return WebGet()
                 elif command_name_upper == "WRITECOMMANDSUMMARYTOFILE":

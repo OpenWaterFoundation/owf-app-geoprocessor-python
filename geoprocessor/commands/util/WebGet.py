@@ -26,7 +26,8 @@ class WebGet(AbstractCommand):
 
     Command Parameters:
     * URL (str, required): the URL of the file to be downloaded.
-    * OutputFile (str, required): the relative pathname of the output file.
+    * OutputFile (str, optional): the relative pathname of the output file. Default: Filename is the same as the url
+        filename. File is saved to the parent folder of the gp workflow file (the working directory).
     """
 
     # Define the command parameters.
@@ -76,11 +77,11 @@ class WebGet(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that parameter OutputFile is a non-empty, non-None string.
-        # - existence of the flder will also be checked in run_command().
+        # Check that parameter OutputFile is a non-empty string (can be None).
+        # - existence of the folder will also be checked in run_command().
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validators.validate_string(pv_OutputFile, True, False):
 
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter to indicate the output file."
@@ -178,15 +179,26 @@ class WebGet(AbstractCommand):
 
         # Obtain the parameter values
         pv_URL = self.get_parameter_value("URL")
-        pv_OutputFile = self.get_parameter_value("OutputFile")
+        pv_OutputFile = self.get_parameter_value("OutputFile", default_value=None)
 
         # Convert the pv_URL parameter to expand for ${Property} syntax.
         url_abs = self.command_processor.expand_parameter_value(pv_URL, self)
 
         # Convert the OutputFile parameter value relative path to an absolute path. Expand for ${Property} syntax.
-        output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
-            self.command_processor.get_property('WorkingDir'),
-            self.command_processor.expand_parameter_value(pv_OutputFile, self)))
+        # If the OutputFile parameter is specified, continue.
+        if pv_OutputFile:
+            output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
+                self.command_processor.get_property('WorkingDir'),
+                self.command_processor.expand_parameter_value(pv_OutputFile, self)))
+
+        # If the OutputFile parameter is NOT specified, continue.
+        else:
+            original_filename = io_util.get_filename(pv_URL) + io_util.get_extension(pv_URL)
+            output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
+                self.command_processor.get_property('WorkingDir'),
+                self.command_processor.expand_parameter_value(original_filename, self)))
+
+        print output_file_absolute
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_run_webget(output_file_absolute):
@@ -201,7 +213,11 @@ class WebGet(AbstractCommand):
 
                 # Get the filename of the URL and the output file
                 url_filename = io_util.get_filename(url_abs)
-                output_filename = io_util.get_filename(pv_OutputFile)
+                output_filename = io_util.get_filename(output_file_absolute)
+
+                # Remove the output file if it already exists.
+                if os.path.exists(output_file_absolute):
+                    os.remove(output_file_absolute)
 
                 # If the URL file is a zip file, process as a zip file.
                 if zip_util.is_zip_file_request(r):

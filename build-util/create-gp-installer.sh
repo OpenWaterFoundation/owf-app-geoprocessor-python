@@ -42,6 +42,20 @@ if [ ! -d ${buildFolder} ]
 	exit 1
 fi
 
+# Check to see if needed software is installed.
+# - If not, developers will need to know how to do it based on the shell environment that is used.
+# - If the result of checks is an empty string, the program was not found
+# - OK to see standard error message from the following to help figure out issue
+
+zipProgramPath=`which zip`
+gzipProgramPath=`which gzip`
+tarProgramPath=`which tar`
+
+# Global error flag check
+# - set to "yes" if any issue occurs below
+# - runner can check messages to see what issue occurred and decide what to do
+errorOccurred="no"
+
 #------------------------------------------------------------------------------------------
 # These steps build the tar.gz installer for gptest,
 # which is used for functional testing but has no QGIS code enabled.
@@ -159,15 +173,22 @@ if [ "$?" -ne 0 ]
 	exit $?
 fi
 echo "Gzipping file ${gptestSitePackageBuildFile} into ${gptestSitePackageBuildFileGz}"
-gzip ${gptestSitePackageBuildFile}
-if [ "$?" -ne 0 ]
+if [ -z ${gzipProgramPath} ]
 	then
-	echo "Error in script.  Exiting."
-	exit $?
+	echo "[ERROR] gzip program was not found.  Unable to gzip ${gptestSitePackageBuildFile}"
+	errorOccurred="yes"
+else
+	gzip ${gptestSitePackageBuildFile}
+	if [ "$?" -ne 0 ]
+		then
+		echo "[ERROR] Error using gzip on ${gptestSitePackageBuildFile}"
+		errorOccurred="yes"
+	fi
 fi
 
 #------------------------------------------------------------------------------------------
 # Step 4b. Zip up all the *.py files in the geoprocessor folder
+# - skip if zip program is not installed (should generally be in path)
 
 gptestSitePackageBuildFileZip="${buildFolder}/gptest-site-package.zip"
 
@@ -179,11 +200,17 @@ fi
 
 echo "Creating zip file containing *.py files ${gptestSitePackageBuildFileZip} ..."
 cd "${buildTmpGptestFolder}"
-zip -r ${gptestSitePackageBuildFileZip} geoprocessor -x '*.pyc'
-if [ "$?" -ne 0 ]
+if [ -z ${zipProgramPath} ]
 	then
-	echo "Error in script.  Exiting."
-	exit $?
+	echo "[ERROR] zip program was not found.  Unable to create zip file ${gptestSitePackageBuildFileZip}"
+	errorOccurred="yes"
+else
+	zip -r ${gptestSitePackageBuildFileZip} geoprocessor -x '*.pyc'
+	if [ "$?" -ne 0 ]
+		then
+		echo "[ERROR] Error using zip to create ${gptestSitePackageBuildFileZip}"
+		errorOccurred="yes"
+	fi
 fi
 
 #------------------------------------------------------------------------------------------
@@ -235,11 +262,17 @@ if [ "$?" -ne 0 ]
 	exit $?
 fi
 echo "Gzipping file ${gpSitePackageBuildFile} into ${gpSitePackageBuildFileGz}"
-gzip ${gpSitePackageBuildFile}
-if [ "$?" -ne 0 ]
+if [ -z ${gzipProgramPath} ]
 	then
-	echo "Error in script.  Exiting."
-	exit $?
+	echo "[ERROR] gzip program was not found.  Unable to gzip ${gpSitePackageBuildFile}"
+	errorOccurred="yes"
+else
+	gzip ${gpSitePackageBuildFile}
+	if [ "$?" -ne 0 ]
+		then
+		echo "[ERROR] Error using gzip on ${gpSitePackageBuildFile}"
+		errorOccurred="yes"
+	fi
 fi
 
 #------------------------------------------------------------------------------------------
@@ -255,17 +288,43 @@ fi
 
 echo "Creating zip file containing *.py files ${gpSitePackageBuildFileZip} ..."
 cd "${buildTmpGpFolder}"
-zip -r ${gpSitePackageBuildFileZip} geoprocessor -x '*.pyc'
-if [ "$?" -ne 0 ]
+if [ -z ${zipProgramPath} ]
 	then
-	echo "Error in script.  Exiting."
-	exit $?
+	echo "[ERROR] zip program was not found.  Unable to create zip file ${gpSitePackageBuildFileZip}"
+	errorOccurred="yes"
+else
+	zip -r ${gpSitePackageBuildFileZip} geoprocessor -x '*.pyc'
+	if [ "$?" -ne 0 ]
+		then
+		echo "[ERROR] Error using zip to create ${gpSitePackageBuildFileZip}"
+	fi
 fi
 
 #------------------------------------------------------------------------------------------
 # Final comment to software developer
 
-echo "Install the files in the site-packages folder of the target Python 2.7 environment"
-echo "- Remove the existing folder before installing to make sure the latest files are installed."
+if [ ${errorOccurred} = "yes" ]
+	then
+	echo ""
+	echo "An error occurred creating installers.  Check messages above."
+	echo "- Partial results may have been created, such as tar.gz but not .zip"
+	echo "- Maybe need to use another shell (Cygwin, Git Bash, Windows Bash, Linux)."
+	echo "- Sometimes Cygwin drops processes so just rerun."
+	echo ""
+fi
 
-exit 0
+echo ""
+echo "Install files were created in ../build folder"
+echo "- Look for *.tar.gz and *.zip files"
+echo "- Install the files in the site-packages folder of the target Python 2.7 environment"
+echo "- The 'geoprocessor' folder should be in a folder indicated by Python sys.path"
+echo "- Remove the existing folder before installing to make sure the latest files are installed."
+echo ""
+
+# Exit with appropriate error status
+if [ ${errorOccurred} = "yes" ]
+	then
+	exit 1
+else
+	exit 0
+fi

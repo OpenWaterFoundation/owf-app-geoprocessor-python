@@ -127,7 +127,7 @@ class RunCommands(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_CommandFile, self)))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings about command parameters."
+            message = "There were " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
             raise ValueError(message)
 
@@ -156,7 +156,7 @@ class RunCommands(AbstractCommand):
                 # handled explicitly whereas user-defined properties are in a list that can be easily shared.
                 # Also, some properties like the working directory receive special treatment.
                 # For now don't bite off the property issue
-                runner.run_commands()
+                runner.run_commands(env_properties=self.command_processor.env_properties)
                 logger.info("Done running commands")
                 # Total runtime for the commands
                 # long run_time_total = TSCommandProcessorUtil.getRunTimeTotal(runner.getProcessor().getCommands());
@@ -269,7 +269,7 @@ class RunCommands(AbstractCommand):
             warning_count += 1
             message = 'Unexpected error running command file "' + pv_CommandFile_absolute + '"'
             traceback.print_exc(file=sys.stdout)
-            logger.exception(message, e)
+            logger.error(message, e, exc_info=True)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(command_status_type.FAILURE, message,
@@ -279,7 +279,7 @@ class RunCommands(AbstractCommand):
             warning_count += 1
             message = 'Unexpected error running command file "' + pv_CommandFile_absolute + '"'
             traceback.print_exc(file=sys.stdout)
-            logger.exception(message)
+            logger.error(message, exc_info=True)
             self.command_status.add_to_log(
                 command_phase_type.RUN,
                 CommandLogRecord(command_status_type.FAILURE, message,

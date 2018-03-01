@@ -318,6 +318,30 @@ def is_int(s):
         return False
 
 
+def key_value_pair_list_to_dictionary(key_value_list):
+    """
+    Convert a list of key=value strings to dictionary with corresponding keys and values.
+
+    Args:
+        key_value_list ([str]:  List of key=value strings.
+
+    Returns:
+        Dictionary of key=value, where values are strings.
+    """
+    dictionary = {}
+    for key_value in key_value_list:
+        # Split by equal sign
+        pos = key_value.find("=")
+        if pos > 1:
+            # Get the key and value
+            key = key_value[0:pos].strip()
+            value = key_value[pos + 1:].strip()
+        # Add to the dictionary
+        if key != "":
+            dictionary[key] = value
+    return dictionary
+
+
 def pattern_count(s, pattern):
     """
     Count the number of unique (non-overlapping) instances of a pattern in a string.

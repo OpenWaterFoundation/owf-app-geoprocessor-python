@@ -52,7 +52,7 @@ class GeoProcessor(object):
         # qgis_prefix_path: the full pathname to the qgis install folder (often C:\OSGeo4W\apps\qgis)
         # TODO smalers 2017-12-30 Need to rework to not hard code.
         # - Need to pass in QGIS configuration from the startup batch file or script.
-        self.set_property("qgis_prefix_path", r"C:\OSGeo4W\apps\qgis")
+        self.set_property("qgis_prefix_path", r"C:\OSGeo4W64\apps\qgis")
 
         # Set the initial working directory properties prior to reading a command file.
         # Reading the command file should reset these properties.

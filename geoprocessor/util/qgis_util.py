@@ -7,6 +7,8 @@ import os
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
 from qgis.core import QgsGeometry, QgsRasterLayer, QgsVectorFileWriter, QgsVectorLayer
 
+import qgis.utils
+
 from processing.core.Processing import Processing
 
 from PyQt4.QtCore import QVariant, QFileInfo
@@ -351,6 +353,36 @@ def get_geometrytype_wkb(qgsvectorlayer):
 
     # Return the WKB geometry type (in text form) of the input QgsVectorLayer.
     return enumerator_dic[qgsvectorlayer.wkbType()]
+
+
+def get_qgis_version_int():
+    """
+    Returns the version (int) of the initiated QGIS software.
+
+    Return: The QGIS version (int).
+    """
+
+    return qgis.utils.QGis.QGIS_VERSION_INT
+
+
+def get_qgis_version_name():
+    """
+    Returns the version name of the initiated QGIS software.
+
+    Return: The QGIS version name (string).
+    """
+
+    return qgis.utils.QGis.QGIS_RELEASE_NAME
+
+
+def get_qgis_version_str():
+    """
+    Returns the version (string) of the initiated QGIS software.
+
+    Return: The QGIS version (string).
+    """
+
+    return qgis.utils.QGis.QGIS_VERSION
 
 
 def get_qgscoordinatereferencesystem_obj(crs_code):

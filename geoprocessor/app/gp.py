@@ -19,6 +19,7 @@ import geoprocessor.util.app_util as app_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.log_util as log_util
 import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.string_util as string_util
 
 # General Python modules
 import argparse
@@ -146,14 +147,35 @@ class GeoProcessorCmd(cmd.Cmd):
         print
 
 
+def parse_command_line_properties(property_list):
+    """
+    Parse command line properties that were specified with the -p Property=Value syntax.
+    The logic may need to be made more complex depending on how quoted strings, etc. are handled.
+
+    Args:
+        property_list: List containing zero or more Property=Value strings.
+
+    Returns:
+        Dictionary with key being property name and value being the property value as string.
+    """
+    logger = logging.getLogger(__name__)
+    property_dict = string_util.key_value_pair_list_to_dictionary(property_list)
+    # Print the properties to help with troubleshooting
+    print("property_dict=" + str(property_dict))
+    for key in property_dict:
+        logger.info('Command line processor property: ' + key + '="' + str(property_dict[key]) + '"')
+    return property_dict
+
+
 # This is the same as the GeoProcessorCmd.do_run() function.
 # - could reuse code but inline it for now
-def run_batch(command_file):
+def run_batch(command_file, runtime_properties):
     """
     Run in batch mode by processing the specific command file.
 
     Args:
         command_file (str):  The name of the command file to run, absolute path or relative to the current folder.
+        runtime_properties (dict):  A dictionary of properties for the processor.
 
     Returns:
         Nothing.
@@ -184,7 +206,8 @@ def run_batch(command_file):
         return
     # Run the command file
     try:
-        runner.run_commands()
+        # Pass the runtime properties to supplement default properties and those created in the command file
+        runner.run_commands(env_properties=runtime_properties)
         logger.info("At end of gp.run_batch")
     except:
         message = 'Error running command file.'
@@ -307,12 +330,20 @@ if __name__ == '__main__':
     # - The --version option has special behavior, as documented in the argparse module documentation.
     parser = argparse.ArgumentParser(description='Open Water Foundation (OWF) GeoProcessor Application')
     # Assigns the command file to args.commands
+    # --commands CommandFile.gp
     parser.add_argument("-c", "--commands", help="Specify command file.")
     # Start the http server (will store True in the 'http' variable)
+    # --http
     parser.add_argument("--http", action='store_true', help="Start the web server.")
+    # Define processor properties on the command line, assumed to be str property
+    # -p PropertyName=PropertyValue
+    # Evaluate later how to allow values with quotes but maybe shell will handle?
+    parser.add_argument("-p", action='append', help="Set a processor property.")
     # Start the user interface (will store True in the 'ui' variable)
+    # -ui
     parser.add_argument("--ui", action='store_true', help="Start the user interface.")
     # Immediately prints the version using the 'version' value
+    # --version
     parser.add_argument("--version", help="Print program version.", action="version",
                         version="gp " + __geoprocessor_app_version)
     args = parser.parse_args()
@@ -325,10 +356,16 @@ if __name__ == '__main__':
     # TODO smalers 2018-01-28 Need to handle the QGIS prefix path dynamically or with software configuration.
     qgis_util.initialize_qgis(r"C:\OSGeo4W\apps\qgis")
 
-    # Launch a GeoProcessor based on the command line parameters
+    # Process configuration parameters
+    runtime_properties = {}
+    if args.p:
+        print("-p options: " + str(args.p))
+        runtime_properties = parse_command_line_properties(args.p)
+
+    # Launch a GeoProcessor based on command line parameters that control run mode
     if args.commands:
         # A command file has been specified so run the batch processor.
-        run_batch(args.commands)
+        run_batch(args.commands, runtime_properties)
     elif args.http:
         # Run the http server
         run_http_server()

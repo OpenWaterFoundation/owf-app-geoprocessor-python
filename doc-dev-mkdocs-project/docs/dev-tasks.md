@@ -272,6 +272,10 @@ The following currently creates .tar.gz and .zip versions of the files and there
 	1. This will create files in the `build` folder in the repository working files.
 	2. See the [`build/README.md`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build/README.md)
 	file for more information about folder contents.
+	3. If an error is shown, follow instructions.
+		1. One issue is that may occur is that if the code was checked out with Git Bash (for example)
+		and the script is run with Cygwin, there may be newline issues.
+		Run `dos2unix` on the script if necessary (Git may want to commit, but `.gitattributes` will cause the commit to be ignored).
 
 The GeoProcessor software can then be installed as per the
 [User Documentation](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/install/).

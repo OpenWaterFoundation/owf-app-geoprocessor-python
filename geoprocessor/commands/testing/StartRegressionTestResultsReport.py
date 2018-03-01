@@ -53,7 +53,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
             is_enabled (bool): whether the command file is enabled (it is useful to list all tests even if not
                 enabled in order to generate an inventory of disabled tests that need cleanup)
             run_time_ms (int): run time for the command in milliseconds
-            test_pass_fail (bool): whether the test was a success or failure (it is possible for the test to
+            test_pass_fail (str): whether the test was a success or failure (it is possible for the test to
                 be a successful even if the command file failed, if failure was expected)
             expected_status (str): the expected status (as a string)
             max_severity (str): the maximum severity from the command file that was run.

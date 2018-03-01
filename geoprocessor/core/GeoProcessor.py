@@ -72,6 +72,12 @@ class GeoProcessor(object):
         # to simplify command class code.
         # self.__command_should_clear_run_log = True
 
+        # Environment properties passed in from the application
+        # - TODO smalers 2018-02-28 may need to be more explicit about setting.
+        #   currently gets set when run_commands() is called.
+        # - Should always work for RunCommands but what if nested several layers?
+        self.env_properties = {}
+
     def add_geolayer(self, geolayer):
         """
         Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
@@ -485,7 +491,7 @@ class GeoProcessor(object):
         self.properties["ProgramVersionString"] = None  # programVersion )
         self.properties["ProgramVersionNumber"] = None  # new Double(programVersionNumber) )
 
-    def run_commands(self, command_list=None, run_properties=None):
+    def run_commands(self, command_list=None, run_properties=None, env_properties=None):
         """
         Run the commands that exist in the processor.
 
@@ -496,6 +502,9 @@ class GeoProcessor(object):
                 This function only acts on the following properties:
                     ResetWorkflowProperties:  Global properties such as run period should be reset before running.
                         The default is True.  This property is used with the RunCommands command to preserve properties.
+            env_properties:  Dictionary of properties passed in from the environment, such as global application
+                properties.  These properties will be added to the processor properties.
+                For example, pass in properties on the command line used to run the GeoProcessor in batch mode.
         """
         # Logger for the processor
         logger = logging.getLogger(__name__)
@@ -515,6 +524,11 @@ class GeoProcessor(object):
             pass
         if reset_workflow_properties:
             self.__reset_workflow_properties()
+        # Set the environment properties in the processor
+        # - These are global properties that should always be known
+        self.set_properties(env_properties)
+        # Also set in the environment for RunCommands to access
+        self.env_properties = env_properties
         # ...end reset of global workflow properties
 
         # The remainder of this code is a port of the Java TSEngine.processCommands() function.
@@ -823,6 +837,21 @@ class GeoProcessor(object):
                 command_object.print_for_debug()
                 print("First command debug:")
                 self.commands[0].print_for_debug()
+
+    def set_properties(self, property_dict):
+        """
+        Set geoprocessor properties from the specified dictionary.
+        This is used, for example, when setting the environment properties before running.
+
+        Args:
+            property_dict (dict):  Dictionary of properties.
+
+        Returns:
+            None.
+        """
+        if property_dict is not None:
+            for key in property_dict:
+                self.properties[key] = property_dict[key]
 
     def set_property(self, property_name, property_value):
         """

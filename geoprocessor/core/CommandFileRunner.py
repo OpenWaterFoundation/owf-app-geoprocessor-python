@@ -76,12 +76,13 @@ class CommandFileRunner(object):
             False,  # Do not append the commands to the commands already in the processor.
             run_discovery_on_load)
 
-    def run_commands(self, run_properties=None):
+    def run_commands(self, run_properties=None, env_properties=None):
         """
         Run the commands that have been previously read from the command file.
 
         Args:
-            run_properties:  properties to pass to the processor.
+            run_properties (dict):  properties to pass to the processor, to control running.
+            env_properties (dict):  properties to pass to the processor, from the environment.
 
         Returns:
             None.
@@ -93,5 +94,6 @@ class CommandFileRunner(object):
         logger.info("Before calling run_commands")
         self.command_processor.run_commands(
             None,  # Subset of Command instances to run - just run all commands
-            run_properties)  # Properties to control run
+            run_properties=run_properties,  # Properties to control run
+            env_properties=env_properties)  # Properties from the environment
         logger.info("Back from calling run_commands")

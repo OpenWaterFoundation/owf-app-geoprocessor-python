@@ -1,5 +1,5 @@
 from geoprocessor.core.CommandStatus import CommandStatus
-import geoprocessor.util.command_util as util_common
+import geoprocessor.util.command_util as command_util
 
 
 class AbstractCommand(object):
@@ -138,7 +138,7 @@ class AbstractCommand(object):
 
         # Get the parameter string from the command string
         # (this is the string within the parenthesis of a command string).
-        parameter_string = util_common.parse_parameter_string_from_command_string(command_string)
+        parameter_string = command_util.parse_parameter_string_from_command_string(command_string)
 
         debug = False
         if len(parameter_string) > 0:
@@ -146,13 +146,13 @@ class AbstractCommand(object):
             # Parse the parameter string of form Parameter=Value,Parameter=Value into a list of parameter items.
             # Parameter items are strings that represent key=value pairs for each parameter in the parameter string.
             # The parameter items are separated by commas in the parameter string.
-            parameter_items = util_common.parse_parameter_string_into_key_value_pairs(parameter_string)
+            parameter_items = command_util.parse_parameter_string_into_key_value_pairs(parameter_string)
 
             # Parse each parameter key and value pair. If the parameter value is supposed to be in list format
             # (rather than string format) convert it to a list. Return a dictionary with each parameter as a separate
             # entry (key: parameter name as entered by the user, value: the parameter value (in either string or list
             # format) assign the parameter dictionary to self.command_parameters for use by the specific command.
-            self.command_parameters = util_common.parse_key_value_pairs_into_dictionary(parameter_items)
+            self.command_parameters = command_util.parse_key_value_pairs_into_dictionary(parameter_items)
             if debug:
                 print "CMD_PARAM: {}".format(self.command_parameters)
 

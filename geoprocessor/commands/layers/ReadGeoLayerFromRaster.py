@@ -120,7 +120,6 @@ class ReadGeoLayerFromRaster(AbstractCommand):
         Checks the following:
         * the SpatialDataFile (absolute) is a valid file
         * the SpatialDataFile (absolute) ends in .SHP (warning, not error)
-        * the ID of the output GeoLayer is unique (not an existing GeoLayerList ID)
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
         Args:

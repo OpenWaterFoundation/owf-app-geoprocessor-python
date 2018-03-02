@@ -132,19 +132,6 @@ class CreatePointsAlongLine(AbstractCommand):
                                            CommandLogRecord(command_status_type.FAILURE, message,
                                                             recommendation))
 
-        # If the output GeoLayer ID is the same as as already-existing GeoLayerListID, raise a FAILURE.
-        if self.command_processor.get_geolayerlist(output_geolayer_id):
-
-            run_copy = False
-            self.warning_count += 1
-            message = 'The CopiedGeoLayerID ({}) value is already in use as a GeoLayerList ID.'.format(
-                output_geolayer_id)
-            recommendation = 'Specify a new GeoLayerID.'
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
-
         # If the output GeoLayer ID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
         elif self.command_processor.get_geolayer(output_geolayer_id):

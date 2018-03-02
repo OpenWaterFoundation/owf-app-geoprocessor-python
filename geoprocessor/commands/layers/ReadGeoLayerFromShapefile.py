@@ -126,7 +126,6 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
         Checks the following:
         * the SpatialDataFile (absolute) is a valid file
         * the SpatialDataFile (absolute) ends in .SHP (warning, not error)
-        * the ID of the output GeoLayer is unique (not an existing GeoLayerList ID)
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
         Args:
@@ -159,18 +158,6 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             self.logger.warning(message)
             self.command_status.add_to_log(command_phase_type.RUN,
                                            CommandLogRecord(command_status_type.WARNING, message, recommendation))
-
-        # If the GeoLayer ID is the same as as already-existing GeoLayerListID, raise a FAILURE.
-        if self.command_processor.get_geolayerlist(geolayer_id):
-
-            run_read = False
-            self.warning_count += 1
-            message = 'The GeoLayerID ({}) value is already in use as a GeoLayerList ID.'.format(geolayer_id)
-            recommendation = 'Specify a new GeoLayerID.'
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
 
         # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.

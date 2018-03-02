@@ -123,7 +123,6 @@ class MergeGeoLayers(AbstractCommand):
         * the input GeoLayer IDs are existing GeoLayer IDs
         * the input GeoLayers are all the same CRS (warning)
         * the input GeoLayers are all the same geometry.
-        * the ID of the output GeoLayer is unique (not an existing GeoLayerList ID)
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
        Args:
@@ -195,18 +194,6 @@ class MergeGeoLayers(AbstractCommand):
                 self.logger.warning(message)
                 self.command_status.add_to_log(command_phase_type.RUN,
                                                CommandLogRecord(command_status_type.WARNING, message, recommendation))
-
-        # If the output_geolayer_id is the same as as already-existing GeoLayerListID, raise a FAILURE.
-        if self.command_processor.get_geolayerlist(output_geolayer_id):
-
-            run_merge = False
-            self.warning_count += 1
-            message = 'The GeoLayer ID ({}) value is already in use as a GeoLayerList ID.'.format(output_geolayer_id)
-            recommendation = 'Specify a new GeoLayerID.'
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
 
         # If the output_geolayer_id is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.

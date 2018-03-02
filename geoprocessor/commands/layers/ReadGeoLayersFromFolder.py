@@ -156,7 +156,6 @@ class ReadGeoLayersFromFolder(AbstractCommand):
     def __should_read_geolayer(self, geolayer_id):
         """
         Checks the following:
-        * the ID of the output GeoLayer is unique (not an existing GeoLayerList ID)
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
         Args:
@@ -170,21 +169,9 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         # Boolean to determine if the read process should be run. Set to true until an error occurs.
         run_read = True
 
-        # If the GeoLayer ID is the same as as already-existing GeoLayerListID, raise a FAILURE.
-        if self.command_processor.get_geolayerlist(geolayer_id):
-
-            run_read = False
-            self.warning_count += 1
-            message = 'The GeoLayerID ({}) value is already in use as a GeoLayerList ID.'.format(geolayer_id)
-            recommendation = 'Specify a new GeoLayerID.'
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
-
         # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
-        elif self.command_processor.get_geolayer(geolayer_id):
+        if self.command_processor.get_geolayer(geolayer_id):
 
             # Get the IfGeoLayerIDExists parameter value.
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")

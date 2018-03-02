@@ -422,8 +422,6 @@ class GeoProcessor(object):
             # del self.GeoLists[:]
             # ...but currently a dictionary...
             self.geolayers.clear()
-            # TODO smalers 2018-01-27 Need to decide whether to remove lists since not currently used
-            self.geolayerlists.clear()
 
     def __reset_workflow_properties(self):
         """

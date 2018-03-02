@@ -358,6 +358,7 @@ def get_geometrytype_wkb(qgsvectorlayer):
 def get_qgis_version_int():
     """
     Returns the version (int) of the initiated QGIS software.
+    example: 21809
 
     Return: The QGIS version (int).
     """
@@ -368,6 +369,7 @@ def get_qgis_version_int():
 def get_qgis_version_name():
     """
     Returns the version name of the initiated QGIS software.
+    example: Las Palmas
 
     Return: The QGIS version name (string).
     """
@@ -378,6 +380,7 @@ def get_qgis_version_name():
 def get_qgis_version_str():
     """
     Returns the version (string) of the initiated QGIS software.
+    example: "2.18.9"
 
     Return: The QGIS version (string).
     """

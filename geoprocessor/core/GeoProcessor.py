@@ -5,6 +5,8 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
+import geoprocessor.util.qgis_util as qgis_util
+
 # Commands that need special handling (all others are handled generically and don't need to be imported)
 # TODO smalers 2018-01-08 Evaluate enabling with `isinstance` syntax but could not get it to work as intended
 # import geoprocessor.commands.running.For as EndFor
@@ -45,8 +47,9 @@ class GeoProcessor(object):
         # geolayers list that holds all registered GeoLayer objects.
         self.geolayers = []
 
-        # geolayerlists list that holds all registered GeoList objects.
-        self.geolayerlists = []
+        # qgis version
+        self.properties["QGISVersion"] = qgis_util.get_qgis_version_str()
+        self.properties["QGISVersionName"] = qgis_util.get_qgis_version_name()
 
         # Set properties for QGIS environment.
         # qgis_prefix_path: the full pathname to the qgis install folder (often C:\OSGeo4W\apps\qgis)
@@ -240,24 +243,6 @@ class GeoProcessor(object):
                 if geolayer.id == geolayer_id:
                     # Found the requested identifier
                     return geolayer
-        # Did not find the requested identifier so return None
-        return None
-
-    def get_geolayerlist(self, geolayerlist_id):
-        """
-        Return the GeoLayerList that has the requested ID.
-
-        Args:
-            geolayerlist_id (str):  GeoLayerList ID string.
-
-        Returns:
-            The GeoLayerList that has the requested ID, or None if not found.
-        """
-        for geolayerlist in self.geolayerlists:
-            if geolayerlist is not None:
-                if geolayerlist.id == geolayerlist_id:
-                    # Found the requested identifier
-                    return geolayerlist
         # Did not find the requested identifier so return None
         return None
 
@@ -460,7 +445,7 @@ class GeoProcessor(object):
         # Cannot iterate through a dictionary and remove items from dictionary.
         # Therefore convert the dictionary to a list and iterate on the list
         processor_property_names = list(self.properties.keys())
-        protected_property_names = ["InitialWorkingDir", "WorkingDir"]
+        protected_property_names = ["InitialWorkingDir", "WorkingDir", "QGISVersion", "QGISVersionName"]
         # Loop through properties and delete all except for protected properties
         for i_parameter in range(0, len(processor_property_names)):
             property_name = processor_property_names[i_parameter]

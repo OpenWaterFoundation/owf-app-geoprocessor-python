@@ -1,4 +1,4 @@
-# FreeGeoLayer
+# FreeGeoLayers
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -8,23 +8,24 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command_util as command_util
+import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
 import logging
 
 
-class FreeGeoLayer(AbstractCommand):
+class FreeGeoLayers(AbstractCommand):
 
     """
-    Removes a GeoLayer from the GeoProcessor.
+    Removes one or more GeoLayers from the GeoProcessor.
 
     Command Parameters
-    * GeoLayerID (str, required): The ID of the existing GeoLayer to copy.
+    * GeoLayerIDs (str, required): A comma-separated list of the IDs of the existing GeoLayers to free.
     """
 
     # Define the command parameters.
     __command_parameter_metadata = [
-        CommandParameterMetadata("GeoLayerID", type(""))]
+        CommandParameterMetadata("GeoLayerIDs", type(""))]
 
     def __init__(self):
         """
@@ -32,8 +33,8 @@ class FreeGeoLayer(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(FreeGeoLayer, self).__init__()
-        self.command_name = "FreeGeoLayer"
+        super(FreeGeoLayers, self).__init__()
+        self.command_name = "FreeGeoLayers"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data
@@ -47,8 +48,7 @@ class FreeGeoLayer(AbstractCommand):
         Args:
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
-        Returns:
-            None.
+        Returns: None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -56,13 +56,13 @@ class FreeGeoLayer(AbstractCommand):
         """
         warning = ""
 
-        # Check that parameter GeoLayerID is a non-empty, non-None string.
-        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
+        # Check that parameter GeoLayerIDs is a non-empty, non-None string.
+        pv_GeoLayerIDs = self.get_parameter_value(parameter_name='GeoLayerIDs',
                                                  command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
-            message = "GeoLayerID parameter has no value."
-            recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to copy."
+        if not validators.validate_string(pv_GeoLayerIDs, False, False):
+            message = "GeoLayerIDs parameter has no value."
+            recommendation = "Specify the GeoLayerIDs parameter to indicate the GeoLayer to copy."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -80,37 +80,35 @@ class FreeGeoLayer(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_geolayer_be_deleted(self, geolayer_id):
+    def __should_geolayer_be_deleted(self, geolayer_id_list):
         """
         Checks the following:
-        * the ID of the input GeoLayer is an existing GeoLayer ID
+        * the IDs of the input GeoLayers are existing GeoLayer IDs
 
         Args:
-            geolayer_id: the id of the GeoLayer to be removed
+            geolayer_id_list: an id list of the GeoLayers to be removed
 
         Returns:
-            remove_geolayer: Boolean. If TRUE, the GeoLayer should be removed. If FALSE, one or more checks have failed
-             and the GeoLayer should not be removed.
+            Boolean. If TRUE, the file should be extracted. If FALSE, at least one check failed and the file should
+            not be extracted.
         """
 
-        # Boolean to determine if the GeoLayer should be removed. Set to TRUE until one or many checks fail.
-        remove_geolayer = True
+        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
+        # test confirms that the command should be run.
+        should_run_command = []
 
-        # If the geolayer_id is not a valid GeoLayer ID, raise a FAILURE.
-        if not self.command_processor.get_geolayer(geolayer_id):
+        # Iterate over the GeoLayerIDs in the GeoLayerIDList.
+        for geolayer_id in geolayer_id_list:
 
-            remove_geolayer = False
-            self.warning_count += 1
-            message = 'The GeoLayer ID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
-            recommendation = 'Specify a new GeoLayerID.'
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE,
-                                                            message, recommendation))
+            # If the geolayer_id is not a valid GeoLayer ID, raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id,
+                                                           "FAIL"))
 
-        # Return the Boolean to determine if the GeoLayer should be removed. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
-        return remove_geolayer
+        # Return the Boolean to determine if the process should be run.
+        if False in should_run_command:
+            return False
+        else:
+            return True
 
     def run_command(self):
         """
@@ -124,28 +122,44 @@ class FreeGeoLayer(AbstractCommand):
         """
 
         # Obtain the parameter values.
-        pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        pv_GeoLayerIDs = self.get_parameter_value("GeoLayerIDs")
+
+        # Convert the GeoLayerIDs parameter from string to list format.
+        # If configured, list all of the registered GeoLayer IDs.
+        if pv_GeoLayerIDs == "*":
+            list_of_geolayer_ids = []
+
+            # Iterate over each GeoLayer registered within the GeoProcessor. Add each GeoLayer's ID to the list.
+            for geolayer_obj in self.command_processor.geolayers:
+                list_of_geolayer_ids.append(geolayer_obj.id)
+
+        # If specific GeoLayer IDs are listed, convert the string into list format.
+        else:
+            list_of_geolayer_ids = string_util.delimited_string_to_list(pv_GeoLayerIDs)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_geolayer_be_deleted(pv_GeoLayerID):
+        if self.__should_geolayer_be_deleted(list_of_geolayer_ids):
 
             try:
 
-                # Get GeoLayer to remove.
-                geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
+                # Iterate over the GeoLayer IDS.
+                for geolayer_id in list_of_geolayer_ids:
 
-                # Remove the GeoLayer from the GeoProcessor's geolayers list.
-                index = self.command_processor.geolayers.index(geolayer)
-                del self.command_processor.geolayers[index]
+                    # Get GeoLayer to remove.
+                    geolayer = self.command_processor.get_geolayer(geolayer_id)
 
-                # Delete the GeoLayer.
-                del geolayer
+                    # Remove the GeoLayer from the GeoProcessor's geolayers list.
+                    index = self.command_processor.geolayers.index(geolayer)
+                    del self.command_processor.geolayers[index]
+
+                    # Delete the GeoLayer.
+                    del geolayer
 
             # Raise an exception if an unexpected error occurs during the process.
             except Exception as e:
 
                 self.warning_count += 1
-                message = "Unexpected error removing GeoLayer ({}).".format(pv_GeoLayerID)
+                message = "Unexpected error removing GeoLayer ({}).".format(pv_GeoLayerIDs)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
                 self.command_status.add_to_log(command_phase_type.RUN,

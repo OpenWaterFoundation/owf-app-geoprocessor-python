@@ -6,7 +6,7 @@ from geoprocessor.commands.layers.AddGeoLayerAttribute import AddGeoLayerAttribu
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
 from geoprocessor.commands.layers.CreateGeoLayerFromGeometry import CreateGeoLayerFromGeometry
-from geoprocessor.commands.layers.FreeGeoLayer import FreeGeoLayer
+from geoprocessor.commands.layers.FreeGeoLayers import FreeGeoLayers
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
@@ -82,7 +82,7 @@ class GeoProcessorCommandFactory(object):
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
         "FOR": For(),
-        "FREEGEOLAYER": FreeGeoLayer(),
+        "FREEGEOLAYERS": FreeGeoLayers(),
         "IF": If(),
         "LISTFILES": ListFiles(),
         "MERGEGEOLAYERS": MergeGeoLayers(),
@@ -217,8 +217,8 @@ class GeoProcessorCommandFactory(object):
                     return EndIf()
                 elif command_name_upper == "FOR":
                     return For()
-                elif command_name_upper == "FREEGEOLAYER":
-                    return FreeGeoLayer()
+                elif command_name_upper == "FREEGEOLAYERS":
+                    return FreeGeoLayers()
                 elif command_name_upper == "IF":
                     return If()
                 elif command_name_upper == "LISTFILES":

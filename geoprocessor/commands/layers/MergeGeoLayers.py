@@ -33,7 +33,8 @@ class MergeGeoLayers(AbstractCommand):
         GeoLayer can be managed with the AttributeMap.
 
     Command Parameters
-    * GeoLayerIDs (list of strings, required): a list of the IDs of the GeoLayers to be merged.
+    * GeoLayerIDs (list of strings, required): a list of the IDs of the GeoLayers to be merged. Can be '*' where all
+        registered GeoLayers within the GeoProcessor are merged.
     * OutputGeoLayerID (string, required): the ID of the output GeoLayer, the merged GeoLayer.
     * AttributeMap (string, optional): a string that can convert to a list. Each item is separated by a comma.
         Each item is an entry pair separated by a ':'.
@@ -343,10 +344,18 @@ class MergeGeoLayers(AbstractCommand):
             else:
                 attribute_map_dic[merged_attr] = [input_attr]
 
-        print attribute_map_dic
-
         # Convert the GeoLayerIDs parameter from string to list format.
-        list_of_geolayer_ids = string_util.delimited_string_to_list(pv_GeoLayerIDs)
+        # If configured, list all of the registered GeoLayer IDs.
+        if pv_GeoLayerIDs == "*":
+            list_of_geolayer_ids = []
+
+            # Iterate over each GeoLayer registered within the GeoProcessor. Add each GeoLayer's ID to the list.
+            for geolayer_obj in self.command_processor.geolayers:
+                list_of_geolayer_ids.append(geolayer_obj.id)
+
+        # If specific GeoLayer IDs are listed, convert the string into list format.
+        else:
+            list_of_geolayer_ids = string_util.delimited_string_to_list(pv_GeoLayerIDs)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_merge(list_of_geolayer_ids, pv_OutputGeoLayerID):

@@ -49,7 +49,6 @@ class GeoProcessor(object):
 
         # qgis version
         self.properties["QGISVersion"] = qgis_util.get_qgis_version_str()
-        self.properties["QGISVersionName"] = qgis_util.get_qgis_version_name()
 
         # Set properties for QGIS environment.
         # qgis_prefix_path: the full pathname to the qgis install folder (often C:\OSGeo4W\apps\qgis)
@@ -443,7 +442,7 @@ class GeoProcessor(object):
         # Cannot iterate through a dictionary and remove items from dictionary.
         # Therefore convert the dictionary to a list and iterate on the list
         processor_property_names = list(self.properties.keys())
-        protected_property_names = ["InitialWorkingDir", "WorkingDir", "QGISVersion", "QGISVersionName"]
+        protected_property_names = ["InitialWorkingDir", "WorkingDir", "QGISVersion"]
         # Loop through properties and delete all except for protected properties
         for i_parameter in range(0, len(processor_property_names)):
             property_name = processor_property_names[i_parameter]

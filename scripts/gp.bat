@@ -41,8 +41,8 @@ rem Add QGIS to the PATH environmental varibale so taht all QGIS, GDAL, OGR, etc
 SET PATH=%PATH%;%QGIS%\bin
 
 rem Add pyQGIS libraries to the PYTHONPATH so that they are found by Python
-set PYTHONPATH=%PYTHONPATH%;%OSGEO4W_ROOT%\apps\qgis\python
-set PYTHONPATH=%PYTHONPATH%;%OSGEO4W_ROOT%\apps\qgis\python\plugins
+set PYTHONPATH=%PYTHONPATH%;%OSGEO4W_ROOT%\apps\%QGISNAME%\python
+set PYTHONPATH=%PYTHONPATH%;%OSGEO4W_ROOT%\apps\%QGISNAME%\python\plugins
 set PYTHONPATH=%PYTHONPATH%;%OSGEO4W_ROOT%\apps\Python27\Lib\site-packages
 
 rem ========== END COPY FROM run*pycharm*.bat SCRIPT ==================================

@@ -20,6 +20,13 @@ from PyQt4.QtCore import QVariant, QFileInfo
 # "qgs" is used to match QGIS conventions (rather than "qgis")
 qgs = None
 
+# Developer QGIS version - the version of QGIS used by the developer to create the GeoProcessor. This must be
+# manually updated as the GeoProcessor is developed with newer versions of QGIS. If updated accurately, GitHub will
+# memorialize the developer QGIS version used at any time within the history of the GeoProcessor. Must be a string.
+# Must be in the following format: "[major release].[minor release].[bug fix release]". Do not pad numbers.
+dev_qgis_version = "2.18.9"
+
+
 def add_feature_to_qgsvectorlayer(qgsvectorlayer, qgsgeometry):
     """
     Add a feature to the input QGSVectorLayer.
@@ -353,6 +360,37 @@ def get_geometrytype_wkb(qgsvectorlayer):
 
     # Return the WKB geometry type (in text form) of the input QgsVectorLayer.
     return enumerator_dic[qgsvectorlayer.wkbType()]
+
+
+def get_qgis_version_developer(int_version=True):
+    """
+    Returns the version of the QGIS software used to develop the GeoProcessor.
+    Can return the int version (ex: 21809) or the string version (ex:2.18.09).
+
+    Arg:
+        int_version (boolean): If TRUE, the developer QGIS version will be returned as an integer.
+            If FALSE, the developer QGIS version will be returned as a string.
+
+    Return: The developer QGIS version.
+    """
+
+    # Convert the string version of the developer QGIS version into an int. The minor release version and the bug fix
+    # release version must be padded to two digits.
+    major, minor, bug_fix = dev_qgis_version.split('.')
+
+    # Pad the minor release if not already two digits.
+    if len(minor) == 1:
+        minor = "0" + minor
+
+    # Pad the bug release if not already two digits.
+    if len(bug_fix) == 1:
+        bug_fix = "0" + bug_fix
+
+    # If configured, return the integer version (5 digit integer).
+    if int_version:
+        return int("{}{}{}".format(major, minor, bug_fix))
+    else:
+        return "{}.{}.{}".format(major, minor, bug_fix)
 
 
 def get_qgis_version_int():

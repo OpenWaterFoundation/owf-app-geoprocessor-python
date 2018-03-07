@@ -30,8 +30,11 @@ rem - the following will reset the PATH and then add QGIS folders to path
 rem - therefore other programs that were found before may not be found
 CALL %OSGEO4W_ROOT%\bin\o4w_env.bat
 
-rem Name of QGIS program to run (**but for running OWF GeoProcessor don't need to run**)
-SET QGISNAME=qgis
+rem Name of QGIS program to run (**but for running OWF GeoProcessor don't need to run**). 
+rem Run the latest release of the OSGeo4W QGIS by setting value to `qgis`. 
+rem Run the long term release of the OSGeo4W QGIS by setting value to `qgis-ltr`. 
+rem SET QGISNAME=qgis
+SET QGISNAME=qgis-ltr
 rem Absolute path to QGIS program to run
 SET QGIS=%OSGEO4W_ROOT%\apps\%QGISNAME%
 rem Not sure what the following is used for but include in case PyCharm or QGIS uses

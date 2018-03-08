@@ -765,20 +765,36 @@ class GeoProcessor(object):
                 # because Python exception handling uses fewer exception classes than Java dode to keep simple
                 traceback.print_exc(file=sys.stdout)  # Formatting of error seems to have issue
                 message = "Unexpected error processing command - unable to complete command"
-                logger.error(message, e, exc_info=True)
                 # Don't raise an exception because want all commands to run as best they can, each with
                 # message logging, so that user can troubleshoot all at once rather than first error at a time
                 command.command_status.add_to_log(
                     command_phase_type.RUN,
                     CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
+                # Put this after the above because it may also cause an issue
+                try:
+                    logger.error(message, e, exc_info=True)
+                except Exception as e2:
+                    # The logger itself might throw exceptions - make sure this does not cause the GeoProcessor
+                    # from continuing to do its work
+                    # - After adding this exception block, it does not appear that the following call to logger.error()
+                    #   does result in a new exception, but keep the code for now.
+                    logger.warning("Exception logging threw an exception.")
             except:
                 message = "Unexpected error processing command - unable to complete command"
-                logger.error(message, exc_info=True)
                 # Don't raise an exception because want all commands to run as best they can, each with
                 # message logging, so that user can troubleshoot all at once rather than first error at a time
                 command.command_status.add_to_log(
                     command_phase_type.RUN,
                     CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
+                # Put this after the above because it may also cause an issue
+                try:
+                    logger.error(message, exc_info=True)
+                except Exception as e2:
+                    # The logger itself might throw exceptions - make sure this does not cause the GeoProcessor
+                    # from continuing to do its work
+                    # - After adding this exception block, it does not appear that the following call to logger.error()
+                    #   does result in a new exception, but keep the code for now.
+                    logger.warning("Exception logging threw an exception.")
 
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough

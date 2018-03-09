@@ -162,7 +162,7 @@ def delimited_string_to_dictionary_list_value(delimited_string, entry_delimiter=
         return dictionary
 
 
-def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_patterns=None):
+def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_patterns=None, return_inclusions=True):
     """
     Filters a list of strings by glob patterns.
 
@@ -172,9 +172,11 @@ def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_
             are to be included. Default is ['*']. All items from the input_list are included.
         exclude_glob_patterns (list): a list of glob-style patterns corresponding to the items in the input_list that
             are to be excluded. Default is ['']. No items from the input_list are excluded.
+        return_inclusions (bool) Default is TRUE. If TRUE, a list of the items that should be included are returned. If
+            FALSE, a list of the items that should be excluded are returned.
 
     Return:
-        A filtered list of strings.
+        A filtered list of strings. Results are based off of return_inclusions boolean.
     """
 
     # Assign the default values to the include_glob_patterns and the exclude_glob_patterns.
@@ -207,9 +209,18 @@ def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_
     # Remove any duplicates from the master_items_to_exclude list.
     master_items_to_exclude = list(set(master_items_to_exclude))
 
-    # Remove any items in the master_items_to_include if the same items is in the master_items_to_exclude. Return
-    # the final list.
-    return [i for i in master_items_to_include if i not in master_items_to_exclude]
+    # The final inclusion list - holds all items that should be included after processing the patterns.
+    include_list_final = [i for i in master_items_to_include if i not in master_items_to_exclude]
+
+    # The final exclusion list - holds all items that should not be included after processing the patterns.
+    exclude_list_final = [i for i in input_list if i not in include_list_final]
+
+    # Return the appropriate list based off of the return_inclusions boolean.
+    if return_inclusions:
+        return include_list_final
+
+    else:
+        return exclude_list_final
 
 
 def glob2re(pat):

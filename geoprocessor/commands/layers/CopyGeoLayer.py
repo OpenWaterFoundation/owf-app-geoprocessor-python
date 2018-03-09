@@ -13,7 +13,6 @@ import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validator_util as validators
 
 import logging
-import re
 
 
 class CopyGeoLayer(AbstractCommand):
@@ -157,52 +156,6 @@ class CopyGeoLayer(AbstractCommand):
         else:
             return True
 
-
-    @ staticmethod
-    def __get_list_of_attributes_to_remove(geolayer, include_patterns, exclude_patterns):
-
-        # Get the existing attribute names of the input GeoLayer.
-        existing_attrs = geolayer.get_attribute_field_names()
-
-        # An empty list to hold the attributes that should be INCLUDED based upon the input "include" patterns.
-        attrs_to_include = []
-
-        # Iterate over the glob-style patterns determining the attributes to include.
-        for pattern in include_patterns:
-
-            # Get a list of the attributes determined to include by this pattern. Add the matching attributes to the
-            # attrs_to_include list.
-            matching_attrs = list(attr for attr in existing_attrs if re.match(string_util.glob2re(pattern), attr))
-            attrs_to_include.extend(matching_attrs)
-
-        # Remove any duplicate values from the attrs_to_include list.
-        attrs_to_include = list(set(attrs_to_include))
-
-        # Get a list of attributes to be removed. Attributes to be removed are any attributes from the list of existing
-        # attributes that are not included in the attrs_to_include list.
-        attrs_to_remove = [attr for attr in existing_attrs if attr not in attrs_to_include]
-
-        # An empty list to hold the attribute that should be EXCLUDED based upon the given attrs_to_exclude PATTERNS.
-        attrs_to_exclude = []
-
-        # Iterate over the glob-style patterns determining the attributes to exclude.
-        for pattern in exclude_patterns:
-
-            # Get a list of the attributes determined to be excluded by this pattern. (Select from the attributes
-            # already selected to be included.) Add the matching attributes to the attrs_to_exclude list.
-            matching_attrs = list(attr for attr in attrs_to_include if re.match(string_util.glob2re(pattern), attr))
-            attrs_to_exclude.extend(matching_attrs)
-
-        # Remove any duplicate values from the attrs_to_exclude list.
-        attrs_to_exclude = list(set(attrs_to_exclude))
-
-        # Extend the attributes to remove with the new attributes to exclude.
-        attrs_to_remove.extend(attrs_to_exclude)
-
-        # Return the list of attributes determined to be removed (remove duplicates).
-        return list(set(attrs_to_remove))
-
-
     def run_command(self):
         """
         Run the command. Make a copy of the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
@@ -253,13 +206,8 @@ class CopyGeoLayer(AbstractCommand):
                     # Delete the non-matching features.
                     qgis_util.remove_qgsvectorlayer_features(copied_geolayer.qgs_vector_layer, non_matching_feats_ids)
 
-                # Get a list of the attributes configured to be excluded in the copied GeoLayer.
-                attrs_to_remove = self.__get_list_of_attributes_to_remove(input_geolayer, attrs_to_include,
-                                                                          attrs_to_exclude)
-
-                # Remove the desired attributes from the copied geolayer.
-                for attr_to_remove in attrs_to_remove:
-                    copied_geolayer.remove_attribute(attr_to_remove)
+                # Remove the attributes of the copied GeoLayer if configured to be excluded.
+                copied_geolayer.remove_attributes(attrs_to_include, attrs_to_exclude)
 
                 # Add the copied GeoLayer to the GeoProcessor's geolayers list.
                 self.command_processor.add_geolayer(copied_geolayer)

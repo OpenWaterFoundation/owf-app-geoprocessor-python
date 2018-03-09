@@ -7,6 +7,7 @@ from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
 from geoprocessor.commands.layers.CreateGeoLayerFromGeometry import CreateGeoLayerFromGeometry
 from geoprocessor.commands.layers.FreeGeoLayers import FreeGeoLayers
+from geoprocessor.commands.layers.IntersectGeoLayer import IntersectGeoLayer
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
@@ -84,6 +85,7 @@ class GeoProcessorCommandFactory(object):
         "FOR": For(),
         "FREEGEOLAYERS": FreeGeoLayers(),
         "IF": If(),
+        "INTERSECTGEOLAYER": IntersectGeoLayer(),
         "LISTFILES": ListFiles(),
         "MERGEGEOLAYERS": MergeGeoLayers(),
         "MESSAGE": Message(),
@@ -221,6 +223,8 @@ class GeoProcessorCommandFactory(object):
                     return FreeGeoLayers()
                 elif command_name_upper == "IF":
                     return If()
+                elif command_name_upper == "INTERSECTGEOLAYER":
+                    return IntersectGeoLayer()
                 elif command_name_upper == "LISTFILES":
                     return ListFiles()
                 elif command_name_upper == "MERGEGEOLAYERS":

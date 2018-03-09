@@ -11,6 +11,8 @@ import qgis.utils
 
 from processing.core.Processing import Processing
 
+import geoprocessor.util.string_util as string_util
+
 from PyQt4.QtCore import QVariant, QFileInfo
 
 
@@ -708,6 +710,29 @@ def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
 
             # Update the layer's fields.
             qgsvectorlayer.updateFields()
+
+
+def remove_qgsvectorlayer_attributes(qgsvectorlayer, keep_patterns, remove_patterns):
+    """
+    Deletes attributes of a Qgs Vector Layer object depending on the keep and remove patterns.
+
+    qgsvectorlayer (object): a Qgs Vector Layer object
+    keep_patterns (list): a list of glob-style patterns of attributes to keep (will not be removed)
+    remove_patterns (list): a list of glob-style patterns of attributes to remove
+
+    Return: None
+    """
+
+    # Get a list of all of the attributes of the Qgs Vector Layer.
+    orig_attribute_field_names = [attr_field.name() for attr_field in qgsvectorlayer.pendingFields()]
+
+    # Sort the list to create a second list that only includes the attributes that should be removed.
+    attrs_to_remove = string_util.filter_list_of_strings(orig_attribute_field_names, keep_patterns, remove_patterns,
+                                                         return_inclusions=False)
+
+    # Iterate over each attribute to be removed and delete it.
+    for attr_to_remove in attrs_to_remove:
+        remove_qgsvectorlayer_attribute(qgsvectorlayer, attr_to_remove)
 
 
 def remove_qgsvectorlayer_features(qgsvectorlayer, list_of_feature_ids):

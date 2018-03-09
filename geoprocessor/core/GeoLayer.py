@@ -222,6 +222,22 @@ class GeoLayer(object):
         # Run processing in the qgis utility function.
         qgis_util.remove_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name)
 
+    def remove_attributes(self, keep_pattern=None, remove_pattern=None):
+        """
+        Removes attributes of the GeoLayer depending on the glob-style input patterns
+
+        Arg:
+            keep_pattern (list): a list of glob-style patterns of attributes to keep (will not be removed)
+                Default: None. All attributes will be kept (if remove_pattern is default).
+            remove_pattern (list): a list of glob-style patterns of attributes to remove
+                Default: None. All attributes will be kept.
+
+        Returns: None
+        """
+
+        # Run processing in the qgis utility function.
+        qgis_util.remove_qgsvectorlayer_attributes(self.qgs_vector_layer, keep_pattern, remove_pattern)
+
     def rename_attribute(self, attribute_name, new_attribute_name):
         """
         Renames an attribute.

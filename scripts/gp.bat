@@ -46,7 +46,7 @@ rem rem Old default:
 rem rem SET QGISNAME=qgis
 rem rem New default:
 rem rem SET QGISNAME=qgis-ltr
-rem set _qgisLTR=%OSGEO4W_ROOT%\bin\qgis-ltr.bat
+set _qgisLTR=%OSGEO4W_ROOT%\bin\qgis-ltr.bat
 
 rem Run LTR version if it is available.
 if exist %_qgisLtr% set QGISNAME=qgis-ltr

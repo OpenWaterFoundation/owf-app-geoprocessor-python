@@ -10,8 +10,10 @@ pages:
 - Software Design: software-design.md
 - Development Tasks: dev-tasks.md
 - Development Environment: dev-env.md
-- Resources: resources.md
 - Troubleshooting: troubleshooting.md
+- Resources:
+  - Resources: resources/resources.md
+  - "QGIS Version Install Experiments": resources/qgis-version-install-experiments.md
 # ------- configuration properties ---------------
 # Use Material theme
 # - installation notes:  https://github.com/squidfunk/mkdocs-material

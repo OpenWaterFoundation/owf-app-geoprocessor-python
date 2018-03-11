@@ -31,7 +31,6 @@ Install QGIS, which provides Python packages that are used by the GeoProccessor.
 QGIS is distributed with a version of Python 2.7.
 The QGIS Python and associated libraries are used by the deployed GeoProcessor
 (GeoProcessor modules are installed in the `site-packages` folder of the QGIS distribution).
-**TODO need to confirm this approach - the alternative is to install someone else and use `PYTHONPATH` via a batch file or script.**
 See the following:
 
 * [Development Environment / QGIS](dev-env#qgis)
@@ -84,6 +83,7 @@ C:\Users\user\owf-dev\                         Top-level development folder (Win
 /cygdrive/C/Users/user/owf-dev/                Top-level development folder (Cygwin).
   GeoProcessor/                                Product folder.
     git-repos/                                 Git repositories for the GeoProcessor.
+      owf-app-geoprocessor-arcpy/              Code repository for ArcGIS version (only if developing ArcGIS version).
       owf-app-geoprocessor-python/             Code repository.
       owf-app-geoprocessor-python-doc-user/    User documentation.
       owf-app-geoprocessor-python-test/        Functional tests.

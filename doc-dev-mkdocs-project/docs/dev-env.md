@@ -81,32 +81,46 @@ Note that the `AppData` folder may be hidden - use the ***View*** control in Fil
 ## QGIS ##
 
 The GeoProcessor is currently being developed for QGIS 2.x, which uses Python 2.7+.
-It is unlikely that a Python 3 QGIS version will be adopted for the GeoProcessor until significant vetting
-has occurred by the QGIS developer community.
-Otherwise, there is increased risk that features will not be available.
+The GeoProcessor will be updated over time to work with Python 2 and 3,
+although QGIS 2.x is the priority given that QGIS 3.x appears to be unstable.
+The GeoProcessor automated tests will be used to confirm that GeoProcessor
+functionality works on QGIS 2 and 3 (same tests will be run on both).
 The following resources explain how to install QGIS, and 64-bit QGIS is recommended if the
 computer operating system is 64-bit.
 
 * [QGIS download page](https://www.qgis.org/en/site/forusers/download.html)
-* See also:  [OWF Learn QGIS / Install QGIS](http://learn.openwaterfoundation.org/owf-learn-qgis/install-qgis/)
+	+ Make sure to do the ***Advanced Install*** and install the stable long-term release to install
+	the Python 2 version needed by the GeoProcessor (2.18+).
+	For example, this will install `qgis-ltr.bat` (QGIS 2.x) in addition to `qgis.bat` (QGIS 3.x).
+* See also:  [OWF Learn QGIS / Install QGIS](http://learn.openwaterfoundation.org/owf-learn-qgis/install-qgis/).
+* See also:  [QGIS Version Install Experiments](resources/qgis-version-install-experiments) for detailed background.
 
-The QGIS Python installation version may vary depending on QGIS version but is generally
+GeoProcessor developers can typically use the OsGeo4W suite that is the default QGIS installer,
+making sure to install the stable long-term release to ensure that a Python 2 version of QGIS is available for development.
+QGIS 3 will be phased in over time.
+
+The QGIS Python installation version will vary depending on QGIS version but is generally
 configured similar to the following on Windows:
 
-* `C:\OSGeo4W64\bin\python.exe` - QGIS Python interpreter, found in QGIS `bin` folder for convenience.
-Other Python executables that would normally be found in the Python `bin` folder exist in `C:\OSGeo4W64\bin`.
-* `C:\OSGeo4W64\apps\Python27\` - typical Python installation folder structure, minus `bin`
+* `C:\OSGeo4W64\bin\python.exe` (Python 2) and `C:\OSGeo4W64\bin\python3.exe` (Python 3) -
+QGIS Python interpreter, found in QGIS `bin` folder for convenience.
+Other Python executables that would normally be found in the Python `bin` folder
+also exist in `C:\OSGeo4W64\bin`.
+* `C:\OSGeo4W64\apps\Python27\` - typical Python 2 installation folder structure, minus `bin`
 (since those programs exist in the folder described above):
 	+ `C:\OSGeo4W64\apps\Python27\Lib\*` - third-party Python packages
 	+ `C:\OSGeo4W64\apps\Python27\Lib\site-packages\*` - additional contributed Python packages
 	(this is one option to install the GeoProcessor in the deployed environment)
+* `C:\OSGeo4W64\apps\Python36\` - similar to above but for Python 3.
 
 The GeoProcessor should use the QGIS configuration during development:
 
 * PyCharm must use QGIS libraries in `PYTHONPATH` ([discussed more here](#pycharm))
-* Running tests via `gp` program ([discussed more here](#running-the-geoprocessor)) can use the QGIS Python and libraries.
+* Running tests in the development environment via `gpdev` program, which uses the development GeoProcessor code
+([discussed more here](#running-the-geoprocessor)) can use the QGIS Python and libraries.
 
-The deployed environment will install the GeoProcessor in the QGIS `site-packages` folder.
+The deployed environment will install the GeoProcessor in the QGIS `site-packages` folder and
+can be run using the `gp` program.
 
 ## PyCharm ##
 

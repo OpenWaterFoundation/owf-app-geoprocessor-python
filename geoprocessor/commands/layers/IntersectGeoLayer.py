@@ -35,10 +35,12 @@ class IntersectGeoLayer(AbstractCommand):
 
     * GeoLayerID (str, required): the ID of the input GeoLayer, the layer to be intersected
     * IntersectGeoLayerID (str, required): the ID of the intersect GeoLayer.
-    * IncludeAttributes (str, optional): A list of glob-style patterns to determine the intersect GeoLayer attributes
-        to include in the output intersected GeoLayer. Default: * (All attributes are included in the output GeoLayer).
-    * ExcludeAttributes (str, optional): A list of glob-style patterns to determine the intersect GeoLayer attributes
-        to exclude in the output intersected GeoLayer. Default: '' (All attributes are included in the output GeoLayer).
+    * IncludeIntersectAttributes (str, optional): A list of glob-style patterns to determine the intersect GeoLayer
+        attributes to include in the output intersected GeoLayer. Default: * (All attributes are included in the output
+        GeoLayer).
+    * ExcludeIntersectAttributes (str, optional): A list of glob-style patterns to determine the intersect GeoLayer
+        attributes to exclude in the output intersected GeoLayer. Default: '' (All attributes are included in the
+        output GeoLayer).
     * OutputGeoLayerID (str, optional): the ID of the GeoLayer created as the output intersected layer. By default the
         GeoLayerID of the output layer will be {}_intersectedBy_{} where the first variable is the GeoLayerID and
         the second variable is the IntersectGeoLayerID.
@@ -51,8 +53,8 @@ class IntersectGeoLayer(AbstractCommand):
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("IntersectGeoLayerID", type("")),       
-        CommandParameterMetadata("IncludeAttributes", type("")),
-        CommandParameterMetadata("ExcludeAttributes", type("")),
+        CommandParameterMetadata("IncludeIntersectAttributes", type("")),
+        CommandParameterMetadata("ExcludeIntersectAttributes", type("")),
         CommandParameterMetadata("OutputGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
@@ -381,8 +383,8 @@ class IntersectGeoLayer(AbstractCommand):
         pv_IntersectGeoLayerID = self.get_parameter_value("IntersectGeoLayerID")
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID", default_value="{}_intersectedBy_{}".format(
             pv_GeoLayerID, pv_IntersectGeoLayerID))
-        pv_IncludeAttributes = self.get_parameter_value("IncludeAttributes", default_value="*")
-        pv_ExcludeAttributes = self.get_parameter_value("ExcludeAttributes", default_value="''")
+        pv_IncludeIntersectAttributes = self.get_parameter_value("IncludeIntersectAttributes", default_value="*")
+        pv_ExcludeIntersectAttributes = self.get_parameter_value("ExcludeIntersectAttributes", default_value="''")
 
         # Set the method used for the command. The IntersectGeoLayer methodology can be completed in many different
         # ways. Currently there are two designs:
@@ -397,9 +399,9 @@ class IntersectGeoLayer(AbstractCommand):
         QGIS_method = True
         OWF_method = False
 
-        # Convert the IncludeAttributes and ExcludeAttributes to lists.
-        attrs_to_include = string_util.delimited_string_to_list(pv_IncludeAttributes)
-        attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeAttributes)
+        # Convert the IncludeIntersectAttributes and ExcludeIntersectAttributes to lists.
+        attrs_to_include = string_util.delimited_string_to_list(pv_IncludeIntersectAttributes)
+        attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeIntersectAttributes)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_intersect_geolayer(pv_GeoLayerID, pv_IntersectGeoLayerID, pv_OutputGeoLayerID):

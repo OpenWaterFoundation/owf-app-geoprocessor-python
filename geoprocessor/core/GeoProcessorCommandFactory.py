@@ -23,6 +23,7 @@ from geoprocessor.commands.layers.SimplifyGeoLayerGeometry import SimplifyGeoLay
 from geoprocessor.commands.layers.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
 from geoprocessor.commands.layers.WriteGeoLayerToDelimitedFile import WriteGeoLayerToDelimitedFile
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
+from geoprocessor.commands.layers.WriteGeoLayerToKML import WriteGeoLayerToKML
 from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
 
 from geoprocessor.commands.logging.Message import Message
@@ -112,6 +113,7 @@ class GeoProcessorCommandFactory(object):
         "WRITEGEOLAYERPROPERTIESTOFILE": WriteGeoLayerPropertiesToFile(),
         "WRITEGEOLAYERTODELIMITEDFILE": WriteGeoLayerToDelimitedFile(),
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
+        "WRITEGEOLAYERTOKML": WriteGeoLayerToKML(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
         "WRITEPROPERTIESTOFILE": WritePropertiesToFile()
     }
@@ -277,6 +279,8 @@ class GeoProcessorCommandFactory(object):
                     return WriteGeoLayerToDelimitedFile()
                 elif command_name_upper == "WRITEGEOLAYERTOGEOJSON":
                     return WriteGeoLayerToGeoJSON()
+                elif command_name_upper == "WRITEGEOLAYERTOKML":
+                    return WriteGeoLayerToKML()
                 elif command_name_upper == "WRITEGEOLAYERTOSHAPEFILE":
                     return WriteGeoLayerToShapefile()
                 elif command_name_upper == "WRITEPROPERTIESTOFILE":

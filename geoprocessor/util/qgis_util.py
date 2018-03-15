@@ -854,6 +854,47 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer, output_file, crs, precision)
                                             layerOptions=['COORDINATE_PRECISION={}'.format(precision), 'WRITE_NAME=NO'])
 
 
+def write_qgsvectorlayer_to_kml(qgsvectorlayer, output_file, crs, name_field, desc_field, altitude_mode):
+    """
+    Write the QgsVectorLayer object to a spatial data file in KML format.
+    REF: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
+    REF: `KML GDAL Specifications <http://www.gdal.org/drv_kml.html>_`
+
+    To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are defined:
+        1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
+        2. path to new file: the full pathname (including filename) of the output file
+        3. output text encoding: always set to "utf-8"
+        4. destination coordinate reference system
+        5. driver name for the output file
+        6. optional layerOptions (specific to driver name): for KML, the following are defined
+            a. NameField: Allows you to specify the field to use for the KML <name> element.
+            b. DescriptionField: Allows you to specify the field to use for the KML <description> element.
+            c. AltitudeMode: Allows you to specify the AltitudeMode to use for KML geometries. This will only affect
+            3D geometries and must be one of the valid KML options.
+
+    Args:
+        qgsvectorlayer (object): the QGSVectorLayer object
+        output_file (str): the full pathname to the output file (do not include .shp extension)
+        crs (str): the output coordinate reference system in EPSG code
+        precision (int): a integer at or between 0 and 15 that determines the number of decimal places to include
+            in the output geometry
+
+    Returns: None
+    """
+
+    # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
+    # Note to developers:
+    #   IGNORE `Unexpected Argument` error for datasourceOptions. This value is appropriate and functions properly.
+    QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
+                                            output_file,
+                                            "utf-8",
+                                            QgsCoordinateReferenceSystem(crs),
+                                            "KML",
+                                            datasourceOptions=['NameField={}'.format(name_field),
+                                                               'DescriptionField={}'.format(desc_field),
+                                                               'AltitudeMode={}'.format(altitude_mode)])
+
+
 def write_qgsvectorlayer_to_shapefile(qgsvectorlayer, output_file, crs):
     """
     Write the QgsVectorLayer object to a spatial data file in Esri Shapefile format.

@@ -1,4 +1,4 @@
-# WriteGeoLayerToGeoJSON
+# WriteGeoLayerToKML
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -15,12 +15,12 @@ import geoprocessor.util.validator_util as validators
 import logging
 
 
-class WriteGeoLayerToGeoJSON(AbstractCommand):
+class WriteGeoLayerToKML(AbstractCommand):
     """
-    Writes a GeoLayer to a spatial data file in GeoJSON format.
+    Writes a GeoLayer to a spatial data file in KML format.
 
-    This command writes a GeoLayer registered within the geoprocessor to a GeoJSON spatial data file. The GeoJSON
-    spatial data file can then be viewed within a GIS, moved within folders on the local computer, packaged for
+    This command writes a GeoLayer registered within the geoprocessor to a KML spatial data file. The KML
+    spatial data file can then be viewed within Google Earth, moved within folders on the local computer, packaged for
     delivery, etc.
 
     Registered GeoLayers are stored as GeoLayer objects within the geoprocessor's GeoLayers list. Each GeoLayer has one
@@ -30,19 +30,18 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
     Command Parameters
     * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in GeoJSON format.
     * OutputFile (str, required): the relative pathname of the output spatial data file.
-    * OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
-        projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
-    * OutputPrecision (int, 0-15, optional): the precision (number of integers behind the GeoJSON geometry's decimal
-        point) of the output spatial data file in GeoJSON format. Must be at or between 0 and 15. By default, the
-        precision parameter is set to 5.
+    * OutputNameAttribute (str, optional): Allows you to specify the field to use for the KML <name> element.
+        Default: Name
+    * OutputDescriptionAttribute (str, optional): Allows you to specify the field to use for the KML <description>
+        element. Default: Description
     """
 
     # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
-        CommandParameterMetadata("OutputCRS", type("")),
-        CommandParameterMetadata("OutputPrecision", type(2))]
+        CommandParameterMetadata("OutputNameAttribute", type("")),
+        CommandParameterMetadata("OutputDescriptionAttribute", type(""))]
 
     def __init__(self):
         """
@@ -50,8 +49,8 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(WriteGeoLayerToGeoJSON, self).__init__()
-        self.command_name = "WriteGeoLayerToGeoJSON"
+        super(WriteGeoLayerToKML, self).__init__()
+        self.command_name = "WriteGeoLayerToKML"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data
@@ -111,18 +110,15 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_write_geolayer(self, geolayer_id, output_file_abs, output_precision):
+    def __should_write_geolayer(self, geolayer_id, output_file_abs):
         """
        Checks the following:
        * the ID of the GeoLayer is an existing GeoLayer ID
        * the output folder is a valid folder
-       * the output precision is at or between 0 and 15
-
 
        Args:
            geolayer_id: the ID of the GeoLayer to be written
            output_file_abs: the full pathname to the output file
-           output_precision (int): the precision of the output GeoJSON file
 
        Returns:
              Boolean. If TRUE, the GeoLayer should be written. If FALSE, at least one check failed and the GeoLayer
@@ -140,10 +136,6 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         should_run_command.append(validators.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
                                                        output_file_abs, "FAIL"))
 
-        # If the output precision is not at or between 0 and 15, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsIntBetweenRange", "OutputPrecision", output_precision,
-                                                       "FAIL", other_values=[0, 15]))
-
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
             return False
@@ -152,7 +144,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command. Write the GeoLayer to a spatial data file in GeoJSON format.
+        Run the command. Write the GeoLayer to a spatial data file in KML format.
 
         Returns: None.
 
@@ -160,10 +152,11 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
             RuntimeError if any warnings occurred during run_command method.
         """
 
-        # Obtain the parameter values except for the OutputCRS
+        # Obtain the parameter values.
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
-        pv_OutputPrecision = int(self.get_parameter_value("OutputPrecision", default_value=5))
         pv_OutputFile = self.get_parameter_value("OutputFile")
+        pv_OutputNameAttribute = self.get_parameter_value("OutputNameAttribute")
+        pv_OutputDescriptionAttribute = self.get_parameter_value("OutputDescriptionAttribute")
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -171,23 +164,22 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute, pv_OutputPrecision):
+        if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute):
 
             try:
                 # Get the GeoLayer
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                # Get the current coordinate reference system (in EPSG code) of the current GeoLayer
-                geolayer_crs = geolayer.get_crs()
-
-                # Obtain the parameter value of the OutputCRS
-                pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
-
-                # Write the GeoLayer to a spatial data file in GeoJSONformat
-                qgis_util.write_qgsvectorlayer_to_geojson(geolayer.qgs_vector_layer,
-                                                          output_file_absolute,
-                                                          pv_OutputCRS,
-                                                          pv_OutputPrecision)
+                # Write the GeoLayer to a spatial data file in KML format
+                # "Note that KML by specification uses only a single projection, EPSG:4326. All OGR KML output will be
+                # presented in EPSG:4326. As such OGR will create layers in the correct coordinate system and transform
+                # any geometries." - www.gdal.org/drv_kml.html
+                qgis_util.write_qgsvectorlayer_to_kml(geolayer.qgs_vector_layer,
+                                                      output_file_absolute,
+                                                      "EPSG:4326",
+                                                      pv_OutputNameAttribute,
+                                                      pv_OutputDescriptionAttribute,
+                                                      "clampToGround")
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

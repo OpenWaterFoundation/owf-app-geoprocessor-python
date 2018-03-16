@@ -1,4 +1,5 @@
 import geoprocessor.util.qgis_util as qgis_util
+import os
 
 
 class GeoLayer(object):
@@ -275,6 +276,22 @@ class GeoLayer(object):
             geolayer_on_disk: GeoLayer object of on-disk file. The id of the returned GeoLayer in the same as the
             current GeoLayer.
         """
+
+        # Remove the shapefile (with its component files) from the temporary directory if it already exists. This
+        # block of code was developed to see if it would fix the issue of tests failing when running under suite mode
+        # and passing when running as a single test.
+        if os.path.exists(output_file_absolute + '.shp'):
+
+            # Iterate over the possible extensions of a shapefile.
+            for extension in ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg', '.sbn', '.sbx', '.shp.xml']:
+
+                # Get the full pathname of the shapefile component file.
+                output_file_full_path = os.path.join(output_file_absolute + extension)
+
+                # If the shapefile component file exists, add it' s absolute path to the files_to_archive list. Note that not
+                # all shapefile component files are required -- some may not exist.
+                if os.path.exists(output_file_full_path):
+                    os.remove(output_file_full_path)
 
         # Write the GeoLayer (generally an in-memory GeoLayer) to a GeoJSON on disk (with the input absolute path).
         qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_vector_layer, output_file_absolute, self.get_crs())

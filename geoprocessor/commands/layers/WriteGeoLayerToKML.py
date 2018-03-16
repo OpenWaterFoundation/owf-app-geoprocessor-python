@@ -30,9 +30,9 @@ class WriteGeoLayerToKML(AbstractCommand):
     Command Parameters
     * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in GeoJSON format.
     * OutputFile (str, required): the relative pathname of the output spatial data file.
-    * OutputNameAttribute (str, optional): Allows you to specify the field to use for the KML <name> element.
+    * PlacemarkNameAttribute (str, optional): Allows you to specify the field to use for the KML <name> element.
         Default: Name
-    * OutputDescriptionAttribute (str, optional): Allows you to specify the field to use for the KML <description>
+    * PlacemarkDescriptionAttribute (str, optional): Allows you to specify the field to use for the KML <description>
         element. Default: Description
     """
 
@@ -40,8 +40,8 @@ class WriteGeoLayerToKML(AbstractCommand):
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
-        CommandParameterMetadata("OutputNameAttribute", type("")),
-        CommandParameterMetadata("OutputDescriptionAttribute", type(""))]
+        CommandParameterMetadata("PlacemarkNameAttribute", type("")),
+        CommandParameterMetadata("PlacemarkDescriptionAttribute", type(""))]
 
     def __init__(self):
         """
@@ -155,8 +155,8 @@ class WriteGeoLayerToKML(AbstractCommand):
         # Obtain the parameter values.
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_OutputFile = self.get_parameter_value("OutputFile")
-        pv_OutputNameAttribute = self.get_parameter_value("OutputNameAttribute")
-        pv_OutputDescriptionAttribute = self.get_parameter_value("OutputDescriptionAttribute")
+        pv_PlacemarkNameAttribute = self.get_parameter_value("PlacemarkNameAttribute")
+        pv_PlacemarkDescriptionAttribute = self.get_parameter_value("PlacemarkDescriptionAttribute")
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -177,8 +177,8 @@ class WriteGeoLayerToKML(AbstractCommand):
                 qgis_util.write_qgsvectorlayer_to_kml(geolayer.qgs_vector_layer,
                                                       output_file_absolute,
                                                       "EPSG:4326",
-                                                      pv_OutputNameAttribute,
-                                                      pv_OutputDescriptionAttribute,
+                                                      pv_PlacemarkNameAttribute,
+                                                      pv_PlacemarkDescriptionAttribute,
                                                       "clampToGround")
 
             # Raise an exception if an unexpected error occurs during the process

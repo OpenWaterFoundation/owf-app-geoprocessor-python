@@ -179,7 +179,7 @@ def zip_shapefile(output_file_abs, keep_archive_files=False):
     files_to_archive = []
 
     # Iterate over the possible extensions of a shapefile.
-    for extension in ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg']:
+    for extension in ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg', '.sbn', '.sbx', '.shp.xml']:
 
         # Get the full pathname of the shapefile component file.
         output_file_full_path = os.path.join(output_folder, output_filename + extension)

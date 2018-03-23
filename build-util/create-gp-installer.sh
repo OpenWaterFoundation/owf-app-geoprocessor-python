@@ -95,7 +95,8 @@ sed -i 's/"ADDGEOLAYERATTRIBUTE": /# "ADDGEOLAYERATTRIBUTE": /g' ${buildTmpGptes
 sed -i 's/"CLIPGEOLAYER": /# "CLIPGEOLAYER": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/"COPYGEOLAYER": /# "COPYGEOLAYER": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/"CREATEGEOLAYERFROMGEOMETRY": /# "CREATEGEOLAYERFROMGEOMETRY": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
-sed -i 's/"FREEGEOLAYER": /# "FREEGEOLAYER": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
+sed -i 's/"FREEGEOLAYERS": /# "FREEGEOLAYERS": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
+sed -i 's/"INTERSECTGEOLAYER": /# "INTERSECTGEOLAYER": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/"MERGEGEOLAYERS": /# "MERGEGEOLAYERS": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/"READGEOLAYERFROMDELIMITEDFILE": /# "READGEOLAYERFROMDELIMITEDFILE": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/"READGEOLAYERFROMGEOJSON": /# "READGEOLAYERFROMGEOJSON": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
@@ -112,12 +113,14 @@ sed -i 's/"WRITEGEOLAYERPROPERTIESTOFILE": /# "WRITEGEOLAYERPROPERTIESTOFILE": /
 sed -i 's/"WRITEGEOLAYERTODELIMITEDFILE": /# "WRITEGEOLAYERTODELIMITEDFILE": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/"WRITEGEOLAYERTOGEOJSON": /# "WRITEGEOLAYERTOGEOJSON": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/"WRITEGEOLAYERTOSHAPEFILE": /# "WRITEGEOLAYERTOSHAPEFILE": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
+sed -i 's/"WRITEGEOLAYERTOKML": /# "WRITEGEOLAYERTOKML": /g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 # Replace the QGIS command construction with pass...
 sed -i 's/return AddGeoLayerAttribute/pass  # return AddGeoLayerAttribute/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/return ClipGeoLayer/pass  # return ClipGeoLayer/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/return CopyGeoLayer/pass  # return CopyGeoLayer/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/return CreateGeoLayerFromGeometry/pass  # return CreateGeoLayerFromGeometry/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
-sed -i 's/return FreeGeoLayer/pass  # return FreeGeoLayer/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
+sed -i 's/return FreeGeoLayers/pass  # return FreeGeoLayers/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
+sed -i 's/return IntersectGeoLayer/pass  # return IntersectGeoLayer/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/return MergeGeoLayers/pass  # return MergeGeoLayers/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/return ReadGeoLayerFromDelimitedFile/pass  # return ReadGeoLayerFromDelimitedFile/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/return ReadGeoLayerFromGeoJSON/pass  # return ReadGeoLayerFromGeoJSON/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
@@ -134,6 +137,13 @@ sed -i 's/return WriteGeoLayerPropertiesToFile/pass  # return WriteGeoLayerPrope
 sed -i 's/return WriteGeoLayerToDelimitedFile/pass  # return WriteGeoLayerToDelimitedFile/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/return WriteGeoLayerToGeoJSON/pass  # return WriteGeoLayerToGeoJSON/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
 sed -i 's/return WriteGeoLayerToShapefile/pass  # return WriteGeoLayerToShapefile/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
+sed -i 's/return WriteGeoLayerToKML/pass  # return WriteGeoLayerToKML/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessorCommandFactory.py
+
+# Change all directories to have persmission of drwxr-xr-xr-x
+find ${buildTmpGptestFolder}/geoprocessor -type d -exec chmod 755 {} \;
+
+# Change all files to have permission of -rw-r--r--
+find ${buildTmpGptestFolder}/geoprocessor -type f -exec chmod 744 {} \;
 
 # Update the geoprocessor/util/qgis_util.py module:
 # - comment out lines that contain "from qgis.core import"
@@ -145,12 +155,24 @@ sed -i 's/^from qgis.core import/# from qgis.core import/g' ${buildTmpGptestFold
 sed -i 's/^from processing.core.Processing import/# from processing.core.Processing import/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
 sed -i 's/^from PyQt4.QtCore import/# from PyQt4.QtCore import/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
 
+# Update the geoprocessor/core/GeoProcessor.py module:
+# - comment out line "import geoprocessor.util.qgis_util as qgis_util"
+echo "Updating geoprocessor/core/GeoProcessor.py  to comment out QGIS module imports ..."
+sed -i 's/^import geoprocessor.util.qgis_util as qgis_util/# import geoprocessor.util.qgis_util as qgis_util/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessor.py
+
+# Update the geoprocessor/util/validator_util.py module:
+# - comment out line of import geoprocessor.util.qgis_util as qgis_util
+# - Could do on one line with chained sed commands but separate lines is more readable and can test separately.
+echo "Updating geoprocessor/util/validator_util.py to comment out QGIS module imports ..."
+sed -i 's/^import geoprocessor.util.qgis_util as qgis_util/# import geoprocessor.util.qgis_util as qgis_util/g' ${buildTmpGptestFolder}/geoprocessor/util/validator_util.py
+
 # Update the geoprocessor/app/gp.py module:
 # - comment out the call to qgis_util.initialize_qgis(...)
 # - comment out the call to qgis_util.exit_qgis(...)
 echo "Updating geoprocessor/app/gp.py to comment out QGIS initialize/stop calls ..."
 sed -i 's/qgis_util.initialize_qgis/# qgis_util.initialize_qgis/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
 sed -i 's/qgis_util.exit_qgis/# qgis_util.exit_qgis/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
+sed -i 's/^import geoprocessor.util.qgis_util as qgis_util/# import geoprocessor.util.qgis_util as qgis_util/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
 
 #------------------------------------------------------------------------------------------
 # Step 4a. Tar up all the *.py files in the geoprocessor folder

@@ -152,6 +152,9 @@ class FreeGeoLayers(AbstractCommand):
                     index = self.command_processor.geolayers.index(geolayer)
                     del self.command_processor.geolayers[index]
 
+                    # Delete the Qgs Vector Layer object.
+                    del geolayer.qgs_vector_layer
+                    
                     # Delete the GeoLayer.
                     del geolayer
 

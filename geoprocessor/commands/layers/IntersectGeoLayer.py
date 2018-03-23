@@ -422,6 +422,7 @@ class IntersectGeoLayer(AbstractCommand):
 
                 # If the input GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
                 if input_geolayer.source_path is None or input_geolayer.source_path.upper() in ["", "MEMORY"]:
+
                     # Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
                                                           input_geolayer.id)

@@ -610,6 +610,34 @@ def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs, delimiter, cr
         return None
 
 
+def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs, worksheet_index = 0):
+    """
+    Reads an Excel worksheet and returns a QGSVectorLayerObject.
+
+    Args:
+        excel_workbook_abs (str): the full pathname to an excel workbook
+        worksheet_index (str or int): the index of the worksheet to read. First is 0, second is 1 ...
+
+    Returns:
+        A QGSVectorLayer object containing the data from the input excel worksheet (table). If the QgsVectorLayer is
+         not valid, return None.
+    """
+
+    # Instantiate the QGSVectorLayer object. Must include the following:
+    #   (1) full path to the delimited file
+    #   (2) the index of the worksheet to be read
+
+    uri = r"{}|layerid={}".format(excel_workbook_abs, str(worksheet_index))
+    qgsvectorlayer = QgsVectorLayer(uri, os.path.basename(excel_workbook_abs), "ogr")
+
+    # If the QgsVectorLayer is valid, return it. Otherwise return None.
+    if qgsvectorlayer.isValid():
+        return qgsvectorlayer
+    else:
+        print "The QGSVectorLayer object ({} worksheet {}) is invalid.".format(excel_workbook_abs, str(worksheet_index))
+
+
+
 def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
 
     """

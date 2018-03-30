@@ -300,6 +300,9 @@ class MergeGeoLayers(AbstractCommand):
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID")
         pv_AttributeMap = self.get_parameter_value("AttributeMap", default_value="")
 
+        # Expand for ${Property} syntax.
+        pv_GeoLayerIDs = self.command_processor.expand_parameter_value(pv_GeoLayerIDs, self)
+
         # Convert the AttributeMap parameter from string to a list of mapping entries.
         attribute_map_entry_list = string_util.delimited_string_to_list(pv_AttributeMap, delimiter=',')
 

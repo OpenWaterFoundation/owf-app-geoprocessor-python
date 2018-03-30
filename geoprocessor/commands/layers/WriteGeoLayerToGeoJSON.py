@@ -165,6 +165,9 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         pv_OutputPrecision = int(self.get_parameter_value("OutputPrecision", default_value=5))
         pv_OutputFile = self.get_parameter_value("OutputFile")
 
+        # Expand for ${Property} syntax.
+        pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),

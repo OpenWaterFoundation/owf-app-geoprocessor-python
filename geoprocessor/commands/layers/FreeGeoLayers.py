@@ -154,7 +154,7 @@ class FreeGeoLayers(AbstractCommand):
 
                     # Delete the Qgs Vector Layer object.
                     del geolayer.qgs_vector_layer
-                    
+
                     # Delete the GeoLayer.
                     del geolayer
 

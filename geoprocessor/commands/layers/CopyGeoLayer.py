@@ -178,13 +178,17 @@ class CopyGeoLayer(AbstractCommand):
         attrs_to_include = string_util.delimited_string_to_list(pv_IncludeAttributes)
         attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeAttributes)
 
+        # Expand for ${Property} syntax.
+        pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+        pv_CopiedGeoLayerID = self.command_processor.expand_parameter_value(pv_CopiedGeoLayerID, self)
+
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID, pv_IncludeFeaturesIf):
 
             # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
             try:
 
-                # Get the input GeoLayer
+                # Get the input GeoLayer.
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
                 copied_geolayer = input_geolayer.deepcopy(pv_CopiedGeoLayerID)
 

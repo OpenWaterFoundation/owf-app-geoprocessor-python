@@ -442,8 +442,6 @@ class GeoProcessor(object):
         # Cannot iterate through a dictionary and remove items from dictionary.
         # Therefore convert the dictionary to a list and iterate on the list
         processor_property_names = list(self.properties.keys())
-        # Do not delete the first protected_property_name line. Used for the GeoProcessor (test version)
-        protected_property_names = ["InitialWorkingDir", "WorkingDir"]
         protected_property_names = ["InitialWorkingDir", "WorkingDir", "QGISVersion"]
         # Loop through properties and delete all except for protected properties
         for i_parameter in range(0, len(processor_property_names)):

@@ -208,19 +208,24 @@ class AddGeoLayerAttribute(AbstractCommand):
         pv_AttributeType = self.get_parameter_value("AttributeType")
         pv_InitialValue = self.get_parameter_value("InitialValue", default_value=None)
 
+        # Expand for ${Property} syntax.
+        pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_attribute_be_added(pv_GeoLayerID, pv_AttributeName):
 
             # Run the process.
             try:
 
-                # Get the input GeoLayer.
+                # Get the input GeoLayer. Expand for ${Property} syntax.
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
                 # Add the attribute to the GeoLayer.
                 input_geolayer.add_attribute(pv_AttributeName, pv_AttributeType)
 
                 # If the InitialValue parameter has been set, populate the added attribute with the given value.
+                # Expand for ${Property} syntax.
+                pv_InitialValue = self.command_processor.expand_parameter_value(pv_InitialValue, self)
                 if pv_InitialValue:
                     input_geolayer.populate_attribute(pv_AttributeName, pv_InitialValue)
 

@@ -8,6 +8,7 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.command_util as command_util
+import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
 import logging
@@ -28,7 +29,11 @@ class For(AbstractCommand):
         CommandParameterMetadata("SequenceEnd", type("")),
         CommandParameterMetadata("SequenceIncrement", type("")),
         # Specify the list property to use for iteration
-        CommandParameterMetadata("ListProperty", type(""))
+        CommandParameterMetadata("ListProperty", type("")),
+        # Specify the following to iterate over a table.
+        CommandParameterMetadata("TableID", type("")),
+        CommandParameterMetadata("TableColumn", type("")),
+        CommandParameterMetadata("TablePropertyMap", type("")),
     ]
 
     def __init__(self):
@@ -61,6 +66,11 @@ class For(AbstractCommand):
 
         # Used with list iterator
         self.iterator_list = None  # The list of objects, typically str, being iterated over
+
+        # Used with table iterator
+        self.table = None
+        self.table_column = None
+        self.table_property_map = None
 
     def check_command_parameters(self, command_parameters):
         """
@@ -164,8 +174,26 @@ class For(AbstractCommand):
             self.iterator_is_list = True  # Will be checked below to make sure only one option is used
             option_count += 1
             # No further validation is done - ListProperty property must be defined at run time
-        # --------------------------------
 
+        # --------------------------------
+        # Iterator option 3 - use a table
+        pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
+        if pv_TableID is not None and pv_TableID != "":
+            self.iterator_is_table = True
+            option_count += 1
+
+            # TableColumn is required
+            pv_TableColumn = self.get_parameter_value(parameter_name='TableColumn',
+                                                      command_parameters=command_parameters)
+            if not validators.validate_string(pv_TableColumn, False, False):
+                message = "The TableColumn parameter must be specified"
+                recommendation = "Specify the TableColumn."
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # --------------------------------
         # Only allow one of the iteration properties to be specified because otherwise the command will be confused.
         if option_count > 1:
             message = "Parameters for multiple iterator types have been specified."
@@ -269,8 +297,54 @@ class For(AbstractCommand):
                     logger.warning(message, exc_info=True)
                     raise ValueError(message)
             elif self.iterator_is_table:
-                # TODO smalers 2017-12-21 see TSTool command to fill out table
-                pass
+                # Iterating over a table
+                logger.info("Initializing For() command for a table.")
+                # Initialize the loop
+                self.__set_iterator_property_value(None)
+                self.command_status.clear_log(command_phase_type.RUN)
+                try:
+                    # Get TableID parameter value. If required, expand for ${Property} syntax.
+                    pv_TableID = self.get_parameter_value(parameter_name='TableID')
+                    pv_TableID = self.command_processor.expand_parameter_value(pv_TableID, self)
+                    # Get TableColumn parameter value. If required, expand for ${Property} syntax.
+                    pv_TableColumn = self.get_parameter_value(parameter_name='TableColumn')
+                    pv_TableColumn = self.command_processor.expand_parameter_value(pv_TableColumn, self)
+                    # Get the table pandas data frame object
+                    self.table = self.command_processor.get_table(pv_TableID)
+                    # Get the TablePropertyMap
+                    pv_TablePropertyMap = self.get_parameter_value(parameter_name='TablePropertyMap')
+                    # Assign as class variable after converting from string to dictionary
+                    self.table_property_map = string_util.delimited_string_to_dictionary_one_value(pv_TablePropertyMap,
+                                                                                                   entry_delimiter=",",
+                                                                                                   key_value_delimiter=":",
+                                                                                                   trim=False)
+                    # Get the values of the input column as a list
+                    self.iterator_object_list_index = 0
+                    self.iterator_list = self.table.get_column_values_as_list(pv_TableColumn)
+
+
+                    if self.iterator_list is None:
+                        message = 'For command iterator table column "' + pv_TableColumn + '" is not defined.'
+                        recommendation = "Confirm that the table column has values."
+                        logger.warning(message)
+                        self.command_status.add_to_log(
+                            command_phase_type.RUN,
+                            CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    else:
+                        self.iterator_object = self.iterator_list[self.iterator_object_list_index]
+                        # Set the other property values if configured.
+                        if self.table_property_map:
+                            self.__next_set_properties_from_table()
+                    # if ( Message.isDebugOn )
+                    if debug:
+                        logger.info("Initialized iterator object to first item in list: " + str(self.iterator_object))
+                        return True
+                except:
+                    # message = "Error initializing For() iterator to initial value (" + e + ").";
+                    message = "Error initializing For() iterator initial value to sequence start"
+                    logger.warning(message, exc_info=True)
+                    raise ValueError(message)
+
             else:
                 # TODO smalers 2017-12-21 need to throw exception
                 pass
@@ -278,8 +352,7 @@ class For(AbstractCommand):
             # Increment the iterator property
             # - optionally set additional properties from other table columns (tables not yet supported)
             if self.iterator_is_list:
-                # If the iterator object is already at or will exceed the list length if incremented,
-                # then done iterating
+                # If the iterator object is already at or will exceed the list length if incremented, then done iterating
                 # - len() is 1-based, index is 0-based
                 if self.iterator_object_list_index >= (len(self.iterator_list) - 1):
                     logger.info("Iterator has reached list end.  Returning False from next().")
@@ -291,8 +364,7 @@ class For(AbstractCommand):
                     logger.info("Iterator value is now " + str(self.iterator_object) + ".  Returning True from next().")
                     return True
             elif self.iterator_is_sequence:
-                # If the iterator object is already at or will exceed the maximum, then
-                # done iterating
+                # If the iterator object is already at or will exceed the maximum, then done iterating
                 # TODO smalers 2017-12-21 verify that Python handles typing automatically for integers and doubles
                 # if (((type(self.iterator_sequence_start) == 'int') &&
                 if self.iterator_object >= self.iterator_sequence_end or \
@@ -306,8 +378,20 @@ class For(AbstractCommand):
                     logger.info("Iterator value is now " + str(self.iterator_object) + ".  Returning True from next().")
                     return True
             elif self.iterator_is_table:
-                # Not yet implemented
-                pass
+                # If the iterator object is already at or will exceed the list length if incremented, then done iterating
+                # - len() is 1-based, index is 0-based
+                if self.iterator_object_list_index >= (len(self.iterator_list) - 1):
+                    logger.info("Iterator has reached list end.  Returning False from next().")
+                    return False
+                else:
+                    # Iterate by incrementing list index and returning corresponding list object
+                    self.iterator_object_list_index += 1
+                    self.iterator_object = self.iterator_list[self.iterator_object_list_index]
+                    logger.info("Iterator value is now " + str(self.iterator_object) + ".  Returning True from next().")
+                    # Set the other property values if configured.
+                    if self.table_property_map:
+                        self.__next_set_properties_from_table()
+                    return True
             else:
                 # Iteration type not recognized so jump out right away to avoid infinite loop
                 return True
@@ -339,6 +423,7 @@ class For(AbstractCommand):
         self.iterator_property = pv_IteratorProperty
         # -------------------------------------------------------------------------------
         # Properties used when iterating over a sequence of integers or decimal numbers
+        # -------------------------------------------------------------------------------
         pv_SequenceStart = self.get_parameter_value('SequenceStart')
         if pv_SequenceStart is not None and pv_SequenceStart != "":
             if pv_SequenceStart.find(".") >= 0:
@@ -384,6 +469,9 @@ class For(AbstractCommand):
             self.iterator_is_list = True
             self.iterator_is_sequence = False
             self.iterator_is_table = False
+        # -------------------------------------------------------------------------------
+        # Properties used when iterating over a table
+        # -------------------------------------------------------------------------------
 
         # next() will have been called by the command processor so at this point just set the processor property.
         # Set the basic property as well as the property with 0 and 1 at end of name indicating zero and 1 offset.
@@ -401,3 +489,25 @@ class For(AbstractCommand):
             None.
         """
         self.iterator_object = iterator_property_value
+
+    def __next_set_properties_from_table(self):
+
+        # Get the iterator object list index
+        index = self.iterator_object_list_index
+
+        # Get the pandas data frame object for the table being iterated
+        df = self.table.df
+
+        # Get the pandas row that is currently being iterated over.
+        row = df.iloc[index]
+
+        # Iterate over the entries in the table_property_map dictionary.
+        # key is the property name and value is the corresponding column name
+        for property, column in self.table_property_map.iteritems():
+
+            # Get the value for the given column and the current row.
+            property_val = row[column]
+
+            # Assign the geoprocessor property the corresponding value.
+            self.command_processor.set_property(property, property_val)
+

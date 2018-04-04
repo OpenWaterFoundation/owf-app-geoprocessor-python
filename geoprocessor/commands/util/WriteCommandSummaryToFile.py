@@ -156,7 +156,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
         nl = os.linesep
         fp.write('<h1>Command Summary</h1>' + nl)
 
-        fp.write('<table class="table-style-hover">' + nl)
+        fp.write('<tables class="tables-style-hover">' + nl)
         fp.write('<thead>' + nl)
         fp.write('<tr>' + nl)
         fp.write('<th>Command #</th>' + nl)
@@ -189,9 +189,9 @@ class WriteCommandSummaryToFile(AbstractCommand):
             fp.write('<td class="' + run_status + '">' + run_status + '</td>' + nl)
             fp.write('<td><code>' + command.command_string + '<code></td>' + nl)
             fp.write('</tr>' + nl + nl)
-        fp.write('</table>' + nl)
+        fp.write('</tables>' + nl)
 
-        # Output a table for each command
+        # Output a tables for each command
 
         i = 0
         for command in self.command_processor.commands:
@@ -205,7 +205,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
                      'Initialization</span> <span class="' + run_status + '" style="border: solid; border-width: 1px;">'
                      + 'Run</span><code> ' + command.command_string + '</code>' + nl)
 
-            fp.write('<table class="table-style-hover">' + nl)
+            fp.write('<tables class="tables-style-hover">' + nl)
             fp.write('<thead>' + nl)
             fp.write('<tr>' + nl)
             fp.write('<th>#</th>' + nl)
@@ -259,7 +259,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
             # TODO smalers 2018-01-28 Need to figure out how to show records from original commands
             # when a command file is run by RunCommands() command
 
-            fp.write('</table>' + nl)
+            fp.write('</tables>' + nl)
             fp.write('<hr>' + nl)
             fp.write('</p>' + nl)
 
@@ -301,14 +301,14 @@ class WriteCommandSummaryToFile(AbstractCommand):
         fp.write('    font-style:  normal;' + nl)
         fp.write('    font-size:  large;' + nl)
         fp.write('  }' + nl)
-        fp.write('  table.table-style-hover {' + nl)
+        fp.write('  tables.tables-style-hover {' + nl)
         fp.write('     border-width: 1px; border-style: solid; border-color: #3A3A3A; ' +
                  'border-collapse: collapse; padding: 4px' + nl)
         fp.write('  }' + nl)
-        fp.write('  table.table-style-hover th {' + nl)
+        fp.write('  tables.tables-style-hover th {' + nl)
         fp.write('     border-width: 1px; border-style: solid; border-color: #3A3A3A; padding: 4px' + nl)
         fp.write('  }' + nl)
-        fp.write('  table.table-style-hover td {' + nl)
+        fp.write('  tables.tables-style-hover td {' + nl)
         fp.write('     border-width: 1px; border-style: solid; border-color: #3A3A3A; padding: 4px' + nl)
         fp.write('  }' + nl)
         fp.write('  .UNKNOWN {' + nl)

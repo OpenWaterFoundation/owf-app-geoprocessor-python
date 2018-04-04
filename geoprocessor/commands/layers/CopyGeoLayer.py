@@ -181,6 +181,7 @@ class CopyGeoLayer(AbstractCommand):
         # Expand for ${Property} syntax.
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
         pv_CopiedGeoLayerID = self.command_processor.expand_parameter_value(pv_CopiedGeoLayerID, self)
+        pv_IncludeFeaturesIf = self.command_processor.expand_parameter_value(pv_IncludeFeaturesIf, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID, pv_IncludeFeaturesIf):

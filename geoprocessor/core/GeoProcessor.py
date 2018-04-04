@@ -47,6 +47,9 @@ class GeoProcessor(object):
         # geolayers list that holds all registered GeoLayer objects.
         self.geolayers = []
 
+        # tables list that holds all registered tables object.
+        self.tables = []
+
         # qgis version
         self.properties["QGISVersion"] = qgis_util.get_qgis_version_str()
 
@@ -101,6 +104,27 @@ class GeoProcessor(object):
 
         # Add the input GeoLayer to the geolayers list.
         self.geolayers.append(geolayer)
+
+    def add_table(self, table):
+        """
+        Add a Table object to the tables list. If a Table already exists with the same Table ID, the existing Table
+        will be overwritten with the input Table.
+
+        Args:
+            table: instance of a Table object
+
+        Return: None
+        """
+
+        # Iterate over the existing Tables.
+        for existing_table in self.tables:
+
+            # If an existing Table has the same ID as the input Table, remove the existing Table from the tables list.
+            if existing_table.id == table.id:
+                self.free_table(existing_table)
+
+        # Add the input Table to the tables list.
+        self.tables.append(table)
 
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):
@@ -227,6 +251,18 @@ class GeoProcessor(object):
         """
         self.geolayers.remove(geolayer)
 
+    def free_table(self, table):
+        """
+        Removes a Table object from the tables list.
+
+        Args:
+            table: instance of a Table object
+
+        Return:
+            Nothing
+        """
+        self.tables.remove(table)
+
     def get_geolayer(self, geolayer_id):
         """
         Return the GeoLayer that has the requested ID.
@@ -242,6 +278,24 @@ class GeoProcessor(object):
                 if geolayer.id == geolayer_id:
                     # Found the requested identifier
                     return geolayer
+        # Did not find the requested identifier so return None
+        return None
+
+    def get_table(self, table_id):
+        """
+        Return the Table that has the requested ID.
+
+        Args:
+            table_id (str):  Table ID string.
+
+        Returns:
+            The Table that has the requested ID, or None if not found.
+        """
+        for table in self.tables:
+            if table is not None:
+                if table.id == table_id:
+                    # Found the requested identifier
+                    return table
         # Did not find the requested identifier so return None
         return None
 

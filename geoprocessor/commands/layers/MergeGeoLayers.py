@@ -25,9 +25,9 @@ class MergeGeoLayers(AbstractCommand):
     Merges GeoLayers with the same geometry into one output GeoLayer.
 
     * All features from the input GeoLayers are retained within the output GeoLayer.
-    * The attributes of the input GeoLayers are retained within the output GeoLayer attribute table.
-    * Attributes that share the same name will be converged in the output GeoLayer attribute table.
-    * Attributes that are unique to an input GeoLayer are included in the output GeoLayer attribute table - features
+    * The attributes of the input GeoLayers are retained within the output GeoLayer attribute tables.
+    * Attributes that share the same name will be converged in the output GeoLayer attribute tables.
+    * Attributes that are unique to an input GeoLayer are included in the output GeoLayer attribute tables - features
         from GeoLayers that don't have that unique attribute will have an attribute value of '0' for that unique field.
     * Attributes from different input GeoLayers (with different names) that are meant to be converged in the output
         GeoLayer can be managed with the AttributeMap.

@@ -26,7 +26,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
 
     GeoLayers read from a delimited file hold point features. It is required that the delimited file has a column
      representing each feature's x coordinates and a column representing each feature's y coordinates. The other
-     columns within the delimited file, if any, are included in the GeoLayer's attribute table as individual attributes.
+     columns within the delimited file, if any, are included in the GeoLayer's attribute tables as individual attributes.
 
     In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
     `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects.

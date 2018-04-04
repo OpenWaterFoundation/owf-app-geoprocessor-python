@@ -217,6 +217,9 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
         pv_SpatialDataFile = self.get_parameter_value("SpatialDataFile")
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
 
+        # Expand for ${Property} syntax.
+        pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+
         # Convert the SpatialDataFile parameter value relative path to an absolute path and expand for ${Property}
         # syntax
         spatial_data_file_absolute = io_util.verify_path_for_os(

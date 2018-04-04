@@ -6,6 +6,7 @@ Multiple functions may be called if necessary, although as many validator functi
 as necessary can be defined.
 """
 import os
+import ogr
 
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
@@ -149,6 +150,26 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if qgis_util.get_qgscoordinatereferencesystem_obj(parameter_value) is None:
             check_failed = True
 
+    # Check if the parameter value (feature class) is within a file geodatabase.
+    elif condition.upper() == "ISFEATURECLASSINFGDB":
+
+        file_gdb_path_abs = other_values[0]
+
+        message = "The {} ({}) is not a valid feature class in the file geodatabase ({}).".format(parameter_name,
+                                                                                                parameter_value,
+                                                                                                file_gdb_path_abs)
+        recommendation = "Specify an existing and valid {}.".format(parameter_name)
+        ogr.UseExceptions()
+        driver = ogr.GetDriverByName("OpenFileGDB")
+        gdb = driver.Open(file_gdb_path_abs)
+        feature_class_list = []
+        for feature_class_idx in range(gdb.GetLayerCount()):
+            feature_class = gdb.GetLayerByIndex(feature_class_idx)
+            feature_class_list.append(feature_class.GetName())
+
+        if parameter_value not in feature_class_list:
+            check_failed = True
+
     # Check if the parameter value (absolute file path) is a valid and existing file.
     elif condition.upper() == "ISFILEPATHVALID":
 
@@ -156,6 +177,17 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         recommendation = "Specify a valid file for the {} parameter.".format(parameter_name)
 
         if not os.path.isfile(parameter_value):
+            check_failed = True
+
+    # Check if the parameter value (absolute folder path) is a valid file geodatabase.
+    elif condition.upper() == "ISFOLDERAFGDB":
+
+        message = "The {} ({}) is not a valid file geodatabase.".format(parameter_name, parameter_value)
+        recommendation = "Specify a valid file geodatabase for the {} parameter.".format(parameter_name)
+
+        ogr.UseExceptions()
+        driver = ogr.GetDriverByName("OpenFileGDB")
+        if driver.Open(parameter_value) is None:
             check_failed = True
 
     # Check if the parameter value (absolute folder path) is a valid and existing folder.

@@ -217,7 +217,7 @@ class AddGeoLayerAttribute(AbstractCommand):
             # Run the process.
             try:
 
-                # Get the input GeoLayer. Expand for ${Property} syntax.
+                # Get the input GeoLayer.
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
                 # Add the attribute to the GeoLayer.

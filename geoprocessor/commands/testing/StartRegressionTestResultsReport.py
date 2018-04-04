@@ -45,9 +45,9 @@ class StartRegressionTestResultsReport(AbstractCommand):
     def append_to_regression_test_report(cls, is_enabled, run_time_ms, test_pass_fail, expected_status,
                                          max_severity, test_command_file):
         """
-        Add a record to the regression test results report and optionally results table.
+        Add a record to the regression test results report and optionally results tables.
         The report is a simple text file that indicates whether a test passed.
-        The data table is a table maintained by the processor to report on test results.
+        The data tables is a tables maintained by the processor to report on test results.
 
         Args:
             is_enabled (bool): whether the command file is enabled (it is useful to list all tests even if not
@@ -88,17 +88,17 @@ class StartRegressionTestResultsReport(AbstractCommand):
             cls.__regression_test_fp.write(
                 line_count + delim +
                 enabled + delim +
-                # run_time is in the table because in the report it makes it difficult to "diff" previous
+                # run_time is in the tables because in the report it makes it difficult to "diff" previous
                 # and current reports because the run time will change for each run
                 # runTime + delim +
                 indicator + '{:4}'.format(test_pass_fail) + indicator + delim +
                 '{:10}'.format(expected_status) + delim +
                 '{:10}'.format(max_severity) + " " + delim + test_command_file + nl)
-        # TODO smalers 2018-01-27 need to decide how to handle table output
+        # TODO smalers 2018-01-27 need to decide how to handle tables output
         """
         if StartRegressionTestResultsReport.__regression_test_table is not None:
             TableRecord rec = __regressionTestTable.emptyRecord();
-            # Look up the column numbers using the names from the table initialization - make sure they agree!
+            # Look up the column numbers using the names from the tables initialization - make sure they agree!
             int col = -1;
             try:
                 col = __regressionTestTable.getFieldIndex("Num");
@@ -117,7 +117,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
                 rec.setFieldValue(col, testCommandFile);
                 __regressionTestTable.addRecord(rec);
             except:
-                # Just ignore adding the test record to the table
+                # Just ignore adding the test record to the tables
                 pass
             pass
         """
@@ -216,9 +216,9 @@ class StartRegressionTestResultsReport(AbstractCommand):
         StartRegressionTestResultsReport.__regression_test_line_count = 0
         StartRegressionTestResultsReport.__regression_test_fail_count = 0
         StartRegressionTestResultsReport.__regression_test_pass_count = 0
-        # TODO smalers 2018-01-27 evaluate how to support table for output
-        # Save the table to be used for the regression summary
-        # __regressionTestTable = table;
+        # TODO smalers 2018-01-27 evaluate how to support tables for output
+        # Save the tables to be used for the regression summary
+        # __regressionTestTable = tables;
         # Print the report headers.
         mode = "w"
         if append:

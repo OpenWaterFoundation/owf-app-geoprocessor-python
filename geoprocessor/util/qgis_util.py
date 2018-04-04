@@ -619,7 +619,7 @@ def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs, worksheet_index
         worksheet_index (str or int): the index of the worksheet to read. First is 0, second is 1 ...
 
     Returns:
-        A QGSVectorLayer object containing the data from the input excel worksheet (table). If the QgsVectorLayer is
+        A QGSVectorLayer object containing the data from the input excel worksheet (tables). If the QgsVectorLayer is
          not valid, return None.
     """
 

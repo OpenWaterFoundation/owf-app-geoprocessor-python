@@ -1,7 +1,6 @@
 import logging
 
 import geoprocessor.util.command_util as command_util
-
 from geoprocessor.commands.layers.AddGeoLayerAttribute import AddGeoLayerAttribute
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
@@ -10,8 +9,8 @@ from geoprocessor.commands.layers.FreeGeoLayers import FreeGeoLayers
 from geoprocessor.commands.layers.IntersectGeoLayer import IntersectGeoLayer
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
+from geoprocessor.commands.layers.ReadGeoLayerFromFGDB import ReadGeoLayerFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
-# from geoprocessor.commands.layers.ReadGeoLayerFromRaster import ReadGeoLayerFromRaster
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
@@ -25,10 +24,8 @@ from geoprocessor.commands.layers.WriteGeoLayerToDelimitedFile import WriteGeoLa
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
 from geoprocessor.commands.layers.WriteGeoLayerToKML import WriteGeoLayerToKML
 from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
-
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
-
 from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.EndIf import EndIf
 from geoprocessor.commands.running.For import For
@@ -38,20 +35,20 @@ from geoprocessor.commands.running.RunProgram import RunProgram
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
-
+from geoprocessor.commands.tables.ReadTableFromExcel import ReadTableFromExcel
+from geoprocessor.commands.tables.WriteTableToExcel import WriteTableToExcel
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
 from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
-
 from geoprocessor.commands.util.Blank import Blank
 from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
 from geoprocessor.commands.util.CommentBlockStart import CommentBlockStart
 from geoprocessor.commands.util.CopyFile import CopyFile
-from geoprocessor.commands.util.UnzipFile import UnzipFile
 from geoprocessor.commands.util.ListFiles import ListFiles
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
+from geoprocessor.commands.util.UnzipFile import UnzipFile
 from geoprocessor.commands.util.WebGet import WebGet
 from geoprocessor.commands.util.WriteCommandSummaryToFile import WriteCommandSummaryToFile
 
@@ -91,10 +88,12 @@ class GeoProcessorCommandFactory(object):
         "MERGEGEOLAYERS": MergeGeoLayers(),
         "MESSAGE": Message(),
         "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
+        "READGEOLAYERFROMFGDB": ReadGeoLayerFromFGDB(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
+        "READTABLEFROMEXCEL":ReadTableFromExcel(),
         "REMOVEFILE": RemoveFile(),
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
@@ -115,6 +114,7 @@ class GeoProcessorCommandFactory(object):
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
         "WRITEGEOLAYERTOKML": WriteGeoLayerToKML(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
+        "WRITETABLETOEXCEL": WriteTableToExcel(),
         "WRITEPROPERTIESTOFILE": WritePropertiesToFile()
     }
 
@@ -235,6 +235,8 @@ class GeoProcessorCommandFactory(object):
                     return Message()
                 elif command_name_upper == "READGEOLAYERFROMDELIMITEDFILE":
                     return ReadGeoLayerFromDelimitedFile()
+                elif command_name_upper == "READGEOLAYERFROMFGDB":
+                    return ReadGeoLayerFromFGDB()
                 elif command_name_upper == "READGEOLAYERFROMGEOJSON":
                     return ReadGeoLayerFromGeoJSON()
                 elif command_name_upper == "READGEOLAYERFROMSHAPEFILE":
@@ -243,6 +245,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayersFromFGDB()
                 elif command_name_upper == "READGEOLAYERSFROMFOLDER":
                     return ReadGeoLayersFromFolder()
+                elif command_name_upper == "READTABLEFROMEXCEL":
+                    return ReadTableFromExcel()
                 elif command_name_upper == "REMOVEFILE":
                     return RemoveFile()
                 elif command_name_upper == "REMOVEGEOLAYERATTRIBUTES":
@@ -285,6 +289,8 @@ class GeoProcessorCommandFactory(object):
                     return WriteGeoLayerToShapefile()
                 elif command_name_upper == "WRITEPROPERTIESTOFILE":
                     return WritePropertiesToFile()
+                elif command_name_upper == "WRITETABLETOEXCEL":
+                    return WriteTableToExcel()
 
             # If here the command name was not matched.
             # Don't know the command so create an UnknownCommand or throw an exception.

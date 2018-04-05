@@ -13,6 +13,7 @@ import geoprocessor.core.command_status_type as command_status_type
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 
 import geoprocessor.util.io_util as io_util
+import geoprocessor.util.pandas_util as pandas_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.zip_util as zip_util
@@ -127,6 +128,15 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if not input_crs == second_crs:
             check_failed = True
 
+    # Check if the parameter value (crs code)is a valid CRS code usable in the QGIS environment.
+    elif condition.upper() == "ISCRSCODEVALID":
+
+        message = 'The {} ({}) is not a valid CRS code.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a valid CRS code (EPSG codes are an approved format).'
+
+        if qgis_util.get_qgscoordinatereferencesystem_obj(parameter_value) is None:
+            check_failed = True
+
     # Check if the parameter value (column name) is a valid column name of a delimited file.
     elif condition.upper() == "ISDELIMITEDFILECOLUMNNAMEVALID":
 
@@ -141,13 +151,20 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if parameter_value not in io_util.get_col_names_from_delimited_file(delimited_file_abs, delimiter):
             check_failed = True
 
-    # Check if the parameter value (crs code)is a valid CRS code usable in the QGIS environment.
-    elif condition.upper() == "ISCRSCODEVALID":
+    # Check if the paramter value (sheet name) is a valid sheet name of an excel file.
+    elif condition.upper() == "ISEXCELSHEETNAMEVALID":
 
-        message = 'The {} ({}) is not a valid CRS code.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a valid CRS code (EPSG codes are an approved format).'
+        excel_file_abs = other_values[0]
 
-        if qgis_util.get_qgscoordinatereferencesystem_obj(parameter_value) is None:
+        message = "The {} ({}) is not a valid excel worksheet name in the excel file ({}).".format(parameter_name,
+                                                                                                   parameter_value,
+                                                                                                   excel_file_abs)
+        recommendation = "Specify an existing and valid {}.".format(parameter_name)
+
+        excel_workbook_obj = pandas_util.create_excel_workbook_obj(excel_file_abs)
+        excel_worksheet_list = excel_workbook_obj.sheet_names
+
+        if parameter_value not in excel_worksheet_list:
             check_failed = True
 
     # Check if the parameter value (feature class) is within a file geodatabase.
@@ -277,6 +294,35 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
 
         if qgis_util.get_qgsexpression_obj(parameter_value) is None:
             check_failed = True
+
+    # Check if the parameter value (Table ID) is an existing Table ID.
+    elif condition.upper() == "ISTABLEIDEXISTING":
+
+        message = 'The {} ({}) is not a valid Table ID.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a valid Table ID.'
+
+        if not self.command_processor.get_table(parameter_value):
+            check_failed = True
+
+    # Check if the parameter value (Table ID) is a unique TableID.
+    elif condition.upper() == "ISTABLEIDUNIQUE":
+
+        message = 'The {} ({}) value is already in use as a Table ID.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a new {}.'.format(parameter_name)
+
+        if self.command_processor.get_table(parameter_value):
+
+            check_failed = True
+            pv_IfTableIDExists = self.get_parameter_value("IfTableIDExists", default_value="Replace")
+
+            if pv_IfTableIDExists.upper() == "REPLACEANDWARN":
+                fail_response = "WARN"
+            elif pv_IfTableIDExists.upper() == "WARN":
+                fail_response = "WARNBUTDONOTRUN"
+            elif pv_IfTableIDExists.upper() == "FAIL":
+                fail_response = "FAIL"
+            else:
+                check_failed = False
 
     # Check if the file is a valid tar file.
     elif condition.upper() == "ISTARFILE":

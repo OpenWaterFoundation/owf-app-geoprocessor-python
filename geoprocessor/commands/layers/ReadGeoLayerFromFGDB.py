@@ -146,8 +146,8 @@ class ReadGeoLayerFromFGDB(AbstractCommand):
             fc_name: the name of the feature class to read
 
         Returns:
-             Boolean. If TRUE, the GeoLayer should be simplified If FALSE, at least one check failed and the GeoLayer
-                should not be simplified.
+             Boolean. If TRUE, the GeoLayer should be read. If FALSE, at least one check failed and the GeoLayer
+                should not be read.
         """
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the

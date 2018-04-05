@@ -109,7 +109,7 @@ class ReadTableFromExcel(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_read_geolayer(self, file_abs, sheet_name, table_id):
+    def __should_read_table(self, file_abs, sheet_name, table_id):
 
         """
         Checks the following:
@@ -123,11 +123,41 @@ class ReadTableFromExcel(AbstractCommand):
             table_id (str): the ID of the output Table
 
         Returns:
-            run_read: Boolean. If TRUE, the read process should be run. If FALSE, the read process should not be run.
+             Boolean. If TRUE, the GeoLayer should be read. If FALSE, at least one check failed and the GeoLayer
+                should not be read.
         """
 
-        # TODO fill out the checks/validators
-        return True
+        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
+        # test confirms that the command should be run.
+        should_run_command = []
+
+        # If the input spatial data file is not a valid file path, raise a FAILURE.
+        should_run_command.append(validators.run_check(self, "IsFilePathValid", "File", file_abs, "FAIL"))
+
+        # If the input file is valid, continue with the checks.
+        if False not in should_run_command:
+
+            # If the SheetName parameter is None, assign it with the name of the first worksheet in the excel file.
+            if sheet_name is None:
+                sheet_name = pandas_util.create_excel_workbook_obj(file_abs).sheet_names[0]
+
+            # If the input sheet name is not a valid sheet name in the excel workbook file, raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "IsExcelSheetNameValid", "SheetName", sheet_name,
+                                                           "FAIL", other_values=[file_abs]))
+
+            # If the TableID parameter is None, assign the parameter with the sheet name.
+            if table_id is None:
+                table_id = sheet_name
+
+            # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
+            # value of the IfTableIDExists parameter.)
+            should_run_command.append(validators.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
+
+        # Return the Boolean to determine if the process should be run.
+        if False in should_run_command:
+            return False
+        else:
+            return True
 
     def run_command(self):
         """
@@ -155,7 +185,7 @@ class ReadTableFromExcel(AbstractCommand):
             pv_TableID = io_util.expand_formatter(file_absolute, pv_TableID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_geolayer(file_absolute, pv_SheetName, pv_TableID):
+        if self.__should_read_table(file_absolute, pv_SheetName, pv_TableID):
 
             try:
 

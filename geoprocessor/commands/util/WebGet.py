@@ -207,7 +207,7 @@ class WebGet(AbstractCommand):
                 output_folder = os.path.dirname(output_file_absolute)
 
                 # Get the URL file and convert it into a request Response object
-                r = requests.get(url_abs, verify=False)
+                r = requests.get(url_abs, verify=False, stream=True)
 
                 # Get the filename of the URL and the output file
                 url_filename = io_util.get_filename(url_abs)

@@ -132,42 +132,38 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         """
         Checks the following:
         * the SpatialDataFolder (absolute) is a valid folder
-        * the SpatialDataFolder (absolute) ends in .GDB (warning, not error)
+        * the SpatialDataFolder (absolute) is a valid File GeoDatabase
 
         Args:
             spatial_data_folder_abs: the full pathname to the input spatial data folder
+            geolayer_id: the ID of the output GeoLayer
+            fc_name: the name of the feature class to read
 
         Returns:
-            run_read: Boolean. If TRUE, the geodatabase read process should be run. If FALSE, the read process should
-            not be run.
+             Boolean. If TRUE, the GeoDatabase should be read. If FALSE, at least one check failed and the GeoDatabase
+             should not be read.
         """
 
-        # Boolean to determine if the read process should be run. Set to true until an error occurs.
-        run_read = True
+        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
+        # test confirms that the command should be run.
+        should_run_command = []
 
         # If the input spatial data folder is not a valid file path, raise a FAILURE.
-        if not os.path.isdir(spatial_data_folder_abs):
+        should_run_command.append(validators.run_check(self, "IsFolderPathValid", "SpatialDataFolder",
+                                                       spatial_data_folder_abs, "FAIL"))
 
-            run_read = False
-            self.warning_count += 1
-            message = "The SpatialDataFolder ({}) is not a valid folder.".format(spatial_data_folder_abs)
-            recommendation = "Specify a valid folder."
-            self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+        # If the input spatial data folder is valid, continue with the checks.
+        if False not in should_run_command:
 
-        # If the input spatial data file does not end in .geojson, raise a WARNING.
-        if not spatial_data_folder_abs.upper().endswith(".GDB"):
-            self.warning_count += 1
-            message = 'The SpatialDataFolder ({}) does not end with the .gdb extension.'.format(spatial_data_folder_abs)
-            recommendation = "No recommendation logged."
-            self.logger.warning(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.WARNING, message, recommendation))
+            # If the input spatial data folder is not a file geodatabase, raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "IsFolderAfGDB", "SpatialDataFolder",
+                                                           spatial_data_folder_abs, "FAIL"))
 
-        # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
-        return run_read
+        # Return the Boolean to determine if the process should be run.
+        if False in should_run_command:
+            return False
+        else:
+            return True
 
     def __should_read_geolayer(self, geolayer_id):
         """
@@ -178,55 +174,23 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             geolayer_id: the ID of the output GeoLayer
 
         Returns:
-            run_read: Boolean. If TRUE, the GeoLayer read process should be run. If FALSE, the read process should
-             not be run.
+            Boolean. If TRUE, the GeoLayer should be read. If FALSE, at least one check failed and the GeoLayer
+                should not be read.
         """
 
-        # Boolean to determine if the read process should be run. Set to true until an error occurs.
-        run_read = True
+        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
+        # test confirms that the command should be run.
+        should_run_command = []
 
-        # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
-        # pv_IfGeoLayerIDExists value.
-        if self.command_processor.get_geolayer(geolayer_id):
+        # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
+        # on the value of the IfGeoLayerIDExists parameter.)
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
 
-            # Get the IfGeoLayerIDExists parameter value.
-            pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
-
-            # Warnings/recommendations if the GeolayerID is the same as a registered GeoLayerID.
-            message = 'The GeoLayerID ({}) value is already in use as a GeoLayer ID.'.format(geolayer_id)
-            recommendation = 'Specify a new GeoLayerID.'
-
-            # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
-            if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
-                self.warning_count += 1
-                self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
-                                                                message, recommendation))
-
-            # The registered GeoLayer should not be replaced. A warning should be logged.
-            if pv_IfGeoLayerIDExists.upper() == "WARN":
-
-                run_read = False
-                self.warning_count += 1
-                self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
-                                                                message, recommendation))
-
-            # The matching IDs should cause a FAILURE.
-            elif pv_IfGeoLayerIDExists.upper() == "FAIL":
-
-                run_read = False
-                self.warning_count += 1
-                self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE,
-                                                                message, recommendation))
-
-        # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
-        return run_read
+        # Return the Boolean to determine if the process should be run.
+        if False in should_run_command:
+            return False
+        else:
+            return True
 
     def run_command(self):
         """

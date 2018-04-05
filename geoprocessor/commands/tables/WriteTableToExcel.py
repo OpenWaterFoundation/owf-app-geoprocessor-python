@@ -12,7 +12,6 @@ import geoprocessor.util.io_util as io_util
 import geoprocessor.util.pandas_util as pandas_util
 import geoprocessor.util.validator_util as validators
 
-import os
 import logging
 
 
@@ -111,8 +110,25 @@ class WriteTableToExcel(AbstractCommand):
            run_write: Boolean. If TRUE, the writing process should be run. If FALSE, it should not be run.
        """
 
-        # TODO fill out the checks/validators
-        return True
+        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
+        # test confirms that the command should be run.
+        should_run_command = []
+
+        # If the Table ID is not an existing Table ID, raise a FAILURE.
+        should_run_command.append(validators.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
+
+        # Get the full path to the output folder
+        output_folder_abs = io_util.get_path(output_file_abs)
+
+        # If the output folder is not an existing folder, raise a FAILURE.
+        should_run_command.append(validators.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
+                                                       "FAIL"))
+
+        # Return the Boolean to determine if the process should be run.
+        if False in should_run_command:
+            return False
+        else:
+            return True
 
     def run_command(self):
         """
@@ -144,7 +160,6 @@ class WriteTableToExcel(AbstractCommand):
 
                 # Write the tables to an Excel file.
                 pandas_util.write_df_to_excel(table.df, output_file_absolute, pv_OuputSheetName)
-
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

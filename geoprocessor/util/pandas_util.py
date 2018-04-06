@@ -15,10 +15,15 @@ def create_excel_workbook_obj(excel_workbook_path):
 
 def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name):
 
-    writer = pd.ExcelWriter(excel_workbook_path, engine="xlsxwriter")
+    # REf:
+    # https://stackoverflow.com/questions/20219254/
+    # how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
+    from openpyxl import load_workbook
+    writer = pd.ExcelWriter(excel_workbook_path, engine="openpyxl")
     import pandas.io.formats.excel
     pandas.io.formats.excel.header_style = None
+    book = load_workbook(excel_workbook_path)
+    writer.book = book
+    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
     df.to_excel(writer, index=False, sheet_name=excel_worksheet_name)
-    workbook = writer.book
-    worksheet = writer.sheets[excel_worksheet_name]
     writer.save()

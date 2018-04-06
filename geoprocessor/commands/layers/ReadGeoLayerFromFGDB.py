@@ -38,7 +38,7 @@ class ReadGeoLayerFromFGDB(AbstractCommand):
     * SpatialDataFolder (str, required): the relative pathname to the file geodatabase containing spatial data files
         (feature classes)
     * GeoLayerID (str, required): the GeoLayer identifier.
-    * FeatureClass (str, optional): the name of the feature class within the geodatabase to read.
+    * FeatureClass (str, required): the name of the feature class within the geodatabase to read.
     * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the GeoLayerID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
@@ -202,7 +202,7 @@ class ReadGeoLayerFromFGDB(AbstractCommand):
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
         pv_FeatureClass = self.command_processor.expand_parameter_value(pv_FeatureClass, self)
 
-        # Convert the SpatialDataFolder parameter value relative path to an absolute path
+        # Convert the SpatialDataFolder parameter value relative path to absolute path. Expand for ${Property} syntax.
         sd_folder_abs = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_SpatialDataFolder, self)))

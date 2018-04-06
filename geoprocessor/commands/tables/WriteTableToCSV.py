@@ -1,4 +1,4 @@
-# WriteTableToExcel
+# WriteTableToCSV
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -15,7 +15,7 @@ import geoprocessor.util.validator_util as validators
 import logging
 
 
-class WriteTableToExcel(AbstractCommand):
+class WriteTableToCSV(AbstractCommand):
     """
     Writes a Table to an Excel file.
 
@@ -37,8 +37,8 @@ class WriteTableToExcel(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(WriteTableToExcel, self).__init__()
-        self.command_name = "WriteTableToExcel"
+        super(WriteTableToCSV, self).__init__()
+        self.command_name = "WriteTableToCSV"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

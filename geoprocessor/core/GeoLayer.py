@@ -13,12 +13,12 @@ class GeoLayer(object):
     A list of registered GeoLayer instances are maintained in the GeoProcessor's self.geolayers property (type: list).
     The GeoProcessor's commands retrieve in-memory GeoLayer instances from the GeoProcessor's self.geolayers property
     using the GeoProcessor.get_geolayer() function. New GeoLayer instances are added to the GeoProcessor list using the
-    set_geolayer() function.
+    add_geolayer() function.
 
     There are a number of properties associated with each GeoLayer (id, coordinate reference system, feature count,
     etc.) The GeoLayer properties stored within each GeoLayer instance are the STATIC properties that will never change
     (ids, QgsVectorLayer object, and source path). The DYNAMIC GeoLayer properties (coordinate reference
-    system, feature count, etc.) are created when needed by accessing call functions in the geo.py utility script.
+    system, feature count, etc.) are created when needed by accessing class functions.
 
     GeoLayers can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
     creates a new GeoLayer (example: Clip). When this occurs, the in-memory GeoLayer is assigned a geolayer_id from

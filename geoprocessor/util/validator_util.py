@@ -295,6 +295,18 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if qgis_util.get_qgsexpression_obj(parameter_value) is None:
             check_failed = True
 
+    # Check if the input string is the correct length.
+    elif condition.upper() == "ISSTRINGLENGTHCORRECT":
+
+        correct_length = other_values[0]
+
+        message = 'The {} ({}) must have exactly {} character(s).'.format(parameter_name, parameter_value, correct_length)
+        recommendation = 'Specify a string with {} characters for the {} parameter.'.format(correct_length, parameter_name)
+
+        # Convert the string into a list.
+        if len(parameter_value) != correct_length:
+            check_failed = True
+
     # Check if the parameter value (Table ID) is an existing Table ID.
     elif condition.upper() == "ISTABLEIDEXISTING":
 

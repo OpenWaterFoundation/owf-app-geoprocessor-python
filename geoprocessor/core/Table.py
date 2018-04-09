@@ -1,7 +1,23 @@
 class Table(object):
 
     """
-    The Table class holds tabular data objects.
+    The Table class holds tabular data objects (columns and rows). The core data is stored in a pandas data frame
+    object in order to leverage the pandas library and functionality. Additional data members are used to store data
+    that are not part of the pandas data frame object and are required from the GeoProcessor. These include attributes
+    like a table identifier and a source filename.
+
+    A list of registered Table instances are maintained by the GeoProcessor's self.tables property (type: list). The
+    GeoProcessor's commands retrieve in-memory Table instances from the GeoProcessor's self.tables property using the
+    GeoProcessor.get_table() function. New Table instances are added to teh GeoProcessor list using the add_table()
+    function.
+
+    There are a number of properties associated with each Table. The initialized properties stored within each Table
+     instance are the STATIC properties that will never change (identifier, df object, and source path). The DYNAMIC
+     properties (column names, number of table entries, etc.) are created when needed by accessing class functions.
+
+    Tables can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
+    creates a new Table. When this occurs, the in-memory Table is assigned a table_id from within the command,
+    the df is created from within the command and the source_path is set to 'MEMORY'or 'NONE'.
     """
 
     def __init__(self, table_id, pandas_df, table_source_path, properties=None):
@@ -46,7 +62,16 @@ class Table(object):
             self.properties = properties
 
     def get_column_values_as_list(self, column_name):
+        """
+        Return all of the column values for a given column.
 
+        Args:
+            column_name (str): the name of the column of interest
+
+        Return: A list of the column values.
+        """
+
+        # Return a list of the column values for the given input column.
         return self.df[column_name].tolist()
 
 

@@ -586,6 +586,7 @@ class GeoProcessor(object):
             # Recursive property was not defined so not running in recursive mode
             recursive = False
         try:
+
             append_prop = run_properties["AppendResults"]
             if append_prop == "True":
                 append_results = True

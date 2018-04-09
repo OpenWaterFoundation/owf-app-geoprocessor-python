@@ -54,6 +54,9 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("SpatialDataFolder", type("")),
+        CommandParameterMetadata("ReadOnlyOneFeatureClass", type("")),
+        CommandParameterMetadata("GeoLayerID", type("")),
+        CommandParameterMetadata("FeatureClass", type("")),
         CommandParameterMetadata("GeoLayerID_prefix", type("")),
         CommandParameterMetadata("Subset_Pattern", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
@@ -114,6 +117,15 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
+        # Check that the optional parameter ReadOnlyOneFeatureClass is a valid Boolean.
+        if not validators.validate_bool(pv_SpatialDataFolder, True, False):
+            message = "ReadOnlyOneFeatureClass is not a valid boolean value."
+            recommendation = "Specify a valid boolean value for the ReadOnlyOneFeatureClass parameter."
+            warning += "\n" + message
+            self.command_status.add_to_log(
+                command_phase_type.INITIALIZATION,
+                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning = command_util.validate_command_parameter_names(self, warning)
@@ -136,8 +148,6 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         Args:
             spatial_data_folder_abs: the full pathname to the input spatial data folder
-            geolayer_id: the ID of the output GeoLayer
-            fc_name: the name of the feature class to read
 
         Returns:
              Boolean. If TRUE, the GeoDatabase should be read. If FALSE, at least one check failed and the GeoDatabase
@@ -206,6 +216,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         # Obtain the required and optional parameter values
         pv_SpatialDataFolder = self.get_parameter_value("SpatialDataFolder")
+        pv_ReadOnlyOneFeatureClass = self.get_parameter_value("ReadOnlyOneFeatureClass")
         pv_Subset_Pattern = self.get_parameter_value("Subset_Pattern")
         pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
 

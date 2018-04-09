@@ -1,4 +1,4 @@
-# WriteTableToExcel
+# WriteTableToDelimitedFile
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -15,21 +15,22 @@ import geoprocessor.util.validator_util as validators
 import logging
 
 
-class WriteTableToExcel(AbstractCommand):
+class WriteTableToDelimitedFile(AbstractCommand):
     """
-    Writes a Table to an Excel file.
+    Writes a Table to an delimiter-separated file.
 
     Command Parameters
-    * TableID (str, required): the identifier of the Table to be written to the Excel file 
-    * OutputFile (str, required): the relative pathname of the output Excel file.
-    * OutputWorksheet (str, required): the name of the worksheet that the Table will be written
+    * TableID (str, required): the identifier of the Table to be written to the delimited file
+    * OutputFile (str, required): the relative pathname of the output delimited file.
+    * Delimiter (str, optional): the delimiter of the output file. Default is `,` Must be a one-character
+        string (limitation is built into the Pandas to_csv command).
     """
 
     # Define the command parameters/
     __command_parameter_metadata = [
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
-        CommandParameterMetadata("OutputWorksheet", type(""))]
+        CommandParameterMetadata("Delimiter", type(""))]
 
     def __init__(self):
         """
@@ -37,8 +38,8 @@ class WriteTableToExcel(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(WriteTableToExcel, self).__init__()
-        self.command_name = "WriteTableToExcel"
+        super(WriteTableToDelimitedFile, self).__init__()
+        self.command_name = "WriteTableToDelimitedFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data
@@ -78,7 +79,7 @@ class WriteTableToExcel(AbstractCommand):
         if not validators.validate_string(pv_OutputFile, False, False):
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter (relative or absolute pathname) to indicate the " \
-                             "location and name of the output Excel file."
+                             "location and name of the output delimited file."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -96,15 +97,17 @@ class WriteTableToExcel(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_write_table(self, table_id, output_file_abs):
+    def __should_write_table(self, table_id, output_file_abs, delimiter):
         """
        Checks the following:
        * the ID of the Table is an existing Table ID
        * the output folder is a valid folder
+       * check that the delimiter is only one character
 
        Args:
            table_id: the ID of the Table to be written
            output_file_abs: the full pathname to the output file
+           delimiter: the delimiter string that will separate each column in the output file
 
        Returns:
            run_write: Boolean. If TRUE, the writing process should be run. If FALSE, it should not be run.
@@ -124,6 +127,10 @@ class WriteTableToExcel(AbstractCommand):
         should_run_command.append(validators.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
                                                        "FAIL"))
 
+        # If the delimiter is not 1 character, raise a FAILURE.
+        should_run_command.append(validators.run_check(self, "IsStringLengthCorrect", "Delimiter", delimiter,
+                                                       "FAIL", other_values=[1]))
+
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
             return False
@@ -132,7 +139,7 @@ class WriteTableToExcel(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command. Write the Table to an excel file.
+        Run the command. Write the Table to a delimited file.
 
         Returns: None.
 
@@ -140,10 +147,10 @@ class WriteTableToExcel(AbstractCommand):
             RuntimeError if any warnings occurred during run_command method.
         """
 
-        # Obtain the parameter values except for the OutputCRS
+        # Obtain the parameter values.
         pv_TableID = self.get_parameter_value("TableID")
         pv_OutputFile = self.get_parameter_value("OutputFile")
-        pv_OutputWorksheet = self.get_parameter_value("OutputWorksheet")
+        pv_Delimiter = self.get_parameter_value("Delimiter", default_value=",")
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -151,20 +158,20 @@ class WriteTableToExcel(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_write_table(pv_TableID, output_file_absolute):
+        if self.__should_write_table(pv_TableID, output_file_absolute, pv_Delimiter):
 
             try:
 
                 # Get the Table object
                 table = self.command_processor.get_table(pv_TableID)
 
-                # Write the tables to an Excel file.
-                pandas_util.write_df_to_excel(table.df, output_file_absolute, pv_OutputWorksheet)
+                # Write the table to a delimited file.
+                pandas_util.write_df_to_delimited_file(table.df, output_file_absolute, pv_Delimiter)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:
                 self.warning_count += 1
-                message = "Unexpected error writing Table {} to Excel workbook file {}.".format(pv_TableID,
+                message = "Unexpected error writing Table {} to delimited file {}.".format(pv_TableID,
                                                                                                 pv_OutputFile)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)

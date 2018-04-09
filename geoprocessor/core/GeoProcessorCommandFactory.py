@@ -35,7 +35,9 @@ from geoprocessor.commands.running.RunProgram import RunProgram
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
+from geoprocessor.commands.tables.ReadTableFromDelimitedFile import ReadTableFromDelimitedFile
 from geoprocessor.commands.tables.ReadTableFromExcel import ReadTableFromExcel
+from geoprocessor.commands.tables.WriteTableToDelimitedFile import WriteTableToDelimitedFile
 from geoprocessor.commands.tables.WriteTableToExcel import WriteTableToExcel
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
@@ -93,6 +95,7 @@ class GeoProcessorCommandFactory(object):
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
+        "READTABLEFROMDELIMITEDFILE": ReadTableFromDelimitedFile(),
         "READTABLEFROMEXCEL":ReadTableFromExcel(),
         "REMOVEFILE": RemoveFile(),
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
@@ -114,6 +117,7 @@ class GeoProcessorCommandFactory(object):
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
         "WRITEGEOLAYERTOKML": WriteGeoLayerToKML(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
+        "WRITETABLETODELIMITEDFILE": WriteTableToDelimitedFile(),
         "WRITETABLETOEXCEL": WriteTableToExcel(),
         "WRITEPROPERTIESTOFILE": WritePropertiesToFile()
     }
@@ -245,6 +249,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayersFromFGDB()
                 elif command_name_upper == "READGEOLAYERSFROMFOLDER":
                     return ReadGeoLayersFromFolder()
+                elif command_name_upper == "READTABLEFROMDELIMITEDFILE":
+                    return ReadTableFromDelimitedFile()
                 elif command_name_upper == "READTABLEFROMEXCEL":
                     return ReadTableFromExcel()
                 elif command_name_upper == "REMOVEFILE":
@@ -289,6 +295,8 @@ class GeoProcessorCommandFactory(object):
                     return WriteGeoLayerToShapefile()
                 elif command_name_upper == "WRITEPROPERTIESTOFILE":
                     return WritePropertiesToFile()
+                elif command_name_upper == "WRITETABLETODELIMITEDFILE":
+                    return WriteTableToDelimitedFile()
                 elif command_name_upper == "WRITETABLETOEXCEL":
                     return WriteTableToExcel()
 

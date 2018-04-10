@@ -1,5 +1,6 @@
 # Utility functions related to the pandas library
 
+import os
 import pandas as pd
 
 
@@ -93,24 +94,38 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_hea
     Returns: None
     """
 
-    # REf: https://stackoverflow.com/questions/20219254/
-    # how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
-    from openpyxl import load_workbook
-
-    # Set the writer object.
-    writer = pd.ExcelWriter(excel_workbook_path, engine="openpyxl")
-
     # Removes the default styling of the table (provided in the pandas library).
     import pandas.io.formats.excel
     pandas.io.formats.excel.header_style = None
 
-    # If applicable, inform the writer object of the already-existing excel workbook.
-    book = load_workbook(excel_workbook_path)
-    writer.book = book
+    # If the output excel file already exists, take into consideration the current file format and the current
+    # worksheets.
+    if os.path.exists(excel_workbook_path):
 
-    # If applicable, inform the writer object of the already-existing excel worksheets.
-    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+        # REf: https://stackoverflow.com/questions/20219254/
+        # how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
+        from openpyxl import load_workbook
 
-    # Write the df to the excel workbook with the given worksheet name.
-    df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, header=include_header)
-    writer.save()
+        # Set the writer object.
+        writer = pd.ExcelWriter(excel_workbook_path, engine="openpyxl")
+
+        # If applicable, inform the writer object of the already-existing excel workbook.
+        book = load_workbook(excel_workbook_path)
+        writer.book = book
+
+        # If applicable, inform the writer object of the already-existing excel worksheets.
+        writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+
+        # Write the df to the excel workbook with the given worksheet name.
+        df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, header=include_header)
+        writer.save()
+
+    # If the output excel file does not already exists, configure which excel file version to use.
+    else:
+
+        # Set the writer object.
+        writer = pd.ExcelWriter(excel_workbook_path)
+
+        # Write the df to the excel workbook with the given worksheet name.
+        df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, header=include_header)
+        writer.save()

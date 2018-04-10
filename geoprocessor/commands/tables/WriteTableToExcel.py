@@ -29,9 +29,6 @@ class WriteTableToExcel(AbstractCommand):
         Default: True
     * WriteIndexColumn (bool, optional): If TRUE, the index column is written, If FALSE, the index column is excluded.
         Default: True
-    * FileFormat (str, optional): This parameter determines which version of an Excel file to write.
-        Available options are: `xlsx`, `xls` and `xlsm`. Default: `xlsx`. If the Excel file already exists, this
-        parameter is ignored and the file format of the original excel file is used.
     """
 
     # Define the command parameters/
@@ -40,8 +37,7 @@ class WriteTableToExcel(AbstractCommand):
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("OutputWorksheet", type("")),
         CommandParameterMetadata("WriteHeaderRow", type("")),
-        CommandParameterMetadata("WriteIndexColumn", type("")),
-        CommandParameterMetadata("FileFormat", type(""))]
+        CommandParameterMetadata("WriteIndexColumn", type(""))]
 
     def __init__(self):
         """
@@ -120,19 +116,6 @@ class WriteTableToExcel(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that optional parameter FileFormat is either `xls`, `xlsx`, `xlsm` or None.
-        pv_FileFormat = self.get_parameter_value(parameter_name="FileFormat", command_parameters=command_parameters)
-        acceptable_values = ["xls", "xlsx", "xlsm"]
-        if not validators.validate_string_in_list(pv_FileFormat, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=False, ignore_case=True):
-            message = "FileFormat parameter value ({}) is not recognized.".format(pv_FileFormat)
-            recommendation = "Specify one of the acceptable values ({}) for the FileFormat parameter.".format(
-                acceptable_values)
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
-
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning = command_util.validate_command_parameter_names(self, warning)
@@ -195,7 +178,6 @@ class WriteTableToExcel(AbstractCommand):
         pv_OutputWorksheet = self.get_parameter_value("OutputWorksheet")
         pv_WriteHeaderRow = self.get_parameter_value("WriteHeaderRow", default_value="True")
         pv_WriteIndexColumn = self.get_parameter_value("WriteIndexColumn", default_value="True")
-        pv_FileFormat = self.get_parameter_value("FileFormat")
 
         # Convert the Boolean parameters from string to valid Boolean values.
         pv_WriteHeaderRow = string_util.str_to_bool(pv_WriteHeaderRow)
@@ -205,10 +187,6 @@ class WriteTableToExcel(AbstractCommand):
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
-
-        # If the excel file already exists, ignore the pv_FileFormat parameter (set it to None).
-        if os.path.exists(output_file_absolute):
-            pv_FileFormat = None
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_write_table(pv_TableID, output_file_absolute):

@@ -193,9 +193,9 @@ class ReadTableFromExcel(AbstractCommand):
                 if pv_Worksheet is None:
                     pv_Worksheet = pandas_util.create_excel_workbook_obj(file_absolute).sheet_names[0]
 
-                    # Assign the TableID parameter to the name of the first Excel worksheet, if it was not specified.
-                    if pv_TableID is None:
-                        pv_TableID = pv_Worksheet
+                # Assign the TableID parameter to the name of the first Excel worksheet, if it was not specified.
+                if pv_TableID is None:
+                    pv_TableID = pv_Worksheet
 
                 # Create a Pandas Data Frame object.
                 df = pandas_util.create_data_frame_from_excel(file_absolute, pv_Worksheet)

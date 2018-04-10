@@ -60,13 +60,15 @@ def create_excel_workbook_obj(excel_workbook_path):
     return xl
 
 
-def write_df_to_delimited_file(df, output_file_full_path, delimiter=","):
+def write_df_to_delimited_file(df, output_file_full_path, include_header, include_index, delimiter=","):
     """
     Writes a pandas data frame object to a delimited file.
 
     Args:
         df (object): the pandas data frame object to write
         output_file_full_path (str): the full pathname to an output delimited file
+        include_header (bool): If TRUE, write the header row. If FALSE, exclude the header row.
+        include_index (bool): If TRUE, write the index column. If FALSE, exclude the index column.
         delimiter (str): the delimiter symbol to use in the output delimited file. Must be a single character. Default
          value is a comma.
 
@@ -74,10 +76,10 @@ def write_df_to_delimited_file(df, output_file_full_path, delimiter=","):
     """
 
     # Write the pandas data frame to a csv file.
-    df.to_csv(output_file_full_path, sep=delimiter)
+    df.to_csv(output_file_full_path, header=include_header, index=include_index, sep=delimiter)
 
 
-def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name):
+def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_header, include_index):
     """
     Writes a pandas data frame object to an excel file.
 
@@ -85,6 +87,8 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name):
         df (object): the pandas data frame object to write
         excel_workbook_path (str): the full pathname to an excel workbook (either existing or non-existing)
         excel_worksheet_name (str): the worksheet name to write to (either existing or non-existing)
+        include_header (bool): If TRUE, write row index. If FALSE, do not include row index.
+        include_index (bool): If TRUE, write out column names. If FALSE, do not write column names.
 
     Returns: None
     """
@@ -108,5 +112,5 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name):
     writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
 
     # Write the df to the excel workbook with the given worksheet name.
-    df.to_excel(writer, index=False, sheet_name=excel_worksheet_name)
+    df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, header=include_header)
     writer.save()

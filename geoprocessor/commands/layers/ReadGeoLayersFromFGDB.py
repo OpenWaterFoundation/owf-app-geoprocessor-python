@@ -40,23 +40,30 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     Command Parameters
     * SpatialDataFolder (str, required): the relative pathname to the file geodatabase containing spatial data files
         (feature classes)
-    * GeoLayerID_prefix (str, optional): the GeoLayer identifier will, by default, use the name of the feature class
-        that is being read. However, if a value is set for this parameter, the GeoLayerID will follow this format:
-        [GeoLayerID_prefix]_[name_of_feature_class]
-    * Subset_Pattern (str, optional): the glob-style pattern of the feature class name to determine which feature
-        classes within the file geodatabase are to be processed. More information on creating a glob pattern can be
-        found at `this site <https://docs.python.org/2/library/glob.html>`_.
-    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
+    * ReadOnlyOneFeatureClass (str, required): a string that can be converted to a valid boolean value. If TRUE, only
+         one specific feature class is read in as a GeoLayer. If FALSE, multiple feature classes are read in as
+         different GeoLayers.
+    * FeatureClass (str, required if ReadOnlyOneFeatureClass is TRUE): the name of the feature class within the
+        geodatabase to read.
+    * GeoLayerID (str, required if ReadOnlyOneFeatureClass is TRUE): the GeoLayer identifier.
+    * GeoLayerID_prefix (str, optional, only used if ReadOnlyOneFeatureClass is FALSE): the GeoLayer identifier will,
+        by default, use the name of the feature class that is being read. However, if a value is set for this parameter,
+         the GeoLayerID will follow this format: [GeoLayerID_prefix]_[name_of_feature_class].
+    * Subset_Pattern (str, optional, only used if ReadOnlyOneFeatureClass is FALSE): the glob-style pattern of the
+        feature class name to determine which feature classes within the file geodatabase are to be processed. More
+        information on creating a glob pattern can be found at https://docs.python.org/2/library/glob.html.
+    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the GeoLayerID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
-        (Refer to user documentation for detailed description.) Default value is `Replace`.
+        (Refer to user documentation for detailed description.) Default value is `Replace`. Used if
+        ReadOnlyOneFeatureClass is TRUE or FALSE.
     """
 
     # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("SpatialDataFolder", type("")),
         CommandParameterMetadata("ReadOnlyOneFeatureClass", type("")),
-        CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("FeatureClass", type("")),
+        CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("GeoLayerID_prefix", type("")),
         CommandParameterMetadata("Subset_Pattern", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
@@ -118,13 +125,29 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check that the optional parameter ReadOnlyOneFeatureClass is a valid Boolean.
-        if not validators.validate_bool(pv_SpatialDataFolder, True, False):
+        pv_ReadOnlyOneFeatureClass = self.get_parameter_value(parameter_name="ReadOnlyOneFeatureClass",
+                                                              command_parameters=command_parameters)
+        if not validators.validate_bool(pv_ReadOnlyOneFeatureClass, True, False):
             message = "ReadOnlyOneFeatureClass is not a valid boolean value."
             recommendation = "Specify a valid boolean value for the ReadOnlyOneFeatureClass parameter."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Continue with checks if the ReadOnlyOneFeatureClass is a valid TRUE Boolean.
+        elif string_util.str_to_bool(pv_ReadOnlyOneFeatureClass):
+
+            # Check that parameter GeoLayerID is a non-empty, non-None string.
+            pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
+
+            if not validators.validate_string(pv_GeoLayerID, False, False):
+                message = "GeoLayerID parameter has no value."
+                recommendation = "Specify the GeoLayerID parameter."
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -139,6 +162,23 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
+    def __return_a_list_of_fc(self, fgdb_full_path):
+
+        # The file geodatabase will be read and each feature class will be added to the feature_class_list.
+        feature_class_list = []
+
+        # Append each feature class in the Esri File Geodatabase to the feature_class_list.
+        # REF: https://pcjericks.github.io/py-gdalogr-cookbook/vector_layers.html|
+        # "Get all layers in an Esri File GeoDataBase"
+        ogr.UseExceptions()
+        driver = ogr.GetDriverByName("OpenFileGDB")
+        gdb = driver.Open(fgdb_full_path)
+        for feature_class_idx in range(gdb.GetLayerCount()):
+            feature_class = gdb.GetLayerByIndex(feature_class_idx)
+            feature_class_list.append(feature_class.GetName())
+
+        return feature_class_list
+
     def __should_read_gdb(self, spatial_data_folder_abs):
 
         """
@@ -147,7 +187,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         * the SpatialDataFolder (absolute) is a valid File GeoDatabase
 
         Args:
-            spatial_data_folder_abs: the full pathname to the input spatial data folder
+            spatial_data_folder_abs (str): the full pathname to the input spatial data folder
 
         Returns:
              Boolean. If TRUE, the GeoDatabase should be read. If FALSE, at least one check failed and the GeoDatabase
@@ -175,13 +215,18 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         else:
             return True
 
-    def __should_read_geolayer(self, geolayer_id):
+    def __should_read_geolayer(self, geolayer_id, one_geolayer_bool, fc_name=None, spatial_data_folder_abs=None):
         """
         Checks the following:
+        * if only one geolayer is being read, the FeatureClass is an existing feature class within the File GeoDatabase
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
         Args:
-            geolayer_id: the ID of the output GeoLayer
+            geolayer_id (str): the ID of the output GeoLayer
+            one_geolayer_bool (bool): if True, the command is only reading one FC from the FGDB
+            fc_name (str): the name of the FC being read.  Only used if one_geolayer_bool is True. Default = None
+            spatial_data_folder_abs (str): the full pathname to the input spatial data folder.
+                Only used if one_geolayer_bool is True. Default = None
 
         Returns:
             Boolean. If TRUE, the GeoLayer should be read. If FALSE, at least one check failed and the GeoLayer
@@ -196,6 +241,13 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         # on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
 
+        # If only one geolayer is being read from the file geodatabase, continue.
+        if one_geolayer_bool:
+
+            # If the provided feature class is not in the FGDB raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "IsFeatureClassInFGDB", "FeatureClass", fc_name,
+                                                           "FAIL", other_values=[spatial_data_folder_abs]))
+
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
             return False
@@ -204,7 +256,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command. Read the feature classes within a file geodatabse. For each desired feature class (can be
+        Run the command. Read the feature classes within a file geodatabase. For each desired feature class (can be
         specified by the Subset_Pattern parameter), create a GeoLayer object, and add to the GeoProcessor's geolayer
         list.
 
@@ -219,6 +271,11 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         pv_ReadOnlyOneFeatureClass = self.get_parameter_value("ReadOnlyOneFeatureClass")
         pv_Subset_Pattern = self.get_parameter_value("Subset_Pattern")
         pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
+        pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        pv_FeatureClass = self.get_parameter_value("FeatureClass")
+
+        # Convert the ReadOnlyOneFeatureClass from a string value to a Boolean value.
+        pv_ReadOnlyOneFeatureClass = string_util.str_to_bool(pv_ReadOnlyOneFeatureClass)
 
         # Convert the SpatialDataFolder parameter value relative path to an absolute path
         sd_folder_abs = io_util.verify_path_for_os(
@@ -228,51 +285,24 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         # Run the initial checks on the parameter values. Only continue if the checks passed.
         if self.__should_read_gdb(sd_folder_abs):
 
-            # The file geodatabase will be read and each feature class will be added to the feature_class_list.
-            feature_class_list = []
+            # If configured to only read one Feature Class into one GeoLayer.
+            if pv_ReadOnlyOneFeatureClass:
 
-            # Append each feature class in the Esri File Geodatabase to the feature_class_list.
-            # REF: https://pcjericks.github.io/py-gdalogr-cookbook/vector_layers.html|
-            # "Get all layers in an Esri File GeoDataBase"
-            ogr.UseExceptions()
-            driver = ogr.GetDriverByName("OpenFileGDB")
-            gdb = driver.Open(sd_folder_abs)
-            for feature_class_idx in range(gdb.GetLayerCount()):
-                feature_class = gdb.GetLayerByIndex(feature_class_idx)
-                feature_class_list.append(feature_class.GetName())
-
-            # If a file_pattern has been included, update the feature_class_list to only include the desired files. If
-            # no file pattern has been included, all feature classes within the file geodatabase will read as GeoLayers
-            if pv_Subset_Pattern:
-                glob_filter = (fc for fc in feature_class_list if
-                               re.match(string_util.glob2re(pv_Subset_Pattern), fc))
-                updated_feature_class_list = list(glob_filter)
-                feature_class_list = updated_feature_class_list
-
-            # Iterate through each desired feature class inside the file geodatabase.
-            for feature_class in feature_class_list:
-
-                # Determine the GeoLayerID.
-                if pv_GeoLayerID_prefix:
-                    geolayer_id = "{}_{}".format(pv_GeoLayerID_prefix, feature_class)
-                else:
-                    geolayer_id = feature_class
-
-                # Run the secondary checks on the parameter values. Only continue if the checks passed.
-                if self.__should_read_geolayer(geolayer_id):
+                # Run the check to see if the GeoLayer should be read.
+                if self.__should_read_geolayer(pv_GeoLayerID, True, pv_FeatureClass, sd_folder_abs):
 
                     try:
 
                         # Get the full pathname to the feature class
                         # TODO egiles 2018-01-04 Need to research how to properly document feature class source path
-                        spatial_data_file_absolute = os.path.join(sd_folder_abs, str(feature_class))
+                        spatial_data_file_absolute = os.path.join(sd_folder_abs, str(pv_FeatureClass))
 
                         # Create a QgsVectorLayer object from the feature class.
                         qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_feature_class(sd_folder_abs,
-                                                                                            feature_class)
+                                                                                            pv_FeatureClass)
 
                         # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                        geolayer_obj = GeoLayer(geolayer_id, qgs_vector_layer, spatial_data_file_absolute)
+                        geolayer_obj = GeoLayer(pv_GeoLayerID, qgs_vector_layer, spatial_data_file_absolute)
                         self.command_processor.add_geolayer(geolayer_obj)
 
                     # Raise an exception if an unexpected error occurs during the process
@@ -280,12 +310,60 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
                         self.warning_count += 1
                         message = "Unexpected error reading feature class ({}) from file geodatabase ({}).".format(
-                            feature_class, sd_folder_abs)
+                            pv_FeatureClass, sd_folder_abs)
                         recommendation = "Check the log file for details."
                         self.logger.error(message, exc_info=True)
                         self.command_status.add_to_log(command_phase_type.RUN,
                                                        CommandLogRecord(command_status_type.FAILURE, message,
                                                                         recommendation))
+
+            # If configured to read multiple Feature Classes into multiple GeoLayers.
+            else:
+
+                # Get a list of all of the feature classes in the file geodatabase.
+                fc_list = self.__return_a_list_of_fc(sd_folder_abs)
+
+                # Filter the fc_list to only include feature classes that meet the Subset Pattern configuration. If
+                # the Subset Pattern configuration is None, all feature classes will remain in the fc_list.
+                fc_list = string_util.filter_list_of_strings(fc_list, [pv_Subset_Pattern])
+
+                # Iterate over the feature classes in the fc_list.
+                for feature_class in fc_list:
+
+                    # Determine the GeoLayerID.
+                    if pv_GeoLayerID_prefix:
+                        geolayer_id = "{}_{}".format(pv_GeoLayerID_prefix, feature_class)
+                    else:
+                        geolayer_id = feature_class
+
+                    # Run the secondary checks on the parameter values. Only continue if the checks passed.
+                    if self.__should_read_geolayer(geolayer_id, False):
+
+                        try:
+
+                            # Get the full pathname to the feature class
+                            # TODO egiles 2018-01-04 Need to research how to properly document feature class source path
+                            spatial_data_file_absolute = os.path.join(sd_folder_abs, str(feature_class))
+
+                            # Create a QgsVectorLayer object from the feature class.
+                            qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_feature_class(sd_folder_abs,
+                                                                                                feature_class)
+
+                            # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                            geolayer_obj = GeoLayer(geolayer_id, qgs_vector_layer, spatial_data_file_absolute)
+                            self.command_processor.add_geolayer(geolayer_obj)
+
+                        # Raise an exception if an unexpected error occurs during the process
+                        except Exception as e:
+
+                            self.warning_count += 1
+                            message = "Unexpected error reading feature class ({}) from file geodatabase ({}).".format(
+                                feature_class, sd_folder_abs)
+                            recommendation = "Check the log file for details."
+                            self.logger.error(message, exc_info=True)
+                            self.command_status.add_to_log(command_phase_type.RUN,
+                                                           CommandLogRecord(command_status_type.FAILURE, message,
+                                                                            recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

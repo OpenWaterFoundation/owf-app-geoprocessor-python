@@ -9,7 +9,6 @@ from geoprocessor.commands.layers.FreeGeoLayers import FreeGeoLayers
 from geoprocessor.commands.layers.IntersectGeoLayer import IntersectGeoLayer
 from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
-from geoprocessor.commands.layers.ReadGeoLayerFromFGDB import ReadGeoLayerFromFGDB
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
@@ -90,7 +89,6 @@ class GeoProcessorCommandFactory(object):
         "MERGEGEOLAYERS": MergeGeoLayers(),
         "MESSAGE": Message(),
         "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
-        "READGEOLAYERFROMFGDB": ReadGeoLayerFromFGDB(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
@@ -239,8 +237,6 @@ class GeoProcessorCommandFactory(object):
                     return Message()
                 elif command_name_upper == "READGEOLAYERFROMDELIMITEDFILE":
                     return ReadGeoLayerFromDelimitedFile()
-                elif command_name_upper == "READGEOLAYERFROMFGDB":
-                    return ReadGeoLayerFromFGDB()
                 elif command_name_upper == "READGEOLAYERFROMGEOJSON":
                     return ReadGeoLayerFromGeoJSON()
                 elif command_name_upper == "READGEOLAYERFROMSHAPEFILE":

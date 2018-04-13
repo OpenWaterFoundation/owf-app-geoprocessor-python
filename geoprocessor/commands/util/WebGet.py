@@ -16,6 +16,8 @@ import logging
 import os
 import requests
 
+from requests.auth import HTTPBasicAuth
+
 
 class WebGet(AbstractCommand):
 
@@ -28,12 +30,16 @@ class WebGet(AbstractCommand):
     * URL (str, required): the URL of the file to be downloaded.
     * OutputFile (str, optional): the relative pathname of the output file. Default: Filename is the same as the url
         filename. File is saved to the parent folder of the gp workflow file (the working directory).
+    * Username (str, optional): an appropriate username if the URL to download is private
+    * Password (str, optional): an appropriate password if the URL to download is private
     """
 
     # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("URL", type("")),
-        CommandParameterMetadata("OutputFile", type(""))]
+        CommandParameterMetadata("OutputFile", type("")),
+        CommandParameterMetadata("Username", type("")),
+        CommandParameterMetadata("Password", type(""))]
 
     def __init__(self):
         """
@@ -180,6 +186,8 @@ class WebGet(AbstractCommand):
         # Obtain the parameter values
         pv_URL = self.get_parameter_value("URL")
         pv_OutputFile = self.get_parameter_value("OutputFile", default_value=None)
+        pv_Username = self.get_parameter_value("Username", default_value=None)
+        pv_Password = self.get_parameter_value("Password", default_value=None)
 
         # Convert the pv_URL parameter to expand for ${Property} syntax.
         url_abs = self.command_processor.expand_parameter_value(pv_URL, self)
@@ -207,7 +215,8 @@ class WebGet(AbstractCommand):
                 output_folder = os.path.dirname(output_file_absolute)
 
                 # Get the URL file and convert it into a request Response object
-                r = requests.get(url_abs, verify=False, stream=True)
+                # Authentication Reference: http://docs.python-requests.org/en/master/user/authentication/
+                r = requests.get(url_abs, auth=HTTPBasicAuth(pv_Username, pv_Password), verify=False, stream=True)
 
                 # Get the filename of the URL and the output file
                 url_filename = io_util.get_filename(url_abs)

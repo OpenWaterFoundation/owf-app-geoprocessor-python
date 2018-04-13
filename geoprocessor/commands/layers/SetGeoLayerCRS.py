@@ -174,6 +174,9 @@ class SetGeoLayerCRS(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_CRS = self.get_parameter_value("CRS")
 
+        # Convert the pv_GeoLayerID parameter to expand for ${Property} syntax.
+        pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_set_crs(pv_GeoLayerID, pv_CRS):
 

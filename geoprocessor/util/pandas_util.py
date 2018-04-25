@@ -3,6 +3,8 @@
 import os
 import pandas as pd
 
+import geoprocessor.util.io_util as io_util
+
 
 def create_data_frame_from_delimited_file(file_path, delimiter):
     """
@@ -17,7 +19,7 @@ def create_data_frame_from_delimited_file(file_path, delimiter):
     """
 
     # Define and return the data frame from the delimited file. Pass the delimited file's delimiter as the sep argument.
-    df = pd.DataFrame.from_csv(file_path, sep=delimiter)
+    df = pd.read_csv(file_path, sep=delimiter)
     return df
 
 
@@ -61,14 +63,14 @@ def create_excel_workbook_obj(excel_workbook_path):
     return xl
 
 
-def write_df_to_delimited_file(df, output_file_full_path, include_header, include_index, delimiter=","):
+def write_df_to_delimited_file(df, output_file_full_path, include_col_list, include_index, delimiter=","):
     """
     Writes a pandas data frame object to a delimited file.
 
     Args:
         df (object): the pandas data frame object to write
         output_file_full_path (str): the full pathname to an output delimited file
-        include_header (bool): If TRUE, write the header row. If FALSE, exclude the header row.
+        include_col_list (list of strings): A list of Table columns to write to the delimited file
         include_index (bool): If TRUE, write the index column. If FALSE, exclude the index column.
         delimiter (str): the delimiter symbol to use in the output delimited file. Must be a single character. Default
          value is a comma.
@@ -77,10 +79,10 @@ def write_df_to_delimited_file(df, output_file_full_path, include_header, includ
     """
 
     # Write the pandas data frame to a csv file.
-    df.to_csv(output_file_full_path, header=include_header, index=include_index, sep=delimiter)
+    df.to_csv(output_file_full_path, columns=include_col_list, index=include_index, sep=delimiter)
 
 
-def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_header, include_index):
+def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_col_list, include_index):
     """
     Writes a pandas data frame object to an excel file.
 
@@ -88,7 +90,7 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_hea
         df (object): the pandas data frame object to write
         excel_workbook_path (str): the full pathname to an excel workbook (either existing or non-existing)
         excel_worksheet_name (str): the worksheet name to write to (either existing or non-existing)
-        include_header (bool): If TRUE, write row index. If FALSE, do not include row index.
+        include_col_list (list of strings): A list of Table columns to write to the excel file
         include_index (bool): If TRUE, write out column names. If FALSE, do not write column names.
 
     Returns: None
@@ -102,23 +104,42 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_hea
     # worksheets.
     if os.path.exists(excel_workbook_path):
 
-        # REf: https://stackoverflow.com/questions/20219254/
-        # how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
-        from openpyxl import load_workbook
+        # TODO egiles 2018-04-25 Currently this function does not work. Need to fix.
+        # Write the table to an existing excel file in XLS format.
+        if io_util.get_extension(excel_workbook_path).upper() == ".XLS":
 
-        # Set the writer object.
-        writer = pd.ExcelWriter(excel_workbook_path, engine="openpyxl")
+            import xlwt
 
-        # If applicable, inform the writer object of the already-existing excel workbook.
-        book = load_workbook(excel_workbook_path)
-        writer.book = book
+            # Set the writer object.
+            writer = pd.ExcelWriter(excel_workbook_path, engine = 'xlwt')
 
-        # If applicable, inform the writer object of the already-existing excel worksheets.
-        writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+            book = xlwt.Workbook(excel_workbook_path)
+            writer.book = book
 
-        # Write the df to the excel workbook with the given worksheet name.
-        df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, header=include_header)
-        writer.save()
+            # Write the df to the excel workbook with the given worksheet name.
+            df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
+            writer.save()
+
+        # Write the table to an existing excel file in XLSX format.
+        else:
+
+            # REf: https://stackoverflow.com/questions/20219254/
+            # how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
+            from openpyxl import load_workbook
+
+            # Set the writer object.
+            writer = pd.ExcelWriter(excel_workbook_path, engine="openpyxl")
+
+            # If applicable, inform the writer object of the already-existing excel workbook.
+            book = load_workbook(excel_workbook_path)
+            writer.book = book
+
+            # If applicable, inform the writer object of the already-existing excel worksheets.
+            writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+
+            # Write the df to the excel workbook with the given worksheet name.
+            df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
+            writer.save()
 
     # If the output excel file does not already exists, configure which excel file version to use.
     else:
@@ -127,5 +148,5 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_hea
         writer = pd.ExcelWriter(excel_workbook_path)
 
         # Write the df to the excel workbook with the given worksheet name.
-        df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, header=include_header)
+        df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
         writer.save()

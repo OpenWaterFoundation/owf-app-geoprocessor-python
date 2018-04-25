@@ -25,8 +25,10 @@ class WriteTableToExcel(AbstractCommand):
     * TableID (str, required): the identifier of the Table to be written to the Excel file 
     * OutputFile (str, required): the relative pathname of the output Excel file.
     * OutputWorksheet (str, required): the name of the worksheet that the Table will be written
-     * WriteHeaderRow (bool, optional): If TRUE, the column names are written. If FALSE, the column names are excluded.
-        Default: True
+    * ColumnsToInclude (str, optional): A list of glob-style patterns to determine the table columns to include in the
+        output delimited file. Default: * (All columns are written).
+    * ColumnsToExclude (str, optional): A list of glob-style patterns to determine the table columns to exclude in the
+        output delimited file. Default: Default: '' (No columns are excluded from the output delimited file).
     * WriteIndexColumn (bool, optional): If TRUE, the index column is written, If FALSE, the index column is excluded.
         Default: True
     """
@@ -36,7 +38,8 @@ class WriteTableToExcel(AbstractCommand):
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("OutputWorksheet", type("")),
-        CommandParameterMetadata("WriteHeaderRow", type("")),
+        CommandParameterMetadata("ColumnsToInclude", type("")),
+        CommandParameterMetadata("ColumnsToExclude", type("")),
         CommandParameterMetadata("WriteIndexColumn", type(""))]
 
     def __init__(self):
@@ -87,18 +90,6 @@ class WriteTableToExcel(AbstractCommand):
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter (relative or absolute pathname) to indicate the " \
                              "location and name of the output Excel file."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
-
-        # Check that parameter WriteHeaderRow is a valid Boolean value or None.
-        pv_WriteHeaderRow = self.get_parameter_value(parameter_name='WriteHeaderRow',
-                                                     command_parameters=command_parameters)
-
-        if not validators.validate_bool(pv_WriteHeaderRow, True, False):
-            message = "WriteHeaderRow parameter is not a valid Boolean value."
-            recommendation = "Specify a valid Boolean value for the WriteHeaderRow parameter."
             warning += "\n" + message
             self.command_status.add_to_log(
                 command_phase_type.INITIALIZATION,
@@ -155,6 +146,22 @@ class WriteTableToExcel(AbstractCommand):
         # If the output folder is not an existing folder, raise a FAILURE.
         should_run_command.append(validators.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
                                                        "FAIL"))
+        # Continue if the output file is an existing file.
+        if os.path.exists(output_folder_abs):
+
+            if io_util.get_extension(output_file_abs).upper() == ".XLS":
+
+                message = 'At the current time, a Table object cannot be appended to or overwrite an existing Excel ' \
+                          'file in XLS format.'
+                recommendation = "Update the XLS file ({}) to an XLSX file or write the table " \
+                                 "to a new XLS file.".format(output_file_abs)
+
+                self.warning_count += 1
+                self.logger.error(message)
+                self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                                                                                        message, recommendation))
+                should_run_command.append(False)
+
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -176,12 +183,16 @@ class WriteTableToExcel(AbstractCommand):
         pv_TableID = self.get_parameter_value("TableID")
         pv_OutputFile = self.get_parameter_value("OutputFile")
         pv_OutputWorksheet = self.get_parameter_value("OutputWorksheet")
-        pv_WriteHeaderRow = self.get_parameter_value("WriteHeaderRow", default_value="True")
+        pv_ColumnsToInclude = self.get_parameter_value("ColumnsToInclude", default_value="*")
+        pv_ColumnsToExclude = self.get_parameter_value("ColumnsToExclude", default_value="")
         pv_WriteIndexColumn = self.get_parameter_value("WriteIndexColumn", default_value="True")
 
         # Convert the Boolean parameters from string to valid Boolean values.
-        pv_WriteHeaderRow = string_util.str_to_bool(pv_WriteHeaderRow)
         pv_WriteIndexColumn = string_util.str_to_bool(pv_WriteIndexColumn)
+
+        # Convert the ColumnsToInclude and ColumnsToExclude parameter values to lists.
+        cols_to_include = string_util.delimited_string_to_list(pv_ColumnsToInclude)
+        cols_to_exclude = string_util.delimited_string_to_list(pv_ColumnsToExclude)
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -196,8 +207,23 @@ class WriteTableToExcel(AbstractCommand):
                 # Get the Table object
                 table = self.command_processor.get_table(pv_TableID)
 
+                # Get a list of all the available column names in the Table.
+                all_cols_names = list(table.df)
+
+                # Sort the list to create a second list that only includes the attributes that should be removed.
+                cols_to_keep = string_util.filter_list_of_strings(list(table.df), cols_to_include, cols_to_exclude,
+                                                                  return_inclusions=True)
+
+                # For the columns configured to be written, order them in the same order that they were in with the
+                # original table. This step ensures that the output table product has the columns in the same order as
+                # the user would expect.
+                sorted_cols_to_keep = []
+                for col in all_cols_names:
+                    if col in cols_to_keep:
+                        sorted_cols_to_keep.append(col)
+
                 # Write the tables to an Excel file.
-                pandas_util.write_df_to_excel(table.df, output_file_absolute, pv_OutputWorksheet, pv_WriteHeaderRow,
+                pandas_util.write_df_to_excel(table.df, output_file_absolute, pv_OutputWorksheet, sorted_cols_to_keep,
                                               pv_WriteIndexColumn)
 
             # Raise an exception if an unexpected error occurs during the process

@@ -196,3 +196,5 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # Set command status type as SUCCESS if there are no errors.
         else:
             self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+
+

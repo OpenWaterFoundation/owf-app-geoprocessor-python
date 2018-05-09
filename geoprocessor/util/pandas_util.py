@@ -2,6 +2,8 @@
 
 import os
 import pandas as pd
+from openpyxl import load_workbook
+import xlwt
 
 import geoprocessor.util.io_util as io_util
 
@@ -96,9 +98,27 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_col
     Returns: None
     """
 
-    # Removes the default styling of the table (provided in the pandas library).
-    import pandas.io.formats.excel
-    pandas.io.formats.excel.header_style = None
+    # Removes the default styling of the table (provided in the pandas library). The package has been moved over time.
+    try:
+        import pandas.io.formats.excel
+        pandas.io.formats.excel.header_style = None
+
+    except:
+        pass
+
+    try:
+        import pandas.formats.format
+        pandas.formats.format.header_style = None
+
+    except:
+        pass
+
+    try:
+        import pandas.core.format
+        pandas.core.format.header_style = None
+
+    except:
+        pass
 
     # If the output excel file already exists, take into consideration the current file format and the current
     # worksheets.
@@ -107,8 +127,6 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_col
         # TODO egiles 2018-04-25 Currently this function does not work. Need to fix.
         # Write the table to an existing excel file in XLS format.
         if io_util.get_extension(excel_workbook_path).upper() == ".XLS":
-
-            import xlwt
 
             # Set the writer object.
             writer = pd.ExcelWriter(excel_workbook_path, engine = 'xlwt')
@@ -125,7 +143,6 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_col
 
             # REf: https://stackoverflow.com/questions/20219254/
             # how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
-            from openpyxl import load_workbook
 
             # Set the writer object.
             writer = pd.ExcelWriter(excel_workbook_path, engine="openpyxl")

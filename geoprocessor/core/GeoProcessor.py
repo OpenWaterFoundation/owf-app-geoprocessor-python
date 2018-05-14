@@ -447,6 +447,37 @@ class GeoProcessor(object):
                 print("First command debug:")
                 self.commands[0].print_for_debug()
 
+    def read_ui_command_workflow(self, command_file_strings):
+
+        # Remove all items within the geoprocessor from the previous run.
+        self.commands = []
+        self.properties = {}
+        self.geolayers = []
+        self.tables = []
+
+        # Create an instance of the GeoProcessorCommandFactory.
+        command_factory = GeoProcessorCommandFactory()
+
+        # Iterate over each line in the command file.
+        for command_file_string in command_file_strings:
+
+            # Initialize the command object (without parameters).
+            # Work is done in the GeoProcessorCommandFactory class.
+            command_object = command_factory.new_command(command_file_string, True)
+
+            # Initialize the parameters of the command object.
+            # Work is done in the AbstractCommand class.
+            command_object.initialize_command(command_file_string, self, True)
+
+            # Append the initialized command (object with parameters) to the geoprocessor command list.
+            self.commands.append(command_object)
+
+            debug = False
+            if debug:
+                command_object.print_for_debug()
+                print("First command debug:")
+                self.commands[0].print_for_debug()
+
     def __reset_data_for_run_start(self, append_results=False):
         """
         Reset the processor data prior to running the commands.

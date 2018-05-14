@@ -21,6 +21,9 @@ import geoprocessor.util.log_util as log_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
 
+from PyQt4 import QtGui
+from geoprocessor.ui.app.launchUI import GeoProcessorUI
+
 # General Python modules
 import argparse
 import cmd
@@ -249,11 +252,15 @@ def run_ui():
     """
     Run the GeoProcessor user interface.
 
-    Returns:
-
+    Returns: None
     """
-    # TODO smalers 2018-01-01 need to coordinate with Emma on a class for the UI
-    print("The GeoProcessor user interface is not implemented.  Exiting...")
+
+    command_processor = GeoProcessor()
+    app = QtGui.QApplication(sys.argv)
+    window = QtGui.QMainWindow()
+    prog = GeoProcessorUI(window, command_processor)
+    window.show()
+    sys.exit(app.exec_())
 
 
 def set_global_data():

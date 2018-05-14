@@ -74,4 +74,20 @@ class Table(object):
         # Return a list of the column values for the given input column.
         return self.df[column_name].tolist()
 
+    def count(self, returnCol=True):
+        """
+        Return either the number of columns within the table or the number of rows within the table.
 
+        Args:
+            returnCol: Boolean. If TRUE, returns column count. If FALSE, returns row count.
+
+        Return: The column or row count (int). Returns None if returnCol argument is invalid Boolean.
+        """
+
+        row, col = self.df.shape
+        if returnCol:
+            return col
+        elif returnCol is False:
+            return row
+        else:
+            return None

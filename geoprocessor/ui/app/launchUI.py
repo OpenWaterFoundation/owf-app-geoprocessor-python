@@ -21,6 +21,9 @@ class GeoProcessorUI(Ui_MainWindow):
         # Ingest the GeoProcessor object.
         self.gp = geoprocessor
 
+        # The most recent file save location.
+        self.saved_file = None
+
         # CommandDialogFactory
         self.command_dialog_factory_dic = {"READGEOLAYERFROMGEOJSON": Ui_Dialog_ReadGeoLayerFromGeoJSON()}
 
@@ -50,6 +53,10 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # Connect the File > Open menu tab.
         self.File_Open_CommandFile.triggered.connect(self.open_command_file)
+        # Connect the File > Save > Commands menu tab.
+        self.File_Save_Commands.triggered.connect(self.save_commands)
+        # Connect the File > Save > Commands As menu tab.
+        self.File_Save_CommandsAs.triggered.connect(self.save_commands_as)
         # Connect the Commands > GeoLayers > Read > ReadGeoLayerFromGeoJSON menu tab.
         self.GeoLayers_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayerFromGeoJSON"))
@@ -238,7 +245,8 @@ class GeoProcessorUI(Ui_MainWindow):
             # Update the command count and Command_List label to show that a command was added to the workflow.
             self.update_command_count()
 
-    def new_message_box(self, message_type, standard_buttons, message, title):
+    @staticmethod
+    def new_message_box(message_type, standard_buttons, message, title):
         """
         Create and execute a message box.
         REF: https://www.tutorialspoint.com/pyqt/pyqt_qmessagebox.htm
@@ -487,6 +495,70 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # After commands have been run, update the UI Results section to reflect the output & intermediary products.
         self.populate_results_tables()
+
+    def save_commands(self):
+        """
+        Saves the commands to a previously saved file location (overwrite).
+
+        Return: None
+        """
+
+        # If there is not a previously saved file location, save the file with the save_command_as function.
+        if self.saved_file is None:
+            self.save_commands_as()
+
+        # If there is a previously saved file location, continue.
+        else:
+
+            # A list to hold each command as a separate string.
+            list_of_cmds = []
+
+            # Iterate over the items in the Commands_List widget.
+            for i in range(self.Commands_List.count()):
+
+                # Add the command string text ot the list_of_cmds list.
+                list_of_cmds.append(self.Commands_List.item(i).text())
+
+            # Join all of the command strings together (separated by a line break).
+            all_commands_string = '\n'.join(list_of_cmds)
+
+            # Write the commands to the previously saved file location (overwrite).
+            file = open(self.saved_file, 'w')
+            file.write(all_commands_string)
+            file.close()
+
+    def save_commands_as(self):
+        """
+        Saves the commands to a file.
+
+        Return: None
+        """
+
+        # TODO egiles 2018-16-05 Discuss with Steve about line breaks for Linux/Windows OS
+
+        # A list to hold each command as a separate string.
+        list_of_cmds = []
+
+        # Iterate over the items in the Commands_List widget.
+        for i in range(self.Commands_List.count()):
+
+            # Add the command string text ot the list_of_cmds list.
+            list_of_cmds.append(self.Commands_List.item(i).text())
+
+        # Join all of the command strings together (separated by a line break).
+        all_commands_string = '\n'.join(list_of_cmds)
+
+        # Create a QDialog window instance.
+        d = QtGui.QDialog()
+
+        # Open a browser for the user to select a location and filename to save the command file. Set the most recent
+        #  file save location.
+        self.saved_file = QtGui.QFileDialog.getSaveFileName(d, 'Save Command File As')
+
+        # Write the commands to the file.
+        file = open(self.saved_file, 'w')
+        file.write(all_commands_string)
+        file.close()
 
     def update_command_count(self):
         """

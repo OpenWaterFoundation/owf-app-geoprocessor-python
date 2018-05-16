@@ -50,6 +50,9 @@ class GeoProcessor(object):
         # tables list that holds all registered tables object.
         self.tables = []
 
+        # list that holds the absolute paths to the output files
+        self.output_files = []
+
         # qgis version
         self.properties["QGISVersion"] = qgis_util.get_qgis_version_str()
 
@@ -125,6 +128,21 @@ class GeoProcessor(object):
 
         # Add the input Table to the tables list.
         self.tables.append(table)
+
+    def add_output_file(self, output_file_abs_path):
+        """
+        Add an Output File (absolute path string) to the output_path list.
+
+
+        output_file_abs_path: A string representing the full pathname to an output file.
+
+        Return: None
+        """
+
+        # Only add the output file path if it does not already exist within the list.
+        if not output_file_abs_path in self.output_files:
+            self.output_files.append(output_file_abs_path)
+
 
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):
@@ -454,6 +472,7 @@ class GeoProcessor(object):
         self.properties = {}
         self.geolayers = []
         self.tables = []
+        self.output_files = []
 
         # Create an instance of the GeoProcessorCommandFactory.
         command_factory = GeoProcessorCommandFactory()

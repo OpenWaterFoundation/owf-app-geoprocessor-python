@@ -68,6 +68,7 @@ class Ui_MainWindow(object):
         self.Commands_List.setWordWrap(True)
         self.Commands_List.setSelectionRectVisible(False)
         self.Commands_List.setObjectName(_fromUtf8("Commands_List"))
+        self.Commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.gridLayout.addWidget(self.Commands_List, 0, 0, 1, 4)
         self.gridLayout_2.addWidget(self.Commands_GroupBox, 1, 0, 1, 6)
         self.Results_GroupBox = QtGui.QGroupBox(self.centralwidget)
@@ -370,6 +371,8 @@ class Ui_MainWindow(object):
         self.Results_Tab_Widget.setCurrentIndex(0)
         QtCore.QObject.connect(self.actionExit, QtCore.SIGNAL(_fromUtf8("triggered()")), MainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "GeoProcessor", None))

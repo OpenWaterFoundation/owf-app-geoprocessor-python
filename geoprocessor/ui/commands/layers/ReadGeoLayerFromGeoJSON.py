@@ -8,6 +8,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
+from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -24,7 +25,12 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class Ui_Dialog(object):
+
     def setupUi(self, Dialog):
+        self.command_parameter_dictionary = {"SpatialDataFile": "",
+                                        "GeoLayerID": "",
+                                        "IfGeoLayerIDExists": ""}
+        self.command_obj = ReadGeoLayerFromGeoJSON()
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.resize(684, 404)
         self.gridLayout = QtGui.QGridLayout(Dialog)
@@ -72,12 +78,8 @@ class Ui_Dialog(object):
         self.gridLayout.addWidget(self.GeoLayerID_Input_LineEdit, 3, 1, 1, 3)
         self.IfGeoLayerIDExists_ComboBox = QtGui.QComboBox(Dialog)
         self.IfGeoLayerIDExists_ComboBox.setObjectName(_fromUtf8("IfGeoLayerIDExists_ComboBox"))
-        self.IfGeoLayerIDExists_ComboBox.addItem(_fromUtf8(""))
-        self.IfGeoLayerIDExists_ComboBox.setItemText(0, _fromUtf8(""))
-        self.IfGeoLayerIDExists_ComboBox.addItem(_fromUtf8(""))
-        self.IfGeoLayerIDExists_ComboBox.addItem(_fromUtf8(""))
-        self.IfGeoLayerIDExists_ComboBox.addItem(_fromUtf8(""))
-        self.IfGeoLayerIDExists_ComboBox.addItem(_fromUtf8(""))
+        for i in range(len(self.command_obj.choices_IfGeoLayerIDExists) + 1):
+            self.IfGeoLayerIDExists_ComboBox.addItem(_fromUtf8(""))
         self.gridLayout.addWidget(self.IfGeoLayerIDExists_ComboBox, 4, 1, 1, 2)
         spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.gridLayout.addItem(spacerItem1, 5, 3, 1, 1)
@@ -131,8 +133,20 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
 
+    def refresh(self):
+        self.SpatialDataFile_Input_LineEdit.setText(self.command_parameter_dictionary["SpatialDataFile"])
+        self.GeoLayerID_Input_LineEdit.setText(self.command_parameter_dictionary["GeoLayerID"])
+        try:
+            index = self.command_obj.choices_IfGeoLayerIDExists.index(self.command_parameter_dictionary["IfGeoLayerIDExists"])
+        except:
+            index = 0
+        self.IfGeoLayerIDExists_ComboBox.setCurrentIndex(index)
+
+
     def selectFile(self):
         self.SpatialDataFile_Input_LineEdit.setText(QtGui.QFileDialog.getOpenFileName())
+        self.command_parameter_dictionary["SpatialDataFile"] = self.SpatialDataFile_Input_LineEdit.text()
+
 
     def sync_lineEdit(self):
 
@@ -169,10 +183,9 @@ class Ui_Dialog(object):
 "Warn : The new GeoLayer is not created. A warning is logged. \n"
 "\n"
 "Fail : The new GeoLayer is not created. A fail message is logged.", None))
-        self.IfGeoLayerIDExists_ComboBox.setItemText(1, _translate("Dialog", "Replace", None))
-        self.IfGeoLayerIDExists_ComboBox.setItemText(2, _translate("Dialog", "ReplaceAndWarn", None))
-        self.IfGeoLayerIDExists_ComboBox.setItemText(3, _translate("Dialog", "Warn", None))
-        self.IfGeoLayerIDExists_ComboBox.setItemText(4, _translate("Dialog", "Fail", None))
+        self.IfGeoLayerIDExists_ComboBox.setItemText(0, _fromUtf8(""))
+        for i in range(len(self.command_obj.choices_IfGeoLayerIDExists)):
+            self.IfGeoLayerIDExists_ComboBox.setItemText(i+1, _translate("Dialog", self.command_obj.choices_IfGeoLayerIDExists[i], None))
         self.GeoLayerID_Description_Label.setText(_translate("Dialog", "Optional - GeoLayer identifier\n"
 "(default: filename of the input Spatial Data File)", None))
         self.SpatialDataFile_Browse_ToolButton.setText(_translate("Dialog", "...", None))

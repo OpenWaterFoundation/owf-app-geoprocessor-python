@@ -226,6 +226,9 @@ class WriteTableToExcel(AbstractCommand):
                 pandas_util.write_df_to_excel(table.df, output_file_absolute, pv_OutputWorksheet, sorted_cols_to_keep,
                                               pv_WriteIndexColumn)
 
+                # Add the output file to the GeoProcessor's list of output files.
+                self.command_processor.add_output_file(output_file_absolute)
+
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:
                 self.warning_count += 1

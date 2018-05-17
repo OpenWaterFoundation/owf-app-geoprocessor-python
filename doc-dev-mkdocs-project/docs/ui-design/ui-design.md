@@ -1,5 +1,7 @@
 # Building the User Interface (UI)
 
+## Overview 
+
 There are two main components to building the GeoProcessor's user interface.
 
 1. Designing the UI windows
@@ -11,6 +13,8 @@ The UI is currently under development and this documentation is meant to documen
 This means that this documentation will be changing frequently until the development of the UI is stable. 
 
 ## UI Design
+
+This section will discuss the first main component to building the GeoProcessor's user interface - designing the UI windows.
 
 ### UI Designer Software
 
@@ -112,7 +116,7 @@ Commands				contains all GeoProcessor commands
 	 
 
 Each command dialog window is designed in a similar layout to contribute to UI design standardization. 
-Many of the design decisions for the command dialog windows were mirrored by those in the TsTool software.
+Many of the design decisions for the command dialog windows were mirrored by those in the [TsTool software](http://learn.openwaterfoundation.org/owf-learn-tstool/).
 Below is an example of a GeoProcessor dialog window (`ReadGeoLayerFromGeoJSON` command) within the Qt Designer environment.
 
 ![UI Dialog Window Design Example](gp-ui-dialog-design.png)
@@ -145,7 +149,7 @@ Exceptions to the above rules:
 ## UI Software Integration 
 
 The GeoProcessor software is built in the Python language. 
-The user interface files, therefore, must also be in Python in order to integrate the ui with the GeoProcessor code.
+The user interface files, therefore, must also be in Python in order to integrate the UI with the GeoProcessor code.
 
 ### Conversion of UI  File to Python File
 
@@ -174,3 +178,61 @@ geoprocessor/ui			contains all GeoProcessor ui design python files
 		util			contains the ui design python files for the commands within the geoprocessor/commands/util folder
 	templates			contains the ui design template files (both .py files and .ui files)
 ```
+
+### Types of Python Files
+
+There are two types of Python files that makes up the user interface (UI) design. 
+
+1. The first interacts with a GeoProcessor instance. It acts as the main communicator with an active session of the GeoProcessor. For the purposes of this documentation, this type of UI Python file is called a `GeoProcessor Interactor` file. 
+2. The other type of Python file is responsible for the design and window structure of a UI window. Each UI window (besides message boxes) has an individual Python file that builds its structure. For the purpose of this documentation, this type of UI Python file is called a `Design Builder` file. 
+
+There will be more `Design Builder` files than `GeoProcessor Interactor` files. As mentioned above, one `Design Builder` file is required for each UI window. This means that *each* GeoProcessor command must have its own `Design Builder` file to allow users to build commands and enter command input parameters. As of current, there is only one main `GeoProcessor Interactor` file. This might change if that file becomes too large and unmanageable. 
+
+#### Design Builder File
+
+Each `Design Builder` file is made up of a single class. The name of the class corresponds to the type of Qt window (`Ui_MainWindow`, `Ui_Dialog`, etc.). Note that more than one `Design Builder` file will use the *same* class name. Each class must have, but is not limited to, a `setupUi` function and a `retanslateUi` function. 
+
+* The `setupUI` function builds the window’s infrastructure (buttons, layout, labels, spacing guidelines, etc.). 
+* The `retranslateUI` function applies the custom text to the window (label text, tooltips, ComboBox options, etc.). The `retranslateUI` function is always called within the `setupUI` function - after the infrastructure build but before creating the signal/slot connections. 
+
+For more information on the UI layout and design on the `Design Builder` files, refer to the [UI Design](#ui-design) section.
+
+#### GeoProcessor Interactor File
+
+The sole `GeoProcessor Interactor` file is called `launchUI.py`. It has only one class - this class is called `GeoProcessorUI`. The `GeoProcessorUI` class is imported into the `gp.py` file within the `run_ui` function to start up the software's user interface. It is important to note that a GeoProcessor instance must be passed into the `GeoProcesorUI` instance so that the user interface can interact with an active GeoProcessor. 
+
+The `GeoProcessor Interactor` file must import all of the individual classes of the `Design Builder` files so that the accessory windows can be opened with button clicks of the main software window. Remember that the same class names are used for multiple `Design Builder` files. With that being said the classes must be "renamed" via the import. Follow the naming convention below:
+
+```
+From [Design Builder File Path] import [Design Builder Class] as [Design Builder Class]_[Design Builder File]
+```
+
+Example:
+```
+from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON import Ui_Dialog as Ui_Dialog_ReadGeoLayerFromGeoJSON
+```
+
+See the following for descriptions on the important `GeoProcesorUI` class variables: 
+
+|Class Variable&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|Description|
+|-|-|
+|`total_commands`|The count (int) of workflow commands within the UI commands list (`Commands_List` [QListWidget](http://doc.qt.io/archives/qt-4.8/qlistwidget.html)).|
+|`selected_commands`|The count (int) of selected workflow commands within the UI commands list (`Commands_List` [QListWidget](http://doc.qt.io/archives/qt-4.8/qlistwidget.html)).|
+|`gp`|An active GeoProcessor instance.|
+|`saved_file`|The full path to the filename of the most recently saved file. This variable is set to *None* until the user clicks the `File > Save > Commands As ...` button or the `File > Save > Command ...` button. It is *reassigned* only when the user clicks the `File > Save > Commands As ...` button. This value is used to save the current workflow commands to the most recently saved file by overwriting that file.| 
+|`command_dialog_factory_dic`|A dictionary relating each GeoProcessor command with its corresponding `Design Builder` class. The user interface dynamically pulls up different GeoProcessor command windows depending on which buttons/options the user clicks. Many of the buttons/options are specific to a certain GeoProcessor command. The name of the command is looked up in this dictionary as the key and the appropriate `Design Builder` class is returned as the value. |
+
+The above `GeoProcesorUI` class variables are initialized in the `__init__` function. In addition, the `__init__` function defines the main window UI listeners, button/menu clicks and other actions. 
+The remaining functions within the `GeoProcesorUI` class are actions that occur in reaction to the main window UI listeners, button/menu clicks and other actions. 
+
+See the following for descriptions on the important `GeoProcesorUI` class functions: 	
+
+|Class Function&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|Description|
+|-|-|
+|`new_command_editor(command_name)`|This function responds to the user clicking on any menu option that selects a GeoProcessor command to add to the workflow. Each menu option click that corresponds to a new command calls this function and passed the corresponding command name into the function. The command name is then used in the `command_dialog_factory_dic` to return the correct `Design Builder` file class to display the appropriate [command dialog window](#command-dialog-windows). <br><br>The user interacts with the [command dialog window](#command-dialog-windows) to enter the desired parameter values. Once accepted, the `new_command_editor` function adds the command string (with the desired parameter values) to the workflow command list (`Commands_List` [QListWidget](http://doc.qt.io/archives/qt-4.8/qlistwidget.html)).|
+|`edit_command_editor(commad_name)`|This function responds to the `right-click > Edit Command` button. It is only called on a command that has *already* been created via the `new_command_editor` function. <br><br>The pre-defined command string is read and, from that, the command name is determined. The command name is used in the `command_dialog_factory_dic` to return the correct `Design Builder` file class to display the appropriate [command dialog window](#command-dialog-windows). There is a dictionary in each command-specific `Design Builder` file class that holds each parameter name (key) and the corresponding parameter value (value). This dictionary is called `command_parameter_dictionary`. The pre-defined command string is parsed to determine the pre-defined parameter names and values. The `command_parameter_dictionary` is updated with the pre-defined parameter values. A function within the `Design Builder` file class called `refresh()` will populate the dialog window with these pre-defined parameter values. <br><br> The user can then see the previously set parameter values and change them as needed. If they click the `OK` button within the [command dialog window](#command-dialog-windows), the old command will be removed from the workflow command list (`Commands_List` [QListWidget](http://doc.qt.io/archives/qt-4.8/qlistwidget.html)) and the new command will be added to the workflow command list at the same index. |
+|`update_gp_command_list(selected=False)`|Passes the UI workflow command list (`Commands_List` [QListWidget](http://doc.qt.io/archives/qt-4.8/qlistwidget.html)) to the GeoProcessor. Can choose to pass *all* commands to the GeoProcessor or only the *selected* commands. |
+|`run_commands(selected=False)`|Passes the UI workflow command list to the GeoProcessor, via the `update_gp_command_list` function,  and runs the commands within the GeoProcessor. The UI main window results section is updated with the GeoProcessor's variables (existing GeoLayers, Tables, Output Files, etc.). Can choose to run *all* commands or only the *selected* commands.|
+|`update_command_count()`|This function is called often. It updates the command count (both total and selected). Buttons are enabled/disabled depending on the command count. For example, `Run all commands` is enabled *only if* one or more commands are in the workflow command list (`Commands_List` [QListWidget](http://doc.qt.io/archives/qt-4.8/qlistwidget.html)).|
+|`update_results_count()`|This function is similar to the `update_command_count` function. It counts the number of items (total and selected) in each Result table and changes the Result Table labels to display the dynamic information.|
+

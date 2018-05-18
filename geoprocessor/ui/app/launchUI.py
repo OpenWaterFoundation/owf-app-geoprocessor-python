@@ -4,6 +4,8 @@ import geoprocessor.util.command_util as command_util
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON import Ui_Dialog as Ui_Dialog_ReadGeoLayerFromGeoJSON
 from PyQt4 import QtGui, QtCore
 import functools
+import webbrowser
+import geoprocessor.ui.util.config as config
 
 
 class GeoProcessorUI(Ui_MainWindow):
@@ -24,6 +26,9 @@ class GeoProcessorUI(Ui_MainWindow):
         # The most recent file save location.
         self.saved_file = None
 
+        # The URL to the user documentation main page
+        self.user_doc_url = config.user_doc_url
+
         # CommandDialogFactory
         self.command_dialog_factory_dic = {"READGEOLAYERFROMGEOJSON": Ui_Dialog_ReadGeoLayerFromGeoJSON()}
 
@@ -37,7 +42,7 @@ class GeoProcessorUI(Ui_MainWindow):
         self.Results_Tables_Table.itemSelectionChanged.connect(self.update_results_count)
         # Listen for a change in item selection within the Results_Maps_Table widget.
         self.Results_Maps_Table.itemSelectionChanged.connect(self.update_results_count)
-        # Listen for a change in item selection within the Results_OutputFiless_Table widget.
+        # Listen for a change in item selection within the Results_OutputFiles_Table widget.
         self.Results_OutputFiles_Table.itemSelectionChanged.connect(self.update_results_count)
 
         # Button connections - connects the buttons to their appropriate actions.
@@ -51,15 +56,19 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # Menu connections - connects the menu tab buttons to their appropriate actions.
 
-        # Connect the File > Open menu tab.
+        # Connect the File > Open > Command File menu tab.
         self.File_Open_CommandFile.triggered.connect(self.open_command_file)
         # Connect the File > Save > Commands menu tab.
         self.File_Save_Commands.triggered.connect(self.save_commands)
         # Connect the File > Save > Commands As menu tab.
         self.File_Save_CommandsAs.triggered.connect(self.save_commands_as)
+        # Connect the File > Set Working Directory menu tab.
+        self.File_SetWorkingDirectory.triggered.connect(self.set_working_directory)
         # Connect the Commands > GeoLayers > Read > ReadGeoLayerFromGeoJSON menu tab.
         self.GeoLayers_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayerFromGeoJSON"))
+        # Connect the Help > View Documentation menu tab.
+        self.Help_ViewDocumentation.triggered.connect(self.view_documentation)
 
         # Other connections
 
@@ -181,15 +190,17 @@ class GeoProcessorUI(Ui_MainWindow):
             # Each entry represents a parameter.
             # Key: parameter name
             # Value: default parameter value
-            for default_parameter_name, default_parameter_value in ui.command_parameter_dictionary.iteritems():
+            for default_parameter_name, default_parameter_value in ui.command_parameter_values.iteritems():
 
                 # If a command parameter is NOT set to default in the cmd_line_string, set the
                 # parameter value within the dialog design instance object to the parameter value indicated by the
                 # cmd_line_string.
                 if input_parameter_name == default_parameter_name:
-                    ui.command_parameter_dictionary[default_parameter_name] = input_parameter_value
+                    ui.command_parameter_values[default_parameter_name] = input_parameter_value
 
         # Update the dialog window with the parameter values from the command line string.
+        print input_parameter_dictionary
+        print ui.command_parameter_values
         ui.refresh()
 
         # If the "OK" button is clicked within the dialog window, continue.
@@ -560,6 +571,11 @@ class GeoProcessorUI(Ui_MainWindow):
         file.write(all_commands_string)
         file.close()
 
+    def set_working_directory(self):
+
+        # TODO egiles 2018-05-17 Discuss with Steve the mechanics of a working directory and an initial working directory
+        pass
+
     def update_command_count(self):
         """
         Count the number of items (each item is a command string) in the Command_List widget. Update the total_commands
@@ -656,3 +672,13 @@ class GeoProcessorUI(Ui_MainWindow):
         slct_row_num = str(len(set(index.row() for index in self.Results_OutputFiles_Table.selectedIndexes())))
         self.Results_OutputFiles_GroupBox.setTitle("Output Files ({} Output Files, {} selected)".format(row_num,
                                                                                                         slct_row_num))
+
+    def view_documentation(self):
+        """
+        Opens the GeoProcessor user documentation in the user's default browser.
+
+        Return: None
+        """
+
+        # Open the GeoProcessor user documentation in the default browser (new window).
+        webbrowser.open_new(self.user_doc_url)

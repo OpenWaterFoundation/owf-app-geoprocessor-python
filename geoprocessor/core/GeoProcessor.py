@@ -466,6 +466,16 @@ class GeoProcessor(object):
                 self.commands[0].print_for_debug()
 
     def read_ui_command_workflow(self, command_file_strings):
+        """
+        Read the command workflow from the user interface and initialize the command list in the geoprocessor.
+
+        Args:
+            command_file_strings (list): list of strings. Each item of the list represents one command line string.
+
+        Return: None
+        """
+
+        # TODO egiles 2018/05/17 Discuss with Steve the inclusion of setting the working directory (as in the read_command_file function)
 
         # Remove all items within the geoprocessor from the previous run.
         self.commands = []

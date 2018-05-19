@@ -136,7 +136,7 @@ and Python developers are expected to at least know how to set up a project in t
 
 The PyCharm IDE runs Python in the development environment,
 and therefore each project must be configured to know which Python interpreter to use.
-PyCharm is typically be configured to use a Python version in the virtual environment folder (`venv`) that is
+PyCharm is typically configured to use a Python version in the virtual environment folder (`venv`) that is
 set up when the GeoProcessor Python project is setup, as shown in the following figure.
 If a virtual environment is not set up, then the Python that was selected when
 the project was set up will be used (such as user's copy of Python).
@@ -150,8 +150,14 @@ The following image illustrates the interpreter installed in a `venv` folder
 QGIS is distributed with Python for its run-time environment,
 rather than using the user's or computer's Python or PyCharm Python.
 The QGIS libraries must be made known to PyCharm in order for the GeoProcessor code to
-function without errors.
-However, the PyCharm virtual environment Python (2.7) will be used for development.
+function without errors (see the [Script to Run PyCharm](#script-to-run-pycharm) section).
+The PyCharm virtual environment Python (2.7) will be used for development.
+The Python environment used for PyCharm can use the QGIS Python if it is specified as the project interpreter, as shown below.
+However, the GeoProcessor is typically run using a batch file.
+
+![PyCharm interpreter](dev-env-images/pycharm-settings-project-interpreter-qgis.png)
+
+**Need to clarify the above, especially as development with QGIS/Python 3 is implemented.**
 
 The QGIS Python can be used in a deployed environment, as long as the GeoProcessor module (`geoprocessor`) is
 installed in QGIS `site-packages` folder or `PYTHONPATH` includes the GeoProcessor module.
@@ -186,8 +192,10 @@ cloned from the repository (explained in the [New Developer](../dev-new) section
 * Windows (via command prompt window):
 	+ [owf-app-geoprocessor-python/build-util/run-pycharm-for-qgis.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build-util/run-pycharm-for-qgis.bat) - run PyCharm 2016.2.3 installed in the standard location
 	+ [owf-app-geoprocessor-python/build-util/run-pycharm2017.3.1-for-qgis.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build-util/run-pycharm2017.3.1-for-qgis.bat) - run PyCharm 2017.3.1 installed in the standard location
+	+ [owf-app-geoprocessor-python/build-util/run-pycharm2018.1.3-for-qgis.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build-util/run-pycharm2018.1.3-for-qgis.bat) - run PyCharm 2018.1.3 installed in the standard location
+	+ Other scripts may be added to run other versions of PyCharm
 * Linux (via terminal window):
-	+ Not yet tested.
+	+ Not yet tested - development typically occurs on Windows and then GeoProcessor is deployed to Linux
 
 ## MkDocs ##
 

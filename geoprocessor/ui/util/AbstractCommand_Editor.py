@@ -17,7 +17,7 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class AbstractDialog(object):
+class UI_AbstractDialog(object):
 
     def __init__(self, command_name, command_description, command_count, command_parameters, current_values):
 
@@ -290,7 +290,7 @@ class AbstractDialog(object):
         if tooltip:
             combobox_object.setToolTip(_translate("Dialog", tooltip, None))
 
-        self.input_types[parameter_name] = combobox_object
+        self.input_edit_objects[parameter_name] = combobox_object
         combobox_object.currentIndexChanged.connect(self.update_command_display)
 
     def get_current_value(self, obj):
@@ -305,7 +305,7 @@ class AbstractDialog(object):
     def update_command_display(self):
 
         for command in self.parameters_list:
-            ui_obj = self.input_types[command]
+            ui_obj = self.input_edit_objects[command]
             value = self.get_current_value(ui_obj)
             self.command_parameter_current_values[command] = value
 

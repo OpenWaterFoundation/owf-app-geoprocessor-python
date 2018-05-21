@@ -1,6 +1,7 @@
 from PyQt4 import QtCore, QtGui
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
-from geoprocessor.ui.util.AbstractDialog import AbstractDialog
+from geoprocessor.ui.util.AbstractCommand_Editor import UI_AbstractDialog
+from geoprocessor.core.CommandParameterMetadata import get_parameter_names
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -16,20 +17,20 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class Ui_Dialog(AbstractDialog):
+class Ui_Dialog(UI_AbstractDialog):
 
     def __init__(self):
-        self.command_name = "ReadGeoLayerFromGeoJSON"
         self.command_obj = ReadGeoLayerFromGeoJSON()
+        self.command_name = self.command_obj.command_name
+        self.command_parameters = get_parameter_names(self.command_obj.command_parameter_metadata)
         self.command_description = "The ReadGeoLayerFromGeoJSON command reads a GeoLayer from a .geojson file. \n\n" \
                                    "Specify the GeoJSON file to read into the GeoProcessor."
-        self.command_parameters = ["SpatialDataFile", "GeoLayerID", "IfGeoLayerIDExists"]
         self.parameter_count = len(self.command_parameters)
         self.command_parameter_values = {"SpatialDataFile": "",
                                          "GeoLayerID": "",
                                          "IfGeoLayerIDExists": ""}
 
-        AbstractDialog.__init__(self, self.command_name, self.command_description, self.parameter_count,
+        UI_AbstractDialog.__init__(self, self.command_name, self.command_description, self.parameter_count,
                                 self.command_parameters, self.command_parameter_values)
 
     def setupUi(self, Dialog):

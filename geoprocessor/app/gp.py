@@ -22,7 +22,7 @@ import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
 
 from PyQt4 import QtGui
-from geoprocessor.ui.app.launchUI import GeoProcessorUI
+from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
 
 # General Python modules
 import argparse

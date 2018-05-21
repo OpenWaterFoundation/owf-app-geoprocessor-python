@@ -1,7 +1,7 @@
-from geoprocessor.ui.app.mainWindow import Ui_MainWindow
+from geoprocessor.ui.app.GeoProcessorUI_Design import Ui_MainWindow
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.command_util as command_util
-from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON import Ui_Dialog as Ui_Dialog_ReadGeoLayerFromGeoJSON
+from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import Ui_Dialog as ReadGeoLayerFromGeoJSON_Editor
 from PyQt4 import QtGui, QtCore
 import functools
 import webbrowser
@@ -30,7 +30,7 @@ class GeoProcessorUI(Ui_MainWindow):
         self.user_doc_url = config.user_doc_url
 
         # CommandDialogFactory
-        self.command_dialog_factory_dic = {"READGEOLAYERFROMGEOJSON": Ui_Dialog_ReadGeoLayerFromGeoJSON()}
+        self.command_dialog_factory_dic = {"READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON_Editor()}
 
         # Listeners - listens for a change event.
 

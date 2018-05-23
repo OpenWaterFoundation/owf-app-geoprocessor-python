@@ -11,18 +11,20 @@ The initial implementation focuses on batch and command shell.
 """
 
 # GeoProcessor modules
+
 from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
-from geoprocessor.core.GeoProcessor import GeoProcessor
-from geoprocessor.core.CommandFileRunner import CommandFileRunner
-from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
+# from geoprocessor.core.GeoProcessor import GeoProcessor
+# from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
+# from geoprocessor.core.CommandFileRunner import CommandFileRunner
+
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.log_util as log_util
-import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
+import geoprocessor.util.qgis_util as qgis_util
 
-from PyQt4 import QtGui
-from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
+from PyQt5 import QtWidgets
+# from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
 
 # General Python modules
 import argparse
@@ -255,12 +257,13 @@ def run_ui():
     Returns: None
     """
 
-    command_processor = GeoProcessor()
-    app = QtGui.QApplication(sys.argv)
-    window = QtGui.QMainWindow()
-    prog = GeoProcessorUI(window, command_processor)
-    window.show()
-    sys.exit(app.exec_())
+    # command_processor = GeoProcessor()
+    # app = QtWidgets.QApplication(sys.argv)
+    # window = QtWidgets.QMainWindow()
+    # prog = GeoProcessorUI(window, command_processor)
+    # window.show()
+    # sys.exit(app.exec_())
+    pass
 
 
 def set_global_data():
@@ -318,6 +321,7 @@ def setup_session(session):
 
 
 if __name__ == '__main__':
+
     """
     Entry point for the OWF GeoProcessor application.
     """
@@ -358,10 +362,10 @@ if __name__ == '__main__':
     # Set global environment data that will be used by library code
     set_global_data()
 
-    # If handling QGIS environment here, rather than in GeoProcessor
-    # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once
-    # TODO smalers 2018-01-28 Need to handle the QGIS prefix path dynamically or with software configuration.
-    qgis_util.initialize_qgis(r"C:\OSGeo4W\apps\qgis")
+    # # If handling QGIS environment here, rather than in GeoProcessor
+    # # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once
+    # # - previously used the following line of code  --->  qgis_util.initialize_qgis(r"C:\OSGeo4W64\apps\qgis")
+    qgis_util.initialize_qgis()
 
     # Process configuration parameters
     runtime_properties = {}
@@ -377,8 +381,9 @@ if __name__ == '__main__':
         # Run the http server
         run_http_server()
     elif args.ui:
-        # Run the user interface
-        run_ui()
+        # # Run the user interface
+        # run_ui()
+        pass
     else:
         # No arguments given to indicate whether batch, UI, etc. so start up the shell.
         run_prompt()
@@ -392,3 +397,5 @@ if __name__ == '__main__':
 
     # Application exit
     exit(0)
+
+    print("Hello")

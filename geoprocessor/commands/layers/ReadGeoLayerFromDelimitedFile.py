@@ -70,7 +70,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(ReadGeoLayerFromDelimitedFile, self).__init__()
+        super().__init__()
         self.command_name = "ReadGeoLayerFromDelimitedFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

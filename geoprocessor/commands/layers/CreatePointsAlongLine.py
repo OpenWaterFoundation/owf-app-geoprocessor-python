@@ -41,7 +41,7 @@ class CreatePointsAlongLine(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(CreatePointsAlongLine, self).__init__()
+        super().__init__()
         self.command_name = "CreatePointsAlongLine"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

@@ -12,7 +12,7 @@ class Blank(AbstractCommand.AbstractCommand):
         """
         # Don't set the command name because don't know that there is one.
         # The AbstractCommand.command_string will be used to output the full string:
-        super(Blank, self).__init__()
+        super().__init__()
 
     def initialize_command(self, command_string, processor, full_initialization):
         """

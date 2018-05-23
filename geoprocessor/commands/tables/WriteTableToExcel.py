@@ -48,7 +48,7 @@ class WriteTableToExcel(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(WriteTableToExcel, self).__init__()
+        super().__init__()
         self.command_name = "WriteTableToExcel"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

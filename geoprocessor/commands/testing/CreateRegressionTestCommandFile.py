@@ -36,7 +36,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         """
         Initialize a new instance of the command.
         """
-        super(CreateRegressionTestCommandFile, self).__init__()
+        super().__init__()
         self.command_name = "CreateRegressionTestCommandFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

@@ -2,7 +2,7 @@ from geoprocessor.ui.app.GeoProcessorUI_Design import Ui_MainWindow
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.command_util as command_util
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import Ui_Dialog as ReadGeoLayerFromGeoJSON_Editor
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 import functools
 import webbrowser
 import geoprocessor.ui.util.config as config
@@ -11,7 +11,8 @@ import geoprocessor.ui.util.config as config
 class GeoProcessorUI(Ui_MainWindow):
 
     def __init__(self, window, geoprocessor):
-        Ui_MainWindow.__init__(self)
+
+        super().__init__()
         self.setupUi(window)
 
         # The count of commands within the Commands_List widget (total).
@@ -93,10 +94,7 @@ class GeoProcessorUI(Ui_MainWindow):
                 message_box_message = "Do you want to delete the {} selected commands?".format(self.selected_commands)
 
             # Open a message box to confirm with the user that they want to delete the selected commands.
-            response = self.new_message_box("question",
-                                             "yes,no",
-                                             message_box_message,
-                                             "Clear Commands")
+            response = self.new_message_box("question", "yes,no", message_box_message, "Clear Commands")
 
             # If the user confirms that they want to delete the selected commands, continue. Otherwise, pass.
             if response.upper() == "YES":
@@ -109,10 +107,8 @@ class GeoProcessorUI(Ui_MainWindow):
         else:
 
             # Open a message box to confirm with the user that they want to delete all of the commands.
-            response = self.new_message_box("question",
-                                             "yes,no",
-                                             "Do you want to delete all of the commands?",
-                                             "Clear Commands")
+            response = self.new_message_box("question", "yes,no", "Do you want to delete all of the commands?",
+                                            "Clear Commands")
 
             # If the user confirms that they want to delete all of the commands, continue. Otherwise, pass.
             if response.upper() == "YES":
@@ -132,10 +128,7 @@ class GeoProcessorUI(Ui_MainWindow):
         """
 
         # Open a message box to confirm with the user that they want to delete the command.
-        response = self.new_message_box("question",
-                                         "yes,no",
-                                         "Do you want to delete this command?",
-                                         "Clear Commands")
+        response = self.new_message_box("question", "yes,no", "Do you want to delete this command?", "Clear Commands")
 
         # If the user confirms that they want to delete the command, continue. Otherwise, pass.
         if response.upper() == "YES":
@@ -170,7 +163,7 @@ class GeoProcessorUI(Ui_MainWindow):
         input_parameter_dictionary = command_util.parse_key_value_pairs_into_dictionary(parameter_key_values)
 
         # Create a QDialog window instance.
-        d = QtGui.QDialog()
+        d = QtWidgets.QDialog()
 
         # Create the dialog design instance for the specific input command.
         ui = self.command_dialog_factory_dic[command_name.upper()]
@@ -199,8 +192,8 @@ class GeoProcessorUI(Ui_MainWindow):
                     ui.command_parameter_values[default_parameter_name] = input_parameter_value
 
         # Update the dialog window with the parameter values from the command line string.
-        print input_parameter_dictionary
-        print ui.command_parameter_values
+        print(input_parameter_dictionary)
+        print(ui.command_parameter_values)
         ui.refresh()
 
         # If the "OK" button is clicked within the dialog window, continue.
@@ -235,7 +228,7 @@ class GeoProcessorUI(Ui_MainWindow):
         """
 
         # Create a QDialog window instance.
-        d = QtGui.QDialog()
+        d = QtWidgets.QDialog()
 
         # Create the dialog design instance for the specific input command.
         ui = self.command_dialog_factory_dic[command_name.upper()]
@@ -274,13 +267,13 @@ class GeoProcessorUI(Ui_MainWindow):
         """
 
         # Relates the input variable TYPE to the appropriate QtGui Icon for the message box.
-        icon_dic = {"QUESTION": QtGui.QMessageBox.Question,
-                    "INFORMATION": QtGui.QMessageBox.Information,
-                    "WARNING": QtGui.QMessageBox.Warning,
-                    "CRITICAL": QtGui.QMessageBox.Critical}
+        icon_dic = {"QUESTION": QtWidgets.QMessageBox.Question,
+                    "INFORMATION": QtWidgets.QMessageBox.Information,
+                    "WARNING": QtWidgets.QMessageBox.Warning,
+                    "CRITICAL": QtWidgets.QMessageBox.Critical}
 
         # Relates the input variable STANDARD_BUTTONS to the appropriate QtGui buttons for the message box.
-        buttons_dic = {"YES,NO": QtGui.QMessageBox.Yes | QtGui.QMessageBox.No}
+        buttons_dic = {"YES,NO": QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No}
 
         # Relates the enumerated clicked button value to the clicked button name.
         # REF: http://ftp.ics.uci.edu/pub/centos0/ics-custom-build/BUILD/PyQt-x11-gpl-4.7.2/doc/html/
@@ -289,7 +282,7 @@ class GeoProcessorUI(Ui_MainWindow):
                             65536: "No"}
 
         # Create the Message Box object.
-        msg = QtGui.QMessageBox()
+        msg = QtWidgets.QMessageBox()
 
         # Set the Message Box icon.
         msg.setIcon(icon_dic[message_type.upper()])
@@ -321,13 +314,15 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
         # of the command file is added to the cmd_filepath variable.
-        cmd_filepath = QtGui.QFileDialog.getOpenFileName()
+        cmd_filepath = QtWidgets.QFileDialog.getOpenFileName()
 
-        # Open the command file.
-        with open(cmd_filepath, 'r') as comand_file:
+        # Open and read the command file.
+        with open(cmd_filepath) as command_file:
+
+            read_data = command_file.read()
 
             # Iterate over the lines of the command file.
-            for line in comand_file:
+            for line in read_data:
 
                 # Strip the line of any excess whitespace and add it as an item to the Command_List widget.
                 self.Commands_List.addItem(line.strip())
@@ -349,7 +344,7 @@ class GeoProcessorUI(Ui_MainWindow):
         """
 
         # Create the Qt Menu object.
-        self.rightClickMenu = QtGui.QMenu()
+        self.rightClickMenu = QtWidgets.QMenu()
 
         # Add the menu options to the right-click menu.
         menu_item_edit_command = self.rightClickMenu.addAction("Edit Command")
@@ -399,17 +394,17 @@ class GeoProcessorUI(Ui_MainWindow):
             self.Results_GeoLayers_Table.insertRow(new_row_index)
 
             # Retrieve the GeoLayer's GeoLayer ID and set as the attribute for the GeoLayer ID column.
-            self.Results_GeoLayers_Table.setItem(new_row_index, 0, QtGui.QTableWidgetItem(geolayer.id))
+            self.Results_GeoLayers_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(geolayer.id))
 
             # Retrieve the GeoLayer's geometry and set as the attribute for the Geometry column.
-            self.Results_GeoLayers_Table.setItem(new_row_index, 1, QtGui.QTableWidgetItem(geolayer.get_geometry()))
+            self.Results_GeoLayers_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(geolayer.get_geometry()))
 
             # Retrieve the number of features within the GeoLayer and set as the attribute for the Feature Count column.
             self.Results_GeoLayers_Table.setItem(new_row_index, 2,
-                                                 QtGui.QTableWidgetItem(str(geolayer.get_feature_count())))
+                                                 QtWidgets.QTableWidgetItem(str(geolayer.get_feature_count())))
 
             # Retrieve the GeoLayer's CRS and set as the attribute for the Coordinate Reference System column.
-            self.Results_GeoLayers_Table.setItem(new_row_index, 3, QtGui.QTableWidgetItem(geolayer.get_crs()))
+            self.Results_GeoLayers_Table.setItem(new_row_index, 3, QtWidgets.QTableWidgetItem(geolayer.get_crs()))
 
         # Populate the Results Tables Table.
         # Iterate through all of the Table objects in the GeoProcessor.
@@ -420,15 +415,15 @@ class GeoProcessorUI(Ui_MainWindow):
             self.Results_Tables_Table.insertRow(new_row_index)
 
             # Retrieve the Tables's Table ID and set as the attribute for the Table ID column.
-            self.Results_Tables_Table.setItem(new_row_index, 0, QtGui.QTableWidgetItem(table.id))
+            self.Results_Tables_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(table.id))
 
             # Retrieve the number of columns in the Table and set as the attribute for the Column Count column.
             self.Results_Tables_Table.setItem(new_row_index, 1,
-                                              QtGui.QTableWidgetItem(str(table.count(returnCol=True))))
+                                              QtWidgets.QTableWidgetItem(str(table.count(returnCol=True))))
 
             # Retrieve the number of rows in the Table and set as the attribute for the Row Count column.
             self.Results_Tables_Table.setItem(new_row_index, 2,
-                                              QtGui.QTableWidgetItem(str(table.count(returnCol=False))))
+                                              QtWidgets.QTableWidgetItem(str(table.count(returnCol=False))))
 
         # TODO egiles 2018-05-14 Populate the Results Maps Table
 
@@ -441,7 +436,7 @@ class GeoProcessorUI(Ui_MainWindow):
             self.Results_OutputFiles_Table.insertRow(new_row_index)
 
             # Retrieve the absolute pathname of the output file and set as the attribute for the Output File column.
-            self.Results_OutputFiles_Table.setItem(new_row_index, 0, QtGui.QTableWidgetItem(output_file))
+            self.Results_OutputFiles_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(output_file))
 
             # Get the extension of the output file.
             output_file_ext = io_util.get_extension(output_file)
@@ -454,10 +449,11 @@ class GeoProcessorUI(Ui_MainWindow):
             # Retrieve the output file type and set as the attribute for the File Type column. If h
             if output_file_ext in extension_dictionary.keys():
                 self.Results_OutputFiles_Table.setItem(new_row_index, 1,
-                                                       QtGui.QTableWidgetItem(extension_dictionary[output_file_ext]))
+                                                       QtWidgets.QTableWidgetItem(
+                                                           extension_dictionary[output_file_ext]))
             else:
                 self.Results_OutputFiles_Table.setItem(new_row_index, 1,
-                                                       QtGui.QTableWidgetItem("Unknown"))
+                                                       QtWidgets.QTableWidgetItem("Unknown"))
 
         # Populate the Results Properties Table.
         # Iterate through all of the properties in the GeoProcessor.
@@ -468,10 +464,10 @@ class GeoProcessorUI(Ui_MainWindow):
             self.Results_Properties_Table.insertRow(new_row_index)
 
             # Set the property name as the attribute for the Property Name column.
-            self.Results_Properties_Table.setItem(new_row_index, 0, QtGui.QTableWidgetItem(prop_name))
+            self.Results_Properties_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(prop_name))
 
             # Set the property value as the attribute for the Property Value column.
-            self.Results_Properties_Table.setItem(new_row_index, 1, QtGui.QTableWidgetItem(prop_value))
+            self.Results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(prop_value))
 
         # Update the results count and results' tables' labels to show that the results were populated.
         self.update_results_count()
@@ -560,11 +556,11 @@ class GeoProcessorUI(Ui_MainWindow):
         all_commands_string = '\n'.join(list_of_cmds)
 
         # Create a QDialog window instance.
-        d = QtGui.QDialog()
+        d = QtWidgets.QDialog()
 
         # Open a browser for the user to select a location and filename to save the command file. Set the most recent
         #  file save location.
-        self.saved_file = QtGui.QFileDialog.getSaveFileName(d, 'Save Command File As')
+        self.saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As')
 
         # Write the commands to the file.
         file = open(self.saved_file, 'w')
@@ -573,7 +569,7 @@ class GeoProcessorUI(Ui_MainWindow):
 
     def set_working_directory(self):
 
-        # TODO egiles 2018-05-17 Discuss with Steve the mechanics of a working directory and an initial working directory
+        # TODO egiles 2018-05-17 Discuss with Steve the mechanics of a working directory and an initial working dir
         pass
 
     def update_command_count(self):
@@ -682,3 +678,4 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # Open the GeoProcessor user documentation in the default browser (new window).
         webbrowser.open_new(self.user_doc_url)
+

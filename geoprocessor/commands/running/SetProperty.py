@@ -34,7 +34,7 @@ class SetProperty(AbstractCommand):
         Initialize a command instance.
         """
         # AbstractCommand data
-        super(SetProperty, self).__init__()
+        super().__init__()
         self.command_name = "SetProperty"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

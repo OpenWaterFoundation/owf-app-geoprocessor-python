@@ -48,7 +48,7 @@ class CreateGeoLayer(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(CreateGeoLayer, self).__init__()
+        super().__init__()
         self.command_name = "CreateGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

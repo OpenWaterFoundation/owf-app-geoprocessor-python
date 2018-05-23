@@ -14,7 +14,7 @@ import geoprocessor.util.validator_util as validators
 
 import logging
 
-from processing.tools import general
+from plugins.processing.tools import general
 
 
 class SetGeoLayerCRS(AbstractCommand):
@@ -40,7 +40,7 @@ class SetGeoLayerCRS(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(SetGeoLayerCRS, self).__init__()
+        super().__init__()
         self.command_name = "SetGeoLayerCRS"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

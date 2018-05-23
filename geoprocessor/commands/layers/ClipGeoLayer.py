@@ -16,7 +16,7 @@ import logging
 
 import os
 
-from processing.tools import general
+from plugins.processing.tools import general
 
 
 class ClipGeoLayer(AbstractCommand):
@@ -54,7 +54,7 @@ class ClipGeoLayer(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(ClipGeoLayer, self).__init__()
+        super().__init__()
         self.command_name = "ClipGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

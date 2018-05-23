@@ -7,7 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -366,6 +366,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.Menu_File.menuAction())
         self.menubar.addAction(self.Menu_Commands.menuAction())
         self.menubar.addAction(self.Menu_Help.menuAction())
+
 
         self.retranslateUi(MainWindow)
         self.Results_Tab_Widget.setCurrentIndex(0)

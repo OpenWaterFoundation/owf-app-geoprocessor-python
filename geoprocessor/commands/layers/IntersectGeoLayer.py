@@ -16,7 +16,7 @@ import geoprocessor.util.string_util as string_util
 import logging
 import os
 
-from processing.tools import general
+from plugins.processing.tools import general
 
 
 class IntersectGeoLayer(AbstractCommand):
@@ -64,7 +64,7 @@ class IntersectGeoLayer(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(IntersectGeoLayer, self).__init__()
+        super().__init__()
         self.command_name = "IntersectGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

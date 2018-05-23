@@ -17,7 +17,7 @@ class CommentBlockEnd(AbstractCommand.AbstractCommand):
         # Command name is the comment block end.
         self.command_name = "*/"
         # The AbstractCommand.command_string will be used to output the full string:
-        super(CommentBlockEnd, self).__init__()
+        super().__init__()
         # Set the command status to success so that testing reports look better
         self.command_status.initialization_status = command_status_type.SUCCESS
         self.command_status.discovery_status = command_status_type.SUCCESS

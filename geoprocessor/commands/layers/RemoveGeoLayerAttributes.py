@@ -38,7 +38,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(RemoveGeoLayerAttributes, self).__init__()
+        super().__init__()
         self.command_name = "RemoveGeoLayerAttributes"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

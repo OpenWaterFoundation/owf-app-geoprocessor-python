@@ -56,7 +56,7 @@ class ListFiles(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(ListFiles, self).__init__()
+        super().__init__()
         self.command_name = "ListFiles"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

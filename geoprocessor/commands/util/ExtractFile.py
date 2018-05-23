@@ -45,7 +45,7 @@ class ExtractFile(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(ExtractFile, self).__init__()
+        super().__init__()
         self.command_name = "ExtractFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

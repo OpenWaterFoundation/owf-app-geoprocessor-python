@@ -94,7 +94,7 @@ class GeoProcessorCommandFactory(object):
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
         "READTABLEFROMDELIMITEDFILE": ReadTableFromDelimitedFile(),
-        "READTABLEFROMEXCEL":ReadTableFromExcel(),
+        "READTABLEFROMEXCEL": ReadTableFromExcel(),
         "REMOVEFILE": RemoveFile(),
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
@@ -299,17 +299,17 @@ class GeoProcessorCommandFactory(object):
             # If here the command name was not matched.
             # Don't know the command so create an UnknownCommand or throw an exception.
             if create_unknown_command_if_not_recognized:
-                logger.warn("Command line is unknown command. Adding UnknownCommand: " + command_string_trimmed)
+                logger.warning("Command line is unknown command. Adding UnknownCommand: " + command_string_trimmed)
                 return UnknownCommand()
             else:
-                logger.warn("Command line is unknown syntax.")
+                logger.warning("Command line is unknown syntax.")
                 raise ValueError('Unrecognized command "' + command_string + '"')
 
         # The syntax is not recognized so create an UnknownCommand or throw an exception.
         else:
             if create_unknown_command_if_not_recognized:
-                logger.warn("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
+                logger.warning("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
                 return UnknownCommand()
             else:
-                logger.warn("Command line is unknown syntax.")
+                logger.warning("Command line is unknown syntax.")
                 raise ValueError('Unrecognized command "' + command_string + '"')

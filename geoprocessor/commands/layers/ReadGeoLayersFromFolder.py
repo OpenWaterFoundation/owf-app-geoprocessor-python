@@ -61,7 +61,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(ReadGeoLayersFromFolder, self).__init__()
+        super().__init__()
         self.command_name = "ReadGeoLayersFromFolder"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

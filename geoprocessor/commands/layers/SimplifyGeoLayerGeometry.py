@@ -14,7 +14,7 @@ import geoprocessor.util.qgis_util as qgis_util
 
 import logging
 import os
-from processing.tools import general
+from plugins.processing.tools import general
 
 
 class SimplifyGeoLayerGeometry(AbstractCommand):
@@ -55,7 +55,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(SimplifyGeoLayerGeometry, self).__init__()
+        super().__init__()
         self.command_name = "SimplifyGeoLayerGeometry"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

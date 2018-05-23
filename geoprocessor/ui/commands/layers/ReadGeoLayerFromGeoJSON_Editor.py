@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.ui.util.AbstractCommand_Editor import UI_AbstractDialog
 from geoprocessor.core.CommandParameterMetadata import get_parameter_names

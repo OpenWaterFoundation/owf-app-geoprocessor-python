@@ -154,7 +154,7 @@ class AbstractCommand(object):
             # format) assign the parameter dictionary to self.command_parameters for use by the specific command.
             self.command_parameters = command_util.parse_key_value_pairs_into_dictionary(parameter_items)
             if debug:
-                print "CMD_PARAM: {}".format(self.command_parameters)
+                print("CMD_PARAM: {}".format(self.command_parameters))
 
         # Print out the parsed command parameters for debugging
         if debug:
@@ -166,7 +166,7 @@ class AbstractCommand(object):
         print("Debug information for command")
         print("Command name=" + self.command_name)
         print("Command string=" + self.command_string)
-        for parameter_name, parameter_value in self.command_parameters.iteritems():
+        for parameter_name, parameter_value in self.command_parameters.items():
             print('Command parameter name ="' + parameter_name + '", value="' + parameter_value + '"')
 
     def run_command(self):
@@ -175,7 +175,7 @@ class AbstractCommand(object):
 
         Returns:
         """
-        print 'In AbstractCommand.run_command'
+        print('In AbstractCommand.run_command')
 
     def to_string(self, command_parameters=None, format_all=False):
         """

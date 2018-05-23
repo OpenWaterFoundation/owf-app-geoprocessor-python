@@ -45,7 +45,7 @@ class CompareFiles(AbstractCommand):
         Initialize a new instance of the command.
         """
         # AbstractCommand data
-        super(CompareFiles, self).__init__()
+        super().__init__()
         self.command_name = "CompareFiles"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

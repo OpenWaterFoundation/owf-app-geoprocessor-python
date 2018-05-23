@@ -40,7 +40,7 @@ class For(AbstractCommand):
         """
         Initialize an instance of the command.
         """
-        super(For, self).__init__()
+        super().__init__()
         # AbstractCommand data
         self.command_name = "For"
         self.command_parameter_metadata = self.__command_parameter_metadata

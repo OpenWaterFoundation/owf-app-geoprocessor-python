@@ -16,7 +16,7 @@ import geoprocessor.util.validator_util as validators
 import logging
 import os
 
-from processing.tools import general
+from plugins.processing.tools import general
 
 
 class MergeGeoLayers(AbstractCommand):
@@ -59,7 +59,7 @@ class MergeGeoLayers(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(MergeGeoLayers, self).__init__()
+        super().__init__()
         self.command_name = "MergeGeoLayers"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

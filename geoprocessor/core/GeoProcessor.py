@@ -6,14 +6,6 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.qgis_util as qgis_util
-
-# Commands that need special handling (all others are handled generically and don't need to be imported)
-# TODO smalers 2018-01-08 Evaluate enabling with `isinstance` syntax but could not get it to work as intended
-# import geoprocessor.commands.running.For as EndFor
-# import geoprocessor.commands.running.For as EndIf
-# import geoprocessor.commands.running.For as For
-# import geoprocessor.commands.running.For as If
-
 import geoprocessor.util.command_util as command_util
 
 # General modules

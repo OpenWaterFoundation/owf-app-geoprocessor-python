@@ -11,8 +11,6 @@ rem Else run base/latest version if it is available.
 if not exist %_qgisLtr% set QGISNAME=qgis
 echo QGISNAME is %QGISNAME%
 
-set PATH=%OSGEO4W_ROOT%\bin;%PATH% 
-set PATH=%PATH%;%OSGEO4W_ROOT%\apps\%QGISNAME%\bin
 
 rem call the OSGeo4W-provided script to set up the 
 call %OSGEO4W_ROOT%\bin\o4w_env.bat
@@ -20,6 +18,8 @@ call %OSGEO4W_ROOT%\bin\qt5_env.bat
 call %OSGEO4W_ROOT%\bin\py3_env.bat
 @echo off
 
+set PATH=%OSGEO4W_ROOT%\bin;%PATH% 
+set PATH=%PATH%;%OSGEO4W_ROOT%\apps\%QGISNAME%\bin
 
 set QGIS_PREFIX_PATH=%OSGEO4W_ROOT:\=/%/apps/%QGISNAME%
 set GDAL_FILENAME_IS_UTF8=YES

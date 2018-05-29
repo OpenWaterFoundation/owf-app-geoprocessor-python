@@ -404,7 +404,9 @@ def get_qgis_version_int():
     Return: The QGIS version (int).
     """
 
-    return qgis.utils.QGis.QGIS_VERSION_INT
+    # TODO smalers 2018-05-28 the following was version 2
+    # return qgis.utils.QGis.QGIS_VERSION_INT
+    return qgis.utils.Qgis.QGIS_VERSION_INT
 
 
 def get_qgis_version_name():
@@ -415,7 +417,9 @@ def get_qgis_version_name():
     Return: The QGIS version name (string).
     """
 
-    return qgis.utils.QGis.QGIS_RELEASE_NAME
+    # TODO smalers 2018-05-28 the following was version 2
+    #return qgis.utils.QGis.QGIS_RELEASE_NAME
+    return qgis.utils.Qgis.QGIS_RELEASE_NAME
 
 
 def get_qgis_version_str():
@@ -426,7 +430,9 @@ def get_qgis_version_str():
     Return: The QGIS version (string).
     """
 
-    return qgis.utils.QGis.QGIS_VERSION
+    # TODO smalers 2018-05-28 the following was version 2
+    #return qgis.utils.QGis.QGIS_VERSION
+    return qgis.utils.Qgis.QGIS_VERSION
 
 
 def get_qgscoordinatereferencesystem_obj(crs_code):

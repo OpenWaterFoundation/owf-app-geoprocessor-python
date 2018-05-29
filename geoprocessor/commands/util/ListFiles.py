@@ -14,7 +14,7 @@ import geoprocessor.util.validator_util as validators
 
 import logging
 import os
-import urllib2
+import urllib
 
 
 class ListFiles(AbstractCommand):
@@ -244,7 +244,7 @@ class ListFiles(AbstractCommand):
             url += '/'
 
         # Read the source content of the URL.
-        urlpath = urllib2.urlopen(url)
+        urlpath = urllib.urlopen(url)
         string = urlpath.read().decode('utf-8')
 
         # Get the URL of the parent directory.

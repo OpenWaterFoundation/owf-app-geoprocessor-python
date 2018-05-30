@@ -2,7 +2,7 @@
 
 import os
 import shutil
-import StringIO
+from io import StringIO
 import tarfile
 import zipfile
 

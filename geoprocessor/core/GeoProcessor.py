@@ -6,14 +6,6 @@ import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
 
 import geoprocessor.util.qgis_util as qgis_util
-
-# Commands that need special handling (all others are handled generically and don't need to be imported)
-# TODO smalers 2018-01-08 Evaluate enabling with `isinstance` syntax but could not get it to work as intended
-# import geoprocessor.commands.running.For as EndFor
-# import geoprocessor.commands.running.For as EndIf
-# import geoprocessor.commands.running.For as For
-# import geoprocessor.commands.running.For as If
-
 import geoprocessor.util.command_util as command_util
 
 # General modules
@@ -52,6 +44,9 @@ class GeoProcessor(object):
 
         # list that holds the absolute paths to the output files
         self.output_files = []
+
+        # holds the initialized qgis processor
+        self.qgis_processor = qgis_util.initialize_qgis_processor()
 
         # qgis version
         self.properties["QGISVersion"] = qgis_util.get_qgis_version_str()
@@ -552,7 +547,7 @@ class GeoProcessor(object):
         # should not be reset (such as properties that are difficult to reset).
         # Check size dynamically in case props are removed below
         # Because the dictionary size may change during iteration, can't do the following
-        #     for property_name, property_value in self.properties.iteritems():
+        #     for property_name, property_value in self.properties.items():
         # Cannot iterate through a dictionary and remove items from dictionary.
         # Therefore convert the dictionary to a list and iterate on the list
         processor_property_names = list(self.properties.keys())

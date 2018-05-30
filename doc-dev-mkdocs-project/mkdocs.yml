@@ -15,6 +15,7 @@ pages:
 - Resources:
   - Resources: resources/resources.md
   - "QGIS Version Install Experiments": resources/qgis-version-install-experiments.md
+  - "Notes on Migration from QGIS2 to QGIS3": resources/migrate-qgis2-qgis3.md
 # ------- configuration properties ---------------
 # Use Material theme
 # - installation notes:  https://github.com/squidfunk/mkdocs-material

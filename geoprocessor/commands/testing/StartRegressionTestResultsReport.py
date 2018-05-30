@@ -37,7 +37,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
         Initialize a new instance of the command.
         """
         # AbstractCommand data
-        super(StartRegressionTestResultsReport, self).__init__()
+        super().__init__()
         self.command_name = "StartRegressionTestResultsReport"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
@@ -199,7 +199,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
         cls.__regression_test_fp = None  # Set so that it can be opened again
 
     # TODO smalers 2018-01-28 Evaluate whether to make this a class method
-    def __open_new_regression_test_report_file(self, output_file, append=False):
+    @staticmethod
+    def __open_new_regression_test_report_file(output_file, append=False):
         """
         Open a new regression test report file.
         This file is used by the processor to record the tests that are run and test status.

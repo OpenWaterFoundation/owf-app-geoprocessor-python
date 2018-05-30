@@ -36,7 +36,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         """
         Initialize a new instance of the command.
         """
-        super(CreateRegressionTestCommandFile, self).__init__()
+        super().__init__()
         self.command_name = "CreateRegressionTestCommandFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
@@ -253,7 +253,10 @@ class CreateRegressionTestCommandFile(AbstractCommand):
             # logger.info('Adding commands from setup command file "' + setup_command_file_absolute + '"')
             # include_setup_file(out, setup_file_absolute, "setup")
             # Include the matching test cases
-            nl = os.linesep  # newline character for operating system
+            # Python 2...
+            #nl = os.linesep  # newline character for operating system
+            # Python 3 translates \n into the OS-specific end of line so os.linesep introduces extra end of lines
+            nl = "\n"
             out.write("#" + nl)
             out.write("# The following " + str(len(files)) +
                       " test cases will be run to compare results with expected results." + nl)

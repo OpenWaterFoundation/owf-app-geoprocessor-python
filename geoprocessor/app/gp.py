@@ -10,24 +10,28 @@ the gp application, which provides several run modes:
 The initial implementation focuses on batch and command shell.
 """
 
+from PyQt5 import QtWidgets
+# from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
+
 # GeoProcessor modules
+
 from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
-from geoprocessor.core.GeoProcessor import GeoProcessor
-from geoprocessor.core.CommandFileRunner import CommandFileRunner
 from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
+# The following are imported dynamically since need a QtApplication instanced in __main__ first
+#from geoprocessor.core.GeoProcessor import GeoProcessor
+#from geoprocessor.core.CommandFileRunner import CommandFileRunner
+
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.log_util as log_util
-import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
-
-from PyQt4 import QtGui
-from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
+import geoprocessor.util.qgis_util as qgis_util
 
 # General Python modules
 import argparse
 import cmd
 import getpass
+import importlib
 import logging
 import os
 import platform
@@ -49,7 +53,7 @@ class GeoProcessorCmd(cmd.Cmd):
 
     Because the docstrings are usd for user help, documentation for functions is provided in in-lined comments.
     """
-    def __init__(self):
+    def __init__(self, qtapp=None):
         # Old style cmd.Cmd parent class in Python 2.7 does not inherit from object so be careful calling super().
         is_new_style_class = True
         try:
@@ -99,9 +103,11 @@ class GeoProcessorCmd(cmd.Cmd):
               platform.release(), platform.version())))
         print("user = " + getpass.getuser())
         # GeoProcessor information, such as properties
-        processor = GeoProcessor()
+        GeoProcessor = importlib.import_module('geoprocessor.core.GeoProcessor')
+        class_ = getattr(GeoProcessor,'GeoProcessor')
+        processor = class_()
         print("GeoProcessor properties:")
-        for property_name, property_value in processor.properties.iteritems():
+        for property_name, property_value in processor.properties.items():
             print(property_name + " = " + str(property_value))
 
     def do_EOF(self, line):
@@ -111,7 +117,7 @@ class GeoProcessorCmd(cmd.Cmd):
         """
         Run the command file from the command line using syntax:  run command-file
         """
-        logger = logging.getLogger("geoprocessor")
+        logger = logging.getLogger(__name__)
         command_file = line
         if command_file is None:
             print('Error:  no command file specified for "run" command.')
@@ -119,7 +125,10 @@ class GeoProcessorCmd(cmd.Cmd):
         working_dir = os.getcwd()
         # Convert the command file to an absolute path if not already.
         command_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(working_dir, command_file))
-        runner = CommandFileRunner()
+        #from geoprocessor.core.CommandFileRunner import CommandFileRunner
+        CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
+        class_ = getattr(CommandFileRunner,'CommandFileRunner')
+        runner = class_()
         # Read the command file
         try:
             runner.read_command_file(command_file_absolute)
@@ -142,9 +151,15 @@ class GeoProcessorCmd(cmd.Cmd):
             logger.error(message)
 
         logger.info("GeoProcessor properties after running:")
-        for property_name, property_value in runner.get_processor().properties.iteritems():
+        for property_name, property_value in runner.get_processor().properties.items():
             logger.info(property_name + " = " + str(property_value))
         print("See log file for more information.")
+
+    def do_ui(self, line):
+        """
+        Run the command file from the command line using syntax:  run command-file
+        """
+        run_ui(qtapp)
 
     def postloop(self):
         print
@@ -170,6 +185,16 @@ def parse_command_line_properties(property_list):
     return property_dict
 
 
+def print_env():
+    """
+    Print information about the environment, useful for troubleshooting.
+    Returns:  None
+    """
+    print("PYTHONPATH items:")
+    for item in sys.path:
+        print(item)
+
+
 # This is the same as the GeoProcessorCmd.do_run() function.
 # - could reuse code but inline it for now
 def run_batch(command_file, runtime_properties):
@@ -181,9 +206,9 @@ def run_batch(command_file, runtime_properties):
         runtime_properties (dict):  A dictionary of properties for the processor.
 
     Returns:
-        Nothing.
+        None.
     """
-    logger = logging.getLogger("geoprocessor")
+    logger = logging.getLogger(__name__)
     print('Running command file: ' + command_file)
     working_dir = os.getcwd()
     # Convert the command file to an absolute path if not already.
@@ -191,7 +216,10 @@ def run_batch(command_file, runtime_properties):
     logger.info("Command file=" + command_file)
     command_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(working_dir, command_file))
     logger.info("Command file (absolute)=" + command_file_absolute)
-    runner = CommandFileRunner()
+    #from geoprocessor.core.CommandFileRunner import CommandFileRunner
+    CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
+    class_ = getattr(CommandFileRunner,'CommandFileRunner')
+    runner = class_()
     # Read the command file
     try:
         runner.read_command_file(command_file_absolute)
@@ -222,7 +250,7 @@ def run_batch(command_file, runtime_properties):
         StartRegressionTestResultsReport.close_regression_test_report_file()
 
     logger.info("GeoProcessor properties after running:")
-    for property_name, property_value in runner.get_processor().properties.iteritems():
+    for property_name, property_value in runner.get_processor().properties.items():
         logger.info(property_name + " = " + str(property_value))
     print("See log file for more information.")
 
@@ -233,34 +261,41 @@ def run_http_server():
     TODO smalers 2017-12-30 need to evaluate whether to use Python built-in capabilities or something like Flask.
 
     Returns:
-        Nothing.
+        None.
     """
     print("The GeoProcessor web server is not implemented.  Exiting...")
 
 
-def run_prompt():
+def run_prompt(qtapp):
     """
     Run the command line prompt interface.
 
     Returns:
-        Nothing.
+        None.
     """
-    GeoProcessorCmd().cmdloop()
+    GeoProcessorCmd(qtapp=qtapp).cmdloop()
 
 
-def run_ui():
+def run_ui(qtapp):
     """
     Run the GeoProcessor user interface.
 
     Returns: None
     """
 
-    command_processor = GeoProcessor()
-    app = QtGui.QApplication(sys.argv)
-    window = QtGui.QMainWindow()
-    prog = GeoProcessorUI(window, command_processor)
+    # The following is used when not dynamically importing modules
+    #command_processor = GeoProcessor()
+    GeoProcessor = importlib.import_module('geoprocessor.core.GeoProcessor')
+    class_ = getattr(GeoProcessor,'GeoProcessor')
+    command_processor = class_()
+    #app = QtWidgets.QApplication(sys.argv)
+    window = QtWidgets.QMainWindow()
+    GeoProcessorUI = importlib.import_module('geoprocessor.ui.GeoProcessorUI')
+    class_ = getattr(GeoProcessorUI,'GeoProcessorUI')
+    prog = class_(window, command_processor)
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(qtapp.exec_())
+    pass
 
 
 def set_global_data():
@@ -284,7 +319,7 @@ def setup_logging(session):
         session:  Application session instance.
 
     Returns:
-        Nothing.
+        None.
     """
     # Customized logging config using log file in user's home folder
     # - For now use default log levels defined by the utility function
@@ -308,7 +343,7 @@ def setup_session(session):
         session:  The GeoProcessorAppSession instance to manage the user's session.
 
     Returns:
-        Nothing.
+        None.
     """
     if not session.create_log_folder():
         logging.warning('Unable to create log folder "' + session.get_log_folder() + '"')
@@ -321,8 +356,16 @@ if __name__ == '__main__':
     """
     Entry point for the OWF GeoProcessor application.
     """
+    debug=True
+    if debug:
+        print_env()
+
+    # Open an application to initialize static UI data
+    print("Initializing QApplication")
+    qtapp = QtWidgets.QApplication(sys.argv)
     # Set up a session instance
     app_session = GeoProcessorAppSession()
+    print("After initializing GeoProcessorAppSession")
     setup_session(app_session)
 
     # Set up logging for the application
@@ -330,12 +373,13 @@ if __name__ == '__main__':
     # - A default log file is created in the users .owfgp/log folder.
     # - The log file will be closed and another restarted by the StartLog() command.
     setup_logging(app_session)
+    logger = logging.getLogger(__name__)
 
     # Parse the command line parameters...
     # - The -h and --help arguments are automatically included so don't need to add below.
     # - The default action is "store" which will save a variable with the same name as the option.
     # - The --version option has special behavior, as documented in the argparse module documentation.
-    parser = argparse.ArgumentParser(description='Open Water Foundation (OWF) GeoProcessor Application')
+    parser = argparse.ArgumentParser(description='GeoProcessor Application')
     # Assigns the command file to args.commands
     # --commands CommandFile.gp
     parser.add_argument("-c", "--commands", help="Specify command file.")
@@ -347,7 +391,7 @@ if __name__ == '__main__':
     # Evaluate later how to allow values with quotes but maybe shell will handle?
     parser.add_argument("-p", action='append', help="Set a processor property.")
     # Start the user interface (will store True in the 'ui' variable)
-    # -ui
+    # --ui
     parser.add_argument("--ui", action='store_true', help="Start the user interface.")
     # Immediately prints the version using the 'version' value
     # --version
@@ -358,10 +402,10 @@ if __name__ == '__main__':
     # Set global environment data that will be used by library code
     set_global_data()
 
-    # If handling QGIS environment here, rather than in GeoProcessor
-    # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once
-    # TODO smalers 2018-01-28 Need to handle the QGIS prefix path dynamically or with software configuration.
-    qgis_util.initialize_qgis(r"C:\OSGeo4W\apps\qgis")
+    # # If handling QGIS environment here, rather than in GeoProcessor
+    # # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once
+    # # - previously used the following line of code  --->  qgis_util.initialize_qgis(r"C:\OSGeo4W64\apps\qgis")
+    qgis_util.initialize_qgis()
 
     # Process configuration parameters
     runtime_properties = {}
@@ -372,22 +416,47 @@ if __name__ == '__main__':
     # Launch a GeoProcessor based on command line parameters that control run mode
     if args.commands:
         # A command file has been specified so run the batch processor.
-        run_batch(args.commands, runtime_properties)
+        print("Running GeoProcessor batch")
+        try:
+            run_batch(args.commands, runtime_properties)
+        except Exception as e:
+            message='Exception running batch'
+            print(message)
+            logger.exception(message, e, exc_info=True)
     elif args.http:
         # Run the http server
-        run_http_server()
+        print("Running GeoProcessor http server")
+        try:
+            run_http_server()
+        except Exception as e:
+            message='Exception running http'
+            print(message)
+            logger.exception(message, e, exc_info=True)
     elif args.ui:
         # Run the user interface
-        run_ui()
+        print("Running GeoProcessor UI")
+        try:
+            run_ui(qtapp)
+        except Exception as e:
+            message='Exception running UI'
+            print(message)
+            logger.exception(message, e, exc_info=True)
     else:
         # No arguments given to indicate whether batch, UI, etc. so start up the shell.
-        run_prompt()
+        print("Running GeoProcessor shell")
+        try:
+            run_prompt(qtapp)
+        except Exception as e:
+            message='Exception running shell'
+            print(message)
+            logger.exception(message, e, exc_info=True)
 
     # Exit QGIS environment
     qgis_util.exit_qgis()
 
     # Close the regression test file
     # - If none is used then nothing is done
+    #from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
     StartRegressionTestResultsReport.close_regression_test_report_file()
 
     # Application exit

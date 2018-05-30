@@ -14,7 +14,7 @@ import geoprocessor.util.validator_util as validators
 
 import logging
 
-from processing.tools import general
+from plugins.processing.tools import general
 
 
 class SetGeoLayerCRS(AbstractCommand):
@@ -40,7 +40,7 @@ class SetGeoLayerCRS(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(SetGeoLayerCRS, self).__init__()
+        super().__init__()
         self.command_name = "SetGeoLayerCRS"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
@@ -190,17 +190,27 @@ class SetGeoLayerCRS(AbstractCommand):
                 if input_geolayer.get_crs():
 
                     # Reproject the GeoLayer.
-                    reprojected = general.runalg("qgis:reprojectlayer", input_geolayer.qgs_vector_layer, pv_CRS, None)
+                    alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
+                                      "TARGET_CRS": pv_CRS,
+                                      "OUTPUT": "memory:"}
+                    reprojected = self.command_processor.qgis_processor.runAlgorithm("native:reprojectlayer",
+                                                                                     alg_parameters)
 
                     # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-                    # reprojected["OUTPUT"] returns the full file pathname of the memory output layer (saved
-                    # in a QGIS temporary folder)
-                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(reprojected["OUTPUT"])
-                    new_geolayer = GeoLayer(input_geolayer.id, qgs_vector_layer, "MEMORY")
+
+                    # In QGIS 2 the reprojected["OUTPUT"] returned the full file pathname of the memory output layer
+                    # (saved in a QGIS temporary folder)
+                    # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(reprojected["OUTPUT"])
+                    # new_geolayer = GeoLayer(input_geolayer.id, qgs_vector_layer, "MEMORY")
+
+                    # In QGIS 3 the reprojected["OUTPUT"] returns the QGS vector layer object
+                    new_geolayer = GeoLayer(input_geolayer.id, reprojected["OUTPUT"], "MEMORY")
                     self.command_processor.add_geolayer(new_geolayer)
 
                 else:
-                    general.runalg("qgis:definecurrentprojection", input_geolayer.qgs_vector_layer, pv_CRS)
+                    alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
+                                      "CRS": pv_CRS}
+                    self.command_processor.qgis_processor.runAlgorithm("qgis:definecurrentprojection", alg_parameters)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

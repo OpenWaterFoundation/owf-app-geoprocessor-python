@@ -41,7 +41,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(RenameGeoLayerAttribute, self).__init__()
+        super().__init__()
         self.command_name = "RenameGeoLayerAttribute"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

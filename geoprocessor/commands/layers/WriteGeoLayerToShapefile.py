@@ -53,7 +53,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(WriteGeoLayerToShapefile, self).__init__()
+        super().__init__()
         self.command_name = "WriteGeoLayerToShapefile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

@@ -10,12 +10,12 @@ def polygonize(raster_full_path, field_name, output_format, output_file, crs_cod
     # Open the raster within the GDAL environment.
     src_ds = gdal.Open(raster_full_path)
     prj = src_ds.GetProjection()
-    print prj
+    print(prj)
 
     srs = osr.SpatialReference(wkt=prj)
     if srs.IsProjected:
-        print srs.GetAttrValue('projcs')
-    print srs.GetAttrValue('geogcs')
+        print(srs.GetAttrValue('projcs'))
+    print(srs.GetAttrValue('geogcs'))
 
 
     # Get the raster's bands.
@@ -31,7 +31,7 @@ def polygonize(raster_full_path, field_name, output_format, output_file, crs_cod
     else:
         drv = None
         dst_ds = None
-        print "{} is not a valid output_format. Choose either Shapefile or GeoJSON."
+        print("{} is not a valid output_format. Choose either Shapefile or GeoJSON.")
 
     # Create the vector layer.
     input_spatial_ref = osr.SpatialReference()

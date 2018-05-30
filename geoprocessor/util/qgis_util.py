@@ -6,14 +6,18 @@ import os
 
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
 from qgis.core import QgsGeometry, QgsRasterLayer, QgsVectorFileWriter, QgsVectorLayer
+from qgis.core import QgsExpressionContext, QgsExpressionContextScope
+
+from qgis.analysis import QgsNativeAlgorithms
 
 import qgis.utils
 
-from processing.core.Processing import Processing
+from plugins.processing.core import Processing
 
 import geoprocessor.util.string_util as string_util
 
-from PyQt4.QtCore import QVariant, QFileInfo
+from PyQt5.QtCore import QVariant, QFileInfo
+
 
 
 
@@ -89,17 +93,17 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
                 qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Date)])
             else:
                 valid_attribute_types = ["int", "double", "string", "date"]
-                print "Error message: The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
-                      "include: {}".format(attribute_type, valid_attribute_types)
+                print ("Error message: The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
+                      "include: {}".format(attribute_type, valid_attribute_types))
 
             qgsvectorlayer.updateFields()
 
         except:
-            print "An error occurred."
+            print ("An error occurred.")
 
     # Print an error message if the input attribute name is already an existing attribute name.
     else:
-        print "Error message: The attribute_name ({}) is an already existing attribute name.".format(attribute_name)
+        print ("Error message: The attribute_name ({}) is an already existing attribute name.".format(attribute_name))
 
 
 def create_qgsgeometry(geometry_format, geometry_input_as_string):
@@ -233,16 +237,23 @@ def get_features_matching_expression(qgsvectorlayer, qgs_expression):
     # A list to hold the QgsFeature objects that match the QgsExpression.
     matching_features = []
 
-    # The QgsExpression.prepare is used to increase the speed that the evaluation takes to run when evaluating multiple
-    # feature of a QgsVectorLayer object.
+    # These variables are used to increase the speed that the evaluation takes to run when evaluating multiple features
+    # of a QgsVectorLayer.
     # REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/expressions.html
-    qgs_expression.prepare(qgsvectorlayer.pendingFields())
+    # REF: https://gis.stackexchange.com/questions/244068/pyqgis-gives-typeerror-qgsexpression-prepare-argument-1-
+    #      has-unexpected-type/244088#244088
+    context = QgsExpressionContext()
+    scope = QgsExpressionContextScope()
 
     # Iterate over the features of the QgsVectorLayer
     for feature in qgsvectorlayer.getFeatures():
 
+        # Set the scope to the current feature.
+        scope.setFeature(feature)
+        context.appendScope(scope)
+
         # If the evaluation of the feature is TRUE, append the feature to the matching_features list.
-        if qgs_expression.evaluate(feature):
+        if qgs_expression.evaluate(context) == 1:
             matching_features.append(feature)
 
     # Return the list of QgsFeatures that match the input QgsExpression.
@@ -264,16 +275,23 @@ def get_features_not_matching_expression(qgsvectorlayer, qgs_expression):
     # A list to hold the QgsFeature objects that do not match the QgsExpression.
     non_matching_features = []
 
-    # The QgsExpression.prepare is used to increase the speed that the evaluation takes to run when evaluating multiple
-    # feature of a QgsVectorLayer object.
+    # These variables are used to increase the speed that the evaluation takes to run when evaluating multiple features
+    # of a QgsVectorLayer.
     # REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/expressions.html
-    qgs_expression.prepare(qgsvectorlayer.pendingFields())
+    # REF: https://gis.stackexchange.com/questions/244068/pyqgis-gives-typeerror-qgsexpression-prepare-argument-1-
+    #      has-unexpected-type/244088#244088
+    context = QgsExpressionContext()
+    scope = QgsExpressionContextScope()
 
     # Iterate over the features of the QgsVectorLayer
     for feature in qgsvectorlayer.getFeatures():
 
+        # Set the scope to the current feature.
+        scope.setFeature(feature)
+        context.appendScope(scope)
+
         # If the evaluation of the feature is FALSE, append the feature to the non_matching_features list.
-        if not qgs_expression.evaluate(feature):
+        if qgs_expression.evaluate(context) == 0:
             non_matching_features.append(feature)
 
     # Return the list of QgsFeatures that do not match the input QgsExpression.
@@ -325,7 +343,7 @@ def get_geometrytype_qgis_from_wkt(wkt_string):
     wkt_geometry_type = (wkt_string.split('(')[0]).strip().upper()
 
     # Iterate over the entries in the QGIS/WKT geometry type conversion dictionary (QGIS_WKT_geom_conversion_dic).
-    for qgis_geometry_type, wkt_geometry_types in QGIS_WKT_geom_conversion_dic.iteritems():
+    for qgis_geometry_type, wkt_geometry_types in QGIS_WKT_geom_conversion_dic.items():
 
         # If the WKT geometry of the input WKT string is recognized, return the equivalent QGIS geometry.
         if wkt_geometry_type in wkt_geometry_types:
@@ -403,7 +421,9 @@ def get_qgis_version_int():
     Return: The QGIS version (int).
     """
 
-    return qgis.utils.QGis.QGIS_VERSION_INT
+    # TODO smalers 2018-05-28 the following was version 2
+    # return qgis.utils.QGis.QGIS_VERSION_INT
+    return qgis.utils.Qgis.QGIS_VERSION_INT
 
 
 def get_qgis_version_name():
@@ -414,7 +434,9 @@ def get_qgis_version_name():
     Return: The QGIS version name (string).
     """
 
-    return qgis.utils.QGis.QGIS_RELEASE_NAME
+    # TODO smalers 2018-05-28 the following was version 2
+    #return qgis.utils.QGis.QGIS_RELEASE_NAME
+    return qgis.utils.Qgis.QGIS_RELEASE_NAME
 
 
 def get_qgis_version_str():
@@ -425,7 +447,9 @@ def get_qgis_version_str():
     Return: The QGIS version (string).
     """
 
-    return qgis.utils.QGis.QGIS_VERSION
+    # TODO smalers 2018-05-28 the following was version 2
+    #return qgis.utils.QGis.QGIS_VERSION
+    return qgis.utils.Qgis.QGIS_VERSION
 
 
 def get_qgscoordinatereferencesystem_obj(crs_code):
@@ -471,22 +495,35 @@ def get_qgsexpression_obj(expression_as_string):
         return None
 
 
-def initialize_qgis(qgis_prefix_path):
+def initialize_qgis():
     """
     Initialize the QGIS environment.  This typically needs to be done only once when the application starts.
     This is expected to be called once when an application starts, before any geoprocessing tasks.
-
-    Args:
-        qgis_prefix_path (str) the installation folder for the QGIS that is being used.
 
     Returns: None.
     """
 
     # Open QGIS environment
-    QgsApplication.setPrefixPath(qgis_prefix_path, True)
-    qgs = QgsApplication([], True)
+    # REF: https://github.com/OSGeo/homebrew-osgeo4mac/issues/197
+    qgs = QgsApplication([], False)
     qgs.initQgis()
-    Processing.initialize()
+
+def  initialize_qgis_processor():
+    """
+    Initialize the QGIS processor environment (to call and run QGIS algorithms).
+
+    Returns: the initialized qgis processor object.
+    """
+
+    pr = Processing.Processing()
+    pr.initialize()
+
+    # Allows the GeoProcessor to use the native algorithms
+    # REF: https://gis.stackexchange.com/questions/279874/
+    #   using-qgis3-processing-algorithms-from-standalone-pyqgis-scripts-outside-of-gui/279937
+    QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
+
+    return pr
 
 
 def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_value):
@@ -504,7 +541,7 @@ def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_
     """
 
     # Get the index of the attribute to populate.
-    attr_index = qgsvectorlayer.fieldNameIndex(attribute_name)
+    attr_index = qgsvectorlayer.fields().lookupField(attribute_name)
 
     # Create an attribute dictionary.
     # Key: the index of the attribute to populate
@@ -542,7 +579,7 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs):
 
     # If the created QGSRasterLayer object is invalid, print an error message and return None.
     else:
-        print "The QGSRasterLayer object ({}) is invalid.".format(spatial_data_file_abs)
+        print ("The QGSRasterLayer object ({}) is invalid.".format(spatial_data_file_abs))
 
 
 def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs, delimiter, crs, wkt_col_name):
@@ -610,7 +647,7 @@ def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs, delimiter, cr
         return None
 
 
-def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs, worksheet_index = 0):
+def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs, worksheet_index=0):
     """
     Reads an Excel worksheet and returns a QGSVectorLayerObject.
 
@@ -634,8 +671,7 @@ def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs, worksheet_index
     if qgsvectorlayer.isValid():
         return qgsvectorlayer
     else:
-        print "The QGSVectorLayer object ({} worksheet {}) is invalid.".format(excel_workbook_abs, str(worksheet_index))
-
+        print("The QGSVectorLayer object ({} worksheet {}) is invalid.".format(excel_workbook_abs, str(worksheet_index)))
 
 
 def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
@@ -673,8 +709,8 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
 
     # If the created QGSVectorLayer object is invalid, print an error message and return None.
     else:
-        print "The QGSVectorLayer object from file geodatabse ({}) feature class ({}) is invalid.".format(
-            file_gdb_path_abs, feature_class)
+        print("The QGSVectorLayer object from file geodatabase ({}) feature class ({}) is invalid.".format(
+            file_gdb_path_abs, feature_class))
         return None
 
 
@@ -710,7 +746,7 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
 
     # If the created QGSVectorLayer object is invalid, print an error message and return None.
     else:
-        print "The QGSVectorLayer object ({}) is invalid.".format(spatial_data_file_abs)
+        print("The QGSVectorLayer object ({}) is invalid.".format(spatial_data_file_abs))
 
 
 def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
@@ -731,7 +767,7 @@ def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
         if attribute.name().upper() == attribute_name.upper():
 
             # Get the index of the attribute to be deleted.
-            index = qgsvectorlayer.fieldNameIndex(attribute.name())
+            index = qgsvectorlayer.fields().lookupField(attribute.name())
 
             # Delete the attribute.
             qgsvectorlayer.dataProvider().deleteAttributes([index])
@@ -752,7 +788,7 @@ def remove_qgsvectorlayer_attributes(qgsvectorlayer, keep_patterns, remove_patte
     """
 
     # Get a list of all of the attributes of the Qgs Vector Layer.
-    orig_attribute_field_names = [attr_field.name() for attr_field in qgsvectorlayer.pendingFields()]
+    orig_attribute_field_names = [attr_field.name() for attr_field in qgsvectorlayer.fields()]
 
     # Sort the list to create a second list that only includes the attributes that should be removed.
     attrs_to_remove = string_util.filter_list_of_strings(orig_attribute_field_names, keep_patterns, remove_patterns,
@@ -803,7 +839,7 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribut
             qgsvectorlayer.startEditing()
 
             # Get the index of the attribute to be renamed.
-            index = qgsvectorlayer.fieldNameIndex(attribute.name())
+            index = qgsvectorlayer.fields().lookupField(attribute.name())
 
             # Rename the attribute with the new name (string).
             qgsvectorlayer.renameAttribute(index, str(new_attribute_name))
@@ -904,8 +940,7 @@ def write_qgsvectorlayer_to_kml(qgsvectorlayer, output_file, crs, name_field, de
         qgsvectorlayer (object): the QGSVectorLayer object
         output_file (str): the full pathname to the output file (do not include .shp extension)
         crs (str): the output coordinate reference system in EPSG code
-        precision (int): a integer at or between 0 and 15 that determines the number of decimal places to include
-            in the output geometry
+        name_field (str): the field holding the
 
     Returns: None
     """

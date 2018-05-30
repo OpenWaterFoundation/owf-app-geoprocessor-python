@@ -137,9 +137,9 @@ def expand_formatter(absolute_path, formatter):
     if formatter == '%F':
 
         if extension == '':
-            print "Warning: There is no file extension for the input file ({})".format(absolute_path)
+            print ("Warning: There is no file extension for the input file ({})".format(absolute_path))
         if filename == '':
-            print "Warning: There is no filename for the input file ({})".format(absolute_path)
+            print ("Warning: There is no filename for the input file ({})".format(absolute_path))
         return "{}{}".format(filename, extension)
 
     # The %f formatter code returns the filename without the leading path and without the extension. Print warning
@@ -148,7 +148,7 @@ def expand_formatter(absolute_path, formatter):
     elif formatter == '%f':
 
         if filename == '':
-            print "Warning: There is no filename for the input file ({})".format(absolute_path)
+            print ("Warning: There is no filename for the input file ({})".format(absolute_path))
         return filename
 
     # The %P formatter code returns the filename with the leading path and with the file extension.
@@ -166,12 +166,12 @@ def expand_formatter(absolute_path, formatter):
     elif formatter == '%E':
 
         if extension == '':
-            print "Warning: There is no file extension for the input file ({})".format(absolute_path)
+            print ("Warning: There is no file extension for the input file ({})".format(absolute_path))
         return extension
 
     # Print a warning message and return None if the input formatter code is not a valid code.
     else:
-        print "The formatter ({}) is not an option."
+        print ("The formatter ({}) is not an option.")
         return None
 
 
@@ -424,7 +424,10 @@ def print_standard_file_header(ofp, comment_line_prefix='#', max_width=120, prop
 
     comments = format_standard_file_header(comment_line_prefix=comment_line_prefix, max_width=max_width, is_xml=is_xml)
 
-    nl = os.linesep
+    # Python 2...
+    # nl = os.linesep
+    # Python 3...
+    nl = '\n'
     for comment in comments:
         ofp.write(comment + nl)
     # Flush to the write to make sure it is visible, such as if written to a long-writing file
@@ -647,7 +650,7 @@ def write_property_file(output_file_absolute, all_properties,
         else:
             fout = open(output_file_absolute, "w")
         # Get the list of all processor property names from the property dictionary
-        prop_name_list = all_properties.keys()
+        prop_name_list = list(all_properties.keys())
         # logger.info("Have " + str(len(prop_name_list)) + " properties to write")
         if sort_order == 0:
             # Want to output in the order of the properties that were requested, not the order from the dictionary

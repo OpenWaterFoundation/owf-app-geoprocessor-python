@@ -26,3 +26,6 @@ doc-dev-mkdocs-project/site/
 # Microsoft temporary files
 *.tmp
 ~$*
+
+# Ignore file extension used as temporary for .bat, etc. so email attachment works
+*.xxx

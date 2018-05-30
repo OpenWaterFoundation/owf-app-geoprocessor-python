@@ -46,7 +46,7 @@ class ReadTableFromExcel(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(ReadTableFromExcel, self).__init__()
+        super().__init__()
         self.command_name = "ReadTableFromExcel"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

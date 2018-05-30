@@ -46,7 +46,7 @@ class UnzipFile(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(UnzipFile, self).__init__()
+        super().__init__()
         self.command_name = "UnzipFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
@@ -185,7 +185,7 @@ class UnzipFile(AbstractCommand):
         dic = {".TAR": "TAR", ".ZIP": "ZIP"}
 
         # Iterate over the dictionary and return the FileType that corresponds to the the input file's extension.
-        for ext, file_type in dic.iteritems():
+        for ext, file_type in dic.items():
             if io_util.get_extension(file_path).upper() == ext:
                 return file_type
 

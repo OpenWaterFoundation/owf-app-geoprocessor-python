@@ -37,7 +37,7 @@ class CopyFile(AbstractCommand):
         Initialize a new instance of the command.
         """
         # AbstractCommand data
-        super(CopyFile, self).__init__()
+        super().__init__()
         self.command_name = "CopyFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

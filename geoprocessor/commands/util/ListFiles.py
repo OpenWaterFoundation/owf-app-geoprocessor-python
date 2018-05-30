@@ -14,7 +14,7 @@ import geoprocessor.util.validator_util as validators
 
 import logging
 import os
-import urllib2
+import urllib
 
 
 class ListFiles(AbstractCommand):
@@ -56,7 +56,7 @@ class ListFiles(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(ListFiles, self).__init__()
+        super().__init__()
         self.command_name = "ListFiles"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
@@ -244,7 +244,7 @@ class ListFiles(AbstractCommand):
             url += '/'
 
         # Read the source content of the URL.
-        urlpath = urllib2.urlopen(url)
+        urlpath = urllib.urlopen(url)
         string = urlpath.read().decode('utf-8')
 
         # Get the URL of the parent directory.
@@ -389,8 +389,8 @@ class ListFiles(AbstractCommand):
                     else:
                         output_filtered = []
 
-                    # Add the filtered list to the desired ListProperty.
-                    self.command_processor.set_property(pv_ListProperty, output_filtered)
+                    # Add the filtered list to the desired ListProperty. Sort the list alphabetically
+                    self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
 
                 # If the input is a url.
                 if pv_URL:
@@ -411,7 +411,7 @@ class ListFiles(AbstractCommand):
                         output_filtered = None
 
                     # Add the filtered list to the desired ListProperty.
-                    self.command_processor.set_property(pv_ListProperty, output_filtered)
+                    self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

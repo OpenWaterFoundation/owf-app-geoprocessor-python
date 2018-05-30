@@ -29,7 +29,7 @@ class StartLog(AbstractCommand):
         """
         Initialize the command instance.
         """
-        super(StartLog, self).__init__()
+        super().__init__()
         self.command_name = "StartLog"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

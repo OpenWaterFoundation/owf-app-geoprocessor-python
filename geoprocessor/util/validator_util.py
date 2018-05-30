@@ -18,7 +18,8 @@ import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.zip_util as zip_util
 
-import urllib2
+from urllib.request import urlopen
+
 
 def run_check(self, condition, parameter_name, parameter_value, fail_response, other_values=None):
     """
@@ -47,7 +48,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         condition: the condition statement (or name) of the check that is to be run
         parameter_name: the command parameter being checked (the name, not the value)
         parameter_value: the command parameter value being checked (the value, not the name)
-        fail_responses: the action that occurs if the check fails. The available options are as follows:
+        fail_response: the action that occurs if the check fails. The available options are as follows:
             (1) FAIL: a FAIL message is logged and the function returns FALSE for run_the_command Boolean
             (2) WARN: a WARN message is logged and the function returns TRUE for run_the_command Boolean
             (3) WARNBUTDONOTRUN: a WARN message is logged and the function returns FALSE for run_the_command Boolean
@@ -173,8 +174,8 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         file_gdb_path_abs = other_values[0]
 
         message = "The {} ({}) is not a valid feature class in the file geodatabase ({}).".format(parameter_name,
-                                                                                                parameter_value,
-                                                                                                file_gdb_path_abs)
+                                                                                                  parameter_value,
+                                                                                                  file_gdb_path_abs)
         recommendation = "Specify an existing and valid {}.".format(parameter_name)
         ogr.UseExceptions()
         driver = ogr.GetDriverByName("OpenFileGDB")
@@ -263,8 +264,8 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         recommendation = 'Specify a list of {} items for the {} parameter.'.format(correct_length, parameter_name)
 
         # Convert the string into a list.
-        list = string_util.delimited_string_to_list(parameter_value, delimiter)
-        if len(list) != correct_length:
+        list_of_strings = string_util.delimited_string_to_list(parameter_value, delimiter)
+        if len(list_of_strings) != correct_length:
             check_failed = True
 
     # Check if the property name is a unique property name
@@ -300,8 +301,10 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
 
         correct_length = other_values[0]
 
-        message = 'The {} ({}) must have exactly {} character(s).'.format(parameter_name, parameter_value, correct_length)
-        recommendation = 'Specify a string with {} characters for the {} parameter.'.format(correct_length, parameter_name)
+        message = 'The {} ({}) must have exactly {} character(s).'.format(parameter_name, parameter_value,
+                                                                          correct_length)
+        recommendation = 'Specify a string with {} characters for the {} parameter.'.format(correct_length,
+                                                                                            parameter_name)
 
         # Convert the string into a list.
         if len(parameter_value) != correct_length:
@@ -352,7 +355,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         recommendation = "Specify a valid URL for {}.".format(parameter_name)
 
         try:
-            urllib2.urlopen(parameter_value)
+            urlopen(parameter_value)
         except:
             check_failed = True
 

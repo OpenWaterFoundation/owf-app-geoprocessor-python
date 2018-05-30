@@ -31,7 +31,7 @@ class If(AbstractCommand):
         """
         Initialize the command instance.
         """
-        super(If, self).__init__()
+        super().__init__()
         # AbstractCommand data
         self.command_name = "If"
         self.command_parameter_metadata = self.__command_parameter_metadata

@@ -42,7 +42,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(ReadTableFromDelimitedFile, self).__init__()
+        super().__init__()
         self.command_name = "ReadTableFromDelimitedFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

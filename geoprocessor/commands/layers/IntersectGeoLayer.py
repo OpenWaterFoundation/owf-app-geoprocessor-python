@@ -16,7 +16,7 @@ import geoprocessor.util.string_util as string_util
 import logging
 import os
 
-from processing.tools import general
+from plugins.processing.tools import general
 
 
 class IntersectGeoLayer(AbstractCommand):
@@ -64,7 +64,7 @@ class IntersectGeoLayer(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(IntersectGeoLayer, self).__init__()
+        super().__init__()
         self.command_name = "IntersectGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
@@ -279,7 +279,7 @@ class IntersectGeoLayer(AbstractCommand):
 
         # Move the appropriate entries within the intersecting dictionary to the within dictionary.
         to_delete = []
-        for target_feature, intersect_feature_list in intersecting_target_feats.iteritems():
+        for target_feature, intersect_feature_list in intersecting_target_feats.items():
 
             # If the dictionary entry only has one intersect feature, continue.
             if len(list(set(intersect_feature_list))) == 1:
@@ -318,7 +318,7 @@ class IntersectGeoLayer(AbstractCommand):
             target_attr_idx = target_layer.fieldNameIndex(field.name())
 
             # Iterate over the within dictionary.
-            for target_feat, intersect_feat in within_target_feats.iteritems():
+            for target_feat, intersect_feat in within_target_feats.items():
                 # Get the intersect attribute value.
                 intersect_feat_value = intersect_feat.attributes()[intersect_attr_to_add_idx]
 
@@ -329,7 +329,7 @@ class IntersectGeoLayer(AbstractCommand):
                 target_layer.dataProvider().changeAttributeValues(({target_feat.id(): attr_dic}))
 
             # Iterate over the intersect dictionary.
-            for target_feat, intersect_feats in intersecting_target_feats.iteritems():
+            for target_feat, intersect_feats in intersecting_target_feats.items():
 
                 list_of_intersect_attr_values = []
 
@@ -450,14 +450,16 @@ class IntersectGeoLayer(AbstractCommand):
                     # Perform the QGIS intersection function. Refer to the reference below for parameter descriptions.
                     # REF: https://docs.qgis.org/2.18/en/docs/user_manual/processing_algs/qgis/
                     # vector_overlay_tools.html#intersection
-                    intersected_output = general.runalg("qgis:intersection", input_geolayer.qgs_vector_layer,
-                                                        intersect_geolayer_copy.qgs_vector_layer, False, None)
+                    alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
+                                      "OVERLAY": intersect_geolayer_copy.qgs_vector_layer,
+                                      "OUTPUT": "memory:"}
+                    intersected_output = self.command_processor.qgis_processor.runAlgorithm("qgis:intersection",
+                                                                                            alg_parameters)
 
                     # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-                    # intersected_output["OUTPUT"] returns the full file pathname of the memory output layer (saved
-                    # in a QGIS temporary folder)
-                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(intersected_output["OUTPUT"])
-                    new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+                    # in QGIS3, intersected_output["OUTPUT"] returns the returns the QGS vector layer object
+                    # see ClipGeoLayer.py for information about value in QGIS2 environment
+                    new_geolayer = GeoLayer(pv_OutputGeoLayerID, intersected_output["OUTPUT"], "MEMORY")
                     self.command_processor.add_geolayer(new_geolayer)
 
                 # If using OWF version of intersect. Set to FALSE always until later notice.

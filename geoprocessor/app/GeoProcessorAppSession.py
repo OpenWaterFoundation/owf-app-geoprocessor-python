@@ -22,7 +22,7 @@ class GeoProcessorAppSession(object):
         """
         log_folder = self.get_log_folder()
         # Do not allow log file to be created under Linux root but allow the application to run
-        if  log_folder == "/":
+        if log_folder == "/":
             return False
 
         if not os.path.exists(log_folder):
@@ -43,8 +43,8 @@ class GeoProcessorAppSession(object):
         Returns:
             The name of the folder for user geoprocessor application files.
         """
-        app_folder = os.path.join(self.get_user_folder(),".owf-gp")
-        logging.info('Application folder is "' + app_folder + '"');
+        app_folder = os.path.join(self.get_user_folder(), ".owf-gp")
+        logging.info('Application folder is "' + app_folder + '"')
         return app_folder
 
     def get_log_file(self):
@@ -56,7 +56,7 @@ class GeoProcessorAppSession(object):
         """
         log_file = os.path.join(self.get_log_folder(), "gp_" + getpass.getuser() + ".log")
         logging.info('Log file is "' + log_file + '"')
-        return log_file;
+        return log_file
 
     def get_log_folder(self):
         """
@@ -65,18 +65,18 @@ class GeoProcessorAppSession(object):
         Returns:
             The name of the folder for user log files.
         """
-        log_folder = os.path.join(self.get_app_folder(),"log")
-        logging.info('Log folder is "' + log_folder + '"');
+        log_folder = os.path.join(self.get_app_folder(), "log")
+        logging.info('Log folder is "' + log_folder + '"')
         return log_folder
 
     def get_user_folder(self):
         """
         Return the name of the user folder for the operating system, for example:
-            Windows:  C:\Users\UserName\.owfgp
+            Windows:  C:\\Users\\UserName\\.owfgp
             Linux: /home/UserName/.owfgp
 
         Returns:
-
+            The name of the user folder
         """
         user_folder = os.path.expanduser("~")
         logging.info('User folder is "' + user_folder + '"')

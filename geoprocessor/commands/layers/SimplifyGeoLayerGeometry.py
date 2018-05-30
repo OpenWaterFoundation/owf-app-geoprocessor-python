@@ -14,7 +14,7 @@ import geoprocessor.util.qgis_util as qgis_util
 
 import logging
 import os
-from processing.tools import general
+from plugins.processing.tools import general
 
 
 class SimplifyGeoLayerGeometry(AbstractCommand):
@@ -55,7 +55,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(SimplifyGeoLayerGeometry, self).__init__()
+        super().__init__()
         self.command_name = "SimplifyGeoLayerGeometry"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
@@ -221,14 +221,17 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                     # Perform the QGIS simplify geometries function. Refer to the REF below for parameter descriptions.
                     # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/
                     #       vector_geometry_tools/simplifygeometries.html
-                    simple_output = general.runalg("qgis:simplifygeometries", geolayer.qgs_vector_layer,
-                                                   tolerance_float, None)
+                    alg_parameters = {"INPUT": geolayer.qgs_vector_layer,
+                                      "METHOD": 0,
+                                      "TOLERANCE": tolerance_float,
+                                      "OUTPUT": "memory:"}
+                    simple_output = self.command_processor.qgis_processor.runAlgorithm("native:simplifygeometries",
+                                                                                       alg_parameters)
 
-                    # Create a new GeoLayer with the input GeoLayer's ID. The new simplified GeoLayer will be
-                    # assigned the value of the SimplifiedGeoLayerID parameter. simple_output["OUTPUT"] returns the
-                    # full file pathname of the memory output layer (saved in a QGIS temporary folder)
-                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(simple_output["OUTPUT"])
-                    new_geolayer = GeoLayer(pv_SimplifiedGeoLayerID, qgs_vector_layer, "MEMORY")
+                    # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
+                    # in QGIS3, simple_output["OUTPUT"] returns the returns the QGS vector layer object
+                    # see ClipGeoLayer.py for information about value in QGIS2 environment
+                    new_geolayer = GeoLayer(pv_SimplifiedGeoLayerID, simple_output["OUTPUT"], "MEMORY")
                     self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process.

@@ -49,7 +49,7 @@ class WriteGeoLayerToKML(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(WriteGeoLayerToKML, self).__init__()
+        super().__init__()
         self.command_name = "WriteGeoLayerToKML"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

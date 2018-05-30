@@ -37,7 +37,7 @@ class RemoveFile(AbstractCommand):
         Initialize a new instance of the command.
         """
         # AbstractCommand data
-        super(RemoveFile, self).__init__()
+        super().__init__()
         self.command_name = "RemoveFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

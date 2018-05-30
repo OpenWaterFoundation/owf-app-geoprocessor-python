@@ -52,7 +52,7 @@ class CopyGeoLayer(AbstractCommand):
         """
 
         # AbstractCommand data
-        super(CopyGeoLayer, self).__init__()
+        super().__init__()
         self.command_name = "CopyGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 

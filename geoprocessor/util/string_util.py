@@ -179,11 +179,18 @@ def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_
         A filtered list of strings. Results are based off of return_inclusions boolean.
     """
 
-    # Assign the default values to the include_glob_patterns and the exclude_glob_patterns.
+    # Assign the default values to the include_glob_patterns if there is no include_glob_patterns list.
     if include_glob_patterns is None:
         include_glob_patterns = ['*']
+    # Assign the default values to the include_glob_patterns if all items in the include_glob_patterns list are None
+    elif len([x for x in include_glob_patterns if x is None]) == len(include_glob_patterns):
+        include_glob_patterns = ['*']
+    # Assign the default values to the exclude_glob_patterns if there is no exclude_glob_patterns list.
     if exclude_glob_patterns is None:
         exclude_glob_patterns = ['']
+    # Assign the default values to the exclude_glob_patterns if all items in the exclude_glob_patterns list are None
+    elif len([x for x in exclude_glob_patterns if x is None]) == len(exclude_glob_patterns):
+        exclude_glob_patterns = ['*']
 
     # A list to hold all of the item to include.
     master_items_to_include = []
@@ -193,18 +200,26 @@ def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_
 
     # Iterate over the include glob patterns.
     for pattern in include_glob_patterns:
-        # Get the items from the input_list that match the pattern. Add the items to the master_items_to_include list.
-        items_to_include = list(i for i in input_list if re.match(glob2re(pattern), i))
-        master_items_to_include.extend(items_to_include)
+
+        # Make sure that a None value is not passed.
+        if pattern:
+
+            # Get the input list items that match the pattern. Add the items to the master_items_to_include list.
+            items_to_include = list(i for i in input_list if re.match(glob2re(pattern), i))
+            master_items_to_include.extend(items_to_include)
 
     # Remove any duplicates from the master_items_to_include list.
     master_items_to_include = list(set(master_items_to_include))
 
     # Iterate over the exclude glob patterns.
     for pattern in exclude_glob_patterns:
-        # Get the items from the input_list that match the pattern. Add the items to the master_items_to_exclude list.
-        items_to_exclude = list(i for i in input_list if re.match(glob2re(pattern), i))
-        master_items_to_exclude.extend(items_to_exclude)
+
+        # Make sure that a None value is not passed.
+        if pattern:
+
+            # Get the input list items that match the pattern. Add the items to the master_items_to_exclude list.
+            items_to_exclude = list(i for i in input_list if re.match(glob2re(pattern), i))
+            master_items_to_exclude.extend(items_to_exclude)
 
     # Remove any duplicates from the master_items_to_exclude list.
     master_items_to_exclude = list(set(master_items_to_exclude))

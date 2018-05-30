@@ -176,14 +176,14 @@ class GeoProcessorUI(Ui_MainWindow):
         # Each entry represents a parameter.
         # Key: parameter name
         # Value: existing parameter value
-        for input_parameter_name, input_parameter_value in input_parameter_dictionary.iteritems():
+        for input_parameter_name, input_parameter_value in input_parameter_dictionary.items():
 
             # Iterate over the dictionary entries of the default command_parameter_dictionary within the dialog design
             # instance object.
             # Each entry represents a parameter.
             # Key: parameter name
             # Value: default parameter value
-            for default_parameter_name, default_parameter_value in ui.command_parameter_values.iteritems():
+            for default_parameter_name, default_parameter_value in ui.command_parameter_values.items():
 
                 # If a command parameter is NOT set to default in the cmd_line_string, set the
                 # parameter value within the dialog design instance object to the parameter value indicated by the
@@ -457,7 +457,7 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # Populate the Results Properties Table.
         # Iterate through all of the properties in the GeoProcessor.
-        for prop_name, prop_value in self.gp.properties.iteritems():
+        for prop_name, prop_value in self.gp.properties.items():
 
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.Results_Properties_Table.rowCount()

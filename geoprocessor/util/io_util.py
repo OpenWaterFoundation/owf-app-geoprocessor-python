@@ -650,7 +650,7 @@ def write_property_file(output_file_absolute, all_properties,
         else:
             fout = open(output_file_absolute, "w")
         # Get the list of all processor property names from the property dictionary
-        prop_name_list = all_properties.keys()
+        prop_name_list = list(all_properties.keys())
         # logger.info("Have " + str(len(prop_name_list)) + " properties to write")
         if sort_order == 0:
             # Want to output in the order of the properties that were requested, not the order from the dictionary

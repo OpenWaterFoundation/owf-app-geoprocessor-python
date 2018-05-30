@@ -503,7 +503,7 @@ class For(AbstractCommand):
 
         # Iterate over the entries in the table_property_map dictionary.
         # key is the property name and value is the corresponding column name
-        for column, property in self.table_property_map.iteritems():
+        for column, property in self.table_property_map.items():
 
             # Get the value for the given column and the current row.
             property_val = row[column]

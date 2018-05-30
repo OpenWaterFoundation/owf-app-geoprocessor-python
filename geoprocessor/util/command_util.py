@@ -391,7 +391,7 @@ def validate_command_parameter_names(command, warning, deprecated_parameter_name
 
     # Check size dynamically in case props are removed below
     # Because the dictionary size may change during iteration, can't do the following
-    # for parameter_name, parameter_value in command.command_parameters.iteritems():
+    # for parameter_name, parameter_value in command.command_parameters.items():
     # TODO smalers 2017-12-25 need to iterate with for to allow delete from the dictionary
     for i_parameter in range(0, len(command_parameter_names)):
         # First make sure that the parameter is in the valid parameter name list.

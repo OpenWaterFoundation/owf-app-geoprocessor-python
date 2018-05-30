@@ -115,7 +115,7 @@ class GeoLayer(object):
         # Get the attribute field names of the GeoLayer
         # "attribute_field_names" (list of strings) is a list of the GeoLayer's attribute field names. Return the
         # attribute_field_names variable.
-        attribute_field_names = [attr_field.name() for attr_field in self.qgs_vector_layer.pendingFields()]
+        attribute_field_names = [attr_field.name() for attr_field in self.qgs_vector_layer.fields()]
         return attribute_field_names
 
     def get_crs(self):

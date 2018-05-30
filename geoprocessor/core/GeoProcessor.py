@@ -45,6 +45,9 @@ class GeoProcessor(object):
         # list that holds the absolute paths to the output files
         self.output_files = []
 
+        # holds the initialized qgis processor
+        self.qgis_processor = qgis_util.initialize_qgis_processor()
+
         # qgis version
         self.properties["QGISVersion"] = qgis_util.get_qgis_version_str()
 
@@ -544,7 +547,7 @@ class GeoProcessor(object):
         # should not be reset (such as properties that are difficult to reset).
         # Check size dynamically in case props are removed below
         # Because the dictionary size may change during iteration, can't do the following
-        #     for property_name, property_value in self.properties.iteritems():
+        #     for property_name, property_value in self.properties.items():
         # Cannot iterate through a dictionary and remove items from dictionary.
         # Therefore convert the dictionary to a list and iterate on the list
         processor_property_names = list(self.properties.keys())

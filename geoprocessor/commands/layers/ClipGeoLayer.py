@@ -16,7 +16,7 @@ import logging
 
 import os
 
-from plugins.processing.tools import general
+from processing.core.Processing import Processing
 
 
 class ClipGeoLayer(AbstractCommand):
@@ -236,16 +236,20 @@ class ClipGeoLayer(AbstractCommand):
 
                 # Perform the QGIS clip function. Refer to the reference below for parameter descriptions.
                 # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_overlay_tools/clip.html
-                clipped_output = general.runalg("qgis:clip",
-                                                input_geolayer.qgs_vector_layer,
-                                                clipping_geolayer.qgs_vector_layer,
-                                                None)
+                alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
+                                  "OVERLAY": clipping_geolayer.qgs_vector_layer,
+                                  "OUTPUT": "memory:"}
+                clipped_output = self.command_processor.qgis_processor.runAlgorithm("native:clip", alg_parameters)
 
                 # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-                # clipped_output["OUTPUT"] returns the full file pathname of the memory output layer (saved
-                # in a QGIS temporary folder)
-                qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
-                new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+
+                # In QGIS 2 the clipped_output["OUTPUT"] returned the full file pathname of the memory output layer
+                # (saved in a QGIS temporary folder)
+                # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
+                # new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+
+                # In QGIS 3 the clipped_output["OUTPUT"] returns the QGS vector layer object
+                new_geolayer = GeoLayer(pv_OutputGeoLayerID, clipped_output["OUTPUT"], "MEMORY")
                 self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process

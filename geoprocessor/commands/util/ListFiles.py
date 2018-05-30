@@ -389,8 +389,8 @@ class ListFiles(AbstractCommand):
                     else:
                         output_filtered = []
 
-                    # Add the filtered list to the desired ListProperty.
-                    self.command_processor.set_property(pv_ListProperty, output_filtered)
+                    # Add the filtered list to the desired ListProperty. Sort the list alphabetically
+                    self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
 
                 # If the input is a url.
                 if pv_URL:
@@ -411,7 +411,7 @@ class ListFiles(AbstractCommand):
                         output_filtered = None
 
                     # Add the filtered list to the desired ListProperty.
-                    self.command_processor.set_property(pv_ListProperty, output_filtered)
+                    self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

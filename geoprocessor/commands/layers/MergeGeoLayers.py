@@ -275,7 +275,7 @@ class MergeGeoLayers(AbstractCommand):
             should_be_renamed = False
 
             # Iterate over the attribute map.
-            for new_attr_name, list_of_existing_attr_names_to_rename in attribute_map.iteritems():
+            for new_attr_name, list_of_existing_attr_names_to_rename in attribute_map.items():
 
                 # If the existing attribute name should be renamed then return the new name.
                 if existing_attribute_name in list_of_existing_attr_names_to_rename:
@@ -375,6 +375,9 @@ class MergeGeoLayers(AbstractCommand):
                 # used as an input to the qgis:mergevectorlayers algorithm.
                 copied_geolayer_sourcepath = []
 
+                first_geolayer = self.command_processor.get_geolayer(list_of_geolayer_ids[0])
+                first_crs = first_geolayer.get_crs()
+
                 # Iterate over the GeoLayers to be merged.
                 for geolayer_id in list_of_geolayer_ids:
 
@@ -394,7 +397,7 @@ class MergeGeoLayers(AbstractCommand):
                     copied_geolayer_ids.append(copied_geolayer.id)
 
                     # Iterate over the GeoLayer's attribute dictionary.
-                    for existing_attr_name, new_attr_name in attribute_dictionary.iteritems():
+                    for existing_attr_name, new_attr_name in attribute_dictionary.items():
 
                         # If the attribute should be renamed, then rename the attribute in the copied GeoLayer.
                         if not (existing_attr_name == new_attr_name):
@@ -414,14 +417,16 @@ class MergeGeoLayers(AbstractCommand):
                 # Merge all of the copied GeoLayers (the GeoLayers with the new attribute names).
                 # Using QGIS algorithm but can also use saga:mergelayers algorithm.
                 # saga:mergelayers documentation at http://www.saga-gis.org/saga_tool_doc/2.3.0/shapes_tools_2.html
-                # merged_output["OUTPUT"] returns the full file pathname of the memory output layer
-                # ---> the sage version is merged_output["MERGED"]
-                merged_output = general.runalg("qgis:mergevectorlayers", copied_geolayer_sourcepath, None)
+                alg_parameters = {"LAYERS": copied_geolayer_sourcepath,
+                                  "CRS": first_crs,
+                                  "OUTPUT": "memory:"}
+                merged_output = self.command_processor.qgis_processor.runAlgorithm("qgis:mergevectorlayers",
+                                                                                   alg_parameters)
 
-                # Create a new GeoLayer (merged output) and add it to the GeoProcessor. The ID of the new GeoLayer
-                # is the OutputGeoLayerID parameter value.
-                qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(merged_output["OUTPUT"])
-                self.command_processor.add_geolayer(GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY"))
+                # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
+                # in QGIS3, merged_output["OUTPUT"] returns the returns the QGS vector layer object
+                # see ClipGeoLayer.py for information about value in QGIS2 environment
+                self.command_processor.add_geolayer(GeoLayer(pv_OutputGeoLayerID, merged_output["OUTPUT"], "MEMORY"))
 
                 # Release the copied GeoLayers from the GeoProcessor.
                 for copied_geolayer_id in copied_geolayer_ids:

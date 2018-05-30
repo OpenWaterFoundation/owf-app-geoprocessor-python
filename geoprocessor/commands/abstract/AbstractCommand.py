@@ -158,7 +158,7 @@ class AbstractCommand(object):
 
         # Print out the parsed command parameters for debugging
         if debug:
-            for parameter_name, parameter_value in self.command_parameters.iteritems():
+            for parameter_name, parameter_value in self.command_parameters.items():
                 print('After parsing, command parameter name="' + parameter_name + '" value="' + parameter_value + '"')
                 pass
 

@@ -6,10 +6,13 @@ import os
 
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
 from qgis.core import QgsGeometry, QgsRasterLayer, QgsVectorFileWriter, QgsVectorLayer
+from qgis.core import QgsExpressionContext, QgsExpressionContextScope
+
+from qgis.analysis import QgsNativeAlgorithms
 
 import qgis.utils
 
-from plugins.processing.core.Processing import Processing
+from plugins.processing.core import Processing
 
 import geoprocessor.util.string_util as string_util
 
@@ -234,16 +237,23 @@ def get_features_matching_expression(qgsvectorlayer, qgs_expression):
     # A list to hold the QgsFeature objects that match the QgsExpression.
     matching_features = []
 
-    # The QgsExpression.prepare is used to increase the speed that the evaluation takes to run when evaluating multiple
-    # feature of a QgsVectorLayer object.
+    # These variables are used to increase the speed that the evaluation takes to run when evaluating multiple features
+    # of a QgsVectorLayer.
     # REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/expressions.html
-    qgs_expression.prepare(qgsvectorlayer.pendingFields())
+    # REF: https://gis.stackexchange.com/questions/244068/pyqgis-gives-typeerror-qgsexpression-prepare-argument-1-
+    #      has-unexpected-type/244088#244088
+    context = QgsExpressionContext()
+    scope = QgsExpressionContextScope()
 
     # Iterate over the features of the QgsVectorLayer
     for feature in qgsvectorlayer.getFeatures():
 
+        # Set the scope to the current feature.
+        scope.setFeature(feature)
+        context.appendScope(scope)
+
         # If the evaluation of the feature is TRUE, append the feature to the matching_features list.
-        if qgs_expression.evaluate(feature):
+        if qgs_expression.evaluate(context) == 1:
             matching_features.append(feature)
 
     # Return the list of QgsFeatures that match the input QgsExpression.
@@ -265,16 +275,23 @@ def get_features_not_matching_expression(qgsvectorlayer, qgs_expression):
     # A list to hold the QgsFeature objects that do not match the QgsExpression.
     non_matching_features = []
 
-    # The QgsExpression.prepare is used to increase the speed that the evaluation takes to run when evaluating multiple
-    # feature of a QgsVectorLayer object.
+    # These variables are used to increase the speed that the evaluation takes to run when evaluating multiple features
+    # of a QgsVectorLayer.
     # REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/expressions.html
-    qgs_expression.prepare(qgsvectorlayer.pendingFields())
+    # REF: https://gis.stackexchange.com/questions/244068/pyqgis-gives-typeerror-qgsexpression-prepare-argument-1-
+    #      has-unexpected-type/244088#244088
+    context = QgsExpressionContext()
+    scope = QgsExpressionContextScope()
 
     # Iterate over the features of the QgsVectorLayer
     for feature in qgsvectorlayer.getFeatures():
 
+        # Set the scope to the current feature.
+        scope.setFeature(feature)
+        context.appendScope(scope)
+
         # If the evaluation of the feature is FALSE, append the feature to the non_matching_features list.
-        if not qgs_expression.evaluate(feature):
+        if qgs_expression.evaluate(context) == 0:
             non_matching_features.append(feature)
 
     # Return the list of QgsFeatures that do not match the input QgsExpression.
@@ -326,7 +343,7 @@ def get_geometrytype_qgis_from_wkt(wkt_string):
     wkt_geometry_type = (wkt_string.split('(')[0]).strip().upper()
 
     # Iterate over the entries in the QGIS/WKT geometry type conversion dictionary (QGIS_WKT_geom_conversion_dic).
-    for qgis_geometry_type, wkt_geometry_types in QGIS_WKT_geom_conversion_dic.iteritems():
+    for qgis_geometry_type, wkt_geometry_types in QGIS_WKT_geom_conversion_dic.items():
 
         # If the WKT geometry of the input WKT string is recognized, return the equivalent QGIS geometry.
         if wkt_geometry_type in wkt_geometry_types:
@@ -490,7 +507,23 @@ def initialize_qgis():
     # REF: https://github.com/OSGeo/homebrew-osgeo4mac/issues/197
     qgs = QgsApplication([], False)
     qgs.initQgis()
-    Processing.initialize()
+
+def  initialize_qgis_processor():
+    """
+    Initialize the QGIS processor environment (to call and run QGIS algorithms).
+
+    Returns: the initialized qgis processor object.
+    """
+
+    pr = Processing.Processing()
+    pr.initialize()
+
+    # Allows the GeoProcessor to use the native algorithms
+    # REF: https://gis.stackexchange.com/questions/279874/
+    #   using-qgis3-processing-algorithms-from-standalone-pyqgis-scripts-outside-of-gui/279937
+    QgsApplication.processingRegistry().addProvider(QgsNativeAlgorithms())
+
+    return pr
 
 
 def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_value):
@@ -508,7 +541,7 @@ def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_
     """
 
     # Get the index of the attribute to populate.
-    attr_index = qgsvectorlayer.fieldNameIndex(attribute_name)
+    attr_index = qgsvectorlayer.fields().lookupField(attribute_name)
 
     # Create an attribute dictionary.
     # Key: the index of the attribute to populate
@@ -734,7 +767,7 @@ def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
         if attribute.name().upper() == attribute_name.upper():
 
             # Get the index of the attribute to be deleted.
-            index = qgsvectorlayer.fieldNameIndex(attribute.name())
+            index = qgsvectorlayer.fields().lookupField(attribute.name())
 
             # Delete the attribute.
             qgsvectorlayer.dataProvider().deleteAttributes([index])
@@ -755,7 +788,7 @@ def remove_qgsvectorlayer_attributes(qgsvectorlayer, keep_patterns, remove_patte
     """
 
     # Get a list of all of the attributes of the Qgs Vector Layer.
-    orig_attribute_field_names = [attr_field.name() for attr_field in qgsvectorlayer.pendingFields()]
+    orig_attribute_field_names = [attr_field.name() for attr_field in qgsvectorlayer.fields()]
 
     # Sort the list to create a second list that only includes the attributes that should be removed.
     attrs_to_remove = string_util.filter_list_of_strings(orig_attribute_field_names, keep_patterns, remove_patterns,
@@ -806,7 +839,7 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribut
             qgsvectorlayer.startEditing()
 
             # Get the index of the attribute to be renamed.
-            index = qgsvectorlayer.fieldNameIndex(attribute.name())
+            index = qgsvectorlayer.fields().lookupField(attribute.name())
 
             # Rename the attribute with the new name (string).
             qgsvectorlayer.renameAttribute(index, str(new_attribute_name))

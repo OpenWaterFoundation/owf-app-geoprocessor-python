@@ -20,7 +20,7 @@ echo Start defining QGIS/OWF GeoProcessor environment...
 
 rem Where QGIS is installed
 SET OSGEO4W_ROOT=C:\OSGeo4W64
-if not exist %QGIS_ROOT% GOTO noqgis
+if not exist %OSGEO4W_ROOT% GOTO noqgis
 
 rem Set the QGIS environment by calling the setup batch files that are distributed with QGIS
 rem - the following will reset the PATH and then add QGIS folders to path

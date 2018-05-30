@@ -424,7 +424,10 @@ def print_standard_file_header(ofp, comment_line_prefix='#', max_width=120, prop
 
     comments = format_standard_file_header(comment_line_prefix=comment_line_prefix, max_width=max_width, is_xml=is_xml)
 
-    nl = os.linesep
+    # Python 2...
+    # nl = os.linesep
+    # Python 3...
+    nl = '\n'
     for comment in comments:
         ofp.write(comment + nl)
     # Flush to the write to make sure it is visible, such as if written to a long-writing file

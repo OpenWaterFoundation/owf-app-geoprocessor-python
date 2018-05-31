@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Script to run the Open Water Foundation GeoProcessor application
+# - This script is used with legacy Python2/QGIS2
 # - This script should eventually work for Cygwin, Git Bash (MinGW), and Linux
 # - Current focus is Cygwin development environment.
 # - This is currently hard-coded to work in the development environment only,
@@ -9,10 +10,6 @@
 # Set the Python environment to find the correct run-time libraries
 
 cygwinUname=`uname -a | grep -i cygwin`
-
-# Save all the arguments so they can be used as a global argument in the function
-# - might be a way to pass to the runProcessor function
-allArgs=$@
 
 if [ ! -z "${cygwinUname}" ]
 	then
@@ -42,6 +39,7 @@ if [ ! -z "${cygwinUname}" ]
 	export PYTHONPATH="$PYTHONPATH:$OSGEO4W_ROOT/apps/qgis/python/plugins"
 	export PYTHONPATH="$PYTHONPATH:$OSGEO4W_ROOT/apps/Python27/Lib/site-packages"
 
+	echo "Running Python2/QGIS2 version."
 	echo "PYTHONPATH=$PYTHONPATH"
 
 	# Also add QGIS to the PATH
@@ -53,12 +51,5 @@ if [ ! -z "${cygwinUname}" ]
 	# QGIS Python complained so try normal Python first
 	#${QGIS_PYTHON_EXE} --version
 	#${QGIS_PYTHON_EXE} -v ../geoprocessor/app/gp.py --help
-	${PYTHON_EXE} -m geoprocessor.app.gp ${allArgs}
-else
-	echo ""
-	echo "Script has been written for Cygwin only."
-	echo ""
-	exit 1
+	${PYTHON_EXE} ../geoprocessor/app/gp.py --help
 fi
-
-exit 0

@@ -1,6 +1,6 @@
 @echo off
 rem Batch file to set the environment for running PyCharm consistent with QGIS environment
-rem - Use QGIS Python and libraries
+rem - Use QGIS 2 Python 2 and libraries
 rem - Start PyCharm with the configured environment
 rem - TODO smalers 2017-12-22 Could update the batch file to
 rem   intelligently figure out the correct PyCharm to run based on what is installed
@@ -52,7 +52,8 @@ SET QGIS_PREFIX_PATH=%QGIS%
 rem Set the absolute path to PyCharm program 
 rem SET PYCHARM="C:\Program Files (x86)\JetBrains\PyCharm 3.0\bin\pycharm.exe"
 rem SET PYCHARM="C:\Program Files (x86)\JetBrains\PyCharm Community Edition 2016.2.3\bin\pycharm.exe"
-SET PYCHARM="C:\Program Files\JetBrains\PyCharm Community Edition 2017.3.1\bin\pycharm64.exe"
+SET PYCHARM="C:\Program Files\JetBrains\PyCharm Community Edition 2018.1.3\bin\pycharm64.exe"
+if not exist %PYCHARM% goto nopycharm
 
 rem Add QGIS to the PATH environmental variable so that all QGIS, GDAL, OGR, etc. programs are found
 SET PATH=%PATH%;%QGIS%\bin
@@ -75,3 +76,12 @@ rem - command line parameters passed to this script will be passed to PyCharm
 rem - PyCharm will use the Python interpreter configured for the project
 echo Starting PyCharm using %PYCHARM%
 start "PyCharm aware of QGIS" /B %PYCHARM% %*
+goto end
+
+:nopycharm
+rem Expected PyCharm was not found
+echo PyCharm was not found:  %PYCHARM%
+echo Try running a different run script.
+rem goto end
+
+:end

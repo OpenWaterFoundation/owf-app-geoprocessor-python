@@ -341,7 +341,7 @@ fi
 echo ""
 echo "Install files were created in ../build folder"
 echo "- Look for *.tar.gz and *.zip files"
-echo "- Install the files in the site-packages folder of the target Python 2.7 environment"
+echo "- Install the files in the site-packages folder of the target Python 3 environment"
 echo "- The 'geoprocessor' folder should be in a folder indicated by Python sys.path"
 echo "- Remove the existing folder before installing to make sure the latest files are installed."
 echo ""

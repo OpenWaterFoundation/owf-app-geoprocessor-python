@@ -1,5 +1,5 @@
 rem Bath file to set the environment for running pycharm consistent with QGIS environment
-rem - Use QGIS Python and libraries
+rem - Use QGIS 2 Python 2 and libraries
 rem - Start pycharm with the configured environment
 
 rem The following seems to be more relevant.

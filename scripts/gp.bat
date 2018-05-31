@@ -2,9 +2,10 @@
 rem gp.bat
 rem
 rem Windows batch file to run the Open Water Foundation GeoProcessor application
+rem - This script is for Python3/QGIS3 (QGIS LTR is not used)
 rem - This script should work on a normal Windows 7/10 computer.
 rem - The geoprocessor package must be installed in a normal location, such as
-rem   Python site-packages folder.
+rem   QGIS Python site-packages folder.
 rem - This script should be installed in the QGIS bin folder or other location
 rem   that is in the PATH or otherwise can be executed.
 
@@ -15,111 +16,91 @@ rem - This causes setup to occur only once if rerunning this batch file.
 
 if "%GEOPROCESSOR_ENV_SETUP%"=="YES" GOTO run
 rem ===================================================================================
-rem ========== START COPY FROM run*pycharm*.bat SCRIPT WITHOUT PYCHARM ================
-rem
-echo Start defining QGIS/OWF GeoProcessor environment...
+rem If here do the setup one time first time batch file is run in a command shell
+echo Start defining QGIS GeoProcessor environment...
 
 rem Where QGIS is installed
-rem - TODO Need to figure out what to do if not in this location, multiple QGIS installs, etc.
 SET QGIS_INSTALL_HOME=C:\OSGeo4W64
 if not exist %QGIS_INSTALL_HOME% GOTO noqgis
 
-SET OSGEO4W_ROOT=%QGIS_INSTALL_HOME%
-rem Set the QGIS environment by calling the setup script that is distributed with QGIS
+rem Set the QGIS environment by calling the setup batch files that are distributed with QGIS
 rem - the following will reset the PATH and then add QGIS folders to path
 rem - therefore other programs that were found before may not be found
-CALL %OSGEO4W_ROOT%\bin\o4w_env.bat
+rem - this effectively isolates QGIS from the system
+SET OSGEO4W_ROOT=%QGIS_INSTALL_HOME%
+call %OSGEO4W_ROOT%\bin\o4w_env.bat
+rem The following sets a number of QT environment variables (QT is used in the UI)
+call %OSGEO4W_ROOT%\bin\qt5_env.bat
+rem The following sets:
+rem - PYTHONHOME to Python shipped with QGIS
+rem - Clears PYTHONPATH
+rem - PATH to include Python shipped with QGIS and Python scripts folder
+call %OSGEO4W_ROOT%\bin\py3_env.bat
 
-rem Name of QGIS version to run (**for running OWF GeoProcessor don't run QGIS
-rem rem but need to use correct QGIS components**).
-rem rem Run the latest release of the OSGeo4W QGIS by setting value to `qgis`.
-rem rem Run the long term release of the OSGeo4W QGIS by setting value to `qgis-ltr`.
-rem rem The QGIS OSGeo4W64 installer as of February 23, 2018 installs QGIS version 3 as `qgis`, which still has issues.
-rem rem Therefore, this script defaults to using the long-term-release version if it exists.
-rem rem If someone is still using an older version (pre version 3), then gp-ltr.bat will not be available,
-rem rem and `qgis` should be used.
-rem rem The main issue will be if someone installs the new version (post February 23, 2018) and does not do the
-rem rem advanced install to select the LTR for install, then they only get QGIS version 3,
-rem rem which is not currently available.
-rem rem This batch file could be updated to print an intelligent message for that case.
-rem rem Old default:
-rem rem SET QGISNAME=qgis
-rem rem New default:
-rem rem SET QGISNAME=qgis-ltr
-set _qgisLTR=%OSGEO4W_ROOT%\bin\qgis-ltr.bat
-
-rem Run LTR version if it is available.
-if exist %_qgisLtr% set QGISNAME=qgis-ltr
-rem rem Else run base/latest version if it is available.
-if not exist %_qgisLtr% set QGISNAME=qgis
+rem Name of QGIS version to run (**for running GeoProcessor don't run QGIS but need to use correct QGIS components**).
+rem Run the latest release of the OSGeo4W QGIS by setting value to `qgis`.
+rem Running the long-term release of the OSGeo4W QGIS by setting value to `qgis-ltr` is not supported.
+SET QGISNAME=qgis
 echo QGISNAME is %QGISNAME%
 
-rem Absolute path to QGIS software, used to find version-specific executables.
-SET QGIS=%OSGEO4W_ROOT%\apps\%QGISNAME%
-rem Not sure what the following is used for but include in case PyCharm or QGIS uses
-SET QGIS_PREFIX_PATH=%QGIS%
+rem Add QGIS to the PATH environment variable so that all QGIS, GDAL, OGR, etc. programs are found.
+set PATH=%OSGEO4W_ROOT%\bin;%PATH%
+set PATH=%PATH%;%OSGEO4W_ROOT%\apps\%QGISNAME%\bin
 
-rem Add QGIS to the PATH environmental variable so that all QGIS, GDAL, OGR, etc. programs are found
-SET PATH=%PATH%;%QGIS%\bin
+set QGIS_PREFIX_PATH=%OSGEO4W_ROOT%\apps\%QGISNAME%
+set GDAL_FILENAME_IS_UTF8=YES
+rem --
+rem Set VSI cache to be used as buffer, see https://issues.qgis.org/issues/6448
+set VSI_CACHE=TRUE
+set VSI_CACHE_SIZE=1000000
+rem --
+
+set QT_PLUGIN_PATH=%OSGEO4W_ROOT%\apps\%QGISNAME%\qtplugins;%OSGEO4W_ROOT%\apps\qt5\plugins
 
 rem Add pyQGIS libraries to the PYTHONPATH so that they are found by Python
-rem - Currently only QGIS 2.X with Python 2.X is supported
-set PYTHONPATH=%PYTHONPATH%;%OSGEO4W_ROOT%\apps\%QGISNAME%\python
-set PYTHONPATH=%PYTHONPATH%;%OSGEO4W_ROOT%\apps\%QGISNAME%\python\plugins
-set PYTHONPATH=%PYTHONPATH%;%OSGEO4W_ROOT%\apps\Python27\Lib\site-packages
-
-rem ========== END COPY FROM run*pycharm*.bat SCRIPT ==================================
+set PYTHONPATH=%OSGEO4W_ROOT%\apps\%QGISNAME%\python;%PYTHONPATH%
+rem See https://anitagraser.com/2018/01/28/porting-processing-scripts-to-qgis3/
+set PYTHONPATH=%OSGEO4W_ROOT%\apps\%QGISNAME%\python\plugins;%PYTHONPATH%
+set PYTHONPATH=%OSGEO4W_ROOT%\apps\Python36\lib\site-packages;%PYTHONPATH%
 
 rem Indicate that the setup has been completed
 rem - this will ensure that the script when run again does not repeat setup
 rem   and keep appending to environment variables
 set GEOPROCESSOR_ENV_SETUP=YES
-echo ...done defining QGIS/OWF GeoProcessor environment
-rem ========== START GeoProcessor Setup Steps to be done once =========================
-rem QGIS Python
-set QGIS_PYTHON_EXE=%OSGEO4W_ROOT%\bin\python.exe
+echo ...done defining QGIS GeoProcessor environment
+goto run
 
-rem Normal Python (should be Python 2.7)
-set PYTHON_EXE=python
-
-rem  Set the PYTHONPATH to include the geoprocessor module
-rem  - Folder for libraries must contain "geoprocessor" since modules being searched for will start with that.
-rem  - The following commented examples are for development environment but should not be needed
-rem    if the geoprocessor has been installed in site-packages.
-rem GEOPROCESSOR_HOME="/cygdrive/C/Users/${USERNAME}/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python/geoprocessor"
-rem set GEOPROCESSOR_HOME=C:\Users\%USERNAME%\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python
-rem set PYTHONPATH=%GEOPROCESSOR_HOME%;%PYTHONPATH%
-
-echo PYTHONPATH=%PYTHONPATH%
-
-rem ========== END GeoProcessor Setup Steps to be done once ===========================
-rem ========== END setup steps to be done once ========================================
+rem ========== END GeoProcessor setup steps to be done once ===========================
 rem ===================================================================================
 
-rem Below here assumes that the above environment has been setup by running in the window previously
-
-:run
-
-rem  Run Python on the code
-rem  - must use Python 2.7 compatible with QGIS
-
-echo Running OWF GeoProcessor application gp...
-
-rem Run QGIS Python with the geoprocessor module found using PYTHONPATH set above.
-rem - Must use Python 2.7 compatible with QGIS
-rem - The --version run works (use for testing basic setup)
-rem - Pass command line arguments that were passed tot he gp.bat file.
-rem %QGIS_PYTHON_EXE% --version
-%QGIS_PYTHON_EXE% -m geoprocessor.app.gp %*
-
-rem Normal (non-QGIS) Python
-rem - this is not used and can likely be removed once QGIS Python use is confirmed.
-rem %PYTHON_EXE% -m geoprocessor.app.gp %*
-
-rem Exit with the error level of the Python command
-exit /b %ERRORLEVEL%
-
 :noqgis
+
 rem QGIS install folder was not found
 echo QGIS standard installation folder was not found:  %QGIS_INSTALL_HOME%
 exit /b 1
+
+:run
+
+rem Echo environment variables for troubleshooting
+echo.
+echo Using Python3/QGIS3 for GeoProcessor
+echo PATH=%PATH%
+echo PYTHONHOME=%PYTHONHOME%
+echo PYTHONPATH=%PYTHONPATH%
+echo QGIS_PREFIX_PATH=%QGIS_PREFIX_PATH%
+echo QT_PLUGIN_PATH=%QT_PLUGIN_PATH%
+echo.
+
+rem Run QGIS Python with the geoprocessor module found using PYTHONPATH set above.
+rem - Must use Python 3.6 compatible with QGIS
+rem - Pass command line arguments that were passed to this bat file.
+rem "%PYTHONHOME%\python" %*
+rem Use -v to see verbose list of modules that are loaded.
+echo Running "%PYTHONHOME%\python" -m geoprocessor.app.gp %*
+"%PYTHONHOME%\python" -m geoprocessor.app.gp %*
+
+rem Run the following to use the environment but be able to do imports, etc. to find modules
+rem "%PYTHONHOME%\python" -v
+
+rem Exit with the error level of the Python command
+exit /b %ERRORLEVEL%

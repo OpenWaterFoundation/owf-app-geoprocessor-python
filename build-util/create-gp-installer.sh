@@ -161,6 +161,7 @@ echo "Updating geoprocessor/core/GeoProcessor.py  to comment out QGIS module imp
 sed -i 's/^import geoprocessor.util.qgis_util as qgis_util/# import geoprocessor.util.qgis_util as qgis_util/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessor.py
 sed -i 's/self.properties\["QGISVersion"\] = qgis_util.get_qgis_version_str()/# self.properties\["QGISVersion"\] = qgis_util.get_qgis_version_str()/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessor.py
 sed -i 's/protected_property_names = \["InitialWorkingDir", "WorkingDir", "QGISVersion"\]/protected_property_names = \["InitialWorkingDir", "WorkingDir"\]/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessor.py
+sed -i 's/self.qgis_processor = qgis_util.initialize_qgis_processor()/# self.qgis_processor = qgis_util.initialize_qgis_processor()/g' ${buildTmpGptestFolder}/geoprocessor/core/GeoProcessor.py
 
 # Update the geoprocessor/util/validator_util.py module:
 # - comment out line of import geoprocessor.util.qgis_util as qgis_util

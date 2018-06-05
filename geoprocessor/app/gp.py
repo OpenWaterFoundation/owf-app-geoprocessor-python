@@ -282,16 +282,24 @@ def run_ui(qtapp):
 
     Returns: None
     """
+    # If the following two lines are commented out, Python crashes.
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication(sys.argv)
+
+    # window = QtWidgets.QWidget()
+    # window.show()
+    #
+    # sys.exit(qtapp.exec())
 
     # The following is used when not dynamically importing modules
     #command_processor = GeoProcessor()
     GeoProcessor = importlib.import_module('geoprocessor.core.GeoProcessor')
-    class_ = getattr(GeoProcessor,'GeoProcessor')
+    class_ = getattr(GeoProcessor, 'GeoProcessor')
     command_processor = class_()
-    #app = QtWidgets.QApplication(sys.argv)
+    # app = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
-    GeoProcessorUI = importlib.import_module('geoprocessor.ui.GeoProcessorUI')
-    class_ = getattr(GeoProcessorUI,'GeoProcessorUI')
+    GeoProcessorUI = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
+    class_ = getattr(GeoProcessorUI, 'GeoProcessorUI')
     prog = class_(window, command_processor)
     window.show()
     sys.exit(qtapp.exec_())

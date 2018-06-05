@@ -1,21 +1,23 @@
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.ui.util.AbstractCommand_Editor import UI_AbstractDialog
 from geoprocessor.core.CommandParameterMetadata import get_parameter_names
 
 try:
-    _fromUtf8 = QtCore.QString.fromUtf8
+    # _fromUtf8 = QtCore.QString.fromUtf8
+    _fromUtf8 = lambda s: s
 except AttributeError:
     def _fromUtf8(s):
         return s
 
 try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
+
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QtWidgets.QApplication.translate(context, text, disambig)
 
 class Ui_Dialog(UI_AbstractDialog):
 
@@ -42,24 +44,24 @@ class Ui_Dialog(UI_AbstractDialog):
         parameter_name = "SpatialDataFile"
         description = self.create_full_description("absolute or relative path to the input GeoJSON file", optional=False)
         tooltip = "The GeoJSON file to read (relative or absolute path).\n${Property} syntax is recognized."
-        self.SpatialDataFile_Label = QtGui.QLabel(Dialog)
+        self.SpatialDataFile_Label = QtWidgets.QLabel(Dialog)
         self.configureLabel(self.SpatialDataFile_Label, parameter_name)
-        self.SpatialDataFile_LineEdit = QtGui.QLineEdit(Dialog)
+        self.SpatialDataFile_LineEdit = QtWidgets.QLineEdit(Dialog)
         self.configureLineEdit(self.SpatialDataFile_LineEdit, parameter_name, long=True, placeholder_text=description,
                             tooltip=tooltip)
-        self.SpatialDataFile_ToolButton = QtGui.QToolButton(Dialog)
+        self.SpatialDataFile_ToolButton = QtWidgets.QToolButton(Dialog)
         self.configureToolButton(self.SpatialDataFile_ToolButton, parameter_name, self.SpatialDataFile_LineEdit)
 
         # GeoLayerID
         parameter_name = "GeoLayerID"
         description = self.create_full_description("GeoLayer identifier", optional=True,
-                                                  default_value="filename of the input Spatial Data File")
+                                                   default_value="filename of the input Spatial Data File")
         tooltip = "A GeoLayer identifier.\n Formatting characters and ${Property} syntax are recognized."
-        self.GeoLayerID_Label = QtGui.QLabel(Dialog)
+        self.GeoLayerID_Label = QtWidgets.QLabel(Dialog)
         self.configureLabel(self.GeoLayerID_Label, parameter_name)
-        self.GeoLayerID_LineEdit = QtGui.QLineEdit(Dialog)
+        self.GeoLayerID_LineEdit = QtWidgets.QLineEdit(Dialog)
         self.configureLineEdit(self.GeoLayerID_LineEdit, parameter_name, tooltip=tooltip)
-        self.GeoLayerID_Description_Label = QtGui.QLabel(Dialog)
+        self.GeoLayerID_Description_Label = QtWidgets.QLabel(Dialog)
         self.configureDescriptionLabel(self.GeoLayerID_Description_Label, parameter_name, description)
 
         # IfGeoLayerIDExists
@@ -71,13 +73,15 @@ class Ui_Dialog(UI_AbstractDialog):
                   "is logged.\n\nReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with " \
                   "the new GeoLayer. A warning is logged. \n\nWarn: The new GeoLayer is not created. A warning " \
                   "is logged. \n\nFail: The new GeoLayer is not created. A fail message is logged."
-        self.IfGeoLayerIDExists_Label = QtGui.QLabel(Dialog)
+        self.IfGeoLayerIDExists_Label = QtWidgets.QLabel(Dialog)
         self.configureLabel(self.IfGeoLayerIDExists_Label, parameter_name)
-        self.IfGeoLayerIDExists_ComboBox = QtGui.QComboBox(Dialog)
+        self.IfGeoLayerIDExists_ComboBox = QtWidgets.QComboBox(Dialog)
         self.configureComboBox(self.IfGeoLayerIDExists_ComboBox, parameter_name,
                             self.command_obj.choices_IfGeoLayerIDExists, tooltip=tooltip)
-        self.IfGeoLayerIDExists_Description_Label = QtGui.QLabel(Dialog)
+        self.IfGeoLayerIDExists_Description_Label = QtWidgets.QLabel(Dialog)
         self.configureDescriptionLabel(self.IfGeoLayerIDExists_Description_Label, parameter_name, description)
+
+
 
     def refresh(self):
         """THIS UPDATE THE DIALOG BOX WITH THE PREVIOUSLY DEFINED PARAMETER VALUES WHEN EDITING A COMMAND WITHIN THE UI.

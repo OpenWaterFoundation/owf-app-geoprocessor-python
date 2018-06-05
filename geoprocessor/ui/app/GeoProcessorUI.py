@@ -66,16 +66,17 @@ class GeoProcessorUI(Ui_MainWindow):
         # Connect the File > Set Working Directory menu tab.
         self.File_SetWorkingDirectory.triggered.connect(self.set_working_directory)
         # Connect the Commands > GeoLayers > Read > ReadGeoLayerFromGeoJSON menu tab.
-        self.GeoLayers_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
-            functools.partial(self.new_command_editor, "ReadGeoLayerFromGeoJSON"))
+        self.GeoLayers_Read_ReadGeoLayerFromGeoJSON.triggered.connect(functools.partial(self.new_command_editor, "ReadGeoLayerFromGeoJSON"))
         # Connect the Help > View Documentation menu tab.
         self.Help_ViewDocumentation.triggered.connect(self.view_documentation)
 
         # Other connections
 
         # Connect right-click of Commands_List widget item.
-        self.Commands_List.connect(self.Commands_List, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),
-                                   self.open_command_list_right_click_menu)
+        self.Commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.Commands_List.customContextMenuRequested.connect(self.open_command_list_right_click_menu)
+        #self.Commands_List.connect(self.Commands_List, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),
+        # self.open_command_list_right_click_menu)
 
     def clear_commands_from_button(self):
         """

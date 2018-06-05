@@ -1,21 +1,22 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 import webbrowser
 import geoprocessor.ui.util.config as config
 import functools
 
 try:
-    _fromUtf8 = QtCore.QString.fromUtf8
+    # _fromUtf8 = QtCore.QString.fromUtf8
+    _fromUtf8 = lambda s: s
 except AttributeError:
     def _fromUtf8(s):
         return s
 
 try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QtWidgets.QApplication.translate(context, text, disambig)
 
 class UI_AbstractDialog(object):
 
@@ -47,31 +48,31 @@ class UI_AbstractDialog(object):
 
         # Create a grid layout object. Apply the grid layout to the Dialog window object.
         # Set the name of the grid layout object.
-        self.gridLayout = QtGui.QGridLayout(Dialog)
+        self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
 
         # Create a frame object. Add the frame object to the Dialog window.
         # Set the shape, the shadow, and the name of the frame object.
         # The frame object, Command_Description, holds the command description and the view documentation button.
-        self.Command_Description = QtGui.QFrame(Dialog)
-        self.Command_Description.setFrameShape(QtGui.QFrame.StyledPanel)
-        self.Command_Description.setFrameShadow(QtGui.QFrame.Raised)
+        self.Command_Description = QtWidgets.QFrame(Dialog)
+        self.Command_Description.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.Command_Description.setFrameShadow(QtWidgets.QFrame.Raised)
         self.Command_Description.setObjectName(_fromUtf8("Command_Description"))
         self.gridLayout.addWidget(self.Command_Description, 0, 0, 1, 8)
 
         # Create a grid layout object. Apply to the Command_Description frame object.
         # Set the name of the grid layout object.
-        self.gridLayout_2 = QtGui.QGridLayout(self.Command_Description)
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.Command_Description)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
 
         # Create a spacer. Add the spacer to the Command_Description frame object.
-        spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout_2.addItem(spacerItem, 2, 0, 1, 1)
 
         # Create a push button. Add the button to the Command_Description frame object.
         # Set the name, the button text and the connection of the push button.
         # The push button, View_Documentation_Button, displays the command's online user documentation when clicked.
-        self.View_Documentation_Button = QtGui.QPushButton(self.Command_Description)
+        self.View_Documentation_Button = QtWidgets.QPushButton(self.Command_Description)
         self.View_Documentation_Button.setObjectName(_fromUtf8("View_Documentation_Button"))
         self.View_Documentation_Button.setText(_translate("Dialog", "  View Documentation  ", None))
         self.View_Documentation_Button.clicked.connect(self.view_documentation)
@@ -80,7 +81,7 @@ class UI_AbstractDialog(object):
         # Create a label. Add the label to the Command_Description frame object.
         # Set the name and the text of the label.
         # The label, Command_Description_Label, briefly describes the command.
-        self.Command_Description_Label = QtGui.QLabel(self.Command_Description)
+        self.Command_Description_Label = QtWidgets.QLabel(self.Command_Description)
         self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
         self.Command_Description_Label.setText(_translate("Dialog", self.command_description, None))
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
@@ -88,32 +89,32 @@ class UI_AbstractDialog(object):
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
         # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
         # The frame object, Separator, separates the command description from the input form section of the Dialog box.
-        self.Separator = QtGui.QFrame(Dialog)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed)
+        self.Separator = QtWidgets.QFrame(Dialog)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
         self.Separator.setSizePolicy(sizePolicy)
-        self.Separator.setFrameShape(QtGui.QFrame.HLine)
-        self.Separator.setFrameShadow(QtGui.QFrame.Sunken)
+        self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
+        self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.Separator.setObjectName(_fromUtf8("Separator"))
         self.gridLayout.addWidget(self.Separator, 1, 0, 1, 8)
 
         # Create a button box object. Add the button box object to the Dialog window.
         # Set the orientation, the standard buttons, the name and the connections of the button box object.
         # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
-        self.OK_Cancel_Buttons = QtGui.QDialogButtonBox(Dialog)
+        self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(Dialog)
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
-        self.OK_Cancel_Buttons.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.OK_Cancel_Buttons.setObjectName(_fromUtf8("OK_Cancel_Buttons"))
-        QtCore.QObject.connect(self.OK_Cancel_Buttons, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept)
-        QtCore.QObject.connect(self.OK_Cancel_Buttons, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject)
+        self.OK_Cancel_Buttons.accepted.connect(Dialog.accept)
+        self.OK_Cancel_Buttons.rejected.connect(Dialog.reject)
         self.gridLayout.addWidget(self.OK_Cancel_Buttons, self.command_count + 4, 6, 1, 2)
 
         # Create a text edit object. Add the text edit object to the Dialog window.
         # Set the size, the name and the html of the text edit object.
         # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
-        self.CommandDisplay_View_TextBrowser = QtGui.QTextEdit(Dialog)
+        self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(Dialog)
         self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
         self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
         self.CommandDisplay_View_TextBrowser.setObjectName(_fromUtf8("CommandDisplay_View_TextBrowser"))
@@ -129,7 +130,7 @@ class UI_AbstractDialog(object):
         # Create a label object to the Dialog window.
         # Set the alignment, the name, and the text of the label.
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
-        self.CommandDisplay_Label = QtGui.QLabel(Dialog)
+        self.CommandDisplay_Label = QtWidgets.QLabel(Dialog)
         self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
         self.CommandDisplay_Label.setText(_translate("Dialog", "Command: ", None))
@@ -137,7 +138,7 @@ class UI_AbstractDialog(object):
 
         # Create a spacer. Add the spacer to the Dialog window.
         # The spacer separates the input parameter value fields from the Command Display text browser.
-        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout.addItem(spacerItem2, self.command_count + 2, 3, 1, -1)
 
         # This will wire up the signals and slots depending on names.
@@ -309,7 +310,6 @@ class UI_AbstractDialog(object):
             value = self.get_current_value(ui_obj)
             self.command_parameter_current_values[command] = value
 
-
         if self.command_parameter_current_values.values().count("") == len(self.command_parameter_current_values):
 
             display = "{}()".format(self.command_name)
@@ -348,4 +348,4 @@ class UI_AbstractDialog(object):
 
     def select_file(self, affected_object):
 
-        affected_object.setText(QtGui.QFileDialog.getOpenFileName())
+        affected_object.setText(QtWidgets.QFileDialog.getOpenFileName())

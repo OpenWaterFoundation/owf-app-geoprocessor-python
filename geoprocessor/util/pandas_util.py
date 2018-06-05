@@ -2,12 +2,27 @@
 
 import os
 import pandas as pd
+import pandas.io.sql as psql
 from openpyxl import load_workbook
 import xlwt
 
 import geoprocessor.util.io_util as io_util
 
 
+def create_data_frame_from_datastore_with_sql(datastore_obj, sql_query):
+    """
+    Creates a pandas data frame object by running a SQL query on a DataFrame object.
+
+    Args:
+        datastore_id (str): the DataStore object
+        sql_query (str):  a SQL query to get the correct table out of the DataStore object
+
+    Returns:
+        A pandas data frame object. This is the object that support the GeoProcessor's Table object.
+    """
+
+    df = psql.read_sql("{}".format(sql_query), datastore_obj.connection)
+    return df
 def create_data_frame_from_delimited_file(file_path, delimiter):
     """
     Creates a pandas data frame object from a delimited file.

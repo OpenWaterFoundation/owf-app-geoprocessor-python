@@ -33,6 +33,9 @@ class GeoProcessor(object):
         # Command list that holds all command objects to run.
         self.commands = []
 
+        # datastores list that holds all registered DataStore objects.
+        self.datastores = []
+
         # Property dictionary that holds all geoprocessor properties.
         self.properties = {}
 
@@ -102,6 +105,28 @@ class GeoProcessor(object):
 
         # Add the input GeoLayer to the geolayers list.
         self.geolayers.append(geolayer)
+
+    def add_datastore(self, datastore):
+        """
+        Add a DataStore object to the datastores list. If the DataStore already exists with the same DataStore ID, the
+        existing DataStore will be overwritten with the input DataStore.
+
+        Args:
+            datastore: instance of a DataStore object
+
+        Return: None
+        """
+
+        # Iterate over the existing DataStores.
+        for existing_datastore in self.datastores:
+
+            # If an existing DataStore has the same ID as the input DataStore, remove the existing DataStore from the
+            # datastores list.
+            if existing_datastore.id == datastore.id:
+                self.free_datastore(existing_datastore)
+
+        # Add the input DataStore to the datastores list.
+        self.datastores.append(datastore)
 
     def add_table(self, table):
         """
@@ -259,10 +284,20 @@ class GeoProcessor(object):
         Args:
             geolayer: instance of a GeoLayer object
 
-        Return:
-            Nothing
+        Return: None
         """
         self.geolayers.remove(geolayer)
+
+    def free_datastore(self, datastore):
+        """
+        Removes a DataStore object from the datastores list.
+
+        Args:
+            datastore: instance of a DataStore object
+
+        Return: None
+        """
+        self.datastores.remove(datastore)
 
     def free_table(self, table):
         """
@@ -271,10 +306,27 @@ class GeoProcessor(object):
         Args:
             table: instance of a Table object
 
-        Return:
-            Nothing
+        Return: None
         """
         self.tables.remove(table)
+
+    def get_datastore(self, datastore_id):
+        """
+        Return the DataStore that has the requested ID.
+
+        Args:
+            datastore_id (str):  DataStore ID string.
+
+        Returns:
+            The DataStore that has the requested ID, or None if not found.
+        """
+        for datastore in self.datastores:
+            if datastore is not None:
+                if datastore.id == datastore_id:
+                    # Found the requested identifier
+                    return datastore
+        # Did not find the requested identifier so return None
+        return None
 
     def get_geolayer(self, geolayer_id):
         """
@@ -537,8 +589,7 @@ class GeoProcessor(object):
         This function is called by the run_commands() function before processing any commands.
         This function is ported from the Java TSCommandProperties.resetWorkflowProperties() method.
 
-        Returns:
-            Nothing.
+        Returns: None
         """
 
         # Java code uses separate properties rather than Python using one dictionary.

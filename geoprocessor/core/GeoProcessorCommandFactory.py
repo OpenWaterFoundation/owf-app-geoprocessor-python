@@ -1,6 +1,7 @@
 import logging
 
 import geoprocessor.util.command_util as command_util
+from geoprocessor.commands.datastores.OpenDataStore import OpenDataStore
 from geoprocessor.commands.layers.AddGeoLayerAttribute import AddGeoLayerAttribute
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
@@ -34,6 +35,7 @@ from geoprocessor.commands.running.RunProgram import RunProgram
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
+from geoprocessor.commands.tables.ReadTableFromDataStore import ReadTableFromDataStore
 from geoprocessor.commands.tables.ReadTableFromDelimitedFile import ReadTableFromDelimitedFile
 from geoprocessor.commands.tables.ReadTableFromExcel import ReadTableFromExcel
 from geoprocessor.commands.tables.WriteTableToDelimitedFile import WriteTableToDelimitedFile
@@ -88,11 +90,13 @@ class GeoProcessorCommandFactory(object):
         "LISTFILES": ListFiles(),
         "MERGEGEOLAYERS": MergeGeoLayers(),
         "MESSAGE": Message(),
+        "OPENDATASTORE": OpenDataStore(),
         "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
+        "READTABLEFROMDATASTORE": ReadTableFromDataStore(),
         "READTABLEFROMDELIMITEDFILE": ReadTableFromDelimitedFile(),
         "READTABLEFROMEXCEL": ReadTableFromExcel(),
         "REMOVEFILE": RemoveFile(),
@@ -235,6 +239,8 @@ class GeoProcessorCommandFactory(object):
                     return MergeGeoLayers()
                 elif command_name_upper == "MESSAGE":
                     return Message()
+                elif command_name_upper == "OPENDATASTORE":
+                    return OpenDataStore()
                 elif command_name_upper == "READGEOLAYERFROMDELIMITEDFILE":
                     return ReadGeoLayerFromDelimitedFile()
                 elif command_name_upper == "READGEOLAYERFROMGEOJSON":
@@ -245,6 +251,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayersFromFGDB()
                 elif command_name_upper == "READGEOLAYERSFROMFOLDER":
                     return ReadGeoLayersFromFolder()
+                elif command_name_upper == "READTABLEFROMDATASTORE":
+                    return ReadTableFromDataStore()
                 elif command_name_upper == "READTABLEFROMDELIMITEDFILE":
                     return ReadTableFromDelimitedFile()
                 elif command_name_upper == "READTABLEFROMEXCEL":

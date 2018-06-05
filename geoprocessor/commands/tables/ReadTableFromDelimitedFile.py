@@ -126,7 +126,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
            table_id (str): the ID of the output Table
 
        Returns:
-           run_read: Boolean. If TRUE, the reading process should be run. If FALSE, it should not be run.
+           Boolean. If TRUE, the reading process should be run. If FALSE, it should not be run.
        """
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the

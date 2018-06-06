@@ -215,20 +215,43 @@ class GeoProcessor(object):
         found_pos_start = -1  # Position when leading "${" is found
         found_pos_end = -1  # Position when ending "}" is found
         prop_name = None  # Whether a property is found that matches the "$" character
+        delim_env_start = "${ENV:"  # Start of property when environment variable
         delim_start = "${"  # Start of property
+        delim_start_len = 2  # Length of start delimiter for ${, will be changed if ${env:
         delim_end = "}"  # End of property
         while search_pos < len(parameter_value):
-            found_pos_start = parameter_value.find(delim_start, search_pos)
-            found_pos_end = parameter_value.find(delim_end, (search_pos + len(delim_start)))
-            if found_pos_start < 0 and found_pos_end < 0:
+            found_pos_start = -1 # Indicates no ${ notation of any kind
+            # First see if any "${env:" strings. using uppercase conversion to allow any case
+            found_pos_env_start = parameter_value.upper().find(delim_env_start, search_pos)
+            if found_pos_env_start >= 0:
+                # Environment variable property syntax
+                found_pos_start = found_pos_env_start  # Set general value for general logic below
+                delim_start_len = 6  # Length of "${env:"
+                delim_start = delim_env_start  # Use for general code below
+            else:
+                # Check general property syntax
+                found_pos_start = parameter_value.find(delim_start, search_pos)
+                if found_pos_start >= 0:
+                    delim_start_len = 2  # Length of "${"
+            # End position syntax is the same regardless of the start
+            found_pos_end = parameter_value.find(delim_end, (search_pos + delim_start_len))
+            # Need both start and end positions to be >= 0 to continue
+            # - otherwise property syntax is not found or is malformed and can't be processed
+            found_delim_count = 0
+            if found_pos_start >= 0:
+                found_delim_count = found_delim_count + 1
+            if found_pos_end >= 0:
                 # No more $ property names, so return what have.
+                found_delim_count = found_delim_count + 1
+            if found_delim_count < 2:
                 return parameter_value
             # Else found the delimiter so continue with the replacement
-            # Message.printStatus(2, routine, "Found " + delimStart + " at position [" + foundPos + "]")
+            # Message.printStatus(2, routine, "Found " + delimStart + " at position [" + found_pos_start + "]")
             if debug:
-                print("Found " + delim_start + " at position [" + str(found_pos_start) + "]")
+                if found_pos_start >= 0:
+                    print("Found " + delim_start + " at position [" + str(found_pos_start) + "]")
             # Get the name of the property
-            prop_name = parameter_value[(found_pos_start + 2):found_pos_end]
+            prop_name = parameter_value[(found_pos_start + delim_start_len):found_pos_end]
             if debug:
                 print('Property name is "' + prop_name + '"')
             # Try to get the property from the processor
@@ -236,9 +259,16 @@ class GeoProcessor(object):
             propval = None
             propval_string = ""
             try:
-                if debug:
-                    print('Getting property value for "' + prop_name + '"')
-                propval = self.get_property(prop_name)
+                if found_pos_env_start >= 0:
+                    # Looking up an environment variable
+                    if debug:
+                        print('Getting property value for environment variable "' + prop_name + '"')
+                    propval = os.environ[prop_name]
+                else:
+                    # Looking up a normal property
+                    if debug:
+                        print('Getting property value for "' + prop_name + '"')
+                    propval = self.get_property(prop_name)
                 if debug:
                     print('Property value is "' + propval + '"')
                 # The following should work for all representations as long as str() does not truncate

@@ -4,7 +4,7 @@ class DataStore(object):
     NEED TO ADD DOCUMENTATION
     """
 
-    def __init__(self, datastore_id, datastore_connection, host, user, password, port):
+    def __init__(self, datastore_id, datastore_connection, db_name, db_host, db_user, db_password, db_port):
         """
         Initialize a new DataStore instance.
 
@@ -22,14 +22,17 @@ class DataStore(object):
         # "connection" is the open connection created to the database
         self.connection = datastore_connection
 
+        # "name" is the name of the database
+        self.name = db_name
+
         # "password_length" is the length of the DataStore connection's password
-        self.password_length = len(password)
+        self.password_length = len(db_password)
 
         # "user" is the username of the DataStore connection
-        self.user = user
+        self.user = db_user
 
         # "host" is the host of the DataStore connection
-        self.host = host
+        self.host = db_host
 
         # "port" is the port of the DataStore connection
-        self.port = port
+        self.port = db_port

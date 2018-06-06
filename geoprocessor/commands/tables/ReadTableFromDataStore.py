@@ -29,6 +29,8 @@ class ReadTableFromDataStore(AbstractCommand):
     * SqlFile(str, optional): The name of the file containing an SQL string to execute, optionally using ${Property}
         notation in the SQL file contents to insert processor property values. If specified, do not specify
         DataStoreTable or Sql.
+    * Top (str, optional): Indicate how many rows to return. Default: return all rows. Must be a string representing
+        a positive integer. Only enabled if DataStoreTable is enabled.
     * TableID (str, required): Identifier to assign to the output table in the GeoProcessor, which allows the table
         data to be used with other commands. A new table will be created. Can be specified with ${Property}.
     * IfTableIDExists (str, optional): This parameter determines the action that occurs if the TableID already exists
@@ -42,6 +44,7 @@ class ReadTableFromDataStore(AbstractCommand):
         CommandParameterMetadata("DataStoreTable", type("")),
         CommandParameterMetadata("Sql", type("")),
         CommandParameterMetadata("SqlFile", type("")),
+        CommandParameterMetadata("Top", type("")),
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
@@ -120,6 +123,40 @@ class ReadTableFromDataStore(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
+        # Run the checks for the Top parameter.
+        pv_Top = self.get_parameter_value(parameter_name='Top', command_parameters=command_parameters)
+        pv_DataStoreTable = self.get_parameter_value(parameter_name="DataStoreTable",
+                                                     command_parameters=command_parameters)
+        if pv_Top:
+
+            # Check that the Top parameter is only used with the DataStoreTable selection.
+            if is_string_list.count(True) == 1 and not pv_DataStoreTable:
+
+                message = "The Top parameter is only valid when the DataStoreID is enabled. The Top parameter value" \
+                          " ({}) will be ignored.".format(pv_Top)
+                recommendation = "If you want to use the Top parameter, specify a value for the DataStoreID parameter."
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.WARNING, message, recommendation))
+
+            # If the DataStoreTable parameter is enabled, check that the Top parameter is an integer or None.
+            if pv_DataStoreTable and not validators.validate_int(pv_Top, True, False):
+
+                message = "Top parameter value ({}) is not a valid integer value.".format(pv_Top)
+                recommendation = "Specify a positive integer for the Top parameter to specify how many rows to return."
+                warning += "\n" + message
+                self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+            # If the DataStoreTable parameter is enabled, check that the Top parameter is positive.
+            elif pv_DataStoreTable and not int(pv_Top) > 0:
+
+                message = "Top parameter value ({}) is not a positive, non-zero integer value.".format(pv_Top)
+                recommendation = "Specify a positive integer for the Top parameter to specify how many rows to return."
+                warning += "\n" + message
+                self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
         # Check that optional parameter IfTableIDExists is one of the acceptable values or is None.
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
                                                       command_parameters=command_parameters)
@@ -193,6 +230,7 @@ class ReadTableFromDataStore(AbstractCommand):
         pv_DataStoreTable = self.get_parameter_value("DataStoreTable")
         pv_Sql = self.get_parameter_value("Sql")
         pv_SqlFile = self.get_parameter_value("SqlFile")
+        pv_Top = self.get_parameter_value("Top")
         pv_TableID = self.get_parameter_value("TableID")
 
         # Expand for ${Property} syntax.
@@ -223,6 +261,10 @@ class ReadTableFromDataStore(AbstractCommand):
                 # If using the DataStoreTable method, the sql_statement selects * from the specified table.
                 elif pv_DataStoreTable:
                     sql_statement = "select * from {}".format(pv_DataStoreTable)
+
+                    # If specified, only query the top n rows.
+                    if pv_Top:
+                        sql_statement += " limit {}".format(pv_Top)
 
                 # If using the SqlFile method, the sql_statement in read from the provided file.
                 else:

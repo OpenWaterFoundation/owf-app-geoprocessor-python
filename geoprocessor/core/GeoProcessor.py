@@ -163,7 +163,6 @@ class GeoProcessor(object):
         if not output_file_abs_path in self.output_files:
             self.output_files.append(output_file_abs_path)
 
-
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):
         """
@@ -357,6 +356,24 @@ class GeoProcessor(object):
                     return datastore
         # Did not find the requested identifier so return None
         return None
+
+    def get_datastore_id_list(self):
+        """
+        Reads the DataStore objects in the datastores list and returns a list of the available DataStore ids.
+
+        Return:
+            List of available DataStore IDS.
+        """
+
+        # An empty list to hold all of the available DataStore IDs.
+        datastore_id_list = []
+
+        # Iterate over the available DataStores in the GeoProcessor. For each DataStore, append its ID to the list.
+        for datastore in self.datastores:
+            datastore_id_list.append(datastore.id)
+
+        # Return the list of the available DataStore IDs.
+        return datastore_id_list
 
     def get_geolayer(self, geolayer_id):
         """

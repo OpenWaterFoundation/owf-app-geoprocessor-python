@@ -1,7 +1,9 @@
 import logging
 
 import geoprocessor.util.command_util as command_util
+from geoprocessor.commands.datastores.CloseDataStore import CloseDataStore
 from geoprocessor.commands.datastores.OpenDataStore import OpenDataStore
+from geoprocessor.commands.datastores.RunSql import RunSql
 from geoprocessor.commands.layers.AddGeoLayerAttribute import AddGeoLayerAttribute
 from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
@@ -39,6 +41,7 @@ from geoprocessor.commands.tables.ReadTableFromDataStore import ReadTableFromDat
 from geoprocessor.commands.tables.ReadTableFromDelimitedFile import ReadTableFromDelimitedFile
 from geoprocessor.commands.tables.ReadTableFromExcel import ReadTableFromExcel
 from geoprocessor.commands.tables.WriteTableToDelimitedFile import WriteTableToDelimitedFile
+from geoprocessor.commands.tables.WriteTableToDataStore import WriteTableToDataStore
 from geoprocessor.commands.tables.WriteTableToExcel import WriteTableToExcel
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
@@ -73,6 +76,7 @@ class GeoProcessorCommandFactory(object):
         "ADDGEOLAYERATTRIBUTE": AddGeoLayerAttribute(),
         "BLANKCOMMAND": Blank(),  # Actually has no name, is whitespace only
         "CLIPGEOLAYER": ClipGeoLayer(),
+        "CLOSEDATASTORE": CloseDataStore(),
         "COMMENT": Comment(),
         "COMMENTBLOCKEND": CommentBlockEnd(),
         "COMMENTBLOCKSTART": CommentBlockStart(),
@@ -104,6 +108,7 @@ class GeoProcessorCommandFactory(object):
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
         "RUNCOMMANDS": RunCommands(),
         "RUNPROGRAM": RunProgram(),
+        "RUNSQL": RunSql(),
         "SETGEOLAYERCRS": SetGeoLayerCRS(),
         "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
         "SETPROPERTY": SetProperty(),
@@ -120,6 +125,7 @@ class GeoProcessorCommandFactory(object):
         "WRITEGEOLAYERTOKML": WriteGeoLayerToKML(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
         "WRITETABLETODELIMITEDFILE": WriteTableToDelimitedFile(),
+        "WRITETABLETODATASTORE": WriteTableToDataStore(),
         "WRITETABLETOEXCEL": WriteTableToExcel(),
         "WRITEPROPERTIESTOFILE": WritePropertiesToFile()
     }
@@ -211,6 +217,8 @@ class GeoProcessorCommandFactory(object):
                     return ClipGeoLayer()
                 # Comment, CommentBlockStart, and CommentBlockEnd are checked for above
                 # - might be able to treat similar to other commands but need to confirm out parsing is done
+                elif command_name_upper == "CLOSEDATASTORE":
+                    return CloseDataStore()
                 elif command_name_upper == "COMPAREFILES":
                     return CompareFiles()
                 elif command_name_upper == "COPYFILE":
@@ -267,6 +275,8 @@ class GeoProcessorCommandFactory(object):
                     return RunCommands()
                 elif command_name_upper == "RUNPROGRAM":
                     return RunProgram()
+                elif command_name_upper == "RUNSQL":
+                    return RunSql()
                 elif command_name_upper == "SETGEOLAYERCRS":
                     return SetGeoLayerCRS()
                 elif command_name_upper == "SETGEOLAYERPROPERTY":
@@ -301,6 +311,8 @@ class GeoProcessorCommandFactory(object):
                     return WritePropertiesToFile()
                 elif command_name_upper == "WRITETABLETODELIMITEDFILE":
                     return WriteTableToDelimitedFile()
+                elif command_name_upper == "WRITETABLETODATASTORE":
+                    return WriteTableToDataStore()
                 elif command_name_upper == "WRITETABLETOEXCEL":
                     return WriteTableToExcel()
 

@@ -128,7 +128,7 @@ class OpenDataStore(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command.
+        Run the command. Open the connection to a database and store as a DataStore.
 
         Returns: None.
 
@@ -168,14 +168,14 @@ class OpenDataStore(AbstractCommand):
                                                                                                    pv_DatabasePort))
 
                     # Create a DataStore and add it to the geoprocessor's datastore list.
-                    datastore_obj = DataStore(pv_DataStoreID, connection,  pv_DatabaseName, pv_DatabaseServer,
-                                              pv_DatabaseUser, pv_DatabaseUser, pv_DatabasePort)
+                    datastore_obj = DataStore(pv_DataStoreID, connection,  pv_DatabaseType, pv_DatabaseName,
+                                              pv_DatabaseServer, pv_DatabaseUser, pv_DatabaseUser, pv_DatabasePort)
                     self.command_processor.add_datastore(datastore_obj)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:
                 self.warning_count += 1
-                message = "Unexpected error reading opening DataStore {} from database ({}).".format(pv_DataStoreID,
+                message = "Unexpected error opening DataStore {} from database ({}).".format(pv_DataStoreID,
                                                                                                      pv_DatabaseName)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)

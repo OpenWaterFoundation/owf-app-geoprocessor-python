@@ -181,15 +181,17 @@ class ReadTableFromDataStore(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_read_table(self, sql_file_abs, table_id):
+    def __should_read_table(self, sql_file_abs, table_id, datastore_id):
         """
         Checks the following:
             * the SqlFile (absolute) is a valid file, if not None
             * the ID of the Table is unique (not an existing Table ID)
+            * the DataStore exists
 
         Args:
             sql_file_abs (str): the full pathname to the sql file
             table_id (str): the ID of the output Table
+            datastore_id (str): the ID of the DataStore to read
 
         Returns:
              Boolean. If TRUE, the reading process should be run. If FALSE, it should not be run.
@@ -208,6 +210,10 @@ class ReadTableFromDataStore(AbstractCommand):
         # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
         # value of the IfTableIDExists parameter.)
         should_run_command.append(validators.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
+
+        # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
+        should_run_command.append(validators.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
+                                                       "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -247,7 +253,7 @@ class ReadTableFromDataStore(AbstractCommand):
                 self.command_processor.expand_parameter_value(pv_SqlFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_table(pv_SqlFile, pv_TableID):
+        if self.__should_read_table(pv_SqlFile, pv_TableID, pv_DataStoreID):
 
             try:
 

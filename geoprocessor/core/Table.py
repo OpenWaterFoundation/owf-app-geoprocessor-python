@@ -61,6 +61,17 @@ class Table(object):
         else:
             self.properties = properties
 
+    def get_column_names(self):
+        """
+        Return a list of column names.
+
+        Return: A list of column names.
+        """
+
+        # Return a list of the column names.
+        return list(self.df)
+
+
     def get_column_values_as_list(self, column_name):
         """
         Return all of the column values for a given column.

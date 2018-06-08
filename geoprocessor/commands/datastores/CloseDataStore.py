@@ -21,7 +21,7 @@ class CloseDataStore(AbstractCommand):
 
     Command Parameters
     * DataStoreID (str, required): the DataStore identifier of the DataStore to close. ${Property} syntax enabled.
-    * StatusMessage (str, optional): A status message to display when the datastore information is viewed.
+    * StatusMessage (str, optional): A status message to display when the DataStore information is viewed.
         The status may be reset if the connection is automatically restored, for example when a subsequent database
         interaction occurs. Default: DataStore [DataStoreID] has been closed. ${Property} syntax enabled.
         Note that this is a placeholder parameter ported over from the TSTool command (CloseDataStore). It currently
@@ -147,9 +147,6 @@ class CloseDataStore(AbstractCommand):
 
                     # Close the DataStore connection.
                     datastore_obj.connection.close()
-
-                    # Remove the DataStore object from the GeoProcessor.
-                    self.command_processor.free_datastore(datastore_obj)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

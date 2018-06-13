@@ -1,10 +1,14 @@
+import sqlalchemy
+from sqlalchemy.engine.url import URL
+
+
 class DataStore(object):
 
     """
     NEED TO ADD DOCUMENTATION
     """
 
-    def __init__(self, datastore_id, datastore_connection, db_type, db_name, db_host, db_user, db_password, db_port):
+    def __init__(self, datastore_id):
         """
         Initialize a new DataStore instance.
 
@@ -19,91 +23,68 @@ class DataStore(object):
         # GeoProcessor for manipulation.
         self.id = datastore_id
 
-        # "connection" is the open connection created to the database
-        self.connection = datastore_connection
+        self.dialect = None
 
-        # "type" is the database type, used to format the database connection URL for the matching database driver
-        # software. Currently the following are supported: PostgreSQL.
-        self.type = db_type
+        self.db_uri = None
 
-        # "name" is the name of the database
-        self.name = db_name
+        self.engine = None
 
-        # "password_length" is the length of the DataStore connection's password
-        self.password_length = len(db_password)
+        self.connection = None
 
-        # "user" is the username of the DataStore connection
-        self.user = db_user
+        self.is_connected = False
 
-        # "host" is the host of the DataStore connection
-        self.host = db_host
+        self.inspector = None
 
-        # "port" is the port of the DataStore connection
-        self.port = db_port
+        self.status_message = "No connection - connection has not been attempted."
 
-        # "cursor" allows interaction with the database (this is available for PostGreSql databases using psycopg2
-        # REF: http://initd.org/psycopg/docs/usage.html
-        if self.type.upper() == "POSTGRESQL":
-            self.cursor = self.connection.cursor()
+    def close_db_connection(self):
 
-    def get_list_of_tables(self):
+        self.connection.close()
+        self.update_status_message("Not connected. Connection has been closed.")
+        self.is_connected = False
+
+    def get_db_uri_postgres(self, host, dbname, user, password, port="5432"):
+
+        postgres_db = {'drivername': "postgres",
+                       'username': user,
+                       'password': password,
+                       'host': host,
+                       'port': port,
+                       'database': dbname}
+
+        self.db_uri = URL(**postgres_db)
+        self.dialect = "POSTGRES"
+
+    def open_db_connection(self):
+
+        self.engine = sqlalchemy.create_engine(self.db_uri)
+        self.connection = self.engine.connect()
+        self.update_status_message("Connected.")
+        self.is_connected = True
+        self.inspector = sqlalchemy.inspect(self.engine)
+
+    def return_table_names(self):
+
+        return self.inspector.get_table_names()
+
+    def return_col_names(self, table):
+
+        return [col["name"] for col in self.inspector.get_columns(table)]
+
+    def update_status_message(self, message):
         """
-        Return a list of the tables in the DataStore's database.
-
-        Return: a list of the tables in the DataStore's database
-        """
-
-        # An empty list to hold all of the table names.
-        tables = []
-
-        # Continue with PostGreSql logic if this DataStore holds a PostGreSql database.
-        if self.type.upper() == "POSTGRESQL":
-
-            # Select all of the table names in the public schema.
-            self.cursor.execute("""SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'""")
-
-            # Iterate over the table names. Returns a tuple.
-            for table in self.cursor.fetchall():
-
-                # Append the table name to the tables list.
-                tables.append(table[0])
-
-        # As more database types are configured within the GeoProcessor, include their logic in elif statements.
-        else:
-            pass
-
-        # Return the list of table names.
-        return tables
-
-    def get_list_of_columns(self, table):
-        """
-        Return a list of columns for a specific DataStore table.
+        Updates the status message. The existing status message will be overwritten.
 
         Args:
-            table (str): the name of a table in the DataStore's database
+            message (str): the new status message
 
-        Return: a list of columns within table=
+        Return: None
         """
 
-        # An empty list to hold all of the column names.
-        cols = []
+        self.status_message = message
 
-        # Continue with PostGreSql logic if this DataStore holds a PostGreSql database.
-        if self.type.upper() == "POSTGRESQL":
+    def run_sql(self, sql):
 
-            # Select all of the columns in the table.
-            self.cursor.execute("select * from " + table + " LIMIT 0")
-
-            # Iterate over the column descriptions in the table.
-            for desc in self.cursor.description:
-
-                # Append the column name to the cols list.
-                # See http://initd.org/psycopg/docs/cursor.html for a description on the description index meanings.
-                cols.append(desc[0])
-
-        # As more database types are configured within the GeoProcessor, include their logic in elif statements.
-        else:
-            pass
-
-        # Return the list of column names.
-        return cols
+        trans = self.connection.begin()
+        self.connection.execute(sql)
+        trans.commit()

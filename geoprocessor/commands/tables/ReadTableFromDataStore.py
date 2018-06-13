@@ -262,10 +262,14 @@ class ReadTableFromDataStore(AbstractCommand):
 
                 # If using the Sql method, the sql_statement is the user-provided sql statement.
                 if pv_Sql:
+
                     sql_statement = pv_Sql
+                    if '%' in sql_statement:
+                        sql_statement = sql_statement.replace('%', '%%')
 
                 # If using the DataStoreTable method, the sql_statement selects * from the specified table.
                 elif pv_DataStoreTable:
+
                     sql_statement = "select * from {}".format(pv_DataStoreTable)
 
                     # If specified, only query the top n rows.
@@ -280,7 +284,7 @@ class ReadTableFromDataStore(AbstractCommand):
                     sql_statement = f.read().strip()
 
                 # Create a Pandas data frame from the selected DataStore data.
-                df = pandas_util.create_data_frame_from_datastore_with_sql(datastore, sql_statement)
+                df = pandas_util.create_data_frame_from_datastore_with_sql(sql_statement, datastore)
 
                 # Create a Table object from the pandas data frame and add it to the geoprocessor's Tables list.
                 table_obj = Table(pv_TableID, df, "DataStore ({})".format(pv_DataStoreID))

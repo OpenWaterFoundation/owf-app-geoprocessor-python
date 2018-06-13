@@ -6,13 +6,11 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-from geoprocessor.core.DataStore import DataStore
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validators
 
 import logging
-import psycopg2 as pg
 
 
 class CloseDataStore(AbstractCommand):
@@ -23,7 +21,7 @@ class CloseDataStore(AbstractCommand):
     * DataStoreID (str, required): the DataStore identifier of the DataStore to close. ${Property} syntax enabled.
     * StatusMessage (str, optional): A status message to display when the DataStore information is viewed.
         The status may be reset if the connection is automatically restored, for example when a subsequent database
-        interaction occurs. Default: DataStore [DataStoreID] has been closed. ${Property} syntax enabled.
+        interaction occurs. Default: "Not connected. Connection has been closed." ${Property} syntax enabled.
         Note that this is a placeholder parameter ported over from the TSTool command (CloseDataStore). It currently
         has no effect of the GeoProcessor environment. In future development this message could be hooked into the
         log or the UI.
@@ -127,11 +125,8 @@ class CloseDataStore(AbstractCommand):
         pv_DataStoreID = self.get_parameter_value("DataStoreID")
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
 
-        # Configure the default status message.
-        default_status_message = "DataStore {} has been closed.".format(pv_DataStoreID)
-
         # Obtain the StatusMessage parameter value and expand for ${Property} syntax.
-        pv_StatusMessage = self.get_parameter_value("StatusMessage", default_value=default_status_message)
+        pv_StatusMessage = self.get_parameter_value("StatusMessage")
         pv_StatusMessage = self.command_processor.expand_parameter_value(pv_StatusMessage, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
@@ -142,11 +137,11 @@ class CloseDataStore(AbstractCommand):
                 # Get the DataStore object
                 datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
 
-                # If the DataStore's database type is PostGreSQL, then continue.
-                if datastore_obj.type.upper() == "POSTGRESQL":
+                # Close the database connection.
+                datastore_obj.close_db_connection()
 
-                    # Close the DataStore connection.
-                    datastore_obj.connection.close()
+                # Update the DataStore's status message.
+                datastore_obj.update_status_message(pv_StatusMessage)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

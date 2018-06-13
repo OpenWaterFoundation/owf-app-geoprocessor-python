@@ -192,14 +192,8 @@ class RunSql(AbstractCommand):
                 else:
                     sql_statement = None
 
-                # If the DataStore is from a PostGreSQL database, continue.
-                if datastore_obj.type.upper() == "POSTGRESQL":
-
-                    # Execute the Sql statement.
-                    datastore_obj.cursor.execute(sql_statement)
-
-                    # Commit the changes
-                    datastore_obj.connection.commit()
+                # Execute and commit the SQL statement.
+                datastore_obj.run_sql(sql_statement)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

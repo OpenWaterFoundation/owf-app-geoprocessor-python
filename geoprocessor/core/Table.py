@@ -61,6 +61,16 @@ class Table(object):
         else:
             self.properties = properties
 
+    def deep_copy(self):
+        """
+        Creates and returns a deep copy of the Table's pandas Data Frame object.
+
+        Return:
+            A pandas Data Frame object.
+        """
+
+        return self.df.copy(deep=True)
+
     def get_column_names(self):
         """
         Return a list of column names.

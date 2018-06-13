@@ -21,20 +21,29 @@ class WriteTableToDataStore(AbstractCommand):
     Writes a Table to a DataStore object.
 
     Command Parameters
-    * TableID (str, required): Identifier for table to write. Can be specified with ${Property}.
+    * TableID (str, required): Identifier for Table to write. Can be specified with ${Property}.
     * IncludeColumns (str, optional) A comma-separated list of the glob-style patterns filtering which table columns to
         write.
     * ExcludeColumns (str, optional) A comma-separated list of the glob-style patterns filtering which table columns to
         NOT write. This will override IncludeColumns.
-    * DataStoreID (str, required): The id of a DataStore to receive data. ${Property} syntax is recognized.
+    * DataStoreID (str, required): The ID of a DataStore to receive data. ${Property} syntax is recognized.
     * DataStoreTable (str, required): The name of the DataStore table to receive data. ${Property} syntax is recognized.
     * ColumnMap (str, optional): A dictionary indicating which columns in TableID have different names in DataStore
         Table, using the syntax: ColumnName:DatastoreTableName, ColumnName:DatastoreTableName,...
         Default: DataStore TableName columns are assumed to match the column names in TableID.
-    * DataStoreRelatedColumnsMap (str, optional):
-    * WriteMode (str, optional): The method used to write data, recognizing the databases use insert and update SQL
-        statements, one of: DeleteInsert, Insert, InsertUpdate, Update, or UpdateInsert
-        Default: InsertUpdate
+    * DataStoreRelatedColumnsMap (str, optional): Not currently enabled.
+    * WriteMode (str, required): The method used to write data. Muse choose one of the following:
+        1. NewTableInsert: a new table is added to the database and all rows of TableID are added to the database table.
+        2. ExistingTableOverwrite: the existing database table is dropped and another database table is added
+            (with the same name). All rows of TableID are added to the database table.
+        3. ExistingTableInsert: Rows of the TableID that do NOT conflict with any of the rows in the existing database
+            table are appended to the database table.
+        4. ExistingTableUpdate: Rows of the TableID that do conflict with any of the rows in the existing database
+            table are used to update the existing database rows. The rows that do NOT conflict with any of the rows
+                in the existing database table are NOT appended to the database table.
+        5. ExistingTableInsertUpdate: Rows of the TableID that do NOT conflict with any of the rows in the existing
+            database table are appended to the database table. Rows of the TableID that do conflict with any of the
+                rows in the existing database table are used to update the existing database rows.
     """
 
     # Define the command parameters.
@@ -49,7 +58,8 @@ class WriteTableToDataStore(AbstractCommand):
         CommandParameterMetadata("WriteMode", type(""))]
 
     # Choices for WriteMode, used to validate parameter and display in editor
-    __choices_WriteMode = ["DeleteInsert", "Insert", "InsertUpdate", "Update", "UpdateInsert"]
+    __choices_WriteMode = ["NewTableInsert", "ExistingTableOverwrite", "ExistingTableInsert", "ExistingTableUpdate",
+                           "ExistingTableInsertUpdate"]
 
     def __init__(self):
         """
@@ -97,7 +107,7 @@ class WriteTableToDataStore(AbstractCommand):
         # Check that optional parameter WriteMode is one of the acceptable values or is None.
         pv_WriteMode = self.get_parameter_value(parameter_name="WriteMode",
                                                 command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_WriteMode, self.__choices_WriteMode, none_allowed=True,
+        if not validators.validate_string_in_list(pv_WriteMode, self.__choices_WriteMode, none_allowed=False,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "WriteMode parameter value ({}) is not recognized.".format(pv_WriteMode)
             recommendation = "Specify one of the acceptable values ({}) for the WriteMode parameter.".format(
@@ -148,6 +158,38 @@ class WriteTableToDataStore(AbstractCommand):
 
         # Return a list of Table column names configured to write data.
         return table_cols_to_include
+
+    @staticmethod
+    def __get_table_cols_to_exclude(include_col_patterns, exclude_col_patterns, table):
+        """
+        The command allows for users to select a subset of the Table columns to write to the DataStore database. This
+        function returns a list of Table columns NOT configured to write data by the user inputs.
+
+        Args:
+            include_col_patterns (str): A comma-separated list of the glob-style patterns filtering which table columns
+                to write.
+            exclude_col_patterns (str): A comma-separated list of the glob-style patterns filtering which table columns
+                to NOT write. This will override IncludeColumns.
+            table (obj): the Table that is being written to the DataStore
+
+        Return:
+            A list of Table column names configured to write data.
+        """
+
+        # Convert the IncludeColumns and the ExcludeColumns parameters from strings to lists
+        table_cols_to_include_patterns = string_util.delimited_string_to_list(include_col_patterns)
+        table_cols_to_exclude_patterns = string_util.delimited_string_to_list(exclude_col_patterns)
+
+        # Get a list of all of the columns in the Table
+        all_table_cols = table.get_column_names()
+
+        # Get a list of the columns in the Table that are NOT configured to be pushed to the DataStore
+        table_cols_to_exclude = string_util.filter_list_of_strings(all_table_cols, table_cols_to_include_patterns,
+                                                                   table_cols_to_exclude_patterns,
+                                                                   return_inclusions=False)
+
+        # Return a list of Table column names NOT configured to write data.
+        return table_cols_to_exclude
 
     @staticmethod
     def __get_mapped_datastore_col_from_table_col(table_col_name, col_map_dic):
@@ -222,17 +264,20 @@ class WriteTableToDataStore(AbstractCommand):
         # Return the list of the columns in the DataStore that are configured to receive data.
         return datastore_table_cols_to_receive
 
-    def __should_write_table(self, table_id, datastore_id, datastore_table_name):
+    def __should_write_table(self, table_id, datastore_id, datastore_table_name, writemode):
         """
         Checks the following:
             * the Table ID exists
             * the DataStore ID exists
-            * the DataStore table exists
+            * the DataStore table exists if the writemode is ExistingTableInsert, ExistingTableUpdate, or
+                ExistingTableInsertUpdate
+            * the DataStore table does not exist if the writemode starts with NewTable
 
         Args:
             table_id (str): the ID of the Table to write
             datastore_id (str): the ID of the DataStore to receive data
             datastore_table_name (str): the name of the DataStore table to receive data
+            writemode (str): the method used to write data
 
         Returns:
              Boolean. If TRUE, the process should be run. If FALSE, it should not be run.
@@ -249,9 +294,19 @@ class WriteTableToDataStore(AbstractCommand):
         # Only run the following check if the previous check passed.
         if False not in should_run_command:
 
-            # If the DataStoreTable is not a table within the DataStore, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsTableInDataStore", "DataStoreTable",
-                                                           datastore_table_name, "FAIL", other_values=[datastore_id]))
+            if writemode.upper().startswith("EXISTING") and not writemode.upper().endswith("OVERWRITE"):
+
+                # If the DataStoreTable is not a table within the DataStore, raise a FAILURE.
+                should_run_command.append(validators.run_check(self, "IsTableInDataStore", "DataStoreTable",
+                                                               datastore_table_name, "FAIL",
+                                                               other_values=[datastore_id]))
+
+            if writemode.upper().startswith("NEW"):
+
+                # If the DataStoreTable is a table within the DataStore, raise a FAILURE.
+                should_run_command.append(validators.run_check(self, "IsDataStoreTableUnique", "DataStoreTable",
+                                                               datastore_table_name, "FAIL",
+                                                               other_values=[datastore_id]))
 
         # If the Table ID is not an existing Table ID, raise a FAILURE.
         should_run_command.append(validators.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
@@ -262,7 +317,7 @@ class WriteTableToDataStore(AbstractCommand):
         else:
             return True
 
-    def __should_write_table2(self, datastore, datastore_table_name, datastore_table_cols_to_receive):
+    def __should_write_table2(self, datastore, datastore_table_name, datastore_table_cols_to_receive, writemode):
         """
             Checks the following:
                 * the datastore columns configured to receive data are existing columns within the DataStore table
@@ -284,11 +339,13 @@ class WriteTableToDataStore(AbstractCommand):
         invalid_columns = []
 
         # Get the DataStore Table columns
-        datastore_table_cols = datastore.get_list_of_columns(datastore_table_name)
+        datastore_table_cols = datastore.return_col_names(datastore_table_name)
 
-        for datastore_table_col_to_receive in datastore_table_cols_to_receive:
-            if datastore_table_col_to_receive not in datastore_table_cols:
-                invalid_columns.append(datastore_table_col_to_receive)
+        if not writemode.upper() == "EXISTINGTABLEOVERWRITE":
+
+            for datastore_table_col_to_receive in datastore_table_cols_to_receive:
+                if datastore_table_col_to_receive not in datastore_table_cols:
+                    invalid_columns.append(datastore_table_col_to_receive)
 
         if invalid_columns:
             message = "One or more of the DataStore columns configured to be edited do(es) not exist in the DataStore" \
@@ -325,24 +382,24 @@ class WriteTableToDataStore(AbstractCommand):
         pv_DataStoreTable = self.get_parameter_value("DataStoreTable")
         pv_ColumnMap = self.get_parameter_value("ColumnMap", default_value="")
         pv_DataStoreRelatedColumnsMap = self.get_parameter_value("DataStoreRelatedColumnsMap")
-        pv_WriteMode = self.get_parameter_value("WriteMode", default_value="InsertUpdate")
+        pv_WriteMode = self.get_parameter_value("WriteMode").upper()
 
         # Expand for ${Property} syntax.
         pv_TableID = self.command_processor.expand_parameter_value(pv_TableID, self)
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
         pv_DataStoreTable = self.command_processor.expand_parameter_value(pv_DataStoreTable, self)
 
-        # Convert the ColumnMap from string to a dictionary. Key: Table Column Name; Value: DataStore Column Name
-        col_map_dic = string_util.delimited_string_to_dictionary_one_value(pv_ColumnMap, ",", ":", True)
-
         # Run the checks on the parameter values. Only continue if the checks pass.
-        if self.__should_write_table(pv_TableID, pv_DataStoreID, pv_DataStoreTable):
+        if self.__should_write_table(pv_TableID, pv_DataStoreID, pv_DataStoreTable, pv_WriteMode):
 
-            # Get the Table object
+            # Get the Table object.
             table_obj = self.command_processor.get_table(pv_TableID)
 
             # Get DataStore object
             datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
+
+            # Convert the ColumnMap from string to a dictionary. Key: Table Column Name; Value: DataStore Column Name
+            col_map_dic = string_util.delimited_string_to_dictionary_one_value(pv_ColumnMap, ",", ":", True)
 
             # Get the list of the columns in the Table that are configured to write.
             table_cols_to_write = self.__get_table_cols_to_write(pv_IncludeColumns, pv_ExcludeColumns, table_obj)
@@ -351,77 +408,51 @@ class WriteTableToDataStore(AbstractCommand):
             datastore_table_cols_to_receive = self.__get_datastore_cols_to_receive(table_cols_to_write, col_map_dic)
 
             # Run a second level of checks. Only continue if the check passes.
-            if self.__should_write_table2(datastore_obj, pv_DataStoreTable, datastore_table_cols_to_receive):
+            if self.__should_write_table2(datastore_obj, pv_DataStoreTable, datastore_table_cols_to_receive,
+                                          pv_WriteMode):
 
                 try:
 
-                    # A Sql statement is used to insert data into a DataBase table. One portion of the Sql statement
-                    # includes the data values that are to be entered. The values_str_master holds that portion the Sql
-                    # statement as a string value. String values from each Table row are appended to this master string.
-                    values_str_master = ""
+                    # Get the list of the columns in the Table that are NOT configured to write.
+                    table_cols_to_exclude = self.__get_table_cols_to_exclude(pv_IncludeColumns, pv_ExcludeColumns,
+                                                                             table_obj)
 
-                    # Iterate over the rows in the Table.
-                    for index, row in table_obj.df.iterrows():
+                    # Make a deep copy of the Table object.
+                    table_obj_copy = table_obj.deep_copy()
 
-                        # A Sql statement is used to insert data into a DataBase table. One portion of the Sql statement
-                        # includes the database table columns that will receive the data. The cols_str holds that
-                        # portion of the Sql statement as a string. Refreshes for each table row.
-                        cols_str = ""
+                    # Remove the copied pandas Data Frame columns that are not to be written to the DataStore.
+                    table_obj_copy = table_obj_copy.drop(columns=table_cols_to_exclude)
 
-                        # A Sql statement is used to insert data into a DataBase table. One portion of the Sql statement
-                        # includes the data values that are to be entered. The values_str_row holds that portion the
-                        # Sql statement as a string value FOR the current row. The values_str_row is then appended to
-                        # the values_str_master for each row. Refreshes for each table row.
-                        values_str_row = ""
+                    # Rename the copied pandas Data Frame columns to match the columns in the database table.
+                    table_obj_copy = table_obj_copy.rename(columns=col_map_dic)
 
-                        # Iterate over the Table columns that should be included in the DataStore table.
-                        for table_col_to_write in table_cols_to_write:
+                    # Write the copied pandas Data Frame to the DataStore's database table.
+                    # If the WriteMode is NewTableInsert, continue.
+                    if pv_WriteMode.upper() == "NEWTABLEINSERT":
 
-                            # Get the corresponding Database table column name.
-                            db_col_name = self.__get_mapped_datastore_col_from_table_col(table_col_to_write,
-                                                                                         col_map_dic)
+                        table_obj_copy.to_sql(name=pv_DataStoreTable, con=datastore_obj.engine, index=False)
 
-                            # Add the Database table column name to the cols_str Sql portion.
-                            cols_str += "{}, ".format(db_col_name)
+                    # If the WriteMode is ExistingTableOverwrite, continue.
+                    elif pv_WriteMode.upper() == "EXISTINGTABLEOVERWRITE":
 
-                            # Get the data type of the Table column. (pandas)
-                            col_data_type = table_obj.df[table_col_to_write].dtype
+                        table_obj_copy.to_sql(name=pv_DataStoreTable, con=datastore_obj.engine, if_exists="replace",
+                                              index=False)
 
-                            # Gracefully handles object (str), int64 (int), float64 (float) and bool (bool) data types.
-                            # Still needs to address datetime64, timedelta[ns], and category data types.
-                            # See REF: http://pbpython.com/pandas_dtypes.html
-                            value = row[table_col_to_write]
-                            if col_data_type == "object":
-                                values_str_row += "'{}', ".format(value)
-                            elif col_data_type == "int64" or col_data_type == "float64":
-                                values_str_row += "{}, ".format(value)
-                            elif col_data_type == "bool":
-                                values_str_row += "{}, ".format(str(value).upper())
+                    # If the WriteMode is ExistingTableInsert, continue.
+                    elif pv_WriteMode.upper() == "EXISTINGTABLEINSERT":
 
-                            # Get the DataBase table column datatype. Currently this data is not used but could be
-                            # used in the future to help with Data Type errors.
-                            database_col_datatype = self.__get_datatype_of_database_col(datastore_obj,
-                                                                                        pv_DataStoreTable,
-                                                                                        db_col_name)
+                        table_obj_copy.to_sql(name=pv_DataStoreTable, con=datastore_obj.engine, if_exists="append",
+                                              index=False)
 
-                        # End of Table columns. Remove the last comma and space characters in the cols_str and the
-                        # values_str_row strings.
-                        cols_str = cols_str.rsplit(", ", 1)[0]
-                        values_str_row = "({})".format(values_str_row.rsplit(", ", 1)[0])
+                    # If the WriteMode is ExistingTableUpdate, continue.
+                    elif pv_WriteMode.upper() == "EXISTINGTABLEUPDATE":
 
-                        # Append the Table values for this Table row to the master values SQL statement.
-                        values_str_master += "{}, ".format(values_str_row)
+                        print("The ExistingTableUpdate WriteMode is currently disabled.")
 
-                    # End of Table rows. Remove the last comma and space characters in the values_str_master string.
-                    values_str_master = values_str_master.rsplit(", ", 1)[0]
+                    # If the WriteMode is ExistingTableInsertUpdate, continue.
+                    elif pv_WriteMode.upper() == "EXISTINGTABLEINSERTUPDATE":
 
-                    # Build the INSERT Sql statement to push the Table data to the DataStore table.
-                    # REF: http://www.postgresqltutorial.com/postgresql-insert/
-                    sql_str = "INSERT INTO {} ({}) VALUES {};".format(pv_DataStoreTable, cols_str, values_str_master)
-
-                    # Execute the Sql statement and commit the changes.
-                    datastore_obj.cursor.execute(sql_str)
-                    datastore_obj.connection.commit()
+                        print("The ExistingTableInsertUpdate WriteMode is currently disabled.")
 
                 # Raise an exception if an unexpected error occurs during the process
                 except Exception as e:
@@ -433,6 +464,114 @@ class WriteTableToDataStore(AbstractCommand):
                     self.command_status.add_to_log(command_phase_type.RUN,
                                                    CommandLogRecord(command_status_type.FAILURE, message,
                                                                     recommendation))
+
+
+        # # Convert the ColumnMap from string to a dictionary. Key: Table Column Name; Value: DataStore Column Name
+        # col_map_dic = string_util.delimited_string_to_dictionary_one_value(pv_ColumnMap, ",", ":", True)
+        #
+        # # Run the checks on the parameter values. Only continue if the checks pass.
+        # if self.__should_write_table(pv_TableID, pv_DataStoreID, pv_DataStoreTable):
+        #
+        #     # Get the Table object
+        #     table_obj = self.command_processor.get_table(pv_TableID)
+        #
+        #     # Get DataStore object
+        #     datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
+        #
+        #     # Get the list of the columns in the Table that are configured to write.
+        #     table_cols_to_write = self.__get_table_cols_to_write(pv_IncludeColumns, pv_ExcludeColumns, table_obj)
+        #
+        #     # Get the list of the columns in the DataStore that are configured to receive data.
+        #     datastore_table_cols_to_receive = self.__get_datastore_cols_to_receive(table_cols_to_write, col_map_dic)
+        #
+        #     # Run a second level of checks. Only continue if the check passes.
+        #     if self.__should_write_table2(datastore_obj, pv_DataStoreTable, datastore_table_cols_to_receive):
+        #
+        #         try:
+        #
+        #             # A Sql statement is used to insert data into a DataBase table. One portion of the Sql statement
+        #             # includes the data values that are to be entered. The values_str_master holds that portion the Sql
+        #             # statement as a string value. String values from each Table row are appended to this master string.
+        #             values_str_master = ""
+        #
+        #             # Iterate over the rows in the Table.
+        #             for index, row in table_obj.df.iterrows():
+        #
+        #                 # A Sql statement is used to insert data into a DataBase table. One portion of the Sql statement
+        #                 # includes the database table columns that will receive the data. The cols_str holds that
+        #                 # portion of the Sql statement as a string. Refreshes for each table row.
+        #                 cols_str = ""
+        #
+        #                 # A Sql statement is used to insert data into a DataBase table. One portion of the Sql statement
+        #                 # includes the data values that are to be entered. The values_str_row holds that portion the
+        #                 # Sql statement as a string value FOR the current row. The values_str_row is then appended to
+        #                 # the values_str_master for each row. Refreshes for each table row.
+        #                 values_str_row = ""
+        #
+        #                 # Iterate over the Table columns that should be included in the DataStore table.
+        #                 for table_col_to_write in table_cols_to_write:
+        #
+        #                     # Get the corresponding Database table column name.
+        #                     db_col_name = self.__get_mapped_datastore_col_from_table_col(table_col_to_write,
+        #                                                                                  col_map_dic)
+        #
+        #                     # Add the Database table column name to the cols_str Sql portion.
+        #                     cols_str += "{}, ".format(db_col_name)
+        #
+        #                     # Get the data type of the Table column. (pandas)
+        #                     col_data_type = table_obj.df[table_col_to_write].dtype
+        #
+        #                     # Gracefully handles object (str), int64 (int), float64 (float) and bool (bool) data types.
+        #                     # Still needs to address datetime64, timedelta[ns], and category data types.
+        #                     # See REF: http://pbpython.com/pandas_dtypes.html
+        #                     value = row[table_col_to_write]
+        #                     if col_data_type == "object":
+        #                         values_str_row += "'{}', ".format(value)
+        #                     elif col_data_type == "int64" or col_data_type == "float64":
+        #                         values_str_row += "{}, ".format(value)
+        #                     elif col_data_type == "bool":
+        #                         values_str_row += "{}, ".format(str(value).upper())
+        #
+        #                     # Get the DataBase table column datatype. Currently this data is not used but could be
+        #                     # used in the future to help with Data Type errors.
+        #                     database_col_datatype = self.__get_datatype_of_database_col(datastore_obj,
+        #                                                                                 pv_DataStoreTable,
+        #                                                                                 db_col_name)
+        #
+        #                 # End of Table columns. Remove the last comma and space characters in the cols_str and the
+        #                 # values_str_row strings.
+        #                 cols_str = cols_str.rsplit(", ", 1)[0]
+        #                 values_str_row = "({})".format(values_str_row.rsplit(", ", 1)[0])
+        #
+        #                 # Append the Table values for this Table row to the master values SQL statement.
+        #                 values_str_master += "{}, ".format(values_str_row)
+        #
+        #             # End of Table rows. Remove the last comma and space characters in the values_str_master string.
+        #             values_str_master = values_str_master.rsplit(", ", 1)[0]
+        #
+        #             # Build the INSERT Sql statement to push the Table data to the DataStore table.
+        #             # REF: http://www.postgresqltutorial.com/postgresql-insert/
+        #             if pv_WriteMode == "INSERT":
+        #                 sql_str = "INSERT INTO {} ({}) VALUES {};".format(pv_DataStoreTable, cols_str, values_str_master)
+        #             elif pv_WriteMode == "INSERTUPDATE":
+        #                 sql_str = "INSERT INTO {} ({}) VALUES {};".format(pv_DataStoreTable, cols_str, values_str_master)
+        #
+        #
+        #
+        #             # Execute the Sql statement and commit the changes.
+        #             datastore_obj.cursor.execute(sql_str)
+        #             datastore_obj.connection.commit()
+        #
+        #         # Raise an exception if an unexpected error occurs during the process
+        #         except Exception as e:
+        #             self.warning_count += 1
+        #             message = "Unexpected error writing Table {} to DataStore ({}).".format(pv_TableID,
+        #                                                                                     pv_DataStoreID)
+        #             recommendation = "Check the log file for details."
+        #             self.logger.error(message, exc_info=True)
+        #             self.command_status.add_to_log(command_phase_type.RUN,
+        #                                            CommandLogRecord(command_status_type.FAILURE, message,
+        #                                                             recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

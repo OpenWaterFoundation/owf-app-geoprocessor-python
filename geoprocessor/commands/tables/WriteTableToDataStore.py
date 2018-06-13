@@ -43,7 +43,7 @@ class WriteTableToDataStore(AbstractCommand):
                 in the existing database table are NOT appended to the database table.
         5. ExistingTableInsertUpdate: Rows of the TableID that do NOT conflict with any of the rows in the existing
             database table are appended to the database table. Rows of the TableID that do conflict with any of the
-                rows in the existing database table are used to update the existing database rows.
+            rows in the existing database table are used to update the existing database rows.
     """
 
     # Define the command parameters.
@@ -338,10 +338,12 @@ class WriteTableToDataStore(AbstractCommand):
 
         invalid_columns = []
 
-        # Get the DataStore Table columns
-        datastore_table_cols = datastore.return_col_names(datastore_table_name)
+        exception_modes = ["NEWTABLEINSERT", "EXISTINGTABLEOVERWRITE"]
 
-        if not writemode.upper() == "EXISTINGTABLEOVERWRITE":
+        if writemode.upper() not in exception_modes:
+
+            # Get the DataStore Table columns
+            datastore_table_cols = datastore.return_col_names(datastore_table_name)
 
             for datastore_table_col_to_receive in datastore_table_cols_to_receive:
                 if datastore_table_col_to_receive not in datastore_table_cols:

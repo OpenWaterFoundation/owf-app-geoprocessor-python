@@ -88,3 +88,9 @@ class DataStore(object):
         trans = self.connection.begin()
         self.connection.execute(sql)
         trans.commit()
+
+
+emma = DataStore("emma")
+emma.get_db_uri_postgres("localhost", "dvdrental", "postgres", "postgres")
+emma.open_db_connection()
+print(emma.return_table_names())

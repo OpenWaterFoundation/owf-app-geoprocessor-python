@@ -164,7 +164,9 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
                 fail_response = "WARNBUTDONOTRUN"
             elif pv_IfDataStoreIDExists.upper() == "FAIL":
                 fail_response = "FAIL"
-            else:
+            elif pv_IfDataStoreIDExists.upper() == "OPEN":
+                check_failed = False
+            elif pv_IfDataStoreIDExists.upper() == "REPLACE":
                 check_failed = False
 
     # Check if the parameter value (Table Name) is unique within the DataStore.

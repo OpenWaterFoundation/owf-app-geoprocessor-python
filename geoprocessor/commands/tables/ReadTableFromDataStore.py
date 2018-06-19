@@ -36,6 +36,10 @@ class ReadTableFromDataStore(AbstractCommand):
     * IfTableIDExists (str, optional): This parameter determines the action that occurs if the TableID already exists
         within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
+    * IntNullHandleMethod (str, optional): pandas can't have nulls in an int column. Choose 1 of the following:
+        - ToFloat: convert the column to a float data type
+        - UseMissingIntValue: use -9999 as the missing int value
+        Default: ToFloat
     """
 
     # Define the command parameters.
@@ -46,10 +50,14 @@ class ReadTableFromDataStore(AbstractCommand):
         CommandParameterMetadata("SqlFile", type("")),
         CommandParameterMetadata("Top", type("")),
         CommandParameterMetadata("TableID", type("")),
-        CommandParameterMetadata("IfTableIDExists", type(""))]
+        CommandParameterMetadata("IfTableIDExists", type("")),
+        CommandParameterMetadata("IntNullHandleMethod", type(""))]
 
     # Choices for IfTableIDExists, used to validate parameter and display in editor
     __choices_IfTableIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
+
+    # Choices for IntNullHandleMethod, used to validate parameter and display in editor
+    __choices_IntNullHandleMethod = ["ToFloat", "UseMissingIntValue"]
 
     def __init__(self):
         """
@@ -161,10 +169,22 @@ class ReadTableFromDataStore(AbstractCommand):
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
                                                       command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_IfTableIDExists, self.__choices_IfTableIDExists, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                  empty_string_allowed=False, ignore_case=True):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
                 self.__choices_IfTableIDExists)
+            warning += "\n" + message
+            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Check that optional parameter IntNullHandleMethod is one of the acceptable values or is None.
+        pv_IntNullHandleMethod = self.get_parameter_value(parameter_name="IntNullHandleMethod",
+                                                          command_parameters=command_parameters)
+        if not validators.validate_string_in_list(pv_IntNullHandleMethod, self.__choices_IntNullHandleMethod,
+                                                  none_allowed=True, empty_string_allowed=False, ignore_case=True):
+            message = "IntNullHandleMethod parameter value ({}) is not recognized.".format(pv_IntNullHandleMethod)
+            recommendation = "Specify one of the acceptable values ({}) for the IntNullHandleMethod parameter.".format(
+                self.__choices_IntNullHandleMethod)
             warning += "\n" + message
             self.command_status.add_to_log(command_phase_type.INITIALIZATION,
                                            CommandLogRecord(command_status_type.FAILURE, message, recommendation))
@@ -221,6 +241,67 @@ class ReadTableFromDataStore(AbstractCommand):
         else:
             return True
 
+    def __create_sql_statement(self, datastore_obj, datastore_table, missing_int_value="-9999"):
+
+        pv_IntNullHandleMethod = self.get_parameter_value("IntNullHandleMethod", default_value="ToFloat").upper()
+
+        if pv_IntNullHandleMethod == "TOFLOAT":
+
+            sql_statement = "SELECT * from {}".format(datastore_table)
+
+        else:
+
+            # Get a list of all columns in the DataStore table.
+            all_cols = datastore_obj.return_col_names(datastore_table)
+
+            # Get a list of the integer-type columns in the DataStore table.
+            int_cols = datastore_obj.return_int_col_names(datastore_table)
+
+            # Get a list of the non integer-type columns in the DataStore table.
+            non_int_cols = [col for col in all_cols if col not in int_cols]
+
+            # If there are columns that hold integer data, create the COALESCE portion of the SQL statement.
+            if int_cols:
+
+                # Iterate over each of the integer columns.
+                for i in range(len(int_cols)):
+
+                    # Add the initial statement if this is the first time through the for loop.
+                    if i == 0:
+                        coalesce_statement = "COALESCE("
+
+                    # Add the details of the integer column to the coalesce statement.
+                    coalesce_statement += "{}, {}) as {}".format(int_cols[i], missing_int_value, int_cols[i])
+
+                    # Add the initial statement for the next coalesce statement, if this is not the last time through
+                    # the loop.
+                    if not i == len(int_cols) - 1:
+                        coalesce_statement += ", COALESCE("
+
+                # If there are non-integer columns, continue.
+                if non_int_cols:
+
+                    # Create the non-integer portion of the SQL statement.
+                    non_int_cols_statement = ", ".join(non_int_cols)
+
+            # Combine the SQL statement portions to create a final and complete SQL statement.
+
+            # If there are columns representing integers and columns representing non-integers.
+            if int_cols and non_int_cols:
+                sql_statement = "SELECT {}, {} from {}".format(non_int_cols_statement, coalesce_statement,
+                                                               datastore_table)
+
+            # If there are only columns representing integers.
+            elif int_cols:
+                sql_statement = "SELECT {} from {}".format(coalesce_statement, datastore_table)
+
+            # If there are no columns representing integers.
+            else:
+                sql_statement = "SELECT * from {}".format(datastore_table)
+
+        # Return the SQL statement.
+        return sql_statement
+
     def run_command(self):
         """
         Run the command. Read the Table from the DataStore
@@ -238,6 +319,7 @@ class ReadTableFromDataStore(AbstractCommand):
         pv_SqlFile = self.get_parameter_value("SqlFile")
         pv_Top = self.get_parameter_value("Top")
         pv_TableID = self.get_parameter_value("TableID")
+
 
         # Expand for ${Property} syntax.
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
@@ -267,10 +349,10 @@ class ReadTableFromDataStore(AbstractCommand):
                     if '%' in sql_statement:
                         sql_statement = sql_statement.replace('%', '%%')
 
-                # If using the DataStoreTable method, the sql_statement selects * from the specified table.
+                # If using the DataStoreTable method, the sql_statement selects * from the specified table.=
                 elif pv_DataStoreTable:
 
-                    sql_statement = "select * from {}".format(pv_DataStoreTable)
+                    sql_statement = self.__create_sql_statement(datastore, pv_DataStoreTable)
 
                     # If specified, only query the top n rows.
                     if pv_Top:

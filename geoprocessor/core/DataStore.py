@@ -65,6 +65,8 @@ class DataStore(object):
         # "status_message" is a string that provides the user information about the DataStore's current status.
         self.status_message = "No connection - connection has not been attempted."
 
+        self.metadata = sqlalchemy.MetaData()
+
     def close_db_connection(self):
         """
         Closes the DataStore's connection to the database.
@@ -153,6 +155,32 @@ class DataStore(object):
 
         # Return a list of the column names in the table.
         return [col["name"] for col in self.inspector.get_columns(table)]
+
+    def return_col_types(self, table):
+        """
+        Get a list of the column types in a give database table.
+
+        Args:
+            table (str): An existing table name within the database.
+
+        Return: A list of the column data types in the table.
+        """
+
+        # Return a list of the column data types in the table.
+        return [col["type"] for col in self.inspector.get_columns(table)]
+
+    def return_int_col_names(self, table):
+        """
+        Get a list of the column names that hold integer data in a given database table.
+
+        Args:
+            table (str): An existing table name within the database.
+
+        Return: A list of column names in the table that holds integer data.
+        """
+
+        import sqlalchemy.sql.sqltypes
+        return [col["name"] for col in self.inspector.get_columns(table) if type(col["type"]) == sqlalchemy.sql.sqltypes.INTEGER]
 
     def run_sql(self, sql):
         """

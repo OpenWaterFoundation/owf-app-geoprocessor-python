@@ -31,6 +31,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
         output delimited file. Default: Default: '' (No columns are excluded from the output delimited file).
     * WriteIndexColumn (bool, optional): If TRUE, the index column is written, If FALSE, the index column is excluded.
         Default: True
+    * UseSquareBrackets (str, optional): If TRUE, table column array values are written as a string with square
+        brackets. If FALSE, table column array values are written as a string with curly brackets. Default: True
     """
 
     # Define the command parameters/
@@ -40,7 +42,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
         CommandParameterMetadata("Delimiter", type("")),
         CommandParameterMetadata("ColumnsToInclude", type("")),
         CommandParameterMetadata("ColumnsToExclude", type("")),
-        CommandParameterMetadata("WriteIndexColumn", type(""))]
+        CommandParameterMetadata("WriteIndexColumn", type("")),
+        CommandParameterMetadata("UseSquareBrackets", type(""))]
 
     def __init__(self):
         """
@@ -95,17 +98,19 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that parameter WriteIndexColumn is a valid Boolean value or None.
-        pv_WriteIndexColumn = self.get_parameter_value(parameter_name='WriteIndexColumn',
-                                                       command_parameters=command_parameters)
+        # Check that the WriteIndexColumn and the UseSquareBrackets parameters are valid Boolean values or None.
+        parameters = ['WriteIndexColumn', 'UseSquareBrackets']
 
-        if not validators.validate_bool(pv_WriteIndexColumn, True, False):
-            message = "WriteIndexColumn parameter is not a valid Boolean value."
-            recommendation = "Specify a valid Boolean value for the WriteIndexColumn parameter."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+        for parameter in parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+
+            if not validators.validate_bool(parameter_value, True, False):
+                message = "{} parameter ({}) is not a valid Boolean value.".format(parameter, parameter_value)
+                recommendation = "Specify a valid Boolean value for the {} parameter.".format(parameter)
+                warning += "\n" + message
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -176,6 +181,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         pv_ColumnsToInclude = self.get_parameter_value("ColumnsToInclude", default_value="*")
         pv_ColumnsToExclude = self.get_parameter_value("ColumnsToExclude", default_value="")
         pv_WriteIndexColumn = self.get_parameter_value("WriteIndexColumn", default_value="True")
+        pv_UseSquareBrackets = string_util.str_to_bool(self.get_parameter_value("UseSquareBrackets", default_value="True"))
 
         # Convert the Boolean parameters from string to valid Boolean values.
         pv_WriteIndexColumn = string_util.str_to_bool(pv_WriteIndexColumn)
@@ -215,6 +221,42 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 # Write the table to a delimited file given the configured settings.
                 pandas_util.write_df_to_delimited_file(table.df, output_file_absolute, sorted_cols_to_keep,
                                                        pv_WriteIndexColumn, delimiter=pv_Delimiter,)
+
+                # If the CSV is configured to be updated, continue.
+                # ---> If configured to use curly brackets rather than square brackets.
+                # ---> If the Table was read from a DataStore using the "UseIntNullValue" method to handle int columns.
+                if not pv_UseSquareBrackets or table.int_null_value:
+
+                    # An empty dictionary to hold the characters that are to be replaced and the corresponding
+                    # replacing characters.
+                    # Key: the character in the delimited file to replace
+                    # Value: the corresponding replacement character
+                    replacement_dictionary = {}
+
+                    # If configured to use curly brackets over square brackets, add the appropriate characters and
+                    # replacement characters to the replacement dictionary.
+                    if not pv_UseSquareBrackets:
+                        replacement_dictionary["["] = "{"
+                        replacement_dictionary["]"] = "}"
+
+                    # If the table was read from a DataStore with the "UseIntNullValue" method, add the appropriate
+                    # character (the table's int null value) and the replacement character (an empty string).
+                    if table.int_null_value:
+                        replacement_dictionary[table.int_null_value] = ""
+
+                    # Open the output csv file and read the text in as a variable.
+                    with open(output_file_absolute, 'r') as f:
+                        file_text = f.read()
+
+                    # Iterate over the characters to be replaced.
+                    for orig, new in replacement_dictionary.items():
+
+                        # Replace the text variable with the correct character.
+                        file_text = file_text.replace(orig, new)
+
+                    # Open the output csv file and overwrite the content with the updated text.
+                    with open(output_file_absolute, "w") as f:
+                        f.write(file_text)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

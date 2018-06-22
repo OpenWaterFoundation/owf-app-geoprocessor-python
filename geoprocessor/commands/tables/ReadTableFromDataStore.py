@@ -15,6 +15,8 @@ import geoprocessor.util.validator_util as validators
 
 import logging
 
+from numpy import nan
+
 
 class ReadTableFromDataStore(AbstractCommand):
     """
@@ -38,8 +40,10 @@ class ReadTableFromDataStore(AbstractCommand):
         (Refer to user documentation for detailed description.) Default value is `Replace`.
     * IntNullHandleMethod (str, optional): pandas can't have nulls in an int column. Choose 1 of the following:
         - ToFloat: convert the column to a float data type
-        - UseMissingIntValue: use -9999 as the missing int value
+        - UseIntNullValue: use -9999 as the missing int value
         Default: ToFloat
+    * IntNullValue (str, optional): Value used to represent null values when IntNullHandleMethod is set to
+        UseIntNullValue Default: -9999999999
     """
 
     # Define the command parameters.
@@ -51,13 +55,14 @@ class ReadTableFromDataStore(AbstractCommand):
         CommandParameterMetadata("Top", type("")),
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("IfTableIDExists", type("")),
-        CommandParameterMetadata("IntNullHandleMethod", type(""))]
+        CommandParameterMetadata("IntNullHandleMethod", type("")),
+        CommandParameterMetadata("IntNullValue", type(""))]
 
     # Choices for IfTableIDExists, used to validate parameter and display in editor
     __choices_IfTableIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
     # Choices for IntNullHandleMethod, used to validate parameter and display in editor
-    __choices_IntNullHandleMethod = ["ToFloat", "UseMissingIntValue"]
+    __choices_IntNullHandleMethod = ["ToFloat", "UseIntNullValue"]
 
     def __init__(self):
         """
@@ -112,6 +117,7 @@ class ReadTableFromDataStore(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
+
         # Check that one (and only one) selection method is a non-empty and non-None string.
         is_string_list = []
         selection_method_parameter_list = ["Sql", "SqlFile", "DataStoreTable"]
@@ -140,9 +146,9 @@ class ReadTableFromDataStore(AbstractCommand):
             # Check that the Top parameter is only used with the DataStoreTable selection.
             if is_string_list.count(True) == 1 and not pv_DataStoreTable:
 
-                message = "The Top parameter is only valid when the DataStoreID is enabled. The Top parameter value" \
-                          " ({}) will be ignored.".format(pv_Top)
-                recommendation = "If you want to use the Top parameter, specify a value for the DataStoreID parameter."
+                message = "The Top parameter is only valid when the DataStoreTable is enabled. The Top parameter" \
+                          " value ({}) will be ignored.".format(pv_Top)
+                recommendation = "To use the Top parameter, specify a value for the DataStoreTable parameter."
                 self.command_status.add_to_log(
                     command_phase_type.INITIALIZATION,
                     CommandLogRecord(command_status_type.WARNING, message, recommendation))
@@ -164,6 +170,29 @@ class ReadTableFromDataStore(AbstractCommand):
                 warning += "\n" + message
                 self.command_status.add_to_log(command_phase_type.INITIALIZATION,
                                                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Run the checks for the IntNullValue parameter.
+        pv_IntNullValue = self.get_parameter_value(parameter_name='IntNullValue', command_parameters=command_parameters)
+
+        if pv_IntNullValue:
+
+            # Check that the IntNullValue parameter is only used with the DataStoreTable selection.
+            if is_string_list.count(True) == 1 and not pv_DataStoreTable:
+                message = "The IntNullValue parameter is only valid when the DataStoreTable is enabled. The" \
+                          " IntNullValue parameter value ({}) will be ignored.".format(pv_IntNullValue)
+                recommendation = "To use the IntNullValue parameter, specify a value for the DataStoreTable parameter."
+                self.command_status.add_to_log(
+                    command_phase_type.INITIALIZATION,
+                    CommandLogRecord(command_status_type.WARNING, message, recommendation))
+
+            # If the DataStoreTable parameter is enabled, check that the IntNullValue parameter is an integer or None.
+            if pv_DataStoreTable and not validators.validate_int(pv_IntNullValue, True, False):
+                message = "IntNullValue parameter value ({}) is not a valid integer value.".format(pv_IntNullValue)
+                recommendation = "Specify an integer for the IntNullValue parameter."
+                warning += "\n" + message
+                self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+                                               CommandLogRecord(command_status_type.FAILURE, message,
+                                                                recommendation))
 
         # Check that optional parameter IfTableIDExists is one of the acceptable values or is None.
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
@@ -241,14 +270,18 @@ class ReadTableFromDataStore(AbstractCommand):
         else:
             return True
 
-    def __create_sql_statement(self, datastore_obj, datastore_table, missing_int_value="-9999"):
+    def __create_sql_statement(self, datastore_obj, datastore_table):
 
+        # Get the IntNullHandleMethod and the IntNullValue parameter values.
         pv_IntNullHandleMethod = self.get_parameter_value("IntNullHandleMethod", default_value="ToFloat").upper()
+        pv_IntNullValue = self.get_parameter_value("IntNullValue", default_value="-9999999999")
 
+        # If the IntNullHandleMethod is set to ToFloat, use the simple form of the Sql statement. The Pandas library
+        # will automatically convert int columns with null values to float columns.
         if pv_IntNullHandleMethod == "TOFLOAT":
-
             sql_statement = "SELECT * from {}".format(datastore_table)
 
+        # If the IntNullHandleMethod is set to UseIntNullValue, create the appropriate Sql statement.
         else:
 
             # Get a list of all columns in the DataStore table.
@@ -271,7 +304,7 @@ class ReadTableFromDataStore(AbstractCommand):
                         coalesce_statement = "COALESCE("
 
                     # Add the details of the integer column to the coalesce statement.
-                    coalesce_statement += "{}, {}) as {}".format(int_cols[i], missing_int_value, int_cols[i])
+                    coalesce_statement += "{}, {}) as {}".format(int_cols[i], pv_IntNullValue, int_cols[i])
 
                     # Add the initial statement for the next coalesce statement, if this is not the last time through
                     # the loop.
@@ -319,7 +352,8 @@ class ReadTableFromDataStore(AbstractCommand):
         pv_SqlFile = self.get_parameter_value("SqlFile")
         pv_Top = self.get_parameter_value("Top")
         pv_TableID = self.get_parameter_value("TableID")
-
+        pv_IntNullHandleMethod = self.get_parameter_value("IntNullHandleMethod", default_value="ToFloat").upper()
+        pv_IntNullValue = self.get_parameter_value("IntNullValue", default_value="-9999999999")
 
         # Expand for ${Property} syntax.
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
@@ -368,8 +402,18 @@ class ReadTableFromDataStore(AbstractCommand):
                 # Create a Pandas data frame from the selected DataStore data.
                 df = pandas_util.create_data_frame_from_datastore_with_sql(sql_statement, datastore)
 
-                # Create a Table object from the pandas data frame and add it to the geoprocessor's Tables list.
+                df.fillna(value=nan, inplace=True)
+                import pandas
+                print(pandas.isna(df.receive_lines))
+
+                # Create a Table object from the pandas data frame.
                 table_obj = Table(pv_TableID, df, "DataStore ({})".format(pv_DataStoreID))
+
+                # If an IntNullValue was used, assign the value to the Table property.
+                if pv_IntNullHandleMethod == "USEINTNULLVALUE":
+                    table_obj.int_null_value = pv_IntNullValue
+
+                # Add the table to the geoprocessor's Tables list.
                 self.command_processor.add_table(table_obj)
 
             # Raise an exception if an unexpected error occurs during the process

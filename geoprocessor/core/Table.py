@@ -50,6 +50,10 @@ class Table(object):
         # "source_path" (str) is the full pathname to the original data file on the user's local computer
         self.source_path = table_source_path
 
+        # "int_null_value" is the value used to replace the null value within the integer columns, if applicable.
+        # See ReadTableFromDataStore parameters IntNullHandleMethod  and IntNullValue for more information
+        self.int_null_value = None
+
         # "properties" (dict) is a dictionary of user (non-built-in) properties that are assigned to the layer.
         # These properties facilitate processing and may or may not be output to to a persistent format,
         # depending on whether the format allows general properties on the layer.

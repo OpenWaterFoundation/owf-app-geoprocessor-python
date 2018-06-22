@@ -213,3 +213,9 @@ class DataStore(object):
 
         # Update the status message to inform users of a specific message.
         self.status_message = message
+
+
+# df = DataStore("ns")
+# df.get_db_uri_postgres("192.168.1.138", "novastar", "novastar", "n0v4st4r")
+# df.open_db_connection()
+# print(df.return_table_names())

@@ -6,13 +6,16 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-from geoprocessor.core.Table import Table
+from geoprocessor.core.Table_new import Table
+from geoprocessor.core.Table_new import TableRecord
+from geoprocessor.core.Table_new import TableField
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.pandas_util as pandas_util
+import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
+import csv
 import logging
 
 
@@ -24,6 +27,11 @@ class ReadTableFromDelimitedFile(AbstractCommand):
     * InputFile (str, required): the relative or absolute pathname of the delimited file to read.
     * Delimiter (str, optional): the delimiter of the input file. Default is `,`.
     * TableID (str, required): the identifier of the Table to be written to the Excel file
+    * HeaderRowCount (str, optional): the number of rows representing the header. These columns will not be included
+         in the output Table data values. The last row of the HeaderRowCount will be used to specify the column headers.
+         Default: 1
+    * NullValues (str, optional): A list of values within the delimited file that represent null values.
+        Default: '' (an empty string)
     * IfTableIDExists (str, optional): This parameter determines the action that occurs if the TableID already exists
         within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
@@ -34,6 +42,8 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("InputFile", type("")),
         CommandParameterMetadata("Delimiter", type("")),
         CommandParameterMetadata("TableID", type("")),
+        CommandParameterMetadata("HeaderRowCount", type("")),
+        CommandParameterMetadata("NullValues", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
     def __init__(self):
@@ -103,6 +113,20 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
+        # If the HeaderRowCount is used, continue with the checks.
+        pv_HeaderRowCount = self.get_parameter_value("HeaderRowCount", command_parameters=command_parameters)
+        if pv_HeaderRowCount:
+
+            # Check that the HeaderRowCount parameter is an integer or None.
+            if not validators.validate_int(pv_HeaderRowCount, True, False):
+
+                message = "HeaderRowCount parameter value ({}) is not a valid integer value.".format(pv_HeaderRowCount)
+                recommendation = "Specify a positive integer for the HeaderRowCount parameter to specify how" \
+                                 " many rows represent the header contnet of the delimited file."
+                warning += "\n" + message
+                self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning = command_util.validate_command_parameter_names(self, warning)
@@ -146,6 +170,93 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         else:
             return True
 
+    @staticmethod
+    def __read_table_from_delimited_file(path, table_id, delimiter, header_count, null_values):
+        """
+        Creates a GeoProcessor table object from a delimited file.
+
+        Args:
+            path (str): the path to the delimited file on the local machine
+            table_id (str): the id of the GeoProcessor Table that is to be created
+            delimiter (str): the delimiter of the input file
+            header_count (int): the number of rows representing the header content (not data values)
+            null_values (list): list of strings that are values in the delimited file representing null values
+
+        Return: A GeoProcessor Table object.
+        """
+
+        # Create a table object
+        table = Table(table_id)
+
+        # Open the csv file to read.
+        with open(path, 'r') as csvfile:
+
+            # Pass the csv file to the csv.reader object. Specify the delimiter.
+            csvreader = csv.reader(csvfile, delimiter=delimiter)
+
+            # TODO egiles 2018-06-25 Need to determine what column headers will be if there are no column headers in
+            # TODO the original delimited file (where header_count = 0).
+
+            # By default, the column headers are retrieved as the last line of the header rows.
+            # Get the column headers.
+            for i in range(header_count):
+                col_headers = next(csvreader)
+
+            # Iterate over the number of columns specified by a column header name.
+            for i in range(len(col_headers)):
+
+                # Create a TableField object and assign the field "name" as the column header name.
+                table_field = TableField(col_headers[i])
+
+                # An empty list to hold the items within the TableField.
+                col_content = []
+
+                # Reset the csv reader to start the reading of the csv file at the first row.
+                csvfile.seek(0)
+
+                # Skip the header rows.
+                for i_head in range(header_count):
+                    next(csvreader)
+
+                # Iterate over the non-header rows and append the column items to the col_content list.
+                for row in csvreader:
+                    col_content.append(row[i])
+
+                # Add the column contents to the TableField object.
+                table_field.items = col_content
+
+                # Set the null values
+                table_field.null_values = null_values
+
+                # Convert the data value that represent null values into None value.\
+                table_field.assign_nulls()
+
+                # Convert the column contents to the correct data type.
+                table_field.assign_data_type()
+
+                # Add the updated table field object to the Table attribute.
+                table.add_table_field(table_field)
+
+            # Get the number of row entries.
+            table.entry_count = len(table_field.items)
+
+        # Iterate over the number of row entries.
+        for i_row in range(table.entry_count):
+
+            # Create a TableRecord object.
+            table_record = TableRecord()
+
+            # Iterate over the table fields.
+            for i_col in range(len(table.table_fields)):
+                new_item = table.table_fields[i_col].items[i_row]
+                table_record.add_item(new_item)
+
+            # Add the table record to the Table attributes.
+            table.table_records.append(table_record)
+
+        # Return the GeoProcessor Table object.
+        return table
+
     def run_command(self):
         """
         Run the command. Read the Table from the delimited file.
@@ -160,23 +271,28 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         pv_InputFile = self.get_parameter_value("InputFile")
         pv_Delimiter = self.get_parameter_value("Delimiter", default_value=",")
         pv_TableID = self.get_parameter_value("TableID")
+        pv_HeaderRowCount = int(self.get_parameter_value("HeaderRowCount", default_value="1"))
+        pv_NullValues = self.get_parameter_value("NullValues", default_value="''")
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         input_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_InputFile, self)))
 
+        # Convert the NullValues parameter values to a list.
+        pv_NullValues = string_util.delimited_string_to_list(pv_NullValues)
+
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_table( input_file_absolute, pv_TableID):
+        if self.__should_read_table(input_file_absolute, pv_TableID):
 
             try:
 
-                # Create a Pandas Data Frame object.
-                df = pandas_util.create_data_frame_from_delimited_file(input_file_absolute, pv_Delimiter)
+                # Create the table from the delimited file.
+                table = self.__read_table_from_delimited_file(input_file_absolute, pv_TableID, pv_Delimiter,
+                                                              pv_HeaderRowCount, pv_NullValues)
 
-                # Create a Table and add it to the geoprocessor's Tables list.
-                table_obj = Table(pv_TableID, df, input_file_absolute)
-                self.command_processor.add_table(table_obj)
+                # Add the table to the GeoProcessor's Tables list.
+                self.command_processor.add_table(table)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:
@@ -196,5 +312,3 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # Set command status type as SUCCESS if there are no errors.
         else:
             self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
-
-

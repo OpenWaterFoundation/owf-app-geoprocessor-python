@@ -66,6 +66,7 @@ class DataStore(object):
         self.status_message = "No connection - connection has not been attempted."
 
         self.metadata = sqlalchemy.MetaData()
+        self.session = None
 
     def close_db_connection(self):
         """
@@ -123,6 +124,12 @@ class DataStore(object):
 
         # Create the SqlAlchemy connection and assign it to the DataStore's connection attribute.
         self.connection = self.engine.connect()
+
+        self.metadata.reflect(bind=self.engine)
+
+        from sqlalchemy.orm import sessionmaker
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
 
         # Update the status message to inform users that the connection has been opened.
         self.update_status_message("Connected.")
@@ -215,7 +222,3 @@ class DataStore(object):
         self.status_message = message
 
 
-# df = DataStore("ns")
-# df.get_db_uri_postgres("192.168.1.138", "novastar", "novastar", "n0v4st4r")
-# df.open_db_connection()
-# print(df.return_table_names())

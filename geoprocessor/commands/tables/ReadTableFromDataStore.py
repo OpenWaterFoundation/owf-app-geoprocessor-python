@@ -6,16 +6,17 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-from geoprocessor.core.Table import Table
+from geoprocessor.core.Table_new import Table
+from geoprocessor.core.Table_new import TableField
+from geoprocessor.core.Table_new import TableRecord
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.pandas_util as pandas_util
+import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
 import logging
-
-from numpy import nan
+import sqlalchemy
 
 
 class ReadTableFromDataStore(AbstractCommand):
@@ -33,17 +34,15 @@ class ReadTableFromDataStore(AbstractCommand):
         DataStoreTable or Sql.
     * Top (str, optional): Indicate how many rows to return. Default: return all rows. Must be a string representing
         a positive integer. Only enabled if DataStoreTable is enabled.
+    * ColumnsToInclude (str, optional): A list of glob-style patterns to determine the DataStore table columns to read.
+        Default: * (All columns are read).
+    * ColumnsToExclude (str, optional): A list of glob-style patterns to determine the DataStore table columns to read.
+        Default: '' (No columns are excluded - All columns are read).
     * TableID (str, required): Identifier to assign to the output table in the GeoProcessor, which allows the table
         data to be used with other commands. A new table will be created. Can be specified with ${Property}.
     * IfTableIDExists (str, optional): This parameter determines the action that occurs if the TableID already exists
         within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
-    * IntNullHandleMethod (str, optional): pandas can't have nulls in an int column. Choose 1 of the following:
-        - ToFloat: convert the column to a float data type
-        - UseIntNullValue: use -9999 as the missing int value
-        Default: ToFloat
-    * IntNullValue (str, optional): Value used to represent null values when IntNullHandleMethod is set to
-        UseIntNullValue Default: -9999999999
     """
 
     # Define the command parameters.
@@ -53,16 +52,13 @@ class ReadTableFromDataStore(AbstractCommand):
         CommandParameterMetadata("Sql", type("")),
         CommandParameterMetadata("SqlFile", type("")),
         CommandParameterMetadata("Top", type("")),
+        CommandParameterMetadata("ColumnsToInclude", type("")),
+        CommandParameterMetadata("ColumnsToExclude", type("")),
         CommandParameterMetadata("TableID", type("")),
-        CommandParameterMetadata("IfTableIDExists", type("")),
-        CommandParameterMetadata("IntNullHandleMethod", type("")),
-        CommandParameterMetadata("IntNullValue", type(""))]
+        CommandParameterMetadata("IfTableIDExists", type(""))]
 
     # Choices for IfTableIDExists, used to validate parameter and display in editor
     __choices_IfTableIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
-
-    # Choices for IntNullHandleMethod, used to validate parameter and display in editor
-    __choices_IntNullHandleMethod = ["ToFloat", "UseIntNullValue"]
 
     def __init__(self):
         """
@@ -117,7 +113,6 @@ class ReadTableFromDataStore(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-
         # Check that one (and only one) selection method is a non-empty and non-None string.
         is_string_list = []
         selection_method_parameter_list = ["Sql", "SqlFile", "DataStoreTable"]
@@ -171,29 +166,6 @@ class ReadTableFromDataStore(AbstractCommand):
                 self.command_status.add_to_log(command_phase_type.INITIALIZATION,
                                                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Run the checks for the IntNullValue parameter.
-        pv_IntNullValue = self.get_parameter_value(parameter_name='IntNullValue', command_parameters=command_parameters)
-
-        if pv_IntNullValue:
-
-            # Check that the IntNullValue parameter is only used with the DataStoreTable selection.
-            if is_string_list.count(True) == 1 and not pv_DataStoreTable:
-                message = "The IntNullValue parameter is only valid when the DataStoreTable is enabled. The" \
-                          " IntNullValue parameter value ({}) will be ignored.".format(pv_IntNullValue)
-                recommendation = "To use the IntNullValue parameter, specify a value for the DataStoreTable parameter."
-                self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.WARNING, message, recommendation))
-
-            # If the DataStoreTable parameter is enabled, check that the IntNullValue parameter is an integer or None.
-            if pv_DataStoreTable and not validators.validate_int(pv_IntNullValue, True, False):
-                message = "IntNullValue parameter value ({}) is not a valid integer value.".format(pv_IntNullValue)
-                recommendation = "Specify an integer for the IntNullValue parameter."
-                warning += "\n" + message
-                self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                               CommandLogRecord(command_status_type.FAILURE, message,
-                                                                recommendation))
-
         # Check that optional parameter IfTableIDExists is one of the acceptable values or is None.
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
                                                       command_parameters=command_parameters)
@@ -202,18 +174,6 @@ class ReadTableFromDataStore(AbstractCommand):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
                 self.__choices_IfTableIDExists)
-            warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
-
-        # Check that optional parameter IntNullHandleMethod is one of the acceptable values or is None.
-        pv_IntNullHandleMethod = self.get_parameter_value(parameter_name="IntNullHandleMethod",
-                                                          command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IntNullHandleMethod, self.__choices_IntNullHandleMethod,
-                                                  none_allowed=True, empty_string_allowed=False, ignore_case=True):
-            message = "IntNullHandleMethod parameter value ({}) is not recognized.".format(pv_IntNullHandleMethod)
-            recommendation = "Specify one of the acceptable values ({}) for the IntNullHandleMethod parameter.".format(
-                self.__choices_IntNullHandleMethod)
             warning += "\n" + message
             self.command_status.add_to_log(command_phase_type.INITIALIZATION,
                                            CommandLogRecord(command_status_type.FAILURE, message, recommendation))
@@ -270,70 +230,207 @@ class ReadTableFromDataStore(AbstractCommand):
         else:
             return True
 
-    def __create_sql_statement(self, datastore_obj, datastore_table):
+    @staticmethod
+    def __read_table_from_datastore(ds, table_name, table_id, top, sql, cols_to_include, cols_to_exclude):
+        """
+        Creates a GeoProcessor table object from a DataStore table.
 
-        # Get the IntNullHandleMethod and the IntNullValue parameter values.
-        pv_IntNullHandleMethod = self.get_parameter_value("IntNullHandleMethod", default_value="ToFloat").upper()
-        pv_IntNullValue = self.get_parameter_value("IntNullValue", default_value="-9999999999")
+        Args:
+            ds (obj): the DataStore object that contains the DataStore table to read
+            table_name (str): the name of the DataStore table to read
+                Can be None if using the Sql method or SqlFile method.
+            table_id (str): the id of the GeoProcessor Table that is to be created
+            top (int): the number of rows from the DataStore Table to read
+                Can be None if using the Sql method or SqlFile method.
+            sql (str): the SQL statement to select out the desired data from the DataStore table.
+                Can be None if using the DataStoreTable method.
+            cols_to_include (list): a list of glob-style patterns representing the DataStore Table columns to read
+                Can be None if using the Sql method or SqlFile method.
+            cols_to_exclude (list): a list of glob-style patterns representing the DataStore Table columns to read
+                Can be None if using the Sql method or SqlFile method.
 
-        # If the IntNullHandleMethod is set to ToFloat, use the simple form of the Sql statement. The Pandas library
-        # will automatically convert int columns with null values to float columns.
-        if pv_IntNullHandleMethod == "TOFLOAT":
-            sql_statement = "SELECT * from {}".format(datastore_table)
+        Return: A GeoProcessor Table object.
+        """
 
-        # If the IntNullHandleMethod is set to UseIntNullValue, create the appropriate Sql statement.
+        # Read the DataStore table into a DataStore Table object.
+        ds_table_obj = ds.metadata.tables[table_name]
+
+        # Create a GeoProcessor Table object.
+        table = Table(table_id)
+
+        # Query the DataStore table. The allows access to table information.
+        q = ds.session.query(ds_table_obj)
+
+        # Select all fields and rows of the table.
+        s = sqlalchemy.sql.select([ds_table_obj])
+
+        # Get a list of all of the column names.
+        table_cols = [col["name"] for col in q.column_descriptions]
+
+        # Sort the list of column names to create create a second list that only includes the columns to read.
+        table_cols_to_read = string_util.filter_list_of_strings(table_cols, cols_to_include, cols_to_exclude, True)
+
+        # If a SQL statement has been specified, then continue.
+        if sql:
+
+            # Run the SQL statement
+            result_from_sql = ds.connection.execute(sql)
+
+            # Get the first row from the result set.
+            row = result_from_sql.fetchone()
+
+            # An empty list to hold the columns that were included in the result set in response to the user-specified
+            # sql.
+            included_cols = []
+
+            # Iterate over all of the available columns in the DataStore table.
+            for table_col in table_cols:
+
+                # Try to read the value of the DataStore table column. If it does not throw an error, it is known that
+                # the column was included in the result set of the user-specified SQL statement. Add the column name to
+                # the included_cols list.
+                try:
+                    value = row[table_col]
+                    included_cols.append(table_col)
+
+                # If an error is thrown, it is known that the column was not included in the result set of the
+                #  user-specified SQL statement. Do not add the column name to the included_cols list.
+                except:
+                    pass
+
+            # Iterate over the DataStore table columns that do have results from the user-specified SQL statement.
+            for included_col in included_cols:
+
+                # Create a TableField object and assign the field "name" as the column name.
+                table_field = TableField(included_col)
+
+                # Run the SQL statement
+                result_from_sql = ds.connection.execute(sql)
+
+                # Iterate over the rows of the DataStore table data.
+                for row in result_from_sql:
+                    # Add the row data for the column to the item list of the TableField.
+                    table_field.items.append(row[included_col])
+
+                # Determine the data type of the column's data.
+                # A list that holds the data type for each data value in the column.
+                data_types = []
+
+                # Iterate over each of the data values in the column.
+                for item in table_field.items:
+
+                    # Add the data type of the item to the data_types list. Ignore data values that are None.
+                    if item is not None:
+                        data_types.append(type(item))
+
+                # If the data_types list is empty, assume that all values in the column are set to None.
+                if not data_types:
+                    table_field.data_type = None
+
+                # Set the data_type attribute of the TableField object to that specified in the data_types list.
+                elif all(x == data_types[0] for x in data_types):
+                    table_field.data_type = data_types[0]
+
+                # All of the data types in the list should be the same value because database columns require that
+                # the data in each column is only one data type. If more than one data type exists in the data_types
+                # list, print an error message.
+                else:
+                    print("There was an error. Not all the data types are the same.")
+
+                # Add the TableField object to the Table attributes.
+                table.add_table_field(table_field)
+
+                # Get the number of row entries in the TableField. This will be the same number for each of the
+                # TableField objects so only the count of the entries in the last TableField object is used in the
+                # remaining code.
+                table.entry_count = len(table_field.items)
+
+        # If a SQL statement has not been specified, continue.
         else:
 
-            # Get a list of all columns in the DataStore table.
-            all_cols = datastore_obj.return_col_names(datastore_table)
+            # Iterate over the column names to read.
+            for col in table_cols_to_read:
 
-            # Get a list of the integer-type columns in the DataStore table.
-            int_cols = datastore_obj.return_int_col_names(datastore_table)
+                # Create a TableField object and assign the field "name" as the column name.
+                table_field = TableField(col)
 
-            # Get a list of the non integer-type columns in the DataStore table.
-            non_int_cols = [col for col in all_cols if col not in int_cols]
+                # Run the SQL query to get the DataStore tables' data. Save as result variable.
+                result = ds.connection.execute(s)
 
-            # If there are columns that hold integer data, create the COALESCE portion of the SQL statement.
-            if int_cols:
+                # If configured to limit the table read to a specified number of top rows, continue.
+                if top:
 
-                # Iterate over each of the integer columns.
-                for i in range(len(int_cols)):
+                    # Counter to track the number of rows read into the Table Field items.
+                    count = 0
 
-                    # Add the initial statement if this is the first time through the for loop.
-                    if i == 0:
-                        coalesce_statement = "COALESCE("
+                    # Iterate over the rows of the DataStore table data.
+                    for row in result:
 
-                    # Add the details of the integer column to the coalesce statement.
-                    coalesce_statement += "{}, {}) as {}".format(int_cols[i], pv_IntNullValue, int_cols[i])
+                        # If the current row count is less than the desired row count, continue.
+                        while count < top:
+                            # Add the row data for the column to the item list of the TableField. Increase the counter.
+                            table_field.items.append(row[col])
+                            count += 1
 
-                    # Add the initial statement for the next coalesce statement, if this is not the last time through
-                    # the loop.
-                    if not i == len(int_cols) - 1:
-                        coalesce_statement += ", COALESCE("
+                # If configured to read all rows of the DataStore table, continue.
+                else:
 
-                # If there are non-integer columns, continue.
-                if non_int_cols:
+                    # Iterate over the rows of the DataStore table data.
+                    for row in result:
+                        # Add the row data for the column to the item list of the TableField.
+                        table_field.items.append(row[col])
 
-                    # Create the non-integer portion of the SQL statement.
-                    non_int_cols_statement = ", ".join(non_int_cols)
+                # Determine the data type of the column's data.
+                # A list that holds the data type for each data value in the column.
+                data_types = []
 
-            # Combine the SQL statement portions to create a final and complete SQL statement.
+                # Iterate over each of the data values in the column.
+                for item in table_field.items:
 
-            # If there are columns representing integers and columns representing non-integers.
-            if int_cols and non_int_cols:
-                sql_statement = "SELECT {}, {} from {}".format(non_int_cols_statement, coalesce_statement,
-                                                               datastore_table)
+                    # Add the data type of the item to the data_types list. Ignore data values that are None.
+                    if item is not None:
+                        data_types.append(type(item))
 
-            # If there are only columns representing integers.
-            elif int_cols:
-                sql_statement = "SELECT {} from {}".format(coalesce_statement, datastore_table)
+                # If the data_types list is empty, assume that all values in the column are set to None.
+                if not data_types:
+                    table_field.data_type = None
 
-            # If there are no columns representing integers.
-            else:
-                sql_statement = "SELECT * from {}".format(datastore_table)
+                # Set the data_type attribute of the TableField object to that specified in the data_types list.
+                elif all(x == data_types[0] for x in data_types):
+                    table_field.data_type = data_types[0]
 
-        # Return the SQL statement.
-        return sql_statement
+                # All of the data types in the list should be the same value because database columns require that the
+                # data in each column is only one data type. If more than one data type exists in the data_types list,
+                # print an error message.
+                else:
+                    print("There was an error. Not all the data types are the same.")
+
+                # Add the TableField object to the Table attributes.
+                table.add_table_field(table_field)
+
+                # Get the number of rows in the TableField. This will be the same number for each of the TableField
+                # objects so only the count of the entries in the last TableField object is used in the remaining code.
+                table.entry_count = len(table_field.items)
+
+        # Iterate over the number of row entries.
+        for i_row in range(table.entry_count):
+
+            # Create a TableRecord object.
+            table_record = TableRecord()
+
+            # Iterate over the table fields.
+            for i_col in range(len(table.table_fields)):
+                # Get the data value for the specified row and the specified field.
+                new_item = table.table_fields[i_col].items[i_row]
+
+                # Assign that data value to the items list of the TableRecord.
+                table_record.add_item(new_item)
+
+            # Add the TableRecord object to the Table attributes.
+            table.table_records.append(table_record)
+
+        # Return the GeoProcessor Table object.
+        return table
 
     def run_command(self):
         """
@@ -352,14 +449,18 @@ class ReadTableFromDataStore(AbstractCommand):
         pv_SqlFile = self.get_parameter_value("SqlFile")
         pv_Top = self.get_parameter_value("Top")
         pv_TableID = self.get_parameter_value("TableID")
-        pv_IntNullHandleMethod = self.get_parameter_value("IntNullHandleMethod", default_value="ToFloat").upper()
-        pv_IntNullValue = self.get_parameter_value("IntNullValue", default_value="-9999999999")
+        pv_ColumnsToInclude = self.get_parameter_value("ColumnsToInclude", default_value="*")
+        pv_ColumnsToExclude = self.get_parameter_value("ColumnsToExclude", default_value="")
 
         # Expand for ${Property} syntax.
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
         pv_DataStoreTable = self.command_processor.expand_parameter_value(pv_DataStoreTable, self)
         pv_Sql = self.command_processor.expand_parameter_value(pv_Sql, self)
         pv_TableID = self.command_processor.expand_parameter_value(pv_TableID, self)
+
+        # Convert the ColumnsToInclude and ColumnsToExclude parameter values to lists.
+        cols_to_include = string_util.delimited_string_to_list(pv_ColumnsToInclude)
+        cols_to_exclude = string_util.delimited_string_to_list(pv_ColumnsToExclude)
 
         # If available, convert the SqlFile parameter value relative path to an absolute path and expand for
         # ${Property} syntax.
@@ -376,6 +477,9 @@ class ReadTableFromDataStore(AbstractCommand):
                 # Get the DataStore object
                 datastore = self.command_processor.get_datastore(pv_DataStoreID)
 
+                # Set the SQL statement to None until proof that SQL statement exists.
+                sql_statement = None
+
                 # If using the Sql method, the sql_statement is the user-provided sql statement.
                 if pv_Sql:
 
@@ -383,38 +487,21 @@ class ReadTableFromDataStore(AbstractCommand):
                     if '%' in sql_statement:
                         sql_statement = sql_statement.replace('%', '%%')
 
-                # If using the DataStoreTable method, the sql_statement selects * from the specified table.=
-                elif pv_DataStoreTable:
-
-                    sql_statement = self.__create_sql_statement(datastore, pv_DataStoreTable)
-
-                    # If specified, only query the top n rows.
-                    if pv_Top:
-                        sql_statement += " limit {}".format(pv_Top)
-
-                # If using the SqlFile method, the sql_statement in read from the provided file.
-                else:
+                # If using the Sql method, the sql_statement is the user-provided sql statement within a file.
+                if pv_SqlFile:
 
                     # Get the SQL statement from the file.
                     f = open(pv_SqlFile, 'r')
                     sql_statement = f.read().strip()
+                    if '%' in sql_statement:
+                        sql_statement = sql_statement.replace('%', '%%')
 
-                # Create a Pandas data frame from the selected DataStore data.
-                df = pandas_util.create_data_frame_from_datastore_with_sql(sql_statement, datastore)
+                # Create the Table from the DataStore.
+                table = self.__read_table_from_datastore(datastore, pv_DataStoreTable, pv_TableID, pv_Top,
+                                                         sql_statement, cols_to_include, cols_to_exclude)
 
-                df.fillna(value=nan, inplace=True)
-                import pandas
-                print(pandas.isna(df.receive_lines))
-
-                # Create a Table object from the pandas data frame.
-                table_obj = Table(pv_TableID, df, "DataStore ({})".format(pv_DataStoreID))
-
-                # If an IntNullValue was used, assign the value to the Table property.
-                if pv_IntNullHandleMethod == "USEINTNULLVALUE":
-                    table_obj.int_null_value = pv_IntNullValue
-
-                # Add the table to the geoprocessor's Tables list.
-                self.command_processor.add_table(table_obj)
+                # Add the table to the GeoProcessor's Tables list.
+                self.command_processor.add_table(table)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

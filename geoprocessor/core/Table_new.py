@@ -148,6 +148,14 @@ class Table(object):
             print(table_record.items)
         print("\n---------------\n")
 
+    def return_fieldnames(self):
+
+        fieldnames = []
+        for table_field in self.table_fields:
+            fieldnames.append(table_field.name)
+
+        return fieldnames
+
 
 class TableRecord(object):
     """

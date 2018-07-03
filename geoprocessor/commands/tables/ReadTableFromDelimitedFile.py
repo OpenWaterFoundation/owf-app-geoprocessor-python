@@ -25,8 +25,8 @@ class ReadTableFromDelimitedFile(AbstractCommand):
 
     Command Parameters
     * InputFile (str, required): the relative or absolute pathname of the delimited file to read.
+    * TableID (str, required): the identifier of the Table.
     * Delimiter (str, optional): the delimiter of the input file. Default is `,`.
-    * TableID (str, required): the identifier of the Table to be written to the Excel file
     * HeaderRowCount (str, optional): the number of rows representing the header. These columns will not be included
          in the output Table data values. The last row of the HeaderRowCount will be used to specify the column headers.
          Default: 1

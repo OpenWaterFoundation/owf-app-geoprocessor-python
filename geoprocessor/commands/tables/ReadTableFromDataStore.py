@@ -270,6 +270,10 @@ class ReadTableFromDataStore(AbstractCommand):
         # Sort the list of column names to create create a second list that only includes the columns to read.
         table_cols_to_read = string_util.filter_list_of_strings(table_cols, cols_to_include, cols_to_exclude, True)
 
+        # Sort the table_cols_to_read list to order in the same order as the table columns in the DataStore table.
+        cols_names = ds.return_col_names(table_name)
+        table_cols_to_read = [col_name for col_name in cols_names if col_name in table_cols_to_read]
+
         # If a SQL statement has been specified, then continue.
         if sql:
 
@@ -420,6 +424,7 @@ class ReadTableFromDataStore(AbstractCommand):
 
             # Iterate over the table fields.
             for i_col in range(len(table.table_fields)):
+
                 # Get the data value for the specified row and the specified field.
                 new_item = table.table_fields[i_col].items[i_row]
 

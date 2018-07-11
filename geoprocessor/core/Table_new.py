@@ -148,6 +148,10 @@ class Table(object):
             print(table_record.items)
         print("\n---------------\n")
 
+    def return_column_index(self, column_name):
+
+        return self.return_fieldnames().index(column_name)
+
     def return_fieldnames(self):
 
         fieldnames = []
@@ -378,3 +382,447 @@ class TableField(object):
 
                     # Assign the null value in the data list to None.
                     self.items[index] = None
+
+# ################################################## TEST ENVIRONMENT ###################################################
+#
+# from geoprocessor.core.DataStore import DataStore
+# import geoprocessor.util.string_util as string_util
+# import sqlalchemy
+# import csv
+#
+#
+# def __read_table_from_datastore(ds, table_name, table_id, top, sql, cols_to_include, cols_to_exclude):
+#     """
+#     Creates a GeoProcessor table object from a DataStore table.
+#
+#     Args:
+#         ds (obj): the DataStore object that contains the DataStore table to read
+#         table_name (str): the name of the DataStore table to read
+#             Can be None if using the Sql method or SqlFile method.
+#         table_id (str): the id of the GeoProcessor Table that is to be created
+#         top (int): the number of rows from the DataStore Table to read
+#             Can be None if using the Sql method or SqlFile method.
+#         sql (str): the SQL statement to select out the desired data from the DataStore table.
+#             Can be None if using the DataStoreTable method.
+#         cols_to_include (list): a list of glob-style patterns representing the DataStore Table columns to read
+#             Can be None if using the Sql method or SqlFile method.
+#         cols_to_exclude (list): a list of glob-style patterns representing the DataStore Table columns to read
+#             Can be None if using the Sql method or SqlFile method.
+#
+#     Return: A GeoProcessor Table object.
+#     """
+#
+#     # Read the DataStore table into a DataStore Table object.
+#     ds_table_obj = ds.metadata.tables[table_name]
+#
+#     # Create a GeoProcessor Table object.
+#     table = Table(table_id)
+#
+#     # Query the DataStore table. The allows access to table information.
+#     q = ds.session.query(ds_table_obj)
+#
+#     # Select all fields and rows of the table.
+#     s = sqlalchemy.sql.select([ds_table_obj])
+#
+#     # Get a list of all of the column names.
+#     table_cols = [col["name"] for col in q.column_descriptions]
+#
+#     # Sort the list of column names to create create a second list that only includes the columns to read.
+#     table_cols_to_read = string_util.filter_list_of_strings(table_cols, cols_to_include, cols_to_exclude, True)
+#
+#     # Sort the table_cols_to_read list to order in the same order as the table columns in the DataStore table.
+#     cols_names = ds.return_col_names(table_name)
+#     table_cols_to_read = [col_name for col_name in cols_names if col_name in table_cols_to_read]
+#
+#     # If a SQL statement has been specified, then continue.
+#     if sql:
+#
+#         # Run the SQL statement
+#         result_from_sql = ds.connection.execute(sql)
+#
+#         # Get the first row from the result set.
+#         row = result_from_sql.fetchone()
+#
+#         # An empty list to hold the columns that were included in the result set in response to the user-specified
+#         # sql.
+#         included_cols = []
+#
+#         # Iterate over all of the available columns in the DataStore table.
+#         for table_col in table_cols:
+#
+#             # Try to read the value of the DataStore table column. If it does not throw an error, it is known that
+#             # the column was included in the result set of the user-specified SQL statement. Add the column name to
+#             # the included_cols list.
+#             try:
+#                 value = row[table_col]
+#                 included_cols.append(table_col)
+#
+#             # If an error is thrown, it is known that the column was not included in the result set of the
+#             #  user-specified SQL statement. Do not add the column name to the included_cols list.
+#             except:
+#                 pass
+#
+#         # Iterate over the DataStore table columns that do have results from the user-specified SQL statement.
+#         for included_col in included_cols:
+#
+#             # Create a TableField object and assign the field "name" as the column name.
+#             table_field = TableField(included_col)
+#
+#             # Run the SQL statement
+#             result_from_sql = ds.connection.execute(sql)
+#
+#             # Iterate over the rows of the DataStore table data.
+#             for row in result_from_sql:
+#                 # Add the row data for the column to the item list of the TableField.
+#                 table_field.items.append(row[included_col])
+#
+#             # Determine the data type of the column's data.
+#             # A list that holds the data type for each data value in the column.
+#             data_types = []
+#
+#             # Iterate over each of the data values in the column.
+#             for item in table_field.items:
+#
+#                 # Add the data type of the item to the data_types list. Ignore data values that are None.
+#                 if item is not None:
+#                     data_types.append(type(item))
+#
+#             # If the data_types list is empty, assume that all values in the column are set to None.
+#             if not data_types:
+#                 table_field.data_type = None
+#
+#             # Set the data_type attribute of the TableField object to that specified in the data_types list.
+#             elif all(x == data_types[0] for x in data_types):
+#                 table_field.data_type = data_types[0]
+#
+#             # All of the data types in the list should be the same value because database columns require that
+#             # the data in each column is only one data type. If more than one data type exists in the data_types
+#             # list, print an error message.
+#             else:
+#                 print("There was an error. Not all the data types are the same.")
+#
+#             # Add the TableField object to the Table attributes.
+#             table.add_table_field(table_field)
+#
+#             # Get the number of row entries in the TableField. This will be the same number for each of the
+#             # TableField objects so only the count of the entries in the last TableField object is used in the
+#             # remaining code.
+#             table.entry_count = len(table_field.items)
+#
+#     # If a SQL statement has not been specified, continue.
+#     else:
+#
+#         # Iterate over the column names to read.
+#         for col in table_cols_to_read:
+#
+#             # Create a TableField object and assign the field "name" as the column name.
+#             table_field = TableField(col)
+#
+#             # Run the SQL query to get the DataStore tables' data. Save as result variable.
+#             result = ds.connection.execute(s)
+#
+#             # If configured to limit the table read to a specified number of top rows, continue.
+#             if top:
+#
+#                 # Counter to track the number of rows read into the Table Field items.
+#                 count = 0
+#
+#                 # Iterate over the rows of the DataStore table data.
+#                 for row in result:
+#
+#                     # If the current row count is less than the desired row count, continue.
+#                     while count < top:
+#                         # Add the row data for the column to the item list of the TableField. Increase the counter.
+#                         table_field.items.append(row[col])
+#                         count += 1
+#
+#             # If configured to read all rows of the DataStore table, continue.
+#             else:
+#
+#                 # Iterate over the rows of the DataStore table data.
+#                 for row in result:
+#                     # Add the row data for the column to the item list of the TableField.
+#                     table_field.items.append(row[col])
+#
+#             # Determine the data type of the column's data.
+#             # A list that holds the data type for each data value in the column.
+#             data_types = []
+#
+#             # Iterate over each of the data values in the column.
+#             for item in table_field.items:
+#
+#                 # Add the data type of the item to the data_types list. Ignore data values that are None.
+#                 if item is not None:
+#                     data_types.append(type(item))
+#
+#             # If the data_types list is empty, assume that all values in the column are set to None.
+#             if not data_types:
+#                 table_field.data_type = None
+#
+#             # Set the data_type attribute of the TableField object to that specified in the data_types list.
+#             elif all(x == data_types[0] for x in data_types):
+#                 table_field.data_type = data_types[0]
+#
+#             # All of the data types in the list should be the same value because database columns require that the
+#             # data in each column is only one data type. If more than one data type exists in the data_types list,
+#             # print an error message.
+#             else:
+#                 print("There was an error. Not all the data types are the same.")
+#
+#             # Add the TableField object to the Table attributes.
+#             table.add_table_field(table_field)
+#
+#             # Get the number of rows in the TableField. This will be the same number for each of the TableField
+#             # objects so only the count of the entries in the last TableField object is used in the remaining code.
+#             table.entry_count = len(table_field.items)
+#
+#     # Iterate over the number of row entries.
+#     for i_row in range(table.entry_count):
+#
+#         # Create a TableRecord object.
+#         table_record = TableRecord()
+#
+#         # Iterate over the table fields.
+#         for i_col in range(len(table.table_fields)):
+#             # Get the data value for the specified row and the specified field.
+#             new_item = table.table_fields[i_col].items[i_row]
+#
+#             # Assign that data value to the items list of the TableRecord.
+#             table_record.add_item(new_item)
+#
+#         # Add the TableRecord object to the Table attributes.
+#         table.table_records.append(table_record)
+#
+#     # Return the GeoProcessor Table object.
+#     return table
+#
+#
+# def __read_table_from_delimited_file(path, table_id, delimiter, header_count, null_values):
+#     """
+#     Creates a GeoProcessor table object from a delimited file.
+#
+#     Args:
+#         path (str): the path to the delimited file on the local machine
+#         table_id (str): the id of the GeoProcessor Table that is to be created
+#         delimiter (str): the delimiter of the input file
+#         header_count (int): the number of rows representing the header content (not data values)
+#         null_values (list): list of strings that are values in the delimited file representing null values
+#
+#     Return: A GeoProcessor Table object.
+#     """
+#
+#     # Create a table object
+#     table = Table(table_id)
+#
+#     # Open the csv file to read.
+#     with open(path, 'r') as csvfile:
+#
+#         # Pass the csv file to the csv.reader object. Specify the delimiter.
+#         csvreader = csv.reader(csvfile, delimiter=delimiter)
+#
+#         # TODO egiles 2018-06-25 Need to determine what column headers will be if there are no column headers in
+#         # TODO the original delimited file (where header_count = 0).
+#
+#         # By default, the column headers are retrieved as the last line of the header rows.
+#         # Get the column headers.
+#         for i in range(header_count):
+#             col_headers = next(csvreader)
+#
+#         # Iterate over the number of columns specified by a column header name.
+#         for i in range(len(col_headers)):
+#
+#             # Create a TableField object and assign the field "name" as the column header name.
+#             table_field = TableField(col_headers[i])
+#
+#             # An empty list to hold the items within the TableField.
+#             col_content = []
+#
+#             # Reset the csv reader to start the reading of the csv file at the first row.
+#             csvfile.seek(0)
+#
+#             # Skip the header rows.
+#             for i_head in range(header_count):
+#                 next(csvreader)
+#
+#             # Iterate over the non-header rows and append the column items to the col_content list.
+#             for row in csvreader:
+#                 col_content.append(row[i])
+#
+#             # Add the column contents to the TableField object.
+#             table_field.items = col_content
+#
+#             # Set the null values
+#             table_field.null_values = null_values
+#
+#             # Convert the data value that represent null values into None value.\
+#             table_field.assign_nulls()
+#
+#             # Convert the column contents to the correct data type.
+#             table_field.assign_data_type()
+#
+#             # Add the updated table field object to the Table attribute.
+#             table.add_table_field(table_field)
+#
+#         # Get the number of row entries.
+#         table.entry_count = len(table_field.items)
+#
+#     # Iterate over the number of row entries.
+#     for i_row in range(table.entry_count):
+#
+#         # Create a TableRecord object.
+#         table_record = TableRecord()
+#
+#         # Iterate over the table fields.
+#         for i_col in range(len(table.table_fields)):
+#             new_item = table.table_fields[i_col].items[i_row]
+#             table_record.add_item(new_item)
+#
+#         # Add the table record to the Table attributes.
+#         table.table_records.append(table_record)
+#
+#         # Return the GeoProcessor Table object.
+#     return table
+#
+#
+# def get_datastore_col_name(column_map, column_name):
+#
+#     if column_name in column_map.keys():
+#         return column_map[column_name]
+#     else:
+#         return column_name
+#
+#
+# column_map = {"first":"first_name", "last":"last_name"}
+#
+# # Create a DataStore object
+# ds = DataStore("ds")
+#
+# # Connect to a database
+# ds.get_db_uri_postgres("localhost", "dvdrental", "postgres", "postgres")
+# ds.open_db_connection()
+#
+# # Specify the name of the database table to read
+# table_to_read = "actor"
+#
+# # Read a database table
+# database_table = __read_table_from_datastore(ds, table_to_read, table_to_read, None, None, ["*"], [""])
+#
+# # Read a delimited file table
+# path_to_delimited_file = r"C:\Users\egiles\Desktop\example.txt"
+# delimited_table = __read_table_from_delimited_file(path_to_delimited_file, "delimited", ",", 2, ["NULL"])
+#
+# # Specify the list of columns in the delimited_table to write to the database_table.
+# cols_to_write = ["actor_id", "first", "last"]
+#
+# row_data_to_insert = []
+#
+# # Get the SqlAlchemy version of the database_table
+# database_table_sqlalchemy = ds.return_sql_alchemy_table_object(table_to_read)
+#
+# # Iterate over each record in the delimited table.
+# for table_record in delimited_table.table_records:
+#
+#     record_dic = {}
+#
+#     # Iterate over the columns to write.
+#     for col_to_write in cols_to_write:
+#
+#         # Get the column index.
+#         index = delimited_table.return_column_index(col_to_write)
+#
+#         # Get the data value
+#         value = table_record.items[index]
+#
+#         # Get the corresponding column name in the database table.
+#         database_col_name = get_datastore_col_name(column_map, col_to_write)
+#
+#         # Add the value to the record_dic.
+#         # KEY: the name of the database column to write to
+#         # VALUE: the value to write to the database table
+#         record_dic[database_col_name] = value
+#
+#     # Add this row data dictionary to the master row list.
+#     row_data_to_insert.append(record_dic)
+#
+#
+#
+# method = "insert"
+#
+# if method.upper() == "INSERT":
+#
+#     ins = database_table_sqlalchemy.insert()
+#     result = ds.connection.execute(ins, row_data_to_insert)
+#     print(result)
+#
+# # if method.upper() == "DELETE":
+# #
+# #     # Iterate over the delimited table records.
+# #     for table_record in database_table.table_records:
+# #
+# #         # Iterate over the delimited table column names to write.
+# #         for col_to_write in cols_to_write:
+# #
+# #             # Get the column index of the delimited file.
+# #             index = delimited_table.return_column_index(col_to_write)
+# #
+# #             # Get the corresponding column name in the database table.
+# #             database_col_name = get_datastore_col_name(column_map, col_to_write)
+# #
+# #             # Get the Sql Alchemy version of the column object.
+# #             database_col_sqlalchemy = ds.return_sql_alchemy_column_object(database_col_name, table_to_read)
+# #
+# #             database_col_sqlalchemy == table_record.items[index]
+# #
+# #
+# #
+# #
+# #         for table_record in d_table.table_records:
+# #             del_st = ds_table_obj.delete().where(
+# #                 ds.return_sql_alchemy_column_object("first_name", table_name) == table_record.items[0] and
+# #                 ds.return_sql_alchemy_column_object("last_name", table_name) == table_record.items[1])
+# #             res = ds.connection.execute(del_st)
+# #
+# # # CREATE THE DATA STORE CONNECTION
+# # ds = DataStore("ds")
+# # ds.get_db_uri_postgres("localhost", "dvdrental", "postgres", "postgres")
+# # ds.open_db_connection()
+# #
+# # # GET THE DATA STORE TABLE
+# # table_name = "actor"
+# # ds_table = __read_table_from_datastore(ds, table_name, table_name, None, None, ["*"], [""])
+# #
+# # # GET THE DELIMITED FILE TABLE
+# # d_table = __read_table_from_delimited_file(r"C:\Users\egiles\Desktop\example.txt", "delimited", ",", 2, ["NULL"])
+# #
+# # # GET DICTIONARY KEY: FIELD NAME VALUE: CORRESPONDING RECORD VALUE
+# # dic_list = []
+# # for table_record in d_table.table_records:
+# #     dic = {}
+# #     for i in range(len(table_record.items)):
+# #         dic[d_table.return_fieldnames()[i]] = table_record.items[i]
+# #     dic_list.append(dic)
+# #
+# # # GET THE SQL ALCHEMY DATA STORE TABLE
+# # # Read the DataStore table into a DataStore Table object.
+# # ds_table_obj = ds.metadata.tables[table_name]
+# #
+# # # DETERMINE IF DELETE OR INSERT
+# # delete = True
+# #
+# # # INSERT THE DELIMITED FILE RECORDS INTO THE DATABASE TABLE
+# # if not delete:
+# #     ins = ds_table_obj.insert()
+# #     ds.connection.execute(ins, dic_list)
+# #
+# # # DELETE RECORDS FROM THE DATABASE TABLE
+# # if delete:
+# #
+# #
+# #     # # Query the DataStore table. The allows access to table information.
+# #     # q = ds.session.query(ds_table_obj)
+# #
+# #     for table_record in d_table.table_records:
+# #         del_st = ds_table_obj.delete().where(
+# #             ds.return_sql_alchemy_column_object("first_name", table_name) == table_record.items[0] and
+# #             ds.return_sql_alchemy_column_object("last_name", table_name) == table_record.items[1])
+# #         res = ds.connection.execute(del_st)

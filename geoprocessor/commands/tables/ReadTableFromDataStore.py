@@ -252,33 +252,17 @@ class ReadTableFromDataStore(AbstractCommand):
         Return: A GeoProcessor Table object.
         """
 
-        # Read the DataStore table into a DataStore Table object.
-        ds_table_obj = ds.metadata.tables[table_name]
-
         # Create a GeoProcessor Table object.
         table = Table(table_id)
-
-        # Query the DataStore table. The allows access to table information.
-        q = ds.session.query(ds_table_obj)
-
-        # Select all fields and rows of the table.
-        s = sqlalchemy.sql.select([ds_table_obj])
-
-        # Get a list of all of the column names.
-        table_cols = [col["name"] for col in q.column_descriptions]
-
-        # Sort the list of column names to create create a second list that only includes the columns to read.
-        table_cols_to_read = string_util.filter_list_of_strings(table_cols, cols_to_include, cols_to_exclude, True)
-
-        # Sort the table_cols_to_read list to order in the same order as the table columns in the DataStore table.
-        cols_names = ds.return_col_names(table_name)
-        table_cols_to_read = [col_name for col_name in cols_names if col_name in table_cols_to_read]
 
         # If a SQL statement has been specified, then continue.
         if sql:
 
             # Run the SQL statement
             result_from_sql = ds.connection.execute(sql)
+
+            # Get the columns from the sql statement.
+            table_cols = ds.connection.execute(sql).keys()
 
             # Get the first row from the result set.
             row = result_from_sql.fetchone()
@@ -351,6 +335,25 @@ class ReadTableFromDataStore(AbstractCommand):
 
         # If a SQL statement has not been specified, continue.
         else:
+
+            # Read the DataStore table into a DataStore Table object.
+            ds_table_obj = ds.metadata.tables[table_name]
+
+            # Query the DataStore table. The allows access to table information.
+            q = ds.session.query(ds_table_obj)
+
+            # Select all fields and rows of the table.
+            s = sqlalchemy.sql.select([ds_table_obj])
+
+            # Get a list of all of the column names.
+            table_cols = [col["name"] for col in q.column_descriptions]
+
+            # Sort the list of column names to create create a second list that only includes the columns to read.
+            table_cols_to_read = string_util.filter_list_of_strings(table_cols, cols_to_include, cols_to_exclude, True)
+
+            # Sort the table_cols_to_read list to order in the same order as the table columns in the DataStore table.
+            cols_names = ds.return_col_names(table_name)
+            table_cols_to_read = [col_name for col_name in cols_names if col_name in table_cols_to_read]
 
             # Iterate over the column names to read.
             for col in table_cols_to_read:

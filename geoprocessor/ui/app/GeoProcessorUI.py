@@ -1,7 +1,7 @@
 from geoprocessor.ui.app.GeoProcessorUI_Design import Ui_MainWindow
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.command_util as command_util
-from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import Ui_Dialog as ReadGeoLayerFromGeoJSON_Editor
+from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import UiDialog as ReadGeoLayerFromGeoJSON_Editor
 from PyQt5 import QtCore, QtWidgets
 import functools
 import webbrowser
@@ -29,9 +29,6 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # The URL to the user documentation main page
         self.user_doc_url = config.user_doc_url
-
-        # CommandDialogFactory
-        self.command_dialog_factory_dic = {"READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON_Editor()}
 
         # Listeners - listens for a change event.
 
@@ -66,17 +63,15 @@ class GeoProcessorUI(Ui_MainWindow):
         # Connect the File > Set Working Directory menu tab.
         self.File_SetWorkingDirectory.triggered.connect(self.set_working_directory)
         # Connect the Commands > GeoLayers > Read > ReadGeoLayerFromGeoJSON menu tab.
-        self.GeoLayers_Read_ReadGeoLayerFromGeoJSON.triggered.connect(functools.partial(self.new_command_editor, "ReadGeoLayerFromGeoJSON"))
+        self.GeoLayers_Read_ReadGeoLayerFromGeoJSON.triggered.connect(functools.partial(self.new_command_editor,
+                                                                                        "ReadGeoLayerFromGeoJSON"))
         # Connect the Help > View Documentation menu tab.
         self.Help_ViewDocumentation.triggered.connect(self.view_documentation)
 
         # Other connections
-
         # Connect right-click of Commands_List widget item.
         self.Commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.Commands_List.customContextMenuRequested.connect(self.open_command_list_right_click_menu)
-        #self.Commands_List.connect(self.Commands_List, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),
-        # self.open_command_list_right_click_menu)
 
     def clear_commands_from_button(self):
         """
@@ -157,7 +152,7 @@ class GeoProcessorUI(Ui_MainWindow):
         # Get the parameter string of the command line string. All text inside parenthesis.
         parameter_string = command_util.parse_parameter_string_from_command_string(cmd_line_string)
 
-        # Convert the parameter string into a list of key value pairs. [ParamterName1=ParmaterValue1, ... ]
+        # Convert the parameter string into a list of key value pairs. [ParameterName1=ParameterValue1, ... ]
         parameter_key_values = command_util.parse_parameter_string_into_key_value_pairs(parameter_string)
 
         # Convert hte list of key value pairs into a parameter dictionary. {ParameterName1: ParameterValue1}
@@ -167,7 +162,11 @@ class GeoProcessorUI(Ui_MainWindow):
         d = QtWidgets.QDialog()
 
         # Create the dialog design instance for the specific input command.
-        ui = self.command_dialog_factory_dic[command_name.upper()]
+        ui = self.new_command_obj(command_name)
+
+        # If there are not parameters, set the input_parameter_dictionary to the command_parameter_values.
+        if not input_parameter_dictionary:
+            input_parameter_dictionary = ui.command_parameter_values
 
         # Apply the command-specific dialog design to the QDialog window.
         ui.setupUi(d)
@@ -193,8 +192,6 @@ class GeoProcessorUI(Ui_MainWindow):
                     ui.command_parameter_values[default_parameter_name] = input_parameter_value
 
         # Update the dialog window with the parameter values from the command line string.
-        print(input_parameter_dictionary)
-        print(ui.command_parameter_values)
         ui.refresh()
 
         # If the "OK" button is clicked within the dialog window, continue.
@@ -232,7 +229,7 @@ class GeoProcessorUI(Ui_MainWindow):
         d = QtWidgets.QDialog()
 
         # Create the dialog design instance for the specific input command.
-        ui = self.command_dialog_factory_dic[command_name.upper()]
+        ui = self.new_command_obj(command_name)
 
         # Apply the command-specific dialog design to the QDialog window.
         ui.setupUi(d)
@@ -249,6 +246,13 @@ class GeoProcessorUI(Ui_MainWindow):
 
             # Update the command count and Command_List label to show that a command was added to the workflow.
             self.update_command_count()
+
+    @staticmethod
+    def new_command_obj(command_name):
+        if command_name.upper() == "READGEOLAYERFROMGEOJSON":
+            return ReadGeoLayerFromGeoJSON_Editor()
+        else:
+            return None
 
     @staticmethod
     def new_message_box(message_type, standard_buttons, message, title):
@@ -352,9 +356,8 @@ class GeoProcessorUI(Ui_MainWindow):
         menu_item_delete_command = self.rightClickMenu.addAction("Delete Command")
 
         # Connect the menu options to the appropriate actions.
-        self.Commands_List.connect(menu_item_edit_command, QtCore.SIGNAL("triggered()"), self.edit_command_editor)
-        self.Commands_List.connect(menu_item_delete_command, QtCore.SIGNAL("triggered()"),
-                                   self.clear_command_from_rightclick)
+        menu_item_edit_command.triggered.connect(self.edit_command_editor)
+        menu_item_delete_command.triggered.connect(self.clear_command_from_rightclick)
 
         # Set the position on the right-click menu to appear at the click point.
         parent_pos = self.Commands_List.mapToGlobal(QtCore.QPoint(0, 0))
@@ -679,4 +682,3 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # Open the GeoProcessor user documentation in the default browser (new window).
         webbrowser.open_new(self.user_doc_url)
-

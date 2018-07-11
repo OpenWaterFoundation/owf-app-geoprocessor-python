@@ -140,6 +140,23 @@ class DataStore(object):
         # Create the SqlAlchemy inspect object and assign it to the DataStore's inspector attribute.
         self.inspector = sqlalchemy.inspect(self.engine)
 
+    def return_sql_alchemy_column_object(self, col_name, table_name):
+
+        # Read the DataStore table into a DataStore Table object.
+        ds_table_obj = self.return_sql_alchemy_table_object(table_name)
+
+        # Query the DataStore table. The allows access to table information.
+        q = self.session.query(ds_table_obj)
+
+        for col_dic in q.column_descriptions:
+
+            if col_dic["name"] == col_name:
+                return col_dic["expr"]
+
+    def return_sql_alchemy_table_object(self, table_name):
+
+        return self.metadata.tables[table_name]
+
     def return_table_names(self):
         """
         Get a list of the table names currently in the connected database.

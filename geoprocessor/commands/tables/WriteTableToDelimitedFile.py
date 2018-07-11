@@ -40,9 +40,11 @@ class WriteTableToDelimitedFile(AbstractCommand):
         The available options are: Ascending, Descending. Default: Ascending
     * UseSquareBrackets (str, optional): If TRUE, table column array values are written as a string with square
         brackets. If FALSE, table column array values are written as a string with curly brackets. Default: True
+    * UseNullValue (str, optional): If TRIE, table column array values with None items are changed to NULL. If FALSE,
+        table column array values with None items remain None. Default: True
     """
 
-    # Define the command parameters/
+    # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
@@ -53,7 +55,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
         CommandParameterMetadata("WriteIndexColumn", type("")),
         CommandParameterMetadata("SortingColumn", type("")),
         CommandParameterMetadata("SortingOrder", type("")),
-        CommandParameterMetadata("UseSquareBrackets", type(""))]
+        CommandParameterMetadata("UseSquareBrackets", type("")),
+        CommandParameterMetadata("UseNullValue", type(""))]
 
     # Choices for SortingOrder, used to validate parameter and display in editor
     __choices_SortingOrder = ["Ascending", "Descending"]
@@ -112,7 +115,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check that the required parameters are valid Boolean values or None.
-        parameters = ['WriteIndexColumn', 'WriteHeaderRow', 'UseSquareBrackets']
+        parameters = ['WriteIndexColumn', 'WriteHeaderRow', 'UseSquareBrackets', 'UseNullValue']
 
         for parameter in parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
@@ -214,7 +217,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
     @ staticmethod
     def __write_table_to_delimited_file(path, table_obj, delimiter, cols_to_include_list, cols_to_exclude_list,
-                                        include_header, include_index, sorting_column, sort_order, use_sq_brackets):
+                                        include_header, include_index, sorting_column, sort_order, use_sq_brackets,
+                                        use_null_values):
         """
         Writes a GeoProcessor table to a delimited file. There are many parameters to customize how the table is
         written to the delimited file.
@@ -234,6 +238,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
             sort_order (str): the order that the records are sorted. Available options: ASCENDING or DESCENDING
             use_sq_brackets (boolean): boolean specifying the types of brackets to use around list/array data values.
                 If TRUE, square brackets are used. If FALSE, curly brackets are used.
+            use_null_values (boolean): boolean specifying if None values in arrays should be represented as None or as
+                NULL. If TRUE, NULL is used. If FALSE, None is used.
 
         Return: None
         """
@@ -313,12 +319,86 @@ class WriteTableToDelimitedFile(AbstractCommand):
             writer = csv.writer(f, delimiter=delimiter, lineterminator='\n')
             writer.writerows(all_records)
 
+        # If configured to use NULL values in an array instead of default None values, continue.
+        if use_null_values:
+
+            # A dictionary to store all of the strings that are to be replaced with different strings.
+            # Key: the string within the delimited file to be replaced
+            # Value: the replacement string
+            replacement_dictionary = {}
+
+            # Open the output delimited file.
+            with open(path, "r") as f:
+
+                # Iterate over each row of the output delimited file.
+                reader = csv.reader(f, delimiter=delimiter)
+                for row in reader:
+
+                    # Iterate over each item in the row.
+                    for item in row:
+
+                        # If the item represents a list/array, continue.
+                        if item.startswith("[") and item.endswith("]"):
+
+                            # Remove the list/array brackets.
+                            new_item = item.replace("[", "")
+                            new_item = new_item.replace("]", "")
+
+                            # Convert the string into a list.
+                            items = new_item.split(",")
+
+                            # The replacement list holds the values that will be used to replace the original array.
+                            replacement_list = []
+
+                            # Iterate over each item in the list/array.
+                            for subitem in items:
+
+                                # Remove leading and ending whitespaces from the item.
+                                subitem = subitem.strip()
+
+                                # If the item represents a None value, add a "NULL" string to the replacement_list.
+                                if subitem.upper() == "NONE":
+                                    replacement_list.append("NULL")
+
+                                # If the item does not represent a None value, add the original value to the
+                                # replacement_list.
+                                else:
+                                    replacement_list.append(str(subitem))
+
+                            # Join the items in the replacement list back into a string. Add the brackets back.
+                            replace_str = ",".join(replacement_list).join(("[", "]"))
+
+                            # Add the replacement string to the master replacement dictionary.
+                            replacement_dictionary[item] = replace_str
+
+            # If there are items to replace, continue.
+            if replacement_dictionary:
+
+                # Open the output csv file and read the text in as a variable.
+                with open(path, 'r') as f:
+                    file_text = f.read()
+
+                # Iterate over the characters to be replaced.
+                for orig, new in replacement_dictionary.items():
+                    # Replace the text variable with the correct character.
+                    file_text = file_text.replace(orig, new)
+
+                # Open the output csv file and overwrite the content with the updated text.
+                with open(path, "w") as f:
+                    f.write(file_text)
+
         # If specified to use curly brackets around array/list data values, continue.
         # Otherwise, the lists and arrays uses the default square brackets.
         if not use_sq_brackets:
 
+            # A dictionary to store all of the strings that are to be replaced with different strings.
+            # Key: the string within the delimited file to be replaced
+            # Value: the replacement string
+            replacement_dictionary = {}
+
             # A dictionary to determine which characters are to be replaced (and their replacement characters).
-            replacement_dictionary = {"[": "{", "]": "}"}
+            replacement_dictionary["["] = "{"
+            replacement_dictionary["]"] = "}"
 
             # Open the output csv file and read the text in as a variable.
             with open(path, 'r') as f:
@@ -332,6 +412,22 @@ class WriteTableToDelimitedFile(AbstractCommand):
             # Open the output csv file and overwrite the content with the updated text.
             with open(path, "w") as f:
                 f.write(file_text)
+
+            # If there are items to replace, continue.
+            if replacement_dictionary:
+
+                # Open the output csv file and read the text in as a variable.
+                with open(path, 'r') as f:
+                    file_text = f.read()
+
+                # Iterate over the characters to be replaced.
+                for orig, new in replacement_dictionary.items():
+                    # Replace the text variable with the correct character.
+                    file_text = file_text.replace(orig, new)
+
+                # Open the output csv file and overwrite the content with the updated text.
+                with open(path, "w") as f:
+                    f.write(file_text)
 
     def run_command(self):
         """
@@ -353,7 +449,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
         pv_WriteIndexColumn = self.get_parameter_value("WriteIndexColumn", default_value="True")
         pv_SortingColumn = self.get_parameter_value("SortingColumn")
         pv_SortingOrder = self.get_parameter_value("SortingOrder", default_value="Ascending")
-        pv_UseSquareBrackets =self.get_parameter_value("UseSquareBrackets", default_value="True")
+        pv_UseSquareBrackets = self.get_parameter_value("UseSquareBrackets", default_value="True")
+        pv_UseNullValue = self.get_parameter_value("UseNullValue", default_value="True")
 
         # Convert the ColumnsToInclude and ColumnsToExclude parameter values to lists.
         cols_to_include = string_util.delimited_string_to_list(pv_ColumnsToInclude)
@@ -368,6 +465,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         pv_WriteHeaderRow = string_util.str_to_bool(pv_WriteHeaderRow)
         pv_WriteIndexColumn = string_util.str_to_bool(pv_WriteIndexColumn)
         pv_UseSquareBrackets = string_util.str_to_bool(pv_UseSquareBrackets)
+        pv_UseNullValue = string_util.str_to_bool(pv_UseNullValue)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_write_table(pv_TableID, output_file_absolute, pv_Delimiter, pv_SortingColumn):
@@ -380,7 +478,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 # Write the table to the delimited file.
                 self.__write_table_to_delimited_file(output_file_absolute, table, pv_Delimiter, cols_to_include,
                                                      cols_to_exclude, pv_WriteHeaderRow, pv_WriteIndexColumn,
-                                                     pv_SortingColumn, pv_SortingOrder, pv_UseSquareBrackets)
+                                                     pv_SortingColumn, pv_SortingOrder, pv_UseSquareBrackets,
+                                                     pv_UseNullValue)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

@@ -205,7 +205,7 @@ class UiDialog(UI_AbstractDialog):
         ifgeolayeridexists_value = self.command_parameter_values["IfGeoLayerIDExists"]
 
         # Set the text of the SpatialDataFile input field to the predefined value of the SpatialDataFile parameter.
-        self.GeoLayerID_LineEdit.setText(spatialdatafile_value)
+        self.SpatialDataFile_LineEdit.setText(spatialdatafile_value)
 
         # Set the text of the SpatialDataFile input field to the predefined value of the SpatialDataFile parameter.
         self.GeoLayerID_LineEdit.setText(geolayerid_value)

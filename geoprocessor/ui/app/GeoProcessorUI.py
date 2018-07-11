@@ -319,12 +319,12 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
         # of the command file is added to the cmd_filepath variable.
-        cmd_filepath = QtWidgets.QFileDialog.getOpenFileName()
+        cmd_filepath = QtWidgets.QFileDialog.getOpenFileName()[0]
 
         # Open and read the command file.
         with open(cmd_filepath) as command_file:
 
-            read_data = command_file.read()
+            read_data = command_file.readlines()
 
             # Iterate over the lines of the command file.
             for line in read_data:
@@ -334,6 +334,10 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # Update the command count and Command_List label to show that new commands were added to the workflow.
         self.update_command_count()
+
+        # Set this file path as the path to save if the user click "Save Commands ..."
+        self.saved_file = cmd_filepath
+
 
     def open_command_list_right_click_menu(self, q_pos):
         """
@@ -564,7 +568,7 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # Open a browser for the user to select a location and filename to save the command file. Set the most recent
         #  file save location.
-        self.saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As')
+        self.saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As')[0]
 
         # Write the commands to the file.
         file = open(self.saved_file, 'w')

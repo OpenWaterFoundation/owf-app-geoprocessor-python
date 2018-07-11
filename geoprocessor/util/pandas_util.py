@@ -8,6 +8,22 @@ import xlwt
 import geoprocessor.util.io_util as io_util
 
 
+def create_data_frame_from_datastore_with_sql(sql_query, datastore_obj):
+    """
+    Creates a pandas data frame object by running a SQL query on a DataFrame object.
+
+    Args:
+        datastore_obj (obj): the DataStore object
+        sql_query (str):  a SQL query to get the correct table out of the DataStore object
+
+    Returns:
+        A pandas data frame object. This is the object that support the GeoProcessor's Table object.
+    """
+
+    df = pd.read_sql(sql_query, datastore_obj.engine)
+    return df
+
+
 def create_data_frame_from_delimited_file(file_path, delimiter):
     """
     Creates a pandas data frame object from a delimited file.
@@ -167,3 +183,4 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_col
         # Write the df to the excel workbook with the given worksheet name.
         df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
         writer.save()
+

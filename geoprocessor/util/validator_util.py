@@ -138,6 +138,51 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         if qgis_util.get_qgscoordinatereferencesystem_obj(parameter_value) is None:
             check_failed = True
 
+    # Check if the parameter value (DataStoreID) is an existing DataStoreID.
+    elif condition.upper() == "ISDATASTOREIDEXISTING":
+
+        message = 'The {} ({}) is not a valid DataStore ID.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a valid DataStore ID.'
+
+        if not self.command_processor.get_datastore(parameter_value):
+            check_failed = True
+
+    # Check if the parameter value (DataStore ID) is a unique DataStoreID.
+    elif condition.upper() == "ISDATASTOREIDUNIQUE":
+
+        message = 'The {} ({}) value is already in use as a DataStore ID.'.format(parameter_name, parameter_value)
+        recommendation = 'Specify a new {}.'.format(parameter_name)
+
+        if self.command_processor.get_geolayer(parameter_value):
+            check_failed = True
+
+            pv_IfDataStoreIDExists = self.get_parameter_value("IfDataStoreIDExists", default_value="Replace")
+
+            if pv_IfDataStoreIDExists.upper() == "REPLACEANDWARN":
+                fail_response = "WARN"
+            elif pv_IfDataStoreIDExists.upper() == "WARN":
+                fail_response = "WARNBUTDONOTRUN"
+            elif pv_IfDataStoreIDExists.upper() == "FAIL":
+                fail_response = "FAIL"
+            elif pv_IfDataStoreIDExists.upper() == "OPEN":
+                check_failed = False
+            elif pv_IfDataStoreIDExists.upper() == "REPLACE":
+                check_failed = False
+
+    # Check if the parameter value (Table Name) is unique within the DataStore.
+    elif condition.upper() == "ISDATASTORETABLEUNIQUE":
+        data_store_id = other_values[0]
+
+        message = "The {} ({}) value is already an existing table in the {} DataStore.".format(parameter_name,
+                                                                                               parameter_value,
+                                                                                               data_store_id)
+        recommendation = "Specify a unique {} value.".format(parameter_name)
+
+        data_store_obj = self.command_processor.get_datastore(data_store_id)
+        list_of_tables = data_store_obj.return_table_names()
+        if parameter_value in list_of_tables:
+            check_failed = True
+
     # Check if the parameter value (column name) is a valid column name of a delimited file.
     elif condition.upper() == "ISDELIMITEDFILECOLUMNNAMEVALID":
 
@@ -228,6 +273,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
 
     # Check if the parameter value (GeoLayer ID) is a unique GeoLayerID.
     elif condition.upper() == "ISGEOLAYERIDUNIQUE":
+
         message = 'The {} ({}) value is already in use as a GeoLayer ID.'.format(parameter_name, parameter_value)
         recommendation = 'Specify a new {}.'.format(parameter_name)
 
@@ -338,6 +384,19 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
                 fail_response = "FAIL"
             else:
                 check_failed = False
+
+    # Check if the parameter value (Table Name) is a table within the DataStore.
+    elif condition.upper() == "ISTABLEINDATASTORE":
+        data_store_id = other_values[0]
+
+        message = "{} ({}) is not an existing table in the {} DataStore.".format(parameter_name, parameter_value,
+                                                                                 data_store_id)
+        recommendation = "Specify a valid {} value.".format(parameter_name)
+
+        data_store_obj = self.command_processor.get_datastore(data_store_id)
+        list_of_tables = data_store_obj.return_table_names()
+        if parameter_value not in list_of_tables:
+            check_failed = True
 
     # Check if the file is a valid tar file.
     elif condition.upper() == "ISTARFILE":

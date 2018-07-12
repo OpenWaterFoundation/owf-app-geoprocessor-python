@@ -3,11 +3,10 @@ from PyQt5 import QtWidgets
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.ui.util.AbstractCommand_Editor import UI_AbstractDialog
 from geoprocessor.ui.util.command_parameter import CommandParameter
-from geoprocessor.core.CommandParameterMetadata import get_parameter_names
+from geoprocessor.core import CommandParameterMetadata
 
 try:
-    # _fromUtf8 = QtCore.QString.fromUtf8
-    _fromUtf8 = lambda s: s
+    fromUtf8 = lambda s: s
 except AttributeError:
     def _fromUtf8(s):
         return s
@@ -33,7 +32,7 @@ class UiDialog(UI_AbstractDialog):
     command_name = command_obj.command_name
 
     # A list of the command parameters. Read from the GeoProcessor command object.
-    command_parameters = get_parameter_names(command_obj.command_parameter_metadata)
+    command_parameters = CommandParameterMetadata.get_parameter_names(command_obj.command_parameter_metadata)
 
     # A brief description of the command. This is displayed in the UI dialog box at the top to give the user context.
     command_description = "The ReadGeoLayerFromGeoJSON command reads a GeoLayer from a .geojson file. \n\n Specify " \
@@ -123,9 +122,6 @@ class UiDialog(UI_AbstractDialog):
         # Initialize the parent Abstract Dialog class.
         UI_AbstractDialog.__init__(self, UiDialog.command_name, UiDialog.command_description, UiDialog.parameter_count,
                                    UiDialog.command_parameters, self.command_parameter_values)
-
-
-
 
     def setupUi(self, Dialog):
 

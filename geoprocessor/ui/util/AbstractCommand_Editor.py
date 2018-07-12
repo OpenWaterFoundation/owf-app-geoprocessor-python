@@ -64,133 +64,33 @@ class UI_AbstractDialog(object):
         # VALUE (str): the entered value of the command parameter
         self.command_parameter_current_values = current_values
 
-    def setupUi_Abstract(self, Dialog):
+    def are_required_parameters_specified(self, ui_command_parameter_list):
         """
-        Sets up a Dialog object with the features that are common across all GeoProcessor command dialog windows.
+        Checks if the required parameters of a command are specified by the user in the command dialog window.
 
-        Arg:
-            Dialog: a QDialog window instance (QtGui.QDialog())
+        ui_command_parameter_list (list of objects):  a list of the CommandParameter objects (UI-specific class)
 
-        Return: None
-        """
-
-        # Set the name, the initial size and the window title (the name of the command) of the Dialog window object.
-        # The Dialog window object, Dialog, represents the entire dialog window.
-        Dialog.setObjectName(_fromUtf8("Dialog"))
-        Dialog.resize(684, 404)
-        Dialog.setWindowTitle(_translate("Dialog", self.command_name, None))
-
-        # Create a grid layout object. Apply the grid layout to the Dialog window object.
-        # Set the name of the grid layout object.
-        self.gridLayout = QtWidgets.QGridLayout(Dialog)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-
-        # Create a frame object. Add the frame object to the Dialog window.
-        # Set the shape, the shadow, and the name of the frame object.
-        # The frame object, Command_Description, holds the command description and the view documentation button.
-        self.Command_Description = QtWidgets.QFrame(Dialog)
-        self.Command_Description.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.Command_Description.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.Command_Description.setObjectName(_fromUtf8("Command_Description"))
-        self.gridLayout.addWidget(self.Command_Description, 0, 0, 1, 8)
-
-        # Create a grid layout object. Apply to the Command_Description frame object.
-        # Set the name of the grid layout object.
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.Command_Description)
-        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
-
-        # Create a spacer. Add the spacer to the Command_Description frame object.
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout_2.addItem(spacerItem, 2, 0, 1, 1)
-
-        # Create a push button. Add the button to the Command_Description frame object.
-        # Set the name, the button text and the connection of the push button.
-        # The push button, View_Documentation_Button, displays the command's online user documentation when clicked.
-        self.View_Documentation_Button = QtWidgets.QPushButton(self.Command_Description)
-        self.View_Documentation_Button.setObjectName(_fromUtf8("View_Documentation_Button"))
-        self.View_Documentation_Button.setText(_translate("Dialog", "  View Documentation  ", None))
-        self.View_Documentation_Button.clicked.connect(self.view_documentation)
-        self.gridLayout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
-
-        # Create a label. Add the label to the Command_Description frame object.
-        # Set the name and the text of the label.
-        # The label, Command_Description_Label, briefly describes the command.
-        self.Command_Description_Label = QtWidgets.QLabel(self.Command_Description)
-        self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
-        self.Command_Description_Label.setText(_translate("Dialog", self.command_description, None))
-        self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
-
-        # Create a line (frame object with special specifications). Add the line to the Dialog window.
-        # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
-        # The frame object, Separator, separates the command description from the input form section of the Dialog box.
-        self.Separator = QtWidgets.QFrame(Dialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
-        self.Separator.setSizePolicy(sizePolicy)
-        self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
-        self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.Separator.setObjectName(_fromUtf8("Separator"))
-        self.gridLayout.addWidget(self.Separator, 1, 0, 1, 8)
-
-        # Create a button box object. Add the button box object to the Dialog window.
-        # Set the orientation, the standard buttons, the name and the connections of the button box object.
-        # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
-        self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(Dialog)
-        self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
-        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        self.OK_Cancel_Buttons.setObjectName(_fromUtf8("OK_Cancel_Buttons"))
-        self.OK_Cancel_Buttons.accepted.connect(Dialog.accept)
-        self.OK_Cancel_Buttons.rejected.connect(Dialog.reject)
-        self.gridLayout.addWidget(self.OK_Cancel_Buttons, self.parameter_count + 4, 6, 1, 2)
-
-        # Create a text edit object. Add the text edit object to the Dialog window.
-        # Set the size, the name and the html of the text edit object.
-        # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
-        self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(Dialog)
-        self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
-        self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
-        self.CommandDisplay_View_TextBrowser.setObjectName(_fromUtf8("CommandDisplay_View_TextBrowser"))
-        html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
-               "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
-               "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
-               " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
-               " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
-               "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
-        self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
-        self.gridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.parameter_count + 3, 1, 1, -1)
-
-        # Create a label object to the Dialog window.
-        # Set the alignment, the name, and the text of the label.
-        # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
-        self.CommandDisplay_Label = QtWidgets.QLabel(Dialog)
-        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
-        self.CommandDisplay_Label.setText(_translate("Dialog", "Command: ", None))
-        self.gridLayout.addWidget(self.CommandDisplay_Label, self.parameter_count + 3, 0, 1, 1)
-
-        # Create a spacer. Add the spacer to the Dialog window.
-        # The spacer separates the input parameter value fields from the Command Display text browser.
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem2, self.parameter_count + 2, 3, 1, -1)
-
-        # This will wire up the signals and slots depending on names.
-        # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
-        QtCore.QMetaObject.connectSlotsByName(Dialog)
-
-    def view_documentation(self):
-        """
-        Opens the command's user documentation in the default browser.
-
-        Return: None
+        Returns:
+            Boolean. If TRUE, all required parameters have been met. If FALSE, one or more of the required parameters
+            are not specified.
         """
 
-        # The url of the command's user documentation.
-        command_doc_url = "{}command-ref/{}/{}/".format(self.user_doc_url, self.command_name, self.command_name)
+        # Specified is set to True until proven False.
+        specified = True
 
-        # Open the command's user documentation in the default browser.
-        webbrowser.open_new(command_doc_url)
+        # Iterate over the UI CommandParameter objects.
+        for ui_parameter in ui_command_parameter_list:
+
+            # If the command parameter is set as "REQUIRED", continue.
+            if ui_parameter.optional is False:
+
+                # If the value of the required command parameter has not been specified by the user, set specified
+                # to False.
+                if self.command_parameter_values[ui_parameter.name] is "":
+                    specified = False
+
+        # Return the specified Boolean.
+        return specified
 
     def configureLabel(self, label, parameter_name):
         """
@@ -403,6 +303,121 @@ class UI_AbstractDialog(object):
         # Return the value within the input QtGui.Widget object.
         return value
 
+    def setupUi_Abstract(self, Dialog):
+        """
+        Sets up a Dialog object with the features that are common across all GeoProcessor command dialog windows.
+
+        Arg:
+            Dialog: a QDialog window instance (QtGui.QDialog())
+
+        Return: None
+        """
+
+        # Set the name, the initial size and the window title (the name of the command) of the Dialog window object.
+        # The Dialog window object, Dialog, represents the entire dialog window.
+        Dialog.setObjectName(_fromUtf8("Dialog"))
+        Dialog.resize(684, 404)
+        Dialog.setWindowTitle(_translate("Dialog", self.command_name, None))
+
+        # Create a grid layout object. Apply the grid layout to the Dialog window object.
+        # Set the name of the grid layout object.
+        self.gridLayout = QtWidgets.QGridLayout(Dialog)
+        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+
+        # Create a frame object. Add the frame object to the Dialog window.
+        # Set the shape, the shadow, and the name of the frame object.
+        # The frame object, Command_Description, holds the command description and the view documentation button.
+        self.Command_Description = QtWidgets.QFrame(Dialog)
+        self.Command_Description.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.Command_Description.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.Command_Description.setObjectName(_fromUtf8("Command_Description"))
+        self.gridLayout.addWidget(self.Command_Description, 0, 0, 1, 8)
+
+        # Create a grid layout object. Apply to the Command_Description frame object.
+        # Set the name of the grid layout object.
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.Command_Description)
+        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
+
+        # Create a spacer. Add the spacer to the Command_Description frame object.
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout_2.addItem(spacerItem, 2, 0, 1, 1)
+
+        # Create a push button. Add the button to the Command_Description frame object.
+        # Set the name, the button text and the connection of the push button.
+        # The push button, View_Documentation_Button, displays the command's online user documentation when clicked.
+        self.View_Documentation_Button = QtWidgets.QPushButton(self.Command_Description)
+        self.View_Documentation_Button.setObjectName(_fromUtf8("View_Documentation_Button"))
+        self.View_Documentation_Button.setText(_translate("Dialog", "  View Documentation  ", None))
+        self.View_Documentation_Button.clicked.connect(self.view_documentation)
+        self.gridLayout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
+
+        # Create a label. Add the label to the Command_Description frame object.
+        # Set the name and the text of the label.
+        # The label, Command_Description_Label, briefly describes the command.
+        self.Command_Description_Label = QtWidgets.QLabel(self.Command_Description)
+        self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
+        self.Command_Description_Label.setText(_translate("Dialog", self.command_description, None))
+        self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
+
+        # Create a line (frame object with special specifications). Add the line to the Dialog window.
+        # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
+        # The frame object, Separator, separates the command description from the input form section of the Dialog box.
+        self.Separator = QtWidgets.QFrame(Dialog)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
+        self.Separator.setSizePolicy(sizePolicy)
+        self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
+        self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.Separator.setObjectName(_fromUtf8("Separator"))
+        self.gridLayout.addWidget(self.Separator, 1, 0, 1, 8)
+
+        # Create a button box object. Add the button box object to the Dialog window.
+        # Set the orientation, the standard buttons, the name and the connections of the button box object.
+        # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
+        self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(Dialog)
+        self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
+        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.OK_Cancel_Buttons.setObjectName(_fromUtf8("OK_Cancel_Buttons"))
+        self.OK_Cancel_Buttons.accepted.connect(Dialog.accept)
+        self.OK_Cancel_Buttons.rejected.connect(Dialog.reject)
+        self.gridLayout.addWidget(self.OK_Cancel_Buttons, self.parameter_count + 4, 6, 1, 2)
+
+        # Create a text edit object. Add the text edit object to the Dialog window.
+        # Set the size, the name and the html of the text edit object.
+        # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
+        self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(Dialog)
+        self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
+        self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
+        self.CommandDisplay_View_TextBrowser.setObjectName(_fromUtf8("CommandDisplay_View_TextBrowser"))
+        html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
+               "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
+               "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
+               " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
+               " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
+               "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
+        self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
+        self.gridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.parameter_count + 3, 1, 1, -1)
+
+        # Create a label object to the Dialog window.
+        # Set the alignment, the name, and the text of the label.
+        # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
+        self.CommandDisplay_Label = QtWidgets.QLabel(Dialog)
+        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
+        self.CommandDisplay_Label.setText(_translate("Dialog", "Command: ", None))
+        self.gridLayout.addWidget(self.CommandDisplay_Label, self.parameter_count + 3, 0, 1, 1)
+
+        # Create a spacer. Add the spacer to the Dialog window.
+        # The spacer separates the input parameter value fields from the Command Display text browser.
+        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacerItem2, self.parameter_count + 2, 3, 1, -1)
+
+        # This will wire up the signals and slots depending on names.
+        # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
+        QtCore.QMetaObject.connectSlotsByName(Dialog)
+
     def update_command_display(self):
         """
         Each command dialog box has a command display that shows the string representation of the command with the
@@ -464,6 +479,19 @@ class UI_AbstractDialog(object):
 
         # Update the Command Display Qt Widget to display the dynamic command display text.
         self.CommandDisplay_View_TextBrowser.setText(display)
+
+    def view_documentation(self):
+        """
+        Opens the command's user documentation in the default browser.
+
+        Return: None
+        """
+
+        # The url of the command's user documentation.
+        command_doc_url = "{}command-ref/{}/{}/".format(self.user_doc_url, self.command_name, self.command_name)
+
+        # Open the command's user documentation in the default browser.
+        webbrowser.open_new(command_doc_url)
 
     @staticmethod
     def select_file(qt_widget):

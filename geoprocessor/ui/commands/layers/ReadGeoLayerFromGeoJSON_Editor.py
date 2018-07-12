@@ -87,6 +87,10 @@ class UiDialog(UI_AbstractDialog):
                                                      "A fail message is logged.",
                                              default_value_description="Replace")
 
+    # "ui_commandparameters" is a list of the CommandParameter objects (UI-specific class).
+    ui_commandparameters = [cp_SpatialDataFile, cp_GeoLayerID, cp_IfGeoLayerIDExists]
+
+
     def __init__(self):
         """
         Initialize the ReadGeoLayerFromGeoJSON dialog box.
@@ -119,6 +123,9 @@ class UiDialog(UI_AbstractDialog):
         # Initialize the parent Abstract Dialog class.
         UI_AbstractDialog.__init__(self, UiDialog.command_name, UiDialog.command_description, UiDialog.parameter_count,
                                    UiDialog.command_parameters, self.command_parameter_values)
+
+
+
 
     def setupUi(self, Dialog):
 

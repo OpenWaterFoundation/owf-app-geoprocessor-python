@@ -238,14 +238,33 @@ class GeoProcessorUI(Ui_MainWindow):
         # Else, if the "Cancel" button is clicked, do nothing.
         if d.exec_():
 
-            # Get the command string from the dialog window.
-            command_string = ui.CommandDisplay_View_TextBrowser.toPlainText()
+            # Check if all of the required parameters are filled. If so, add the command to the Command_List widget.
+            if ui.are_required_parameters_specified(ui.ui_commandparameters):
 
-            # Add the command string to the Command_List widget.
-            self.Commands_List.addItem(command_string)
+                # Get the command string from the dialog window.
+                command_string = ui.CommandDisplay_View_TextBrowser.toPlainText()
 
-            # Update the command count and Command_List label to show that a command was added to the workflow.
-            self.update_command_count()
+                # Add the command string to the Command_List widget.
+                self.Commands_List.addItem(command_string)
+
+                # Update the command count and Command_List label to show that a command was added to the workflow.
+                self.update_command_count()
+
+            else:
+
+                # Display a message box to inform user that a required parameter is missing.
+                value = self.new_message_box("CRITICAL", "YES,NO",
+                                             "One or more of the required parameters is not filled out. "
+                                            "Return to the dialog box?", "Required parameter(s) not met.")
+
+                # If the user decides to return to the dialog box, display the dialog box with the original values.
+                if value.upper() == "YES":
+                    #TODO need to figure out how to go back to the original dialog box.
+                    pass
+
+                # Delete the original dialog box and return to the main window.
+                else:
+                    pass
 
     @staticmethod
     def new_command_obj(command_name):
@@ -337,7 +356,6 @@ class GeoProcessorUI(Ui_MainWindow):
 
         # Set this file path as the path to save if the user click "Save Commands ..."
         self.saved_file = cmd_filepath
-
 
     def open_command_list_right_click_menu(self, q_pos):
         """

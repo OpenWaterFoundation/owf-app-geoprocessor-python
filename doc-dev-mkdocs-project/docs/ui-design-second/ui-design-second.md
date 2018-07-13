@@ -89,9 +89,9 @@ For example, the workflow of creating commands should follow these steps:
 
 To develop a `command dialog` window  with the single-tab design, use the `ReadGeoLayerFromGeoJSON_Editor.py` script as a template. 
 
-1. Import required modules
+### 1. Import required modules
 
-	|Import Statement&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|Description|
+|Import Statement&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|Description|
 |-|-|
 |`from`<br>`PyQt5`<br>`import`<br>`QtWidgets`|The user interface is built on the [PyQt5](http://pyqt.sourceforge.net/Docs/PyQt5/introduction.html) library. QtWidgets are the building blocks for each of the items on the `command dialog` window.|
 |`from`<br>`geoprocessor.commands.[python package].[command]`<br>`import`<br>`[command class]`|The user interface obtains information from the command's core code. |
@@ -99,28 +99,56 @@ To develop a `command dialog` window  with the single-tab design, use the `ReadG
 |`from`<br>`geoprocessor.ui.util.command_parameter`<br>`import`<br>`Command_Parameter`|The *Command_Parameter* class is used as a building block to hold information about each of the command's parameters (specific to the user interface).|
 |`from`<br>`geoprocessor.core`<br>`import`<br>`CommandParameterMetadata`|The *CommandParameterMetadata* holds information about each of the command's parameters (specific to the core processing code).|
 
-2. Add PyQt5 Pre-defined Translation Code
+### 2. Add PyQt5 Pre-defined Translation Code
 
-	It is not known why this block of code is important. 
+It is not known why this block of code is important. 
 To create the first `command dialog` window, the [Qt Designer](http://doc.qt.io/qt-5/qtdesigner-manual.html) program was used to automate the creation of the *.py* file.
 The Qt Designer program creates a *.ui* file and then using the [PyQt5 pyuic5 utility](http://pyqt.sourceforge.net/Docs/PyQt5/designer.html#pyuic5) the *.ui* file is converted to a *.py* file. 
 This chunk of code was in the original converted *.py* file and remains present in the final version of the `command dialog` window *.py* file.
 
 	![PyQt5 Pre-defined Translation Code](pyqt5-translation.png)
 
-3. Create the `Command Dialog` Window Class
+### 3. Create the `Command Dialog` Window Class
 
-	The class name should be the same for all `command dialog` window classes - `UiDialog`.
+The class name should be the same for all `command dialog` window classes - `UiDialog`.
 The `UI_AbstractDialog` class is the parent class for all `command dialog` window classes.
 It contains content and functions that apply to all `command dialog` window classes.
 
 	![`Command Dialog` Window Class](command_dialog_window_class.png)
 	
-4. Create the Class Variables 
+### 4. Create the Class Variables 
 
-	The class variables are the variables that are consistent across each `command dialog` window for the specific commands. 
-	They are static, remaining the same value throughout the time that the GeoProcessor is running. 
+The class variables are the variables that are consistent across each `command dialog` window for the specific commands. 
+They are static, remaining the same value throughout the time that the GeoProcessor is running. 
 	
+|Class variable|Description|Value <br>Example from ReadGeoLayerFromGeoJSON_Editor|
+|-|-|-|
+|command_obj|The instance of the command. This is imported in the import statements from the `geoprocessor.commands.[python package].[command]` module.|`[command class]()`<br><br>`ReadGeoLayerFromGeoJSON()`|
+|command_name|The name of the command. This is a set parameter within the command class so the value is called from the command_obj instance.|`command_obj.command_name`<br><br>`command_obj.command_name`|
+|command_parameters|A list of the command's parameters. This is retrieved by running the imported CommandParameterMetadata `get_parameter_names` function on the command class instance (command_obj). |`CommandParameterMetadata.get_parameter_names(command_obj.command_parameter_metadata)`<br><br>`CommandParameterMetadata.get_parameter_names(command_obj.command_parameter_metadata)`|
+|command_description|A brief description of the command. This is displayed in the UI dialog box at the top to give the user context.|`Description as a string.`<br><br>`"The ReadGeoLayerFromGeoJSON command reads a GeoLayer from a .geojson file. Specify the GeoJSON file to read into the GeoProcessor."`|
+|parameter_count|The number of command parameters. This is automatically determined by counting the items in the `command_parameters` variable.|`len(command_parameters)`<br><br>`len(command_parameters)`|
+|name label for each command parameter|Each command parameter is displayed in the `command dialog` window with an input field and a label to give context to the user which input field belongs to which parameter. The label variable follows the `[command parameter name (CamelCase)]_Label` naming convention. For now, the label variable for each command parameter is set to None.|`[command parameter name (CamelCase)]_Label=None`<br><br>`SpatialDataFile_Label=None`<br>`GeoLayerID_Label=None`<br>`IfGeoLayerIDExists_Label=None`|
+|description for each command parameter|Each command parameter (besides those that have a *long LineEdit input field widget*) has a second label that displays a description of the parameter to the user. The description variable follows the `[command parameter name (CamelCase)]_Description_Label` naming convention. For now, the description label variable for each command parameter is set to None.|`[CommandParameterName]_Description_Label`<br><br>`GeoLayerID_Description_Label=None`<br>`IfGeoLayerIDExists_Description_Label=None`|
+|specificataion class for each command parameter|There is information about each command parameter that is displayed on the `command dialog` window. This information is help in the CommandParameter class. There is one CommandParameter class instance for each command parameter. The CommandParameter class instance follows the `cp_[command parameter name (CamelCase)]` naming convention. See the [CommandParameter Class](#commandparameter-class) section for more information.|See the [CommandParameter Class](#commandparameter-class) section for values and examples.|
+|ui_commandparameters| A list of the CommandParameter class instances.|`[cp_[CommandParameter1], cp_[CommandParameter2] ... ]`<br><br> `[cp_SpatialDataFile, cp_GeoLayerID, cp_IfGeoLayerIDExists]`|
+	
+#### CommandParameter Class
+
+There is one `CommandParameter` class instance for each command parameter of a command user interface class. 
+The `CommandParameter` class holds the following information about a command parameter:
+
+- the name of the command parameter
+- a brief description of the command parameter
+- whether the command parameter is required or optional
+- the command parameter's tooltip, if applicable. A tooltip is further detail about the command parameter that appears in a pop-up bubble when the parameter is hovered over in the `command dialog` window. 
+- the default value of the command parameter
+
+The `CommandParameter` instances are *class* variables of each `command dialog` window class. When designing a `command dialog` window class, the developer must manually enter all of the above information to initialize the `CommmandParameter` class for *each* of the command's parameters. 
+
+The `CommandParameter` instance should follow the `cp_[CommandParameterName (CamelCase)` file naming convention. See the following initialization of the `ReadGeoLayerFromGeoJSON` `SpatialDataFile` parameter. 
+
+`cp_SpatialDataFile = `<br>`CommandParameter(`<br>`name="SpatialDataFile",`<br>`                     description="absolute or relative path to the input GeoJSON file",`<br>       `optional=False,`<br>`tooltip="The GeoJSON file to read (relative or absolute path).\n${Property} syntax is recognized.",`<br>`                                        default_value_description=None`<br>`)`
 	
 
 

@@ -14,7 +14,7 @@ import geoprocessor.util.validator_util as validators
 
 import csv
 import logging
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 
 
 class WriteTableToDelimitedFile(AbstractCommand):
@@ -26,22 +26,23 @@ class WriteTableToDelimitedFile(AbstractCommand):
     * OutputFile (str, required): the relative pathname of the output delimited file.
     * Delimiter (str, optional): the delimiter of the output file. Default is `,` Must be a one-character
         string (limitation is built into the Pandas to_csv command).
-    * ColumnsToInclude (str, optional): A list of glob-style patterns to determine the table columns to include in the
+    * IncludeColumns (str, optional): A list of glob-style patterns to determine the table columns to include in the
         output delimited file. Default: * (All columns are written).
-    * ColumnsToExclude (str, optional): A list of glob-style patterns to determine the table columns to exclude in the
+    * ExcludeColumns (str, optional): A list of glob-style patterns to determine the table columns to exclude in the
         output delimited file. Default: Default: '' (No columns are excluded from the output delimited file).
     * WriteHeaderRow (bool, optional): If TRUE, the header row is written, If FALSE, the header row is excluded.
         Default: True
     * WriteIndexColumn (bool, optional): If TRUE, the index column is written, If FALSE, the index column is excluded.
         Default: True
-    * SortingColumn (str, optional): The name of the Table column used to sort the order that the table records are
-        written to the delimited file. Default: The first Table column.
-    * SortingOrder(str, optional): The order to sort the records based on the values of the SortingColumn.
-        The available options are: Ascending, Descending. Default: Ascending
-    * UseSquareBrackets (str, optional): If TRUE, table column array values are written as a string with square
-        brackets. If FALSE, table column array values are written as a string with curly brackets. Default: True
-    * UseNullValue (str, optional): If TRIE, table column array values with None items are changed to NULL. If FALSE,
-        table column array values with None items remain None. Default: True
+    * SortColumns (str, optional): The names of the Table columns, separated by commas, used to sort the order that
+        the table records are written to the delimited file. Default: The first Table column.
+    * SortOrder(str, optional): The sort order for the columns specified by SortColumns, using the syntax:
+        SortColumn1:Ascending,SortColumn2:Descending Default: Ascending
+    * ArrayFormat (str, optional): If SquareBrackets, table column array values are written as a string with square
+        brackets. If CurlyBrackets, table column array values are written as a string with curly brackets.
+        Default: SquareBrackets
+    * NullValueFormat (str, optional): If `NULL`, table column array values with None items are changed to NULL.
+        If `None`, table column array values with None items remain None. Default: NULL
     """
 
     # Define the command parameters.
@@ -49,17 +50,18 @@ class WriteTableToDelimitedFile(AbstractCommand):
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("Delimiter", type("")),
-        CommandParameterMetadata("ColumnsToInclude", type("")),
-        CommandParameterMetadata("ColumnsToExclude", type("")),
+        CommandParameterMetadata("IncludeColumns", type("")),
+        CommandParameterMetadata("ExcludeColumns", type("")),
         CommandParameterMetadata("WriteHeaderRow", type("")),
         CommandParameterMetadata("WriteIndexColumn", type("")),
-        CommandParameterMetadata("SortingColumn", type("")),
-        CommandParameterMetadata("SortingOrder", type("")),
-        CommandParameterMetadata("UseSquareBrackets", type("")),
-        CommandParameterMetadata("UseNullValue", type(""))]
+        CommandParameterMetadata("SortColumns", type("")),
+        CommandParameterMetadata("SortOrder", type("")),
+        CommandParameterMetadata("ArrayFormat", type("")),
+        CommandParameterMetadata("NullValueFormat", type(""))]
 
-    # Choices for SortingOrder, used to validate parameter and display in editor
-    __choices_SortingOrder = ["Ascending", "Descending"]
+    # Choices for parameters, used to validate parameter and display in editor
+    __choices_ArrayFormat = ["SquareBrackets", "CurlyBrackets"]
+    __choices_NullValueFormat = ["Null", "None"]
 
     def __init__(self):
         """
@@ -115,7 +117,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
         # Check that the required parameters are valid Boolean values or None.
-        parameters = ['WriteIndexColumn', 'WriteHeaderRow', 'UseSquareBrackets', 'UseNullValue']
+        parameters = ['WriteIndexColumn', 'WriteHeaderRow']
 
         for parameter in parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
@@ -128,14 +130,26 @@ class WriteTableToDelimitedFile(AbstractCommand):
                     command_phase_type.INITIALIZATION,
                     CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # Check that optional parameter SortingOrder is one of the acceptable values or is None.
-        pv_SortingOrder = self.get_parameter_value(parameter_name="SortingOrder", command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_SortingOrder, self.__choices_SortingOrder,
+        # Check that optional parameter ArrayFormat is one of the acceptable values or is None.
+        pv_ArrayFormat = self.get_parameter_value(parameter_name="ArrayFormat", command_parameters=command_parameters)
+        if not validators.validate_string_in_list(pv_ArrayFormat, self.__choices_ArrayFormat,
                                                   none_allowed=True,
                                                   empty_string_allowed=False, ignore_case=True):
-            message = "SortingOrder parameter value ({}) is not recognized.".format(pv_SortingOrder)
-            recommendation = "Specify one of the acceptable values ({}) for the SortingOrder parameter.".format(
-                self.__choices_SortingOrder)
+            message = "ArrayFormat parameter value ({}) is not recognized.".format(pv_ArrayFormat)
+            recommendation = "Specify one of the acceptable values ({}) for the ArrayFormat parameter.".format(
+                self.__choices_ArrayFormat)
+            warning += "\n" + message
+            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
+                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+
+        # Check that optional parameter NullValueFormat is one of the acceptable values or is None.
+        pv_NullValueFormat = self.get_parameter_value(parameter_name="NullValueFormat",
+                                                      command_parameters=command_parameters)
+        if not validators.validate_string_in_list(pv_NullValueFormat, self.__choices_NullValueFormat,
+                                                  none_allowed=True, empty_string_allowed=False, ignore_case=True):
+            message = "NullValueFormat parameter value ({}) is not recognized.".format(pv_NullValueFormat)
+            recommendation = "Specify one of the acceptable values ({}) for the NullValueFormat parameter.".format(
+                self.__choices_NullValueFormat)
             warning += "\n" + message
             self.command_status.add_to_log(command_phase_type.INITIALIZATION,
                                            CommandLogRecord(command_status_type.FAILURE, message, recommendation))
@@ -152,19 +166,19 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
 
-    def __should_write_table(self, table_id, output_file_abs, delimiter, sorting_column):
+    def __should_write_table(self, table_id, output_file_abs, delimiter, sort_columns):
         """
        Checks the following:
        * the ID of the Table is an existing Table ID
        * the output folder is a valid folder
        * check that the delimiter is only one character
-       * check that the SortingColumn is an existing column
+       * check that the columns within the SortColumns are existing columns
 
        Args:
            table_id: the ID of the Table to be written
            output_file_abs: the full pathname to the output file
            delimiter: the delimiter string that will separate each column in the output file
-           sorting_col: the table column used to sort the records
+           sort_columns: a list of table columns used to sort the records
 
        Returns:
            run_write: Boolean. If TRUE, the writing process should be run. If FALSE, it should not be run.
@@ -177,8 +191,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # If the Table ID is not an existing Table ID, raise a FAILURE.
         should_run_command.append(validators.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
 
-        # If the Table ID does exist and the sorting_column is not None, continue with checks.
-        if True in should_run_command and sorting_column is not None:
+        # If the Table ID does exist and the sort_columns is not None, continue with checks.
+        if True in should_run_command and sort_columns is not None:
 
             # Get the Table object
             table = self.command_processor.get_table(table_id)
@@ -186,16 +200,21 @@ class WriteTableToDelimitedFile(AbstractCommand):
             # Get a list of the columns in the table.
             columns = table.return_fieldnames()
 
-            # If the SortingColumn does not exist in the Table, raise a FAILURE.
-            if sorting_column not in columns:
+            # If one of the SortingColumns does not exist in the Table, raise a FAILURE.
+            invalid_columns = []
+            for sort_column in sort_columns:
+                if sort_column not in columns:
+                    invalid_columns.append(sort_column)
 
-                message = 'The SortingColumn ({}) is not a column in the table ({}).'.format(sorting_column, table_id)
-                recommendation = 'Specify a column within the Table. \n Existing columns: {}'.format(columns)
+            if invalid_columns:
+
+                message = 'The SortColumns ({}) are not columns in the table ({}).'.format(invalid_columns, table_id)
+                recommendation = 'Specify columns within the Table. \nValid columns: {}'.format(columns)
 
                 self.warning_count += 1
                 self.logger.error(message)
                 self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                            message, recommendation))
+                                                                                        message, recommendation))
                 should_run_command.append(False)
 
         # Get the full path to the output folder
@@ -217,7 +236,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
     @ staticmethod
     def __write_table_to_delimited_file(path, table_obj, delimiter, cols_to_include_list, cols_to_exclude_list,
-                                        include_header, include_index, sorting_column, sort_order, use_sq_brackets,
+                                        include_header, include_index, sort_columns, sorting_dic, use_sq_brackets,
                                         use_null_values):
         """
         Writes a GeoProcessor table to a delimited file. There are many parameters to customize how the table is
@@ -234,8 +253,11 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 row is written. If FALSE, the header row is not written.
             include_index (boolean): boolean to determine if the index column should be written. If TRUE, the index
                 column is written. If FALSE, the index column is not written.
-            sorting_column (str): the name of the column to use to sort the table records
-            sort_order (str): the order that the records are sorted. Available options: ASCENDING or DESCENDING
+            sort_columns (list): the names of the columns to use to sort the table records
+            sorting_dic (dic): a dictionary that relates each sorting column with the its corresponding order
+                Available options: ASCENDING or DESCENDING
+                Key: the name of the sorting column
+                Value: the sorting order
             use_sq_brackets (boolean): boolean specifying the types of brackets to use around list/array data values.
                 If TRUE, square brackets are used. If FALSE, curly brackets are used.
             use_null_values (boolean): boolean specifying if None values in arrays should be represented as None or as
@@ -252,22 +274,38 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
         # Sort the records by the values of a field.
         try:
-            # If a sorting column is specified, sort the records with the data values from the specified column.
-            # Get the index of the sorting column.
-            if sorting_column:
-                index = fieldnames.index(sorting_column)
+            if sort_columns:
+
+                for i in range(len(sort_columns)):
+
+                    # Get the sort column.
+                    sort_column = sort_columns[i]
+
+                    # Get the column index.
+                    index = fieldnames.index(sort_column)
+
+                    # Get the appropriate sorting order.
+                    if sort_column in list(sorting_dic.keys()):
+                        sort_order = sorting_dic[sort_column]
+                    else:
+                        sort_order = "ASCENDING"
+
+                    if sort_order.upper() == "ASCENDING" and i == 0:
+                        s = sorted(all_records, key=itemgetter(index))
+                    elif sort_order.upper() == "DESCENDING" and i == 0:
+                        s = sorted(all_records, key=itemgetter(index), reverse=True)
+                    elif sort_order.upper() == "ASCENDING":
+                        s = sorted(s, key=itemgetter(index))
+                    elif sort_order.upper() == "DESCENDING":
+                        s = sorted(s, key=itemgetter(index), reverse=True)
+
+                    all_records = s
 
             # If a sorting column is not specified, sort the records with the first column.
             else:
-                index = 0
 
-            # If the sorting order is ascending, then sort the records in ascending order of the sorting column.
-            if sort_order.upper() == "ASCENDING":
-                all_records = sorted(all_records, key=itemgetter(index))
-
-            # If the sorting order is descending, then sort the records in descending order of the sorting column.
-            else:
-                all_records = sorted(all_records, key=itemgetter(index), reverse=True)
+                # Sort the records in ascending order of the first table column.
+                all_records = sorted(all_records, key=itemgetter(0))
 
         # Try to sort but do not throw an error if the sort fails. Instead keep the records in the original order.
         except:
@@ -443,18 +481,24 @@ class WriteTableToDelimitedFile(AbstractCommand):
         pv_TableID = self.get_parameter_value("TableID")
         pv_OutputFile = self.get_parameter_value("OutputFile")
         pv_Delimiter = self.get_parameter_value("Delimiter", default_value=",")
-        pv_ColumnsToInclude = self.get_parameter_value("ColumnsToInclude", default_value="*")
-        pv_ColumnsToExclude = self.get_parameter_value("ColumnsToExclude", default_value="")
+        pv_IncludeColumns = self.get_parameter_value("IncludeColumns", default_value="*")
+        pv_ExcludeColumns = self.get_parameter_value("ExcludeColumns", default_value="")
         pv_WriteHeaderRow = self.get_parameter_value("WriteHeaderRow", default_value="True")
-        pv_WriteIndexColumn = self.get_parameter_value("WriteIndexColumn", default_value="True")
-        pv_SortingColumn = self.get_parameter_value("SortingColumn")
-        pv_SortingOrder = self.get_parameter_value("SortingOrder", default_value="Ascending")
-        pv_UseSquareBrackets = self.get_parameter_value("UseSquareBrackets", default_value="True")
-        pv_UseNullValue = self.get_parameter_value("UseNullValue", default_value="True")
+        pv_WriteIndexColumn = self.get_parameter_value("WriteIndexColumn", default_value="False")
+        pv_SortColumns = self.get_parameter_value("SortColumns")
+        pv_SortOrder = self.get_parameter_value("SortOrder", default_value="")
+        pv_ArrayFormat = self.get_parameter_value("ArrayFormat", default_value="SquareBrackets")
+        pv_NullValueFormat = self.get_parameter_value("NullValueFormat", default_value="Null")
 
-        # Convert the ColumnsToInclude and ColumnsToExclude parameter values to lists.
-        cols_to_include = string_util.delimited_string_to_list(pv_ColumnsToInclude)
-        cols_to_exclude = string_util.delimited_string_to_list(pv_ColumnsToExclude)
+        # Convert the IncludeColumns, ExcludeColumns, and SortColumns parameter values to lists.
+        cols_to_include = string_util.delimited_string_to_list(pv_IncludeColumns)
+        cols_to_exclude = string_util.delimited_string_to_list(pv_ExcludeColumns)
+        sort_cols_list = string_util.delimited_string_to_list(pv_SortColumns)
+
+        # Convert the SortOrder to a dictionary.
+        sort_dictionary = string_util.delimited_string_to_dictionary_one_value(pv_SortOrder, entry_delimiter=",",
+                                                                               key_value_delimiter=":",
+                                                                               trim=True)
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -464,22 +508,30 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # Covert the Boolean parameters from string to Boolean values.
         pv_WriteHeaderRow = string_util.str_to_bool(pv_WriteHeaderRow)
         pv_WriteIndexColumn = string_util.str_to_bool(pv_WriteIndexColumn)
-        pv_UseSquareBrackets = string_util.str_to_bool(pv_UseSquareBrackets)
-        pv_UseNullValue = string_util.str_to_bool(pv_UseNullValue)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_write_table(pv_TableID, output_file_absolute, pv_Delimiter, pv_SortingColumn):
+        if self.__should_write_table(pv_TableID, output_file_absolute, pv_Delimiter, sort_cols_list):
 
             try:
 
                 # Get the Table object
                 table = self.command_processor.get_table(pv_TableID)
 
+                # Determine if square brackets should be used depending on the user input of the ArrayFormat parameter.
+                use_sq_brackets = False
+                if pv_ArrayFormat.upper() == "SQUAREBRACKETS":
+                    use_sq_brackets = True
+
+                # Determine if the null values should be used depending on the user input of the NullValueFormat
+                # parameter.
+                use_null_value = False
+                if pv_NullValueFormat.upper() == "NULL":
+                    use_null_value = True
+
                 # Write the table to the delimited file.
                 self.__write_table_to_delimited_file(output_file_absolute, table, pv_Delimiter, cols_to_include,
                                                      cols_to_exclude, pv_WriteHeaderRow, pv_WriteIndexColumn,
-                                                     pv_SortingColumn, pv_SortingOrder, pv_UseSquareBrackets,
-                                                     pv_UseNullValue)
+                                                     sort_cols_list, sort_dictionary, use_sq_brackets, use_null_value)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

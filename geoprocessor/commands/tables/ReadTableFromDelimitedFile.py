@@ -6,9 +6,9 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-from geoprocessor.core.Table_new import Table
-from geoprocessor.core.Table_new import TableRecord
-from geoprocessor.core.Table_new import TableField
+from geoprocessor.core.Table import Table
+from geoprocessor.core.Table import TableRecord
+from geoprocessor.core.Table import TableField
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -27,9 +27,8 @@ class ReadTableFromDelimitedFile(AbstractCommand):
     * InputFile (str, required): the relative or absolute pathname of the delimited file to read.
     * TableID (str, required): the identifier of the Table.
     * Delimiter (str, optional): the delimiter of the input file. Default is `,`.
-    * HeaderRowCount (str, optional): the number of rows representing the header. These columns will not be included
-         in the output Table data values. The last row of the HeaderRowCount will be used to specify the column headers.
-         Default: 1
+    * HeaderLines (str, optional): The number of rows representing non-data comments. These columns are not included
+        in the output Table data values. Default: 0
     * NullValues (str, optional): A list of values within the delimited file that represent null values.
         Default: '' (an empty string)
     * IfTableIDExists (str, optional): This parameter determines the action that occurs if the TableID already exists
@@ -42,7 +41,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("InputFile", type("")),
         CommandParameterMetadata("Delimiter", type("")),
         CommandParameterMetadata("TableID", type("")),
-        CommandParameterMetadata("HeaderRowCount", type("")),
+        CommandParameterMetadata("HeaderLines", type("")),
         CommandParameterMetadata("NullValues", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
@@ -113,15 +112,15 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 command_phase_type.INITIALIZATION,
                 CommandLogRecord(command_status_type.FAILURE, message, recommendation))
 
-        # If the HeaderRowCount is used, continue with the checks.
-        pv_HeaderRowCount = self.get_parameter_value("HeaderRowCount", command_parameters=command_parameters)
-        if pv_HeaderRowCount:
+        # If the HeaderLines is used, continue with the checks.
+        pv_HeaderLines = self.get_parameter_value("HeaderLines", command_parameters=command_parameters)
+        if pv_HeaderLines:
 
-            # Check that the HeaderRowCount parameter is an integer or None.
-            if not validators.validate_int(pv_HeaderRowCount, True, False):
+            # Check that the HeaderLines parameter is an integer or None.
+            if not validators.validate_int(pv_HeaderLines, True, False):
 
-                message = "HeaderRowCount parameter value ({}) is not a valid integer value.".format(pv_HeaderRowCount)
-                recommendation = "Specify a positive integer for the HeaderRowCount parameter to specify how" \
+                message = "HeaderLines parameter value ({}) is not a valid integer value.".format(pv_HeaderLines)
+                recommendation = "Specify a positive integer for the HeaderLines parameter to specify how" \
                                  " many rows represent the header contnet of the delimited file."
                 warning += "\n" + message
                 self.command_status.add_to_log(command_phase_type.INITIALIZATION,
@@ -194,12 +193,8 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             # Pass the csv file to the csv.reader object. Specify the delimiter.
             csvreader = csv.reader(csvfile, delimiter=delimiter)
 
-            # TODO egiles 2018-06-25 Need to determine what column headers will be if there are no column headers in
-            # TODO the original delimited file (where header_count = 0).
-
-            # By default, the column headers are retrieved as the last line of the header rows.
-            # Get the column headers.
-            for i in range(header_count):
+            # Get the column headers as a list. Skip over any header lines of comments.
+            for i in range(header_count + 1):
                 col_headers = next(csvreader)
 
             # Iterate over the number of columns specified by a column header name.
@@ -215,7 +210,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 csvfile.seek(0)
 
                 # Skip the header rows.
-                for i_head in range(header_count):
+                for i_head in range(header_count+1):
                     next(csvreader)
 
                 # Iterate over the non-header rows and append the column items to the col_content list.
@@ -271,7 +266,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         pv_InputFile = self.get_parameter_value("InputFile")
         pv_Delimiter = self.get_parameter_value("Delimiter", default_value=",")
         pv_TableID = self.get_parameter_value("TableID")
-        pv_HeaderRowCount = int(self.get_parameter_value("HeaderRowCount", default_value="1"))
+        pv_HeaderLines = int(self.get_parameter_value("HeaderLines", default_value="0"))
         pv_NullValues = self.get_parameter_value("NullValues", default_value="''")
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax
@@ -289,7 +284,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
 
                 # Create the table from the delimited file.
                 table = self.__read_table_from_delimited_file(input_file_absolute, pv_TableID, pv_Delimiter,
-                                                              pv_HeaderRowCount, pv_NullValues)
+                                                              pv_HeaderLines, pv_NullValues)
 
                 # Add the table to the GeoProcessor's Tables list.
                 self.command_processor.add_table(table)

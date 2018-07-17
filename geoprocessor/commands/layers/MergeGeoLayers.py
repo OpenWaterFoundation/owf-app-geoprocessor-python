@@ -316,7 +316,7 @@ class MergeGeoLayers(AbstractCommand):
         for attribute_map_entry in attribute_map_entry_list:
 
             # Get a list of the keys (merged attributes) currently in the attribute map dictionary.
-            curr_merged_attributes = attribute_map_dic.keys()
+            curr_merged_attributes = list(attribute_map_dic.keys())
 
             # If the attribute map entry has the correct format, continue.
             if ':' in attribute_map_entry:

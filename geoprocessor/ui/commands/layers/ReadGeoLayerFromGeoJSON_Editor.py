@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
 
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
-from geoprocessor.ui.util.AbstractCommand_Editor import UI_AbstractDialog
+from geoprocessor.ui.commands.abstract.AbstractCommand_Editor import UI_AbstractDialog
 from geoprocessor.ui.util.command_parameter import CommandParameter
 from geoprocessor.core import CommandParameterMetadata
 
@@ -46,7 +46,7 @@ class UiDialog(UI_AbstractDialog):
     #   SpatialDataFile_Label: labels the SpatialDataFile input text field. Note that the SpatialDataFile parameter
     #   does not need a description label object because the parameter description is written in the text field as
     #   placeholder text.
-    #   GeoLayerID_Label: labels the GeoLayerID input text field
+    #   GeoLayerID_Label: labels the GeoLayerID inpubst text field
     #   GeoLayerID_Description_Label: describes the GeoLayerID parameter
     #   IfGeoLayerIDExists_Label: labels the IfGeoLayerIDExists input text field
     #   IfGeoLayerIDExists_Description_Label: describes the IfGeoLayerIDExists parameter

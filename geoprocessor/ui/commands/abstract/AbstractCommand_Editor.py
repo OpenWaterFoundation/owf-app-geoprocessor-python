@@ -1,10 +1,10 @@
-from PyQt5 import QtCore, QtWidgets
-import webbrowser
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 import geoprocessor.ui.util.config as config
 import functools
+import webbrowser
 
 try:
-    # _fromUtf8 = QtCore.QString.fromUtf8
     _fromUtf8 = lambda s: s
 except AttributeError:
     def _fromUtf8(s):
@@ -45,11 +45,11 @@ class UI_AbstractDialog(object):
         # "user_doc_url" is the path to the online GeoProcessor user documentation
         self.user_doc_url = config.user_doc_url
 
-        # "parameter_count" is the the number of command parameters of the GeoProcessor command that the Dialog box is
+        # "parameter_count" is the number of command parameters of the GeoProcessor command that the Dialog box is
         # representing
         self.parameter_count = parameter_count
 
-        # "parameters_list" is a list of string representing the command parameter names (in order) of the
+        # "parameters_list" is a list of strings representing the command parameter names (in order) of the
         # GeoProcessor command that the Dialog box is representing
         self.parameters_list = command_parameters
 

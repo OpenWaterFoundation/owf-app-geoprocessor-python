@@ -6,7 +6,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-from geoprocessor.core.Table import Table
+from geoprocessor.core.Table_pandas import Table
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.pandas_util as pandas_util

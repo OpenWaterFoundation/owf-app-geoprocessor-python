@@ -6,9 +6,9 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 import geoprocessor.core.command_phase_type as command_phase_type
 import geoprocessor.core.command_status_type as command_status_type
-from geoprocessor.core.Table_new import Table
-from geoprocessor.core.Table_new import TableField
-from geoprocessor.core.Table_new import TableRecord
+from geoprocessor.core.Table import Table
+from geoprocessor.core.Table import TableField
+from geoprocessor.core.Table import TableRecord
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -34,10 +34,10 @@ class ReadTableFromDataStore(AbstractCommand):
         DataStoreTable or Sql.
     * Top (str, optional): Indicate how many rows to return. Default: return all rows. Must be a string representing
         a positive integer. Only enabled if DataStoreTable is enabled.
-    * ColumnsToInclude (str, optional): A list of glob-style patterns to determine the DataStore table columns to read.
-        Default: * (All columns are read).
-    * ColumnsToExclude (str, optional): A list of glob-style patterns to determine the DataStore table columns to read.
-        Default: '' (No columns are excluded - All columns are read).
+    * IncludeColumns (str, optional): A list of glob-style patterns to determine the DataStore table columns
+        to read. Default: * (All columns are read).
+    * ExcludeColumns (str, optional): A list of glob-style patterns to determine the DataStore table columns
+        to read. Default: '' (No columns are excluded - All columns are read).
     * TableID (str, required): Identifier to assign to the output table in the GeoProcessor, which allows the table
         data to be used with other commands. A new table will be created. Can be specified with ${Property}.
     * IfTableIDExists (str, optional): This parameter determines the action that occurs if the TableID already exists
@@ -52,8 +52,8 @@ class ReadTableFromDataStore(AbstractCommand):
         CommandParameterMetadata("Sql", type("")),
         CommandParameterMetadata("SqlFile", type("")),
         CommandParameterMetadata("Top", type("")),
-        CommandParameterMetadata("ColumnsToInclude", type("")),
-        CommandParameterMetadata("ColumnsToExclude", type("")),
+        CommandParameterMetadata("IncludeColumns", type("")),
+        CommandParameterMetadata("ExcludeColumns", type("")),
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
@@ -67,7 +67,7 @@ class ReadTableFromDataStore(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "ReadTableFromDelimitedFile"
+        self.command_name = "ReadTableFromDataStore"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data
@@ -457,8 +457,8 @@ class ReadTableFromDataStore(AbstractCommand):
         pv_SqlFile = self.get_parameter_value("SqlFile")
         pv_Top = self.get_parameter_value("Top")
         pv_TableID = self.get_parameter_value("TableID")
-        pv_ColumnsToInclude = self.get_parameter_value("ColumnsToInclude", default_value="*")
-        pv_ColumnsToExclude = self.get_parameter_value("ColumnsToExclude", default_value="")
+        pv_IncludeColumns = self.get_parameter_value("IncludeColumns", default_value="*")
+        pv_ExcludeColumns = self.get_parameter_value("ExcludeColumns", default_value="")
 
         # Expand for ${Property} syntax.
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
@@ -466,9 +466,9 @@ class ReadTableFromDataStore(AbstractCommand):
         pv_Sql = self.command_processor.expand_parameter_value(pv_Sql, self)
         pv_TableID = self.command_processor.expand_parameter_value(pv_TableID, self)
 
-        # Convert the ColumnsToInclude and ColumnsToExclude parameter values to lists.
-        cols_to_include = string_util.delimited_string_to_list(pv_ColumnsToInclude)
-        cols_to_exclude = string_util.delimited_string_to_list(pv_ColumnsToExclude)
+        # Convert the IncludeColumns and ExcludeColumns parameter values to lists.
+        cols_to_include = string_util.delimited_string_to_list(pv_IncludeColumns)
+        cols_to_exclude = string_util.delimited_string_to_list(pv_ExcludeColumns)
 
         # If available, convert the SqlFile parameter value relative path to an absolute path and expand for
         # ${Property} syntax.

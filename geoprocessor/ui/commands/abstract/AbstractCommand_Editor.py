@@ -496,7 +496,7 @@ class UI_AbstractDialog(object):
     @staticmethod
     def select_file(qt_widget):
         """
-        Opens a file browser to all a user to select a file through a Qt predefined user interface. The path of the
+        Opens a file browser to allow a user to select a file through a Qt predefined user interface. The path of the
         selected file is added to the qt_widget Qt Widget input field.
 
         Args:

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+# THIS CLASS IS NOT CURRENTLY USED BECAUSE UI COMPONENTS ARE MANUALLY CODED.
+# - Qt Designer is useful for some things but not complex GeoProcessor code.
+
 # Form implementation generated from reading ui file 'main-window-draft2.ui'
 #
 # Created: Tue May 08 10:21:50 2018

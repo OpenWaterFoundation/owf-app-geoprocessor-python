@@ -297,11 +297,11 @@ def run_ui(qtapp):
     class_ = getattr(GeoProcessor, 'GeoProcessor')
     command_processor = class_()
     # app = QtWidgets.QApplication(sys.argv)
-    window = QtWidgets.QMainWindow()
+    #window = QtWidgets.QMainWindow()
     GeoProcessorUI = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI, 'GeoProcessorUI')
-    prog = class_(window, command_processor)
-    window.show()
+    ui = class_(command_processor)
+    ui.show()
     sys.exit(qtapp.exec_())
     pass
 

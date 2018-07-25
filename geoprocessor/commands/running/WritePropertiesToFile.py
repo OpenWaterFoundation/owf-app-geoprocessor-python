@@ -168,7 +168,7 @@ class WritePropertiesToFile(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings about command parameters."
+            message = "There were " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
             raise ValueError(message)
 

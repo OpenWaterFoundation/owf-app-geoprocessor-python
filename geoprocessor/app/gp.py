@@ -17,7 +17,7 @@ from PyQt5 import QtWidgets
 
 from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
 from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
-# The following are imported dynamically since need a QtApplication instanced in __main__ first
+# The following are imported dynamically since need a QtApplication instance in __main__ first
 #from geoprocessor.core.GeoProcessor import GeoProcessor
 #from geoprocessor.core.CommandFileRunner import CommandFileRunner
 
@@ -26,6 +26,7 @@ import geoprocessor.util.io_util as io_util
 import geoprocessor.util.log_util as log_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.app.version as version
 
 # General Python modules
 import argparse
@@ -37,8 +38,6 @@ import os
 import platform
 import sys
 import traceback
-
-__geoprocessor_app_version = "0.0.1"
 
 
 class GeoProcessorCmd(cmd.Cmd):
@@ -300,7 +299,10 @@ def run_ui(qtapp):
     #window = QtWidgets.QMainWindow()
     GeoProcessorUI = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI, 'GeoProcessorUI')
-    ui = class_(command_processor)
+    runtime_properties = {}
+    runtime_properties['AppVersion'] = version.app_version
+    runtime_properties['AppVersionDate'] = version.app_version_date
+    ui = class_(command_processor, runtime_properties)
     ui.show()
     sys.exit(qtapp.exec_())
     pass
@@ -316,7 +318,7 @@ def set_global_data():
         None
     """
     app_util.program_name = "gp"
-    app_util.program_version = __geoprocessor_app_version
+    app_util.program_version = version.app_version
 
 
 def setup_logging(session):
@@ -404,7 +406,7 @@ if __name__ == '__main__':
     # Immediately prints the version using the 'version' value
     # --version
     parser.add_argument("--version", help="Print program version.", action="version",
-                        version="gp " + __geoprocessor_app_version)
+                        version="gp " + version.app_version)
     args = parser.parse_args()
 
     # Set global environment data that will be used by library code

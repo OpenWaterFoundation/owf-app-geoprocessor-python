@@ -192,6 +192,9 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                                                           pv_OutputCRS,
                                                           pv_OutputPrecision)
 
+                # Save the output file in the processor
+                self.command_processor.add_output_file(output_file_absolute)
+
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:
                 self.warning_count += 1

@@ -4,6 +4,8 @@ import geoprocessor.ui.util.qt_util as qt_util
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import UiDialog as ReadGeoLayerFromGeoJSON_Editor
 from PyQt5 import QtCore, QtGui, QtWidgets
 import functools
+import logging
+import os
 import webbrowser
 import geoprocessor.ui.util.config as config
 
@@ -49,7 +51,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # - Initially the AppVersion and AppVersionDate, for use in Help About
         self.runtime_properties = runtime_properties
 
-        # The most recent file save location.
+        # Latest command file that was read or saved, parent folder is the working directory
+        self.command_file_path = None
+
+        # The most recent file save location, used to help file dialog start with recent location
+        # - could be command file or other files
         self.saved_file = None
 
         # The URL to the user documentation main page
@@ -235,52 +241,57 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
         # If ALL of the commands should be run, continue.
-        if not run_selected:
-            # Update the GeoProcessor's list of commands to include ALL of the commands in the Command_List widget.
-            self.processor_update_commands_from_command_list()
-        else:
+        if run_selected:
             # Update the GeoProcessor's list of commands to include only the SELECTED commands in the Command_List
             # widget.
-            self.processor_update_commands_from_command_list(selected=True)
+            self.processor_update_commands_from_command_list(run_selected=True)
+        else:
+            # Update the GeoProcessor's list of commands to include ALL of the commands in the Command_List widget.
+            self.processor_update_commands_from_command_list()
 
         # Runs the geoprocessor's processor_run_commands function to run the existing commands
         # that exist in the processor.
-        self.gp.processor_run_commands()
+        print("Running commands in processor...")
+        self.gp.run_commands()
+        print("...back from processor running commands.")
 
         # After commands have been run, update the UI Results section to reflect the output & intermediary products.
+        print("Showing processing results.")
         self.show_results()
 
-    def processor_update_commands_from_command_list(self, selected=False):
+    def processor_update_commands_from_command_list(self, run_selected=False):
         """
-        Updates the GeoProcessor's command list with the existing command strings in the Command_List widget.
+        Update the GeoProcessor's command list with the existing command strings in the Command_List widget.
 
         Returns: None
         """
-
         # An empty list. Will hold the command strings. One item for each existing command within the Command_List
         # widget.
         cmd_string_list = []
 
         # If the GeoProcessor should be updated with ALL commands, continue.
-        if not selected:
-
+        if run_selected:
+            # Iterate over the SELECTED items in the Command_List widget.
+            print("Setting selected " + str(len(self.commands_List.selectedItems())) + " commands in processor...")
+            for item in list(self.commands_List.selectedItems()):
+                # Add the item's text (the command string) to the cmd_string_list.
+                cmd_string_list.append(item.text())
+        else:
             # Iterate over ALL of the items in the Command_List widget.
+            print("Setting all " + str(self.commands_List.count()) + " commands in processor...")
             for i in range(self.commands_List.count()):
-
                 # Add the item's text (the command string) to the cmd_string_list.
                 cmd_string_list.append(self.commands_List.item(i).text())
 
-        # If the GeoProcessor should be updated with the SELECTED commands, continue.
-        else:
-
-            # Iterate over the SELECTED items in the Command_List widget.
-            for item in list(self.commands_List.selectedItems()):
-
-                # Add the item's text (the command string) to the cmd_string_list.
-                cmd_string_list.append(item.text())
-
         # Read the command strings into GeoProcessor command objects. Pass the objects to the GeoProcessor.
-        self.gp.read_ui_command_workflow(cmd_string_list)
+        # - Also pass the working directory corresponding to the folder that command file was read from.
+        runtime_properties = {}
+        if self.command_file_path is not None:
+            # Tell the processor the working directory
+            # - this is used to convert to/from relative paths and is also used by RunCommands
+            runtime_properties['WorkingDir'] = os.path.dirname(self.command_file_path)
+            runtime_properties['InitialWorkingDir'] = os.path.dirname(self.command_file_path)
+        self.gp.read_commands_from_command_list(cmd_string_list, runtime_properties)
 
     def setup_ui(self):
         """
@@ -406,6 +417,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         y_commands = y_commands + 1
         self.commands_GridLayout.addWidget(self.commands_List, y_commands, 0, 1, 4)
+        # Define listeners to handle events
+        # Listen for a change in item selection within the commands_List widget.
+        self.commands_List.itemSelectionChanged.connect(self.update_ui_status_commands)
+        # Other connections
+        # Connect right-click of commands_List widget item.
+        self.commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.commands_List.customContextMenuRequested.connect(self.ui_action_command_list_right_click)
 
         # Commands area buttons under the list
         self.commands_RunSelectedCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
@@ -417,13 +435,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_RunSelectedCommands_PushButton.setToolTip("Run selected commands from above to generate results.")
         y_commands = y_commands + 1
         self.commands_GridLayout.addWidget(self.commands_RunSelectedCommands_PushButton, y_commands, 0, 1, 1)
+        # Connect the Run Selected Commands button.
+        self.commands_RunSelectedCommands_PushButton.clicked.connect(
+            functools.partial(self.processor_run_commands, True))
 
         self.commands_RunAllCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
         self.commands_RunAllCommands_PushButton.setEnabled(False)
         self.commands_RunAllCommands_PushButton.setObjectName(_fromUtf8("commands_RunAllCommands_PushButton"))
-        self.commands_RunAllCommands_PushButton.setText("  Run All Commands  ")
+        self.commands_RunAllCommands_PushButton.setText("Run All Commands")
         self.commands_RunAllCommands_PushButton.setToolTip("Run all commands from above to generate results.")
         self.commands_GridLayout.addWidget(self.commands_RunAllCommands_PushButton, y_commands, 1, 1, 1)
+        # Connect the Run All Commands button.
+        self.commands_RunAllCommands_PushButton.clicked.connect(self.processor_run_commands, False)
 
         # Spacer makes sure that buttons on left and right are correctly positioned
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -432,30 +455,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_ClearCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
         self.commands_ClearCommands_PushButton.setEnabled(False)
         self.commands_ClearCommands_PushButton.setObjectName(_fromUtf8("commands_ClearCommands_PushButton"))
-        self.commands_ClearCommands_PushButton.setText("  Clear Commands  ")
+        self.commands_ClearCommands_PushButton.setText("Clear Commands")
         self.commands_ClearCommands_PushButton.setToolTip(
             "Clear selected commands.  Clear all commands if none are selected.")
         self.commands_GridLayout.addWidget(self.commands_ClearCommands_PushButton, y_commands, 3, 1, 1)
+        # Connect the Clear Commands button.
+        self.commands_ClearCommands_PushButton.clicked.connect(self.ui_action_clear_commands)
 
         # Add the commands to the central widget
         self.centralwidget_GridLayout.addWidget(self.commands_GroupBox, y_centralwidget, 0, 1, 6)
-
-        # Define listeners to handle events
-        # Listen for a change in item selection within the commands_List widget.
-        self.commands_List.itemSelectionChanged.connect(self.update_ui_status_commands)
-
-        # Connect the Run All Commands button.
-        self.commands_RunAllCommands_PushButton.clicked.connect(self.processor_run_commands, False)
-        # Connect the Clear Commands button.
-        self.commands_ClearCommands_PushButton.clicked.connect(self.ui_action_clear_commands)
-        # Connect the Run Selected Commands button.
-        self.commands_RunSelectedCommands_PushButton.clicked.connect(
-            functools.partial(self.processor_run_commands, True))
-
-        # Other connections
-        # Connect right-click of commands_List widget item.
-        self.commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.commands_List.customContextMenuRequested.connect(self.ui_action_command_list_right_click)
 
     def setup_ui_menus(self, MainWindow):
         """
@@ -548,9 +556,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_GeoLayers_Read = QtWidgets.QMenu(self.Menu_Commands_GeoLayers)
         self.Menu_Commands_GeoLayers_Read.setObjectName(_fromUtf8("Menu_Commands_GeoLayers_Read"))
         self.Menu_Commands_GeoLayers_Read.setTitle("Read")
-        ##self.actionRead.setText("Read")
-        ##self.actionRead = QtWidgets.QAction(MainWindow)
-        ##self.actionRead.setObjectName(_fromUtf8("actionRead"))
+        ## self.actionRead.setText("Read")
+        ## self.actionRead = QtWidgets.QAction(MainWindow)
+        ## self.actionRead.setObjectName(_fromUtf8("actionRead"))
         self.Menu_Commands_GeoLayers.addAction(self.Menu_Commands_GeoLayers_Read.menuAction())
         # Commands / GeoLayers / Read menu for specific commands
         self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON = QtWidgets.QAction(MainWindow)
@@ -586,13 +594,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_GeoLayers_Process.setText("Process")
         self.Menu_Commands_GeoLayers.addAction(self.Menu_Commands_GeoLayers_Process)
         # Commands / GeoLayers / Write menu
-        #self.actionWrite = QtWidgets.QAction(MainWindow)
+        # self.actionWrite = QtWidgets.QAction(MainWindow)
         self.Menu_Commands_GeoLayers_Write = QtWidgets.QAction(MainWindow)
         self.Menu_Commands_GeoLayers_Write.setObjectName(_fromUtf8("Menu_Commands_GeoLayers_Write"))
         self.Menu_Commands_GeoLayers_Write.setText("Write")
-        #self.actionWrite.setText("Write")
-        #self.actionWrite.setObjectName(_fromUtf8("actionWrite"))
-        #self.Menu_Commands_GeoLayers_Write = QtWidgets.QAction(MainWindow)
+        # self.actionWrite.setText("Write")
+        # self.actionWrite.setObjectName(_fromUtf8("actionWrite"))
+        # self.Menu_Commands_GeoLayers_Write = QtWidgets.QAction(MainWindow)
         self.Menu_Commands_GeoLayers.addAction(self.Menu_Commands_GeoLayers_Write)
 
         # Commands / Tables menu
@@ -788,14 +796,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_OutputFiles_GroupBox_VerticalLayout.setObjectName(_fromUtf8("results_OutputFiles_GroupBox_VerticalLayout"))
         self.results_OutputFiles_Table = QtWidgets.QTableWidget(self.results_OutputFiles_GroupBox)
         self.results_OutputFiles_Table.setObjectName(_fromUtf8("results_OutputFiles_Table"))
-        self.results_OutputFiles_Table.setColumnCount(3)
+        single_column = True  # Like TSTool, only the filename
+        if single_column:
+            self.results_OutputFiles_Table.setColumnCount(1)
+        else:
+            self.results_OutputFiles_Table.setColumnCount(3)
         self.results_OutputFiles_Table.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.results_OutputFiles_Table.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_OutputFiles_Table.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_OutputFiles_Table.setHorizontalHeaderItem(2, item)
+        if not single_column:
+            item = QtWidgets.QTableWidgetItem()
+            self.results_OutputFiles_Table.setHorizontalHeaderItem(1, item)
+            item = QtWidgets.QTableWidgetItem()
+            self.results_OutputFiles_Table.setHorizontalHeaderItem(2, item)
         self.results_OutputFiles_Table.horizontalHeader().setDefaultSectionSize(150)
         self.results_OutputFiles_Table.horizontalHeader().setStretchLastSection(True)
         self.results_OutputFiles_GroupBox_VerticalLayout.addWidget(self.results_OutputFiles_Table)
@@ -804,8 +817,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Used to be in retranslateUi
         self.results_OutputFiles_GroupBox.setTitle("Output Files (0 Output Files, 0 selected)")
         self.results_OutputFiles_Table.horizontalHeaderItem(0).setText("Output File ")
-        self.results_OutputFiles_Table.horizontalHeaderItem(1).setText("File Type")
-        self.results_OutputFiles_Table.horizontalHeaderItem(2).setText("Command Reference")
+        if not single_column:
+            self.results_OutputFiles_Table.horizontalHeaderItem(1).setText("File Type")
+            self.results_OutputFiles_Table.horizontalHeaderItem(2).setText("Command Reference")
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_OutputFiles_Tab), "Output Files")
 
         # Results - Properties tab
@@ -949,11 +963,32 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         # Call the specific functions for each output category
         # - Each call will also update the status information in the UI (counts, selected, etc.)
-        self.show_results_geolayers()
-        self.show_results_maps()
-        self.show_results_output_files()
-        self.show_results_properties()
-        self.show_results_tables()
+        logger = logging.getLogger(__name__)
+        try:
+            self.show_results_geolayers()
+        except Exception as e:
+            message="Error showing GeoLayers in Results"
+            logger.error(message, e, exc_info=True)
+        try:
+            self.show_results_maps()
+        except Exception as e:
+            message="Error showing Maps in Results"
+            logger.error(message, e, exc_info=True)
+        try:
+            self.show_results_output_files()
+        except Exception as e:
+            message="Error showing Output Files in Results"
+            logger.error(message, e, exc_info=True)
+        try:
+            self.show_results_properties()
+        except Exception as e:
+            message="Error showing Properties in Results"
+            logger.error(message, e, exc_info=True)
+        try:
+            self.show_results_tables()
+        except Exception as e:
+            message="Error showing Tables in Results"
+            logger.error(message, e, exc_info=True)
 
     def show_results_geolayers(self):
         """
@@ -966,6 +1001,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Populate the Results GeoLayers Table.
         # Iterate through all of the GeoLayer objects in the GeoProcessor.
+        print("Showing " + str(len(self.gp.geolayers)) + " geolayers")
         for geolayer in self.gp.geolayers:
 
             # Get the index of the next available row in the table. Add a new row to the table.
@@ -985,7 +1021,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Retrieve the GeoLayer's CRS and set as the attribute for the Coordinate Reference System column.
             self.results_GeoLayers_Table.setItem(new_row_index, 3, QtWidgets.QTableWidgetItem(geolayer.get_crs()))
 
-        self.update_ui_status_geolayers()
+        self.update_ui_status_results_geolayers()
 
     def show_results_maps(self):
         """
@@ -1000,7 +1036,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Remove items from the Results Output Files table (from a previous run).
         self.results_OutputFiles_Table.setRowCount(0)
 
-        self.update_ui_status_maps()
+        self.update_ui_status_results_maps()
 
     def show_results_output_files(self):
         """
@@ -1013,6 +1049,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Populate the Results / Output Files Table
         # Iterate through all of the Output Files in the GeoProcessor.
+        single_column = True  # Like TSTool, only the filename
         for output_file in self.gp.output_files:
 
             # Get the index of the next available row in the table. Add a new row to the table.
@@ -1022,23 +1059,24 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Retrieve the absolute pathname of the output file and set as the attribute for the Output File column.
             self.results_OutputFiles_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(output_file))
 
-            # Get the extension of the output file.
-            output_file_ext = io_util.get_extension(output_file)
+            if not single_column:
+                # Get the extension of the output file.
+                output_file_ext = io_util.get_extension(output_file)
 
-            # A dictionary that relates common file extensions to the appropriate file name.
-            extension_dictionary = {'.xlsx': 'Microsoft Excel Open XML Format Spreadsheet',
-                                    '.geojson': 'GeoJSON',
-                                    '.xls': 'Microsoft Excel 97-2003 Worksheet'}
+                # A dictionary that relates common file extensions to the appropriate file name
+                extension_dictionary = {'.xlsx': 'Microsoft Excel Open XML Format Spreadsheet',
+                                        '.geojson': 'GeoJSON',
+                                        '.xls': 'Microsoft Excel 97-2003 Worksheet'}
 
-            # Retrieve the output file type and set as the attribute for the File Type column. If h
-            if output_file_ext in extension_dictionary.keys():
-                self.results_OutputFiles_Table.setItem(new_row_index, 1,
-                                                       QtWidgets.QTableWidgetItem(
+                # Retrieve the output file type and set as the attribute for the File Type column. If h
+                if output_file_ext in extension_dictionary.keys():
+                    self.results_OutputFiles_Table.setItem(new_row_index, 1,
+                                                           QtWidgets.QTableWidgetItem(
                                                            extension_dictionary[output_file_ext]))
-            else:
-                self.results_OutputFiles_Table.setItem(new_row_index, 1,
-                                                       QtWidgets.QTableWidgetItem("Unknown"))
-        self.update_ui_status_output_files()
+                else:
+                    self.results_OutputFiles_Table.setItem(new_row_index, 1,
+                                                           QtWidgets.QTableWidgetItem("Unknown"))
+        self.update_ui_status_results_output_files()
 
     def show_results_properties(self):
         """
@@ -1048,20 +1086,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         # Remove items from the Results Properties table (from a previous run).
         self.results_Properties_Table.setRowCount(0)
+        print("Showing property results")
 
         # Populate the Results / Properties Table.
         # Iterate through all of the properties in the GeoProcessor.
         for prop_name, prop_value in self.gp.properties.items():
-
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_Properties_Table.rowCount()
+            #print("Showing property name=" + str(prop_name) + " value=" + str(prop_value) + " row " + str(new_row_index))
             self.results_Properties_Table.insertRow(new_row_index)
 
             # Set the property name as the attribute for the Property Name column.
             self.results_Properties_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(prop_name))
 
             # Set the property value as the attribute for the Property Value column.
-            self.results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(prop_value))
+            # - Have to cast to string because table is configured to display strings
+            self.results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(prop_value)))
 
     def show_results_tables(self):
         """
@@ -1092,7 +1132,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                                               QtWidgets.QTableWidgetItem(str(table.count(returnCol=False))))
 
         # Update the results count and results' tables' labels to show that the results were populated.
-        self.update_ui_status_tables()
+        self.update_ui_status_results_tables()
 
     def ui_action_clear_commands(self):
         """
@@ -1167,7 +1207,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         version = self.runtime_properties['AppVersion']
         version_date = self.runtime_properties['AppVersionDate']
-        response = qt_util.new_message_box(
+        qt_util.new_message_box(
             QtWidgets.QMessageBox.Information,
             QtWidgets.QMessageBox.Ok,
             "GeoProcessor " + version + " (" + version_date + ")\n" +
@@ -1205,6 +1245,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set this file path as the path to save if the user click "Save Commands ..."
         self.saved_file = cmd_filepath
 
+        # Set the last command file
+        self.command_file_path = cmd_filepath
+
     def ui_action_save_commands(self):
         """
         Saves the commands to a previously saved file location (overwrite).
@@ -1235,6 +1278,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             file = open(self.saved_file, 'w')
             file.write(all_commands_string)
             file.close()
+
+            # Save the command file name for use as the working directory
+            self.command_file_path = None
 
     def ui_action_save_commands_as(self):
         """
@@ -1268,6 +1314,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         file = open(self.saved_file, 'w')
         file.write(all_commands_string)
         file.close()
+
+        # Save the command file name for use as the working directory
+        self.command_file_path = None
 
     def ui_action_view_documentation(self):
         """

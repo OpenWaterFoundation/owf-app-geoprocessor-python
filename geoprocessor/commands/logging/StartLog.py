@@ -98,6 +98,8 @@ class StartLog(AbstractCommand):
             # Change the GeoProcesssor logger to use the specified file
             # - The initial application log file will be closed.
             log_util.reset_log_file_handler(log_file_absolute)
+            # Add the log file to output
+            self.command_processor.add_output_file(log_file_absolute)
         except Exception as e:
             warning_count += 1
             message = 'Unexpected error (re)starting log file "' + log_file_absolute + '"'

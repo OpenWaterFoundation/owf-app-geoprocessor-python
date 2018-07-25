@@ -559,17 +559,16 @@ class GeoProcessor(object):
                 print("First command debug:")
                 self.commands[0].print_for_debug()
 
-    def read_ui_command_workflow(self, command_file_strings):
+    def read_commands_from_command_list(self, command_file_strings, runtime_properties):
         """
         Read the command workflow from the user interface and initialize the command list in the geoprocessor.
 
         Args:
             command_file_strings (list): list of strings. Each item of the list represents one command line string.
+            runtime_properties (dict): dictrionary of runtime properties, in particular 'WorkingDir'
 
         Return: None
         """
-
-        # TODO egiles 2018/05/17 Discuss with Steve the inclusion of setting the working directory (as in the read_command_file function)
 
         # Remove all items within the geoprocessor from the previous run.
         self.commands = []
@@ -578,8 +577,18 @@ class GeoProcessor(object):
         self.tables = []
         self.output_files = []
 
+        # Set the working directory to that indicated by the properties
+
         # Create an instance of the GeoProcessorCommandFactory.
         command_factory = GeoProcessorCommandFactory()
+        try:
+            self.properties["WorkingDir"] = runtime_properties.get("WorkingDir")
+        except KeyError:
+            # For now swallow this because UI my not have saved the working directory
+            pass
+        # TODO smalers 2018-07-24 Need to evaluate whether initial folder is also needed,
+        # such as for redundant calls by RunCommands()
+        #self.properties["InitialWorkingDir"] = ??
 
         # Iterate over each line in the command file.
         for command_file_string in command_file_strings:

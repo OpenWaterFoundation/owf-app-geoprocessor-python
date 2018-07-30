@@ -16,6 +16,9 @@ class AbstractCommand(object):
         # Command name as user would see. Will be set when command is parsed. Will NOT be set if an UnknownCommand.
         self.command_name = ""
 
+        # Command description, used in editors.
+        self.command_description = "Read a GeoLayer from a shapefile."
+
         # Command processor, needed to interact with the geoprocessing environment.
         self.command_processor = None
 

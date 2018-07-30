@@ -167,11 +167,11 @@ def parse_key_value_pairs_into_dictionary(parameter_items):
                 # parameter dictionary.
                 parameter_dictionary[parameter_name] = parameter_value
             else:
-                logger.warn("The parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(
+                logger.warning("The parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(
                     parameter_item))
 
         else:
-            logger.warn("The parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(parameter_item))
+            logger.warning("The parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(parameter_item))
 
     return parameter_dictionary
 
@@ -193,20 +193,21 @@ def parse_parameter_string_from_command_string(command_string):
     """
 
     # Remove white spaces on either side of the command line.
-    command_string = command_string.strip()
+    command_string_stripped = command_string.strip()
 
     # Determine the index of the first and last parenthesis within the command line string.
     # - ( and ) are allowed in parameters if quoted, as determined in further parsing.
-    paren_start_pos = command_string.find("(")
+    paren_start_pos = command_string_stripped.find("(")
     # Find the right-most parenthesis in case one is included in the quoted part of the parameter value
-    paren_end_pos = command_string.rfind(")")
+    paren_end_pos = command_string_stripped.rfind(")")
 
-    if (paren_start_pos <= 0) or (paren_end_pos != (len(command_string) - 1)):
+    if (paren_start_pos <= 0) or (paren_end_pos != (len(command_string_stripped) - 1)):
         # Bounding parenthesis are not present.
+        # - expecting somewhere on left and in last position on the right
         message = 'Invalid syntax for "' + command_string + '".  Expecting CommandName(Parameter="Value",...)'
         # Get logger her instead of top to increase performance, but can move it
         logger = logging.getLogger(__name__)
-        logger.warn(message)
+        logger.warning(message)
         raise ValueError(message)
 
     # Get the parameter line from the command string (in between the '(' and the ')' ).
@@ -272,7 +273,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
                     # (actually can handle as nonfatal but prefer commas for clarity).
                     if (len(parameter_items) > 0) and not comma_found:
                         # 2nd or greater parameter so need to have found a comma to separate parameters
-                        logger.warn("Missing comma between parameter definitions")
+                        logger.warning("Missing comma between parameter definitions")
                         comma_found = False
             else:
                 # In a quoted parameter value string.
@@ -364,15 +365,15 @@ def validate_command_parameter_names(command, warning, deprecated_parameter_name
     # deprecated_parameters size.
 
     has_notes = False
-    deprecated_notes_size = 0
+    deprecated_parameter_notes_size = 0
     if deprecated_parameter_notes is not None:
         deprecated_parameter_notes_size = len(deprecated_parameter_notes)
         has_notes = True
 
     if has_notes and (deprecated_parameter_names_size != deprecated_parameter_notes_size):
-        raise ValueError("The number of deprecated parameter names (" + deprecated_parameter_names_size +
+        raise ValueError("The number of deprecated parameter names (" + str(deprecated_parameter_names_size) +
                          ") is not the same as the number of deprecated parameter notes (" +
-                         deprecated_parameter_notes_size + ")")
+                         str(deprecated_parameter_notes_size) + ")")
 
     # Iterate through all the parameter names for the command and check whether they are valid, invalid, or deprecated.
 

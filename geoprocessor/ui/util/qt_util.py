@@ -1,11 +1,30 @@
 # Qt utility functions
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtGui, QtWidgets
+import geoprocessor.util.app_util as app_util
+
+
+def info_message_box(message, title="Information"):
+    """
+    Display an information message dialog.
+
+    Args:
+        app_name: Application name to use in dialog title (default is no application name shown)
+        message: Message string.
+        title: Title for dialog.
+
+    Returns: Which button was selected.
+    """
+    app_name = app_util.get_property("ProgramName")
+    if app_name is not None:
+        title = app_name + " - " + title
+    message_box = new_message_box(QtWidgets.QMessageBox.Information, QtWidgets.QMessageBox.Ok, message, title)
+    return message_box
 
 
 def new_message_box(message_type, standard_buttons_mask, message, title):
     """
-    Create and execute a message box.
+    Create and execute a message box, returning an indicator for the button that was selected.
     REF: https://www.tutorialspoint.com/pyqt/pyqt_qmessagebox.htm
 
     Args:
@@ -19,22 +38,47 @@ def new_message_box(message_type, standard_buttons_mask, message, title):
     """
 
     # Create the Message Box object.
-    msg = QtWidgets.QMessageBox()
+    message_box = QtWidgets.QMessageBox()
 
     # Set the Message Box icon.
-    msg.setIcon(message_type)
+    message_box.setIcon(message_type)
 
     # Set the Message Box message text.
-    msg.setText(message)
+    message_box.setText(message)
 
     # Set the Message Box title text.
-    msg.setWindowTitle(title)
+    message_box.setWindowTitle(title)
 
     # Set the Message Box standard buttons.
-    msg.setStandardButtons(standard_buttons_mask)
+    message_box.setStandardButtons(standard_buttons_mask)
+
+    # Set the icon
+    # - icon path should use Qt / notation
+    icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
+    #print("Icon path='" + icon_path + "'")
+    #message_box.setWindowIcon(QtGui.Icon(icon_path))
+    message_box.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
 
     # Execute the Message Box and retrieve the clicked button enumerator.
-    btn_value = msg.exec_()
+    btn_value = message_box.exec_()
 
     # Return the clicked button Qt type
     return btn_value
+
+
+def warning_message_box(message, title="Warning"):
+    """
+    Display a warning message dialog.
+
+    Args:
+        app_name: Application name to use in dialog title (default is no application name shown)
+        message: Message string.
+        title: Title for dialog.
+
+    Returns: Which button was selected.
+    """
+    app_name = app_util.get_property("ProgramName")
+    if app_name is not None:
+        title = app_name + " - " + title
+    message_box = new_message_box(QtWidgets.QMessageBox.Warning, QtWidgets.QMessageBox.Ok, message, title)
+    return message_box

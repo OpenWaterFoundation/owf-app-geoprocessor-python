@@ -34,7 +34,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
     `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects.
 
     Command Parameters
-    * SpatialDataFile (str, required): the relative pathname to the spatial data file (GeoJSON format)
+    * SpatialDataFile (str, required): the relative pathname to the spatial data file (shapefile format)
     * GeoLayerID (str, optional): the GeoLayer identifier. If None, the spatial data filename (without the .geojson
         extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the absolute
         pathname to the spatial data file is C:/Desktop/Example/example_file.geojson, then the GeoLayerID will be
@@ -46,9 +46,16 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
     # Define the command parameters.
     __command_parameter_metadata = [
-        CommandParameterMetadata("SpatialDataFile", type("")),
-        CommandParameterMetadata("GeoLayerID", type("")),
-        CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
+        CommandParameterMetadata("SpatialDataFile", type(""),
+                                 parameter_description="Path to file",
+                                 editor_tooltip="Path to shapefile to read, can use ${Property}."),
+        CommandParameterMetadata("GeoLayerID", type(""),
+                                 parameter_description="GeoLayer identifier",
+                                 editor_tooltip="GeoLayer identifier."),
+        CommandParameterMetadata("IfGeoLayerIDExists", type(""),
+                                 parameter_description="Action if GeoLayer exists",
+                                 default_value="Warn",
+                                 editor_tooltip="Action if GeoLayer exists.")]
 
     # Choices for IfGeoLayerIDExists, used to validate parameter and display in editor
     __choices_IfGeoLayerIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]

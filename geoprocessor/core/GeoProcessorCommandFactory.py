@@ -66,6 +66,7 @@ class GeoProcessorCommandFactory(object):
     The command string is parsed within the command class instance.
     """
 
+    # TODO smalers 2018-07-27 evaluate whether the following is needed
     # The dictionary of all available commands, in alphabetical order.
     # key: the name of the command (converted to all UPPERCASE)
     # value: the constructor (__init__) function to create an instance of the command

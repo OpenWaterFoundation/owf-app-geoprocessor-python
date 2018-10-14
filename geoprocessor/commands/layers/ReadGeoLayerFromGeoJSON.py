@@ -60,6 +60,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+
         self.command_name = "ReadGeoLayerFromGeoJSON"
         self.command_parameter_metadata = self.__command_parameter_metadata
         self.choices_IfGeoLayerIDExists = self.__choices_IfGeoLayerIDExists

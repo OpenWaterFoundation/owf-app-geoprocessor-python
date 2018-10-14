@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
-import geoprocessor.ui.util.config as config
+from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 import functools
 import webbrowser
 
@@ -18,9 +18,9 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
-class UI_AbstractDialog(object):
+class AbstractCommandEditor_Tabbed(AbstractCommandEditor):
 
-    def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
+    def __init__(self, command):
         """
         Initialize the Abstract Dialog instance.
 
@@ -35,23 +35,21 @@ class UI_AbstractDialog(object):
                 Key: the name of the command parameter
                 Value: the entered value of the command parameter
         """
+        super().__init__(command)
 
         # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
-        self.command_name = command_name
+        ##self.command_name = command_name
 
         # "command_description" is the description of the GeoProcessor command that the Dialog box is representing
-        self.command_description = command_description
-
-        # "user_doc_url" is the path to the online GeoProcessor user documentation
-        self.user_doc_url = config.user_doc_url
+        ##self.command_description = command_description
 
         # "parameter_count" is the number of command parameters of the GeoProcessor command that the Dialog box is
         # representing
-        self.parameter_count = parameter_count
+        ##self.parameter_count = parameter_count
 
         # "parameters_list" is a list of strings representing the command parameter names (in order) of the
         # GeoProcessor command that the Dialog box is representing
-        self.parameters_list = command_parameters
+        ##self.parameters_list = command_parameters
 
         # "input_edit_objects" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
@@ -62,7 +60,7 @@ class UI_AbstractDialog(object):
         # "command_parameter_current_values" is a dictionary that holds the command parameters and their current values
         # KEY (str): the name of the command parameter
         # VALUE (str): the entered value of the command parameter
-        self.command_parameter_current_values = current_values
+        ##self.command_parameter_current_values = current_values
 
     def are_required_parameters_specified(self, ui_command_parameter_list):
         """

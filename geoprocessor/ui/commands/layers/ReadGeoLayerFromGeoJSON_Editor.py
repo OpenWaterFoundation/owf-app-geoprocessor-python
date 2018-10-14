@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
 
 from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
-from geoprocessor.ui.commands.abstract.AbstractCommand_Editor import UI_AbstractDialog
+from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 from geoprocessor.ui.util.command_parameter import CommandParameter
 from geoprocessor.core import CommandParameterMetadata
 
@@ -21,7 +21,7 @@ except AttributeError:
         return QtWidgets.QApplication.translate(context, text, disambig)
 
 
-class UiDialog(UI_AbstractDialog):
+class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
 
     # CLASS VARIABLES: static across all classes
 
@@ -90,11 +90,12 @@ class UiDialog(UI_AbstractDialog):
     ui_commandparameters = [cp_SpatialDataFile, cp_GeoLayerID, cp_IfGeoLayerIDExists]
 
 
-    def __init__(self):
+    def __init__(self, command):
         """
         Initialize the ReadGeoLayerFromGeoJSON dialog box.
         Assign the INSTANCE VARIABLES: values specific to each instance.
         """
+        super().__init__(command)
 
         # Command_parameter_values is a dictionary that holds the entered command parameter values.
         # Key: the name of the command parameter
@@ -103,8 +104,8 @@ class UiDialog(UI_AbstractDialog):
 
         # Add all of the command parameters to the command_parameter_values dictionary. By default, set all
         # parameter values to an empty string. The values are populated later as the user enters text in the dialog box.
-        for command_parameter_name in UiDialog.command_parameters:
-            self.command_parameter_values[command_parameter_name] = ""
+        ## for command_parameter_name in UiDialog.command_parameters:
+        ##     self.command_parameter_values[command_parameter_name] = ""
 
         # UI input field objects are to be assigned within the setupUI function
         # The values of these input field objects are dynamic and unique to the instance. They are, however, all
@@ -120,11 +121,14 @@ class UiDialog(UI_AbstractDialog):
         self.IfGeoLayerIDExists_ComboBox = None
 
         # Initialize the parent Abstract Dialog class.
-        UI_AbstractDialog.__init__(self, UiDialog.command_name, UiDialog.command_description, UiDialog.parameter_count,
-                                   UiDialog.command_parameters, self.command_parameter_values)
+        ## UI_AbstractDialog.__init__(self, UiDialog.command_name, UiDialog.command_description, UiDialog.parameter_count,
+        ##                            UiDialog.command_parameters, self.command_parameter_values)
+
+    def setup_ui(self):
+        pass
 
     def setupUi(self, Dialog):
-
+        """
         # Configure the Dialog window with the features that are consistent across all GeoProcessor command dialog
         # windows.
         self.setupUi_Abstract(Dialog)
@@ -194,6 +198,7 @@ class UiDialog(UI_AbstractDialog):
         self.configureDescriptionLabel(UiDialog.IfGeoLayerIDExists_Description_Label,
                                        UiDialog.cp_IfGeoLayerIDExists.name,
                                        UiDialog.cp_IfGeoLayerIDExists.description)
+        """
 
     def refresh(self):
         """
@@ -216,14 +221,14 @@ class UiDialog(UI_AbstractDialog):
         # If the predefined IfGeoLayerIDExists parameter value is within one of the available options, the index of
         # the value in the ComboBox object is the index of the value in the options list plus one. The one accounts
         #  for the blank option that is available in the ComboBox but is not in the available options list.
-        if ifgeolayeridexists_value in UiDialog.command_obj.choices_IfGeoLayerIDExists:
-            index = UiDialog.command_obj.choices_IfGeoLayerIDExists.index(ifgeolayeridexists_value) + 1
+        ## if ifgeolayeridexists_value in UiDialog.command_obj.choices_IfGeoLayerIDExists:
+        ##     index = UiDialog.command_obj.choices_IfGeoLayerIDExists.index(ifgeolayeridexists_value) + 1
 
         # If the predefined IfGeoLayerIDExists parameter value is NOT within one of the available options, set the
         # index to the location of the blank option.
-        else:
-            index = 0
+        ## else:
+        ##     index = 0
 
         # Set the value of the IfGeoLayerIDExists combo box to the predefined value of the IfGeoLayerIDExists parameter.
         # Combo boxes are set by indexes rather than by text.
-        self.IfGeoLayerIDExists_ComboBox.setCurrentIndex(index)
+        ## self.IfGeoLayerIDExists_ComboBox.setCurrentIndex(index)

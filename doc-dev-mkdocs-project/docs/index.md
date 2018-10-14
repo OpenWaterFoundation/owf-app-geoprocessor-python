@@ -1,7 +1,7 @@
-# Open Water Foundation / Learn GeoProcessor (for Developers)#
+# Open Water Foundation / GeoProcessor (for Developers) #
 
 This documentation provides resources to learn how to develop the OWF GeoProcessor software,
-which automates processing of spatial data.
+which automates processing spatial data.
 
 This documentation is intended for GeoProcessor developers that have experience with Python,
 QGIS Python libraries, and Python development environment.
@@ -10,8 +10,7 @@ although other tools can be used.
 PyCharm project files are not included in the repository.
 
 The primary development environment at the Open Water Foundation
-is currently Windows 10 using the latest stable QGIS 2.x release.
-Support for QGIS 3.x will be added after sufficient vetting.
+is currently Windows 10 using the latest stable QGIS 3.x release.
 The primary deployment environments are Windows 7/10, and Ubuntu/Debian Linux.
 A non-QGIS distribution is also available,
 in order to use the GeoProcessor workflow as a "function test" framework.
@@ -24,7 +23,7 @@ in place, with appropriate tests and documentation.**
 
 ## About the Open Water Foundation ##
 
-The [Open Water Foundation](http://openwaterfoundation.org) is a 501(c)3 nonprofit social enterprise that focuses
+The [Open Water Foundation](http://openwaterfoundation.org) is a nonprofit social enterprise that focuses
 on developing and supporting open source software for water resources, so that organizations can make better decisions about water.
 OWF also works to advance open data tools and implementation.
 
@@ -35,7 +34,7 @@ See also other [OWF learning resources](http://learn.openwaterfoundation.org).
 The documentation is organized in order of information that will be useful to new and continuing developers.
 
 This documentation is not intended to be a full reference for Geographic Information Systems (GIS) concepts or GIS technologies.
-See the [Resources section](resources) for additional information from other sources.
+See the [Resources section](../resources/resources) for additional information from other sources.
 
 Use the navigation menu provided on the left side of the page to navigate the documentation sections within the full document.
 Use the navigation menu provided on the right side of the page to navigate the documentation sections with a page.

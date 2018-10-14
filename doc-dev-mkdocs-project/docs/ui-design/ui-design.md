@@ -9,11 +9,15 @@
 - [Reference of Completed Command Dialog Windows](#list-of-commands-with-command-dialog-windows)
 - [Resources](#resources)
 
+------------------
+
 ## Overview
 
-This documentation is in place to explain the current user interface design. 
+**This documentation needs to be fully reviewed.**
+
+This documentation explains the current user interface design. 
 The design is still in implementation phase and can be redesigned in the future if needed. 
-The GeoProcessor user interface is currently in working order. 
+The GeoProcessor user interface is functional but is limited.
 It has the following functionality: 
 
 - Open a command file to view in the user interface
@@ -43,11 +47,11 @@ The reading of a command file and the running of that command file is performed 
 To run a command file within the UI, follow the instructions below:
 
 1. Start the GeoProcessor user interface.
-2. Click `File` > `Open Command File`.
+2. Click ***File / Open Command File***.
 3. Browse to and select the command file of interest. 
 4. The command file will appear in the `command list` ui component. 
 Each line of the command file is a unique line in the `command list` ui component
-5. Click the `Run Commands` button. 
+5. Click the ***Run Commands*** button. 
 This will read the text within the `command list` ui component and 
 will pass that string to the GeoProcessor `core` code to be parsed, read and run. 
 The GeoProcessor runs with a single string input. 

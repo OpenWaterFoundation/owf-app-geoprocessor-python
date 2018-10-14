@@ -299,26 +299,51 @@ def run_ui(qtapp):
     #window = QtWidgets.QMainWindow()
     GeoProcessorUI = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI, 'GeoProcessorUI')
-    runtime_properties = {}
-    runtime_properties['AppVersion'] = version.app_version
-    runtime_properties['AppVersionDate'] = version.app_version_date
-    ui = class_(command_processor, runtime_properties)
+    ui = class_(command_processor)
     ui.show()
     sys.exit(qtapp.exec_())
     pass
 
 
+# TODO smalers 2018-07-29 is there a global dictionary similar to Python system properites?
 def set_global_data():
     """
     Set global data that is useful in library code but is difficult to pass into deep code.
     This may evolve as greater understanding is gained about how to use standard Python modules
     to retrieve application data.
 
-    Returns:
-        None
+    Returns:  None
     """
-    app_util.program_name = "gp"
-    app_util.program_version = version.app_version
+    # Determine the absolute path to the application, useful later when trying to find resources such as
+    # configuration and image
+    try:
+        ps = os.sep
+        app_util.set_property('ProgramCopyright', version.app_copyright)
+        program_home = os.path.dirname(os.path.realpath(__file__))
+        # Program executable name, what is typed on command line
+        app_util.set_property('ProgramExecutableName', "gp")
+        # Does not have trailing separator
+        app_util.set_property('ProgramHome', program_home)
+        # Icon is in geoprocessor/resources/images/OWF-Logo-Favicon-32x32.png
+        # - TODO smalers 2018-07-29 figure out what the optimal logo size is for Qt
+        app_util.set_property('ProgramIconPath', program_home + ps + ".." +
+                              ps + "resources" + ps + "images" + ps + "OWF-Logo-Favicon-32x32.png")
+        app_util.set_property('ProgramLicense', version.app_license)
+        # Program name, shown in UI title bars
+        app_util.set_property('ProgramName', version.app_name)
+        # Program organizatio and URL, shown in Help / About
+        app_util.set_property('ProgramOrganization', version.app_organization)
+        app_util.set_property('ProgramOrganizationUrl', version.app_organization_url)
+        # Resources are in geoprocessor/resources
+        app_util.set_property('ProgramResourcesPath', program_home + ps + ".." + ps + "resources")
+        # User documentation URL, without trailing slash
+        app_util.set_property('ProgramUserDocumentationUrl',
+                              "http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user")
+        # Program version, tracks with release notes
+        app_util.set_property('ProgramVersion', version.app_version)
+        app_util.set_property('ProgramVersionDate', version.app_version_date)
+    except Exception as e:
+        print("Error setting up program data.")
 
 
 def setup_logging(session):
@@ -343,6 +368,8 @@ def setup_logging(session):
     logger.info(message)
     # Also print to the console because normal the console should only have error messages
     print(message)
+
+
 
 
 def setup_session(session):
@@ -373,6 +400,8 @@ if __name__ == '__main__':
     # Open an application to initialize static UI data
     print("Initializing QApplication")
     qtapp = QtWidgets.QApplication(sys.argv)
+    # Set global environment data that will be used by library code
+    set_global_data()
     # Set up a session instance
     app_session = GeoProcessorAppSession()
     print("After initializing GeoProcessorAppSession")
@@ -408,9 +437,6 @@ if __name__ == '__main__':
     parser.add_argument("--version", help="Print program version.", action="version",
                         version="gp " + version.app_version)
     args = parser.parse_args()
-
-    # Set global environment data that will be used by library code
-    set_global_data()
 
     # # If handling QGIS environment here, rather than in GeoProcessor
     # # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once

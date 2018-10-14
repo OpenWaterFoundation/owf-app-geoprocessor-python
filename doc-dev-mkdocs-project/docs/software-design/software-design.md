@@ -27,10 +27,11 @@ while implementing the command/workflow feature
 design developed in the [TSTool time series processing software](http://openwaterfoundation.org/software-tools/tstool).
 Many lessons were learned developing TSTool that have been applied to the GeoProcessor.
 
-The GeoProcessor currently is written for Python 2 because QGIS libraries use Python 2.
-The GeoProcessor will be updated to use Python 3 once the QGIS Python 3 version is proven out.
+The GeoProcessor is written for Python 3 because QGIS libraries use Python 3.
+The GeoProcessor was previously written using Python 2 but this proved to be limiting because third-party Python
+components have been updated to Python 3.
 
-TSTool is written in Java and is being moved to an open source project (not there yet, as of Jan 2018).
+TSTool is written in Java and is being moved to an open source project.
 Java is object-oriented and the time series processor design is modular.
 Although Python provides object-oriented features via classes,
 there are differences between Java and Python, in particular:
@@ -38,7 +39,7 @@ there are differences between Java and Python, in particular:
 * Java does not support multiple inheritance and Python does.
 * Java supports interfaces and Python does not (natively).
 * Java provides enumerations and Python 2 does not (Python 3 does).
-* Java provides private and public levels whereas Python relies more on convention,
+* Java provides private and public levels whereas Python sometimes relies on convention,
 such as using `__` prefix on data and functions to indicate private data.
 * Java concepts of static classes is paralleled by Python `@classmethod`, `@staticmethod` and module functions.
 
@@ -98,7 +99,7 @@ relies on `PYTHONPATH` to find QGIS libraries.
 be made more robust for general use.**
 
 * Configuration in the developer environment is accomplished by running a setup script,
-for example [run-pycharm2017.3.1-for-qgis.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build-util/run-pycharm2017.3.1-for-qgis.bat).
+for example [run-pycharm2018.1.3-for-qgis.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build-util/run-pycharm2018.1.3-for-qgis.bat).
 	+ This script runs the QGIS `ow4_env.bat` batch file and performs additional configuration.
 * Configuration in the runtime environment is accomplished by running the
 [`gp.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.bat) batch file on Windows
@@ -111,7 +112,7 @@ This script can be used to run GeoProcessor command files in the test framework.
 For example, see the test runner that has been manually created:
 [`run-tests-steve.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-tests-steve.bat).
 The automated test framework that uses `RunCommands` commands, similar to TSTool, is also available and is
-described in [Development Tasks / Testing](dev-tasks#testing).
+described in [Development Tasks / Testing](../dev-tasks/dev-tasks#testing).
 
 ## GeoProcessor Class ##
 
@@ -404,9 +405,10 @@ The Python module is run using one of the following command-line scripts:
 
 ## Graphical User Interface ##
 
-The graphical user interface (UI) for the GeoProcessor has not yet been developed.
+The graphical user interface (UI) for the GeoProcessor allows users to edit and run command workflows.
 Ideally the interface will be similar to TSTool but with features to view spatial data.
 The UI is run from the `run_ui` function in the `gp` module.
+See the [UI Design](../ui-design/ui-design) section.
 
 ## Built-in Test Framework ##
 
@@ -426,24 +428,25 @@ The tests can then be run one at a time with a script, similar to:
 
 * [run-tests-steve.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-tests-steve.bat)
 
-Tests can also be run run by creating a test suite, similar to TSTool (see [Development Tasks / Testing](dev-tasks#testing)).
+Tests can also be run run by creating a test suite, similar to TSTool (see [Development Tasks / Testing](../dev-tasks/dev-tasks#testing)).
 
 Dynamic test files should not be committed to the repository.
 
 Tests should be created by following the standards documented in the test repository main
 [README](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test) file
-and [Development Tasks / Testing](dev-tasks#testing).
+and [Development Tasks / Testing](../dev-tasks/dev-tasks#testing).
 
 ## Future Design Elements ##
 
 The following are design elements that are envisioned for future implementation:
 
-* Graphical user interface with command editors.
+* Full graphical user interface with command editors.
 * Implement discovery run mode similar to TSTool to allow commands to be partially
 run when loaded in to the user interface.
 This allows information such as GeoLayer identifiers in earlier commands to be
 provided in editors for later commands, to streamline command parameter
 selection and provide improved user experience.
-* Add useful commands comparable to TSTool, such as `WebGet`.
-* Add table data objects to facilitate data manipulation.
+* Add a variety of useful commands comparable to TSTool.
+* Add fully-functional table data objects to facilitate data manipulation.
 * Implement unit tests via `pytest` to test at the function level.
+* Implement functional tests for all commands.

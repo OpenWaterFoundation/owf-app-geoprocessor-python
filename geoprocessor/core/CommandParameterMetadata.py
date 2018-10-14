@@ -7,13 +7,25 @@ class CommandParameterMetadata(object):
     Validation requires more effort when the allowed value is an enumeration, etc.
     """
 
-    def __init__(self, parameter_name, parameter_type, validator_function=None):
+    def __init__(self, parameter_name, parameter_type, parameter_description=None, default_value=None,
+                 editor_tooltip=None, validator_function=None):
         # Parameter name should be in format WordWord
         self.parameter_name = parameter_name
+
+        # Parameter description should be short, for editor right size
+        self.parameter_description = parameter_description
+
+        # Parameter default value, as string
+        self.default_value = default_value
+
+        # Parameter tooltip
+        self.editor_tooltip = editor_tooltip
 
         # Parameter type should match the output of the type(), for example type(""), type(1), type(1.0).
         # Use string for complex types that will require parsing in the command.
         self.parameter_type = parameter_type
+
+        # TODO smalers 2018-07-27 need to indicate whether required, optional, or depends on input
 
         # Validator function to be called to validate the command parameter
         # TODO smalers 2017-12-30 This may be removed since validation is often more complicated

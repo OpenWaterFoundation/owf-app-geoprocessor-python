@@ -59,6 +59,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # VALUE (str): the entered value of the command parameter
         #self.command_parameter_current_values = current_values
 
+        # Initialize components that will be used
+        self.CommandDisplay_View_TextBrowser = None
+
         # Layout used for the main editor
         # - other layouts may be added as needed to organize components
         self.grid_layout = None
@@ -67,18 +70,6 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # - each addition should increment before adding a component
         self.grid_layout_row = -1
 
-        # Set up the editor core elements, which apply to any command.
-        self.setup_ui_core_top()
-        # Set up the editor specific to the command.
-        # - this code should be implemented in child class
-        self.setup_ui()
-        # Set up the core components at the bottom
-        self.setup_ui_core_bottom()
-
-        # This will wire up the signals and slots depending on names.
-        # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
-        # - don't do this because not using QtDesigner
-        #QtCore.QMetaObject.connectSlotsByName(self)
 
     def add_ui_horizontal_separator(self):
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
@@ -159,7 +150,22 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         Returns: None
         """
+        # This should not normally happen but will be the case if a child editor has not implemented the function
         print("In AbstractCommandEditor.setup_ui")
+
+    def setup_ui_core(self):
+        # Set up the editor core elements, which apply to any command.
+        self.setup_ui_core_top()
+        # Set up the editor specific to the command.
+        # - this code should be implemented in child class
+        self.setup_ui()
+        # Set up the core components at the bottom
+        self.setup_ui_core_bottom()
+
+        # This will wire up the signals and slots depending on names.
+        # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
+        # - don't do this because not using QtDesigner
+        #QtCore.QMetaObject.connectSlotsByName(self)
 
     def setup_ui_core_bottom(self):
         """

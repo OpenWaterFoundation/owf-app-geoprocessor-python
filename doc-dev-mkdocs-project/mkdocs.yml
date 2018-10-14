@@ -2,20 +2,20 @@
 # Use hash-comments to comment out pages have not been written
 # Reference: http://www.mkdocs.org/user-guide/configuration/
 #
-site_name: Learn / OWF GeoProcessor (Dev)
+site_name: 'OWF GeoProcessor (Dev)'
 pages:
-- Home: index.md
-- Introduction: introduction.md
-- New Developer: dev-new.md
-- Software Design: software-design.md
-- UI Design: ui-design/ui-design.md
-- Development Tasks: dev-tasks.md
-- Development Environment: dev-env.md
-- Troubleshooting: troubleshooting.md
+- Home: 'index.md'
+- Introduction: 'introduction/introduction.md'
+- New Developer: 'dev-new/dev-new.md'
+- Software Design: 'software-design/software-design.md'
+- UI Design: 'ui-design/ui-design.md'
+- Development Tasks: 'dev-tasks/dev-tasks.md'
+- Development Environment: 'dev-env/dev-env.md'
+- Troubleshooting: 'troubleshooting/troubleshooting.md'
 - Resources:
-  - Resources: resources/resources.md
-  - "QGIS Version Install Experiments": resources/qgis-version-install-experiments.md
-  - "Notes on Migration from QGIS2 to QGIS3": resources/migrate-qgis2-qgis3.md
+  - Resources: 'resources/resources.md'
+  - 'QGIS Version Install Experiments': 'resources/qgis-version-install-experiments.md'
+  - 'Notes on Migration from QGIS2 to QGIS3': 'resources/migrate-qgis2-qgis3.md'
 # ------- configuration properties ---------------
 # Use Material theme
 # - installation notes:  https://github.com/squidfunk/mkdocs-material
@@ -23,10 +23,10 @@ theme: material
 # Don't specify the repository because doing show shows irritating edit
 # icons on every page - instead, edit the documentation in the developer environment.
 #repo_url:  https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python
-site_description:  Open Water Foundation Learn GeoProcessor (for Developers)
-site_author:  Open Water Foundation
+site_description:  'Open Water Foundation Learn GeoProcessor (for Developers)'
+site_author:  'Open Water Foundation'
 site_favicon:  'images/OWF-Logo-Favicon-32x32.png'
-copyright:  Copyright Open Water Foundation
+copyright:  'Copyright Open Water Foundation'
 # Use extra CSS to customize styles, based on theme
 extra_css:
   - 'css/extra-material-theme.css'

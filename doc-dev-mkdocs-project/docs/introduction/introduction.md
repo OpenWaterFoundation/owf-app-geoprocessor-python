@@ -18,10 +18,10 @@ The Open Water Foundation is involved in multiple open source software projects.
 Some significant projects such as the OpenCDSS project for the State of Colorado,
 involve moving government-funded software to full open source projects.
 
-The GeoProcessor is one of the first major projects that OWF has undertaken as an OWF project.
+The GeoProcessor is one of the first major projects that OWF has undertaken as an independent OWF project.
 The goal is to provide a significant new option for geoprocessing software while also
 supporting ongoing and new OWF projects.
-Demonstrating the software to the water resources community will hopefully result in streamlined
+Demonstrating the software to the water resources community is expected to result in streamlined
 data processing and analysis, allowing the community to focus on solutions to difficult problems.
 Through application, OWF hopes to enhance the software over time to address more and more water resources problems.
 OWF accepts funding to enhance the software, provide training,

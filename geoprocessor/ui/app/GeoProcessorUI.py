@@ -220,37 +220,23 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         try:
             # If the "OK" button is clicked within the dialog window, continue.
             # Else, if the "Cancel" button is clicked, do nothing.
-            if command_editor.exec_():
-                pass
+            button_clicked = command_editor.exec_()
+            if button_clicked == QtWidgets.QDialog.Accepted:
                 # Check if all of the required parameters are filled. If so, add the command to the Command_List widget.
                 ## if ui.are_required_parameters_specified(ui.ui_commandparameters):
 
-                ##     # Get the command string from the dialog window.
-                ##     command_string = ui.CommandDisplay_View_TextBrowser.toPlainText()
+                # Get the command string from the dialog window.
+                command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
-                ##     # Add the command string to the Command_List widget.
-                ##     self.commands_List.addItem(command_string)
+                # Add the command string to the Command_List widget.
+                # - TODO smalers 2018-07-29 need to insert in front of selected command
+                self.commands_List.addItem(command_string)
+                # Update the state
+                self.update_ui_status_commands()
+            else:
+                # Cancel was clicked so don't do anything
+                pass
 
-                ##     # Update the command count and Command_List label to show that a command was added to the workflow.
-                ##     self.update_ui_status_commands()
-
-                ## else:
-
-                ##     # Display a message box to inform user that a required parameter is missing.
-                ##     value = qt_util.new_message_box(
-                ##         QtWidgets.QMessageBox.Critical,
-                ##         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                ##         "One or more of the required parameters is not filled out. "
-                ##         "Return to the dialog box?", "Required parameter(s) not met.")
-
-            ##     # If the user decides to return to the dialog box, display the dialog box with the original values.
-            ##     if value == QtWidgets.QMessageBox.Yes:
-            ##         # TODO need to figure out how to go back to the original dialog box.
-            ##         pass
-
-            ##     # Delete the original dialog box and return to the main window.
-            ##     else:
-            ##         pass
         except Exception as e:
             message="Error editing new command"
             logger.error(message, e, exc_info=True)
@@ -1511,8 +1497,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.commands_RunSelectedCommands_PushButton.setEnabled(False)
 
         # Update the Command_List widget label to display the total and selected number of commands.
+        # TODO smalers 2018-07-29 need to calculate the following values
+        commands_with_failures = 0
+        commands_with_warnings = 0
         self.commands_GroupBox.setTitle(
-            "Commands ({} commands, {} selected)".format(total_commands, selected_commands))
+            #"Commands ({} commands, {} selected, {} with failures, {} with warnings)".format(
+            "Commands ({} commands, {} selected".format(
+                # total_commands, selected_commands, commands_with_failures, commands_with_warnings))
+                total_commands, selected_commands))
 
     def update_ui_status_results_geolayers(self):
         """

@@ -2,7 +2,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 from geoprocessor.ui.util.command_parameter import CommandParameter
+import geoprocessor.ui.util.qt_util as qt_util
 from geoprocessor.core import CommandParameterMetadata
+
+import logging
 
 try:
     fromUtf8 = lambda s: s
@@ -34,7 +37,10 @@ class GenericCommandEditor(AbstractCommandEditor):
         super().__init__(command)
 
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
-        self.parameter_LineEdit = []
+        self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
+
+        # Setup the UI in the abstract class, which will call back to set_ui() in this class.
+        self.setup_ui_core()
 
     def get_parameter_dict_from_ui(self):
         """
@@ -76,10 +82,12 @@ class GenericCommandEditor(AbstractCommandEditor):
 
         # Add entry fields for each parameter
         y_parameter = -1
-        self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)  # Reinitialize list
         for command_parameter_metadata in self.command.command_parameter_metadata:
             # Parameters listed in logical order
             y_parameter = y_parameter + 1
+            # ---------------
+            # Label component
+            # ---------------
             parameter_name = command_parameter_metadata.parameter_name
             parameter_Label = QtWidgets.QLabel(parameter_Frame)
             parameter_Label.setObjectName("Command_Parameter_Label")
@@ -88,14 +96,21 @@ class GenericCommandEditor(AbstractCommandEditor):
             # Allow expanding horizontally
             parameter_Label.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)
             parameter_GridLayout.addWidget(parameter_Label, y_parameter, 0, 1, 1)
-            # The text entry fields
+            # --------------------
+            # Text entry component
+            # --------------------
             self.parameter_LineEdit[y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
             self.parameter_LineEdit[y_parameter].setObjectName(parameter_name)
             parameter_GridLayout.addWidget(self.parameter_LineEdit[y_parameter], y_parameter, 1, 2, 1)
             tooltip = command_parameter_metadata.editor_tooltip
             if tooltip is not None:
                 self.parameter_LineEdit[y_parameter].setToolTip(tooltip)
-            # Description field, optionally with default value
+            # Create a listener that reacts if the line edit field has been changed. If so, run the
+            # update_command_display function.
+            self.parameter_LineEdit[y_parameter].textChanged.connect(self.refresh_command)
+            # ----------------------------------------------------
+            # Description component, optionally with default value
+            # ----------------------------------------------------
             parameter_description = command_parameter_metadata.parameter_description
             parameter_desc_Label = QtWidgets.QLabel(parameter_Frame)
             parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
@@ -212,3 +227,34 @@ class GenericCommandEditor(AbstractCommandEditor):
         # Set the value of the IfGeoLayerIDExists combo box to the predefined value of the IfGeoLayerIDExists parameter.
         # Combo boxes are set by indexes rather than by text.
         ## self.IfGeoLayerIDExists_ComboBox.setCurrentIndex(index)
+
+    def refresh_command(self):
+        """
+        Update the command string.
+
+        Returns:  None
+        """
+        # Loop through the command parameter metadata and retrieve the values from editor components
+        try:
+            y_parameter = -1
+            # Initial part of command string
+            command_string = self.command.command_name + "("
+            # Add all parameters to the command string
+            for command_parameter_metadata in self.command.command_parameter_metadata:
+                # Parameters listed in logical order
+                y_parameter = y_parameter + 1
+                if y_parameter == 0:
+                    sep = ""
+                else:
+                    sep = ","
+                parameter_name = command_parameter_metadata.parameter_name
+                parameter_value = self.parameter_LineEdit[y_parameter].text()
+                if parameter_value is not None and parameter_value != "":
+                    command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
+            command_string = command_string + ")"
+            self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
+        except Exception as e:
+            message="Error refreshing command from parameters"
+            logger = logging.getLogger(__name__)
+            logger.error(message, e, exc_info=True)
+            qt_util.warning_message_box(message)

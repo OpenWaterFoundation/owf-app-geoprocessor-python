@@ -68,19 +68,19 @@ Functional tests stored in the above repository are generally run one of two way
 
 1. **Run individual tests (useful when working on a specific workflow/test)**:
 	1. **Create** a script to run individual test:
-		1. ![Windows](images/windows-32.png) Windows: For example:
+		1. ![Windows](../images/windows-32.png) Windows: For example:
 		[run-tests-steve.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-tests-steve.bat).
 		This example uses the
 		[`gpdev.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gpdev.bat)
 		batch file to run the GeoProcessor, which is typical during GeoProcessor software develoment.
-		2. ![Linux](images/linux-32.png) Linux: For example:
+		2. ![Linux](../images/linux-32.png) Linux: For example:
 		[run-tests-steve.sh](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-tests-steve.sh).
 		This example uses the
 		[`gptest.sh`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gptest.sh)
 		shell script to run the GeoProcessor, which is typical when using the GeoProcessor as as functional testing framework for other software.
 	2. **Run** the above:
-		1. ![Windows](images/windows-32.png) Windows:  run in a windows command prompt window.
-		2. ![Linux](images/linux-32.png) Linux: run in a Linux shell window.
+		1. ![Windows](../images/windows-32.png) Windows:  run in a windows command prompt window.
+		2. ![Linux](../images/linux-32.png) Linux: run in a Linux shell window.
 	3. **Review** the log file created by the batch file (if redirected to a log file)
 	and command file that was run (if the `StartLog` command was used).  Fix issues and run again.
 2. **Run auto-generated test suite (useful when testing all software features before software release):**
@@ -92,7 +92,7 @@ Functional tests stored in the above repository are generally run one of two way
 	file with [`RunCommands`](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/RunCommands/RunCommands/)
 	commands for each test to run,
 	plus some additional testing commands for reporting.
-		1. ![Windows](images/windows-32.png) Windows:  Use the GeoProcessor to run the
+		1. ![Windows](../images/windows-32.png) Windows:  Use the GeoProcessor to run the
 		command file in a command shell window to auto-generate the full GeoProcessor test suite:
 		[create-test-command-file-dev.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/create/create-test-command-file-dev.bat)
 		(to test with development environment GeoProcessor) or
@@ -100,7 +100,7 @@ Functional tests stored in the above repository are generally run one of two way
 		(to test with deployed environment GeoProcessor).
 		This runs the command file
 		[create-regression-test-command-file.gp](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/create/create-regression-test-command-file.gp).
-		2. ![Linux](images/linux-32.png) Linux:  Use the GeoProcessor to run the
+		2. ![Linux](../images/linux-32.png) Linux:  Use the GeoProcessor to run the
 		command file in a terminal window to  auto-generate the full GeoProcessor test suite:
 		[create-test-command-file.sh](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/create/create-test-command-file.sh)
 		(to test with deployed environment test GeoProcessor).
@@ -111,12 +111,12 @@ Functional tests stored in the above repository are generally run one of two way
 		[`gptest.sh`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gptest.sh)
 		script.  Other script variations can be defined as needed.**
 	2. **Run** the command file created in the previous step:
-		1. ![Windows](images/windows-32.png) Windows:  In a Windows command prompt window, run the test suite from the previous step:
+		1. ![Windows](../images/windows-32.png) Windows:  In a Windows command prompt window, run the test suite from the previous step:
 		[run-geoprocessor-tests.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-geoprocessor-tests.bat).
 		This currently uses the
 		[`gpdev.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gpdev.bat)
 		batch file to run.
-		2. ![Linux](images/linux-32.png) Linux: In a Linux terminal window, run the test suite from the previous step:
+		2. ![Linux](../images/linux-32.png) Linux: In a Linux terminal window, run the test suite from the previous step:
 		[run-geoprocessor-tests.sh](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-geoprocessor-tests.sh)
 		This currently uses the
 		[`gptest.sh`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gptest.sh)
@@ -218,7 +218,7 @@ Total          = 100
 Example of `geoprocessor-tests.gp.summary.html` file
 (this file is dynamically-created and is not saved in the repository):
 
-![summary](dev-tasks-images/geoprocessor-tests.gp.summary.html.png)
+![summary](images/geoprocessor-tests.gp.summary.html.png)
 
 ### Unit Tests ###
 
@@ -236,6 +236,7 @@ Use the following to check the target Python environment to see which folders ar
 The GeoProcessor package can be installed in one of the indicated folders or
 the run script (`gp.bat`, `gp.sh`, `gptest.bat`, or `gptest.sh`) will need to set the `PYTHONPATH`
 to include the folder where the files are installed.
+**This needs to be updated for Python 3.**
 
 ```
 python2
@@ -263,10 +264,10 @@ The following currently creates .tar.gz and .zip versions of the files and there
 (error messages are printed to help diagnose issues).
 
 1. Open a Linux shell window:
-	1. ![Cygwin](images/cygwin-32.png) Cygwin terminal (verified method used by developers)
-	2. ![Git Bash](images/git-bash-32.png) Git Bash (**should work but not yet verified**)
-	3. ![Windows](images/windows-32.png) Windows Subsystem for Linux Bash (**should work but not yet verified**)
-	3. ![Linux](images/linux-32.png) Linux terminal (**should work but not yet verified**)
+	1. ![Cygwin](../images/cygwin-32.png) Cygwin terminal (verified method used by developers)
+	2. ![Git Bash](../images/git-bash-32.png) Git Bash (**should work but not yet verified**)
+	3. ![Windows](../images/windows-32.png) Windows Subsystem for Linux Bash (**should work but not yet verified**)
+	3. ![Linux](../images/linux-32.png) Linux terminal (**should work but not yet verified**)
 2. Change directories to the `build-util` folder in the repository working files.
 3. Run the following script:  `create-gp-installer.sh`
 	1. This will create files in the `build` folder in the repository working files.

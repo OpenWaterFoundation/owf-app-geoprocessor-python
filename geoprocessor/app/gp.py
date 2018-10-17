@@ -299,7 +299,6 @@ def run_ui(qtapp, app_session):
     #window = QtWidgets.QMainWindow()
     GeoProcessorUI = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI, 'GeoProcessorUI')
-    ui = class_(command_processor)
     runtime_properties = {}
     runtime_properties['AppVersion'] = version.app_version
     runtime_properties['AppVersionDate'] = version.app_version_date

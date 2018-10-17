@@ -1265,16 +1265,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # - whitespace on front side is OK
                     self.commands_List.addItem(line.rstrip())
         except Exception as e:
-            #print(message)
+            pass
+            # print(message)
             #logging.exception(message, e, exc_info=True)
-            message = "Error opening file: " + cmd_filepath
-            response = qt_util.new_message_box(
-                QtWidgets.QMessageBox.Warning,
-                QtWidgets.QMessageBox.Ok,
-                message,
-                "Open Command File")
-            if response == QtWidgets.QMessageBox.Ok:
-                return
+            #message = "Error opening file: " + cmd_filepath
+            #response = qt_util.new_message_box(
+            #    QtWidgets.QMessageBox.Warning,
+            #    QtWidgets.QMessageBox.Ok,
+            #    message,
+            #    "Open Command File")
 
 
 

@@ -158,7 +158,7 @@ class GeoProcessorCmd(cmd.Cmd):
         """
         Run the command file from the command line using syntax:  run command-file
         """
-        run_ui(qtapp)
+        run_ui(qtapp, app_session)
 
     def postloop(self):
         print
@@ -275,7 +275,7 @@ def run_prompt(qtapp):
     GeoProcessorCmd(qtapp=qtapp).cmdloop()
 
 
-def run_ui(qtapp):
+def run_ui(qtapp, app_session):
     """
     Run the GeoProcessor user interface.
 
@@ -302,7 +302,7 @@ def run_ui(qtapp):
     runtime_properties = {}
     runtime_properties['AppVersion'] = version.app_version
     runtime_properties['AppVersionDate'] = version.app_version_date
-    ui = class_(command_processor, runtime_properties)
+    ui = class_(command_processor, runtime_properties, app_session)
     ui.show()
     sys.exit(qtapp.exec_())
     pass
@@ -446,7 +446,7 @@ if __name__ == '__main__':
         # Run the user interface
         print("Running GeoProcessor UI")
         try:
-            run_ui(qtapp)
+            run_ui(qtapp, app_session)
         except Exception as e:
             message='Exception running UI'
             print(message)

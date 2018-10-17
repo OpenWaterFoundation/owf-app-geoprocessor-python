@@ -34,9 +34,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     This class is a child of the core Qt window classes.
     """
 
-    def __init__(self, geoprocessor, runtime_properties):
+    def __init__(self, geoprocessor, runtime_properties, app_session):
         # Old way was to initialize generically
         # super().__init__()
+
+        # This is a session object to keep track of session variables such as command file history
+        self.app_session = app_session
+
         # New way is to inherit from Qt main window
         QtWidgets.QMainWindow.__init__(self)
         print('Inside GeoProcessorUI constructor, calling setupUi')
@@ -502,8 +506,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Open_CommandFile = QtWidgets.QAction(MainWindow)
         self.Menu_File_Open_CommandFile.setObjectName(_fromUtf8("Menu_File_Open_CommandFile"))
         self.Menu_File_Open_CommandFile.setText("Command File ...")
-        self.Menu_File_Open_CommandFile.triggered.connect(self.ui_action_open_command_file)
+        self.Menu_File_Open_CommandFile.triggered.connect(lambda:self.ui_action_open_command_file())
         self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFile)
+        self.Menu_File_Open.addSeparator()
+        # File / Open / Command File History menu
+        self.Menu_File_Open_CommandFileHistory_List = [QtWidgets.QAction(MainWindow) for i in range(0, 20)]
+        self.ui_init_file_open_recent_files()
+
         # File / Save menu
         self.Menu_File_Save = QtWidgets.QMenu(self.Menu_File)
         self.Menu_File_Save.setObjectName(_fromUtf8("Menu_File_Save"))
@@ -1215,7 +1224,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             "The GeoProcessor automates geospatial processing.",
             "About GeoProcessor")
 
-    def ui_action_open_command_file(self):
+    def ui_init_file_open_recent_files(self):
+        max = 20 if (len(self.app_session.read_history()) > 20) else len(self.app_session.read_history())
+        for i in range(0, max):
+            if (i >= len(self.app_session.read_history())):
+                filename = ""
+            else:
+                filename = str(self.app_session.read_history()[i])
+            self.Menu_File_Open_CommandFileHistory_List[i].setText(filename)
+            self.Menu_File_Open_CommandFile.setObjectName(_fromUtf8("Menu_File_Open_CommandFileHistory_Command_" + str(i)))
+            self.Menu_File_Open_CommandFileHistory_List[i].triggered.connect(lambda checked, filename=filename: self.ui_action_open_command_file(filename))
+            self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFileHistory_List[i])
+
+
+    def ui_action_open_command_file(self, filename=""):
         """
         Open a new command file. Each line of the command file is a separate item in the Command_List QList Widget.
 
@@ -1224,20 +1246,36 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Clear the items from the current Command_List widget.
         self.commands_List.clear()
 
-        # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
-        # of the command file is added to the cmd_filepath variable.
-        cmd_filepath = QtWidgets.QFileDialog.getOpenFileName()[0]
+        if(filename == ""):
+            # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
+            # of the command file is added to the cmd_filepath variable.
+            cmd_filepath = QtWidgets.QFileDialog.getOpenFileName()[0]
+        else:
+            cmd_filepath = filename
 
-        # Open and read the command file.
-        with open(cmd_filepath) as command_file:
+        try:
+            # Open and read the command file.
+            with open(cmd_filepath) as command_file:
 
-            read_data = command_file.readlines()
+                read_data = command_file.readlines()
 
-            # Iterate over the lines of the command file.
-            for line in read_data:
-                # Add the command string as an item to the Command_List widget.
-                # - whitespace on front side is OK
-                self.commands_List.addItem(line.rstrip())
+                # Iterate over the lines of the command file.
+                for line in read_data:
+                    # Add the command string as an item to the Command_List widget.
+                    # - whitespace on front side is OK
+                    self.commands_List.addItem(line.rstrip())
+        except Exception as e:
+            pass
+            # print(message)
+            #logging.exception(message, e, exc_info=True)
+            #message = "Error opening file: " + cmd_filepath
+            #response = qt_util.new_message_box(
+            #    QtWidgets.QMessageBox.Warning,
+            #    QtWidgets.QMessageBox.Ok,
+            #    message,
+            #    "Open Command File")
+
+
 
         # Update the command count and Command_List label to show that new commands were added to the workflow.
         self.update_ui_status_commands()
@@ -1247,6 +1285,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Set the last command file
         self.command_file_path = cmd_filepath
+
+        # Add command file to history
+        self.app_session.push_history(cmd_filepath)
+
+        # Update the recent files in the File... Open menu, for the next menu access
+        self.ui_init_file_open_recent_files()
+
 
     def ui_action_save_commands(self):
         """
@@ -1282,6 +1327,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Save the command file name for use as the working directory
             self.command_file_path = None
 
+            # Update command file history list in GUI
+            self.ui_init_file_open_recent_files()
+
+
     def ui_action_save_commands_as(self):
         """
         Saves the commands to a file.
@@ -1315,8 +1364,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         file.write(all_commands_string)
         file.close()
 
+        # Save the command file name in the command file history
+        self.app_session.push_history(self.saved_file)
+
         # Save the command file name for use as the working directory
         self.command_file_path = None
+
+        # Update the recent files in the File... Open menu, for the next menu access
+        self.ui_init_file_open_recent_files()
 
     def ui_action_view_documentation(self):
         """

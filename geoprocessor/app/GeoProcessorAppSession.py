@@ -47,6 +47,17 @@ class GeoProcessorAppSession(object):
         logging.info('Application folder is "' + app_folder + '"')
         return app_folder
 
+    def get_history_file(self):
+        """
+        Get the name of the command history file for the user.
+
+        Returns:
+            The name of the history file.
+        """
+        history_file = os.path.join(self.get_app_folder(), "command-file-history.txt")
+        logging.info('Command file history is"' + history_file + '"')
+        return history_file
+
     def get_log_file(self):
         """
         Get the name of the log file for the user.
@@ -81,3 +92,98 @@ class GeoProcessorAppSession(object):
         user_folder = os.path.expanduser("~")
         logging.info('User folder is "' + user_folder + '"')
         return user_folder
+
+    def push_history(self, command_file):
+        """
+        Push a new command file onto history. This reads the history, updates it, and writes it.
+        This is done because if multiple StateDMI sessions are running, the will share history.
+
+        :param command_file:
+            full path to command file that has been opened
+        """
+
+        # Read the history file from the .geoprocessor file
+        history = self.read_history()
+        # Add in the first position so it will show up first in the File... Open... menu
+        history.insert(0, command_file)
+
+        # Process from back so that old duplicates are removed and recent access is always at the top of the list
+        max = 100
+        i = len(history) - 1
+        for file in reversed(history):
+            if(i >= 1):
+                old = history[i]
+                if(i >= max):
+                    # Trim the history to the maximum
+                    del history[i]
+                elif(old == command_file or old == '' or old.startswith("#")):
+                    # Ignore comments, blank lines and duplicate to most recent access
+                    del history[i]
+                    i-=1
+            i-=1
+        self.write_history(history)
+
+    def read_history(self):
+        """
+        Read the history of command files that have been opened.
+
+        :return:
+            list of command files recently opened, newest first
+        """
+
+        #history_list = list(history.splitlines())
+
+        #for line in history_list:
+        #    if(line.startswith("#")):
+        #        history_list.remove(line)
+
+        #print(history_list)
+
+
+        try:
+            with open(self.get_history_file()) as f:
+                history = f.read().splitlines()
+                for line in history:
+                    if(line.startswith("#")):
+                        history.remove(line)
+                return history
+        except Exception as e:
+            #For now just swallow exception - may be because the history folder does not exist
+            #message = 'Exception opening command file history'
+            #print(message)
+            #logging.exception(message, e, exc_info=True)
+            return []
+
+    def write_history(self, history_list):
+        """
+        Write the history of command files that have been opened
+
+        :param history_list: a list of strings representing the history of command files
+        """
+
+        # Don't allow files to be created under root on Linux(?)
+
+        # History being written (?)
+
+        line_separator = "/"
+        string_builder = "# GeoProcessor command file history, most recent at top, shared between GeoProcessor instances\n"
+
+        try:
+            for s in history_list:
+                string_builder += s + "\n"
+            # Create the history folder if necessary
+            f = open(self.get_history_file(), "w")
+            folder = os.path.abspath(os.path.join(self.get_history_file(), '..'))
+            if not os.path.exists(folder):
+                if not os.makedirs(folder):
+                    # Unable to make folder
+                    return
+            try:
+                f.write(string_builder)
+            except Exception as e:
+                # Absorb exception for now
+                pass
+        except Exception as e:
+            message = 'Exception writing command file history'
+            print(message)
+            logging.exception(message, e, exc_info=True)

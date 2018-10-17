@@ -25,7 +25,7 @@
 # - warn if any repositories use Cygwin because mixing with Git for Windows can cause confusion in tools
 #
 
-version="1.0.0 2018-10-13"
+version="1.2.0 2018-10-16"
 
 # Parse the command parameters
 while getopts :hm:p:v opt; do
@@ -35,9 +35,11 @@ while getopts :hm:p:v opt; do
 			echo ""
 			echo "Usage:  git-check.sh -m mainRepo -p productHome"
 			echo ""
+			echo "    git-check.sh -m product-main-repo -p DevFolder/Product"
 			echo "    git-check.sh -m cdss-app-tstool-main -p cdss-dev/TSTool"
 			echo "         -m specifies the main repo name."
 			echo "         -p specifies the product home folder relative to HOME"
+			echo "            (a git-repos folder is assumed to exist under this)."
 			echo ""
 			echo "    -h prints the usage"
 			echo "    -v prints the version"
@@ -48,7 +50,7 @@ while getopts :hm:p:v opt; do
 			mainRepo=$OPTARG
 			;;
 		p) # product home
-			productHome=$OPTARG
+			productHomeFolder=$OPTARG
 			;;
 		v) # version
 			echo ""
@@ -83,6 +85,7 @@ done
 # - See colors:  https://en.wikipedia.org/wiki/ANSI_escape_code#Unix-like_systems
 # - Set the background to black to eensure that white background window will clearly show colors contrasting on black.
 actionColor='\e[0;40;33m' # 40=background black, 33=yellow
+actionWarnColor='\e[0;40;31m' # 40=background black, 31=red
 okColor='\e[0;40;32m' # 40=background black, 32=green
 colorEnd='\e[0m' # To switch back to default color
 
@@ -97,10 +100,11 @@ checkOperatingSystem()
 	fi
 	operatingSystem="unknown"
 	case "$(uname)" in
-		CYGWIN*) operatingSystem="cygwin";;
+		CYGWIN*)
+			operatingSystem="cygwin";;
 		MINGW*) operatingSystem="mingw";;
 	esac
-	echo "operatingSystem=$operatingSystem (used to check for Cygwin)"
+	echo "operatingSystem=$operatingSystem (used to check for Cygwin and filemode compatibility)"
 	if [ "${operatingSystem}" = "cygwin" ]
 	then
 		echo "RECOMMEND not using Cygwin git commands for development for this product"
@@ -132,7 +136,7 @@ checkCommandLineGitCompatibility()
 		if [ "${operatingSystem}" = "cygwin" ] && [ "${filemode}" = "false" ]
 		then
 			# Probably cloned using Git Bash or other Windows-centric Git client
-			echo "DO NOT USE CygWin command line git with this repo (was NOT cloned with Cygwin, filemode=false)."
+			echo -e "${actionWarnColor}DO NOT USE CygWin command line git with this repo (was likely NOT cloned with Cygwin, filemode=false).${colorEnd}"
 		elif [ "${operatingSystem}" = "cygwin" ] && [ "${filemode}" = "true" ]
 		then
 			# Probably cloned using Cygwin but for consistency recommend Windows-centric Git client
@@ -140,13 +144,13 @@ checkCommandLineGitCompatibility()
 		elif [ "${operatingSystem}" = "mingw" ] && [ "${filemode}" = "true" ]
 		then
 			# Probably cloned using Cygwin but for consistency recommend Windows-centric Git client
-			echo "USE CygWin command line git with this repo (was cloned with Cygwin, filemode=true)."
+			echo "${actionWarnColor}USE CygWin command line git with this repo (was likely cloned with Cygwin, filemode=true).${colorEnd}"
 		elif [ "${operatingSystem}" = "mingw" ] && [ "${filemode}" = "false" ]
 		then
 			# Probably cloned using Git Bash or other Windows-centric Git client so OK
 			echo "USE Git Bash or other Windows git client with this repo (filemode=false)."
 		else
-			echo "Unhandled operating system ${operatingSystem} - no git use recommendations provided."
+			echo "${actionColor}Unhandled operating system ${operatingSystem} - no git use recommendations provided.${colorEnd}"
 		fi
 	fi
 }
@@ -186,15 +190,51 @@ checkWorkingFiles()
 
 # Function to check the status of local compared to remote repository
 # - see:  https://stackoverflow.com/questions/3258243/check-if-pull-needed-in-git
+# - Code from above was used as is with some additional lines for checks out output messages
 checkRepoStatus()
 {
+	# Current branch
+	currentRepo=`git branch | grep \* | cut -d ' ' -f2`
+	# Repo that is the master, to which all work flows - used to check whether on a branch
+	masterRepo="master"
+
+	if [ ! "${currentRepo}" == "${masterRepo}" ]
+	then
+		echo -e "${actionColor}Branch:  ${currentRepo}${colorEnd}"
+		echo -e "${actionColor}May need to pull remote before merging this branch.  Rerun check on master before merging this branch.${colorEnd}"
+	else
+		echo "Branch:  ${masterRepo}"
+	fi
+
 	# Get the remote information
 	git remote update
 	# Start code from above StackOverflow article
+	errorCount=0
 	UPSTREAM=${1:-'@{u}'}
 	LOCAL=$(git rev-parse @)
+	if [ "$?" -ne "0" ]
+	then
+		errorCount=`expr ${errorCount} + 1`
+	fi
 	REMOTE=$(git rev-parse "$UPSTREAM")
+	if [ "$?" -ne "0" ]
+	then
+		errorCount=`expr ${errorCount} + 1`
+	fi
 	BASE=$(git merge-base @ "$UPSTREAM")
+	if [ "$?" -ne "0" ]
+	then
+		errorCount=`expr ${errorCount} + 1`
+	fi
+
+	# There may be errors in the Git commands if working in a branch but there is no remote.
+	# For example, this might be a local feature/topic branch that is checked out from master.
+	if [ "${errorCount}" -ne "0" ]
+	then
+		echo -e "${actionColor}Error checking upstream repository.${colorEnd}"
+		echo -e "${actionColor}May be a local branch that has not been pushed to remote.${colorEnd}"
+		
+	fi
 
 	repoCount=`expr ${repoCount} + 1`
 	if [ "$LOCAL" = "$REMOTE" ]; then
@@ -235,7 +275,7 @@ echo ""
 # Check the operating system
 checkOperatingSystem
 
-if [ -z "${productHome}" ]
+if [ -z "${productHomeFolder}" ]
 then
 	echo ""
 	echo "The product home is not specified - exiting."
@@ -251,23 +291,34 @@ if [ "${operatingSystem}" = "cygwin" ]
 	# Expect product files to be in Windows user files location (/cygdrive/...), not Cygwin user files (/home/...)
 	home2="/cygdrive/C/Users/$USER"
 fi
-# Product home is relative to the users files in a standard CDSS development files location
-productHomeAbs="$home2/${productHome}"
+# Product home is relative to the users files in a standard development files location
+# $HOME/
+#    DevFiles/
+#      ProductHome/
+#        git-repoos/
+#          repo-name1/
+#          repo-name2/
+#          ...
+productHomeFolderAbs="$home2/${productHomeFolder}"
+# Location of git repositories
+# - currently assume that there is a "git-repos" folder under the product home folder
+# - may allow this to be dynamic with a passed in scrip parameter
+gitReposFolder="${productHomeFolderAbs}/git-repos"
 # Main repository in a group of repositories for a product
 # - this is where the product repository list file will live
-mainRepoAbs="${productHomeAbs}/git-repos/${mainRepo}"
+mainRepoAbs="${gitReposFolder}/${mainRepo}"
 # The following is a list of repositories including the main repository
 # - one repo per line, no URL, just the repo name
 # - repositories must have previously been cloned to local files
-repoList="${mainRepoAbs}/build-util/product-repo-list.txt"
+repoListFile="${mainRepoAbs}/build-util/product-repo-list.txt"
 
 # Check for local folder existence and exit if not as expected
 # - ensures that other logic will work as expected in folder structure
 
-if [ ! -d "${productHomeAbs}" ]
+if [ ! -d "${productHomeFolderAbs}" ]
 	then
 	echo ""
-	echo "Product home folder does not exist:  ${productHomeAbs}"
+	echo "Product home folder does not exist:  ${productHomeFolderAbs}"
 	echo "Exiting."
 	echo ""
 	exit 1
@@ -280,10 +331,10 @@ if [ ! -d "${mainRepoAbs}" ]
 	echo ""
 	exit 1
 fi
-if [ ! -f "${repoList}" ]
+if [ ! -f "${repoListFile}" ]
 	then
 	echo ""
-	echo "Product repo list file does not exist:  ${repoList}"
+	echo "Product repo list file does not exist:  ${repoListFile}"
 	echo "Exiting."
 	echo ""
 	exit 1
@@ -321,7 +372,7 @@ do
 		continue
 	fi
 	# Check the status on the specific repository
-	productRepoFolder="${productHomeAbs}/git-repos/${repoName}"
+	productRepoFolder="${gitReposFolder}/${repoName}"
 	echo "================================================================================"
 	echo "Checking status of repo:  $repoName"
 	if [ ! -d "${productRepoFolder}" ]
@@ -339,18 +390,23 @@ do
 		checkCommandLineGitCompatibility
 	fi
 #done 
-done < ${repoList}
+done < ${repoListFile}
 
 echo ""
 echo "================================================================================"
 echo "Summary of all repositories - see above for details"
-echo "================================================================================"
 # Print a message to encourage not using Cygwin to clone repositories
 if [ "${cygwinRepoCount}" -ne "0" ]
 then
 	echo "Number of Cygwin-cloned repos is ${cygwinRepoCount}.  See above for recommendations."
 fi
 # Print message to alert about attention needed on any repository
+# Don't need to color the number of repositories
+echo "Product home folder: ${productHomeFolderAbs}"
+echo "Product Git repositories folder: ${gitReposFolder}"
+echo "Repository list file: ${repoListFile}"
+echo "================================================================================"
+echo "Number of repositories:                                                   ${repoCount}"
 if [ "${upToDateRepoCount}" -eq "${repoCount}" ]
 then
 	echo -e "Number of up-to-date repositories:                                        ${okColor}${upToDateRepoCount}${colorEnd}"

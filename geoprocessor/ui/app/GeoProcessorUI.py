@@ -529,7 +529,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Open_CommandFile = QtWidgets.QAction(main_window)
         self.Menu_File_Open_CommandFile.setObjectName(_fromUtf8("Menu_File_Open_CommandFile"))
         self.Menu_File_Open_CommandFile.setText("Command File ...")
-        self.Menu_File_Open_CommandFile.triggered.connect(self.ui_action_open_command_file)
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\','/')
         icon_path = icon_path + "/images/baseline_folder_open_black_18dp.png"
         self.Menu_File_Open_CommandFile.setIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))

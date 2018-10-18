@@ -537,6 +537,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Open.addSeparator()
         # File / Open / Command File History menu
         self.Menu_File_Open_CommandFileHistory_List = [QtWidgets.QAction(main_window) for i in range(0, 20)]
+        for i in range(0, 20):
+            qt_action = QtWidgets.QAction(main_window)
+            # Initially assigned a callback function so that it can be cleared in the first step of reassinging
+            # a new callback in ui_init_file_open_recent()
+            qt_action.triggered.connect(lambda:self.ui_action_open_command_file(""))
+            self.Menu_File_Open_CommandFileHistory_List[i] = qt_action
         self.ui_init_file_open_recent_files()
 
         # File / Save menu
@@ -1320,6 +1326,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 filename = ""
             else:
                 filename = str(self.app_session.read_history()[i])
+            self.Menu_File_Open_CommandFileHistory_List[i].triggered.disconnect()
             self.Menu_File_Open_CommandFileHistory_List[i].setText(filename)
             self.Menu_File_Open_CommandFile.setObjectName(_fromUtf8("Menu_File_Open_CommandFileHistory_Command_" + str(i)))
             self.Menu_File_Open_CommandFileHistory_List[i].triggered.connect(lambda checked, filename=filename: self.ui_action_open_command_file(filename))
@@ -1364,7 +1371,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             #    message,
             #    "Open Command File")
 
-
+        # Push new command onto history
+        self.app_session.push_history(cmd_filepath)
 
         # Update the command count and Command_List label to show that new commands were added to the workflow.
         self.update_ui_status_commands()
@@ -1377,6 +1385,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Set the title for the main window
         self.ui_set_main_window_title('"' + cmd_filepath + '"')
+
+        # Update recently opened files in file menu
+        self.ui_init_file_open_recent_files()
 
     def ui_action_print_commands(self):
         """
@@ -1612,5 +1623,4 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         row_num = str(self.results_Tables_Table.rowCount())
         slct_row_num = str(len(set(index.row() for index in self.results_Tables_Table.selectedIndexes())))
         self.results_Tables_GroupBox.setTitle("Tables ({} Tables, {} selected)".format(row_num, slct_row_num))
-
 

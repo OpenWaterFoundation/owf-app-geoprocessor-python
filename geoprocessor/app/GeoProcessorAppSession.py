@@ -107,10 +107,12 @@ class GeoProcessorAppSession(object):
         # Add in the first position so it will show up first in the File... Open... menu
         history.insert(0, command_file)
 
+        #print("Command File: " + command_file)
+
         # Process from back so that old duplicates are removed and recent access is always at the top of the list
+        #print("History before loop: " +  str(history))
         max = 100
-        i = len(history) - 1
-        for file in reversed(history):
+        for i in reversed(list(range(0, len(history)))):
             if(i >= 1):
                 old = history[i]
                 if(i >= max):
@@ -120,7 +122,6 @@ class GeoProcessorAppSession(object):
                     # Ignore comments, blank lines and duplicate to most recent access
                     del history[i]
                     i-=1
-            i-=1
         self.write_history(history)
 
     def read_history(self):

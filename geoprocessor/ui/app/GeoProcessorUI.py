@@ -916,6 +916,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             "parameters using ${Property} notation (see command documentation). ")
         self.results_Properties_Table.horizontalHeaderItem(0).setText("Property Name")
         self.results_Properties_Table.horizontalHeaderItem(1).setText("Property Value")
+        #self.results_Properties_Table.horizontalHeader().setStyleSheet(
+            "QHeaderView::section { border-bottom: 1px solid black; }")
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Properties_Tab), "Properties")
 
         # Results - Tables tab
@@ -1168,6 +1170,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Set the property value as the attribute for the Property Value column.
             # - Have to cast to string because table is configured to display strings
             self.results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(prop_value)))
+
+        self.results_Properties_Table.sortByColumn(0, QtCore.Qt.AscendingOrder)
 
     def show_results_tables(self):
         """

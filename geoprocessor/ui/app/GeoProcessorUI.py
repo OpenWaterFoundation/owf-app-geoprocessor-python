@@ -917,7 +917,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_Table.horizontalHeaderItem(0).setText("Property Name")
         self.results_Properties_Table.horizontalHeaderItem(1).setText("Property Value")
         #self.results_Properties_Table.horizontalHeader().setStyleSheet(
-            "QHeaderView::section { border-bottom: 1px solid black; }")
+        #    "QHeaderView::section { border-bottom: 1px solid black; }")
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Properties_Tab), "Properties")
 
         # Results - Tables tab

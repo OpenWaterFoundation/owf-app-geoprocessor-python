@@ -8,7 +8,7 @@ from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFact
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import ReadGeoLayerFromGeoJSON_Editor
 from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCommandEditorFactory
 from pandas import DataFrame
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 import functools
 import logging
 import os
@@ -847,8 +847,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Maps_Tab),"Maps")
 
         # Results - Output Files tab
+        #self.results_OutputFiles_Scroll = QtWidgets.QScrollArea()
         self.results_OutputFiles_Tab = QtWidgets.QWidget()
         self.results_OutputFiles_Tab.setObjectName(_fromUtf8("results_OutputFiles_Tab"))
+        #self.results_OutputFiles_Scroll.setWidget(self.results_OutputFiles_Tab)
         self.results_OutputFiles_VerticalLayout = QtWidgets.QVBoxLayout(self.results_OutputFiles_Tab)
         self.results_OutputFiles_VerticalLayout.setObjectName(_fromUtf8("results_OutputFiles_VerticalLayout"))
         self.results_OutputFiles_GroupBox = QtWidgets.QGroupBox(self.results_OutputFiles_Tab)
@@ -857,6 +859,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_OutputFiles_GroupBox_VerticalLayout.setObjectName(_fromUtf8("results_OutputFiles_GroupBox_VerticalLayout"))
         self.results_OutputFiles_Table = QtWidgets.QTableWidget(self.results_OutputFiles_GroupBox)
         self.results_OutputFiles_Table.setObjectName(_fromUtf8("results_OutputFiles_Table"))
+        self.results_OutputFiles_Table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         single_column = True  # Like TSTool, only the filename
         if single_column:
             self.results_OutputFiles_Table.setColumnCount(1)
@@ -864,20 +867,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_OutputFiles_Table.setColumnCount(3)
         self.results_OutputFiles_Table.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
-        self.results_OutputFiles_Table.setHorizontalHeaderItem(0, item)
+        # self.results_OutputFiles_Table.setHorizontalHeaderItem(0, item)
         if not single_column:
             item = QtWidgets.QTableWidgetItem()
             self.results_OutputFiles_Table.setHorizontalHeaderItem(1, item)
             item = QtWidgets.QTableWidgetItem()
             self.results_OutputFiles_Table.setHorizontalHeaderItem(2, item)
-        self.results_OutputFiles_Table.horizontalHeader().setDefaultSectionSize(150)
-        self.results_OutputFiles_Table.horizontalHeader().setStretchLastSection(True)
+        # self.results_OutputFiles_Table.horizontalHeader().setDefaultSectionSize(150)
+        # self.results_OutputFiles_Table.horizontalHeader().setStretchLastSection(True)
+        self.results_OutputFiles_Table.horizontalHeader().hide()
         self.results_OutputFiles_GroupBox_VerticalLayout.addWidget(self.results_OutputFiles_Table)
         self.results_OutputFiles_VerticalLayout.addWidget(self.results_OutputFiles_GroupBox)
         self.results_TabWidget.addTab(self.results_OutputFiles_Tab, _fromUtf8(""))
         # Used to be in retranslateUi
         self.results_OutputFiles_GroupBox.setTitle("Output Files (0 Output Files, 0 selected)")
-        self.results_OutputFiles_Table.horizontalHeaderItem(0).setText("Output File ")
+        # self.results_OutputFiles_Table.horizontalHeaderItem(0).setText("Output File")
         if not single_column:
             self.results_OutputFiles_Table.horizontalHeaderItem(1).setText("File Type")
             self.results_OutputFiles_Table.horizontalHeaderItem(2).setText("Command Reference")
@@ -1137,6 +1141,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 else:
                     self.results_OutputFiles_Table.setItem(new_row_index, 1,
                                                            QtWidgets.QTableWidgetItem("Unknown"))
+        self.results_OutputFiles_Table.resizeColumnsToContents()
         self.update_ui_status_results_output_files()
 
     def show_results_properties(self):

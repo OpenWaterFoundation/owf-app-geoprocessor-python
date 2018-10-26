@@ -806,10 +806,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Used to be in retranslateUi
         self.results_GeoLayers_GroupBox.setTitle("GeoLayers (0 GeoLayers, 0 selected)")
         self.results_GeoLayers_Table.horizontalHeaderItem(0).setText("GeoLayer ID")
+        self.results_GeoLayers_Table.horizontalHeaderItem(0).setToolTip("GeoLayer ID")
         self.results_GeoLayers_Table.horizontalHeaderItem(1).setText("Geometry")
+        self.results_GeoLayers_Table.horizontalHeaderItem(1).setToolTip("Geometry")
         self.results_GeoLayers_Table.horizontalHeaderItem(2).setText("Feature Count")
+        self.results_GeoLayers_Table.horizontalHeaderItem(2).setToolTip("Feature Count")
         self.results_GeoLayers_Table.horizontalHeaderItem(3).setText("Coordinate Reference System")
+        self.results_GeoLayers_Table.horizontalHeaderItem(3).setToolTip("Coordinate Reference System")
         self.results_GeoLayers_Table.horizontalHeaderItem(4).setText("Command Reference")
+        self.results_GeoLayers_Table.horizontalHeaderItem(4).setToolTip("Command Reference")
+        self.results_GeoLayers_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_GeoLayers_Tab),"GeoLayers")
 
         # Results - Maps tab
@@ -841,9 +847,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Used to be in retranslateUi
         self.results_Maps_GroupBox.setTitle("Maps (0 Maps, 0 selected)")
         self.results_Maps_Table.horizontalHeaderItem(0).setText("Map ID")
+        self.results_Maps_Table.horizontalHeaderItem(0).setToolTip("Map ID")
         self.results_Maps_Table.horizontalHeaderItem(1).setText("Included GeoLayers")
+        self.results_Maps_Table.horizontalHeaderItem(1).setToolTip("Included GeoLayers")
         self.results_Maps_Table.horizontalHeaderItem(2).setText("Coordinate Reference System")
+        self.results_Maps_Table.horizontalHeaderItem(2).setToolTip("Coordinate Reference System")
         self.results_Maps_Table.horizontalHeaderItem(3).setText("Command Reference")
+        self.results_Maps_Table.horizontalHeaderItem(3).setToolTip("Command Reference")
+        self.results_Maps_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Maps_Tab),"Maps")
 
         # Results - Output Files tab
@@ -915,9 +926,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             "Processor properties control processing and can be used in some command " +
             "parameters using ${Property} notation (see command documentation). ")
         self.results_Properties_Table.horizontalHeaderItem(0).setText("Property Name")
+        self.results_Properties_Table.horizontalHeaderItem(0).setToolTip("Property Name")
         self.results_Properties_Table.horizontalHeaderItem(1).setText("Property Value")
-        #self.results_Properties_Table.horizontalHeader().setStyleSheet(
-        #    "QHeaderView::section { border-bottom: 1px solid black; }")
+        self.results_Properties_Table.horizontalHeaderItem(1).setToolTip("Property Value")
+        self.results_Properties_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Properties_Tab), "Properties")
 
         # Results - Tables tab
@@ -941,16 +953,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_Table.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
         self.results_Tables_Table.setHorizontalHeaderItem(3, item)
-        self.results_Tables_Table.horizontalHeader().setDefaultSectionSize(175)
+        #self.results_Tables_Table.horizontalHeader().setDefaultSectionSize(175)
+        self.results_Tables_Table.horizontalHeader().setStretchLastSection(True)
         self.results_Tables_GroupBox_VerticalLayout.addWidget(self.results_Tables_Table)
         self.results_Tables_VerticalLayout.addWidget(self.results_Tables_GroupBox)
         self.results_TabWidget.addTab(self.results_Tables_Tab, _fromUtf8(""))
         # Used to be in retranslateUi
         self.results_Tables_GroupBox.setTitle("Tables (0 Tables, 0 selected)")
         self.results_Tables_Table.horizontalHeaderItem(0).setText("Table ID")
+        self.results_Tables_Table.horizontalHeaderItem(0).setToolTip("Table ID")
         self.results_Tables_Table.horizontalHeaderItem(1).setText("Column Count")
+        self.results_Tables_Table.horizontalHeaderItem(1).setToolTip("Column Count")
         self.results_Tables_Table.horizontalHeaderItem(2).setText("Row Count")
+        self.results_Tables_Table.horizontalHeaderItem(2).setToolTip("Row Count")
         self.results_Tables_Table.horizontalHeaderItem(3).setText("Command Reference")
+        self.results_Tables_Table.horizontalHeaderItem(3).setToolTip("Command Reference")
+        self.results_Tables_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Tables_Tab), "Tables")
 
         # Add the Results tab to the vertical layout

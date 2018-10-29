@@ -798,6 +798,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_Table.setHorizontalHeaderItem(4, item)
         self.results_GeoLayers_Table.horizontalHeader().setCascadingSectionResizes(False)
         self.results_GeoLayers_Table.horizontalHeader().setDefaultSectionSize(200)
+        self.results_GeoLayers_Table.setSortingEnabled(True)
         self.results_GeoLayers_Table.horizontalHeader().setSortIndicatorShown(True)
         self.results_GeoLayers_Table.horizontalHeader().setStretchLastSection(True)
         self.results_GeoLayers_GroupBox_VerticalLayout.addWidget(self.results_GeoLayers_Table)
@@ -858,10 +859,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Maps_Tab),"Maps")
 
         # Results - Output Files tab
-        #self.results_OutputFiles_Scroll = QtWidgets.QScrollArea()
         self.results_OutputFiles_Tab = QtWidgets.QWidget()
         self.results_OutputFiles_Tab.setObjectName(_fromUtf8("results_OutputFiles_Tab"))
-        #self.results_OutputFiles_Scroll.setWidget(self.results_OutputFiles_Tab)
         self.results_OutputFiles_VerticalLayout = QtWidgets.QVBoxLayout(self.results_OutputFiles_Tab)
         self.results_OutputFiles_VerticalLayout.setObjectName(_fromUtf8("results_OutputFiles_VerticalLayout"))
         self.results_OutputFiles_GroupBox = QtWidgets.QGroupBox(self.results_OutputFiles_Tab)
@@ -878,21 +877,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_OutputFiles_Table.setColumnCount(3)
         self.results_OutputFiles_Table.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
-        # self.results_OutputFiles_Table.setHorizontalHeaderItem(0, item)
         if not single_column:
             item = QtWidgets.QTableWidgetItem()
             self.results_OutputFiles_Table.setHorizontalHeaderItem(1, item)
             item = QtWidgets.QTableWidgetItem()
             self.results_OutputFiles_Table.setHorizontalHeaderItem(2, item)
-        # self.results_OutputFiles_Table.horizontalHeader().setDefaultSectionSize(150)
-        # self.results_OutputFiles_Table.horizontalHeader().setStretchLastSection(True)
         self.results_OutputFiles_Table.horizontalHeader().hide()
         self.results_OutputFiles_GroupBox_VerticalLayout.addWidget(self.results_OutputFiles_Table)
         self.results_OutputFiles_VerticalLayout.addWidget(self.results_OutputFiles_GroupBox)
         self.results_TabWidget.addTab(self.results_OutputFiles_Tab, _fromUtf8(""))
         # Used to be in retranslateUi
         self.results_OutputFiles_GroupBox.setTitle("Output Files (0 Output Files, 0 selected)")
-        # self.results_OutputFiles_Table.horizontalHeaderItem(0).setText("Output File")
         if not single_column:
             self.results_OutputFiles_Table.horizontalHeaderItem(1).setText("File Type")
             self.results_OutputFiles_Table.horizontalHeaderItem(2).setText("Command Reference")
@@ -953,7 +948,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_Table.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
         self.results_Tables_Table.setHorizontalHeaderItem(3, item)
-        #self.results_Tables_Table.horizontalHeader().setDefaultSectionSize(175)
+        self.results_Tables_Table.setSortingEnabled(True)
+        self.results_Tables_Table.horizontalHeader().setSortIndicatorShown(True)
         self.results_Tables_Table.horizontalHeader().setStretchLastSection(True)
         self.results_Tables_GroupBox_VerticalLayout.addWidget(self.results_Tables_Table)
         self.results_Tables_VerticalLayout.addWidget(self.results_Tables_GroupBox)
@@ -1218,6 +1214,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Retrieve the number of rows in the Table and set as the attribute for the Row Count column.
             self.results_Tables_Table.setItem(new_row_index, 2,
                                               QtWidgets.QTableWidgetItem(str(table.count(returnCol=False))))
+
+        # Sort by Table ID
+        # self.results_Tables_Table.sortByColumn(0, QtCore.Qt.AscendingOrder)
 
         # Update the results count and results' tables' labels to show that the results were populated.
         self.update_ui_status_results_tables()

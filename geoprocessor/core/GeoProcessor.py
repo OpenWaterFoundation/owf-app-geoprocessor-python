@@ -30,6 +30,10 @@ class GeoProcessor(object):
         Construct/initialize a geoprocessor.
         """
 
+        # The array of command processor listeners to be called
+        # when the commands are running, to indicate progress.
+        self.command_processor_listener_array = []
+
         # Command list that holds all command objects to run.
         self.commands = []
 
@@ -83,6 +87,22 @@ class GeoProcessor(object):
         #   currently gets set when run_commands() is called.
         # - Should always work for RunCommands but what if nested several layers?
         self.env_properties = {}
+
+    def add_command_processor_listener(self, listener):
+        """
+        Add a command processor listener, to be notified when commands are started,
+        progress made, and completed. This is useful to allow calling software to report progress.
+        If the listener has already been added, the listener will remain in the list in the original order.
+        """
+
+        # Use arrays to make a little simpler than Vectors to use later...
+        if not listener:
+            return
+        # See if the listener has already been added...
+        for listener_from_array in self.command_processor_listener_array:
+            if listener_from_array == listener:
+                return
+        self.command_processor_listener_array.append(listener)
 
     def add_geolayer(self, geolayer):
         """
@@ -486,6 +506,42 @@ class GeoProcessor(object):
                 return c
         return None
 
+    def notify_command_processor_listener_of_command_cancelled(self, icommand, ncommand, command):
+        """
+        Notify registered command processor listeners about a command being cancelled.
+        :param icommand: the index (0+) of the command that is cancelled.
+        :param ncommand: the number of commands being processed. This will often be the
+        total number of commands but calling code may process a subset.
+        :param command: The instance of the nearest command that is being called.
+        """
+        if self.command_processor_listener_array:
+            for listener_from_array in self.command_processor_listener_array:
+                listener_from_array.command_cancelled(icommand, ncommand, command, -1.0, "Command cancelled")
+
+    def notify_command_processor_listener_of_command_completed(self, icommand, ncommand, command):
+        """
+        Notify registered command process listeners about a command completing.
+        :param icommand: The index (0+) of the command that is completing.
+        :param ncommand: The number of commands being processed. This will often be the
+        total number of commands but calling code may process a subset.
+        :param command: The instance of the command that is completing.
+        """
+        if self.command_processor_listener_array:
+            for listener_from_array in self.command_processor_listener_array:
+                listener_from_array.command_completed(icommand, ncommand, command, -1.0, "Command completed.")
+
+    def notify_command_processor_listeners_of_command_started(self, icommand, ncommand, command):
+        """
+        Notify registed command processor listeners about a command starting.
+        :param icommand: The index (0+) of the command that is starting.
+        :param ncommand: The number of commands being processed. This will often be the
+        total number of commands but calling code may process a subset.
+        :param command: The instance of the command that is starting
+        """
+        if self.command_processor_listener_array:
+            for listener_from_array in self.command_processor_listener_array:
+                listener_from_array.command_started(icommand, ncommand, command, -1.0, "Command started.")
+
     # TODO smalers 2017-12-31 Need to switch to CommandFileRunner class
     def process_command_file(self, command_file):
         """
@@ -816,6 +872,8 @@ class GeoProcessor(object):
                         command.command_string
                     # print(message)
                     logger.info(message)
+                    # notify listener that commands have started running
+                    self.notify_command_processor_listeners_of_command_started(i_command, n_commands, command)
 
                 command_class = command.__class__.__name__
 
@@ -977,6 +1035,8 @@ class GeoProcessor(object):
                     # Reevaluate If stack
                     If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
                     logger.debug('...back from running command')
+                # Notify listener that commands are finished running
+                self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
             except Exception as e:
                 # TODO smalers 2017-12-21 need to expand error handling by type but for now catch generically
                 # because Python exception handling uses fewer exception classes than Java dode to keep simple

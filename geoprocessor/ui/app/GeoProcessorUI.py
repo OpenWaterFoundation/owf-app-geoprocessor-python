@@ -7,7 +7,6 @@ import geoprocessor.ui.util.qt_util as qt_util
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import ReadGeoLayerFromGeoJSON_Editor
 from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCommandEditorFactory
-from pandas import DataFrame
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 import functools
 import logging
@@ -99,6 +98,76 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Update the command count and Command_List label to show that commands were deleted.
         self.update_ui_status_commands()
+
+    def command_started(self, icommand, ncommand, command, percent_completed, message):
+        """
+        Indicate that a command has started running.
+        :param icommand: The command index (0+) in the list of commands being run (see ncommand)
+        :param ncommand: The total number of commands to process (will be selected number if running selected)
+        :param command: The reference to the command that is starting to run,
+        provided to allow future interaction with the command.
+        :param percent_completed: If >= 0, the value can be used to indicate progress
+        running a list of commands (not the single command). If less than zero, then no estimate is given
+        for the percent complete and calling code can make its own determination
+        (e.g. ((icommand +1)/ncommand)*100).
+        :param message: A short message describing the status (e.g. "Running command...")
+        """
+
+        # command_completed updates the progress bar after each command.
+        # For this method, only reset the bounds of the progress bar and
+        # clear if the first command.
+        hint = ("Running command " + str(icommand + 1) + " of " + str(ncommand))
+        self.status_Label_Hint.setText(hint)
+        # TODO check if run commands is being run then also put the input file name to make it easeir to understand
+        # TODO progress. Check TSTool.
+        # run_commands()/additional info?
+        # Use level zero because the command processor is already printing a log message when each command is run
+
+        self.status_Label.setText("Wait")
+
+        if icommand == 0:
+            self.status_CommandWorkflow_StatusBar.setMinimum(0)
+            self.status_CommandWorkflow_StatusBar.setMaximum(ncommand)
+            self.status_CommandWorkflow_StatusBar.setValue(0)
+        # Set the tooltip text for the progress bar to indicate the numbers
+            self.status_CommandWorkflow_StatusBar.setToolTip(hint)
+        # Always set the value for the command progress sot hat it shows up
+        # as zero. The command_progress() method will do a better job of setting
+        # the limits and current status for each specific command.
+        self.status_CurrentCommand_StatusBar.setMinimum(0)
+        self.status_CurrentCommand_StatusBar.setMaximum(100)
+        self.status_CurrentCommand_StatusBar.setValue(0)
+
+    def command_completed(self, icommand, ncommand, command, percent_completed, message):
+        """
+        Indicate that a command has completed. The success/failure of the command is not indicated
+        :param icommand:  The command index (0+).
+        :param ncommand: The total number of commands to process
+        :param command: The reference to the command that is starting to run,
+        provided to allow future interaction with the command.
+        :param percent_completed:  If >= 0, the value can be used to indicate progress
+        running a list of commands (not the single command). If less than zero, then no
+        estimate is given for the percent complete and calling code can make its own determination
+        (e.g. ((icommand + 1)/ncommand)*100)
+        :param message:  A short message describing the status (e.g. "Running command...")
+        """
+
+        # Update the progress to indicate progress (1 to number of commands... completed).
+        self.status_CommandWorkflow_StatusBar.setValue(icommand + 1)
+        self.status_CurrentCommand_StatusBar.setValue(100)
+
+        # Set the tooltip text for the progress bar to indicate the numbers
+        hint = ("Completed command " + str(icommand + 1) + " of " + str(ncommand))
+        self.status_CommandWorkflow_StatusBar.setToolTip(hint)
+
+        self.status_Label.setText("Ready")
+        self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
+
+        # TODO Last command has complete or Exit() command. Check TSTool
+        # Is instance of exit_command ???
+        #if (icommand + 1) == ncommand:
+            # Last command has completed so refresh the time series results.
+            #command_string = command.
 
     # TODO smalers 2018-07-24 need to review this function
     def edit_command_editor(self):
@@ -317,6 +386,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             runtime_properties['WorkingDir'] = os.path.dirname(self.command_file_path)
             runtime_properties['InitialWorkingDir'] = os.path.dirname(self.command_file_path)
         self.gp.read_commands_from_command_list(cmd_string_list, runtime_properties)
+        self.gp.add_command_processor_listener(self)
 
     def setup_ui(self):
         """
@@ -998,42 +1068,45 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set the status bar
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName(_fromUtf8("statusbar"))
-        MainWindow.setStatusBar(self.statusbar)
+        self.statusbar.setStyleSheet("::item { border: none; }")
 
-        # Command status in footer of the window - currently uses a general Widget area
-        self.status_Widget = QtWidgets.QWidget(self.centralwidget)
-        self.status_GridLayout = QtWidgets.QGridLayout(self.status_Widget)
-        y_status = -1
-        y_status = y_status + 1
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.status_GridLayout.addItem(spacerItem1, y_status, 1, 1, 1)
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.status_GridLayout.addItem(spacerItem2, y_status, 2, 1, 1)
-        # Progress bar for overall workflow
-        self.status_CommandWorkflow_StatusBar = QtWidgets.QProgressBar(self.status_Widget)
+        self.status_GridLayout = QtWidgets.QGridLayout()
+
+        self.status_CommandWorkflow_StatusBar = QtWidgets.QProgressBar()
         self.status_CommandWorkflow_StatusBar.setObjectName(_fromUtf8("status_CommandWorkflow_StatusBar"))
         self.status_CommandWorkflow_StatusBar.setToolTip("Indicates progress processing the workflow")
         self.status_CommandWorkflow_StatusBar.setProperty("value", 0)
         self.status_CommandWorkflow_StatusBar.setInvertedAppearance(False)
-        self.status_GridLayout.addWidget(self.status_CommandWorkflow_StatusBar, y_status, 3, 1, 1)
-        # Progress bar for current command
-        self.status_CurrentCommand_StatusBar = QtWidgets.QProgressBar(self.status_Widget)
+
+        self.statusbar.addPermanentWidget(self.status_CommandWorkflow_StatusBar)
+
+        self.status_CurrentCommand_StatusBar = QtWidgets.QProgressBar()
         self.status_CurrentCommand_StatusBar.setObjectName(_fromUtf8("status_CurrentCommand_StatusBar"))
         self.status_CurrentCommand_StatusBar.setToolTip("Indicates progress within current command")
         self.status_CurrentCommand_StatusBar.setProperty("value", 0)
         self.status_CurrentCommand_StatusBar.setInvertedAppearance(False)
-        self.status_GridLayout.addWidget(self.status_CurrentCommand_StatusBar, y_status, 4, 1, 1)
-        # General status label
-        self.status_Label = QtWidgets.QLabel(self.status_Widget)
+
+        self.statusbar.addPermanentWidget(self.status_CurrentCommand_StatusBar)
+
+        self.status_Label = QtWidgets.QLabel()
         self.status_Label.setObjectName(_fromUtf8("status_Label"))
         self.status_Label.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.status_Label.setFrameShadow(QtWidgets.QFrame.Plain)
         self.status_Label.setLineWidth(2)
         self.status_Label.setText("Ready")
-        self.status_GridLayout.addWidget(self.status_Label, y_status, 5, 1, 1)
 
-        # Add the status component to the central widget
-        self.centralwidget_GridLayout.addWidget(self.status_Widget, y_centralwidget, 0, 1, 6)
+        self.statusbar.addPermanentWidget(self.status_Label)
+
+        self.status_Label_Hint = QtWidgets.QLabel()
+        self.status_Label_Hint.setObjectName(_fromUtf8("status_Label_hint"))
+        self.status_Label_Hint.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.status_Label_Hint.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.status_Label_Hint.setLineWidth(2)
+        self.status_Label_Hint.setText("Use the Run buttons to run the commands.")
+
+        self.statusbar.addWidget(self.status_Label_Hint)
+
+        MainWindow.setStatusBar(self.statusbar)
 
     def show_results(self):
         """

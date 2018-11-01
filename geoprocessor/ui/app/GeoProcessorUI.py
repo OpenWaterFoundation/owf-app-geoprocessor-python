@@ -12,6 +12,7 @@ import functools
 import logging
 import os
 import qgis.utils
+import qgis.gui
 import subprocess
 import sys
 import webbrowser
@@ -887,6 +888,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_Table.horizontalHeaderItem(4).setText("Command Reference")
         self.results_GeoLayers_Table.horizontalHeaderItem(4).setToolTip("Command Reference")
         self.results_GeoLayers_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
+        self.results_GeoLayers_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.results_GeoLayers_Table.customContextMenuRequested.connect(self.ui_action_geolayers_right_click)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_GeoLayers_Tab),"GeoLayers")
 
         # Results - Maps tab
@@ -1341,11 +1344,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
 
         # Create the Qt Menu object.
-        self.rightClickMenu = QtWidgets.QMenu()
+        self.rightClickMenu_Commands = QtWidgets.QMenu()
 
         # Add the menu options to the right-click menu.
-        menu_item_edit_command = self.rightClickMenu.addAction("Edit Command")
-        menu_item_delete_command = self.rightClickMenu.addAction("Delete Command")
+        menu_item_edit_command = self.rightClickMenu_Commands.addAction("Edit Command")
+        menu_item_delete_command = self.rightClickMenu_Commands.addAction("Delete Command")
 
         # Connect the menu options to the appropriate actions.
         menu_item_edit_command.triggered.connect(self.edit_command_editor)
@@ -1353,10 +1356,84 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Set the position on the right-click menu to appear at the click point.
         parent_pos = self.commands_List.mapToGlobal(QtCore.QPoint(0, 0))
-        self.rightClickMenu.move(parent_pos + q_pos)
+        self.rightClickMenu_Commands.move(parent_pos + q_pos)
 
         # Display the right-click menu.
-        self.rightClickMenu.show()
+        self.rightClickMenu_Commands.show()
+
+    def ui_action_geolayers_right_click(self, q_pos):
+
+        self.rightClickMenu_GeoLayers = QtWidgets.QMenu()
+
+        menu_item_map_command = self.rightClickMenu_GeoLayers.addAction("Open Map")
+
+        menu_item_map_command.triggered.connect(self.open_map_window)
+
+        parent_pos = self.results_GeoLayers_Table.mapToGlobal(QtCore.QPoint(0,0))
+        self.rightClickMenu_GeoLayers.move(parent_pos + q_pos)
+
+        self.rightClickMenu_GeoLayers.show()
+
+    def open_map_window(self):
+
+        print(self.results_GeoLayers_Table.currentRow())
+        curr_geolayer_index = self.results_GeoLayers_Table.currentRow()
+        qgis_geometry_layer = self.gp.geolayers[curr_geolayer_index].qgs_vector_layer
+        print(qgis_geometry_layer)
+
+        # Create Software/System Information Dialog Box
+        self.map_window = QtWidgets.QDialog()
+        self.map_window.resize(800, 500)
+        self.map_window.setWindowTitle("Map")
+        self.map_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+        self.map_window.setWindowIcon(QtGui.QIcon(icon_path))
+        self.map_window_widget = QtWidgets.QWidget(self.map_window)
+        self.map_window_widget.setGeometry(QtCore.QRect(30, 20, 731, 591))
+        self.canvas = qgis.gui.QgsMapCanvas(self.map_window_widget)
+        self.canvas.setCanvasColor(QtCore.Qt.white)
+        self.canvas.setLayers([qgis_geometry_layer])
+        #self.canvas_rect = qgis.core.QgsRectangle(50,50,100,100)
+        #self.canvas.setExtent(self.canvas_rect)
+
+        # Add tools
+        self.actionZoomIn = QtWidgets.QAction("Zoom in", self)
+        self.actionZoomOut = QtWidgets.QAction("Zoom out", self)
+        self.actionPan = QtWidgets.QAction("Pan", self)
+
+        self.actionZoomIn.setCheckable(True)
+        self.actionZoomOut.setCheckable(True)
+        self.actionPan.setCheckable(True)
+
+        self.actionZoomIn.triggered.connect(self.zoomIn)
+        self.actionZoomOut.triggered.connect(self.zoomOut)
+        self.actionPan.triggered.connect(self.pan)
+
+        self.toolbar = self.addToolBar("Canvas actions")
+        self.toolbar.addAction(self.actionZoomIn)
+        self.toolbar.addAction(self.actionZoomOut)
+        self.toolbar.addAction(self.actionPan)
+
+        # Add tools to canvas
+        self.toolPan = qgis.gui.QgsMapToolPan(self.canvas)
+        self.toolPan.setAction(self.actionPan)
+        self.toolZoomIn = qgis.gui.QgsMapToolZoom(self.canvas, False)  # false = in
+        self.toolZoomIn.setAction(self.actionZoomIn)
+        self.toolZoomOut = qgis.gui.QgsMapToolZoom(self.canvas, True)  # true = out
+        self.toolZoomOut.setAction(self.actionZoomOut)
+
+        QtCore.QMetaObject.connectSlotsByName(self.map_window)
+        self.map_window.show()
+
+    def zoomIn(self):
+        self.canvas.setMapTool(self.toolZoomIn)
+
+    def zoomOut(self):
+        self.canvas.setMapTool(self.toolZoomOut)
+
+    def pan(self):
+        self.canvas.setMapTool(self.toolPan)
+
 
     # TODO smalers 2018-07-24 need to make the dialog nicer, including live link to OWF website
     def ui_action_help_about(self):
@@ -1465,6 +1542,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.sys_info.resize(800, 500)
         self.sys_info.setWindowTitle("Software/System Information")
         self.sys_info.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+        self.sys_info.setWindowIcon(QtGui.QIcon(icon_path))
         self.sys_info_text_browser = QtWidgets.QTextBrowser(self.sys_info)
         self.sys_info_text_browser.setGeometry(QtCore.QRect(25, 20, 750, 450))
         self.sys_info_text_browser.setText(properties)

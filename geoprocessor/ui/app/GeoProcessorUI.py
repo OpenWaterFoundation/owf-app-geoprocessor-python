@@ -820,6 +820,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Add Help menu to menubar
         self.menubar.addAction(self.Menu_Help.menuAction())
 
+        # Tools menu
+        self.Menu_Tools = QtWidgets.QMenu(self.menubar)
+        self.Menu_Tools.setObjectName(_fromUtf8("Menu_Tools"))
+        self.Menu_Tools.setTitle("Tools")
+        # Tools / View Log File menu
+        self.Menu_Tools_ViewLog = QtWidgets.QAction(main_window)
+        self.Menu_Tools_ViewLog.setObjectName(_fromUtf8("Menu_Tools_ViewLog"))
+        self.Menu_Tools_ViewLog.setText("View Log File")
+        self.Menu_Tools.addAction(self.Menu_Tools_ViewLog)
+        # TODO add action to button
+        #self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_help_about)
+        # Add Help menu to menubar
+        self.menubar.addAction(self.Menu_Tools.menuAction())
+
     def setup_ui_results(self, y_centralwidget):
         """
         Set up the Results area of the UI.

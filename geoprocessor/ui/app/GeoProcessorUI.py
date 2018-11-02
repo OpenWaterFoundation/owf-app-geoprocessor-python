@@ -1376,10 +1376,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
     def open_map_window(self):
 
-        print(self.results_GeoLayers_Table.currentRow())
         curr_geolayer_index = self.results_GeoLayers_Table.currentRow()
         qgis_geometry_layer = self.gp.geolayers[curr_geolayer_index].qgs_vector_layer
-        print(qgis_geometry_layer)
 
         # Create Software/System Information Dialog Box
         self.map_window = QtWidgets.QDialog()
@@ -1389,12 +1387,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
         self.map_window.setWindowIcon(QtGui.QIcon(icon_path))
         self.map_window_widget = QtWidgets.QWidget(self.map_window)
-        self.map_window_widget.setGeometry(QtCore.QRect(30, 20, 731, 591))
+        self.map_window_widget.setGeometry(QtCore.QRect(25, 20, 750, 450))
         self.canvas = qgis.gui.QgsMapCanvas(self.map_window_widget)
         self.canvas.setCanvasColor(QtCore.Qt.white)
-        self.canvas.setLayers([qgis_geometry_layer])
         #self.canvas_rect = qgis.core.QgsRectangle(50,50,100,100)
-        #self.canvas.setExtent(self.canvas_rect)
+        self.canvas.resize(750, 450)
+        #self.canvas.setExtent(qgis_geometry_layer.extent())
+        #self.canvas.setLayerSet([qgis.gui.QgsMapCanvasLayer(qgis_geometry_layer)])
 
         # Add tools
         self.actionZoomIn = QtWidgets.QAction("Zoom in", self)

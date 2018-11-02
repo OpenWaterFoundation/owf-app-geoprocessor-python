@@ -830,7 +830,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Tools_ViewLog.setText("View Log File")
         self.Menu_Tools.addAction(self.Menu_Tools_ViewLog)
         # TODO add action to button
-        #self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_help_about)
+        self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_view_log_file)
         # Add Help menu to menubar
         self.menubar.addAction(self.Menu_Tools.menuAction())
 
@@ -1707,6 +1707,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             message='Error viewing documentation for url "' + user_doc_url + '"'
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
+
+    def ui_action_view_log_file(self):
+        """
+        Opens the log file in the default text editor for operating system
+        """
+        logger = logging.getLogger(__name__)
+        print(logger.__str__())
+        os.system("start " + self.app_session.get_log_file())
+
 
     def ui_set_main_window_title(self, title):
         """

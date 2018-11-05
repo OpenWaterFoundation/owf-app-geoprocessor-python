@@ -222,6 +222,24 @@ def exit_qgis():
         qgs.exit()
 
 
+def get_extent_from_geolayers(selected_geolayers):
+    xmin = float("inf")
+    xmax = -float("inf")
+    ymin = float("inf")
+    ymax = -float("inf")
+    for layer in selected_geolayers:
+        extent = layer.extent()
+        if extent.xMinimum() < xmin:
+            xmin = extent.xMinimum()
+        if extent.xMaximum() > xmax:
+            xmax = extent.xMaximum()
+        if extent.yMinimum() < ymin:
+            ymin = extent.yMinimum()
+        if extent.yMaximum() > ymax:
+            ymax = extent.yMaximum()
+
+    return qgis.core.QgsRectangle(xmin, ymin, xmax, ymax)
+
 def get_features_matching_expression(qgsvectorlayer, qgs_expression):
     """
     Returns the QgsFeature objects of the features that match the input QgsExpression.

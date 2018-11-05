@@ -238,7 +238,16 @@ def get_extent_from_geolayers(selected_geolayers):
         if extent.yMaximum() > ymax:
             ymax = extent.yMaximum()
 
-    return qgis.core.QgsRectangle(xmin, ymin, xmax, ymax)
+    # Check if extent is single dimension
+    if xmin == xmax:
+        xmin -= 1.0
+        xmax += 1.0
+
+    if ymin == ymax:
+        ymin -= 1.0
+        ymax += 1.0
+
+    return qgis.core.QgsRectangle(xmin,ymin,xmax,ymax)
 
 def get_features_matching_expression(qgsvectorlayer, qgs_expression):
     """

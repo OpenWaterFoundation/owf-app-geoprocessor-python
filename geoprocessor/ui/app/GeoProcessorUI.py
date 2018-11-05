@@ -1367,88 +1367,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         menu_item_map_command = self.rightClickMenu_GeoLayers.addAction("Open Map")
 
-        menu_item_map_command.triggered.connect(self.open_map_window)
+        menu_item_map_command.triggered.connect(self.ui_action_open_map_window)
 
         parent_pos = self.results_GeoLayers_Table.mapToGlobal(QtCore.QPoint(0,0))
         self.rightClickMenu_GeoLayers.move(parent_pos + q_pos)
 
         self.rightClickMenu_GeoLayers.show()
-
-    def open_map_window(self):
-
-        curr_geolayer_index = self.results_GeoLayers_Table.currentRow()
-        self.qgis_geometry_layer = self.gp.geolayers[curr_geolayer_index].qgs_vector_layer
-
-        # Create Software/System Information Dialog Box
-        self.map_window = QtWidgets.QDialog()
-        self.map_window.resize(800, 500)
-        self.map_window.setWindowTitle("Map")
-        self.map_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-
-        self.map_window_layout = QtWidgets.QVBoxLayout(self.map_window)
-        self.map_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
-        self.map_window_layout.setObjectName(_fromUtf8("mapVerticalLayout"))
-
-        self.map_toolbar = QtWidgets.QToolBar()
-        self.map_window_layout.addWidget(self.map_toolbar)
-
-        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-        self.map_window.setWindowIcon(QtGui.QIcon(icon_path))
-
-        self.map_window_widget = QtWidgets.QWidget()
-        self.map_window_layout.addWidget(self.map_window_widget)
-        #self.map_window_widget = QtWidgets.QWidget(self.map_window)
-        self.map_window_widget.setGeometry(QtCore.QRect(25, 20, 750, 450))
-        self.canvas = qgis.gui.QgsMapCanvas(self.map_window_widget)
-        self.canvas.setCanvasColor(QtCore.Qt.white)
-        self.canvas_rect = qgis.core.QgsRectangle(50,50,100,100)
-        if not self.qgis_geometry_layer.isValid():
-            raise IOError
-        self.canvas.resize(750, 400)
-        self.canvas.setExtent(self.qgis_geometry_layer.extent())
-        self.canvas.setLayers([self.qgis_geometry_layer])
-        #self.canvas.setLayerSet([qgis.gui.QgsMapCanvasLayer(qgis_geometry_layer)])
-
-        # Add tools
-        self.actionZoomIn = QtWidgets.QAction("Zoom in", self)
-        self.actionZoomOut = QtWidgets.QAction("Zoom out", self)
-        self.actionPan = QtWidgets.QAction("Pan", self)
-
-        self.actionZoomIn.setCheckable(True)
-        self.actionZoomOut.setCheckable(True)
-        self.actionPan.setCheckable(True)
-
-        self.actionZoomIn.triggered.connect(self.zoomIn)
-        self.actionZoomOut.triggered.connect(self.zoomOut)
-        self.actionPan.triggered.connect(self.pan)
-
-        self.map_toolbar.addAction(self.actionZoomIn)
-        self.map_toolbar.addAction(self.actionZoomOut)
-        self.map_toolbar.addAction(self.actionPan)
-
-        # # Add tools to canvas
-        self.toolPan = qgis.gui.QgsMapToolPan(self.canvas)
-        self.toolPan.setAction(self.actionPan)
-        self.toolZoomIn = qgis.gui.QgsMapToolZoom(self.canvas, False)  # false = in
-        self.toolZoomIn.setAction(self.actionZoomIn)
-        self.toolZoomOut = qgis.gui.QgsMapToolZoom(self.canvas, True)  # true = out
-        self.toolZoomOut.setAction(self.actionZoomOut)
-
-        QtCore.QMetaObject.connectSlotsByName(self.map_window)
-        self.map_window_widget.resizeEvent = self.resize_map_window
-        self.map_window.show()
-
-    def resize_map_window(self, event):
-        self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())
-
-    def zoomIn(self):
-        self.canvas.setMapTool(self.toolZoomIn)
-
-    def zoomOut(self):
-        self.canvas.setMapTool(self.toolZoomOut)
-
-    def pan(self):
-        self.canvas.setMapTool(self.toolPan)
 
 
     # TODO smalers 2018-07-24 need to make the dialog nicer, including live link to OWF website
@@ -1571,15 +1495,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         #self.push_button.clicked.connect(lambda:self.copy_text(properties))
         QtCore.QMetaObject.connectSlotsByName(self.sys_info)
         # Reassign default resizeEvent() to resizeTextBox()
-        self.sys_info.resizeEvent = self.resize_text_box
+        self.sys_info.resizeEvent = self.ui_action_resize_text_box
         self.sys_info.show()
 
-    def resize_text_box(self, event):
-        self.sys_info_text_browser.resize(self.sys_info.width()-50, self.sys_info.height()-50)
-
-    def copy_text(self, text):
-        cmd='echo ' + text.strip() + '|clip'
-        return subprocess.check_call(cmd, shell=True)
+    # def copy_text(self, text):
+    #     cmd='echo ' + text.strip() + '|clip'
+    #     return subprocess.check_call(cmd, shell=True)
 
     def ui_action_new_command_file(self):
         """
@@ -1600,6 +1521,87 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Set the title for the main window
         self.ui_set_main_window_title("commands not saved")
+
+    def ui_action_map_resize(self, event):
+        self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())
+
+    def ui_action_map_zoomIn(self):
+        self.canvas.setMapTool(self.toolZoomIn)
+
+    def ui_action_map_zoomOut(self):
+        self.canvas.setMapTool(self.toolZoomOut)
+
+    def ui_action_map_pan(self):
+        self.canvas.setMapTool(self.toolPan)
+
+    def ui_action_open_map_window(self):
+
+        # Create map window dialog box
+        self.map_window = QtWidgets.QDialog()
+        self.map_window.resize(800, 500)
+        self.map_window.setWindowTitle("Map")
+        self.map_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        # Add icon
+        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+        self.map_window.setWindowIcon(QtGui.QIcon(icon_path))
+
+        # Create a vertical layout for the map window
+        self.map_window_layout = QtWidgets.QVBoxLayout(self.map_window)
+        self.map_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
+        self.map_window_layout.setObjectName(_fromUtf8("mapVerticalLayout"))
+
+        # Add toolbar to map window
+        self.map_toolbar = QtWidgets.QToolBar()
+        self.map_window_layout.addWidget(self.map_toolbar)
+
+        # Create a widget for the canvas and add it to map_window in the map_window_layout
+        self.map_window_widget = QtWidgets.QWidget()
+        self.map_window_layout.addWidget(self.map_window_widget)
+        self.map_window_widget.setGeometry(QtCore.QRect(25, 20, 750, 450))
+        # Create canvas and add it to the previously widget
+        self.canvas = qgis.gui.QgsMapCanvas(self.map_window_widget)
+        self.canvas.setCanvasColor(QtCore.Qt.white)
+        self.canvas.resize(750, 400)
+
+        # Retrive QgsVectorLayer from selected geolayer
+        curr_geolayer_index = self.results_GeoLayers_Table.currentRow()
+        qgis_geometry_layer = self.gp.geolayers[curr_geolayer_index].qgs_vector_layer
+        # Check if layer is valid
+        if not qgis_geometry_layer.isValid():
+            raise IOError
+        # Add QgsVectorLayer to the map canvas
+        self.canvas.setExtent(qgis_geometry_layer.extent())
+        self.canvas.setLayers([qgis_geometry_layer])
+
+        # Add tools for map canvas
+        self.actionZoomIn = QtWidgets.QAction("Zoom in", self)
+        self.actionZoomOut = QtWidgets.QAction("Zoom out", self)
+        self.actionPan = QtWidgets.QAction("Pan", self)
+
+        self.actionZoomIn.setCheckable(True)
+        self.actionZoomOut.setCheckable(True)
+        self.actionPan.setCheckable(True)
+
+        self.actionZoomIn.triggered.connect(self.ui_action_map_zoomIn)
+        self.actionZoomOut.triggered.connect(self.ui_action_map_zoomOut)
+        self.actionPan.triggered.connect(self.ui_action_map_pan)
+
+        self.map_toolbar.addAction(self.actionZoomIn)
+        self.map_toolbar.addAction(self.actionZoomOut)
+        self.map_toolbar.addAction(self.actionPan)
+
+        # # Add tools to canvas
+        self.toolPan = qgis.gui.QgsMapToolPan(self.canvas)
+        self.toolPan.setAction(self.actionPan)
+        self.toolZoomIn = qgis.gui.QgsMapToolZoom(self.canvas, False)  # false = in
+        self.toolZoomIn.setAction(self.actionZoomIn)
+        self.toolZoomOut = qgis.gui.QgsMapToolZoom(self.canvas, True)  # true = out
+        self.toolZoomOut.setAction(self.actionZoomOut)
+
+        QtCore.QMetaObject.connectSlotsByName(self.map_window)
+        # Assign a resize event to resize map canvas when dialog window is resized
+        self.map_window_widget.resizeEvent = self.ui_action_map_resize
+        self.map_window.show()
 
     def ui_init_file_open_recent_files(self):
         max = 20 if (len(self.app_session.read_history()) > 20) else len(self.app_session.read_history())
@@ -1725,6 +1727,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Update command file history list in GUI
             self.ui_init_file_open_recent_files()
 
+    def ui_action_resize_text_box(self, event):
+        self.sys_info_text_browser.resize(self.sys_info.width()-50, self.sys_info.height()-50)
 
     def ui_action_save_commands_as(self):
         """

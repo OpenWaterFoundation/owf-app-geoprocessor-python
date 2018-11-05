@@ -3,6 +3,7 @@ import platform
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.command_util as command_util
+import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.ui.util.qt_util as qt_util
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import ReadGeoLayerFromGeoJSON_Editor
@@ -1563,15 +1564,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.canvas.setCanvasColor(QtCore.Qt.white)
         self.canvas.resize(750, 400)
 
-        # Retrive QgsVectorLayer from selected geolayer
-        curr_geolayer_index = self.results_GeoLayers_Table.currentRow()
-        qgis_geometry_layer = self.gp.geolayers[curr_geolayer_index].qgs_vector_layer
-        # Check if layer is valid
-        if not qgis_geometry_layer.isValid():
-            raise IOError
-        # Add QgsVectorLayer to the map canvas
-        self.canvas.setExtent(qgis_geometry_layer.extent())
-        self.canvas.setLayers([qgis_geometry_layer])
+        # Retrive QgsVectorLayers from selected geolayers
+        selected_rows = self.results_GeoLayers_Table.selectedIndexes()
+        selected_geolayers = []
+        for row in selected_rows:
+            if not row.isValid():
+                raise IOError
+            selected_geolayers.append(self.gp.geolayers[row.row()].qgs_vector_layer)
+        # Get the extent for all the layers by calling qgis_util
+        extent = qgis_util.get_extent_from_geolayers(selected_geolayers)
+        self.canvas.setExtent(extent)
+        self.canvas.setLayers(selected_geolayers)
 
         # Add tools for map canvas
         self.actionZoomIn = QtWidgets.QAction("Zoom in", self)

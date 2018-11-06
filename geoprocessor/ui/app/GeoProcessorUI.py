@@ -1712,10 +1712,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Opens the log file in the default text editor for operating system
         """
-        logger = logging.getLogger(__name__)
-        print(logger.__str__())
-        os.system("start " + self.app_session.get_log_file())
 
+        os.startfile(self.app_session.get_log_file())
 
     def ui_set_main_window_title(self, title):
         """

@@ -1367,8 +1367,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.rightClickMenu_GeoLayers = QtWidgets.QMenu()
 
         menu_item_map_command = self.rightClickMenu_GeoLayers.addAction("Open Map")
+        menu_item_attributes = self.rightClickMenu_GeoLayers.addAction("Attributes")
 
         menu_item_map_command.triggered.connect(self.ui_action_open_map_window)
+        menu_item_attributes.triggered.connect(self.ui_action_open_attributes)
 
         parent_pos = self.results_GeoLayers_Table.mapToGlobal(QtCore.QPoint(0,0))
         self.rightClickMenu_GeoLayers.move(parent_pos + q_pos)
@@ -1522,6 +1524,57 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Set the title for the main window
         self.ui_set_main_window_title("commands not saved")
+
+    def ui_action_open_attributes(self):
+        # Create map window dialog box
+        self.attributes_window = QtWidgets.QDialog()
+        self.attributes_window.resize(800, 300)
+        self.attributes_window.setWindowTitle("Attributes")
+        self.attributes_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        # Add icon
+        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+        self.attributes_window.setWindowIcon(QtGui.QIcon(icon_path))
+
+        # Create a vertical layout for the map window
+        self.attributes_window_layout = QtWidgets.QVBoxLayout(self.attributes_window)
+        self.attributes_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
+        self.attributes_window_layout.setObjectName(_fromUtf8("mapVerticalLayout"))
+
+        # Get GeoLayer from Table
+        selected_row_index = self.results_GeoLayers_Table.currentRow()
+        selected_geolayer = self.gp.geolayers[selected_row_index]
+        selected_vector_layer = selected_geolayer.qgs_vector_layer
+
+        # Get features from vector layer
+        features = selected_vector_layer.getFeatures()
+        num_features = selected_vector_layer.featureCount()
+        # Get attribute field names
+        attribute_field_names = selected_geolayer.get_attribute_field_names()
+
+        # Create a table for attributes
+        self.attributes_table = QtWidgets.QTableWidget()
+        self.attributes_window_layout.addWidget(self.attributes_table)
+        self.attributes_table.setColumnCount(len(attribute_field_names))
+        self.attributes_table.setRowCount(num_features)
+
+        # Set Column Headers
+        for i, attribute_field in enumerate(attribute_field_names):
+            item = QtWidgets.QTableWidgetItem()
+            self.attributes_table.setHorizontalHeaderItem(i, item)
+            self.attributes_table.horizontalHeaderItem(i).setText(str(attribute_field))
+
+        # Customize Header Row
+        self.attributes_table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
+
+        # Retrieve attributes per feature and add them to the table
+        for i, feature in enumerate(features):
+            for j, attribute_field in enumerate(attribute_field_names):
+                attribute = feature[attribute_field]
+                item = QtWidgets.QTableWidgetItem(str(attribute))
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.attributes_table.setItem(i, j, item)
+
+        self.attributes_window.show()
 
     def ui_action_map_resize(self, event):
         self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())

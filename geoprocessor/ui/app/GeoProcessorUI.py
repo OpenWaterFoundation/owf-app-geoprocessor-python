@@ -1528,7 +1528,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_open_attributes(self):
         # Create map window dialog box
         self.attributes_window = QtWidgets.QDialog()
-        self.attributes_window.resize(800, 300)
+        self.attributes_window.resize(800, 500)
         self.attributes_window.setWindowTitle("Attributes")
         self.attributes_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         # Add icon

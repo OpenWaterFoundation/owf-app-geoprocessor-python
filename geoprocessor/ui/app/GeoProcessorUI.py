@@ -14,7 +14,6 @@ import logging
 import os
 import qgis.utils
 import qgis.gui
-import subprocess
 import sys
 import webbrowser
 import datetime
@@ -249,6 +248,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Update the command count and Command_List label to show that a command was added to the workflow.
             self.update_ui_status_commands()
 
+    # def keyPressEvent(self, event):
+    #     print("here")
+    #     if type(event) == QtGui.QKeyEvent:
+    #         print('hello world!')
+    #         print(event.key())
+    #         print(event.accept())
+    #     else:
+    #         event.ignore()
+
     # TODO smalers 2018-07-24 need to review this function
     def new_command_editor(self, command_name):
         """
@@ -425,7 +433,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Row position within central widget grid layout
         # - will be incremented by one before adding a component so first use will set to zero
-        y_centralwidget = -1
+        y_centralwidget = 2
 
         # Set up the Catalog area
         #y_centralwidget = y_centralwidget + 1
@@ -448,6 +456,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Setup the Menu components
         self.setup_ui_menus(main_window)
+        # Setup the Toolbar components
+        self.setup_ui_toolbar(main_window)
 
         # Triggering the exit event on the main window closes the window.
         self.Menu_File_Exit.triggered.connect(main_window.close)
@@ -662,6 +672,25 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set the menu bar
         main_window.setMenuBar(self.menubar)
         self.menubar.addAction(self.Menu_File.menuAction())
+
+        # Edit menu
+        self.Menu_Edit = QtWidgets.QMenu(self.menubar)
+        self.Menu_Edit.setObjectName(_fromUtf8("Menu_Edit"))
+        self.Menu_Edit.setTitle("Edit")
+
+        # Edit menu
+        self.Menu_Edit = QtWidgets.QMenu(self.menubar)
+        self.Menu_Edit.setObjectName(_fromUtf8("Menu_Edit"))
+        self.Menu_Edit.setTitle("Edit")
+        # Edit / Format menu
+        self.Menu_Edit_Format = QtWidgets.QAction(main_window)
+        self.Menu_Edit_Format.setObjectName(_fromUtf8("Menu_Tools_ViewLog"))
+        self.Menu_Edit_Format.setText("Format")
+        self.Menu_Edit.addAction(self.Menu_Edit_Format)
+        # TODO add action to button
+        #self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_view_log_file)
+        # Add Help menu to menubar
+        self.menubar.addAction(self.Menu_Edit.menuAction())
 
         # Commands menu
         self.Menu_Commands = QtWidgets.QMenu(self.menubar)
@@ -1126,6 +1155,59 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         MainWindow.setStatusBar(self.statusbar)
 
+    def setup_ui_toolbar(self, main_window):
+        """
+        Setup UI Toolbar
+        :param main_window:
+        """
+
+        icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
+        icon_path = icon_path + "/images/baseline_format_indent_increase_black_18dp.png"
+        self.increase_indent_button = QtWidgets.QAction(QtGui.QIcon(QtGui.QPixmap(icon_path)), "Increase Indent", self)
+        icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
+        icon_path = icon_path + "/images/baseline_format_indent_decrease_black_18dp.png"
+        self.decrease_indent_button = QtWidgets.QAction(QtGui.QIcon(QtGui.QPixmap(icon_path)), "Decrease Indent", self)
+
+        self.increase_indent_button.triggered.connect(self.increase_indent_command_line)
+        self.decrease_indent_button.triggered.connect(self.decrease_indent_command_line)
+
+        self.toolbar = self.addToolBar("Toolbar Actions")
+        self.toolbar.addAction(self.decrease_indent_button)
+        self.toolbar.addAction(self.increase_indent_button)
+
+        self.toolbar.setMovable(False)
+        self.toolbar.setStyleSheet("background: white;")
+        self.toolbar.setMaximumHeight(30)
+
+    def increase_indent_command_line(self):
+        """
+        Add an indent to the front of the command string
+        """
+        TAB = "    "
+        # Retrive QgsVectorLayers from selected geolayers
+        commands_list_selected = self.commands_List.selectedItems()
+        for command in commands_list_selected:
+            current_command = command.text()
+            current_command = TAB + current_command
+            command.setText(current_command)
+
+        self.update_ui_status_commands()
+
+    def decrease_indent_command_line(self):
+        """
+        If the string is indented remove the indent from the front of the string
+        """
+        # Retrive QgsVectorLayers from selected geolayers
+        commands_list_selected = self.commands_List.selectedItems()
+        for command in commands_list_selected:
+            current_command = command.text()
+            front_of_string = current_command[:4]
+            if front_of_string == '    ':
+                current_command = current_command[4:]
+            command.setText(current_command)
+
+        self.update_ui_status_commands()
+
     def show_results(self):
         """
         Populates the Results tables of the UI to reflect results of running the GeoProcessor, including
@@ -1364,10 +1446,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Add the menu options to the right-click menu.
         menu_item_edit_command = self.rightClickMenu_Commands.addAction("Edit Command")
         menu_item_delete_command = self.rightClickMenu_Commands.addAction("Delete Command")
+        self.rightClickMenu_Commands.addSeparator()
+        menu_item_increase_indent_command = self.rightClickMenu_Commands.addAction("Increase Indent")
+        menu_item_decrease_indent_command = self.rightClickMenu_Commands.addAction("Decrease Indent")
 
         # Connect the menu options to the appropriate actions.
         menu_item_edit_command.triggered.connect(self.edit_command_editor)
         menu_item_delete_command.triggered.connect(self.clear_command_from_rightclick)
+        menu_item_increase_indent_command.triggered.connect(self.increase_indent_command_line)
+        menu_item_decrease_indent_command.triggered.connect(self.decrease_indent_command_line)
 
         # Set the position on the right-click menu to appear at the click point.
         parent_pos = self.commands_List.mapToGlobal(QtCore.QPoint(0, 0))

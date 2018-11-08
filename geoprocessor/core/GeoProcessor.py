@@ -649,6 +649,8 @@ class GeoProcessor(object):
         # Iterate over each line in the command file.
         for command_file_string in command_file_strings:
 
+            command_file_string = command_file_string.strip()
+
             # Initialize the command object (without parameters).
             # Work is done in the GeoProcessorCommandFactory class.
             command_object = command_factory.new_command(command_file_string, True)

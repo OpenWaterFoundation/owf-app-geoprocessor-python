@@ -986,10 +986,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_OutputFiles_GroupBox_VerticalLayout.setObjectName(_fromUtf8("results_OutputFiles_GroupBox_VerticalLayout"))
         self.results_OutputFiles_Table = QtWidgets.QTableWidget(self.results_OutputFiles_GroupBox)
         self.results_OutputFiles_Table.setObjectName(_fromUtf8("results_OutputFiles_Table"))
-        self.results_OutputFiles_Table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         single_column = True  # Like TSTool, only the filename
         if single_column:
-            self.results_OutputFiles_Table.setColumnCount(1)
+            self.results_OutputFiles_Table.setColumnCount(2)
         else:
             self.results_OutputFiles_Table.setColumnCount(3)
         self.results_OutputFiles_Table.setRowCount(0)
@@ -999,6 +998,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_OutputFiles_Table.setHorizontalHeaderItem(1, item)
             item = QtWidgets.QTableWidgetItem()
             self.results_OutputFiles_Table.setHorizontalHeaderItem(2, item)
+        self.results_OutputFiles_Table.horizontalHeader().setStretchLastSection(False)
         self.results_OutputFiles_Table.horizontalHeader().hide()
         self.results_OutputFiles_GroupBox_VerticalLayout.addWidget(self.results_OutputFiles_Table)
         self.results_OutputFiles_VerticalLayout.addWidget(self.results_OutputFiles_GroupBox)
@@ -1019,16 +1019,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_GroupBox.setObjectName(_fromUtf8("results_Properties_GroupBox"))
         self.results_Properties_GroupBox_VerticalLayout = QtWidgets.QVBoxLayout(self.results_Properties_GroupBox)
         self.results_Properties_GroupBox_VerticalLayout.setObjectName(_fromUtf8("results_Properties_GroupBox_VerticalLayout"))
+        # Assign a resize event to resize map canvas when dialog window is resized
         self.results_Properties_Table = QtWidgets.QTableWidget(self.results_Properties_GroupBox)
         self.results_Properties_Table.setAlternatingRowColors(True)
         self.results_Properties_Table.setObjectName(_fromUtf8("results_Properties_Table"))
-        self.results_Properties_Table.setColumnCount(2)
+        self.results_Properties_Table.setColumnCount(3)
         self.results_Properties_Table.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.results_Properties_Table.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
         self.results_Properties_Table.setHorizontalHeaderItem(1, item)
-        self.results_Properties_Table.horizontalHeader().setStretchLastSection(True)
+        item = QtWidgets.QTableWidgetItem()
+        self.results_Properties_Table.setHorizontalHeaderItem(2, item)
+        self.results_Properties_Table.horizontalHeader().setStretchLastSection(False)
         self.results_Properties_Table.verticalHeader().setStretchLastSection(False)
         self.results_Properties_GroupBox_VerticalLayout.addWidget(self.results_Properties_Table)
         self.results_Properties_Tab_VerticalLayout.addWidget(self.results_Properties_GroupBox)
@@ -1042,6 +1045,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_Table.horizontalHeaderItem(1).setText("Property Value")
         self.results_Properties_Table.horizontalHeaderItem(1).setToolTip("Property Value")
         self.results_Properties_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
+        # Hide last column to ensure horizontal scroll
+        self.results_Properties_Table.setColumnWidth(2, 0)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Properties_Tab), "Properties")
 
         # Results - Tables tab
@@ -1359,6 +1364,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(prop_value)))
 
         self.results_Properties_Table.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        self.results_Properties_Table.resizeColumnsToContents()
+        self.update_ui_status_results_properties()
 
     def show_results_tables(self):
         """
@@ -1978,6 +1985,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.update_ui_status_results_geolayers()
         self.update_ui_status_results_maps()
         self.update_ui_status_results_output_files()
+        self.update_ui_status_results_properties()
         self.update_ui_status_results_tables()
 
     def update_ui_status_commands(self):
@@ -2061,6 +2069,24 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         slct_row_num = str(len(self.results_OutputFiles_Table.selectedIndexes()))
         self.results_OutputFiles_GroupBox.setTitle(
             "Output Files ({} Output Files, {} selected)".format(row_num, slct_row_num))
+
+        # Hide last column to ensure horizontal scroll
+        self.results_OutputFiles_Table.setColumnWidth(1, 0)
+
+    def update_ui_status_results_properties(self):
+        """
+        Update the UI status for Results / GeoLayers area.
+
+        Returns: None
+        """
+
+        # Count the total and selected number of rows within the Properties table. Update the label to reflect counts.
+        row_num = str(self.results_Properties_Table.rowCount())
+        # slct_row_num = str(len(set(index.row() for index in self.results_GeoLayers_Table.selectedIndexes())))
+        slct_row_num = str(len(self.results_Properties_Table.selectedIndexes()))
+        self.results_Properties_GroupBox.setTitle("Properties ({} Properties, {} selected)".format(row_num, slct_row_num))
+
+        self.results_Properties_Table.setColumnWidth(2,0)
 
     def update_ui_status_results_tables(self):
         """

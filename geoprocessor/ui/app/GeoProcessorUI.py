@@ -2018,7 +2018,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         commands_with_warnings = 0
         self.commands_GroupBox.setTitle(
             #"Commands ({} commands, {} selected, {} with failures, {} with warnings)".format(
-            "Commands ({} commands, {} selected".format(
+            "Commands ({} commands, {} selected)".format(
                 # total_commands, selected_commands, commands_with_failures, commands_with_warnings))
                 total_commands, selected_commands))
 

@@ -1838,6 +1838,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
             # of the command file is added to the cmd_filepath variable.
             cmd_filepath = QtWidgets.QFileDialog.getOpenFileName()[0]
+            if not cmd_filepath:
+                return
         else:
             cmd_filepath = filename
 

@@ -76,6 +76,41 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # All event handlers and connections are configured in the setup_ui*() functions grouped by component.
 
+    def command_decrease_indent(self):
+        """
+        If the string is indented remove the indent from the front of the string
+        """
+        # Retrive QgsVectorLayers from selected geolayers
+        commands_list_selected = self.commands_List.selectedItems()
+        for command in commands_list_selected:
+            current_command = command.text()
+            front_of_string = current_command[:4]
+            if front_of_string == '    ':
+                current_command = current_command[4:]
+            command.setText(current_command)
+
+        # Show that command file has been edited
+        self.ui_update_main_window_title_modified()
+        self.command_file_modified = True
+        self.update_ui_status_commands()
+
+    def command_increase_indent(self):
+        """
+        Add an indent to the front of the command string
+        """
+        TAB = "    "
+        # Retrive QgsVectorLayers from selected geolayers
+        commands_list_selected = self.commands_List.selectedItems()
+        for command in commands_list_selected:
+            current_command = command.text()
+            current_command = TAB + current_command
+            command.setText(current_command)
+
+        # Show that command file has been modified
+        self.ui_update_main_window_title_modified()
+        self.command_file_modified = True
+        self.update_ui_status_commands()
+
     # TODO smalers 2018-07-24 need to review this function
     def clear_command_from_rightclick(self):
         """
@@ -96,9 +131,34 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Get the index of the right-clicked command (item) and remove it from the Command_List widget.
             index_of_item_to_remove = self.commands_List.currentRow()
             self.commands_List.takeItem(index_of_item_to_remove)
+            # Show that command file has been edited
+            self.ui_update_main_window_title_modified()
+            self.command_file_modified = True
 
         # Update the command count and Command_List label to show that commands were deleted.
         self.update_ui_status_commands()
+
+    def closeEvent(self, event):
+
+        if self.command_file_modified:
+            ret = QtWidgets.QMessageBox.question(self, 'PyQt5', 'Do you want to save the changes you made?',
+                                                    QtWidgets.QMessageBox.Yes |
+                                                    QtWidgets.QMessageBox.No |
+                                                    QtWidgets.QMessageBox.Cancel
+                                                )
+
+            if ret == QtWidgets.QMessageBox.Yes:
+                # Open Save Window
+                if self.new_command_file:
+                    self.ui_action_save_commands_as()
+                else:
+                    self.ui_action_save_commands()
+            if ret == QtWidgets.QMessageBox.Cancel:
+                event.ignore()
+            else:
+                event.accept()
+
+
 
     def command_started(self, icommand, ncommand, command, percent_completed, message):
         """
@@ -245,6 +305,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Add the command string to the Command_List widget in the same location as the previous command item.
             self.commands_List.insertItem(index, command_string)
 
+            # Update window title to show that command file has been edited
+            self.ui_update_main_window_title_modified()
+            self.command_file_modified = True
+
             # Update the command count and Command_List label to show that a command was added to the workflow.
             self.update_ui_status_commands()
 
@@ -320,6 +384,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Add the command string to the Command_List widget.
                 # - TODO smalers 2018-07-29 need to insert in front of selected command
                 self.commands_List.addItem(command_string)
+                # Show that command file has been edited
+                self.ui_update_main_window_title_modified()
+                self.command_file_modified = True
                 # Update the state
                 self.update_ui_status_commands()
             else:
@@ -1173,8 +1240,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = icon_path + "/images/baseline_format_indent_decrease_black_18dp.png"
         self.decrease_indent_button = QtWidgets.QAction(QtGui.QIcon(QtGui.QPixmap(icon_path)), "Decrease Indent", self)
 
-        self.increase_indent_button.triggered.connect(self.increase_indent_command_line)
-        self.decrease_indent_button.triggered.connect(self.decrease_indent_command_line)
+        self.increase_indent_button.triggered.connect(self.command_increase_indent)
+        self.decrease_indent_button.triggered.connect(self.command_decrease_indent)
 
         self.toolbar = self.addToolBar("Toolbar Actions")
         self.toolbar.addAction(self.decrease_indent_button)
@@ -1183,35 +1250,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.toolbar.setMovable(False)
         self.toolbar.setStyleSheet("background: white;")
         self.toolbar.setMaximumHeight(30)
-
-    def increase_indent_command_line(self):
-        """
-        Add an indent to the front of the command string
-        """
-        TAB = "    "
-        # Retrive QgsVectorLayers from selected geolayers
-        commands_list_selected = self.commands_List.selectedItems()
-        for command in commands_list_selected:
-            current_command = command.text()
-            current_command = TAB + current_command
-            command.setText(current_command)
-
-        self.update_ui_status_commands()
-
-    def decrease_indent_command_line(self):
-        """
-        If the string is indented remove the indent from the front of the string
-        """
-        # Retrive QgsVectorLayers from selected geolayers
-        commands_list_selected = self.commands_List.selectedItems()
-        for command in commands_list_selected:
-            current_command = command.text()
-            front_of_string = current_command[:4]
-            if front_of_string == '    ':
-                current_command = current_command[4:]
-            command.setText(current_command)
-
-        self.update_ui_status_commands()
 
     def show_results(self):
         """
@@ -1460,8 +1498,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Connect the menu options to the appropriate actions.
         menu_item_edit_command.triggered.connect(self.edit_command_editor)
         menu_item_delete_command.triggered.connect(self.clear_command_from_rightclick)
-        menu_item_increase_indent_command.triggered.connect(self.increase_indent_command_line)
-        menu_item_decrease_indent_command.triggered.connect(self.decrease_indent_command_line)
+        menu_item_increase_indent_command.triggered.connect(self.command_increase_indent)
+        menu_item_decrease_indent_command.triggered.connect(self.command_decrease_indent)
 
         # Set the position on the right-click menu to appear at the click point.
         parent_pos = self.commands_List.mapToGlobal(QtCore.QPoint(0, 0))
@@ -1633,6 +1671,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set the title for the main window
         self.ui_set_main_window_title("commands not saved")
 
+        # New Command File
+        self.new_command_file = True
+
     def ui_action_open_attributes(self):
         # Create map window dialog box
         self.attributes_window = QtWidgets.QDialog()
@@ -1789,6 +1830,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         # Clear the items from the current Command_List widget.
         self.commands_List.clear()
+
+        self.new_command_file = False
+        self.command_file_modified = False
 
         if(filename == ""):
             # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
@@ -1974,6 +2018,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:  None
         """
         self.setWindowTitle("GeoProcessor - " + title)  # Initial title
+
+    def ui_update_main_window_title_modified(self):
+        """
+        Update the main window title to reflect that the command file has been modified.
+        :return:
+        """
+        window_title = self.windowTitle()
+        window_title_end = window_title[-10:]
+        if window_title_end != "(modified)" and window_title != "GeoProcessor - commands not saved":
+            window_title_modified = window_title + " (modified)"
+            self.setWindowTitle(window_title_modified)
 
     def update_ui_status(self):
         """

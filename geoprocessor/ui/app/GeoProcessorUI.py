@@ -1853,7 +1853,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 for line in read_data:
                     # Add the command string as an item to the Command_List widget.
                     # - whitespace on front side is OK
-                    self.commands_List.addItem(line.rstrip())
+                    item = QtWidgets.QListWidgetItem()
+                    item.setText(line.rstrip())
+                    if line.rstrip()[0] == '#':
+                        item.setForeground(QtGui.QColor(68,121,206))
+                    self.commands_List.addItem(item)
         except Exception as e:
             pass
             # print(message)

@@ -5,12 +5,14 @@ import geoprocessor.util.app_util as app_util
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.ui.util.qt_util as qt_util
+from functools import partial
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import ReadGeoLayerFromGeoJSON_Editor
 from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCommandEditorFactory
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 import functools
 import logging
+import math
 import os
 import qgis.utils
 import qgis.gui
@@ -76,6 +78,99 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # All event handlers and connections are configured in the setup_ui*() functions grouped by component.
 
+    # TODO smalers 2018-07-24 need to review this function
+    def clear_command_from_rightclick(self):
+        """
+        Clear the right-clicked command from the Command List widget.
+
+        Returns: None
+        """
+
+        # Open a message box to confirm with the user that they want to delete the command.
+        response = qt_util.new_message_box(
+            QtWidgets.QMessageBox.Question,
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            "Do you want to delete this command?",
+            "Clear Commands")
+
+        # If the user confirms that they want to delete the command, continue. Otherwise, pass.
+        if response == QtWidgets.QMessageBox.Yes:
+            # Get the index of the right-clicked command (item) and remove it from the Command_List widget.
+            index_of_item_to_remove = self.commands_List.currentRow()
+            # remove item from command list
+            self.commands_List.takeItem(index_of_item_to_remove)
+            # remove item from gutter
+            self.gutter.takeItem(index_of_item_to_remove)
+            # remove item from numbered list and update numbers
+            self.delete_numbered_list_item(index_of_item_to_remove)
+            # Show that command file has been edited
+            self.ui_update_main_window_title_modified()
+            # set modified to true for checking when user exits main window
+            self.command_file_modified = True
+
+        # Update the command count and Command_List label to show that commands were deleted.
+        self.update_ui_status_commands()
+
+    def closeEvent(self, event):
+        """
+        When exiting out of the main window do checks to see if the command file has been modified.
+        If modified warn user and ask if command file should be saved.
+        :param event: close event
+        :return: None
+        """
+        # If modified, open dialog box to ask if user wants to save file
+        if self.command_file_modified:
+            ret = QtWidgets.QMessageBox.question(self, 'PyQt5', 'Do you want to save the changes you made?',
+                                                    QtWidgets.QMessageBox.Yes |
+                                                    QtWidgets.QMessageBox.No |
+                                                    QtWidgets.QMessageBox.Cancel
+                                                )
+
+            # If user selects yes to save commands
+            if ret == QtWidgets.QMessageBox.Yes:
+                # Open Save Window
+                if self.new_command_file:
+                    self.ui_action_save_commands_as()
+                else:
+                    self.ui_action_save_commands()
+            # If user selects cancel do not exit or save
+            if ret == QtWidgets.QMessageBox.Cancel:
+                event.ignore()
+            # If user selects no exit application
+            else:
+                event.accept()
+
+    def command_completed(self, icommand, ncommand, command, percent_completed, message):
+        """
+        Indicate that a command has completed. The success/failure of the command is not indicated
+        :param icommand:  The command index (0+).
+        :param ncommand: The total number of commands to process
+        :param command: The reference to the command that is starting to run,
+        provided to allow future interaction with the command.
+        :param percent_completed:  If >= 0, the value can be used to indicate progress
+        running a list of commands (not the single command). If less than zero, then no
+        estimate is given for the percent complete and calling code can make its own determination
+        (e.g. ((icommand + 1)/ncommand)*100)
+        :param message:  A short message describing the status (e.g. "Running command...")
+        """
+
+        # Update the progress to indicate progress (1 to number of commands... completed).
+        self.status_CommandWorkflow_StatusBar.setValue(icommand + 1)
+        self.status_CurrentCommand_StatusBar.setValue(100)
+
+        # Set the tooltip text for the progress bar to indicate the numbers
+        hint = ("Completed command " + str(icommand + 1) + " of " + str(ncommand))
+        self.status_CommandWorkflow_StatusBar.setToolTip(hint)
+
+        self.status_Label.setText("Ready")
+        self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
+
+        # TODO Last command has complete or Exit() command. Check TSTool
+        # Is instance of exit_command ???
+        #if (icommand + 1) == ncommand:
+            # Last command has completed so refresh the time series results.
+            #command_string = command.
+
     def command_decrease_indent(self):
         """
         If the string is indented remove the indent from the front of the string
@@ -111,54 +206,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.command_file_modified = True
         self.update_ui_status_commands()
 
-    # TODO smalers 2018-07-24 need to review this function
-    def clear_command_from_rightclick(self):
+    def command_list_vertical_scroll(self, vs, value):
         """
-        Clear the right-clicked command from the Command List widget.
-
-        Returns: None
+        Connect the vertical scrolling with command list and numbered list
+        :param vs: vertical scroll bar to update
+        :param value: the value to set the vertical scroll bar to
+        :return:
         """
-
-        # Open a message box to confirm with the user that they want to delete the command.
-        response = qt_util.new_message_box(
-            QtWidgets.QMessageBox.Question,
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            "Do you want to delete this command?",
-            "Clear Commands")
-
-        # If the user confirms that they want to delete the command, continue. Otherwise, pass.
-        if response == QtWidgets.QMessageBox.Yes:
-            # Get the index of the right-clicked command (item) and remove it from the Command_List widget.
-            index_of_item_to_remove = self.commands_List.currentRow()
-            self.commands_List.takeItem(index_of_item_to_remove)
-            # Show that command file has been edited
-            self.ui_update_main_window_title_modified()
-            self.command_file_modified = True
-
-        # Update the command count and Command_List label to show that commands were deleted.
-        self.update_ui_status_commands()
-
-    def closeEvent(self, event):
-
-        if self.command_file_modified:
-            ret = QtWidgets.QMessageBox.question(self, 'PyQt5', 'Do you want to save the changes you made?',
-                                                    QtWidgets.QMessageBox.Yes |
-                                                    QtWidgets.QMessageBox.No |
-                                                    QtWidgets.QMessageBox.Cancel
-                                                )
-
-            if ret == QtWidgets.QMessageBox.Yes:
-                # Open Save Window
-                if self.new_command_file:
-                    self.ui_action_save_commands_as()
-                else:
-                    self.ui_action_save_commands()
-            if ret == QtWidgets.QMessageBox.Cancel:
-                event.ignore()
-            else:
-                event.accept()
-
-
+        vs.setValue(value)
 
     def command_started(self, icommand, ncommand, command, percent_completed, message):
         """
@@ -199,36 +254,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.status_CurrentCommand_StatusBar.setMaximum(100)
         self.status_CurrentCommand_StatusBar.setValue(0)
 
-    def command_completed(self, icommand, ncommand, command, percent_completed, message):
+    def delete_numbered_list_item(self, index):
         """
-        Indicate that a command has completed. The success/failure of the command is not indicated
-        :param icommand:  The command index (0+).
-        :param ncommand: The total number of commands to process
-        :param command: The reference to the command that is starting to run,
-        provided to allow future interaction with the command.
-        :param percent_completed:  If >= 0, the value can be used to indicate progress
-        running a list of commands (not the single command). If less than zero, then no
-        estimate is given for the percent complete and calling code can make its own determination
-        (e.g. ((icommand + 1)/ncommand)*100)
-        :param message:  A short message describing the status (e.g. "Running command...")
+        Delete the row in the numbered list and update the other numbers
+        :param index: numbered list item to be deleted
+        :return:
         """
+        # Remove item at index
+        self.numbered_List.takeItem(index)
+        # Get the length of the numbered list
+        count = self.numbered_List.count()
 
-        # Update the progress to indicate progress (1 to number of commands... completed).
-        self.status_CommandWorkflow_StatusBar.setValue(icommand + 1)
-        self.status_CurrentCommand_StatusBar.setValue(100)
-
-        # Set the tooltip text for the progress bar to indicate the numbers
-        hint = ("Completed command " + str(icommand + 1) + " of " + str(ncommand))
-        self.status_CommandWorkflow_StatusBar.setToolTip(hint)
-
-        self.status_Label.setText("Ready")
-        self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
-
-        # TODO Last command has complete or Exit() command. Check TSTool
-        # Is instance of exit_command ???
-        #if (icommand + 1) == ncommand:
-            # Last command has completed so refresh the time series results.
-            #command_string = command.
+        # Update numbers past the deleted row
+        for i in range(index, count):
+            num = int(self.numbered_List.item(i).text())
+            num-=1
+            self.numbered_List.item(i).setText(str(num))
 
     # TODO smalers 2018-07-24 need to review this function
     def edit_command_editor(self):
@@ -262,7 +303,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # If there are not parameters, set the input_parameter_dictionary to the command_parameter_values.
         if not input_parameter_dictionary:
-            input_parameter_dictionary = ui.command_parameter_values
+                input_parameter_dictionary = ui.command_parameter_values
 
         # Apply the command-specific dialog design to the QDialog window.
         ui.setupUi(d)
@@ -312,6 +353,26 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Update the command count and Command_List label to show that a command was added to the workflow.
             self.update_ui_status_commands()
 
+    def gutter_error_at_row(self, item):
+        """
+        Set gutter row to red if there is a command line error on this row.
+        :param item: QListWidgetItem from the gutter representing the
+        command line row with error
+        :return: QListWidgetItem
+        """
+        item.setBackground(QtCore.Qt.red)
+        return item
+
+    def gutter_warning_at_row(self, item):
+        """
+        Set gutter row to yellow if there is a command line warning on this row.
+        :param item: QListWidgetItem from the gutter representing the
+        command line row with warning
+        :return: QListWidgetItem
+        """
+        item.setBackground(QtCore.Qt.yellow)
+        return item
+
     # def keyPressEvent(self, event):
     #     print("here")
     #     if type(event) == QtGui.QKeyEvent:
@@ -320,6 +381,70 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     #         print(event.accept())
     #     else:
     #         event.ignore()
+
+    def main_window_resize_event_resize_gutter(self):
+        # """
+        # Update the size of the gutter to ensure that it doesn't scroll and that it
+        # appropriately displays a good overview of all issues.
+        #
+        # :return: None
+        # """
+
+        # Get the current height of the gutter
+        current_height = self.gutter.height()
+        # Check the count of all
+        count = self.commands_List.count()
+        # Get the height of all items
+        current_items_height = 16 * count
+        # Make sure count is never 0, if so set to 1
+        if count == 0:
+            count = 1
+
+        item_height = math.floor(current_height / count)
+        if current_items_height > current_height - 4:
+            for i in range(0, self.commands_List.count()):
+                item = self.gutter.item(i)
+                item.setSizeHint(QtCore.QSize(-1, item_height))
+        else:
+            for i in range(0, self.commands_List.count()):
+                item = self.gutter.item(i)
+                item.setSizeHint(QtCore.QSize(-1, 16))
+
+        # update last item in list to always fill whole space, for better appearance
+        # and to also ensure there is never any scrolling
+        # could be improved upon in the future
+        # new gutter height
+        new_height = item_height * count
+        if new_height > current_height - 4:
+            # 4 offers as a buffer
+            last_item_height = item_height + (current_height - (new_height) - 4)
+            # update height of last item
+            self.gutter.item(count - 1).setSizeHint(QtCore.QSize(-1, last_item_height))
+
+    def main_window_resize_event_resize_numbered_list(self):
+        """
+        Add an extra row to numbered list if the command list area has a horizontal scroll
+        bar. If there isn't an extra row the two lists will get out of sync
+        :return: None
+        """
+
+        # Is horizontal scroll bar visible
+        scroll_bar_visible = self.commands_List.horizontalScrollBar().isVisible()
+        # Number of rows in numbered list
+        num_list_size = self.numbered_List.count()
+        # Number of rows in command lists
+        command_list_size = self.commands_List.count()
+
+        # If the horizontal scroll bar is visible and there the numbered list is the same size
+        # as the command list, add an extra row to keep the lists in sync. Otherwise, if no
+        # scroll bar and numbered list is bigger than command list remove a row.
+        if scroll_bar_visible:
+            if num_list_size == command_list_size:
+                item = QtWidgets.QListWidgetItem()
+                self.numbered_List.addItem(item)
+        else:
+            if num_list_size > command_list_size:
+                self.numbered_List.takeItem(command_list_size)
 
     # TODO smalers 2018-07-24 need to review this function
     def new_command_editor(self, command_name):
@@ -384,6 +509,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Add the command string to the Command_List widget.
                 # - TODO smalers 2018-07-29 need to insert in front of selected command
                 self.commands_List.addItem(command_string)
+
+                # Add to numbered list
+                count = self.numbered_List.count()
+                item = self.numbered_List.item(count - 1)
+                item.setText(str(count))
+                item.setTextAlignment(QtCore.Qt.AlignRight)
+
+                self.numbered_List.addItem('')
+
+                # Add line to gutter
+                item = QtWidgets.QListWidgetItem()
+                self.gutter.addItem(item)
+
                 # Show that command file has been edited
                 self.ui_update_main_window_title_modified()
                 self.command_file_modified = True
@@ -399,6 +537,51 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box(message)
             return
 
+    def numbered_list_error_at_row(self, item):
+        """
+        Add the error icon to the numbered list row with an error
+        :param item: QListWidgetItem representing row with command line with an error
+        :return: QListWidgetItem
+        """
+        # Get the error icon from path
+        icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
+        icon_path = icon_path + "/images/error.gif"
+        # Create icon
+        error_icon = QtGui.QIcon(icon_path)
+        # Add icon to QListWidgetItem
+        item.setIcon(error_icon)
+        return item
+
+    def numbered_list_warning_at_row(self, item):
+        """
+        Add the warning icon to the numbered list row with an warning
+        :param item: QListWidgetItem representing row with command line with an error
+        :return: QListWidgetItem
+        """
+        # Get the warning icon from path
+        icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
+        icon_path = icon_path + "/images/warning.gif"
+        # Create icon
+        error_icon = QtGui.QIcon(icon_path)
+        # Add icon to QListWidgetItem
+        item.setIcon(error_icon)
+        return item
+
+    def numbered_list_unknown_at_row(self, item):
+        """
+        Add the unknown icon to the numbered list row with an unknown
+        :param item: QListWidgetItem representing row with command line with an error
+        :return: QListWidgetItem
+        """
+        # Get the unknown icon from path
+        icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
+        icon_path = icon_path + "/images/unknown.gif"
+        # Create icon
+        error_icon = QtGui.QIcon(icon_path)
+        # Add icon to QListWidgetItem
+        item.setIcon(error_icon)
+        return item
+
     def processor_run_commands(self, run_selected=False):
         """
         Runs the commands from the Command_List widget within the GeoProcessor.
@@ -411,6 +594,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
+        logger = logging.getLogger(__name__)
         # If ALL of the commands should be run, continue.
         if run_selected:
             # Update the GeoProcessor's list of commands to include only the SELECTED commands in the Command_List
@@ -423,7 +607,26 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Runs the geoprocessor's processor_run_commands function to run the existing commands
         # that exist in the processor.
         print("Running commands in processor...")
-        self.gp.run_commands()
+
+        # Attempting to add logic to UI design. When running gp.run_commands()
+        # to detect any errors. Currently, if errors are caught they are caught by
+        # the following try, except but I am needing a way to determine with commands
+        # caused the errors.
+        #
+        # Once determining which lines contain error or warnings appropriate icons can be added
+        # to self.numbered_List QListWidget by using self.numbered_list_error_at_row(int) or
+        # self.numbered_list_warning_at_row(int) which both take the integer representing the
+        # row to add the appropriate icon to as a single parameter.
+        #
+        # In a similar manner gutter needs to be updated to display which command line has errors
+        # or warnings. Call self.gutter_error_at_row(int) or gutter_warning_at_row(int) where int
+        # represents the row where the command line with the error or warning is.
+        try:
+            self.gp.run_commands()
+        except Exception as e:
+            message = "Error running command in GeoProcessorUI.py"
+            logger.error(message, exc_info=True)
+        logger.info('...back from processor running commands.')
         print("...back from processor running commands.")
 
         # After commands have been run, update the UI Results section to reflect the output & intermediary products.
@@ -464,6 +667,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             runtime_properties['InitialWorkingDir'] = os.path.dirname(self.command_file_path)
         self.gp.read_commands_from_command_list(cmd_string_list, runtime_properties)
         self.gp.add_command_processor_listener(self)
+
+    def resizeEvent(self, event):
+        """
+        When window is resized update gutter and numbered list
+        :param event: Window resized event
+        :return: None
+        """
+        self.main_window_resize_event_resize_gutter()
+        self.main_window_resize_event_resize_numbered_list()
 
     def setup_ui(self):
         """
@@ -578,8 +790,24 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_GroupBox.setObjectName(_fromUtf8("commands_GroupBox"))
         self.commands_GroupBox.setTitle("Commands (0 commands, 0  selected, 0 with failures, 0 with warnings)")
         self.commands_GridLayout = QtWidgets.QGridLayout(self.commands_GroupBox)
+        self.commands_HBoxLayout_Commands = QtWidgets.QHBoxLayout()
+        self.commands_GridLayout.addLayout(self.commands_HBoxLayout_Commands, 0 , 0)
+        self.commands_HBoxLayout_Buttons = QtWidgets.QHBoxLayout()
+        self.commands_GridLayout.addLayout(self.commands_HBoxLayout_Buttons, 1, 0)
         y_commands = -1  # Row position within grid layout for commands area
-        self.commands_GridLayout.setObjectName(_fromUtf8("commands_GridLayout"))
+        self.commands_HBoxLayout_Commands.setObjectName(_fromUtf8("commands_GridLayout"))
+        self.commands_HBoxLayout_Commands.setSpacing(0)
+
+        # Numbered List
+        self.numbered_List = QtWidgets.QListWidget()
+        self.numbered_List.setFixedWidth(45)
+        self.numbered_List.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.numbered_List.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        #
+        self.numbered_List.mouseReleaseEvent = self.ui_action_numbered_list_clicked
+        self.numbered_List.setObjectName("numbered_list")
+        self.numbered_List.addItem('')
+        self.commands_HBoxLayout_Commands.addWidget(self.numbered_List)
 
         # Commands area list
         self.commands_List = QtWidgets.QListWidget(self.commands_GroupBox)
@@ -592,12 +820,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_List.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.commands_List.setProperty("isWrapping", False)
         self.commands_List.setLayoutMode(QtWidgets.QListView.SinglePass)
-        self.commands_List.setWordWrap(True)
+        self.commands_List.setWordWrap(False)
         self.commands_List.setSelectionRectVisible(False)
+        self.commands_List.mouseReleaseEvent = self.ui_action_commands_list_clicked
         self.commands_List.setObjectName(_fromUtf8("commands_List"))
         self.commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         y_commands = y_commands + 1
-        self.commands_GridLayout.addWidget(self.commands_List, y_commands, 0, 1, 4)
+        self.commands_HBoxLayout_Commands.addWidget(self.commands_List)
         # Define listeners to handle events
         # Listen for a change in item selection within the commands_List widget.
         self.commands_List.itemSelectionChanged.connect(self.update_ui_status_commands)
@@ -605,6 +834,23 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Connect right-click of commands_List widget item.
         self.commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.commands_List.customContextMenuRequested.connect(self.ui_action_command_list_right_click)
+
+        # Connect scrolling between commands list and numbered list
+        vs1 = self.commands_List.verticalScrollBar()
+        vs2 = self.numbered_List.verticalScrollBar()
+
+        vs1.valueChanged.connect(partial(self.command_list_vertical_scroll, vs2))
+        vs2.valueChanged.connect(partial(self.command_list_vertical_scroll, vs1))
+
+        # Gutter
+        self.gutter = QtWidgets.QListWidget(self.commands_GroupBox)
+        self.gutter.setFixedWidth(21)
+        self.gutter.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.gutter.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.gutter.setObjectName('gutter')
+        # Connect gutter click to custom gutter_clicked function
+        self.gutter.mouseReleaseEvent = self.ui_action_gutter_clicked
+        self.commands_HBoxLayout_Commands.addWidget(self.gutter)
 
         # Commands area buttons under the list
         self.commands_RunSelectedCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
@@ -615,7 +861,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_RunSelectedCommands_PushButton.setText("Run Selected Commands")
         self.commands_RunSelectedCommands_PushButton.setToolTip("Run selected commands from above to generate results.")
         y_commands = y_commands + 1
-        self.commands_GridLayout.addWidget(self.commands_RunSelectedCommands_PushButton, y_commands, 0, 1, 1)
+        self.commands_HBoxLayout_Buttons.addWidget(self.commands_RunSelectedCommands_PushButton)
         # Connect the Run Selected Commands button.
         self.commands_RunSelectedCommands_PushButton.clicked.connect(
             functools.partial(self.processor_run_commands, True))
@@ -625,13 +871,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_RunAllCommands_PushButton.setObjectName(_fromUtf8("commands_RunAllCommands_PushButton"))
         self.commands_RunAllCommands_PushButton.setText("Run All Commands")
         self.commands_RunAllCommands_PushButton.setToolTip("Run all commands from above to generate results.")
-        self.commands_GridLayout.addWidget(self.commands_RunAllCommands_PushButton, y_commands, 1, 1, 1)
+        self.commands_HBoxLayout_Buttons.addWidget(self.commands_RunAllCommands_PushButton)
         # Connect the Run All Commands button.
         self.commands_RunAllCommands_PushButton.clicked.connect(self.processor_run_commands, False)
 
         # Spacer makes sure that buttons on left and right are correctly positioned
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.commands_GridLayout.addItem(spacerItem, y_commands, 2, 1, 1)
+        self.commands_HBoxLayout_Buttons.addItem(spacerItem)
 
         self.commands_ClearCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
         self.commands_ClearCommands_PushButton.setEnabled(False)
@@ -639,7 +885,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_ClearCommands_PushButton.setText("Clear Commands")
         self.commands_ClearCommands_PushButton.setToolTip(
             "Clear selected commands.  Clear all commands if none are selected.")
-        self.commands_GridLayout.addWidget(self.commands_ClearCommands_PushButton, y_commands, 3, 1, 1)
+        self.commands_HBoxLayout_Buttons.addWidget(self.commands_ClearCommands_PushButton)
         # Connect the Clear Commands button.
         self.commands_ClearCommands_PushButton.clicked.connect(self.ui_action_clear_commands)
 
@@ -1447,6 +1693,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         Returns: None
         """
+
         selected_commands_count = len(self.commands_List.selectedIndexes())
         commands_count = self.commands_List.count()
         if selected_commands_count == 0 or selected_commands_count == commands_count:
@@ -1464,13 +1711,29 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # - Delete in reverse order so that overhead of shifting does not occur
                 for i in range(commands_count-1, -1, -1):
                     self.commands_List.takeItem(i)
+                    self.delete_numbered_list_item(i)
+                    self.gutter.takeItem(i)
         else:
             # Iterate over and remove each selected item (command strings)
             for selected_item in self.commands_List.selectedItems():
-                self.commands_List.takeItem(self.commands_List.row(selected_item))
+                index = self.commands_List.row(selected_item)
+                self.commands_List.takeItem(index)
+                self.delete_numbered_list_item(index)
+                self.gutter.takeItem(index)
 
         # Update the command count and Command_List label to show that commands were deleted.
         self.update_ui_status_commands()
+
+    def ui_action_commands_list_clicked(self, event):
+        """
+        When clicking on a command list item also select the same
+        row in the numbered list and gutter
+        :param event: Release click event from numbered list.
+        :return:
+        """
+        index = self.commands_List.currentRow()
+        self.numbered_List.setCurrentRow(index)
+        self.gutter.setCurrentRow(index)
 
     def ui_action_command_list_right_click(self, q_pos):
         """
@@ -1522,6 +1785,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.rightClickMenu_GeoLayers.move(parent_pos + q_pos)
 
         self.rightClickMenu_GeoLayers.show()
+
+    def ui_action_gutter_clicked(self, event):
+        """
+        When clicking on a gutter item also select the same
+        row in the command list and the numbered list
+        :param event:
+        :return: QListWidgetItem
+        """
+        index = self.gutter.currentRow()
+        self.numbered_List.setCurrentRow(index)
+        self.commands_List.setCurrentRow(index)
 
 
     # TODO smalers 2018-07-24 need to make the dialog nicer, including live link to OWF website
@@ -1644,12 +1918,41 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         #self.push_button.clicked.connect(lambda:self.copy_text(properties))
         QtCore.QMetaObject.connectSlotsByName(self.sys_info)
         # Reassign default resizeEvent() to resizeTextBox()
-        self.sys_info.resizeEvent = self.ui_action_resize_text_box
+        self.sys_info.resizeEvent = self.ui_action_resize_software_system_information_text_box
         self.sys_info.show()
 
     # def copy_text(self, text):
     #     cmd='echo ' + text.strip() + '|clip'
     #     return subprocess.check_call(cmd, shell=True)
+
+    def ui_action_map_pan(self):
+        """
+        Set map tool to pan
+        :return: None
+        """
+        self.canvas.setMapTool(self.toolPan)
+
+    def ui_action_map_resize(self, event):
+        """
+        Resize map canvas when map dialog box is resized
+        :param event: Resize event
+        :return: None
+        """
+        self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())
+
+    def ui_action_map_zoomIn(self):
+        """
+        Set map tool to zoom in
+        :return: None
+        """
+        self.canvas.setMapTool(self.toolZoomIn)
+
+    def ui_action_map_zoomOut(self):
+        """
+        Set map tool to zoom out
+        :return: None
+        """
+        self.canvas.setMapTool(self.toolZoomOut)
 
     def ui_action_new_command_file(self):
         """
@@ -1661,6 +1964,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Clear the items from the current Command_List widget.
         # TODO smalers 2018-07-29 check whether need to save the existing commands
         self.commands_List.clear()
+        self.numbered_List.clear()
+        self.gutter.clear()
 
         # Update the command count and Command_List label to show that new commands were added to the workflow.
         self.update_ui_status_commands()
@@ -1673,6 +1978,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # New Command File
         self.new_command_file = True
+
+    def ui_action_numbered_list_clicked(self, event):
+        """
+        When clicking on a numbered list item also select the same
+        row in the command list and the gutter
+        :param event: Release click event from numbered list.
+        :return:
+        """
+        index = self.numbered_List.currentRow()
+        self.commands_List.setCurrentRow(index)
+        self.gutter.setCurrentRow(index)
 
     def ui_action_open_attributes(self):
         # Create map window dialog box
@@ -1725,19 +2041,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.attributes_window.show()
 
-    def ui_action_map_resize(self, event):
-        self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())
-
-    def ui_action_map_zoomIn(self):
-        self.canvas.setMapTool(self.toolZoomIn)
-
-    def ui_action_map_zoomOut(self):
-        self.canvas.setMapTool(self.toolZoomOut)
-
-    def ui_action_map_pan(self):
-        self.canvas.setMapTool(self.toolPan)
-
     def ui_action_open_map_window(self):
+        """
+        Open a map window dialog box that displays the map layers from the selected GeoLayers
+        :return: None
+        """
 
         # Create map window dialog box
         self.map_window = QtWidgets.QDialog()
@@ -1808,20 +2116,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.map_window_widget.resizeEvent = self.ui_action_map_resize
         self.map_window.show()
 
-    def ui_init_file_open_recent_files(self):
-        max = 20 if (len(self.app_session.read_history()) > 20) else len(self.app_session.read_history())
-        for i in range(0, max):
-            if (i >= len(self.app_session.read_history())):
-                filename = ""
-            else:
-                filename = str(self.app_session.read_history()[i])
-            self.Menu_File_Open_CommandFileHistory_List[i].triggered.disconnect()
-            self.Menu_File_Open_CommandFileHistory_List[i].setText(filename)
-            self.Menu_File_Open_CommandFile.setObjectName(_fromUtf8("Menu_File_Open_CommandFileHistory_Command_" + str(i)))
-            self.Menu_File_Open_CommandFileHistory_List[i].triggered.connect(lambda checked, filename=filename: self.ui_action_open_command_file(filename))
-            self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFileHistory_List[i])
-
-
     def ui_action_open_command_file(self, filename=""):
         """
         Open a new command file. Each line of the command file is a separate item in the Command_List QList Widget.
@@ -1830,6 +2124,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         # Clear the items from the current Command_List widget.
         self.commands_List.clear()
+        self.numbered_List.clear()
+        self.gutter.clear()
 
         self.new_command_file = False
         self.command_file_modified = False
@@ -1850,7 +2146,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 read_data = command_file.readlines()
 
                 # Iterate over the lines of the command file.
-                for line in read_data:
+                for i, line in enumerate(read_data):
                     # Add the command string as an item to the Command_List widget.
                     # - whitespace on front side is OK
                     item = QtWidgets.QListWidgetItem()
@@ -1858,6 +2154,31 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     if line.rstrip()[0] == '#':
                         item.setForeground(QtGui.QColor(68,121,206))
                     self.commands_List.addItem(item)
+
+                    # Add numbers to numbered list
+                    i+=1
+                    item = QtWidgets.QListWidgetItem()
+                    item.setText(str(i))
+                    item.setTextAlignment(QtCore.Qt.AlignRight)
+                    item.setSizeHint(QtCore.QSize(-1, 16))
+                    if i == 9:
+                        item = self.numbered_list_error_at_row(item)
+                    if i == 2:
+                        item = self.numbered_list_unknown_at_row(item)
+                    if i == 12:
+                        item = self.numbered_list_warning_at_row(item)
+                    self.numbered_List.addItem(item)
+
+                    # Add items to gutter
+                    item = QtWidgets.QListWidgetItem()
+                    item.setSizeHint(QtCore.QSize(-1, 16))
+                    if i == 9:
+                        item = self.gutter_error_at_row(item)
+                    if i == 12:
+                        item = self.gutter_warning_at_row(item)
+                    self.gutter.addItem(item)
+
+                #self.numbered_List.addItem('')
         except Exception as e:
             pass
             # print(message)
@@ -1887,6 +2208,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Update recently opened files in file menu
         self.ui_init_file_open_recent_files()
 
+        # Update size of gutter
+        self.main_window_resize_event_resize_gutter()
+
     def ui_action_print_commands(self):
         """
         Print the command file.
@@ -1902,6 +2226,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Update the recent files in the File... Open menu, for the next menu access
         self.ui_init_file_open_recent_files()
+
+    def ui_action_resize_software_system_information_text_box(self, event):
+        """
+        Resize the text box for the Software/System Information dialog window.
+        :param event: Resize Event
+        :return: None
+        """
+        self.sys_info_text_browser.resize(self.sys_info.width()-50, self.sys_info.height()-50)
 
 
     def ui_action_save_commands(self):
@@ -1940,9 +2272,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             # Update command file history list in GUI
             self.ui_init_file_open_recent_files()
-
-    def ui_action_resize_text_box(self, event):
-        self.sys_info_text_browser.resize(self.sys_info.width()-50, self.sys_info.height()-50)
 
     def ui_action_save_commands_as(self):
         """
@@ -2010,8 +2339,28 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Opens the log file in the default text editor for operating system
         """
-
         os.startfile(self.app_session.get_log_file())
+
+    def ui_init_file_open_recent_files(self):
+        """
+        Will display recently opened command files when opening a new command file.
+        :return: None
+        """
+        # Set the maximum amount of recent command files to open.
+        # If there are less than 20 cached commands in command file history then set the max to be the
+        # number of recently opened files
+        # If there are more than 20 cahced commands in command file history set max = 20
+        max = 20 if (len(self.app_session.read_history()) > 20) else len(self.app_session.read_history())
+        for i in range(0, max):
+            if (i >= len(self.app_session.read_history())):
+                filename = ""
+            else:
+                filename = str(self.app_session.read_history()[i])
+            self.Menu_File_Open_CommandFileHistory_List[i].triggered.disconnect()
+            self.Menu_File_Open_CommandFileHistory_List[i].setText(filename)
+            self.Menu_File_Open_CommandFile.setObjectName(_fromUtf8("Menu_File_Open_CommandFileHistory_Command_" + str(i)))
+            self.Menu_File_Open_CommandFileHistory_List[i].triggered.connect(lambda checked, filename=filename: self.ui_action_open_command_file(filename))
+            self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFileHistory_List[i])
 
     def ui_set_main_window_title(self, title):
         """

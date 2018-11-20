@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 (set -o igncr) 2>/dev/null && set -o igncr; # this comment is required
 # The above line ensures that the script can be run on Cygwin/Linux even with Windows CRNL
 # 
@@ -22,12 +22,15 @@ checkOperatingSystem()
 	case "${os}" in
 		CYGWIN*)
 			operatingSystem="cygwin"
+			operatingSystemShort="cyg"
 			;;
 		LINUX*)
 			operatingSystem="linux"
+			operatingSystemShort="lin"
 			;;
 		MINGW*)
-			operatingSystem="mingw"
+			operatingSystem="min"
+			operatingSystemShort="min"
 			;;
 	esac
 	echo "Detected operatingSystem=$operatingSystem"
@@ -70,15 +73,30 @@ checkPythonConfig() {
 	fi
 }
 
+# Check that the Python configuration in the virtual environment is good.
+# - Script first lines must be < 128 characters
+checkVenvPythonConfig () {
+	# Check that the shbang #! line of the python scripts are not too long
+	# - generally cannot be longer than 127 characters
+	# - see: https://stackoverflow.com/questions/10813538/shebang-line-limit-in-bash-and-linux-kernel
+	# - depends on scriptPath being set
+	pip3Script="${VIRTUAL_ENV}/bin/pip3"
+	lenFirstLine=`head -n1 "${pip3Script}" | wc -c`
+	if [ "$lenFirstLine" -gt 127 ]; then
+		echo "Length ($lenFirstLine) of first line of ${pip3Script} is > 127 chars.  Exiting."
+		exit 1
+	fi
+}
+
 # Create the Cygwin virtual environment for gptest
 createGptestVirtualenvCygwin() {
 	echo "Creating virtualenv for gptest for Cygwin"
 	# First change to the folder in which to create the virtual environment
 	echo "Changing to ${virtualenvTmpFolder}"
 	cd ${virtualenvTmpFolder}
-	virtualEnvFolder="gptest-${version}-cygwin-venv"
+	virtualEnvFolder="gptest-${version}-${operatingSystemShort}-venv"
 	virtualenvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
-	# Remove the previous virtual environment of for the GeoProcessor version
+	# Remove the previous virtual environment for the GeoProcessor version
 	if [ -d "${virtualenvFolderPath}" ]; then
 		echo "Removing existing ${virtualenvFolderPath}"
 		rm -rf ${virtualenvFolderPath}
@@ -89,12 +107,34 @@ createGptestVirtualenvCygwin() {
 	# --system-site-packages gives the virtual environment access to the global site-packages,
 	# possibly necessary to install PyQt5 that was installed by Cygwin but is unavailable via pip
 	# However, this is bad because it mixes the environments.
-	# And, trying it gave an error with numpy, which stack overflow indicates is due to multiple
+	# And, trying it gave an error on Cygwin with numpy, which stack overflow indicates is due to multiple
 	# numpy installations, probably caused by --system-site-packages.
 	# See:  https://virtualenv.pypa.io/en/stable/reference/#options
-	virtualenv -p /usr/bin/python3 ${virtualenvFolderPath}
+	# -v is verbose
+	# -p specifies the Python to copy
+	if [ "${operatingSystem}" = "linux" ]; then
+		# Try the following without the leading path to Python because
+		# behavior seemed to not be correct
+		echo "Creating virtual environment with: virtualenv -v -p python3 ${virtualenvFolderPath}"
+		virtualenv -v -p python3 ${virtualenvFolderPath}
+	else
+		# The following worked for Cygwin but maybe should not use path?
+		echo "Creating virtual environment with: virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}"
+		virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}
+	fi
 	# Activate the virtual environment, making it the active Python
-	source ${virtualenvFolderPath}/bin/activate
+	echo "Activating virtual environment with:  . ${virtualenvFolderPath}/bin/activate"
+	. ${virtualenvFolderPath}/bin/activate
+	# Print the following to verify that activation took effect
+	echo "VIRTUAL_ENV=$VIRTUAL_ENV"
+	echo "Running which python3 to confirm virtualenv activation"
+	which python3
+	echo "Running which pip3 to confirm virtualenv activation"
+	which pip3
+	echo "Running which pip to confirm virtualenv activation"
+	which pip
+	# Further check the Python configuration
+	checkVenvPythonConfig
 	# Install the GeoProcessor files created by the create-gp-installer.sh script.
 	# - should be something like lib/python3.6/site-packages
 	pythonLibWithVersion=`ls -1 ${virtualenvFolderPath}/lib`
@@ -122,20 +162,36 @@ createGptestVirtualenvCygwin() {
 	# Full list
 	#pipPackages='openpyxl pandas PyQt5 requests[security] SQLAlchemy xlwt'
 	# Leave out PyQt5 because could not find a pip version that compiled/installed
-	pipPackages='openpyxl pandas requests[security] SQLAlchemy xlwt'
+	if [ "${operatingSystem}" = "cygwin" ]; then
+		pipPackages='openpyxl pandas requests[security] SQLAlchemy xlwt'
+	elif [ "${operatingSystem}" = "linux" ]; then
+		# Leave out pandas for now until troubleshoot
+		pipPackages='openpyxl requests[security] SQLAlchemy xlwt'
+	fi
 	for pipPackage in $pipPackages; do
 		echo "Installing package ${pipPackage}"
 		# Possible options
 		# --no-cache-dir - use if need to force new download for latest
 		# --only-binary all
-		# --prefer-binary
-		pip install $pipPackage --prefer-binary
+		# --prefer-binary (not available on linux version of python3)
+		if [ "${operatingSystem}" = "linux" ]; then
+			echo "Running:  pip3 install $pipPackage"
+			pip3 install $pipPackage
+		else
+			echo "Running:  pip3 install $pipPackage --prefer-binary"
+			pip3 install $pipPackage --prefer-binary
+		fi
 	done
 	# Manual copy of Cygwin-installed packages
-	echo "Copying Cygwin-installed /usr/lib/${pythonLibWithVersion}/site-packages/PyQt5 to site-packagses"
-	cp -r /usr/lib/${pythonLibWithVersion}/site-packages/PyQt5 ${sitepackagesFolder}
-	echo "Copying Cygwin-installed /usr/lib/${pythonLibWithVersion}/site-packages/sip* to site-packagses"
-	cp /usr/lib/${pythonLibWithVersion}/site-packages/sip* ${sitepackagesFolder}
+	if [ "$operatingSystem" = "linux" ]; then
+		echo "[ERROR] Linux install of PyQt5 and sep not yet implemented"
+	else
+		# Windows variant such as Cygwin
+		echo "Copying Cygwin-installed /usr/lib/${pythonLibWithVersion}/site-packages/PyQt5 to site-packagses"
+		cp -r /usr/lib/${pythonLibWithVersion}/site-packages/PyQt5 ${sitepackagesFolder}
+		echo "Copying Cygwin-installed /usr/lib/${pythonLibWithVersion}/site-packages/sip* to site-packagses"
+		cp /usr/lib/${pythonLibWithVersion}/site-packages/sip* ${sitepackagesFolder}
+	fi
 
 	# Copy scripts
 	virtualenvScriptsFolder="${virtualenvFolderPath}/scripts"
@@ -152,11 +208,15 @@ createGptestVirtualenvCygwin() {
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
 
+# Check the operating system
+checkOperatingSystem
+
 # Define top-level folders - everything is relative to this below to avoid confusion
 buildUtilFolder=${scriptFolder}
 repoFolder=`dirname ${buildUtilFolder}`
 buildTmpFolder="${buildUtilFolder}/build-tmp"
-virtualenvTmpFolder="${buildUtilFolder}/virtualenv-tmp"
+#virtualenvTmpFolder="${buildUtilFolder}/virtualenv-tmp"
+virtualenvTmpFolder="${buildUtilFolder}/venv-tmp"
 # Get the software version number
 versionFile="${repoFolder}/geoprocessor/app/version.py"
 version=`cat ${versionFile} | grep app_version -m 1 | cut -d '=' -f 2 | tr -d " " | tr -d '"'`

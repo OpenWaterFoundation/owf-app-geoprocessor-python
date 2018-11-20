@@ -13,10 +13,39 @@
 #   to learn how to use setup.py
 # - .zip files are also created.
 
+# Supporting functions
+
+# Determine the operating system that is running the script
+# - sets the variable operatingSystem to cygwin, linux, or mingw (Git Bash)
+checkOperatingSystem()
+{
+	if [ ! -z "${operatingSystem}" ]; then
+		# Have already checked operating system so return
+		return
+	fi
+	operatingSystem="unknown"
+	os=`uname | tr [a-z] [A-Z]`
+	case "${os}" in
+		CYGWIN*)
+			operatingSystem="cygwin"
+			;;
+		LINUX*)
+			operatingSystem="linux"
+			;;
+		MINGW*)
+			operatingSystem="mingw"
+			;;
+	esac
+	echo "Detected operatingSystem=$operatingSystem"
+}
+
 #------------------------------------------------------------------------------------------
 # Step 0. Setup.
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
+
+# Determine the operating system
+checkOperatingSystem
 
 # Define top-level folders - everything is relative to this below to avoid confusion
 repoFolder=`dirname ${scriptFolder}`
@@ -33,18 +62,15 @@ echo "build-tmp folder is ${buildTmpFolder}"
 echo "GeoProcessor version (from ${versionFile}) is ${version}"
 
 # Check to see if folders exist.  If not, something is probably wrong so don't continue.
-if [ ! -d ${repoFolder} ]
-	then
+if [ ! -d ${repoFolder} ]; then
 	echo "Something is wrong.  Repository folder does not exist:  ${repoFolder}"
 	exit 1
 fi
-if [ ! -d ${buildUtilFolder} ]
-	then
+if [ ! -d ${buildUtilFolder} ]; then
 	echo "Something is wrong.  build-util folder does not exist:  ${buildUtilFolder}"
 	exit 1
 fi
-if [ ! -d ${buildTmpFolder} ]
-	then
+if [ ! -d ${buildTmpFolder} ]; then
 	echo "Something is wrong.  build-tmp folder does not exist:  ${buildTmpFolder}"
 	exit 1
 fi
@@ -56,23 +82,35 @@ fi
 # - if the first character of the 'which` output is a / then assume the program was found
 
 tarProgramPath=`which tar`
-tarProgramPath1=`echo $tarProgramPath | cut -c1`
+if [ ! -z "${tarProgramPath}" ]; then
+	tarProgramPath1=`echo $tarProgramPath | cut -c1`
+fi
 gzipProgramPath=`which gzip`
-gzipProgramPath1=`echo $gzipProgramPath | cut -c1`
+if [ ! -z "${gzipProgramPath}" ]; then
+	gzipProgramPath1=`echo $gzipProgramPath | cut -c1`
+fi
 zipProgramPath=`which zip`
-zipProgramPath1=`echo $zipProgramPath | cut -c1`
+if [ ! -z "${zipProgramPath}" ]; then
+	zipProgramPath1=`echo $zipProgramPath | cut -c1`
+fi
 
-if [ ${tarProgramPath1} != "/" ]; then
+if [ -z "${tarProgramPath}" ] || [ "${tarProgramPath1}" != "/" ]; then
 	echo "Required program 'tar' is not found.  Must install.  Exiting."
 	exit 1
 fi
-if [ ${gzipProgramPath1} != "/" ]; then
+if [ -z "${gzipProgramPath}" ] || [ "${gzipProgramPath1}" != "/" ]; then
 	echo "Required program 'gzip' is not found.  Must install.  Exiting."
 	exit 1
 fi
-if [ ${zipProgramPath1} != "/" ]; then
-	echo "Required program 'zip' is not found.  Must install.  Exiting."
-	exit 1
+if [ -z "${zipProgramPath}" ] || [ "${zipProgramPath1}" != "/" ]; then
+	if [ "${operatingSystem}" != "linux" ]; then
+		# Only require zip if on Windows variant operating system
+		echo "Required program 'zip' is not found.  Must install.  Exiting."
+		exit 1
+	else
+		# Set to blank so can check below
+		zipProgramPath=""
+	fi
 fi
 
 # Global error flag check
@@ -87,8 +125,7 @@ errorOccurred="no"
 # Step 1. Copy all files to be distributed to a temporary folder
 
 buildTmpGptestFolder="${buildTmpFolder}/tmp-gptest-${version}"
-if [ -d "${buildTmpGptestFolder}" ]
-	then
+if [ -d "${buildTmpGptestFolder}" ]; then
 	echo "Removing contents of temporary build temporary folder ${buildTmpGptestFolder} ..."
 	rm -rf ${buildTmpGptestFolder}
 fi
@@ -263,8 +300,7 @@ sed -i 's/^import geoprocessor.util.qgis_util as qgis_util/# import geoprocessor
 gptestSitePackageBuildFile="${buildTmpFolder}/gptest-${version}-site-package.tar"
 gptestSitePackageBuildFileGz="${buildTmpFolder}/gptest-${version}-site-package.tar.gz"
 
-if [ -e "${gptestSitePackageBuildFileGz}" ]
-	then
+if [ -e "${gptestSitePackageBuildFileGz}" ]; then
 	echo "Removing existing build file ${gptestSitePackageBuildFileGz}"
 	rm ${gptestSitePackageBuildFileGz}
 fi
@@ -272,20 +308,17 @@ fi
 echo "Creating tar file containing *.py files ..."
 cd "${buildTmpGptestFolder}"
 find geoprocessor -name '*.py' -exec tar -rvf ${gptestSitePackageBuildFile} {} \;
-if [ "$?" -ne 0 ]
-	then
+if [ "$?" -ne 0 ]; then
 	echo "Error in script.  Exiting."
 	exit $?
 fi
 echo "Gzipping file ${gptestSitePackageBuildFile} into ${gptestSitePackageBuildFileGz}"
-if [ -z ${gzipProgramPath} ]
-	then
+if [ -z ${gzipProgramPath} ]; then
 	echo "[ERROR] gzip program was not found.  Unable to gzip ${gptestSitePackageBuildFile}"
-	errorOccurred="yes"
+		errorOccurred="yes"
 else
 	gzip ${gptestSitePackageBuildFile}
-	if [ "$?" -ne 0 ]
-		then
+	if [ "$?" -ne 0 ]; then
 		echo "[ERROR] Error using gzip on ${gptestSitePackageBuildFile}"
 		errorOccurred="yes"
 	fi
@@ -297,22 +330,21 @@ fi
 
 gptestSitePackageBuildFileZip="${buildTmpFolder}/gptest-${version}-site-package.zip"
 
-if [ -e "${gptestSitePackageBuildFileZip}" ]
-	then
+if [ -e "${gptestSitePackageBuildFileZip}" ]; then
 	echo "Removing existing build file ${gptestSitePackageBuildFileZip}"
 	rm ${gptestSitePackageBuildFileZip}
 fi
 
 echo "Creating zip file containing *.py files ${gptestSitePackageBuildFileZip} ..."
 cd "${buildTmpGptestFolder}"
-if [ -z ${zipProgramPath} ]
-	then
-	echo "[ERROR] zip program was not found.  Unable to create zip file ${gptestSitePackageBuildFileZip}"
-	errorOccurred="yes"
+if [ -z ${zipProgramPath} ]; then
+	if [ "${operatingSystem}" != "linux" ]; then
+		echo "[ERROR] zip program was not found.  Unable to create zip file ${gptestSitePackageBuildFileZip}"
+		errorOccurred="yes"
+	fi
 else
 	zip -r ${gptestSitePackageBuildFileZip} geoprocessor -x '*.pyc'
-	if [ "$?" -ne 0 ]
-		then
+	if [ "$?" -ne 0 ]; then
 		echo "[ERROR] Error using zip to create ${gptestSitePackageBuildFileZip}"
 		errorOccurred="yes"
 	fi
@@ -324,8 +356,7 @@ fi
 # Step 1. Copy all files to be distributed to a temporary folder
 
 buildTmpGpFolder="${buildTmpFolder}/tmp-gp-${version}"
-if [ -d "${buildTmpGpFolder}" ]
-	then
+if [ -d "${buildTmpGpFolder}" ]; then
 	echo "Removing contents of temporary build temporary folder ${buildTmpGpFolder} ..."
 	rm -rf ${buildTmpGpFolder}
 fi
@@ -358,8 +389,7 @@ cp ${repoFolder}/scripts/gpui.bat ${buildTmpGpFolder}/scripts
 gpSitePackageBuildFile="${buildTmpFolder}/gp-${version}-site-package.tar"
 gpSitePackageBuildFileGz="${buildTmpFolder}/gp-${version}-site-package.tar.gz"
 
-if [ -e "${gpSitePackageBuildFileGz}" ]
-	then
+if [ -e "${gpSitePackageBuildFileGz}" ]; then
 	echo "Removing existing build file ${gpSitePackageBuildFileGz}"
 	rm ${gpSitePackageBuildFileGz}
 fi
@@ -367,20 +397,17 @@ fi
 echo "Creating tar file containing *.py files ..."
 cd "${buildTmpGpFolder}"
 find geoprocessor -name '*.py' -exec tar -rvf ${gpSitePackageBuildFile} {} \;
-if [ "$?" -ne 0 ]
-	then
+if [ "$?" -ne 0 ]; then
 	echo "Error in script.  Exiting."
 	exit $?
 fi
 echo "Gzipping file ${gpSitePackageBuildFile} into ${gpSitePackageBuildFileGz}"
-if [ -z ${gzipProgramPath} ]
-	then
+if [ -z ${gzipProgramPath} ]; then
 	echo "[ERROR] gzip program was not found.  Unable to gzip ${gpSitePackageBuildFile}"
 	errorOccurred="yes"
 else
 	gzip ${gpSitePackageBuildFile}
-	if [ "$?" -ne 0 ]
-		then
+	if [ "$?" -ne 0 ]; then
 		echo "[ERROR] Error using gzip on ${gpSitePackageBuildFile}"
 		errorOccurred="yes"
 	fi
@@ -391,22 +418,22 @@ fi
 
 gpSitePackageBuildFileZip="${buildTmpFolder}/gp-${version}-site-package.zip"
 
-if [ -e "${gpSitePackageBuildFileZip}" ]
-	then
+if [ -e "${gpSitePackageBuildFileZip}" ]; then
 	echo "Removing existing build file ${gpSitePackageBuildFileZip}"
 	rm ${gpSitePackageBuildFileZip}
 fi
 
 echo "Creating zip file containing *.py files ${gpSitePackageBuildFileZip} ..."
 cd "${buildTmpGpFolder}"
-if [ -z ${zipProgramPath} ]
-	then
-	echo "[ERROR] zip program was not found.  Unable to create zip file ${gpSitePackageBuildFileZip}"
-	errorOccurred="yes"
+if [ -z ${zipProgramPath} ]; then
+	if [ "${operatingSystem}" != "linux" ]; then
+		# Only an issue for Windows variant operating systems
+		echo "[ERROR] zip program was not found.  Unable to create zip file ${gpSitePackageBuildFileZip}"
+		errorOccurred="yes"
+	fi
 else
 	zip -r ${gpSitePackageBuildFileZip} geoprocessor -x '*.pyc'
-	if [ "$?" -ne 0 ]
-		then
+	if [ "$?" -ne 0 ]; then
 		echo "[ERROR] Error using zip to create ${gpSitePackageBuildFileZip}"
 	fi
 fi
@@ -414,8 +441,7 @@ fi
 #------------------------------------------------------------------------------------------
 # Final comment to software developer
 
-if [ "${errorOccurred}" = "yes" ]
-	then
+if [ "${errorOccurred}" = "yes" ]; then
 	echo ""
 	echo "An error occurred creating installers.  Check messages above."
 	echo "- Partial results may have been created, such as tar.gz but not .zip"
@@ -434,8 +460,7 @@ echo "- Remove the existing folder before installing to make sure the latest fil
 echo ""
 
 # Exit with appropriate error status
-if [ "${errorOccurred}" = "yes" ]
-	then
+if [ "${errorOccurred}" = "yes" ]; then
 	exit 1
 else
 	exit 0

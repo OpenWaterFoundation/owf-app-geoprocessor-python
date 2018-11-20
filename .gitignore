@@ -13,6 +13,9 @@ __pycache__/
 # Ignore Python stack dump files when a crash occurs
 *.stackdump
 
+# Ignore log files
+*.log
+
 # Ignore build folder files, used to create installers
 # - remove these at some point when process is in place since local .gitignore files are used
 build/*.tar

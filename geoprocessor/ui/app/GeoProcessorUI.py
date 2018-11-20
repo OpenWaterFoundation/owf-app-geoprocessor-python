@@ -2132,9 +2132,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.command_file_modified = False
 
         if(filename == ""):
+            last_opened_folder = ""
+            if self.app_session.read_history():
+                last_opened_file = str(self.app_session.read_history()[0])
+                index = last_opened_file.rfind('/')
+                last_opened_folder = last_opened_file[:index]
+            print(last_opened_folder)
             # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
             # of the command file is added to the cmd_filepath variable.
-            cmd_filepath = QtWidgets.QFileDialog.getOpenFileName()[0]
+            cmd_filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", last_opened_folder)[0]
             if not cmd_filepath:
                 return
         else:

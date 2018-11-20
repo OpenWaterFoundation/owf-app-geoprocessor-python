@@ -2,7 +2,7 @@
 # Use hash-comments to comment out pages have not been written
 # Reference: http://www.mkdocs.org/user-guide/configuration/
 #
-site_name: 'OWF GeoProcessor (Dev)'
+site_name: 'GeoProcessor (Developer)'
 pages:
 - Home: 'index.md'
 - Introduction: 'introduction/introduction.md'
@@ -16,6 +16,7 @@ pages:
   - Resources: 'resources/resources.md'
   - 'QGIS Version Install Experiments': 'resources/qgis-version-install-experiments.md'
   - 'Notes on Migration from QGIS2 to QGIS3': 'resources/migrate-qgis2-qgis3.md'
+  - 'Notes on Virtual Environment': 'resources/virtualenv-notes.md'
 # ------- configuration properties ---------------
 # Use Material theme
 # - installation notes:  https://github.com/squidfunk/mkdocs-material

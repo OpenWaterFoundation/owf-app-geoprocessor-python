@@ -1,4 +1,4 @@
-# Learn GeoProcessor (Dev) / Troubleshooting #
+# GeoProcessor / Troubleshooting #
 
 The GeoProcessor is a Python application that uses Python modules developed as part of the GeoProcessor,
 and Python modules and software that are part of the QGIS software.

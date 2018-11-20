@@ -1,4 +1,4 @@
-# Learn GeoProcessor (Dev) / Resources #
+# GeoProcessor / Resources #
 
 The following are useful resources listed alphabetically by major topic:
 
@@ -8,6 +8,7 @@ The following are useful resources listed alphabetically by major topic:
 * [PyCharm](#pycharm) - Python IDE
 * [Python](#python) - Python programming language
 * [QGIS](#qgis) - geoprocessing software used by the GeoProcessor
+* [Virtual Environment](virtualenv-notes) - Python virtual environment (separate page)
 
 -----------------
 

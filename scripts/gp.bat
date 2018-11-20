@@ -1,7 +1,7 @@
 @echo off
-rem gp.bat
+rem gp.bat - run the GeoProcessor, default is to start the interpreter
 rem
-rem Windows batch file to run the Open Water Foundation GeoProcessor application
+rem Windows batch file to run the Open Water Foundation GeoProcessor application for QGIS
 rem - This script is for Python3/QGIS3 (QGIS LTR is not used)
 rem - This script should work on a normal Windows 7/10 computer.
 rem - The geoprocessor package must be installed in a normal location, such as

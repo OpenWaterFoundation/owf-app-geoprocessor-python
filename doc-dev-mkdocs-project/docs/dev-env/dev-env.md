@@ -1,4 +1,4 @@
-# Learn GeoProcessor (Dev) / Development Environment #
+# GeoProcessor / Development Environment #
 
 This documentation explains how to set up the development environment.
 Some of the information looks ahead (to after development environment setup) to provide context.
@@ -8,6 +8,7 @@ Some of the information looks ahead (to after development environment setup) to 
 * [PyCharm](#pycharm) - integrated development environment (IDE), uses QGIS packages via `PYTHONPATH`
 * [MkDocs](#mkdocs) - for documentation, uses system/user Python
 * [Git](#git) - for version control
+* [Cygwin](#cygwin) - for command-line development tasks and testing
 * [Running the GeoProcessor](#running-the-geoprocessor) - for testing and deployed version
 
 -----
@@ -48,12 +49,41 @@ When in doubt, use commands like `where py` or `where python` on Windows (`which
 to find which python is being used and then examine the `Lib` and `Lib/site-packages` folders
 to see where packages are installed.
 
-### Cygwin Python ###
+### Cygwin ###
 
 If working on Windows, it is convenient to install Cygwin, which provides Linux software.
 Cygwin can help increase productivity.
 If Cygwin is used, then its system Python will likely be used given that Cygwin is essentially a per-user system.
 For example, Cygwin Python is handy for installing and running MkDocs.
+
+See the [OWF / Learn Cygwin](http://learn.openwaterfoundation.org/owf-learn-cygwin/)
+documentation for information on installing Cygwin.
+The following Cygwin software must be installed in order to create a Python virtual environment
+to test GeoProcessor software.
+
+| **Cygwin Software**                | **Needed By **       | **Description**                                            |
+|------------------------------------|----------------------|------------------------------------------------------------|
+| `gcc-core`                         | `pip`                | Needed to compile software because no binary is available. |
+| `gcc-fortran`                      | `pip`                | Needed to compile software because no binary is available. |
+| `python3-devel`                    | `pip`                | Needed to compile software because no binary is available. |
+| `libffi-devel`                     | `requests[security]` | Needed to compile software because no binary is available. |
+| `libpq-devel`                      | `psycopg2`           | Needed to compile software because no binary is available. |
+| `openssl-devel`                    | `requests[security]` | Needed to compile software because no binary is available. |
+| `python3-numpy`                    | `pandas`             | Needed because `pip` version was not available.            |
+| `python3-six`                      | `pandas`             | Needed because `pip` version was not available.            |
+| `python3-wheel`                    | `pandas`             | Needed because `pip` version was not available.            |
+| `python3-setuptools`               | `pandas`             | Needed because `pip` version was not available.            |
+| `python3-pip`                      | `pandas`             | Needed because `pip` version was not available.            |
+| `python3-cython`                   | `pandas`             | Needed because `pip` version was not available.            |
+| `gcc-g++`                          | `pandas`             | Needed because `pip` version was not available.            |
+| `make`                             | `pandas`             | Needed because `pip` version was not available.            |
+| `wget`                             | `pandas`             | Needed because `pip` version was not available.            |
+| `python3-pyqt5`                    | `PyQt5`              | Needed because `pip` version was not available.            |
+| `python3-pyqt5-qsci`               | `PyQt5`              | Needed because `pip` version was not available.            |
+| `python3-pyqt5-qt3d`               | `PyQt5`              | Needed because `pip` version was not available.            |
+| `python3-pyqt5-qtchart`            | `PyQt5`              | Needed because `pip` version was not available.            |
+| `python3-pyqt5-qtdatavisualization`| `PyQt5`              | Needed because `pip` version was not available.            |
+| `python3-sip`                      | `PyQt5`              | Needed because `pip` version was not available.            |
 
 ### Windows 7 Python 2.7 System Install Example ###
 
@@ -225,6 +255,39 @@ For example, use Git for Windows.
 
 The GeoProcessor project uses a "feature branch" workflow where the `master` branch is the current branch under development,
 with tags and stable release branches made as necessary for releases.
+
+## Cygin ##
+
+Cygwin provides a Linux-like environment on Windows that can be used to
+run scripts in the Windows development environment (the other option being Git Bash).
+See the [Learn Cygwin](http://learn.openwaterfoundation.org/owf-learn-cygwin/)
+documentation for information on installing Cygwin.
+The following Cygwin software must be installed in order to create a Python virtual environment
+to test GeoProcessor software.
+
+| **Cygwin Software**                | **Description**                                                                               |
+|------------------------------------|-----------------------------------------------------------------------------------------------|
+| `gcc-core`                         | Needed when `pip` compiles software because no binary is available.                           |
+| `gcc-fortran`                      | Needed when `pip` compiles software because no binary is available.                           |
+| `python3-devel`                    | Needed when `pip` compiles software because no binary is available (multiple components).     |
+| `libffi-devel`                     | Needed when `pip` compiles software because no binary is available (for `requests[security]`. |
+| `libpq-devel`                      | Needed when `pip` compiles software because no binary is available (for PostgreSQL driver).   |
+| `openssl-devel`                    | Needed when `pip` compiles software because no binary is available (for `requests[security]`. |
+| `python3-numpy`                    | Needed because `pip` version was not available (for `pandas`).                                |
+| `python3-six`                      | Needed because `pip` version was not available (for `pandas`).                                |
+| `python3-wheel`                    | Needed because `pip` version was not available (for `pandas`).                                |
+| `python3-setuptools`               | Needed because `pip` version was not available (for `pandas`).                                |
+| `python3-pip`                      | Needed because `pip` version was not available (for `pandas`).                                |
+| `python3-cython`                   | Needed because `pip` version was not available (for `pandas`).                                |
+| `gcc-g++`                          | Needed because `pip` version was not available (for `pandas`).                                |
+| `make`                             | Needed because `pip` version was not available (for `pandas`).                                |
+| `wget`                             | Needed because `pip` version was not available (for `pandas`).                                |
+| `python3-pyqt5`                    | Needed because `pip` version was not available (for `PyQt5`).                                 |
+| `python3-pyqt5-qsci`               | Needed because `pip` version was not available (for `PyQt5`).                                 |
+| `python3-pyqt5-qt3d`               | Needed because `pip` version was not available (for `PyQt5`).                                 |
+| `python3-pyqt5-qtchart`            | Needed because `pip` version was not available (for `PyQt5`).                                 |
+| `python3-pyqt5-qtdatavisualization`| Needed because `pip` version was not available (for `PyQt5`).                                 |
+| `python3-sip`                      | Needed because `pip` version was not available (for `PyQt5`).                                 |
 
 ## Running the GeoProcessor ##
 

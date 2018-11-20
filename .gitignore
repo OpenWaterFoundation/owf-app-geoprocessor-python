@@ -5,10 +5,16 @@
 #   so don't hand off any PyCharm files in the repository
 .idea/
 venv/
-*.py[cod]
 __pycache__/
 
+# Ignore compiled Python files
+*.py[cod]
+
+# Ignore Python stack dump files when a crash occurs
+*.stackdump
+
 # Ignore build folder files, used to create installers
+# - remove these at some point when process is in place since local .gitignore files are used
 build/*.tar
 build/*.gz
 build/*.zip

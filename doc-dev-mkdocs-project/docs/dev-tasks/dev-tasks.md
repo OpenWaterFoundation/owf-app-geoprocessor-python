@@ -1,4 +1,4 @@
-# Learn GeoProcessor (Dev) / Development Tasks #
+# GeoProcessor / Development Tasks #
 
 This documentation describes common development tasks:
 
@@ -8,6 +8,7 @@ This documentation describes common development tasks:
 * [Testing](#testing)
 	+ [Functional Tests](#functional-tests)
 	+ [Unit Tests](#unit-tests)
+* [Version Control](#version-control)
 * [Creating Installer](#creating-installer)
 
 --------------------
@@ -44,6 +45,8 @@ See the [user documentation repository](https://github.com/OpenWaterFoundation/o
 The user documentation is maintained in a separate repository because contributions may be submitted by non-programmers.
 
 ## Testing ##
+
+**Need to update this once the UI is functional and is used for testing.**
 
 The GeoProcessor is designed to facilitate automated testing.
 Each command and workflows involving multiple commands can be tested.
@@ -226,57 +229,49 @@ The GeoProcessor does not currently utilize unit tests such a pytest.
 However, units tests will be added in the future.
 The majority of testing currently uses the functional test framework in order to test full functionality and user experience.
 
+## Version Control ##
+
+Git and GitHub are used for version control and software developers are expected to be proficient with Git.
+A feature/topic branching model is used with the `master` branch being the main branch for deployment.
+Tags and releases are created at major milestones.
+The following `build-util` scripts are provided to facilite Git use:
+
+* `git-check-gp.sh` - check all component repositories for local and remote status
+* `git-clone-all-gp.sh` - clone all repositories after main repository is cloned
+
 ## Creating Installer ##
 
 The GeoProcessor is not yet packaged via a `pip` or `pipenv` installer.
-Instead, zip files (Windows) and tar.gz files (Linux) are created containing the `geoprocessor` package.
-These files can be unzipped in the `site-packages` (or similar) folder in the deployed Python environment
-so that they are found when Python runs.
-Use the following to check the target Python environment to see which folders are searched for modules.
-The GeoProcessor package can be installed in one of the indicated folders or
-the run script (`gp.bat`, `gp.sh`, `gptest.bat`, or `gptest.sh`) will need to set the `PYTHONPATH`
-to include the folder where the files are installed.
-**This needs to be updated for Python 3.**
-
-```
-python2
->>> import sys
->>> print(sys.path)
-['', '/usr/lib/python2.7/site-packages/logilab_common-0.62.0-py2.7.egg', '/usr/lib/python27.zip', '/usr/lib/python2.7', '/usr/lib/python2.7/plat-cygwin', '/usr/lib/python2.7/lib-tk', '/usr/lib/python2.7/lib-old', '/usr/lib/python2.7/lib-dynload', '/usr/lib/python2.7/site-packages']
->>> quit()
-```
-Another useful technique to use during troubleshooting is to run `python -v`
-to print out verbose information about which folder
-modules were loaded from, given the above choices.
-This may require editing the standard `gp.bat` and similar files.
-This approach can be used if the `geoprocessor` files are installed in more than one place
-and old files are being used instead of an updated version.
-
-Windows batch files (`gp.bat` and `gptest.bat`) and Linux shell script (`gp.sh` and `gptest.sh`)
-files are used to run the GeoProcessor software,
-and can be installed in an appropriate location.
-These files will be stored in a standard software folder and accessed via operating system "start" menu
-once the user interface for the GeoProcessor is implemented.
-
-Use the following process to create the installer packages in the developer environment.
-The following currently creates .tar.gz and .zip versions of the files and therefore the
-`tar`, `gzip`, and `zip` programs must be available to completely process the installer
-(error messages are printed to help diagnose issues).
-
-1. Open a Linux shell window:
-	1. ![Cygwin](../images/cygwin-32.png) Cygwin terminal (verified method used by developers)
-	2. ![Git Bash](../images/git-bash-32.png) Git Bash (**should work but not yet verified**)
-	3. ![Windows](../images/windows-32.png) Windows Subsystem for Linux Bash (**should work but not yet verified**)
-	3. ![Linux](../images/linux-32.png) Linux terminal (**should work but not yet verified**)
-2. Change directories to the `build-util` folder in the repository working files.
-3. Run the following script:  `create-gp-installer.sh`
-	1. This will create files in the `build` folder in the repository working files.
-	2. See the [`build/README.md`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build/README.md)
-	file for more information about folder contents.
-	3. If an error is shown, follow instructions.
-		1. One issue is that may occur is that if the code was checked out with Git Bash (for example)
-		and the script is run with Cygwin, there may be newline issues.
-		Run `dos2unix` on the script if necessary (Git may want to commit, but `.gitattributes` will cause the commit to be ignored).
+The deployment process is evolving as the product matures.
 
 The GeoProcessor software can then be installed as per the
 [User Documentation](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/install/).
+
+### ![Cygwin](../images/cygwin-32.png) Creating Installer for Cygwin ###
+
+A Cygwin deployment is useful for testing the test framework version before creating Linux installer.
+The Cygwin environment must have been properly configured as per the [Development Environment / Cygwin](../dev-env/dev-env#cygwin) documentation.
+A Python virtual environment is created in the development environment.
+This version is not intended for distribution.
+The following steps are executed:
+
+1. Run `build-util/1-create-gp-tar.sh` to create `tar.gz` and `.zip` files that contain the `site-packages` files.
+	1. This creates temporary folders in `build-util/build-tmp` containing the Python files.
+2. Run `build-util/2-create-gp-venv.sh` to create a Python virtual environment.
+	1. This creates a virtual environment from the files in the previous step.
+3. Activate the virtual environment:  `source bin/activate`, which will define a shell function `deactivate`.
+4. Start the X Window Server to allow graphical user interface programs to run within Cygwin:
+	1. From a Cygwin terminal run `startxwin`.
+	2. Or, use the menu ***Start / Cygwin-X / XWin Server***.
+	3. Then, in the Cygwin terminal, set the `DISPLAY` variable:  `export DISPLAY=:0.0`
+4. Run the `scripts/gptest` or `scripts/gptestui` script in the virtual environment to run the GeoProcessor.
+5. Run tests to confirm functionality.
+
+### ![Linux](../images/linux-32.png) Creating Installer for Linux ###
+
+Need to complete this section, will be similar to the Cygwin steps, but run on Linux to use
+Linux Python to create the virtual environment for the test framework.
+
+### ![Windows](../images/windows-32.png) Creating Installer for Windows ###
+
+Need to complete this section, will be similar to Cygwin but step 1 files are deployed to QGIS environment.

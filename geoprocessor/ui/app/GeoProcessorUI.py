@@ -2161,21 +2161,23 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     item.setText(str(i))
                     item.setTextAlignment(QtCore.Qt.AlignRight)
                     item.setSizeHint(QtCore.QSize(-1, 16))
-                    if i == 9:
-                        item = self.numbered_list_error_at_row(item)
-                    if i == 2:
-                        item = self.numbered_list_unknown_at_row(item)
-                    if i == 12:
-                        item = self.numbered_list_warning_at_row(item)
+                    # Hard coded icons into file for testing:
+                    # if i == 9:
+                    #     item = self.numbered_list_error_at_row(item)
+                    # if i == 2:
+                    #     item = self.numbered_list_unknown_at_row(item)
+                    # if i == 12:
+                    #     item = self.numbered_list_warning_at_row(item)
                     self.numbered_List.addItem(item)
 
                     # Add items to gutter
                     item = QtWidgets.QListWidgetItem()
                     item.setSizeHint(QtCore.QSize(-1, 16))
-                    if i == 9:
-                        item = self.gutter_error_at_row(item)
-                    if i == 12:
-                        item = self.gutter_warning_at_row(item)
+                    # Hard coded overview gutter colors for testing:
+                    # if i == 9:
+                    #     item = self.gutter_error_at_row(item)
+                    # if i == 12:
+                    #     item = self.gutter_warning_at_row(item)
                     self.gutter.addItem(item)
 
                 #self.numbered_List.addItem('')

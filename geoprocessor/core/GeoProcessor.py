@@ -765,6 +765,8 @@ class GeoProcessor(object):
         # Logger for the processor
         logger = logging.getLogger(__name__)
 
+        warning_count = 0
+
         # Reset the global workflow properties if requested, used when RunCommands command calls recursively...
         # - This code is a port of Java TSCommandProcessor.runCommands().
         reset_workflow_properties = True
@@ -907,6 +909,7 @@ class GeoProcessor(object):
                 # - this is called when editing the command but also need to check here when running
                 # - the list of parameters is passed because the code is reused with editors that check
                 #   parameters before saving the edits
+
                 command.check_command_parameters(command.command_parameters)
 
                 # Check to see whether the If stack evaluates to True and can run the command
@@ -958,6 +961,7 @@ class GeoProcessor(object):
                                     command_phase_type.RUN,
                                     CommandLogRecord(command_status_type.FAILURE, message,
                                                      "Add a matching EndFor() command."))
+                                warning_count += 1
                                 raise RuntimeError(message)
                         if ok_to_run_for:
                             # Continue running commands that are after the For() command
@@ -1006,7 +1010,17 @@ class GeoProcessor(object):
                         continue
                     else:
                         # A typical command - run it
-                        command.run_command()
+
+                        # Check to see if command.run_command() runs with no errors. If an error
+                        # arises it is caught with try, except which logs a message and increases
+                        # the warning_count. At the end of GeoProcessor.run_commands() there needs to
+                        # be a check if warning_count is greater than 0 and if so raise an exception.
+                        try:
+                            command.run_command()
+                        except:
+                            message = "Error running command in GeoProcessor.py"
+                            warning_count += 1
+                            logger.error(message, exc_info=True)
                         # If the command generated an output file, add it to the list of output files.
                         # The list is used by the UI to display results.
                         # TODO smalers 2017-12-21 - add the file list generator like TSEngine
@@ -1037,6 +1051,7 @@ class GeoProcessor(object):
                     # Reevaluate If stack
                     If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
                     logger.debug('...back from running command')
+                logger.info("Notify Command Processor Listener of Command Completed")
                 # Notify listener that commands are finished running
                 self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
             except Exception as e:
@@ -1074,6 +1089,13 @@ class GeoProcessor(object):
                     # - After adding this exception block, it does not appear that the following call to logger.error()
                     #   does result in a new exception, but keep the code for now.
                     logger.warning("Exception logging threw an exception.")
+
+        # The following checks to see if any warnings were caught in the above code.
+        # If there were any warnings raise and exception.
+        if warning_count > 0:
+            message = "Errors found in processing commands."
+            logger.error(message)
+            raise RuntimeError(message)
 
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough

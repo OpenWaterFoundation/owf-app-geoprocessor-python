@@ -215,6 +215,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+        logger = logging.getLogger(__name__)
 
         # Obtain the parameter values.
         pv_SpatialDataFile = self.get_parameter_value("SpatialDataFile")
@@ -259,6 +260,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings proceeding this command.".format(self.warning_count)
+            logger.error(message)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

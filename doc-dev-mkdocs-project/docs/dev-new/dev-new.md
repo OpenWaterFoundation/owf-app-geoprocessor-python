@@ -8,7 +8,8 @@ contribute to GeoProcessor software.
 	2. [QGIS](#install-qgis)
 	3. [PyCharm](#install-pycharm)
 	4. [MkDocs](#install-mkdocs)
-	4. [Git](#install-git)
+	5. [Git](#install-git)
+	6. [Cygwin](#install-cygwin)
 2. [Clone Repository and Configure Project](#clone-repository-and-configure-project)
 3. [Develop software as per Development Tasks](dev-tasks)
 
@@ -62,6 +63,15 @@ See the following:
 
 * [Development Environment / Git](../dev-env/dev-env#git)
 
+## Install Cygwin ##
+
+Cygwin provides a Linux-like environment on Windows that can be used to
+run scripts in the Windows development environment (the other option being Git Bash).
+It is also needed to create a Python virtual environment to test the test framework version
+of the GeoProcessor.  See the following:
+
+* [Development Environment / Cygwin](../dev-env/dev-env#cygwin)
+
 ## Clone Repository and Configure Project ##
 
 The following steps illustrate how to clone and configure a PyCharm project.
@@ -74,7 +84,7 @@ This allows progress to occur in all areas, while only requiring Python expertis
 
 Once set up, scripts within the project will use relative paths or will refer to known absolute paths,
 such as the PyCharm installation folder.
-The following folder structure is one option for organizing the GeoProcessor project.
+The following folder structure is the recommended folder structure for organizing the GeoProcessor project.
 Each of the folders under `git-repos` matches the name of a repository on the Open Water Foundation GitHub page.
 
 ```text
@@ -91,20 +101,25 @@ C:\Users\user\owf-dev\                         Top-level development folder (Win
 
 ```
 
-Therefore, to set up a new project, create a folder down to the `git-repos` level.
-Then execute `git clone` for each of the component repositories.
-The `owf-app-geoprocessor-arcpy` projects relies on Esri's ArcGIS Pro and is not needed for the QGIS GeoProcessor.
-**Need to implement a `git-clone-all.sh` script similar to TSTool.**
+To set up a new project:
+
+1. Create a folder down to the `git-repos` level.
+2. Execute `git clone` for the main component repository: `owf-app-geoprocessor-python`.
+3. Run the `build-util/git-clone-all-gp.sh` script to clone the other repositories (if they don't already exist).
+
+The `owf-app-geoprocessor-arcpy` project relies on Esri's ArcGIS Pro and is not needed for the QGIS GeoProcessor.
+Additional information will be added later for the ArcGIS Pro version of the GeoProcessor.
 
 ### Start PyCharm ###
 
 Once cloned, the following script can be used to start PyCharm on Windows, or use a similar approach.
 The script configures the Python environment to find QGIS libraries, which are needed by the GeoProcessor.
 More recent versions of this script may also be available.
-The PyCharm installer typically updates files on the previous release.
+The PyCharm installer typically updates files on the previous release so the script name may no agree
+with the Python version.
 
 ```text
-git-repos/owf-app-geoprocessor-python/build-util/run-pycharm2018.1.3-for-qgis.bat
+git-repos/owf-app-geoprocessor-python/build-util/run-pycharm2018.2.4-for-qgis.bat
 ```
 
 For example, open a Windows command prompt window, change to the folder shown above,
@@ -123,8 +138,9 @@ Then select the folder that was cloned from GitHub, similar to the following.
 Note that the repository's `.gitignore` file indicates to ignore all PyCharm project files.
 The user documentation and functional test repositories do not need to be known to PyCharm.
 **The following image needs to be updated to use a Python 3.x base interpreter.
-The QGIS Python version can be determined by checking folder names in the `C:\OSGeo4W64\apps` folder
-and may include `Python27` for the long-term stable release and `Python3x` for recent release.**
+The QGIS Python version can be determined by checking folder names in the `C:\OSGeo4W64\apps` folder,
+which will use `Python3x` for recent release and may include `Python27` for the long-term stable release
+if installed.**
 
 ![Create project 2](images/create-project2.png)
 

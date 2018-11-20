@@ -1,4 +1,4 @@
-# User Interface 
+# GeoProcessor / User Interface (UI) Design #
 
 - [Overview](#overview)
 - [User Interface Terms](#user-interface-terms)
@@ -13,7 +13,7 @@
 
 ## Overview
 
-**This documentation needs to be fully reviewed.**
+**This documentation needs to be fully reviewed and updated.**
 
 This documentation explains the current user interface design. 
 The design is still in implementation phase and can be redesigned in the future if needed. 

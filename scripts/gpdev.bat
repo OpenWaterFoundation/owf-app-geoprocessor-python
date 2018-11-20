@@ -1,7 +1,7 @@
 @echo off
-rem gpdev3.bat
+rem gpdev.bat
 rem
-rem Windows batch file to run the Open Water Foundation GeoProcessor application for QGIS 3
+rem Windows batch file to run the Open Water Foundation GeoProcessor application for QGIS
 rem - This script is used with Python3/QGIS3
 rem - This uses the QGIS Python as the interpreter, but development geoprocessor module via PYTHONPATH.
 rem - Paths to files are assumed based on standard OWF development environment.
@@ -14,7 +14,7 @@ rem - The GEOPROCESSOR_ENV_SETUP environment variable is set to YES
 rem   to indicate that setup has been done.
 rem - This causes setup to occur only once if rerunning this batch file.
 
-if "%GEOPROCESSOR_ENV_SETUP%"=="YES" GOTO run
+if "%GEOPROCESSOR_DEV_ENV_SETUP%"=="YES" GOTO run
 rem ===================================================================================
 rem If here do the setup one time first time batch file is run in a command shell
 echo Start defining QGIS GeoProcessor environment (done once per command shell window)...
@@ -70,7 +70,7 @@ set PYTHONPATH=%GEOPROCESSOR_HOME%;%PYTHONPATH%
 rem Indicate that the setup has been completed
 rem - this will ensure that the script when run again does not repeat setup
 rem   and keep appending to environment variables
-set GEOPROCESSOR_ENV_SETUP=YES
+set GEOPROCESSOR_DEV_ENV_SETUP=YES
 echo ...done defining QGIS GeoProcessor environment (done once per command shell window)
 goto run
 

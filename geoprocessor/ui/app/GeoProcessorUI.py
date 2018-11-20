@@ -1135,6 +1135,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Add to menu bar
         self.menubar.addAction(self.Menu_Commands.menuAction())
 
+        # Tools menu
+        self.Menu_Tools = QtWidgets.QMenu(self.menubar)
+        self.Menu_Tools.setObjectName(_fromUtf8("Menu_Tools"))
+        self.Menu_Tools.setTitle("Tools")
+        # Tools / View Log File menu
+        self.Menu_Tools_ViewLog = QtWidgets.QAction(main_window)
+        self.Menu_Tools_ViewLog.setObjectName(_fromUtf8("Menu_Tools_ViewLog"))
+        self.Menu_Tools_ViewLog.setText("View Log File")
+        self.Menu_Tools.addAction(self.Menu_Tools_ViewLog)
+        # TODO add action to button
+        self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_view_log_file)
+        # Add Help menu to menubar
+        self.menubar.addAction(self.Menu_Tools.menuAction())
+
         # Help menu
         self.Menu_Help = QtWidgets.QMenu(self.menubar)
         self.Menu_Help.setObjectName(_fromUtf8("Menu_Help"))
@@ -1155,7 +1169,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Help_ViewDocumentation = QtWidgets.QAction(main_window)
         self.Menu_Help_ViewDocumentation.setObjectName(_fromUtf8("Menu_Help_ViewDocumentation"))
         self.Menu_Help_ViewDocumentation.setText("View Documentation")
-        icon_path = app_util.get_property("ProgramResourcesPath").replace('\\','/')
+        icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/baseline_school_black_18dp.png"
         self.Menu_Help_ViewDocumentation.setIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
         self.Menu_Help.addAction(self.Menu_Help_ViewDocumentation)
@@ -1163,20 +1177,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Help_ViewDocumentation.triggered.connect(self.ui_action_view_documentation)
         # Add Help menu to menubar
         self.menubar.addAction(self.Menu_Help.menuAction())
-
-        # Tools menu
-        self.Menu_Tools = QtWidgets.QMenu(self.menubar)
-        self.Menu_Tools.setObjectName(_fromUtf8("Menu_Tools"))
-        self.Menu_Tools.setTitle("Tools")
-        # Tools / View Log File menu
-        self.Menu_Tools_ViewLog = QtWidgets.QAction(main_window)
-        self.Menu_Tools_ViewLog.setObjectName(_fromUtf8("Menu_Tools_ViewLog"))
-        self.Menu_Tools_ViewLog.setText("View Log File")
-        self.Menu_Tools.addAction(self.Menu_Tools_ViewLog)
-        # TODO add action to button
-        self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_view_log_file)
-        # Add Help menu to menubar
-        self.menubar.addAction(self.Menu_Tools.menuAction())
 
     def setup_ui_results(self, y_centralwidget):
         """

@@ -1495,7 +1495,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.toolbar.setMovable(False)
         self.toolbar.setStyleSheet("background: white;")
-        self.toolbar.setMaximumHeight(30)
+        self.toolbar.setStyleSheet("QToolButton {padding-left: 0px}")
+        self.toolbar.setMaximumHeight(27)
 
     def show_results(self):
         """

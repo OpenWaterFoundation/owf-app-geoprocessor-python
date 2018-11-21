@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 (set -o igncr) 2>/dev/null && set -o igncr; # this comment is required
 # The above line ensures that the script can be run on Cygwin/Linux even with Windows CRNL
 # 
@@ -103,7 +103,7 @@ createGptestVirtualenvCygwin() {
 	fi
 	# Create the virtualenv using the Cygwin python3
 	echo "Creating virtualenv folder ${virtualenvFolderPath}"
-	mkdir ${virtualenvFolderPath}
+	#mkdir ${virtualenvFolderPath}
 	# --system-site-packages gives the virtual environment access to the global site-packages,
 	# possibly necessary to install PyQt5 that was installed by Cygwin but is unavailable via pip
 	# However, this is bad because it mixes the environments.
@@ -112,19 +112,17 @@ createGptestVirtualenvCygwin() {
 	# See:  https://virtualenv.pypa.io/en/stable/reference/#options
 	# -v is verbose
 	# -p specifies the Python to copy
-	if [ "${operatingSystem}" = "linux" ]; then
-		# Try the following without the leading path to Python because
-		# behavior seemed to not be correct
-		echo "Creating virtual environment with: virtualenv -v -p python3 ${virtualenvFolderPath}"
-		virtualenv -v -p python3 ${virtualenvFolderPath}
-	else
-		# The following worked for Cygwin but maybe should not use path?
-		echo "Creating virtual environment with: virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}"
-		virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}
-	fi
+	# Works on Cygwin and Linux
+	echo "Creating virtual environment with: virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}"
+	virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}
 	# Activate the virtual environment, making it the active Python
 	echo "Activating virtual environment with:  . ${virtualenvFolderPath}/bin/activate"
 	. ${virtualenvFolderPath}/bin/activate
+	# Need to upgrade the setuptools on Linux for some packages
+	# - works ok on Cygwin with the update
+	if [ "${operatingSystem}" = "linux" ]; then
+		pip3 install --upgrade setuptools
+	fi
 	# Print the following to verify that activation took effect
 	echo "VIRTUAL_ENV=$VIRTUAL_ENV"
 	echo "Running which python3 to confirm virtualenv activation"
@@ -149,8 +147,7 @@ createGptestVirtualenvCygwin() {
 	cd "${sitepackagesFolder}"
 	echo "Installing geoprocessor package files"
 	tar -xzvf ${buildTmpFolder}/gptest-${version}-site-package.tar.gz
-	# Copy the GeoProcessor scripts
-	# Install the necessary Python packages, alphabetically except for python-dev
+	# Install the necessary Python packages, alphabetically
 	# openpyxl - read/write Excel files
 	# pandas - statistics
 	# psycopg2-binary - PostegreSQL driver    (binary is needed because otherwise will try to compile the install)
@@ -166,6 +163,7 @@ createGptestVirtualenvCygwin() {
 		pipPackages='openpyxl pandas requests[security] SQLAlchemy xlwt'
 	elif [ "${operatingSystem}" = "linux" ]; then
 		# Leave out pandas for now until troubleshoot
+		#pipPackages='openpyxl pandas requests[security] SQLAlchemy xlwt'
 		pipPackages='openpyxl requests[security] SQLAlchemy xlwt'
 	fi
 	for pipPackage in $pipPackages; do
@@ -178,22 +176,102 @@ createGptestVirtualenvCygwin() {
 			echo "Running:  pip3 install $pipPackage"
 			pip3 install $pipPackage
 		else
+			# Cygwin and others
 			echo "Running:  pip3 install $pipPackage --prefer-binary"
 			pip3 install $pipPackage --prefer-binary
 		fi
 	done
-	# Manual copy of Cygwin-installed packages
-	if [ "$operatingSystem" = "linux" ]; then
-		echo "[ERROR] Linux install of PyQt5 and sep not yet implemented"
-	else
+
+	# Experience has shown that some packages are not available or involve long pip compile processes.
+	# Therefore, the following are assumed to have been installed in the system Python.
+	if [ "$operatingSystem" = "cygwin" ]; then
+		# Manual copy of Cygwin-installed packages
 		# Windows variant such as Cygwin
 		echo "Copying Cygwin-installed /usr/lib/${pythonLibWithVersion}/site-packages/PyQt5 to site-packagses"
 		cp -r /usr/lib/${pythonLibWithVersion}/site-packages/PyQt5 ${sitepackagesFolder}
 		echo "Copying Cygwin-installed /usr/lib/${pythonLibWithVersion}/site-packages/sip* to site-packagses"
 		cp /usr/lib/${pythonLibWithVersion}/site-packages/sip* ${sitepackagesFolder}
+	elif [ "$operatingSystem" = "linux" ]; then
+		# apt-get install python3-sip
+		# apt-get install python3-pyqt5
+		# apt-get install python3-pandas
+		# See:  https://pandas.pydata.org/pandas-docs/stable/install.html
+		#
+		# Debian Jessie 64-bit...
+		# Get:1 http://ftp.us.debian.org/debian/ jessie/main libhdf5-8 amd64 1.8.13+docs-15+deb8u1 [1,061 kB]
+		# Get:2 http://ftp.us.debian.org/debian/ jessie/main libtcl8.6 amd64 8.6.2+dfsg-2 [978 kB]
+		# Get:3 http://ftp.us.debian.org/debian/ jessie/main libtk8.6 amd64 8.6.2-1 [771 kB]
+		# Get:4 http://ftp.us.debian.org/debian/ jessie/main liblz4-1 amd64 0.0~r122-2 [17.0 kB]
+		# Get:5 http://ftp.us.debian.org/debian/ jessie/main tk8.6-blt2.5 amd64 2.5.3+dfsg-1 [586 kB]
+		# Get:6 http://ftp.us.debian.org/debian/ jessie/main blt amd64 2.5.3+dfsg-1 [14.3 kB]
+		# Get:7 http://ftp.us.debian.org/debian/ jessie/main fonts-lyx all 2.1.2-2 [176 kB]
+		# Get:8 http://ftp.us.debian.org/debian/ jessie/main libjs-jquery-ui all 1.10.1+dfsg-1 [499 kB]
+		# Get:9 http://ftp.us.debian.org/debian/ jessie/main python-matplotlib-data all 1.4.2-3.1 [3,041 kB]
+		# Get:10 http://ftp.us.debian.org/debian/ jessie/main python-tables-data all 3.1.1-3 [48.5 kB]
+		# Get:11 http://ftp.us.debian.org/debian/ jessie/main python3-bs4 all 4.3.2-2 [77.6 kB]
+		# Get:12 http://ftp.us.debian.org/debian/ jessie/main python3-dateutil all 2.2-2 [33.2 kB]
+		# Get:13 http://ftp.us.debian.org/debian/ jessie/main python3-decorator all 3.4.0-2 [22.5 kB]
+		# Get:14 http://ftp.us.debian.org/debian/ jessie/main python3-lxml amd64 3.4.0-1 [742 kB]
+		# Get:15 http://ftp.us.debian.org/debian/ jessie/main python3-pyparsing all 2.0.3+dfsg1-1 [64.1 kB]
+		# Get:16 http://ftp.us.debian.org/debian/ jessie/main python3-tz all 2012c+dfsg-0.1 [25.4 kB]
+		# Get:17 http://ftp.us.debian.org/debian/ jessie/main python3-numpy amd64 1:1.8.2-2 [1,628 kB]
+		# Get:18 http://ftp.us.debian.org/debian/ jessie/main python3-nose all 1.3.4-1 [131 kB]
+		# Get:19 http://ftp.us.debian.org/debian/ jessie/main python3-matplotlib amd64 1.4.2-3.1 [3,743 kB]
+		# Get:20 http://ftp.us.debian.org/debian/ jessie/main python3-numexpr amd64 2.4-1 [129 kB]
+		# Get:21 http://ftp.us.debian.org/debian/ jessie/main python3-pandas-lib amd64 0.14.1-2 [1,273 kB]
+		# Get:22 http://ftp.us.debian.org/debian/ jessie/main python3-pandas all 0.14.1-2 [1,249 kB]
+		# Get:23 http://ftp.us.debian.org/debian/ jessie/main python3-pil amd64 2.6.1-2+deb8u3 [304 kB]
+		# Get:24 http://ftp.us.debian.org/debian/ jessie/main libsnappy1 amd64 1.1.2-3 [40.4 kB]
+		# Get:25 http://ftp.us.debian.org/debian/ jessie/main python3-tables-lib amd64 3.1.1-3+b1 [341 kB]
+		# Get:26 http://ftp.us.debian.org/debian/ jessie/main python3-tables all 3.1.1-3 [329 kB]
+		# Get:27 http://ftp.us.debian.org/debian/ jessie/main python3-tk amd64 3.4.2-1+b1 [25.2 kB]
+		# Get:28 http://ftp.us.debian.org/debian/ jessie/main python3-scipy amd64 0.14.0-2 [7,771 kB]
+		#
+		# Debian uses dist-packages instead of site-packages and seems to install into
+		# /usr/lib/python3, not, for example /usr/lib/python3.4
+		# pandas and dependencies
+		echo "Copying apt-get-installed /usr/lib/python3/dist-packages/pandas (and related) to site-packagses"
+		#cp -r /usr/lib/python3/dist-packages/blt ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/bs4 ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/dateutil ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/decorator.py ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/fonts-lyx ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/libjs-jquery-ui ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/libhdf5-8 ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/libtcl8.6 ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/libtk8.6 ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/libtk8.6-blt2.5 ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/liblz4-1 ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/libsnappy1 ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/lxml ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/matplotlib ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/mpltoolkits ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/nose ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/numexpr ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/numpy ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/pandas ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/pandas-lib ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/pyparsing ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/python-matplotlib-data ${sitepackagesFolder}
+		# From pandas-pil?
+		cp -r /usr/lib/python3/dist-packages/PIL ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/python-tables ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/scipy ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/tables ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/tables-lib ${sitepackagesFolder}
+		#cp -r /usr/lib/python3/dist-packages/tk ${sitepackagesFolder}
+		cp -r /usr/lib/python3/dist-packages/pytz ${sitepackagesFolder}
+		# PyQt5
+		echo "Copying apt-get-installed /usr/lib/python3/dist-packages/PyQt5 to site-packagses"
+		cp -r /usr/lib/python3/dist-packages/PyQt5 ${sitepackagesFolder}
+		# sip
+		echo "Copying apt-get-installed /usr/lib/python3/dist-packages/sip* to site-packagses"
+		cp /usr/lib/python3/dist-packages/sip* ${sitepackagesFolder}
+	else
+		echo "[Error] operating system ${operatingSystem} is not supported for package copy."
 	fi
 
-	# Copy scripts
+	# Copy GeoProcessor scripts
 	virtualenvScriptsFolder="${virtualenvFolderPath}/scripts"
 	mkdir ${virtualenvScriptsFolder}
 	buildTmpGptestFolder="${buildTmpFolder}/tmp-gptest-${version}"

@@ -419,7 +419,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # 4 offers as a buffer
             last_item_height = item_height + (current_height - (new_height) - 4)
             # update height of last item
-            self.gutter.item(count - 1).setSizeHint(QtCore.QSize(-1, last_item_height))
+            # TODO smalers added the following check, otherwise the app crashed
+            if self.gutter.item(count -1) is not None:
+                self.gutter.item(count - 1).setSizeHint(QtCore.QSize(-1, last_item_height))
 
     def main_window_resize_event_resize_numbered_list(self):
         """
@@ -1855,7 +1857,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         operating_system = platform.uname()[0] + " " + platform.uname()[2]
         version = platform.uname()[3]
         version = version[0: version.rfind('.')]
-        architecture = os.environ["MSYSTEM_CARCH"]
+        try:
+            architecture = os.environ["MSYSTEM_CARCH"]
+        except KeyError as e:
+            # TODO smalers 2018-11-21 Need to fix the above to be portable
+            architecture = "unknown"
 
         properties += ("Operating System Information:\n" +
                        TAB + " Name: " + operating_system + "\n" +
@@ -2348,7 +2354,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Opens the log file in the default text editor for operating system
         """
-        os.startfile(self.app_session.get_log_file())
+        logger = logging.getLogger(__name__)
+        try:
+            # TODO smalers 2018-11-21 the following works on Windows - need to support other operating systems
+            os.startfile(self.app_session.get_log_file())
+        except (AttributeError, NotImplementedError) as e:
+            message='Error viewing log file - no application available for log file "' + self.app_session.get_log_file() + '"'
+            logger.error(message, e, exc_info=True)
+            qt_util.warning_message_box(message)
 
     def ui_init_file_open_recent_files(self):
         """
@@ -2358,7 +2371,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set the maximum amount of recent command files to open.
         # If there are less than 20 cached commands in command file history then set the max to be the
         # number of recently opened files
-        # If there are more than 20 cahced commands in command file history set max = 20
+        # If there are more than 20 cached commands in command file history set max = 20
         max = 20 if (len(self.app_session.read_history()) > 20) else len(self.app_session.read_history())
         for i in range(0, max):
             if (i >= len(self.app_session.read_history())):

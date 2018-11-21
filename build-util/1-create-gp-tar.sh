@@ -270,7 +270,7 @@ sed -i 's/^import geoprocessor.util.qgis_util/# import geoprocessor.util.qgis_ut
 sed -i 's/^from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor/# from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor/g' ${buildTmpGptestFolder}/geoprocessor/ui/app/GeoProcessorUI.py
 sed -i 's/^import qgis.utils/# import qgis.utils/g' ${buildTmpGptestFolder}/geoprocessor/ui/app/GeoProcessorUI.py
 sed -i 's/^import qgis.gui/# import qgis.gui/g' ${buildTmpGptestFolder}/geoprocessor/ui/app/GeoProcessorUI.py
-sed -i 's/qgis_version =/# qgis_version =/g' ${buildTmpGptestFolder}/geoprocessor/ui/app/GeoProcessorUI.py
+sed -i 's/qgis_version =/qgis_version = "unknown" # /g' ${buildTmpGptestFolder}/geoprocessor/ui/app/GeoProcessorUI.py
 sed -i 's/self.canvas =/# self.canvas =/g' ${buildTmpGptestFolder}/geoprocessor/ui/app/GeoProcessorUI.py
 sed -i 's/self.canvas.set/pass  # self.canvas.set/g' ${buildTmpGptestFolder}/geoprocessor/ui/app/GeoProcessorUI.py
 sed -i 's/self.canvas.resize/pass  # self.canvas.resize/g' ${buildTmpGptestFolder}/geoprocessor/ui/app/GeoProcessorUI.py

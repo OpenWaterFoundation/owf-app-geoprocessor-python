@@ -110,11 +110,11 @@ createGptestVirtualenvCygwin() {
 	# And, trying it gave an error on Cygwin with numpy, which stack overflow indicates is due to multiple
 	# numpy installations, probably caused by --system-site-packages.
 	# See:  https://virtualenv.pypa.io/en/stable/reference/#options
-	# -v is verbose
+	# -v is verbose (use for troubleshooting temporarily but do not deploy)
 	# -p specifies the Python to copy
 	# Works on Cygwin and Linux
 	echo "Creating virtual environment with: virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}"
-	virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}
+	virtualenv -p /usr/bin/python3 ${virtualenvFolderPath}
 	# Activate the virtual environment, making it the active Python
 	echo "Activating virtual environment with:  . ${virtualenvFolderPath}/bin/activate"
 	. ${virtualenvFolderPath}/bin/activate
@@ -158,12 +158,16 @@ createGptestVirtualenvCygwin() {
 	echo "Installing required Python packages using pip"
 	# Full list
 	#pipPackages='openpyxl pandas PyQt5 requests[security] SQLAlchemy xlwt'
-	# Leave out PyQt5 because could not find a pip version that compiled/installed
 	if [ "${operatingSystem}" = "cygwin" ]; then
+		# Cygwin Python can install most packages with pip, but the following
+		# must be installed in Cygwin via the setup program because no pip version.
+		#	python3-pyqt5
 		pipPackages='openpyxl pandas requests[security] SQLAlchemy xlwt'
 	elif [ "${operatingSystem}" = "linux" ]; then
-		# Leave out pandas for now until troubleshoot
-		#pipPackages='openpyxl pandas requests[security] SQLAlchemy xlwt'
+		# Linux Python can install most packages with pip, but the following
+		# must be installed via apt-get because no pip version.
+		#	apt-get install python3-pyqt5
+		#	apt-get install python3-pandas
 		pipPackages='openpyxl requests[security] SQLAlchemy xlwt'
 	fi
 	for pipPackage in $pipPackages; do
@@ -173,11 +177,15 @@ createGptestVirtualenvCygwin() {
 		# --only-binary all
 		# --prefer-binary (not available on linux version of python3)
 		if [ "${operatingSystem}" = "linux" ]; then
+			echo "------------------------------------------------------"
 			echo "Running:  pip3 install $pipPackage"
+			echo "------------------------------------------------------"
 			pip3 install $pipPackage
 		else
 			# Cygwin and others
+			echo "------------------------------------------------------"
 			echo "Running:  pip3 install $pipPackage --prefer-binary"
+			echo "------------------------------------------------------"
 			pip3 install $pipPackage --prefer-binary
 		fi
 	done
@@ -186,18 +194,45 @@ createGptestVirtualenvCygwin() {
 	# Therefore, the following are assumed to have been installed in the system Python.
 	if [ "$operatingSystem" = "cygwin" ]; then
 		# Manual copy of Cygwin-installed packages
-		# Windows variant such as Cygwin
-		echo "Copying Cygwin-installed /usr/lib/${pythonLibWithVersion}/site-packages/PyQt5 to site-packagses"
-		cp -r /usr/lib/${pythonLibWithVersion}/site-packages/PyQt5 ${sitepackagesFolder}
-		echo "Copying Cygwin-installed /usr/lib/${pythonLibWithVersion}/site-packages/sip* to site-packagses"
-		cp /usr/lib/${pythonLibWithVersion}/site-packages/sip* ${sitepackagesFolder}
+		# PyQt5
+		installedCount=`cygcheck -c python3-pyqt5 | grep OK | wc -l`
+		if [ $installedCount -ne "1" ]; then
+			echo "PyQt5 does not appear to be installed as a Cygwin package"
+			echo "Install python3-pyqt5 from the Cygwin installer"
+		else
+			# Appears to be installed, but check the folder
+			pyQt5Folder="/usr/lib/${pythonLibWithVersion}/site-packages/PyQt5"
+			if [ ! -d "${pyQt5Folder}" ]; then
+				echo "PyQt5 does not appear to be installed in the Cygwin system Python3:  ${pyQt5Folder}"
+				echo "Install python3-pyqt5 from the Cygwin installer"
+			else
+				echo "Copying Cygwin-installed ${pyQt5Folder} to site-packagses"
+				cp -r ${pyQt5Folder} ${sitepackagesFolder}
+			fi
+		fi
+		# SIP software
+		installedCount=`cygcheck -c python3-sip | grep OK | wc -l`
+		if [ $installedCount -ne "1" ]; then
+			echo "SIP does not appear to be installed as a Cygwin package"
+			echo "Install python3-sip from the Cygwin installer"
+		else
+			sipFile="/usr/lib/${pythonLibWithVersion}/site-packages/sipconfig.py"
+			sipFolder="/usr/lib/${pythonLibWithVersion}/site-packages/sip*"
+			if [ ! -f "${sipFile}" ]; then
+				echo "SIP does not appear to be installed in the Cygwin system Python3: ${sipFolder}"
+				echo "Install python3-sip from the Cygwin installer"
+			else
+				echo "Copying Cygwin-installed sip* to site-packagses"
+				cp ${sipFolder} ${sitepackagesFolder}
+			fi
+		fi
 	elif [ "$operatingSystem" = "linux" ]; then
 		# apt-get install python3-sip
 		# apt-get install python3-pyqt5
 		# apt-get install python3-pandas
 		# See:  https://pandas.pydata.org/pandas-docs/stable/install.html
 		#
-		# Debian Jessie 64-bit...
+		# Pandas also installs the following on Debian Jessie 64-bit, which indicate folders to copy...
 		# Get:1 http://ftp.us.debian.org/debian/ jessie/main libhdf5-8 amd64 1.8.13+docs-15+deb8u1 [1,061 kB]
 		# Get:2 http://ftp.us.debian.org/debian/ jessie/main libtcl8.6 amd64 8.6.2+dfsg-2 [978 kB]
 		# Get:3 http://ftp.us.debian.org/debian/ jessie/main libtk8.6 amd64 8.6.2-1 [771 kB]
@@ -230,53 +265,89 @@ createGptestVirtualenvCygwin() {
 		# Debian uses dist-packages instead of site-packages and seems to install into
 		# /usr/lib/python3, not, for example /usr/lib/python3.4
 		# pandas and dependencies
-		echo "Copying apt-get-installed /usr/lib/python3/dist-packages/pandas (and related) to site-packagses"
-		#cp -r /usr/lib/python3/dist-packages/blt ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/bs4 ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/dateutil ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/decorator.py ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/fonts-lyx ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/libjs-jquery-ui ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/libhdf5-8 ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/libtcl8.6 ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/libtk8.6 ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/libtk8.6-blt2.5 ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/liblz4-1 ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/libsnappy1 ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/lxml ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/matplotlib ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/mpltoolkits ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/nose ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/numexpr ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/numpy ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/pandas ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/pandas-lib ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/pyparsing ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/python-matplotlib-data ${sitepackagesFolder}
-		# From pandas-pil?
-		cp -r /usr/lib/python3/dist-packages/PIL ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/python-tables ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/scipy ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/tables ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/tables-lib ${sitepackagesFolder}
-		#cp -r /usr/lib/python3/dist-packages/tk ${sitepackagesFolder}
-		cp -r /usr/lib/python3/dist-packages/pytz ${sitepackagesFolder}
+		installedCount=1
+		if [ $installedCount -ne "1" ]; then
+			echo "Pandas does not appear to be installed as an apt-get package"
+			echo "Install python3-pandas using:  sudo apt-get install python3-pandas"
+		else
+			echo "Copying apt-get-installed /usr/lib/python3/dist-packages/pandas (and related) to site-packagses"
+			#cp -r /usr/lib/python3/dist-packages/blt ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/bs4 ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/dateutil ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/decorator.py ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/fonts-lyx ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/libjs-jquery-ui ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/libhdf5-8 ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/libtcl8.6 ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/libtk8.6 ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/libtk8.6-blt2.5 ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/liblz4-1 ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/libsnappy1 ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/lxml ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/matplotlib ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/mpltoolkits ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/nose ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/numexpr ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/numpy ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/pandas ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/pandas-lib ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/pyparsing ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/python-matplotlib-data ${sitepackagesFolder}
+			# From pandas-pil?
+			cp -r /usr/lib/python3/dist-packages/PIL ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/python-tables ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/scipy ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/tables ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/tables-lib ${sitepackagesFolder}
+			#cp -r /usr/lib/python3/dist-packages/tk ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/pytz ${sitepackagesFolder}
+		fi
 		# PyQt5
-		echo "Copying apt-get-installed /usr/lib/python3/dist-packages/PyQt5 to site-packagses"
-		cp -r /usr/lib/python3/dist-packages/PyQt5 ${sitepackagesFolder}
+		# TODO smalers 2018-11-25 make the following work on Linux for apt-get installs
+		#installedCount=`cygcheck -c python3-pyqt5 | grep OK | wc -l`
+		installedCount=1
+		if [ $installedCount -ne "1" ]; then
+			echo "PyQt5 does not appear to be installed as an apt-get package"
+			echo "Install python3-pyqt5 using:  sudo apt-get install python3-pyqt5"
+		else
+			pyQt5Folder="/usr/lib/python3/dist-packages/PyQt5"
+			if [ ! -d "${pyQt5Folder}" ]; then
+				echo "PyQt5 does not appear to be installed in the system Python3:  ${pyQt5Folder}"
+				echo "Install with:  sudo apt-get install python3-pyqt5"
+			else
+				echo "Copying apt-get-installed /usr/lib/python3/dist-packages/PyQt5 to site-packages"
+				cp -r ${pyQt5Folder} ${sitepackagesFolder}
+			fi
+		fi
 		# sip
-		echo "Copying apt-get-installed /usr/lib/python3/dist-packages/sip* to site-packagses"
-		cp /usr/lib/python3/dist-packages/sip* ${sitepackagesFolder}
+		installedCount=1
+		if [ $installedCount -ne "1" ]; then
+			echo "SIP does not appear to be installed as a Linux package"
+			echo "Install python3-sip using:  sudo apt-get install python3-sip"
+		else
+			sipFile="/usr/lib/python3/dist-packages/sipconfig.py"
+			if [ ! -f "${sipFile}" ]; then
+				echo "SIP does not appear to be installed in the system Python3 folder"
+				echo "Install python3-sip using:  sudo apt-get install python3-sip"
+			else
+				echo "Copying apt-get-installed /usr/lib/python3/dist-packages/sip* to site-packages"
+				cp "${sipFolder} ${sitepackagesFolder}"
+			fi
+		fi
 	else
 		echo "[Error] operating system ${operatingSystem} is not supported for package copy."
 	fi
 
-	# Copy GeoProcessor scripts
-	virtualenvScriptsFolder="${virtualenvFolderPath}/scripts"
-	mkdir ${virtualenvScriptsFolder}
-	buildTmpGptestFolder="${buildTmpFolder}/tmp-gptest-${version}"
-	cp ${buildTmpGptestFolder}/scripts/gptest ${virtualenvScriptsFolder}
-	cp ${buildTmpGptestFolder}/scripts/gptestui ${virtualenvScriptsFolder}
+	# Copy GeoProcessor scripts for gptest
+	if [ ${operatingSystem} = "cygwin" ] || [ ${operatingSystem} = "linux" ]; then
+		virtualenvScriptsFolder="${virtualenvFolderPath}/scripts"
+		mkdir ${virtualenvScriptsFolder}
+		buildTmpGptestFolder="${buildTmpFolder}/tmp-gptest-${version}"
+		cp ${buildTmpGptestFolder}/scripts/gptest ${virtualenvScriptsFolder}
+		cp ${buildTmpGptestFolder}/scripts/gptestui ${virtualenvScriptsFolder}
+	else
+		echo "[Error] operating system ${operatingSystem} is not supported for GeoProcessor copy."
+	fi
 }
 
 # Entry point into script

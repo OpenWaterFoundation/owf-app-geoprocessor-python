@@ -72,6 +72,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Latest command file that was read or saved, parent folder is the working directory
         self.command_file_path = None
 
+        # Whether the commands in the UI have been modified and need to be saved
+        self.command_file_modified = False
+
         # The most recent file save location, used to help file dialog start with recent location
         # - could be command file or other files
         self.saved_file = None

@@ -10,7 +10,8 @@ the gp application, which provides several run modes:
 The initial implementation focuses on batch and command shell.
 """
 
-from PyQt5 import QtWidgets
+#from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication
 # from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
 
 # GeoProcessor modules
@@ -158,7 +159,7 @@ class GeoProcessorCmd(cmd.Cmd):
         """
         Run the command file from the command line using syntax:  run command-file
         """
-        run_ui(qtapp, app_session)
+        run_ui(app_session)
 
     def postloop(self):
         print
@@ -265,24 +266,26 @@ def run_http_server():
     print("The GeoProcessor web server is not implemented.  Exiting...")
 
 
-def run_prompt(qtapp):
+def run_prompt():
     """
     Run the command line prompt interface.
 
     Returns:
         None.
     """
-    GeoProcessorCmd(qtapp=qtapp).cmdloop()
+    GeoProcessorCmd().cmdloop()
 
 
-def run_ui(qtapp, app_session):
+def run_ui(app_session):
     """
     Run the GeoProcessor user interface.
 
+    Args:
+        app_session:  application session properties
+
     Returns: None
     """
-    # If the following two lines are commented out, Python crashes.
-    from PyQt5.QtWidgets import QApplication
+    # Trying to declare the following in the main and passing here does not seem to work.
     app = QApplication(sys.argv)
 
     # window = QtWidgets.QWidget()
@@ -295,8 +298,7 @@ def run_ui(qtapp, app_session):
     GeoProcessor = importlib.import_module('geoprocessor.core.GeoProcessor')
     class_ = getattr(GeoProcessor, 'GeoProcessor')
     command_processor = class_()
-    # app = QtWidgets.QApplication(sys.argv)
-    #window = QtWidgets.QMainWindow()
+    # GeoProcessorUI derives from window = QtWidgets.QMainWindow()
     GeoProcessorUI = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI, 'GeoProcessorUI')
     runtime_properties = {}
@@ -304,7 +306,9 @@ def run_ui(qtapp, app_session):
     runtime_properties['AppVersionDate'] = version.app_version_date
     ui = class_(command_processor, runtime_properties, app_session)
     ui.show()
-    sys.exit(qtapp.exec_())
+    # Enter the main loop for the application
+    # - the following ensures a clean exit from the application
+    sys.exit(app.exec_())
     pass
 
 
@@ -334,7 +338,7 @@ def set_global_data():
         app_util.set_property('ProgramLicense', version.app_license)
         # Program name, shown in UI title bars
         app_util.set_property('ProgramName', version.app_name)
-        # Program organizatio and URL, shown in Help / About
+        # Program organization and URL, shown in Help / About
         app_util.set_property('ProgramOrganization', version.app_organization)
         app_util.set_property('ProgramOrganizationUrl', version.app_organization_url)
         # Resources are in geoprocessor/resources
@@ -401,8 +405,12 @@ if __name__ == '__main__':
         print_env()
 
     # Open an application to initialize static UI data
+    # - might not be needed in batch mode, but UI may be needed for image manipulation, etc.
     print("Initializing QApplication")
-    qtapp = QtWidgets.QApplication(sys.argv)
+    # The following should work, and allow passing to run_ui(), but the UI does not open.
+    # Instead, declare the application in run_ui(), which works.
+    #qtapp = QtWidgets.QApplication(sys.argv)
+    #qtapp = QApplication(sys.argv)
     # Set global environment data that will be used by library code
     set_global_data()
     # Set up a session instance
@@ -475,7 +483,7 @@ if __name__ == '__main__':
         # Run the user interface
         print("Running GeoProcessor UI")
         try:
-            run_ui(qtapp, app_session)
+            run_ui(app_session)
         except Exception as e:
             message='Exception running UI'
             print(message)
@@ -484,7 +492,7 @@ if __name__ == '__main__':
         # No arguments given to indicate whether batch, UI, etc. so start up the shell.
         print("Running GeoProcessor shell")
         try:
-            run_prompt(qtapp)
+            run_prompt()
         except Exception as e:
             message='Exception running shell'
             print(message)

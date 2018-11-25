@@ -305,9 +305,9 @@ if [ -e "${gptestSitePackageBuildFileGz}" ]; then
 	rm ${gptestSitePackageBuildFileGz}
 fi
 
-echo "Creating tar file containing *.py files ..."
+echo "Creating tar file containing *.py *png *.gif files ..."
 cd "${buildTmpGptestFolder}"
-find geoprocessor -name '*.py' -exec tar -rvf ${gptestSitePackageBuildFile} {} \;
+find geoprocessor \( -name '*.py' -o -name '*.png' -o -name '*.gif' \) -exec tar -rvf ${gptestSitePackageBuildFile} {} \;
 if [ "$?" -ne 0 ]; then
 	echo "Error in script.  Exiting."
 	exit $?
@@ -394,9 +394,9 @@ if [ -e "${gpSitePackageBuildFileGz}" ]; then
 	rm ${gpSitePackageBuildFileGz}
 fi
 
-echo "Creating tar file containing *.py files ..."
+echo "Creating tar file containing *.py *png *.gif files ..."
 cd "${buildTmpGpFolder}"
-find geoprocessor -name '*.py' -exec tar -rvf ${gpSitePackageBuildFile} {} \;
+find geoprocessor \( -name '*.py' -o -name '*.png' -o -name '*.gif' \) -exec tar -rvf ${gpSitePackageBuildFile} {} \;
 if [ "$?" -ne 0 ]; then
 	echo "Error in script.  Exiting."
 	exit $?

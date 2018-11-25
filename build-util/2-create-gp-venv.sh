@@ -265,12 +265,12 @@ createGptestVirtualenvCygwin() {
 		# Debian uses dist-packages instead of site-packages and seems to install into
 		# /usr/lib/python3, not, for example /usr/lib/python3.4
 		# pandas and dependencies
-		installedCount=1
-		if [ $installedCount -ne "1" ]; then
+		installedCount=`dpkg-query -l python3-pandas | grep -v 'no packages' | wc -l`
+		if [ $installedCount -eq "1" ]; then
 			echo "Pandas does not appear to be installed as an apt-get package"
 			echo "Install python3-pandas using:  sudo apt-get install python3-pandas"
 		else
-			echo "Copying apt-get-installed /usr/lib/python3/dist-packages/pandas (and related) to site-packagses"
+			echo "Copying apt-get-installed /usr/lib/python3/dist-packages/pandas (and related) to ${sitepackagesFolder}"
 			#cp -r /usr/lib/python3/dist-packages/blt ${sitepackagesFolder}
 			cp -r /usr/lib/python3/dist-packages/bs4 ${sitepackagesFolder}
 			cp -r /usr/lib/python3/dist-packages/dateutil ${sitepackagesFolder}
@@ -285,7 +285,7 @@ createGptestVirtualenvCygwin() {
 			#cp -r /usr/lib/python3/dist-packages/libsnappy1 ${sitepackagesFolder}
 			cp -r /usr/lib/python3/dist-packages/lxml ${sitepackagesFolder}
 			cp -r /usr/lib/python3/dist-packages/matplotlib ${sitepackagesFolder}
-			cp -r /usr/lib/python3/dist-packages/mpltoolkits ${sitepackagesFolder}
+			cp -r /usr/lib/python3/dist-packages/mpl_toolkits ${sitepackagesFolder}
 			cp -r /usr/lib/python3/dist-packages/nose ${sitepackagesFolder}
 			cp -r /usr/lib/python3/dist-packages/numexpr ${sitepackagesFolder}
 			cp -r /usr/lib/python3/dist-packages/numpy ${sitepackagesFolder}
@@ -304,9 +304,8 @@ createGptestVirtualenvCygwin() {
 		fi
 		# PyQt5
 		# TODO smalers 2018-11-25 make the following work on Linux for apt-get installs
-		#installedCount=`cygcheck -c python3-pyqt5 | grep OK | wc -l`
-		installedCount=1
-		if [ $installedCount -ne "1" ]; then
+		installedCount=`dpkg-query -l python3-pyqt5 | grep -v 'no packages' | wc -l`
+		if [ $installedCount -eq "1" ]; then
 			echo "PyQt5 does not appear to be installed as an apt-get package"
 			echo "Install python3-pyqt5 using:  sudo apt-get install python3-pyqt5"
 		else
@@ -315,23 +314,24 @@ createGptestVirtualenvCygwin() {
 				echo "PyQt5 does not appear to be installed in the system Python3:  ${pyQt5Folder}"
 				echo "Install with:  sudo apt-get install python3-pyqt5"
 			else
-				echo "Copying apt-get-installed /usr/lib/python3/dist-packages/PyQt5 to site-packages"
+				echo "Copying apt-get-installed /usr/lib/python3/dist-packages/PyQt5 to ${sitepackagesFolder}"
 				cp -r ${pyQt5Folder} ${sitepackagesFolder}
 			fi
 		fi
 		# sip
-		installedCount=1
-		if [ $installedCount -ne "1" ]; then
+		installedCount=`dpkg-query -l python3-sip | grep -v 'no packages' | wc -l`
+		if [ $installedCount -eq "1" ]; then
 			echo "SIP does not appear to be installed as a Linux package"
 			echo "Install python3-sip using:  sudo apt-get install python3-sip"
 		else
 			sipFile="/usr/lib/python3/dist-packages/sipconfig.py"
+			sipFolder="/usr/lib/python3/dist-packages/sip*"
 			if [ ! -f "${sipFile}" ]; then
 				echo "SIP does not appear to be installed in the system Python3 folder"
 				echo "Install python3-sip using:  sudo apt-get install python3-sip"
 			else
-				echo "Copying apt-get-installed /usr/lib/python3/dist-packages/sip* to site-packages"
-				cp "${sipFolder} ${sitepackagesFolder}"
+				echo "Copying apt-get-installed ${sipFolder} to ${sitepackagesFolder}"
+				cp ${sipFolder} ${sitepackagesFolder}
 			fi
 		fi
 	else

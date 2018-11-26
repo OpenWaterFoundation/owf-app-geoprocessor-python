@@ -10,6 +10,13 @@
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
 
+# Set the DISPLAY variable needed for X windows
+if [ -z "$DISPLAY" ]; then
+>-------echo "Setting DISPLAY=:0.0"
+>-------export DISPLAY=0.0
+fi
+
+# Run the GeoProcessor using the main script
 ${scriptFolder}/gp --ui $@
 
 # Exit with the status of the called script

@@ -4,7 +4,13 @@ This folder contains Windows batch files and Linux scripts used in the developme
 These scripts should generally be run from within the `build-util` folder from a
 Windows command prompt window (if .bat file) or Cygwin/Git Bash/Windows Bash/Linux command shell (if .sh file).
 
-* `create-gptest-installer.sh` - Linux/Cygwin script to create tar.gz installer files for the geoprocessor module
-	+ Output is in the `../build` folder
-* `run-pycharm2016.2.3-for-qgis.bat` - Windows batch file to start PyCharm 2016.2.3 Community Edition (installed in standard location)
-* `run-pycharm2017.3.1-for-qgis.bat` - Windows batch file to start PyCharm 2017.3.1 Community Edition (installed in standard location)
+* `1-create-gp-tar.sh` - Linux/Cygwin script to create tar.gz installer files for the geoprocessor
+	+ Output is in the `build-tmp` folder
+* `2-create-gp-venv.sh` - Linux/Cygwin script to a Python virtual environment from previous step tar.gz file
+* `3-install-gp-venv-for-user.sh` - Linux/Cygwin script to install virtual environment from previous step
+to user-specified installation folder, for use in production environment
+* `git-check-gp.sh` - check Git/GitHub status of multiple product repositories
+* `git-clone-all-gp.sh` - clone the full product's repositories after the `owf-app-geoprocessor-python`
+repository is cloned
+* `run-pycharm*.bat` - Windows batch file(s) to start PyCharm Community Edition (installed in standard location)
+	+ Batch files are updated as new versions of PyCharm are released and used for development

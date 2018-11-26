@@ -348,6 +348,17 @@ createGptestVirtualenvCygwin() {
 	else
 		echo "[Error] operating system ${operatingSystem} is not supported for GeoProcessor copy."
 	fi
+
+	# Finally, create a tar file of the virtual environment, for distribution to deployed user environment
+	echo "--------------------------------------------------------"
+	echo "Creating tar.gz file for virtual environment"
+	echo "--------------------------------------------------------"
+	echo "Changing to ${virtualenvTmpFolder}"
+	cd ${virtualenvTmpFolder}
+	gptestTargzFile="gptest-${version}-${operatingSystemShort}-venv.tar.gz"
+	echo "Creating file to distribute virtual environment:  ${gptestTargzFile}"
+	virtualenvFolderBasename=`basename ${virtualenvFolderPath}`
+	tar -czvf ${gptestTargzFile} ${virtualenvFolderBasename}
 }
 
 # Entry point into script
@@ -403,7 +414,10 @@ fi
 checkPythonConfig
 
 # Create the virtual environment for Cygwin
-createGptestVirtualenvCygwin
+if [ ${operatingSystem} = "cygwin" ]; then
+	echo "Detected Cygwin...creating gptest virtual environment for Cygwin"
+	createGptestVirtualenvCygwin
+fi
 
 errorOccurred="no"
 

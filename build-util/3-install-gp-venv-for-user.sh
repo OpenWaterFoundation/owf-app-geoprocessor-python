@@ -109,27 +109,78 @@ while [ "1" = "1" ]; do
 					# Search and replace the original virtual environment configuration to installed folder
 					installFolderAbsForSed=`echo $installFolderAbs | tr '/' '\\/'`
 					# bin/activate
-					sed -i "s,^VIRTUAL_ENV=.*,VIRTUAL_ENV=\"$installFolderAbs\",g" ${installFolderAbs}/bin/activate
+					binActivate="${installFolderAbs}/bin/activate"
+					if [ -f "${binActivate}" ]; then
+						sed -i "s,^VIRTUAL_ENV=.*,VIRTUAL_ENV=\"$installFolderAbs\",g" ${binActivate}
+					fi
 					# bin/activate.csh
-					sed -i "s,^setenv VIRTUAL_ENV.*,setenv VIRTUAL_ENV \"$installFolderAbs\",g" ${installFolderAbs}/bin/activate.csh
+					binActivateCsh="${installFolderAbs}/bin/activate.csh"
+					if [ -f "${binActivateCsh}" ]; then
+						sed -i "s,^setenv VIRTUAL_ENV.*,setenv VIRTUAL_ENV \"$installFolderAbs\",g" ${binActivateCsh}
+					fi
 					# bin/activate.fish
-					sed -i "s,^set -gx VIRTUAL_ENV=.*,set -gx VIRTUAL_ENV \"$installFolderAbs\",g" ${installFolderAbs}/bin/activate.fish
+					binActivateFish="${installFolderAbs}/bin/activate.fish"
+					if [ -f "${binActivateFish}" ]; then
+						sed -i "s,^set -gx VIRTUAL_ENV=.*,set -gx VIRTUAL_ENV \"$installFolderAbs\",g" ${binActivateFish}
+					fi
+					# bin/chardetect
+					binChardetect="${installFolderAbs}/bin/chardetect"
+					if [ -f "${binChardetect}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binChardetect}
+					fi
 					# bin/easy_install
-					sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${installFolderAbs}/bin/easy_install
+					binEasyInstall="${installFolderAbs}/bin/easy_install"
+					if [ -f "${binEasyInstall}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binEasyInstall}
+					fi
+					# TODO smalers 2018-11-27 brute force but need to make more intelligent
 					# bin/easy_install-3.6
-					sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${installFolderAbs}/bin/easy_install-3.6
+					binEasyInstall36="${installFolderAbs}/bin/easy_install-3.6"
+					if [ -f "${binEasyInstall36}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binEasyInstall36}
+					fi
+					# bin/easy_install-3.4
+					binEasyInstall34="${installFolderAbs}/bin/easy_install-3.4"
+					if [ -f "${binEasyInstall34}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binEasyInstall34}
+					fi
 					# bin/pip
-					sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${installFolderAbs}/bin/pip
+					binPip="${installFolderAbs}/bin/pip"
+					if [ -f "${binPip}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binPip}
+					fi
 					# bin/pip3
-					sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${installFolderAbs}/bin/pip3
+					binPip3="${installFolderAbs}/bin/pip3"
+					if [ -f "${binPip3}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binPip3}
+					fi
 					# bin/pip3.6
-					sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${installFolderAbs}/bin/pip3.6
+					binPip36="${installFolderAbs}/bin/pip3.6"
+					if [ -f "${binPip36}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binPip36}
+					fi
+					# bin/pip3.4
+					binPip34="${installFolderAbs}/bin/pip3.4"
+					if [ -f "${binPip34}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binPip34}
+					fi
 					# bin/python3
-					sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${installFolderAbs}/bin/python3
+					# - no need to modify versioned copes because symlinks are used rather than copies
+					binPip34="${installFolderAbs}/bin/python"
+					if [ -f "${binPython}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binPython}
+					fi
 					# bin/python-config
-					sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${installFolderAbs}/bin/python-config
+					binPythonConfig="${installFolderAbs}/bin/python-config"
+					if [ -f "${binPythonConfig}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binPythonConfig}
+					fi
 					# bin/wheel
-					sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${installFolderAbs}/bin/wheel
+					binWheel="${installFolderAbs}/bin/wheel"
+					if [ -f "${binWheel}" ]; then
+						sed -i "s,^'''exec' .*,'''exec' $installFolderAbs/bin/python3 \"\$O\" \"\$@\",g" ${binWheel}
+					fi
+					# Attempted actions above so exit the loop...
 					break
 				elif [ "${answer}" = "n" ]; then
 					# Quit the script

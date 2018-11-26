@@ -417,6 +417,10 @@ checkPythonConfig
 if [ ${operatingSystem} = "cygwin" ]; then
 	echo "Detected Cygwin...creating gptest virtual environment for Cygwin"
 	createGptestVirtualenvCygwin
+elif [ ${operatingSystem} = "linux" ]; then
+	echo "Detected Linux gptest virtual environment for Linux"
+	# For now call the same code since logic is handled for Cygwin and Linux
+	createGptestVirtualenvCygwin
 fi
 
 errorOccurred="no"

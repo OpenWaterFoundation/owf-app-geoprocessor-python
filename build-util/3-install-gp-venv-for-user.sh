@@ -1,4 +1,6 @@
 #!/bin/sh
+(set -o igncr) 2>/dev/null && set -o igncr; # this comment is required
+# The above line ensures that the script can be run on Cygwin/Linux even with Windows CRNL
 #
 # Install the GeoProcessor Python virtual environment in deployed user environment.
 # This involves searching and replacing some paths with user file location.

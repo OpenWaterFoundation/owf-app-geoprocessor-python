@@ -1,5 +1,8 @@
 import platform
 
+import geoprocessor.commands.util.Comment as Comment
+import geoprocessor.commands.logging.Message as Message
+import geoprocessor.commands.logging.StartLog as StartLog
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.command_util as command_util
@@ -7,6 +10,8 @@ import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.ui.util.qt_util as qt_util
 from functools import partial
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
+import geoprocessor.core.command_status_type as command_status_type
+import geoprocessor.core.command_phase_type as command_phase_type
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import ReadGeoLayerFromGeoJSON_Editor
 from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCommandEditorFactory
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
@@ -1503,6 +1508,86 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.toolbar.setStyleSheet("QToolButton {padding-left: 0px}")
         self.toolbar.setMaximumHeight(27)
 
+    def show_command_status(self):
+        """
+        Opens a dialog box that shows the command status.
+
+        Returns: None
+        """
+
+        # Get the command that was selected
+        # TODO smalers 2018-11-26 for now find the first non-comment command
+        # - the first bit of code can be discarded when geoprocessor/UI code is integrated
+        # - the corresponding command in the geoprocessor must also be known so that
+        #   the command object can be retrieved
+
+        logger = logging.getLogger(__name__)
+        gp = self.gp
+        print("in show_command_status, have " + str(len(gp.commands)) + " commands in processor from running")
+        selected_command = None
+        for command in gp.commands:
+            command_class = command.__class__.__name__
+            if command_class == "StartLog":
+                continue
+            elif command_class == "Comment":
+                continue
+            else:
+                # Found a command to get status
+                selected_command = command
+                break
+        if selected_command is None:
+            qt_util.info_message_box('No command found to show status.')
+        else:
+            # Format the information similar to TSTool status
+            # - TSTool uses an HTML-formatted status, but for now show as simple text
+            # - HTML formatting or other free-form format is preferred because content will fill table cells
+            try:
+                command_status = command.command_status
+                status_string = "Command:" + selected_command.command_string + "\n\n" + \
+                    "Phase             Status/Max Severity\n" + \
+                    "Initialization    " + command_status.initialization_status + "\n" + \
+                    "Discovery         " + command_status.discovery_status + "\n" + \
+                    "Run               " + command_status.run_status + "\n\n" + \
+                    "Command Status Details (" + \
+                    str(command_status.get_log_count(phase=None, severity=command_status_type.WARNING)) + \
+                    " warnings, " + str(command_status.get_log_count(
+                        phase=None, severity=command_status_type.FAILURE)) + " failures):\n" + \
+                    "  #   Phase       Severity      Problem        Recommendation\n"
+                # Loop over each phase and output the warning and failure log messages
+                # - TODO smalers 2018-11-26 the following needs to be formatted
+                log_count = 0
+                for log_record in command_status.initialization_log_list:
+                    if log_record.severity == command_status_type.WARNING or \
+                        log_record.severity == command_status_type.FAILURE:
+                        log_count = log_count + 1
+                        status_string = status_string + str(log_count) + "   " +\
+                                        command_phase_type.INITIALIZATION + \
+                                        "  " + log_record.severity + "   " + \
+                                        "  " + log_record.problem + "   " + \
+                                        log_record.recommendation + "\n"
+                for log_record in command_status.discovery_log_list:
+                    if log_record.severity == command_status_type.WARNING or \
+                            log_record.severity == command_status_type.FAILURE:
+                        log_count = log_count + 1
+                        status_string = status_string + str(log_count) + "   " +\
+                                           command_phase_type.DISCOVERY + "  " + \
+                                        log_record.severity + "   " + \
+                                        log_record.problem + "   " + \
+                                        log_record.recommendation + "\n"
+                print("Have " + str(len(command_status.run_log_list)) + " log records")
+                for log_record in command_status.run_log_list:
+                    if log_record.severity == command_status_type.WARNING or \
+                            log_record.severity == command_status_type.FAILURE:
+                        log_count = log_count + 1
+                        status_string = status_string + str(log_count) + "   " + \
+                                        command_phase_type.RUN +\
+                                        "  " + log_record.severity + "   " + \
+                                        "  " + log_record.problem + "   " + \
+                                        log_record.recommendation + "\n"
+                qt_util.info_message_box(status_string)
+            except Exception as e:
+                logger.warning("Error formatting status", e, exc_info=True)
+
     def show_results(self):
         """
         Populates the Results tables of the UI to reflect results of running the GeoProcessor, including
@@ -1758,6 +1843,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.rightClickMenu_Commands = QtWidgets.QMenu()
 
         # Add the menu options to the right-click menu.
+        menu_item_command_status = self.rightClickMenu_Commands.addAction("Show Command Status")
+        self.rightClickMenu_Commands.addSeparator()
         menu_item_edit_command = self.rightClickMenu_Commands.addAction("Edit Command")
         menu_item_delete_command = self.rightClickMenu_Commands.addAction("Delete Command")
         self.rightClickMenu_Commands.addSeparator()
@@ -1765,6 +1852,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         menu_item_decrease_indent_command = self.rightClickMenu_Commands.addAction("Decrease Indent")
 
         # Connect the menu options to the appropriate actions.
+        menu_item_command_status.triggered.connect(self.show_command_status)
         menu_item_edit_command.triggered.connect(self.edit_command_editor)
         menu_item_delete_command.triggered.connect(self.clear_command_from_rightclick)
         menu_item_increase_indent_command.triggered.connect(self.command_increase_indent)

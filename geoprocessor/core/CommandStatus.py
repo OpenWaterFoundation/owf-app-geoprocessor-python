@@ -1,5 +1,6 @@
 import geoprocessor.core.command_status_type as command_status_type
 import geoprocessor.core.command_phase_type as command_phase_type
+import logging
 
 
 class CommandStatus(object):
@@ -84,10 +85,34 @@ class CommandStatus(object):
         else:  # This should never happen.
             return command_status_type.UNKNOWN
 
+    def get_log_count(self, phase=None, severity=None):
+        """
+
+        Args:
+            phase: the command phase type (e.g., command_phase_type.RUN), or None to include all phases.
+            severity: the severity (e.g., command_status_type.WARNING) of log messages to count
+
+        Returns: the count of the log messages for the given phase and severity
+        """
+        log_count = 0
+        if phase == command_phase_type.INITIALIZATION or phase is None:
+            for log_message in self.initialization_log_list:
+                if log_message.severity == severity:
+                    log_count = log_count + 1
+        if phase == command_phase_type.DISCOVERY or phase is None:
+            for log_message in self.discovery_log_list:
+                if log_message.severity == severity:
+                    log_count = log_count + 1
+        if phase == command_phase_type.RUN or phase is None:
+            for log_message in self.run_log_list:
+                if log_message.severity == severity:
+                    log_count = log_count + 1
+        return log_count
+
     def refresh_phase_severity(self, phase, severity_if_unknown):
         """
         Refresh the command status for a phase.  This should normally only be called when
-        initializing a status or setting to success.  Otherwise, addToLog() should be
+        initializing a status or setting to success.  Otherwise, add_to_log() should be
         used and the status determined from the CommandLogRecord status values.
         This ensures that the command has a status even if no log messages were generated.
 

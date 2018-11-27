@@ -25,7 +25,7 @@ def get_command_status_types(sort=False):
     """
     if sort:
         # Sort alphabetically
-        return [INFO, FAILURE, SUCCESS, WARNING]
+        return [FAILURE, INFO, SUCCESS, WARNING]
     else:
         # Return in order of severity (good to bad)
         return [INFO, SUCCESS, WARNING, FAILURE]
@@ -100,6 +100,8 @@ def value_of(str_value, ignore_case=False):
         return UNKNOWN
     elif str_value == 'INFO':
         return INFO
+    elif str_value == 'SUCCESS':
+        return SUCCESS
     elif str_value == 'WARNING' or str_value == 'WARN':
         return WARNING
     elif str_value == 'FAILURE' or str_value == 'FAIL':

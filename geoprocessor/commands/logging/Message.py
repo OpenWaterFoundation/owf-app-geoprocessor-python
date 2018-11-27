@@ -97,11 +97,29 @@ class Message(AbstractCommand):
 
         # Message parameter won't be null.
         pv_Message = self.get_parameter_value('Message')
+        pv_CommandStatus = self.get_parameter_value('CommandStatus')
+        if pv_CommandStatus is None or pv_CommandStatus == "":
+            pv_commandStatus = command_status_type.SUCCESS
         message_expanded = self.command_processor.expand_parameter_value(pv_Message)
         logger.info(message_expanded)
 
+        # Add a log message for the requested status type
+        # - don't add to the warning count
+        if pv_CommandStatus == command_status_type.SUCCESS:
+            self.command_status.add_to_log(
+                command_phase_type.RUN,
+                CommandLogRecord(command_status_type.SUCCESS, message_expanded, ""))
+        elif pv_CommandStatus == command_status_type.WARNING:
+            self.command_status.add_to_log(
+                command_phase_type.RUN,
+                CommandLogRecord(command_status_type.WARNING, message_expanded, ""))
+        elif pv_CommandStatus == command_status_type.FAILURE:
+            self.command_status.add_to_log(
+                command_phase_type.RUN,
+                CommandLogRecord(command_status_type.FAILURE, message_expanded, ""))
+
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings processing the command."
+            message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
         self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

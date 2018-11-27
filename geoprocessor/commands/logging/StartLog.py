@@ -110,7 +110,7 @@ class StartLog(AbstractCommand):
                                  "Check the old log file or command window for details."))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings processing the command."
+            message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
         self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)

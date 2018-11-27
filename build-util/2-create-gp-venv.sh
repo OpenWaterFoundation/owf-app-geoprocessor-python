@@ -9,6 +9,95 @@
 
 # Supporting functions
 
+# Check whether proper Cygwin packages are installed in development environment
+# - some packages (e.g., python-devel) will only be used by pip during compiles, which use system include files and libraries
+# - other packages (e.g., python-pyqt5) will be copied from the system Python to virtual environment by this script
+checkCygwinDevEnv()
+{	# First check for Cygwin install packages
+	cygwinMissingPackageCount=0
+	# There may be more requirements but installing major component like python-pyqt5
+	# generally install needed dependencies.
+	cygwinRequiredPackages="gcc-core gcc-fortran python3-devel libffi-devel libpq-devel openssl-devel python3-pip python3-pyqt5 python3-sip"
+	echo "Checking that Cygwin setup program installed:  $cygwinRequiredPackages"
+	for requiredPackage in $cygwinRequiredPackages; do
+		installedCount1=`cygcheck -c ${requiredPackage} | grep OK | wc -l`
+		if [ "$installedCount1" -ne "1" ]; then
+			${echo2} "${failColor}$requiredPackage does not appear to be installed as a Cygwin package.${endColor}"
+			${echo2} "${failColor}Install $requiredPackage using the Cygwin setup installer.${endColor}"
+			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#cygwin${endColor}"
+			cygwinMissingPackageCount=`expr $cygwinMissingPackageCount + 1`
+		fi
+	done
+	# If any errors occurred exit here and fix
+	if [ $cygwinMissingPackageCount -ne "0" ]; then
+		${echo2} "${failColor}Required Cygwin packages are missing.  See above for information.${endColor}"
+		exit 1
+	fi
+
+	# Also check for pip installed packages in system Python
+	cygwinMissingPackageCount=0
+	cygwinRequiredPackages="pip virtualenv"
+	echo "Checking that system Python pip3 packages are installed:  $cygwinRequiredPackages"
+	for requiredPackage in $cygwinRequiredPackages; do
+		installedCount1=`pip3 list | grep $requiredPackage | wc -l`
+		if [ "$installedCount1" -ne "1" ]; then
+			${echo2} "${failColor}$requiredPackage does not appear to be installed as system pip3 package.${endColor}"
+			${echo2} "${failColor}Install $requiredPackage using: pip3 install ${requiredPackage}${endColor}"
+			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#cygwin${endColor}"
+			cygwinMissingPackageCount=`expr $cygwinMissingPackageCount + 1`
+		fi
+	done
+	# If any errors occurred exit here and fix
+	if [ $cygwinMissingPackageCount -ne "0" ]; then
+		${echo2} "${failColor}Required pip3 packages are missing.  See above for information.${endColor}"
+		exit 1
+	fi
+}
+
+# Check whether proper Linux packages are installed in development environment
+# - some packages (e.g., python-devel) will only be used by pip during compiles, which use system include files and libraries
+# - other packages (e.g., python-pyqt5) will be copied from the system Python to virtual environment by this script
+checkLinuxDevEnv()
+{	# First check for Linux install packages
+	linuxMissingPackageCount=0
+	# There may be more requirements but installing major component like python-pyqt5
+	# generally install needed dependencies.
+	linuxRequiredPackages="gcc-core gcc-fortran python3-devel libffi-devel libpq-devel openssl-devel python-pandas python3-pip python3-pyqt5 python3-sip"
+	for requiredPackage in $linuxRequiredPackages; do
+		installedCount1=`dpkg-query -l $requiredPackage | grep -v 'no packages' | wc -l`
+		if [ "$installedCount1" -ne "1" ]; then
+			${echo2} "${failColor}$requiredPackage does not appear to be installed as an apt package.${endColor}"
+			${echo2} "${failColor}Install $requiredPackage using:  sudo apt-get install ${requiredPackage}${endColor}"
+			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#linux${endColor}"
+			linuxMissingPackageCount=`expr $linuxMissingPackageCount + 1`
+		fi
+	done
+	# If any errors occurred exit here and fix
+	if [ $linuxMissingPackageCount -ne "0" ]; then
+		${echo2} "${failColor}Required Linux packages are missing.  See above for information.${endColor}"
+		exit 1
+	fi
+
+	# Also check for pip installed packages in system Python
+	linuxMissingPackageCount=0
+	linuxRequiredPackages="pip virtualenv"
+	echo "Checking that system Python pip3 packages are installed:  $linuxRequiredPackages"
+	for requiredPackage in $linuxRequiredPackages; do
+		installedCount1=`pip3 list | grep $requiredPackage | wc -l`
+		if [ "$installedCount1" -ne "1" ]; then
+			${echo2} "${failColor}$requiredPackage does not appear to be installed as system pip3 package.${endColor}"
+			${echo2} "${failColor}Install $requiredPackage using: pip3 install ${requiredPackage}${endColor}"
+			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#linux${endColor}"
+			linuxMissingPackageCount=`expr $linuxMissingPackageCount + 1`
+		fi
+	done
+	# If any errors occurred exit here and fix
+	if [ $linuxMissingPackageCount -ne "0" ]; then
+		${echo2} "${failColor}Required pip3 packages are missing.  See above for information.${endColor}"
+		exit 1
+	fi
+}
+
 # Determine the operating system that is running the script
 # - sets the variable operatingSystem to cygwin, linux, or mingw (Git Bash)
 checkOperatingSystem()
@@ -88,9 +177,15 @@ checkVenvPythonConfig () {
 	fi
 }
 
-# Create the Cygwin virtual environment for gptest
-createGptestVirtualenvCygwin() {
+# Create the Cygwin and Linux virtual environment for gptest
+createGptestVirtualenvCygwinAndLinux() {
 	echo "Creating virtualenv for gptest for Cygwin"
+	# Check to make sure that the proper packages are installed in Cygwin
+	if [ ${operatingSystem} = "cygwin" ]; then
+		checkCygwinDevEnv
+	elif [ ${operatingSystem} = "linux" ]; then
+		checkLinuxDevEnv
+	fi
 	# First change to the folder in which to create the virtual environment
 	echo "Changing to ${virtualenvTmpFolder}"
 	cd ${virtualenvTmpFolder}
@@ -118,8 +213,9 @@ createGptestVirtualenvCygwin() {
 	# Activate the virtual environment, making it the active Python
 	echo "Activating virtual environment with:  . ${virtualenvFolderPath}/bin/activate"
 	. ${virtualenvFolderPath}/bin/activate
+	# Check to make sure needed tools are installed
 	# Need to upgrade the setuptools on Linux for some packages
-	# - works ok on Cygwin with the update
+	# - works ok on linux with the update
 	if [ "${operatingSystem}" = "linux" ]; then
 		pip3 install --upgrade setuptools
 	fi
@@ -363,6 +459,31 @@ createGptestVirtualenvCygwin() {
 
 # Entry point into script
 
+# Determine which echo to use, needs to support -e to output colored text
+# - normally built-in shell echo is OK, but on Debian Linux dash shell is used, and it does not support -e
+echo2='echo -e'
+testEcho=`echo -e test`
+if [ "${testEcho}" = '-e test' ]; then
+	# The -e option did not work as intended.
+	-using the normal /bin/echo should work
+	-printf is also an option
+	echo2='/bin/echo -e'
+	The following does not seem to work
+	echo2='printf'
+fi
+
+# Strings to change colors on output, to make it easier to indicate when actions are needed
+# - Colors in Git Bash:  https://stackoverflow.com/questions/21243172/how-to-change-rgb-colors-in-git-bash-for-windows
+# - Useful info:  http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
+# - See colors:  https://en.wikipedia.org/wiki/ANSI_escape_code#Unix-like_systems
+# - Set the background to black to eensure that white background window will clearly show colors contrasting on black.
+# - Yellow "33" in Linux can show as brown, see:  https://unix.stackexchange.com/questions/192660/yellow-appears-as-brown-in-konsole
+# - Tried to use RGB but could not get it to work - for now live with "yellow" as it is
+warnColor='\e[0;40;33m' # user needs to do something, 40=background black, 33=yellow
+failColor='\e[0;40;31m' # serious issue, 40=background black, 31=red
+okColor='\e[0;40;32m' # status is good, 40=background black, 32=green
+colorEnd='\e[0m' # To switch back to default color
+
 #------------------------------------------------------------------------------------------
 # Step 0. Setup.
 # Get the location where this script is located since it may have been run from any folder
@@ -416,11 +537,10 @@ checkPythonConfig
 # Create the virtual environment for Cygwin
 if [ ${operatingSystem} = "cygwin" ]; then
 	echo "Detected Cygwin...creating gptest virtual environment for Cygwin"
-	createGptestVirtualenvCygwin
+	createGptestVirtualenvCygwinAndLinux
 elif [ ${operatingSystem} = "linux" ]; then
-	echo "Detected Linux gptest virtual environment for Linux"
-	# For now call the same code since logic is handled for Cygwin and Linux
-	createGptestVirtualenvCygwin
+	echo "Detected Linux...creating gptest virtual environment for Linux"
+	createGptestVirtualenvCygwinAndLinux
 fi
 
 errorOccurred="no"

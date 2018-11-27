@@ -361,25 +361,25 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Update the command count and Command_List label to show that a command was added to the workflow.
             self.update_ui_status_commands()
 
-    def gutter_error_at_row(self, item):
+    def gutter_error_at_row(self, index):
         """
         Set gutter row to red if there is a command line error on this row.
         :param item: QListWidgetItem from the gutter representing the
         command line row with error
         :return: QListWidgetItem
         """
+        item = self.gutter.item(index)
         item.setBackground(QtCore.Qt.red)
-        return item
 
-    def gutter_warning_at_row(self, item):
+    def gutter_warning_at_row(self, index):
         """
         Set gutter row to yellow if there is a command line warning on this row.
         :param item: QListWidgetItem from the gutter representing the
         command line row with warning
         :return: QListWidgetItem
         """
+        item = self.gutter.item(index)
         item.setBackground(QtCore.Qt.yellow)
-        return item
 
     # def keyPressEvent(self, event):
     #     print("here")
@@ -547,12 +547,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box(message)
             return
 
-    def numbered_list_error_at_row(self, item):
+    def numbered_list_error_at_row(self, index):
         """
         Add the error icon to the numbered list row with an error
         :param item: QListWidgetItem representing row with command line with an error
         :return: QListWidgetItem
         """
+        # Get item from index
+        item = self.numbered_List.item(index)
         # Get the error icon from path
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/error.gif"
@@ -560,14 +562,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         error_icon = QtGui.QIcon(icon_path)
         # Add icon to QListWidgetItem
         item.setIcon(error_icon)
-        return item
 
-    def numbered_list_warning_at_row(self, item):
+    def numbered_list_warning_at_row(self, index):
         """
         Add the warning icon to the numbered list row with an warning
         :param item: QListWidgetItem representing row with command line with an error
         :return: QListWidgetItem
         """
+        # Get item from index
+        item = self.numbered_List.item(index)
         # Get the warning icon from path
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/warning.gif"
@@ -575,7 +578,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         error_icon = QtGui.QIcon(icon_path)
         # Add icon to QListWidgetItem
         item.setIcon(error_icon)
-        return item
 
     def numbered_list_unknown_at_row(self, item):
         """
@@ -631,13 +633,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # In a similar manner gutter needs to be updated to display which command line has errors
         # or warnings. Call self.gutter_error_at_row(int) or gutter_warning_at_row(int) where int
         # represents the row where the command line with the error or warning is.
-        try:
-            self.gp.run_commands()
-        except Exception as e:
-            message = "Error running command in GeoProcessorUI.py"
-            logger.error(message, exc_info=True)
-        logger.info('...back from processor running commands.')
-        print("...back from processor running commands.")
+        self.gp.run_commands()
+
+        # Update command list to check for any errors or warnings.
+        self.update_ui_commands_list()
+
+        # Make sure width of numbered list is appropriate
+        self.numbered_List.setMinimumWidth(self.numbered_List.sizeHintForColumn(0))
 
         # After commands have been run, update the UI Results section to reflect the output & intermediary products.
         print("Showing processing results.")
@@ -811,9 +813,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Numbered List
         self.numbered_List = QtWidgets.QListWidget()
         self.numbered_List.setFixedWidth(45)
+        #.setSizeHint(QtCore.QSize(-1, -1))
+        #self.numbered_List.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
         self.numbered_List.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.numbered_List.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        #
         self.numbered_List.mouseReleaseEvent = self.ui_action_numbered_list_clicked
         self.numbered_List.setObjectName("numbered_list")
         self.numbered_List.addItem('')
@@ -1523,18 +1526,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         logger = logging.getLogger(__name__)
         gp = self.gp
+        # If length of commands is 0 then geoprocessor has not been run, therefore there are
+        # no command status generated yet. Return
+        if len(gp.commands) == 0:
+            qt_util.info_message_box("Commands not run. No command status to show.")
+            return
         print("in show_command_status, have " + str(len(gp.commands)) + " commands in processor from running")
         selected_command = None
-        for command in gp.commands:
-            command_class = command.__class__.__name__
-            if command_class == "StartLog":
-                continue
-            elif command_class == "Comment":
-                continue
-            else:
-                # Found a command to get status
-                selected_command = command
-                break
+        # Ensure that the geoprocessor command list and the ui command list are synched up properly
+        if self.commands_List.count() != len(gp.commands):
+            message = "Something has gone wrong between the geoprocessor and the ui commands list synchronization."
+            logger.error(message)
+        # Get the index of the command list selected and retrieve that command from the geoprocessor
+        row_index = self.commands_List.currentRow()
+        selected_command = gp.commands[row_index]
         if selected_command is None:
             qt_util.info_message_box('No command found to show status.')
         else:
@@ -1542,8 +1547,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # - TSTool uses an HTML-formatted status, but for now show as simple text
             # - HTML formatting or other free-form format is preferred because content will fill table cells
             try:
-                command_status = command.command_status
-                status_string = "Command:" + selected_command.command_string + "\n\n" + \
+                command_status = selected_command.command_status
+                status_string = "Command:\n" + selected_command.command_string + "\n\n" + \
                     "Phase             Status/Max Severity\n" + \
                     "Initialization    " + command_status.initialization_status + "\n" + \
                     "Discovery         " + command_status.discovery_status + "\n" + \
@@ -2255,6 +2260,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # - whitespace on front side is OK
                     item = QtWidgets.QListWidgetItem()
                     item.setText(line.rstrip())
+                    item.setSizeHint(QtCore.QSize(-1, 16))
                     if line.rstrip()[0] == '#':
                         item.setForeground(QtGui.QColor(68,121,206))
                     self.commands_List.addItem(item)
@@ -2265,23 +2271,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     item.setText(str(i))
                     item.setTextAlignment(QtCore.Qt.AlignRight)
                     item.setSizeHint(QtCore.QSize(-1, 16))
-                    # Hard coded icons into file for testing:
-                    # if i == 9:
-                    #     item = self.numbered_list_error_at_row(item)
-                    # if i == 2:
-                    #     item = self.numbered_list_unknown_at_row(item)
-                    # if i == 12:
-                    #     item = self.numbered_list_warning_at_row(item)
                     self.numbered_List.addItem(item)
 
                     # Add items to gutter
                     item = QtWidgets.QListWidgetItem()
                     item.setSizeHint(QtCore.QSize(-1, 16))
-                    # Hard coded overview gutter colors for testing:
-                    # if i == 9:
-                    #     item = self.gutter_error_at_row(item)
-                    # if i == 12:
-                    #     item = self.gutter_warning_at_row(item)
                     self.gutter.addItem(item)
 
                 #self.numbered_List.addItem('')
@@ -2497,6 +2491,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         if window_title_end != "(modified)" and window_title != "GeoProcessor - commands not saved":
             window_title_modified = window_title + " (modified)"
             self.setWindowTitle(window_title_modified)
+
+    def update_ui_commands_list(self):
+        """
+        Once commands have been run. Loop through and check for any errors or warnings.
+        :return: None
+        """
+        gp = self.gp
+        for i in range(0, self.commands_List.count()):
+            command_status = gp.commands[i].command_status.run_status
+            if command_status == "FAILURE":
+                self.numbered_list_error_at_row(i)
+                self.gutter_error_at_row(i)
+            elif command_status == "WARNING":
+                self.numbered_list_warning_at_row(i)
+                self.gutter_warning_at_row(i)
 
     def update_ui_status(self):
         """

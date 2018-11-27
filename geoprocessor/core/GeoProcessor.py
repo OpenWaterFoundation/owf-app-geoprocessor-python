@@ -1095,7 +1095,7 @@ class GeoProcessor(object):
         if warning_count > 0:
             message = "Errors found in processing commands."
             logger.error(message)
-            raise RuntimeError(message)
+            #raise RuntimeError(message)
 
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough

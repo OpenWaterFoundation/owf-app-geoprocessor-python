@@ -55,17 +55,18 @@ checkCygwinDevEnv()
 }
 
 # Check whether proper Linux packages are installed in development environment
-# - some packages (e.g., python-devel) will only be used by pip during compiles, which use system include files and libraries
+# - some packages (e.g., python-dev) will only be used by pip during compiles, which use system include files and libraries
 # - other packages (e.g., python-pyqt5) will be copied from the system Python to virtual environment by this script
 checkLinuxDevEnv()
 {	# First check for Linux install packages
 	linuxMissingPackageCount=0
 	# There may be more requirements but installing major component like python-pyqt5
 	# generally install needed dependencies.
-	linuxRequiredPackages="gcc-core gcc-fortran python3-devel libffi-devel libpq-devel openssl-devel python-pandas python3-pip python3-pyqt5 python3-sip"
+	# - maybe need openssl or openssl-dev, but don't see the latter
+	linuxRequiredPackages="gcc gfortran python3-dev libffi-dev libpq-dev python3-pandas python3-pip python3-pyqt5 python3-sip"
 	for requiredPackage in $linuxRequiredPackages; do
-		installedCount1=`dpkg-query -l $requiredPackage | grep -v 'no packages' | wc -l`
-		if [ "$installedCount1" -ne "1" ]; then
+		missingCount1=`dpkg-query -l $requiredPackage | grep 'no packages' | wc -l`
+		if [ "$missingCount1" -ne "0" ]; then
 			${echo2} "${failColor}$requiredPackage does not appear to be installed as an apt package.${endColor}"
 			${echo2} "${failColor}Install $requiredPackage using:  sudo apt-get install ${requiredPackage}${endColor}"
 			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#linux${endColor}"
@@ -468,8 +469,8 @@ if [ "${testEcho}" = '-e test' ]; then
 	-using the normal /bin/echo should work
 	-printf is also an option
 	echo2='/bin/echo -e'
-	The following does not seem to work
-	echo2='printf'
+	# The following does not seem to work
+	# echo2='printf'
 fi
 
 # Strings to change colors on output, to make it easier to indicate when actions are needed

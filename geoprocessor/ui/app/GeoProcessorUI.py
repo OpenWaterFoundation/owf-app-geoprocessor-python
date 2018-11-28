@@ -687,7 +687,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         :return: None
         """
         self.main_window_resize_event_resize_gutter()
-        self.main_window_resize_event_resize_numbered_list()
+        # self.main_window_resize_event_resize_numbered_list()
 
     def setup_ui(self):
         """
@@ -813,8 +813,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Numbered List
         self.numbered_List = QtWidgets.QListWidget()
         self.numbered_List.setFixedWidth(45)
-        #.setSizeHint(QtCore.QSize(-1, -1))
-        #self.numbered_List.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Ignored)
         self.numbered_List.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.numbered_List.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.numbered_List.mouseReleaseEvent = self.ui_action_numbered_list_clicked
@@ -846,6 +844,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Other connections
         # Connect right-click of commands_List widget item.
         self.commands_List.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.commands_List.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        #self.commands_List.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.MinimumExpanding)
         self.commands_List.customContextMenuRequested.connect(self.ui_action_command_list_right_click)
 
         # Connect scrolling between commands list and numbered list
@@ -2260,9 +2260,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # - whitespace on front side is OK
                     item = QtWidgets.QListWidgetItem()
                     item.setText(line.rstrip())
-                    item.setSizeHint(QtCore.QSize(-1, 16))
+                    qsize = QtCore.QSize()
+                    qsize.setHeight(16)
+                    qsize.setWidth(self.commands_List.size().width())
+                    item.setSizeHint(qsize)
                     if line.rstrip()[0] == '#':
-                        item.setForeground(QtGui.QColor(68,121,206))
+                        item.setForeground(QtGui.QColor(68, 121, 206))
                     self.commands_List.addItem(item)
 
                     # Add numbers to numbered list
@@ -2278,7 +2281,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     item.setSizeHint(QtCore.QSize(-1, 16))
                     self.gutter.addItem(item)
 
-                #self.numbered_List.addItem('')
+                self.numbered_List.addItem("")
         except Exception as e:
             pass
             # print(message)

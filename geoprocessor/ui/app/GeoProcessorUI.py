@@ -1524,12 +1524,35 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # - the corresponding command in the geoprocessor must also be known so that
         #   the command object can be retrieved
 
+        # Create command status dialog box
+        command_status_dialog = QtWidgets.QDialog()
+        command_status_dialog.resize(600, 290)
+        command_status_dialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        # Add window title
+        command_status_dialog.setWindowTitle("GeoProcessor - Command Status")
+        # Add icon to window
+        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+        command_status_dialog.setWindowIcon(QtGui.QIcon(icon_path))
+        command_status_dialog.setObjectName("Command Status Dialog")
+
+        # Create a grid layout for dialog box
+        grid_layout = QtWidgets.QGridLayout(command_status_dialog)
+        grid_layout.setObjectName("Command Status Grid Layout")
+
+        # Add a text browser for the content
+        command_status_text_browser = QtWidgets.QTextBrowser(command_status_dialog)
+        command_status_text_browser.setObjectName("Command Status Text Browser")
+
+        grid_layout.addWidget(command_status_text_browser, 0, 0, 1, 1)
+
+        html_string = ""
+
         logger = logging.getLogger(__name__)
         gp = self.gp
         # If length of commands is 0 then geoprocessor has not been run, therefore there are
         # no command status generated yet. Return
         if len(gp.commands) == 0:
-            qt_util.info_message_box("Commands not run. No command status to show.")
+            html_string = "Commands not run. No command status to show."
             return
         print("in show_command_status, have " + str(len(gp.commands)) + " commands in processor from running")
         selected_command = None
@@ -1541,57 +1564,104 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         row_index = self.commands_List.currentRow()
         selected_command = gp.commands[row_index]
         if selected_command is None:
-            qt_util.info_message_box('No command found to show status.')
+            html_string = 'No command found to show status.'
         else:
             # Format the information similar to TSTool status
             # - TSTool uses an HTML-formatted status, but for now show as simple text
             # - HTML formatting or other free-form format is preferred because content will fill table cells
             try:
                 command_status = selected_command.command_status
-                status_string = "Command:\n" + selected_command.command_string + "\n\n" + \
-                    "Phase             Status/Max Severity\n" + \
-                    "Initialization    " + command_status.initialization_status + "\n" + \
-                    "Discovery         " + command_status.discovery_status + "\n" + \
-                    "Run               " + command_status.run_status + "\n\n" + \
-                    "Command Status Details (" + \
-                    str(command_status.get_log_count(phase=None, severity=command_status_type.WARNING)) + \
-                    " warnings, " + str(command_status.get_log_count(
-                        phase=None, severity=command_status_type.FAILURE)) + " failures):\n" + \
-                    "  #   Phase       Severity      Problem        Recommendation\n"
-                # Loop over each phase and output the warning and failure log messages
-                # - TODO smalers 2018-11-26 the following needs to be formatted
+
+                html_string = (
+                    "<p><b>Command:<br>" + selected_command.command_string + "</b></p>"
+                                                                             
+                    "<p><b>Command Status Summary</b> (see below for details if problems exist):</p>" +
+                    "<table border='1'>" +
+                        "<tr style='background-color:#d0d0ff; font-weight:bold;'>" +
+                            "<th> Phase </th>" +
+                            "<th> Status/Max Severity </th>" +
+                        "</tr>" +
+                        "<tr>" +
+                            "<td> INITIALIZATION </td>" +
+                            "<td>" + command_status.initialization_status + "</td>" +
+                        "</tr>" +
+                        "<tr>" +
+                            "<td> DISCOVERY </td>" +
+                            "<td>" + command_status.discovery_status + "</td>" +
+                        "</tr>" +
+                        "<tr>" +
+                            "<td> RUN </td>" +
+                            "<td>" + command_status.run_status + "</td>" +
+                        "</tr>" +
+                    "</table>" +
+
+                    "<p><b>Command Status Details (" +
+                    str(command_status.get_log_count(phase=None, severity=command_status_type.WARNING)) +
+                    " warnings, " +
+                    str(command_status.get_log_count( phase=None, severity=command_status_type.FAILURE)) +
+                    " failures):</p>" +
+                    "<table border='1'>" +
+                        "<tr style='background-color:#d0d0ff; font-weight:bold;'>" +
+                            "<th> # </th>" +
+                            "<th> Phase </th>" +
+                            "<th> Severity </th>" +
+                            "<th> Problem </th>" +
+                            "<th> Recommendation </th>" +
+                        "</tr>"
+                )
+
                 log_count = 0
                 for log_record in command_status.initialization_log_list:
                     if log_record.severity == command_status_type.WARNING or \
                         log_record.severity == command_status_type.FAILURE:
                         log_count = log_count + 1
-                        status_string = status_string + str(log_count) + "   " +\
-                                        command_phase_type.INITIALIZATION + \
-                                        "  " + log_record.severity + "   " + \
-                                        "  " + log_record.problem + "   " + \
-                                        log_record.recommendation + "\n"
+                        html_string += (
+                                        "<tr>" +
+                                            "<td>" + str(log_count) + "</td>" +
+                                            "<td>" + command_phase_type.INITIALIZATION + "</td>" +
+                                            "<td>" + log_record.severity + "</td>" +
+                                            "<td>" + log_record.problem + "</td>" +
+                                            "<td>" + log_record.recommendation + "</td>" +
+                                        "</tr>"
+                                        )
                 for log_record in command_status.discovery_log_list:
                     if log_record.severity == command_status_type.WARNING or \
                             log_record.severity == command_status_type.FAILURE:
                         log_count = log_count + 1
-                        status_string = status_string + str(log_count) + "   " +\
-                                           command_phase_type.DISCOVERY + "  " + \
-                                        log_record.severity + "   " + \
-                                        log_record.problem + "   " + \
-                                        log_record.recommendation + "\n"
+                        html_string += (
+                                "<tr>" +
+                                "<td>" + str(log_count) + "</td>" +
+                                "<td>" + command_phase_type.DISCOVERY + "</td>" +
+                                "<td>" + log_record.severity + "</td>" +
+                                "<td>" + log_record.problem + "</td>" +
+                                "<td>" + log_record.recommendation + "</td>" +
+                                "</tr>"
+                        )
                 print("Have " + str(len(command_status.run_log_list)) + " log records")
                 for log_record in command_status.run_log_list:
                     if log_record.severity == command_status_type.WARNING or \
                             log_record.severity == command_status_type.FAILURE:
                         log_count = log_count + 1
-                        status_string = status_string + str(log_count) + "   " + \
-                                        command_phase_type.RUN +\
-                                        "  " + log_record.severity + "   " + \
-                                        "  " + log_record.problem + "   " + \
-                                        log_record.recommendation + "\n"
-                qt_util.info_message_box(status_string)
+                        html_string += (
+                                "<tr>" +
+                                "<td>" + str(log_count) + "</td>" +
+                                "<td>" + command_phase_type.RUN + "</td>" +
+                                "<td>" + log_record.severity + "</td>" +
+                                "<td>" + log_record.problem + "</td>" +
+                                "<td>" + log_record.recommendation + "</td>" +
+                                "</tr>"
+                        )
+                html_string += (
+                                "</table>"
+                                )
+
             except Exception as e:
-                logger.warning("Error formatting status", e, exc_info=True)
+                 logger.warning("Error formatting status", e, exc_info=True)
+
+        _translate = QtCore.QCoreApplication.translate
+        command_status_text_browser.setHtml(_translate("Dialog", html_string))
+
+        command_status_dialog.exec()
 
     def show_results(self):
         """

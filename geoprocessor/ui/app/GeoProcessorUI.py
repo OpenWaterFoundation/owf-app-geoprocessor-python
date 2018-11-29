@@ -815,7 +815,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.numbered_List.setFixedWidth(45)
         self.numbered_List.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.numbered_List.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.numbered_List.setMouseTracking(True)
         self.numbered_List.mouseReleaseEvent = self.ui_action_numbered_list_clicked
+        self.numbered_List.mouseMoveEvent = self.show_command_status_tooltip
         self.numbered_List.setObjectName("numbered_list")
         self.numbered_List.addItem('')
         self.commands_HBoxLayout_Commands.addWidget(self.numbered_List)
@@ -1573,6 +1575,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 command_status = selected_command.command_status
 
                 html_string = (
+                    "<style> td.failure{background-color:red} </style>" +
                     "<p><b>Command:<br>" + selected_command.command_string + "</b></p>"
                                                                              
                     "<p><b>Command Status Summary</b> (see below for details if problems exist):</p>" +
@@ -1580,18 +1583,54 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                         "<tr style='background-color:#d0d0ff; font-weight:bold;'>" +
                             "<th> Phase </th>" +
                             "<th> Status/Max Severity </th>" +
-                        "</tr>" +
+                        "</tr>"
+                )
+
+                style = ""
+
+                if command_status.initialization_status == "WARNING":
+                    style = "style='background-color:yellow'"
+                elif command_status.initialization_status == "FAILURE":
+                    style = "style='background-color:#ffa8a8'"
+                elif command_status.initialization_status == "SUCCESS":
+                    style = "style='background-color:#7dba71'"
+
+                html_string += (
                         "<tr>" +
                             "<td> INITIALIZATION </td>" +
-                            "<td>" + command_status.initialization_status + "</td>" +
-                        "</tr>" +
+                            "<td " + style + ">" + command_status.initialization_status + "</td>" +
+                        "</tr>"
+                )
+
+                style = ""
+
+                if command_status.discovery_status == "WARNING":
+                    style = "style='background-color:yellow'"
+                elif command_status.discovery_status == "FAILURE":
+                    style = "style='background-color:#ffa8a8'"
+                elif command_status.discovery_status == "SUCCESS":
+                    style = "style='background-color:green'"
+
+                html_string += (
                         "<tr>" +
                             "<td> DISCOVERY </td>" +
-                            "<td>" + command_status.discovery_status + "</td>" +
-                        "</tr>" +
+                            "<td " + style + ">" + command_status.discovery_status + "</td>" +
+                        "</tr>"
+                )
+
+                style = ""
+
+                if command_status.run_status == "WARNING":
+                    style = "style='background-color:yellow'"
+                elif command_status.run_status == "FAILURE":
+                    style = "style='background-color:#ffa8a8'"
+                else:
+                    style = "style='background-color:#7dba71'"
+
+                html_string += (
                         "<tr>" +
                             "<td> RUN </td>" +
-                            "<td>" + command_status.run_status + "</td>" +
+                            "<td " + style + ">" + command_status.run_status + "</td>" +
                         "</tr>" +
                     "</table>" +
 
@@ -1614,41 +1653,65 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 for log_record in command_status.initialization_log_list:
                     if log_record.severity == command_status_type.WARNING or \
                         log_record.severity == command_status_type.FAILURE:
-                        log_count = log_count + 1
-                        html_string += (
-                                        "<tr>" +
-                                            "<td>" + str(log_count) + "</td>" +
-                                            "<td>" + command_phase_type.INITIALIZATION + "</td>" +
-                                            "<td>" + log_record.severity + "</td>" +
-                                            "<td>" + log_record.problem + "</td>" +
-                                            "<td>" + log_record.recommendation + "</td>" +
-                                        "</tr>"
-                                        )
-                for log_record in command_status.discovery_log_list:
-                    if log_record.severity == command_status_type.WARNING or \
-                            log_record.severity == command_status_type.FAILURE:
+                        
+                        style = ""
+
+                        if log_record.severity == "WARNING":
+                            style = "style='background-color:yellow'"
+                        elif log_record.severity == "FAILURE":
+                            style = "style='background-color:#ffa8a8'"
+
                         log_count = log_count + 1
                         html_string += (
                                 "<tr>" +
-                                "<td>" + str(log_count) + "</td>" +
-                                "<td>" + command_phase_type.DISCOVERY + "</td>" +
-                                "<td>" + log_record.severity + "</td>" +
-                                "<td>" + log_record.problem + "</td>" +
-                                "<td>" + log_record.recommendation + "</td>" +
+                                    "<td>" + str(log_count) + "</td>" +
+                                    "<td>" + command_phase_type.INITIALIZATION + "</td>" +
+                                    "<td " + style + ">" + log_record.severity + "</td>" +
+                                    "<td>" + log_record.problem + "</td>" +
+                                    "<td>" + log_record.recommendation + "</td>" +
+                                "</tr>"
+                        )
+                for log_record in command_status.discovery_log_list:
+                    if log_record.severity == command_status_type.WARNING or \
+                            log_record.severity == command_status_type.FAILURE:
+
+                        style = ""
+
+                        if log_record.severity == "WARNING":
+                            style = "style='background-color:yellow'"
+                        elif log_record.severity == "FAILURE":
+                            style = "style='background-color:#ffa8a8'"
+
+                        log_count = log_count + 1
+                        html_string += (
+                                "<tr>" +
+                                    "<td>" + str(log_count) + "</td>" +
+                                    "<td>" + command_phase_type.DISCOVERY + "</td>" +
+                                    "<td " + style + ">" + log_record.severity + "</td>" +
+                                    "<td>" + log_record.problem + "</td>" +
+                                    "<td>" + log_record.recommendation + "</td>" +
                                 "</tr>"
                         )
                 print("Have " + str(len(command_status.run_log_list)) + " log records")
                 for log_record in command_status.run_log_list:
                     if log_record.severity == command_status_type.WARNING or \
                             log_record.severity == command_status_type.FAILURE:
+
+                        style = ""
+
+                        if log_record.severity == "WARNING":
+                            style = "style='background-color:yellow'"
+                        elif log_record.severity == "FAILURE":
+                            style = "style='background-color:#ffa8a8'"
+
                         log_count = log_count + 1
                         html_string += (
                                 "<tr>" +
-                                "<td>" + str(log_count) + "</td>" +
-                                "<td>" + command_phase_type.RUN + "</td>" +
-                                "<td>" + log_record.severity + "</td>" +
-                                "<td>" + log_record.problem + "</td>" +
-                                "<td>" + log_record.recommendation + "</td>" +
+                                    "<td>" + str(log_count) + "</td>" +
+                                    "<td>" + command_phase_type.RUN + "</td>" +
+                                    "<td " + style + ">" + log_record.severity + "</td>" +
+                                    "<td>" + log_record.problem + "</td>" +
+                                    "<td>" + log_record.recommendation + "</td>" +
                                 "</tr>"
                         )
                 html_string += (
@@ -1662,6 +1725,107 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         command_status_text_browser.setHtml(_translate("Dialog", html_string))
 
         command_status_dialog.exec()
+
+    def show_command_status_tooltip(self, event):
+
+        gp = self.gp
+        _translate = QtCore.QCoreApplication.translate
+        logger = logging.getLogger(__name__)
+
+        item = self.numbered_List.itemAt(event.pos())
+        row_index = self.numbered_List.row(item)
+        selected_command = gp.commands[row_index]
+
+        command_status = selected_command.command_status
+        run_status = command_status.run_status
+        if run_status == "WARNING" or run_status == "FAILURE":
+            try:
+                html_string = (
+                    "<p><b>Command Status Details (" +
+                    str(command_status.get_log_count(phase=None, severity=command_status_type.WARNING)) +
+                    " warnings, " +
+                    str(command_status.get_log_count(phase=None, severity=command_status_type.FAILURE)) +
+                    " failures):</p>" +
+                    "<table border='1'>" +
+                        "<tr style='background-color:#d0d0ff; font-weight:bold;'>" +
+                            "<th> # </th>" +
+                            "<th> Phase </th>" +
+                            "<th> Severity </th>" +
+                            "<th> Problem </th>" +
+                            "<th> Recommendation </th>" +
+                        "</tr>"
+                            )
+
+                log_count = 0
+                for log_record in command_status.initialization_log_list:
+                    if log_record.severity == command_status_type.WARNING or \
+                            log_record.severity == command_status_type.FAILURE:
+                        style = ""
+
+                        if log_record.severity == "WARNING":
+                            style = "style='background-color:yellow'"
+                        elif log_record.severity == "FAILURE":
+                            style = "style='background-color:#ffa8a8'"
+                        log_count = log_count + 1
+                        html_string += (
+                                "<tr>" +
+                                    "<td style='white-space:pre'>" + str(log_count) + "</td>" +
+                                    "<td style='white-space:pre'>" + command_phase_type.INITIALIZATION + "</td>" +
+                                    "<td " + style + ">" + log_record.severity + "</td>" +
+                                    "<td style='white-space:pre'>" + log_record.problem + "</td>" +
+                                    "<td style='white-space:pre'>" + log_record.recommendation + "</td>" +
+                                "</tr>"
+                        )
+                for log_record in command_status.discovery_log_list:
+                    if log_record.severity == command_status_type.WARNING or \
+                            log_record.severity == command_status_type.FAILURE:
+
+                        style = ""
+
+                        if log_record.severity == "WARNING":
+                            style = "style='background-color:yellow'"
+                        elif log_record.severity == "FAILURE":
+                            style = "style='background-color:#ffa8a8'"
+
+                        log_count = log_count + 1
+                        html_string += (
+                                "<tr>" +
+                                    "<td style='white-space:pre'>" + str(log_count) + "</td>" +
+                                    "<td style='white-space:pre'>" + command_phase_type.DISCOVERY + "</td>" +
+                                    "<td " + style + ">" + log_record.severity + "</td>" +
+                                    "<td style='white-space:pre'>" + log_record.problem + "</td>" +
+                                    "<td style='white-space:pre'>" + log_record.recommendation + "</td>" +
+                                "</tr>"
+                        )
+                # print("Have " + str(len(command_status.run_log_list)) + " log records")
+                for log_record in command_status.run_log_list:
+                    if log_record.severity == command_status_type.WARNING or \
+                            log_record.severity == command_status_type.FAILURE:
+
+                        style = ""
+
+                        if log_record.severity == "WARNING":
+                            style = "style='background-color:yellow'"
+                        elif log_record.severity == "FAILURE":
+                            style = "style='background-color:#ffa8a8'"
+
+                        log_count = log_count + 1
+                        html_string += (
+                                "<tr>" +
+                                    "<td style='white-space:pre'>" + str(log_count) + "</td>" +
+                                    "<td style='white-space:pre'>" + command_phase_type.RUN + "</td>" +
+                                    "<td " + style + ">" + log_record.severity + "</td>" +
+                                    "<td style='white-space:pre'>" + log_record.problem + "</td>" +
+                                    "<td>" + log_record.recommendation + "</td>" +
+                                "</tr>"
+                        )
+                html_string += (
+                    "</table>"
+                )
+
+                item.setToolTip(_translate("Tooltip", html_string))
+            except Exception as e:
+                 logger.warning("Error formatting status", e, exc_info=True)
 
     def show_results(self):
         """
@@ -2163,6 +2327,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.commands_List.setCurrentRow(index)
         self.gutter.setCurrentRow(index)
 
+        self.show_command_status()
+
     def ui_action_open_attributes(self):
         # Create map window dialog box
         self.attributes_window = QtWidgets.QDialog()
@@ -2344,6 +2510,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     item.setText(str(i))
                     item.setTextAlignment(QtCore.Qt.AlignRight)
                     item.setSizeHint(QtCore.QSize(-1, 16))
+                    item.mouseReleaseEvent = self.show_command_status_tooltip
                     self.numbered_List.addItem(item)
 
                     # Add items to gutter
@@ -2572,6 +2739,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         gp = self.gp
         for i in range(0, self.commands_List.count()):
+            # TODO jurentie may update to handle Discovery errors once implemented in GeoProcessor
             command_status = gp.commands[i].command_status.run_status
             if command_status == "FAILURE":
                 self.numbered_list_error_at_row(i)

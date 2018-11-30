@@ -8,15 +8,18 @@
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
 
-# GeoProcessor product home is relative to the user's files in a standard OWF development files location
-# - $HOME/${productHome}
-productHome="owf-dev/GeoProcessor"
+# Git utilities folder is relative to the user's files in a standard development files location
+# - determine based on location relative to the script folder
+# Specific repository folder for this repository
+repoFolder=`dirname ${scriptFolder}`
+# Want the parent folder to the specific Git repository folder
+gitReposFolder=`dirname ${repoFolder}`
 
 # GeoProcessor GitHub repo URL root
 githubRootUrl="https://github.com/OpenWaterFoundation"
 
 # Main GeoProcessor repository
-mainRepo="cdss-app-geoprocessor-python"
+mainRepo="owf-app-geoprocessor-python"
 
 # Run the general script
-${scriptFolder}/git-util/git-clone-all.sh -m "${mainRepo}" -p "${productHome}" -u "${githubRootUrl}" $@
+${scriptFolder}/git-util/git-clone-all.sh -m "${mainRepo}" -g "${gitReposFolder}" -u "${githubRootUrl}" $@

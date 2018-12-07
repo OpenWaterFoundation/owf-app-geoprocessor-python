@@ -34,6 +34,8 @@ class GeoProcessor(object):
         # when the commands are running, to indicate progress.
         self.command_processor_listener_array = []
 
+        self.command_list_processor_listener_array = []
+
         # Command list that holds all command objects to run.
         self.commands = []
 
@@ -103,6 +105,15 @@ class GeoProcessor(object):
             if listener_from_array == listener:
                 return
         self.command_processor_listener_array.append(listener)
+
+    def add_model_listener(self, listener):
+
+        if not listener:
+            return
+        for listener_from_array in self.command_list_processor_listener_array:
+            if listener_from_array == listener:
+                return
+        self.command_list_processor_listener_array.append(listener)
 
     def add_geolayer(self, geolayer):
         """
@@ -359,6 +370,9 @@ class GeoProcessor(object):
         """
         self.tables.remove(table)
 
+    def get_command_list(self):
+        return self.commands
+
     def get_datastore(self, datastore_id):
         """
         Return the DataStore that has the requested ID.
@@ -506,6 +520,25 @@ class GeoProcessor(object):
                 return c
         return None
 
+    def notify_command_list_processor_listener_of_commands_read(self, command_list):
+
+        if self.command_list_processor_listener_array:
+            for listener_from_array in self.command_list_processor_listener_array:
+                listener_from_array.command_list_read()
+
+    def notify_command_list_processor_listener_of_all_commands_completed(self):
+        """
+        Notify registered command process listeners about a command completing.
+        :param icommand: The index (0+) of the command that is completing.
+        :param ncommand: The number of commands being processed. This will often be the
+        total number of commands but calling code may process a subset.
+        :param command: The instance of the command that is completing.
+        """
+        if self.command_list_processor_listener_array:
+            for listener_from_array in self.command_list_processor_listener_array:
+                listener_from_array.command_list_ran()
+
+
     def notify_command_processor_listener_of_command_cancelled(self, icommand, ncommand, command):
         """
         Notify registered command processor listeners about a command being cancelled.
@@ -593,6 +626,9 @@ class GeoProcessor(object):
         # Get a list of command file strings (each line of the command file is its own item in the list).
         command_file_strings = command_util.read_file_into_string_list(command_file)
 
+        # clear commands
+        self.commands.clear()
+
         # Iterate over each line in the command file.
         for command_file_string in command_file_strings:
 
@@ -614,6 +650,8 @@ class GeoProcessor(object):
                 command_object.print_for_debug()
                 print("First command debug:")
                 self.commands[0].print_for_debug()
+
+        self.notify_command_list_processor_listener_of_commands_read(self.commands)
 
     def read_commands_from_command_list(self, command_file_strings, runtime_properties):
         """
@@ -851,6 +889,19 @@ class GeoProcessor(object):
                 command.reset_command()
             # Clear the command Run log.
             command.command_status.clear_log(command_phase_type.RUN)
+
+        ### DE-BUGGING:
+        print("--------------------------------------")
+        print("commands in geoprocessor run commands:")
+        for command in self.commands:
+            print(command.command_string)
+        print("--------------------------------------")
+
+        print("--------------------------------------")
+        print("geolayers in geoprocessor: ")
+        for geolayer in self.geolayers:
+            print(geolayer)
+        print("--------------------------------------")
 
         # Run all the commands
         # - set debug = True to turn on debug messages
@@ -1097,6 +1148,8 @@ class GeoProcessor(object):
             logger.error(message)
             #raise RuntimeError(message)
 
+        self.notify_command_list_processor_listener_of_all_commands_completed()
+
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough
         logger.info("At end of run_commands")
@@ -1136,6 +1189,38 @@ class GeoProcessor(object):
                 command_object.print_for_debug()
                 print("First command debug:")
                 self.commands[0].print_for_debug()
+
+    def add_command_string(self, command_string):
+        """
+        Add a command string to the end
+        """
+        command_factory = GeoProcessorCommandFactory()
+
+        command_object = command_factory.new_command(command_string, True)
+
+        self.commands.append(command_object)
+
+        # GeoProcessorCommandFactory
+        debug = False
+        if debug:
+            command_object.print_for_debug()
+            print("First command debug:")
+            self.commands[0].print_for_debug()
+
+    def remove_command(self, index):
+        """
+        Remove a command string at the given index
+        :param index:
+        :return:
+        """
+        del self.commands[index]
+
+        # GeoProcessorCommandFactory
+        debug = False
+        if debug:
+            command_object.print_for_debug()
+            print("First command debug:")
+            self.commands[0].print_for_debug()
 
     def set_properties(self, property_dict):
         """

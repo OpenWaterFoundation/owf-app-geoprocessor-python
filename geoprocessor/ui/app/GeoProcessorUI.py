@@ -96,35 +96,45 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.gp.add_command_processor_listener(self)
 
     # TODO smalers 2018-07-24 need to review this function
-    def clear_command_from_rightclick(self):
+    def clear_command_from_geoprocessor(self):
         """
         Clear the right-clicked command from the Command List widget.
 
         Returns: None
         """
 
+        selected_q_indices = self.command_ListWidget.commands_List.selectionModel().selectedIndexes()
+
+        question_string = ""
+
+        if len(selected_q_indices) > 1:
+            question_string = "Do you want to delete selected commands?"
+        else:
+            question_string = "Do you want to delete this command?"
         # Open a message box to confirm with the user that they want to delete the command.
         response = qt_util.new_message_box(
             QtWidgets.QMessageBox.Question,
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            "Do you want to delete this command?",
+            question_string,
             "Clear Commands")
 
         # If the user confirms that they want to delete the command, continue. Otherwise, pass.
         if response == QtWidgets.QMessageBox.Yes:
-            # Get the index of the right-clicked command (item) and remove it from the Command_List widget.
-            index_of_item_to_remove = self.commands_List.currentRow()
-            # remove item from command list
-            self.commands_List.takeItem(index_of_item_to_remove)
-            # remove item from gutter
-            self.gutter.takeItem(index_of_item_to_remove)
-            # remove item from numbered list and update numbers
-            self.delete_numbered_list_item(index_of_item_to_remove)
-            # update the window title in case command file has been modified
-            self.update_ui_main_window_title()
+            # # Get the index of the right-clicked command (item) and remove it from the Command_List widget.
+            # index_of_item_to_remove = self.commands_List.currentRow()
+            # # remove item from command list
+            # self.commands_List.takeItem(index_of_item_to_remove)
+            # # remove item from gutter
+            # self.gutter.takeItem(index_of_item_to_remove)
+            # # remove item from numbered list and update numbers
+            # self.delete_numbered_list_item(index_of_item_to_remove)
+            # # update the window title in case command file has been modified
+            # self.update_ui_main_window_title()
+            selected_indices = [item.row() for item in selected_q_indices]
+            self.gp_model.clear_selected_commands(selected_indices)
 
-        # Update the command count and Command_List label to show that commands were deleted.
-        self.update_ui_status_commands()
+        # # Update the command count and Command_List label to show that commands were deleted.
+        # self.update_ui_status_commands()
 
     def closeEvent(self, event):
         """
@@ -135,7 +145,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
 
         # Check to see if command list has been modified
-        command_list_modified = self.command_list_backup.command_list_modified(self.commands_List)
+        command_list_modified = self.command_ListWidget.command_list_modified()
 
         # If modified, open dialog box to ask if user wants to save file
         if command_list_modified:
@@ -328,35 +338,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             # Update the command count and Command_List label to show that a command was added to the workflow.
             self.update_ui_status_commands()
-
-    def gutter_error_at_row(self, index):
-        """
-        Set gutter row to red if there is a command line error on this row.
-        :param item: QListWidgetItem from the gutter representing the
-        command line row with error
-        :return: QListWidgetItem
-        """
-        item = self.gutter.item(index)
-        item.setBackground(QtCore.Qt.red)
-
-    def gutter_warning_at_row(self, index):
-        """
-        Set gutter row to yellow if there is a command line warning on this row.
-        :param item: QListWidgetItem from the gutter representing the
-        command line row with warning
-        :return: QListWidgetItem
-        """
-        item = self.gutter.item(index)
-        item.setBackground(QtCore.Qt.yellow)
-
-    # def keyPressEvent(self, event):
-    #     print("here")
-    #     if type(event) == QtGui.QKeyEvent:
-    #         print('hello world!')
-    #         print(event.key())
-    #         print(event.accept())
-    #     else:
-    #         event.ignore()
 
     def main_window_resize_event_resize_gutter(self):
         # """
@@ -1326,8 +1307,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = icon_path + "/images/baseline_format_indent_decrease_black_18dp.png"
         self.decrease_indent_button = QtWidgets.QAction(QtGui.QIcon(QtGui.QPixmap(icon_path)), "Decrease Indent", self)
 
-        self.increase_indent_button.triggered.connect(self.command_ListWidget.command_increase_indent)
-        self.decrease_indent_button.triggered.connect(self.command_ListWidget.command_decrease_indent)
+        self.increase_indent_button.triggered.connect(self.command_ListWidget.event_handler_indent_button_clicked)
+        self.decrease_indent_button.triggered.connect(self.command_ListWidget.event_handler_decrease_indent_button_clicked)
 
         self.toolbar = self.addToolBar("Toolbar Actions")
         self.toolbar.addAction(self.decrease_indent_button)
@@ -1559,9 +1540,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         _translate = QtCore.QCoreApplication.translate
         logger = logging.getLogger(__name__)
 
-        item = self.numbered_List.itemAt(event.pos())
-        row_index = self.numbered_List.row(item)
-        if (row_index >= self.commands_List.count()) or row_index == -1:
+        item = self.command_ListWidget.numbered_List.itemAt(event.pos())
+        row_index = self.command_ListWidget.numbered_List.row(item)
+        if (row_index >= self.command_ListWidget.commands_List.count()) or row_index == -1:
             return
         selected_command = gp.commands[row_index]
 
@@ -1894,16 +1875,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # update the window title in case command file has been modified
         self.update_ui_main_window_title()
 
-    def ui_action_commands_list_clicked(self, event):
-        """
-        When clicking on a command list item also select the same
-        row in the numbered list and gutter
-        :param event: Release click event from numbered list.
-        :return:
-        """
-        index = self.commands_List.currentRow()
-        self.numbered_List.setCurrentRow(index)
-        self.gutter.setCurrentRow(index)
 
     def ui_action_command_list_right_click(self, q_pos):
         """
@@ -1925,7 +1896,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         menu_item_command_status = self.rightClickMenu_Commands.addAction("Show Command Status")
         self.rightClickMenu_Commands.addSeparator()
         menu_item_edit_command = self.rightClickMenu_Commands.addAction("Edit Command")
-        menu_item_delete_command = self.rightClickMenu_Commands.addAction("Delete Command")
+        menu_item_delete_command = self.rightClickMenu_Commands.addAction("Delete Command(s)")
         self.rightClickMenu_Commands.addSeparator()
         menu_item_increase_indent_command = self.rightClickMenu_Commands.addAction("Increase Indent")
         menu_item_decrease_indent_command = self.rightClickMenu_Commands.addAction("Decrease Indent")
@@ -1933,9 +1904,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Connect the menu options to the appropriate actions.
         menu_item_command_status.triggered.connect(self.show_command_status)
         menu_item_edit_command.triggered.connect(self.edit_command_editor)
-        menu_item_delete_command.triggered.connect(self.command_ListWidget.clear_command_from_rightclick)
-        menu_item_increase_indent_command.triggered.connect(self.command_ListWidget.command_increase_indent)
-        menu_item_decrease_indent_command.triggered.connect(self.command_ListWidget.command_decrease_indent)
+        menu_item_delete_command.triggered.connect(self.clear_command_from_geoprocessor)
+        menu_item_increase_indent_command.triggered.connect(self.command_ListWidget.event_handler_indent_button_clicked)
+        menu_item_decrease_indent_command.triggered.connect(self.command_ListWidget.event_handler_decrease_indent_button_clicked)
 
         # Set the position on the right-click menu to appear at the click point.
         parent_pos = self.command_ListWidget.commands_List.mapToGlobal(QtCore.QPoint(0, 0))
@@ -1957,18 +1928,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.rightClickMenu_GeoLayers.move(parent_pos + q_pos)
 
         self.rightClickMenu_GeoLayers.show()
-
-    def ui_action_gutter_clicked(self, event):
-        """
-        When clicking on a gutter item also select the same
-        row in the command list and the numbered list
-        :param event:
-        :return: QListWidgetItem
-        """
-        index = self.gutter.currentRow()
-        self.numbered_List.setCurrentRow(index)
-        self.commands_List.setCurrentRow(index)
-
 
     # TODO smalers 2018-07-24 need to make the dialog nicer, including live link to OWF website
     def ui_action_help_about(self):
@@ -2315,8 +2274,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.gp.read_command_file(filename)
 
+        cmd_filepath = ""
+
         if filename:
             cmd_filepath = filename
+
+        # Set this file path as the path to save if the user click "Save Commands ..."
+        self.saved_file = cmd_filepath
 
         # if(filename == ""):
         #     last_opened_folder = ""
@@ -2388,9 +2352,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Update the command list backup
         self.command_list_backup.update_command_list(self.commands_List)
 
-        # Set this file path as the path to save if the user click "Save Commands ..."
-        self.saved_file = cmd_filepath
-
         # Set the last command file
         self.command_file_path = cmd_filepath
 
@@ -2436,7 +2397,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
 
         # Record the new saved command file in the command list backup class
-        self.command_list_backup.update_command_list(self.commands_List)
+        self.gp_model.update_command_list_backup()
 
         # If there is not a previously saved file location, save the file with the save_command_as function.
         if self.saved_file is None:
@@ -2449,10 +2410,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             list_of_cmds = []
 
             # Iterate over the items in the commands_List widget.
-            for i in range(self.commands_List.count()):
+            for i in range(self.command_ListWidget.commands_List.count()):
 
                 # Add the command string text ot the list_of_cmds list.
-                list_of_cmds.append(self.commands_List.item(i).text())
+                list_of_cmds.append(self.command_ListWidget.commands_List.item(i).text())
 
             # Join all of the command strings together (separated by a line break).
             all_commands_string = '\n'.join(list_of_cmds)
@@ -2476,7 +2437,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
 
         # Record the new saved command file in the command list backup class
-        self.command_list_backup.update_command_list(self.commands_List)
+        self.gp_model.update_command_list_backup()
 
         # TODO egiles 2018-16-05 Discuss with Steve about line breaks for Linux/Windows OS
 
@@ -2484,10 +2445,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         list_of_cmds = []
 
         # Iterate over the items in the commands_List widget.
-        for i in range(self.commands_List.count()):
+        for i in range(self.command_ListWidget.commands_List.count()):
 
             # Add the command string text ot the list_of_cmds list.
-            list_of_cmds.append(self.commands_List.item(i).text())
+            list_of_cmds.append(self.command_ListWidget.commands_List.item(i).text())
 
         # Join all of the command strings together (separated by a line break).
         all_commands_string = '\n'.join(list_of_cmds)

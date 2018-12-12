@@ -116,7 +116,7 @@ class CommandListWidget(object):
             list_text = self.numbered_List.item(i).text()
             if list_text:
                 num = int(self.numbered_List.item(i).text())
-                num-=1
+                num -= 1
                 self.numbered_List.item(i).setText(str(num))
 
     def event_handler_commands_list_clicked(self, event):
@@ -694,7 +694,7 @@ class CommandListWidget(object):
         qsize.setHeight(16)
         qsize.setWidth(self.commands_List.size().width())
         item.setSizeHint(qsize)
-        if command_string.rstrip()[0] == '#':
+        if command_string.strip()[0] == '#':
             item.setForeground(QtGui.QColor(68, 121, 206))
         self.commands_List.addItem(item)
 

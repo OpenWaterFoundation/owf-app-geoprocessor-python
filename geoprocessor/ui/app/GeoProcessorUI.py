@@ -956,6 +956,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Add to menu bar
         self.menubar.addAction(self.Menu_Commands.menuAction())
 
+        # Commands-Table menu
+        self.Menu_Commands_Table = QtWidgets.QMenu(self.menubar)
+        self.Menu_Commands_Table.setObjectName(_fromUtf8("Menu_Commands_Table"))
+        self.Menu_Commands_Table.setTitle("Commands-Table")
+        # Commands-Table / Placeholder menu
+        self.Menu_Commands_Table_Placeholder = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Table_Placeholder.setObjectName(_fromUtf8("Menu_Commands_Table_Placeholder"))
+        self.Menu_Commands_Table_Placeholder.setText("Placeholder")
+        ## self.Menu_File_Print.triggered.connect(None)
+        self.Menu_Commands_Table.addAction(self.Menu_Commands_Table_Placeholder)
+        # Add to menu bar
+        self.menubar.addAction(self.Menu_Commands_Table.menuAction())
+
         # Tools menu
         self.Menu_Tools = QtWidgets.QMenu(self.menubar)
         self.Menu_Tools.setObjectName(_fromUtf8("Menu_Tools"))

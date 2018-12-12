@@ -1682,15 +1682,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Remove items from the Results GeoLayers table (from a previous run).
         self.results_GeoLayers_Table.setRowCount(0)
 
-        print("--------------------------------------")
-        print("GeoLayers Table row count at start of show_results_geolayers:")
-        print(self.results_GeoLayers_Table.rowCount())
-        print("--------------------------------------")
-
-        # Populate the Results GeoLayers Table.
-        # Iterate through all of the GeoLayer objects in the GeoProcessor.
-        print("Showing " + str(len(self.gp.geolayers)) + " geolayers")
-        print("--------------------------------------")
         for geolayer in self.gp.geolayers:
 
             print(geolayer)

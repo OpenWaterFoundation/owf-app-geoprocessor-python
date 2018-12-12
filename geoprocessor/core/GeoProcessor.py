@@ -919,19 +919,6 @@ class GeoProcessor(object):
             # Clear the command Run log.
             command.command_status.clear_log(command_phase_type.RUN)
 
-        ### DE-BUGGING:
-        print("--------------------------------------")
-        print("commands in geoprocessor run commands:")
-        for command in self.commands:
-            print(command.command_string)
-        print("--------------------------------------")
-
-        print("--------------------------------------")
-        print("geolayers in geoprocessor: ")
-        for geolayer in self.geolayers:
-            print(geolayer)
-        print("--------------------------------------")
-
         # Run all the commands
         # - set debug = True to turn on debug messages
         debug = False

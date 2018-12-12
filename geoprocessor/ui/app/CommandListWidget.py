@@ -720,6 +720,14 @@ class CommandListWidget(object):
         Once commands have been run. Loop through and check for any errors or warnings.
         :return: None
         """
+        # Start by clearing previous icons from numbered list and gutter
+        for i in range(0, len(self.command_list)):
+            numbered_list_item = self.numbered_List.item(i)
+            numbered_list_item.setIcon(QtGui.QIcon())
+            gutter_item = self.gutter.item(i)
+            gutter_item.setBackground(QtCore.Qt.white)
+
+        # Now update the numbered list and gutter with current errors and warnings
         for i in range(0, len(self.command_list)):
             command_status = self.command_list[i].command_status.run_status
             if command_status == "FAILURE":

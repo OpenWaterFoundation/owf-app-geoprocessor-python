@@ -1684,8 +1684,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         for geolayer in self.gp.geolayers:
 
-            print(geolayer)
-
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_GeoLayers_Table.rowCount()
             self.results_GeoLayers_Table.insertRow(new_row_index)
@@ -2252,96 +2250,37 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_open_command_file(self, filename=""):
         """
         Open a new command file. Each line of the command file is a separate item in the Command_List QList Widget.
-
         Returns: None
         """
-        # Clear the items from the current Command_List widget.
-
-        # self.commands_List.clear()
-        # self.numbered_List.clear()
-        # self.gutter.clear()
-
         self.new_command_file = False
-
-        self.gp.read_command_file(filename)
 
         cmd_filepath = ""
 
-        if filename:
+        if (filename == ""):
+            last_opened_folder = ""
+            if self.app_session.read_history():
+                last_opened_file = str(self.app_session.read_history()[0])
+                index = last_opened_file.rfind('/')
+                last_opened_folder = last_opened_file[:index]
+            # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
+            # of the command file is added to the cmd_filepath variable.
+            cmd_filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", last_opened_folder)[0]
+            print("command filepath: " + cmd_filepath)
+            if not cmd_filepath:
+                return
+        else:
             cmd_filepath = filename
 
-        # Set this file path as the path to save if the user click "Save Commands ..."
-        self.saved_file = cmd_filepath
-
-        # if(filename == ""):
-        #     last_opened_folder = ""
-        #     if self.app_session.read_history():
-        #         last_opened_file = str(self.app_session.read_history()[0])
-        #         index = last_opened_file.rfind('/')
-        #         last_opened_folder = last_opened_file[:index]
-        #     print(last_opened_folder)
-        #     # A browser window will appear to allow the user to browse to the desired command file. The absolute pathname
-        #     # of the command file is added to the cmd_filepath variable.
-        #     cmd_filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", last_opened_folder)[0]
-        #     if not cmd_filepath:
-        #         return
-        # else:
-        #     cmd_filepath = filename
-        #
-        # try:
-        #     # Open and read the command file.
-        #     with open(cmd_filepath) as command_file:
-        #
-        #         read_data = command_file.readlines()
-        #
-        #         # Iterate over the lines of the command file.
-        #         for i, line in enumerate(read_data):
-        #             # Add the command string as an item to the Command_List widget.
-        #             # - whitespace on front side is OK
-        #             item = QtWidgets.QListWidgetItem()
-        #             item.setText(line.rstrip())
-        #             qsize = QtCore.QSize()
-        #             qsize.setHeight(16)
-        #             qsize.setWidth(self.commands_List.size().width())
-        #             item.setSizeHint(qsize)
-        #             if line.rstrip()[0] == '#':
-        #                 item.setForeground(QtGui.QColor(68, 121, 206))
-        #             self.commands_List.addItem(item)
-        #
-        #             # Add numbers to numbered list
-        #             i+=1
-        #             item = QtWidgets.QListWidgetItem()
-        #             item.setText(str(i))
-        #             item.setTextAlignment(QtCore.Qt.AlignRight)
-        #             item.setSizeHint(QtCore.QSize(-1, 16))
-        #             item.mouseReleaseEvent = self.show_command_status_tooltip
-        #             self.numbered_List.addItem(item)
-        #
-        #             # Add items to gutter
-        #             item = QtWidgets.QListWidgetItem()
-        #             item.setSizeHint(QtCore.QSize(-1, 16))
-        #             self.gutter.addItem(item)
-        #
-        #         self.numbered_List.addItem("")
-        # except Exception as e:
-        #     pass
-        #     # print(message)
-        #     #logging.exception(message, e, exc_info=True)
-        #     message = "Error opening file: " + cmd_filepath
-        #     response = qt_util.new_message_box(
-        #         QtWidgets.QMessageBox.Warning,
-        #         QtWidgets.QMessageBox.Ok,
-        #         message,
-        #         "Open Command File")
+        # Read the command file in GeoProcessor
+        # GeoProcessor should handle necessary event handling and notify
+        # the GeoProessorListModel to update the User Interface
+        self.gp.read_command_file(cmd_filepath)
 
         # Push new command onto history
         self.app_session.push_history(cmd_filepath)
 
-        # Update the command count and Command_List label to show that new commands were added to the workflow.
-        self.update_ui_status_commands()
-
-        # Update the command list backup
-        self.command_list_backup.update_command_list(self.commands_List)
+        # Set this file path as the path to save if the user click "Save Commands ..."
+        self.saved_file = cmd_filepath
 
         # Set the last command file
         self.command_file_path = cmd_filepath
@@ -2351,9 +2290,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Update recently opened files in file menu
         self.ui_init_file_open_recent_files()
-
-        # Update size of gutter
-        self.main_window_resize_event_resize_gutter()
 
     def ui_action_print_commands(self):
         """
@@ -2590,8 +2526,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         Returns: None
         """
+        print('running inside update_ui_status_commands')
+        gp = self.gp
         # Count the number of items (each item is a command string) in the Command_List widget.
-        total_commands = self.commands_List.count()
+        total_commands = len(gp.commands)
+        print("total commands: " + str(total_commands))
+        num_errors = gp.get_number_errors()
+        print("num errors: " + str(num_errors))
+        num_warnings = gp.get_number_warnings()
+        print("num warnings: " + str(num_warnings))
 
         # If there is at least one command in the Command_List widget, enable the "Run All Commands" button and the
         # "Clear Commands" button. If not, disable the "Run All Commands" button and the "Clear Commands" button.
@@ -2603,7 +2546,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.commands_ClearCommands_PushButton.setEnabled(False)
 
         # Count the number of selected items (each item is a command string) in the Command_List widget.
-        selected_commands = len(self.commands_List.selectedItems())
+        selected_commands = len(self.command_ListWidget.commands_List.selectedItems())
 
         # If there is at least one selected command in the Command_List widget, enable the "Run Selected Commands"
         # button. If not, disable the "Run Selected Commands" button.

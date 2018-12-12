@@ -57,6 +57,10 @@ class CommandListWidget(object):
         # notify the program if it has been edited since the previous save.
         self.command_list_backup = command_list_backup.CommandListBackup()
 
+        # Keep track of errors and warnings in command list
+        self.num_errors = 0
+        self.num_warnings = 0
+
         # Setup the user interface elements of the command list widget
         self.setupUi()
 
@@ -460,6 +464,8 @@ class CommandListWidget(object):
 
         # Add event handler for QGroupBox resize event
         self.commands_GroupBox.resizeEvent = self.group_box_resize
+        self.commands_GroupBox.setObjectName(_fromUtf8("commands_GroupBox"))
+        self.commands_GroupBox.setTitle("Commands (0 commands, 0  selected, 0 with failures, 0 with warnings)")
 
         # Add basic QListWidget elements to design the command list
         self.setup_ui_command_list_widget_layout()
@@ -656,10 +662,24 @@ class CommandListWidget(object):
 
         # Update the Command_List widget label to display the total and selected number of commands.
         self.commands_GroupBox.setTitle(
-            #"Commands ({} commands, {} selected, {} with failures, {} with warnings)".format(
-            "Commands ({} commands, {} selected)".format(
-                # total_commands, selected_commands, commands_with_failures, commands_with_warnings))
-                total_commands, selected_commands))
+            "Commands ({} commands, {} selected, {} with failures, {} with warnings)".format(
+                total_commands, selected_commands, self.num_errors, self.num_warnings))
+
+    def update_command_list(self, command_string):
+        """
+        Add data to the command list
+        :param command_string: a command string to add to the command list
+        :return: None
+        """
+        item = QtWidgets.QListWidgetItem()
+        item.setText(command_string.rstrip())
+        qsize = QtCore.QSize()
+        qsize.setHeight(16)
+        qsize.setWidth(self.commands_List.size().width())
+        item.setSizeHint(qsize)
+        if command_string.strip()[0] == '#':
+            item.setForeground(QtGui.QColor(68, 121, 206))
+        self.commands_List.addItem(item)
 
     def update_command_list_widget(self):
         """
@@ -681,22 +701,6 @@ class CommandListWidget(object):
             self.update_gutter()
 
         self.numbered_List.addItem("")
-
-    def update_command_list(self, command_string):
-        """
-        Add data to the command list
-        :param command_string: a command string to add to the command list
-        :return: None
-        """
-        item = QtWidgets.QListWidgetItem()
-        item.setText(command_string.rstrip())
-        qsize = QtCore.QSize()
-        qsize.setHeight(16)
-        qsize.setWidth(self.commands_List.size().width())
-        item.setSizeHint(qsize)
-        if command_string.strip()[0] == '#':
-            item.setForeground(QtGui.QColor(68, 121, 206))
-        self.commands_List.addItem(item)
 
     def update_numbered_list(self, index):
         """
@@ -727,15 +731,21 @@ class CommandListWidget(object):
             gutter_item = self.gutter.item(i)
             gutter_item.setBackground(QtCore.Qt.white)
 
+        # Clear number of warnings and errors
+        self.num_errors = 0
+        self.num_warnings = 0
+
         # Now update the numbered list and gutter with current errors and warnings
         for i in range(0, len(self.command_list)):
             command_status = self.command_list[i].command_status.run_status
             if command_status == "FAILURE":
                 self.numbered_list_error_at_row(i)
                 self.gutter_error_at_row(i)
+                self.num_errors += 1
             elif command_status == "WARNING":
                 self.numbered_list_warning_at_row(i)
                 self.gutter_warning_at_row(i)
+                self.num_warnings += 1
 
     def update_gutter(self):
         """

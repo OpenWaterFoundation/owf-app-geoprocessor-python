@@ -26,6 +26,8 @@ class GeoProcessorListModel(object):
         """
         # Remove all the commands from GeoProcessor
         self.gp.remove_all_commands()
+        # Update status of commands
+        self.command_list_view.update_ui_status_commands()
 
     def clear_selected_commands(self, selected_indices):
         """
@@ -45,6 +47,9 @@ class GeoProcessorListModel(object):
             i_command = selected_indices_sorted[i]
             self.gp.remove_command(i_command)
 
+        # Update status of commands
+        self.command_list_view.update_ui_status_commands()
+
     def command_list_read(self):
         """
         After commands are read in GeoProcessor the following functions
@@ -59,6 +64,8 @@ class GeoProcessorListModel(object):
         self.command_list_view.set_command_list_backup()
         # Add command strings to the command list widget in CommandListWidget
         self.command_list_view.update_command_list_widget()
+        # Update the command status
+        self.command_list_view.update_ui_status_commands()
         # Enable the 'Run All Commands' and 'Clear Commands' buttons
         # self.command_list_view.enable_buttons()
         self.command_list_view.commands_RunAllCommands_PushButton.setEnabled(True)
@@ -73,6 +80,8 @@ class GeoProcessorListModel(object):
         # Check for errors or warnings in CommandListWidget and update icons
         # if necessary
         self.command_list_view.update_ui_command_list_errors()
+        # Update status of commands
+        self.command_list_view.update_ui_status_commands()
 
     # def get_command_list(self):
     #

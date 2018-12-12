@@ -427,6 +427,30 @@ class GeoProcessor(object):
         # Did not find the requested identifier so return None
         return None
 
+    def get_number_errors(self):
+        """
+        Return the number of errors in commands.
+        :return: Number of errors in commands list.
+        """
+        num_errors = 0
+        for command in self.commands:
+            command_status = command.command_status.run_status
+            if command_status == "FAILURE":
+                num_errors += 1
+        return num_errors
+
+    def get_number_warnings(self):
+        """
+        Return the number of errors in commands.
+        :return: Number of errors in commands list.
+        """
+        num_warnings = 0
+        for command in self.commands:
+            command_status = command.command_status.run_status
+            if command_status == "WARNING":
+                num_warnings += 1
+        return num_warnings
+
     def get_table(self, table_id):
         """
         Return the Table that has the requested ID.

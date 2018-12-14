@@ -1,4 +1,3 @@
-
 import functools
 import geoprocessor.ui.util.CommandListBackup as command_list_backup
 import geoprocessor.ui.util.qt_util as qt_util
@@ -130,9 +129,16 @@ class CommandListWidget(object):
         :param event: Release click event from numbered list.
         :return: None
         """
-        index = self.commands_List.currentRow()
-        self.numbered_List.setCurrentRow(index)
-        self.gutter.setCurrentRow(index)
+        # First clear previous selections from numbered list and gutter
+        self.numbered_List.clearSelection()
+        self.gutter.clearSelection()
+
+        # Update numbered list and gutter with selections
+        selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
+        selected_indices = [item.row() for item in selected_q_indices]
+        for index in selected_indices:
+            self.numbered_List.item(index).setSelected(True)
+            self.gutter.item(index).setSelected(True)
 
     def event_handler_button_run_all_commands_clicked(self, event):
         """
@@ -152,7 +158,7 @@ class CommandListWidget(object):
         """
         selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
         selected_indices = [item.row() for item in selected_q_indices]
-        self.notify_model_listener_run_selected_commands_clicked(selected_indices)
+        self.notify_model_listener_main_ui_listener_run_selected_commands_clicked(selected_indices)
 
     def event_handler_button_clear_commands_clicked(self, event):
         """
@@ -376,13 +382,21 @@ class CommandListWidget(object):
         self.command_model_listener.run_all_commands()
         self.command_main_ui_listener.show_results()
 
-    def notify_model_listener_run_selected_commands_clicked(self, selected_indices):
+    def notify_model_listener_main_ui_listener_run_selected_commands_clicked(self, selected_indices):
         """
         Notify the model listener that the geoprocessor
         :param selected_indices:
         :return: None
         """
         self.command_model_listener.run_selected_commands(selected_indices)
+        self.command_main_ui_listener.show_results()
+
+    def notify_main_ui_listener_refresh_results(self):
+        """
+        Notify the main ui that the results should be refreshed
+        :return: None
+        """
+        self.command_main_ui_listener.show_results()
 
     def numbered_list_error_at_row(self, index):
         """
@@ -527,6 +541,7 @@ class CommandListWidget(object):
         self.gutter.setFixedWidth(21)
         self.gutter.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.gutter.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.gutter.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.gutter.setObjectName('gutter')
         # Connect gutter click to custom gutter_clicked function
         self.gutter.mouseReleaseEvent = self.event_handler_gutter_clicked
@@ -561,6 +576,8 @@ class CommandListWidget(object):
         self.numbered_List.setFixedWidth(45)
         self.numbered_List.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.numbered_List.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.numbered_List.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.numbered_List.setFocusPolicy(QtCore.Qt.NoFocus)
         self.numbered_List.setMouseTracking(True)
         self.numbered_List.mouseReleaseEvent = self.event_handler_numbered_list_item_clicked
         self.numbered_List.mouseMoveEvent = self.event_handler_numbered_list_item_hover
@@ -627,6 +644,8 @@ class CommandListWidget(object):
         for i in range(0, len(selected_indices)):
             index = selected_indices[i]
             self.commands_List.item(index).setSelected(True)
+            self.numbered_List.item(index).setSelected(True)
+            self.gutter.item(index).setSelected(True)
 
     def update_ui_status_commands(self):
         """

@@ -475,15 +475,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.gp.read_commands_from_command_list(cmd_string_list, runtime_properties)
         self.gp.add_command_processor_listener(self)
 
-    def resizeEvent(self, event):
-        """
-        When window is resized update gutter and numbered list
-        :param event: Window resized event
-        :return: None
-        """
-        self.main_window_resize_event_resize_gutter()
-        # self.main_window_resize_event_resize_numbered_list()
-
     def setup_ui(self):
         """
         Set up the user interface.

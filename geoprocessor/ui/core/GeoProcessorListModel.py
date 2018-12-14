@@ -71,6 +71,8 @@ class GeoProcessorListModel(object):
         self.command_list_view.commands_RunAllCommands_PushButton.setEnabled(True)
         self.command_list_view.commands_ClearCommands_PushButton.setEnabled(True)
         #self.initialize_command_list()
+        # Notify the main ui that results should be refreshed
+        self.command_list_view.notify_main_ui_listener_refresh_results()
 
     def command_list_ran(self):
         """

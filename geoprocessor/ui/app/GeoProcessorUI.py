@@ -95,47 +95,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.gp.add_command_processor_listener(self)
 
-    # TODO smalers 2018-07-24 need to review this function
-    def clear_command_from_geoprocessor(self):
-        """
-        Clear the right-clicked command from the Command List widget.
-
-        Returns: None
-        """
-
-        selected_q_indices = self.command_ListWidget.commands_List.selectionModel().selectedIndexes()
-
-        question_string = ""
-
-        if len(selected_q_indices) > 1:
-            question_string = "Do you want to delete selected commands?"
-        else:
-            question_string = "Do you want to delete this command?"
-        # Open a message box to confirm with the user that they want to delete the command.
-        response = qt_util.new_message_box(
-            QtWidgets.QMessageBox.Question,
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-            question_string,
-            "Clear Commands")
-
-        # If the user confirms that they want to delete the command, continue. Otherwise, pass.
-        if response == QtWidgets.QMessageBox.Yes:
-            # # Get the index of the right-clicked command (item) and remove it from the Command_List widget.
-            # index_of_item_to_remove = self.commands_List.currentRow()
-            # # remove item from command list
-            # self.commands_List.takeItem(index_of_item_to_remove)
-            # # remove item from gutter
-            # self.gutter.takeItem(index_of_item_to_remove)
-            # # remove item from numbered list and update numbers
-            # self.delete_numbered_list_item(index_of_item_to_remove)
-            # # update the window title in case command file has been modified
-            # self.update_ui_main_window_title()
-            selected_indices = [item.row() for item in selected_q_indices]
-            self.gp_model.clear_selected_commands(selected_indices)
-
-        # # Update the command count and Command_List label to show that commands were deleted.
-        # self.update_ui_status_commands()
-
     def closeEvent(self, event):
         """
         When exiting out of the main window do checks to see if the command file has been modified.
@@ -338,72 +297,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             # Update the command count and Command_List label to show that a command was added to the workflow.
             self.update_ui_status_commands()
-
-    def main_window_resize_event_resize_gutter(self):
-        # """
-        # Update the size of the gutter to ensure that it doesn't scroll and that it
-        # appropriately displays a good overview of all issues.
-        #
-        # :return: None
-        # """
-
-        # Get the current height of the gutter
-        current_height = self.gutter.height()
-        # Check the count of all
-        count = self.commands_List.count()
-        # Get the height of all items
-        current_items_height = 16 * count
-        # Make sure count is never 0, if so set to 1
-        if count == 0:
-            count = 1
-
-        item_height = math.floor(current_height / count)
-        if current_items_height > current_height - 4:
-            for i in range(0, self.commands_List.count()):
-                item = self.gutter.item(i)
-                item.setSizeHint(QtCore.QSize(-1, item_height))
-        else:
-            for i in range(0, self.commands_List.count()):
-                item = self.gutter.item(i)
-                item.setSizeHint(QtCore.QSize(-1, 16))
-
-        # update last item in list to always fill whole space, for better appearance
-        # and to also ensure there is never any scrolling
-        # could be improved upon in the future
-        # new gutter height
-        new_height = item_height * count
-        if new_height > current_height - 4:
-            # 4 offers as a buffer
-            last_item_height = item_height + (current_height - (new_height) - 4)
-            # update height of last item
-            # TODO smalers added the following check, otherwise the app crashed
-            if self.gutter.item(count -1) is not None:
-                self.gutter.item(count - 1).setSizeHint(QtCore.QSize(-1, last_item_height))
-
-    def main_window_resize_event_resize_numbered_list(self):
-        """
-        Add an extra row to numbered list if the command list area has a horizontal scroll
-        bar. If there isn't an extra row the two lists will get out of sync
-        :return: None
-        """
-
-        # Is horizontal scroll bar visible
-        scroll_bar_visible = self.commands_List.horizontalScrollBar().isVisible()
-        # Number of rows in numbered list
-        num_list_size = self.numbered_List.count()
-        # Number of rows in command lists
-        command_list_size = self.commands_List.count()
-
-        # If the horizontal scroll bar is visible and there the numbered list is the same size
-        # as the command list, add an extra row to keep the lists in sync. Otherwise, if no
-        # scroll bar and numbered list is bigger than command list remove a row.
-        if scroll_bar_visible:
-            if num_list_size == command_list_size:
-                item = QtWidgets.QListWidgetItem()
-                self.numbered_List.addItem(item)
-        else:
-            if num_list_size > command_list_size:
-                self.numbered_List.takeItem(command_list_size)
 
     # TODO smalers 2018-07-24 need to review this function
     def new_command_editor(self, command_name):
@@ -1657,6 +1550,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         Returns: None
         """
+
         # Call the specific functions for each output category
         # - Each call will also update the status information in the UI (counts, selected, etc.)
         logger = logging.getLogger(__name__)
@@ -1835,49 +1729,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Update the results count and results' tables' labels to show that the results were populated.
         self.update_ui_status_results_tables()
 
-    def ui_action_clear_commands(self):
-        """
-        Clear one or more of the commands from the Command List widget.
-        If no commands are selected or all are selected, clear all.
-        If one or more commands are selected, clear the selected commands without asking.
-
-        Returns: None
-        """
-
-        selected_commands_count = len(self.commands_List.selectedIndexes())
-        commands_count = self.commands_List.count()
-        if selected_commands_count == 0 or selected_commands_count == commands_count:
-            # Open a message box to confirm with the user that they want to delete all of the commands.
-            response = qt_util.new_message_box(
-                QtWidgets.QMessageBox.Question,
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                "Are you sure you want to delete ALL the commands?",
-                "Clear Commands")
-
-            # If the user confirms that they want to delete the selected commands, delete the commands.
-            # - Delete using objects so indices are not an issue
-            if response == QtWidgets.QMessageBox.Yes:
-                # Iterate over and remove all of the items (command strings).
-                # - Delete in reverse order so that overhead of shifting does not occur
-                for i in range(commands_count-1, -1, -1):
-                    self.commands_List.takeItem(i)
-                    self.delete_numbered_list_item(i)
-                    self.gutter.takeItem(i)
-        else:
-            # Iterate over and remove each selected item (command strings)
-            for selected_item in self.commands_List.selectedItems():
-                index = self.commands_List.row(selected_item)
-                self.commands_List.takeItem(index)
-                self.delete_numbered_list_item(index)
-                self.gutter.takeItem(index)
-
-        # Update the command count and Command_List label to show that commands were deleted.
-        self.update_ui_status_commands()
-
-        # update the window title in case command file has been modified
-        self.update_ui_main_window_title()
-
-
     def ui_action_command_list_right_click(self, q_pos):
         """
         Open the Command_List widget right-click menu.
@@ -1890,7 +1741,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         Returns: None
         """
-
         # Create the Qt Menu object.
         self.rightClickMenu_Commands = QtWidgets.QMenu()
 
@@ -1906,7 +1756,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Connect the menu options to the appropriate actions.
         menu_item_command_status.triggered.connect(self.show_command_status)
         menu_item_edit_command.triggered.connect(self.edit_command_editor)
-        menu_item_delete_command.triggered.connect(self.clear_command_from_geoprocessor)
+        menu_item_delete_command.triggered.connect(self.command_ListWidget.event_handler_button_clear_commands_clicked)
         menu_item_increase_indent_command.triggered.connect(self.command_ListWidget.event_handler_indent_button_clicked)
         menu_item_decrease_indent_command.triggered.connect(self.command_ListWidget.event_handler_decrease_indent_button_clicked)
 
@@ -2115,24 +1965,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # New Command File
         self.new_command_file = True
-
-    def ui_action_numbered_list_clicked(self, event):
-        """
-        When clicking on a numbered list item also select the same
-        row in the command list and the gutter
-        :param event: Release click event from numbered list.
-        :return:
-        """
-        index = self.numbered_List.currentRow()
-        self.commands_List.setCurrentRow(index)
-        self.gutter.setCurrentRow(index)
-
-        gp = self.gp
-        selected_command = gp.commands[index]
-        command_status = selected_command.command_status
-        run_status = command_status.run_status
-        if run_status == "WARNING" or run_status == "FAILURE":
-            self.show_command_status()
 
     def ui_action_open_attributes(self):
         # Create map window dialog box

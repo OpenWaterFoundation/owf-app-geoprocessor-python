@@ -2313,7 +2313,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         window_title = self.windowTitle()
         window_title_end = window_title[-10:]
         # First check to see if the command file has been modified
-        if self.command_list_backup.command_list_modified(self.commands_List):
+        if self.command_ListWidget.command_list_modified():
             if window_title_end != "(modified)" and window_title != "GeoProcessor - commands not saved":
                 window_title_modified = window_title + " (modified)"
                 self.setWindowTitle(window_title_modified)

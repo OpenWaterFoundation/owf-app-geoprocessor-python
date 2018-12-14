@@ -194,6 +194,9 @@ class CommandListWidget(object):
             if response == QtWidgets.QMessageBox.Yes:
                 self.notify_model_listener_clear_all_commands()
 
+        # Check to see if command list modified. If so notify the main ui
+        self.command_main_ui_listener.update_ui_main_window_title()
+
     def event_handler_decrease_indent_button_clicked(self):
         """
         Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked
@@ -204,6 +207,9 @@ class CommandListWidget(object):
         self.notify_model_listener_decrease_indent_button_clicked(selected_indices)
         self.update_selected_commands(selected_indices)
 
+        # Check to see if command list modified. If so notify the main ui
+        self.command_main_ui_listener.update_ui_main_window_title()
+
     def event_handler_indent_button_clicked(self):
         """
         Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked
@@ -213,6 +219,9 @@ class CommandListWidget(object):
         selected_indices = [item.row() for item in selected_q_indices]
         self.notify_model_listener_indent_button_clicked(selected_indices)
         self.update_selected_commands(selected_indices)
+
+        # Check to see if command list modified. If so notify the main ui
+        self.command_main_ui_listener.update_ui_main_window_title()
 
     def event_handler_gutter_clicked(self, event):
         """

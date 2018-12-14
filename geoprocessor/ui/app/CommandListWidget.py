@@ -389,7 +389,7 @@ class CommandListWidget(object):
         :return: None
         """
         self.command_model_listener.run_selected_commands(selected_indices)
-        self.command_main_ui_listener.show_results() 
+        self.command_main_ui_listener.show_results()
 
     def notify_main_ui_listener_refresh_results(self):
         """

@@ -12,7 +12,7 @@ class CommandListBackup(object):
     def __init__(self):
 
         # Create a new command list QListWidget object
-        self.command_list = QtWidgets.QListWidget()
+        self.command_list = []
 
     def command_list_modified(self, command_list):
         """
@@ -22,18 +22,16 @@ class CommandListBackup(object):
         :return: True if file has been modified, otherwise False
         """
 
-        if self.command_list.count() != command_list.count():
+        if len(self.command_list) != len(command_list):
             return True
 
-        for i in range(0, command_list.count()):
+        size = len(command_list)
 
-            row = command_list.item(i)
+        for i in range(0, size):
 
-            original_row = self.command_list.item(i)
+            text = command_list[i].command_string
 
-            text = row.text()
-
-            original_text = original_row.text()
+            original_text = self.command_list[i]
 
             if text != original_text:
                 return True
@@ -47,9 +45,8 @@ class CommandListBackup(object):
         :return: None
         """
 
-        self.command_list.clear()
+        del self.command_list[:]
 
-        for i in range(0, command_list.count()):
-            item = command_list.item(i)
-            new_item = QtWidgets.QListWidgetItem(item.text())
-            self.command_list.addItem(new_item)
+        for command in command_list:
+            text = command.command_string
+            self.command_list.append(text)

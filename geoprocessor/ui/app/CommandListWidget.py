@@ -582,7 +582,6 @@ class CommandListWidget(object):
         """
         # Create a list next to command list that reflects command line numbers
         self.numbered_List = QtWidgets.QListWidget()
-        self.numbered_List.setFixedWidth(45)
         self.numbered_List.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.numbered_List.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.numbered_List.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
@@ -593,6 +592,7 @@ class CommandListWidget(object):
         self.numbered_List.setObjectName("numbered_list")
         self.numbered_List.addItem('')
         self.commands_HBoxLayout_Commands.addWidget(self.numbered_List)
+        self.update_numbered_list_width()
 
     def setup_ui_command_list_widget_button_run_selected_commands(self):
         """
@@ -746,6 +746,16 @@ class CommandListWidget(object):
         item.setSizeHint(QtCore.QSize(-1, 16))
         ## item.mouseReleaseEvent = self.show_command_status_tooltip
         self.numbered_List.addItem(item)
+        self.update_numbered_list_width()
+
+    def update_numbered_list_width(self):
+        largest_int = self.numbered_List.count()
+        myFont = QtGui.QFont()
+        string = str(largest_int)
+        fm = QtGui.QFontMetrics(myFont)
+        maximum_int_width = fm.width(string)
+        width = maximum_int_width + 38
+        self.numbered_List.setFixedWidth(width)
 
     def update_ui_command_list_errors(self):
         """

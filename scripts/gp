@@ -46,6 +46,65 @@ checkOperatingSystem()
 	echo "operatingSystem=${operatingSystem}"
 }
 
+# Set the DISPLAY variable needed for X windows
+checkXWindowsDisplay() {
+	if [ -z "$DISPLAY" ]; then
+		# DISPLAY environment variable is not set so set it
+		# - assume running X server and program on one computer
+		echo "Setting DISPLAY=:0.0 to work with X Windows server"
+		export DISPLAY=:0.0
+	fi
+}
+
+# Check to make sure the X Windows Server is running
+# - currently only check on Cygwin since if running on Linux X Windows is usually running
+# - if the check is not performed and X Windows server is not running, will probably see:
+#   "Could not connect to any X display"
+checkXWindowsServer() {
+	if [ ${operatingSystem} = "cygwin" ]; then
+		# Check for XWin process
+		xwinProcess=$(ps | grep -i XWin)
+		if [ -z "${xwinProcess}" ]; then
+			echo ""
+			echo "It appears that the X Windows server is not running on Cygwin."
+			xserverPath="/cygdrive/C/ProgramData/Microsoft/Windows/Start Menu/Programs/Cygwin-X/XWin Server.lnk"
+			if [ -f "${xserverPath}" ]; then
+				# Windows shortcut exists in the normal location.
+				# Run it to start the X Windows server
+				echo "Starting X Windows server by running:"
+				echo "  cygstart ${xserverPath}"
+				# See the following about running a Windows shortcut from Cygwin:
+				# https://superuser.com/questions/790128/cygwin-to-execute-windows-shortcut-files-lnk
+				cygstart "${xserverPath}"
+				# Have to wait a bit for the X Windows server to start
+				# - Loop for 10 seconds and if that is not enough continue and see what happens
+				startSeconds=$(date +%s)
+				while [ "1" = "1" ]; do
+					# Sleep 1 second to give X Windows server time to start
+					sleep 1
+					# See if the X Windows server process is found
+					xwinProcess=$(ps | grep -i XWin)
+					if [ ! -z "${xwinProcess}" ]; then
+						# X Windows server process is found
+						break
+					else
+						# See if 10 seconds has passed and if so break, assuming process won't start
+						nowSeconds=$(date +%s)
+						timediff=$(expr $nowSeconds - $startSeconds)
+						if [ "${timediff}" -gt "10" ]; then
+							break
+						fi
+					fi
+				done
+				echo "If still get errors, try starting manually with Start / Cygwin-X / XWin Server"
+			else
+				echo "Cannot determine how to automatically start the X Windows Server"
+				echo "If get an error running GeoProcessor, try starting X Windows server manually with Start / Cygwin-X / XWin Server"
+			fi
+		fi
+	fi
+}
+
 # Set the Python environment to find the correct QGIS run-time libraries for Cygwin
 # - The GEOPROCESSOR_ENV_SETUP environment variable is set to YES
 #   to indicate that setup has been done.
@@ -159,6 +218,22 @@ noQgis () {
 	exit 1
 }
 
+# Parse command line
+# - only handle some specific checks for local logic and let the called script handle command line
+parseCommandLineLong() {
+	for arg in $@ :; do
+		if [ "$arg" = "--ui" ]; then
+			# Make sure that X Window environment is set up before calling Python UI program
+			# Determine the operating system
+			checkOperatingSystem
+			# Check the X Windows DISPLAY environment variable
+			checkXWindowsDisplay
+			# Check X Server
+			checkXWindowsServer
+		fi
+	done
+}
+
 # Run Python for the GeoProcessor module
 runProcessor() {
 	# Echo environment variables for troubleshooting
@@ -188,6 +263,9 @@ runProcessor() {
 }
 
 # Main entry point into the script
+
+# Parse the command parameters
+parseCommandLineLong "$@"
 
 # Check the operating system
 checkOperatingSystem

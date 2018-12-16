@@ -10,12 +10,6 @@
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
 
-# Set the DISPLAY variable needed for X windows
-if [ -z "$DISPLAY" ]; then
-	echo "Setting DISPLAY=:0.0"
-	export DISPLAY=0.0
-fi
-
 # Run the main script with full path since it may not be in the PATH
 ${scriptFolder}/gptest --ui $@
 

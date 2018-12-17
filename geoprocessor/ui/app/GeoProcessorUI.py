@@ -103,30 +103,46 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         :return: None
         """
 
+        self.closeEvent_save_command_file()
+        self.closeEvent_confirm_exit(event)
+
+    def closeEvent_confirm_exit(self, event):
+        exit_dialog = QtWidgets.QMessageBox.question(self, 'GeoProcessor', 'Are you sure you want to exit GeoProcessor?',
+                                                    QtWidgets.QMessageBox.Yes |
+                                                    QtWidgets.QMessageBox.No
+                                                    )
+
+        # If user selects yes to save commands
+        if exit_dialog == QtWidgets.QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
+    def closeEvent_save_command_file(self):
+        """
+        Before exiting check to see if the command file has been edited. If so ask if the user
+        would like to save the command file.
+        :param event: close event passed down from closeEvent()
+        :return: None
+        """
         # Check to see if command list has been modified
         command_list_modified = self.command_ListWidget.command_list_modified()
 
         # If modified, open dialog box to ask if user wants to save file
         if command_list_modified:
-            ret = QtWidgets.QMessageBox.question(self, 'GeoProcessor', 'Do you want to save the changes you made?',
-                                                    QtWidgets.QMessageBox.Yes |
-                                                    QtWidgets.QMessageBox.No |
-                                                    QtWidgets.QMessageBox.Cancel
-                                                )
+            save_command_dialog = QtWidgets.QMessageBox.question(self, 'GeoProcessor', 'Do you want to save the changes you made?',
+                                                 QtWidgets.QMessageBox.Yes |
+                                                 QtWidgets.QMessageBox.No |
+                                                 QtWidgets.QMessageBox.Cancel
+                                                 )
 
             # If user selects yes to save commands
-            if ret == QtWidgets.QMessageBox.Yes:
+            if save_command_dialog == QtWidgets.QMessageBox.Yes:
                 # Open Save Window
                 if self.new_command_file:
                     self.ui_action_save_commands_as()
                 else:
                     self.ui_action_save_commands()
-            # If user selects cancel do not exit or save
-            if ret == QtWidgets.QMessageBox.Cancel:
-                event.ignore()
-            # If user selects no exit application
-            else:
-                event.accept()
 
     def command_completed(self, icommand, ncommand, command, percent_completed, message):
         """

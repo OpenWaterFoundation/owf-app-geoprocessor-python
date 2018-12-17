@@ -34,6 +34,8 @@ class GeoProcessor(object):
         # when the commands are running, to indicate progress.
         self.command_processor_listener_array = []
 
+        self.command_list_processor_listener_array = []
+
         # Command list that holds all command objects to run.
         self.commands = []
 
@@ -103,6 +105,15 @@ class GeoProcessor(object):
             if listener_from_array == listener:
                 return
         self.command_processor_listener_array.append(listener)
+
+    def add_model_listener(self, listener):
+
+        if not listener:
+            return
+        for listener_from_array in self.command_list_processor_listener_array:
+            if listener_from_array == listener:
+                return
+        self.command_list_processor_listener_array.append(listener)
 
     def add_geolayer(self, geolayer):
         """
@@ -359,6 +370,9 @@ class GeoProcessor(object):
         """
         self.tables.remove(table)
 
+    def get_command_list(self):
+        return self.commands
+
     def get_datastore(self, datastore_id):
         """
         Return the DataStore that has the requested ID.
@@ -413,6 +427,30 @@ class GeoProcessor(object):
         # Did not find the requested identifier so return None
         return None
 
+    def get_number_errors(self):
+        """
+        Return the number of errors in commands.
+        :return: Number of errors in commands list.
+        """
+        num_errors = 0
+        for command in self.commands:
+            command_status = command.command_status.run_status
+            if command_status == "FAILURE":
+                num_errors += 1
+        return num_errors
+
+    def get_number_warnings(self):
+        """
+        Return the number of errors in commands.
+        :return: Number of errors in commands list.
+        """
+        num_warnings = 0
+        for command in self.commands:
+            command_status = command.command_status.run_status
+            if command_status == "WARNING":
+                num_warnings += 1
+        return num_warnings
+
     def get_table(self, table_id):
         """
         Return the Table that has the requested ID.
@@ -451,6 +489,19 @@ class GeoProcessor(object):
                 # Let the exception from not finding a key in the dictionary be raised
                 # print('Property not found so throwing exception')
                 raise
+
+    def indent_command_string(self, index):
+        TAB = "    "
+        current_command = self.commands[index].command_string
+        current_command = TAB + current_command
+        self.commands[index].command_string = current_command
+
+    def decrease_indent_command_string(self, index):
+        current_command = self.commands[index].command_string
+        front_of_string = current_command[:4]
+        if front_of_string == '    ':
+            current_command = current_command[4:]
+            self.commands[index].command_string = current_command
 
     @classmethod
     def __lookup_endfor_command_index(cls, command_list, for_name):
@@ -505,6 +556,34 @@ class GeoProcessor(object):
             if c.get_name() == if_name:
                 return c
         return None
+
+    def notify_command_list_processor_listener_of_commands_read(self, command_list):
+
+        if self.command_list_processor_listener_array:
+            for listener_from_array in self.command_list_processor_listener_array:
+                listener_from_array.command_list_read()
+
+    def notify_command_list_processor_listener_of_all_commands_completed(self):
+        """
+        Notify registered command process listeners about a command completing.
+        :param icommand: The index (0+) of the command that is completing.
+        :param ncommand: The number of commands being processed. This will often be the
+        total number of commands but calling code may process a subset.
+        :param command: The instance of the command that is completing.
+        """
+        if self.command_list_processor_listener_array:
+            for listener_from_array in self.command_list_processor_listener_array:
+                listener_from_array.command_list_ran()
+
+    def notify_command_list_processor_listener_update_commands(self):
+        """
+        Notify the GeoProcessorListModel that the commands list UI in CommandListWidget
+        need to be updated to reflect changes made to commands list in GeoProcessor
+        :return:
+        """
+        if self.command_list_processor_listener_array:
+            for listener_from_array in self.command_list_processor_listener_array:
+                listener_from_array.update_command_list_ui()
 
     def notify_command_processor_listener_of_command_cancelled(self, icommand, ncommand, command):
         """
@@ -573,6 +652,13 @@ class GeoProcessor(object):
                 CURRENTLY NOT ENABLED.
         """
 
+        # Remove all items within the geoprocessor from the previous run.
+        self.commands = []
+        self.properties = {}
+        self.geolayers = []
+        self.tables = []
+        self.output_files = []
+
         # Set the processor properties.
         if os.path.isabs(command_file):
             # Command file is absolute so the working directory is just the parent of the command file.
@@ -592,6 +678,9 @@ class GeoProcessor(object):
 
         # Get a list of command file strings (each line of the command file is its own item in the list).
         command_file_strings = command_util.read_file_into_string_list(command_file)
+
+        # clear commands
+        self.commands.clear()
 
         # Iterate over each line in the command file.
         for command_file_string in command_file_strings:
@@ -614,6 +703,8 @@ class GeoProcessor(object):
                 command_object.print_for_debug()
                 print("First command debug:")
                 self.commands[0].print_for_debug()
+
+        self.notify_command_list_processor_listener_of_commands_read(self.commands)
 
     def read_commands_from_command_list(self, command_file_strings, runtime_properties):
         """
@@ -767,6 +858,11 @@ class GeoProcessor(object):
 
         warning_count = 0
 
+        # Remove all items within the geoprocessor from the previous run.
+        self.geolayers = []
+        self.tables = []
+        self.output_files = []
+
         # Reset the global workflow properties if requested, used when RunCommands command calls recursively...
         # - This code is a port of Java TSCommandProcessor.runCommands().
         reset_workflow_properties = True
@@ -823,6 +919,10 @@ class GeoProcessor(object):
             command_list = self.commands
         else:
             logger.info("Running specified command list")
+            # Running selected commands so reset all commands in command list
+            for i_command in range(len(self.commands)):
+                command = self.commands[i_command]
+                command.command_status.clear_log(command_phase_type.RUN)
 
         # Reset any properties left over from the previous run that may impact the current run.
         self.__reset_data_for_run_start()
@@ -1097,9 +1197,20 @@ class GeoProcessor(object):
             logger.error(message)
             #raise RuntimeError(message)
 
+        self.notify_command_list_processor_listener_of_all_commands_completed()
+
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough
         logger.info("At end of run_commands")
+
+    def run_selected_commands(self, selected_indices, command_list=None, run_properties=None, env_properties=None):
+        command_list = []
+
+        selected_indices.sort()
+        for index in selected_indices:
+            command_list.append(self.commands[index])
+
+        self.run_commands(command_list)
 
     def set_command_strings(self, command_strings):
         """
@@ -1136,6 +1247,50 @@ class GeoProcessor(object):
                 command_object.print_for_debug()
                 print("First command debug:")
                 self.commands[0].print_for_debug()
+
+    def add_command_string(self, command_string):
+        """
+        Add a command string to the end
+        """
+        command_factory = GeoProcessorCommandFactory()
+
+        command_object = command_factory.new_command(command_string, True)
+
+        self.commands.append(command_object)
+
+        # GeoProcessorCommandFactory
+        debug = False
+        if debug:
+            command_object.print_for_debug()
+            print("First command debug:")
+            self.commands[0].print_for_debug()
+
+    def remove_command(self, index):
+        """
+        Remove a command string at the given index
+        :param index:
+        :return:
+        """
+        del self.commands[index]
+        self.notify_command_list_processor_listener_update_commands()
+
+        # GeoProcessorCommandFactory
+        # debug = False
+        # if debug:
+        #     command_object.print_for_debug()
+        #     print("First command debug:")
+        #     self.commands[0].print_for_debug()
+
+    def remove_all_commands(self):
+        """
+        Remove all the commands from the command list
+        :return: None
+        """
+        # Remove all commands from command list
+        del self.commands[:]
+        # Nofity the command list model that the commands list UI in CommandListWidget
+        # needs to be updated to reflect changes made to commands in GeoProcessor
+        self.notify_command_list_processor_listener_update_commands()
 
     def set_properties(self, property_dict):
         """

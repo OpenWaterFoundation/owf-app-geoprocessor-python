@@ -200,9 +200,13 @@ class RunProgram(AbstractCommand):
         include_env_vars_dict = None
         if pv_IncludeEnvVars is not None and pv_IncludeEnvVars != "":
             # Have specified environment variables to include
+            # - expand the environment variable value using processor properties
             include_env_vars_dict = string_util.delimited_string_to_dictionary_one_value(pv_IncludeEnvVars,
                                                                                          key_value_delimiter="=",
                                                                                          trim=True)
+            for key, value in include_env_vars_dict.items():
+                include_env_vars_dict[key] = self.command_processor.expand_parameter_value(value, self)
+
         pv_ExcludeEnvVars = self.get_parameter_value('ExcludeEnvVars')
         exclude_env_vars_list = None
         if pv_ExcludeEnvVars is not None and pv_ExcludeEnvVars != "":
@@ -277,7 +281,6 @@ class RunProgram(AbstractCommand):
         # If any output files were indicated, add to the command output if they exist
         if output_files_list is not None:
             for output_file in output_files_list:
-                print('output_file="{}"\n'.format(output_file))
                 if os.path.isfile(output_file):
                     # Add the log file to output
                     self.command_processor.add_output_file(output_file)

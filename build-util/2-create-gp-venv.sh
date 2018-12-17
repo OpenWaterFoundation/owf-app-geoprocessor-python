@@ -560,7 +560,7 @@ if [ "${errorOccurred}" = "yes" ]
 fi
 
 echo ""
-echo "Python virtual environments  were created in virtualenv-tmp folder"
+echo "Python virtual environments were created in virtualenv-tmp folder"
 echo ""
 
 # Exit with appropriate error status

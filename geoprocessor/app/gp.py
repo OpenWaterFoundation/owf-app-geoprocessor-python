@@ -295,12 +295,12 @@ def run_ui(app_session):
 
     # The following is used when not dynamically importing modules
     #command_processor = GeoProcessor()
-    GeoProcessor = importlib.import_module('geoprocessor.core.GeoProcessor')
-    class_ = getattr(GeoProcessor, 'GeoProcessor')
+    GeoProcessor_module = importlib.import_module('geoprocessor.core.GeoProcessor')
+    class_ = getattr(GeoProcessor_module, 'GeoProcessor')
     command_processor = class_()
     # GeoProcessorUI derives from window = QtWidgets.QMainWindow()
-    GeoProcessorUI = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
-    class_ = getattr(GeoProcessorUI, 'GeoProcessorUI')
+    GeoProcessorUI_module = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
+    class_ = getattr(GeoProcessorUI_module, 'GeoProcessorUI')
     runtime_properties = {}
     runtime_properties['AppVersion'] = version.app_version
     runtime_properties['AppVersionDate'] = version.app_version_date

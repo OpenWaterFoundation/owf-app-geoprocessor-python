@@ -146,7 +146,7 @@ class AbstractCommand(object):
         debug = False
         if len(parameter_string) > 0:
             # Parameters are available to parse...
-            # Parse the parameter string of form Parameter=Value,Parameter=Value into a list of parameter items.
+            # Parse the parameter string of form Parameter="Value",Parameter="Value" into a list of parameter items.
             # Parameter items are strings that represent key=value pairs for each parameter in the parameter string.
             # The parameter items are separated by commas in the parameter string.
             parameter_items = command_util.parse_parameter_string_into_key_value_pairs(parameter_string)

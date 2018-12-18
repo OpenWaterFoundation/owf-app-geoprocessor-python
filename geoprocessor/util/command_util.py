@@ -212,6 +212,8 @@ def parse_parameter_string_from_command_string(command_string):
 
     # Get the parameter line from the command string (in between the '(' and the ')' ).
     parameter_string = command_string[paren_start_pos + 1: paren_end_pos]
+    # Strip enclosing whitespace
+    parameter_string = parameter_string.strip()
     # print("After parsing, parameter_string=" + parameter_string)
     return parameter_string
 
@@ -258,6 +260,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
                 # Not in a quoted parameter value string.
                 if current_char == '"':
                     # Start of a parameter value string.
+                    # - TODO smalers 2018-12-17 need to evaluate whether to allow escaping double quote
                     in_quoted_string = True
                 elif current_char == ' ':
                     # Whitespace, skip

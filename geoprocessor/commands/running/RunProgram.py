@@ -28,6 +28,16 @@ class RunProgram(AbstractCommand):
         CommandParameterMetadata("UseCommandShell", type("")),
         CommandParameterMetadata("IncludeParentEnvVars", type("")),
         CommandParameterMetadata("IncludeEnvVars", type("")),
+        CommandParameterMetadata("IncludeEnvVarName1", type("")),  # These are used for complex values difficult to parse
+        CommandParameterMetadata("IncludeEnvVarValue1", type("")),
+        CommandParameterMetadata("IncludeEnvVarName2", type("")),
+        CommandParameterMetadata("IncludeEnvVarValue2", type("")),
+        CommandParameterMetadata("IncludeEnvVarName3", type("")),
+        CommandParameterMetadata("IncludeEnvVarValue3", type("")),
+        CommandParameterMetadata("IncludeEnvVarName4", type("")),
+        CommandParameterMetadata("IncludeEnvVarValue4", type("")),
+        CommandParameterMetadata("IncludeEnvVarName5", type("")),
+        CommandParameterMetadata("IncludeEnvVarValue5", type("")),
         CommandParameterMetadata("ExcludeEnvVars", type("")),
         CommandParameterMetadata("OutputFiles", type(""))
     ]
@@ -187,6 +197,7 @@ class RunProgram(AbstractCommand):
         logger.info('In RunProgram.run_command')
 
         # Get data for the command
+        print("command parameters=" + string_util.format_dict(self.command_parameters))
         pv_CommandLine = self.get_parameter_value('CommandLine')
         pv_UseCommandShell = self.get_parameter_value('UseCommandShell')
         use_command_shell = False  # Default
@@ -206,6 +217,40 @@ class RunProgram(AbstractCommand):
                                                                                          trim=True)
             for key, value in include_env_vars_dict.items():
                 include_env_vars_dict[key] = self.command_processor.expand_parameter_value(value, self)
+
+        # Add environment variables individually by name
+        # - these are used when a list of parameters is difficult to parse
+        # - this is kind of ugly but meets requirements in the short term
+        pv_IncludeEnvVarName1 = self.get_parameter_value('IncludeEnvVarName1')
+        pv_IncludeEnvVarValue1 = self.get_parameter_value('IncludeEnvVarValue1')
+        if pv_IncludeEnvVarName1 is not None and pv_IncludeEnvVarName1 != "":
+            if include_env_vars_dict is None:
+                include_env_vars_dict = {}
+            include_env_vars_dict[pv_IncludeEnvVarName1] = pv_IncludeEnvVarValue1
+        pv_IncludeEnvVarName2 = self.get_parameter_value('IncludeEnvVarName2')
+        pv_IncludeEnvVarValue2 = self.get_parameter_value('IncludeEnvVarValue2')
+        if pv_IncludeEnvVarName2 is not None and pv_IncludeEnvVarName2 != "":
+            if include_env_vars_dict is None:
+                include_env_vars_dict = {}
+            include_env_vars_dict[pv_IncludeEnvVarName2] = pv_IncludeEnvVarValue2
+        pv_IncludeEnvVarName3 = self.get_parameter_value('IncludeEnvVarName3')
+        pv_IncludeEnvVarValue3 = self.get_parameter_value('IncludeEnvVarValue3')
+        if pv_IncludeEnvVarName3 is not None and pv_IncludeEnvVarName3 != "":
+            if include_env_vars_dict is None:
+                include_env_vars_dict = {}
+            include_env_vars_dict[pv_IncludeEnvVarName3] = pv_IncludeEnvVarValue3
+        pv_IncludeEnvVarName4 = self.get_parameter_value('IncludeEnvVarName4')
+        pv_IncludeEnvVarValue4 = self.get_parameter_value('IncludeEnvVarValue4')
+        if pv_IncludeEnvVarName4 is not None and pv_IncludeEnvVarName4 != "":
+            if include_env_vars_dict is None:
+                include_env_vars_dict = {}
+            include_env_vars_dict[pv_IncludeEnvVarName4] = pv_IncludeEnvVarValue4
+        pv_IncludeEnvVarName5 = self.get_parameter_value('IncludeEnvVarName5')
+        pv_IncludeEnvVarValue5 = self.get_parameter_value('IncludeEnvVarValue5')
+        if pv_IncludeEnvVarName5 is not None and pv_IncludeEnvVarName5 != "":
+            if include_env_vars_dict is None:
+                include_env_vars_dict = {}
+            include_env_vars_dict[pv_IncludeEnvVarName5] = pv_IncludeEnvVarValue5
 
         pv_ExcludeEnvVars = self.get_parameter_value('ExcludeEnvVars')
         exclude_env_vars_list = None
@@ -244,6 +289,7 @@ class RunProgram(AbstractCommand):
             logger.info('Running command line "' + command_line_expanded + '"')
             # Create the environment dictionary
             env_dict = self.create_env_dict(include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list)
+            print("env_dict=" + string_util.format_dict(env_dict))
             # TODO smalers 2018-12-16 evaluate using shlex.quote() to handle command string
             # TODO smalers 2018-12-16 handle standard input and output
             p = subprocess.Popen(command_line_expanded, shell=use_command_shell, env=env_dict)
@@ -279,7 +325,7 @@ class RunProgram(AbstractCommand):
                                  "See the log file for details."))
 
         # If any output files were indicated, add to the command output if they exist
-        if output_files_list is not None:
+        if output_files_list is not None and len(output_files_list) > 0:
             for output_file in output_files_list:
                 if os.path.isfile(output_file):
                     # Add the log file to output

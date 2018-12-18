@@ -238,6 +238,30 @@ def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_
         return exclude_list_final
 
 
+def format_dict(dict, value_quote='"'):
+    """
+    Format a dictionary for output in a string, such as for print statement.
+
+    Args:
+        dict: dictionary to format.
+        value_quote: character to quote all values
+
+    Returns:  a string containing formatted dictionary, string=key="value",key="value"
+    """
+    if dict is None:
+        return ""
+    formatted_string = ""
+    count = 0
+    delim = ","
+    for key, value in dict.items():
+        count = count + 1
+        if count > 1:
+            formatted_string = formatted_string + delim + key + "=" + value_quote + value + value_quote
+        else:
+            formatted_string = key + "=" + value_quote + value + value_quote
+    return formatted_string
+
+
 def glob2re(pat):
     """
     Translates a shell PATTERN to a regular expression.

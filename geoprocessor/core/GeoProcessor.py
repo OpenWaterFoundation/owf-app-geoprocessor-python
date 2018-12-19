@@ -1248,13 +1248,17 @@ class GeoProcessor(object):
                 print("First command debug:")
                 self.commands[0].print_for_debug()
 
-    def add_command_string(self, command_string):
+    def add_command(self, command_string):
         """
         Add a command string to the end
         """
         command_factory = GeoProcessorCommandFactory()
 
         command_object = command_factory.new_command(command_string, True)
+
+        # Initialize the parameters of the command object.
+        # Work is done in the AbstractCommand class.
+        command_object.initialize_command(command_string, self, True)
 
         self.commands.append(command_object)
 
@@ -1273,13 +1277,6 @@ class GeoProcessor(object):
         """
         del self.commands[index]
         self.notify_command_list_processor_listener_update_commands()
-
-        # GeoProcessorCommandFactory
-        # debug = False
-        # if debug:
-        #     command_object.print_for_debug()
-        #     print("First command debug:")
-        #     self.commands[0].print_for_debug()
 
     def remove_all_commands(self):
         """

@@ -374,27 +374,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Get the command string from the dialog window.
                 command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
-                # Add the command string to the Command_List widget.
-                # - TODO smalers 2018-07-29 need to insert in front of selected command
-                self.commands_List.addItem(command_string)
-
-                # Add to numbered list
-                count = self.numbered_List.count()
-                item = self.numbered_List.item(count - 1)
-                item.setText(str(count))
-                item.setTextAlignment(QtCore.Qt.AlignRight)
-
-                self.numbered_List.addItem('')
-
-                # Add line to gutter
-                item = QtWidgets.QListWidgetItem()
-                self.gutter.addItem(item)
+                # Add command to GeoProcessor commands
+                self.gp.add_command(command_string)
+                self.gp_model.update_command_list_ui()
 
                 # update the window title in case command file has been modified
                 self.update_ui_main_window_title()
 
                 # Update the state
-                self.update_ui_status_commands()
+                # self.update_ui_status_commands()
             else:
                 # Cancel was clicked so don't do anything
                 pass

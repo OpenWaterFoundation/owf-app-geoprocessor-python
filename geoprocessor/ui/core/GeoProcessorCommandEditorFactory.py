@@ -78,15 +78,18 @@ class GeoProcessorCommandEditorFactory(object):
             # Initialize the command editor class object if it is a valid command.
             # - only some commands have custom editors, depending on whether time has been spent building an editor
             # - alphabetize the commands
-            # - use uppercase to reduce steps needed when comparing command names as case-insensitive
-            command_name_upper = command_name.upper()
-            command_editor = None  # Editor for the given command
-            if command_name_upper == "READGEOLAYERFROMGEOJSON":
-                command_editor = ReadGeoLayerFromGeoJSON_Editor(command)
+            # - use uppercase to reduce steps needed when comparing command names as case-insensitive.
+            # TODO the following was commented out by @jurentie since GenericCommandEditor is always returned
+            # command_name_upper = command_name.upper()
+            # command_editor = None  # Editor for the given command
+            # if command_name_upper == "READGEOLAYERFROMGEOJSON":
+            #     # command_editor = ReadGeoLayerFromGeoJSON_Editor(command)
+            #     print('GeoProcessorCommandEditorFactory.new_command_editor.READGEOLAYERFROMGEOJSON')
+            #     # return command_editor
 
-            if command_editor is not None:
-                # Successfully created an editor
-                self.command_created_count = self.command_created_count + 1
+            # if command_editor is not None:
+            #     # Successfully created an editor
+            #     self.command_created_count = self.command_created_count + 1
 
             # If here the command name was not matched and additional steps are taken to throw an error.
             # Don't know the command so create an UnknownCommand or throw an exception.

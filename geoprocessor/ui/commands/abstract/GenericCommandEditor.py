@@ -61,6 +61,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         Returns: None
 
         """
+
         # The AbstractCommandEditor sets up the editor by:
         # 1. Initializes the dialog.
         # 2. Setting up standard editor top.
@@ -101,7 +102,7 @@ class GenericCommandEditor(AbstractCommandEditor):
             # --------------------
             self.parameter_LineEdit[y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
             self.parameter_LineEdit[y_parameter].setObjectName(parameter_name)
-            parameter_GridLayout.addWidget(self.parameter_LineEdit[y_parameter], y_parameter, 1, 2, 1)
+            parameter_GridLayout.addWidget(self.parameter_LineEdit[y_parameter], y_parameter, 1, 1, 1)
             tooltip = command_parameter_metadata.editor_tooltip
             if tooltip is not None:
                 self.parameter_LineEdit[y_parameter].setToolTip(tooltip)
@@ -124,76 +125,76 @@ class GenericCommandEditor(AbstractCommandEditor):
             parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
             parameter_GridLayout.addWidget(parameter_desc_Label, y_parameter, 3, 4, 1)
 
-    def setupUi(self, Dialog):
-        """
-        # Configure the Dialog window with the features that are consistent across all GeoProcessor command dialog
-        # windows.
-        self.setupUi_Abstract(Dialog)
-
-        # SpatialDataFile ##
-        # Initialize a Qt QLabel object for the SpatialDataFile label.
-        UiDialog.SpatialDataFile_Label = QtWidgets.QLabel(Dialog)
-
-        # Configure the label to display the parameter name and align with the left side of the dialog window.
-        self.configureLabel(UiDialog.SpatialDataFile_Label, UiDialog.cp_SpatialDataFile.name)
-
-        # Initialize a Qt QLineEdit object for the SpatialDataFile input field.
-        self.SpatialDataFile_LineEdit = QtWidgets.QLineEdit(Dialog)
-
-        # Configure the input field to be extra long, display the placeholder description and include tooltip help.
-        self.configureLineEdit(self.SpatialDataFile_LineEdit, UiDialog.cp_SpatialDataFile.name, long=True,
-                               placeholder_text=UiDialog.cp_SpatialDataFile.description,
-                               tooltip=UiDialog.cp_SpatialDataFile.tooltip)
-
-        # Initialize a Qt QToolButton to open a browser to select a file for the SpatialDataFile parameter.
-        self.SpatialDataFile_ToolButton = QtWidgets.QToolButton(Dialog)
-
-        # Configure the button to link the selection to the SpatialDataFile_LineEdit input field.
-        self.configureToolButton(self.SpatialDataFile_ToolButton, UiDialog.cp_SpatialDataFile.name,
-                                 self.SpatialDataFile_LineEdit)
-
-        # GeoLayerID ##
-        # Initialize a Qt QLabel object for the GeoLayerID label.
-        UiDialog.GeoLayerID_Label = QtWidgets.QLabel(Dialog)
-
-        # Configure the label to display the parameter name and align with the left side of the dialog window.
-        self.configureLabel(UiDialog.GeoLayerID_Label, UiDialog.cp_GeoLayerID.name)
-
-        # Initialize a Qt QLineEdit object for the GeoLayerID input field.
-        self.GeoLayerID_LineEdit = QtWidgets.QLineEdit(Dialog)
-
-        # Configure the input field to include tooltip help.
-        self.configureLineEdit(self.GeoLayerID_LineEdit, UiDialog.cp_GeoLayerID.name,
-                               tooltip=UiDialog.cp_GeoLayerID.tooltip)
-
-        # Initialize a Qt QLabel object for the GeoLayerID description.
-        UiDialog.GeoLayerID_Description_Label = QtWidgets.QLabel(Dialog)
-
-        # Configure the label to display the GeoLayerID parameter description.
-        self.configureDescriptionLabel(UiDialog.GeoLayerID_Description_Label, UiDialog.cp_GeoLayerID.name,
-                                       UiDialog.cp_GeoLayerID.description)
-
-        # IfGeoLayerIDExists ##
-        # Initialize a Qt QLabel object for the IfGeoLayerIDExists label.
-        UiDialog.IfGeoLayerIDExists_Label = QtWidgets.QLabel(Dialog)
-
-        # Initialize a Qt QComboBox object for the IfGeoLayerIDExists input field.
-        self.IfGeoLayerIDExists_ComboBox = QtWidgets.QComboBox(Dialog)
-
-        # Configure the input combo box to be populated with the available choices for the IfGeoLayerIDExists parameter.
-        self.configureComboBox(self.IfGeoLayerIDExists_ComboBox, UiDialog.cp_IfGeoLayerIDExists.name,
-                               UiDialog.command_obj.choices_IfGeoLayerIDExists,
-                               tooltip=UiDialog.cp_IfGeoLayerIDExists.tooltip)
-
-        # Initialize a Qt QLabel object for the IfGeoLayerIDExists description.
-        UiDialog.IfGeoLayerIDExists_Description_Label = QtWidgets.QLabel(Dialog)
-
-        # Configure the label to display the IfGeoLayerIDExists parameter description.
-        self.configureDescriptionLabel(UiDialog.IfGeoLayerIDExists_Description_Label,
-                                       UiDialog.cp_IfGeoLayerIDExists.name,
-                                       UiDialog.cp_IfGeoLayerIDExists.description)
-        """
-        return
+    # def setupUi(self, Dialog):
+    #     """
+    #     # Configure the Dialog window with the features that are consistent across all GeoProcessor command dialog
+    #     # windows.
+    #     self.setupUi_Abstract(Dialog)
+    #
+    #     # SpatialDataFile ##
+    #     # Initialize a Qt QLabel object for the SpatialDataFile label.
+    #     UiDialog.SpatialDataFile_Label = QtWidgets.QLabel(Dialog)
+    #
+    #     # Configure the label to display the parameter name and align with the left side of the dialog window.
+    #     self.configureLabel(UiDialog.SpatialDataFile_Label, UiDialog.cp_SpatialDataFile.name)
+    #
+    #     # Initialize a Qt QLineEdit object for the SpatialDataFile input field.
+    #     self.SpatialDataFile_LineEdit = QtWidgets.QLineEdit(Dialog)
+    #
+    #     # Configure the input field to be extra long, display the placeholder description and include tooltip help.
+    #     self.configureLineEdit(self.SpatialDataFile_LineEdit, UiDialog.cp_SpatialDataFile.name, long=True,
+    #                            placeholder_text=UiDialog.cp_SpatialDataFile.description,
+    #                            tooltip=UiDialog.cp_SpatialDataFile.tooltip)
+    #
+    #     # Initialize a Qt QToolButton to open a browser to select a file for the SpatialDataFile parameter.
+    #     self.SpatialDataFile_ToolButton = QtWidgets.QToolButton(Dialog)
+    #
+    #     # Configure the button to link the selection to the SpatialDataFile_LineEdit input field.
+    #     self.configureToolButton(self.SpatialDataFile_ToolButton, UiDialog.cp_SpatialDataFile.name,
+    #                              self.SpatialDataFile_LineEdit)
+    #
+    #     # GeoLayerID ##
+    #     # Initialize a Qt QLabel object for the GeoLayerID label.
+    #     UiDialog.GeoLayerID_Label = QtWidgets.QLabel(Dialog)
+    #
+    #     # Configure the label to display the parameter name and align with the left side of the dialog window.
+    #     self.configureLabel(UiDialog.GeoLayerID_Label, UiDialog.cp_GeoLayerID.name)
+    #
+    #     # Initialize a Qt QLineEdit object for the GeoLayerID input field.
+    #     self.GeoLayerID_LineEdit = QtWidgets.QLineEdit(Dialog)
+    #
+    #     # Configure the input field to include tooltip help.
+    #     self.configureLineEdit(self.GeoLayerID_LineEdit, UiDialog.cp_GeoLayerID.name,
+    #                            tooltip=UiDialog.cp_GeoLayerID.tooltip)
+    #
+    #     # Initialize a Qt QLabel object for the GeoLayerID description.
+    #     UiDialog.GeoLayerID_Description_Label = QtWidgets.QLabel(Dialog)
+    #
+    #     # Configure the label to display the GeoLayerID parameter description.
+    #     self.configureDescriptionLabel(UiDialog.GeoLayerID_Description_Label, UiDialog.cp_GeoLayerID.name,
+    #                                    UiDialog.cp_GeoLayerID.description)
+    #
+    #     # IfGeoLayerIDExists ##
+    #     # Initialize a Qt QLabel object for the IfGeoLayerIDExists label.
+    #     UiDialog.IfGeoLayerIDExists_Label = QtWidgets.QLabel(Dialog)
+    #
+    #     # Initialize a Qt QComboBox object for the IfGeoLayerIDExists input field.
+    #     self.IfGeoLayerIDExists_ComboBox = QtWidgets.QComboBox(Dialog)
+    #
+    #     # Configure the input combo box to be populated with the available choices for the IfGeoLayerIDExists parameter.
+    #     self.configureComboBox(self.IfGeoLayerIDExists_ComboBox, UiDialog.cp_IfGeoLayerIDExists.name,
+    #                            UiDialog.command_obj.choices_IfGeoLayerIDExists,
+    #                            tooltip=UiDialog.cp_IfGeoLayerIDExists.tooltip)
+    #
+    #     # Initialize a Qt QLabel object for the IfGeoLayerIDExists description.
+    #     UiDialog.IfGeoLayerIDExists_Description_Label = QtWidgets.QLabel(Dialog)
+    #
+    #     # Configure the label to display the IfGeoLayerIDExists parameter description.
+    #     self.configureDescriptionLabel(UiDialog.IfGeoLayerIDExists_Description_Label,
+    #                                    UiDialog.cp_IfGeoLayerIDExists.name,
+    #                                    UiDialog.cp_IfGeoLayerIDExists.description)
+    #     """
+    #     return
 
     def refresh(self):
         """

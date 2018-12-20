@@ -281,7 +281,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
         self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
-        self.Command_Description_Label.setText(self.command.command_description)
+        self.Command_Description_Label.setText(self.command.command_name + str(' {description}'))
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
     # def setupUi_Abstract(self, Dialog):

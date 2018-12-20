@@ -378,6 +378,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 self.gp.add_command(command_string)
                 self.gp_model.update_command_list_ui()
 
+                # Manually set the run all commands and clear commands buttons to enabled
+                self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
+                self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(True)
+
                 # update the window title in case command file has been modified
                 self.update_ui_main_window_title()
 
@@ -719,85 +723,319 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands.setObjectName(_fromUtf8("Menu_Commands"))
         self.Menu_Commands.setTitle("Commands")
 
-        # Commands / GeoLayers menu
-        self.Menu_Commands_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_GeoLayers.setObjectName(_fromUtf8("Menu_Commands_GeoLayers"))
-        self.Menu_Commands_GeoLayers.setTitle("GeoLayers")
-        self.Menu_Commands.addAction(self.Menu_Commands_GeoLayers.menuAction())
-        # Commands / GeoLayers / Read menu
-        self.Menu_Commands_GeoLayers_Read = QtWidgets.QMenu(self.Menu_Commands_GeoLayers)
-        self.Menu_Commands_GeoLayers_Read.setObjectName(_fromUtf8("Menu_Commands_GeoLayers_Read"))
-        self.Menu_Commands_GeoLayers_Read.setTitle("Read")
-        ## self.actionRead.setText("Read")
-        ## self.actionRead = QtWidgets.QAction(MainWindow)
-        ## self.actionRead.setObjectName(_fromUtf8("actionRead"))
-        self.Menu_Commands_GeoLayers.addAction(self.Menu_Commands_GeoLayers_Read.menuAction())
-        # Commands / GeoLayers / Read menu for specific commands
+        # Commands / Select, Free - GeoLayers menu
+        self.Menu_Commands_Select_Free_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Select_Free_GeoLayers.setObjectName(
+            _fromUtf8("Menu_Commands_Select_Free_GeoLayers"))
+        self.Menu_Commands_Select_Free_GeoLayers.setTitle("Select, Free GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Select_Free_GeoLayers.menuAction())
+        # FreeGeoLayers
+        self.Menu_Commands_Select_Free_FreeGeoLayers = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Select_Free_FreeGeoLayers.setObjectName(
+            _fromUtf8("Menu_Commands_Select_Free_FreeGeoLayers"))
+        self.Menu_Commands_Select_Free_FreeGeoLayers.setText(
+            "FreeGeoLayers()... <removes one or more GeoLayers from the GeoProcessor>")
+        self.Menu_Commands_Select_Free_FreeGeoLayers.triggered.connect(
+            functools.partial(self.new_command_editor, "FreeGeoLayers"))
+        self.Menu_Commands_Select_Free_GeoLayers.addAction(self.Menu_Commands_Select_Free_FreeGeoLayers)
+
+        # Commands / Create - GeoLayers menu
+        self.Menu_Commands_Create_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Create_GeoLayers.setObjectName(_fromUtf8("Menu_Commands_Create_GeoLayers"))
+        self.Menu_Commands_Create_GeoLayers.setTitle("Create GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Create_GeoLayers.menuAction())
+        # CopyGeoLayer
+        self.Menu_Commands_Create_CopyGeoLayer = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Create_CopyGeoLayer.setObjectName(
+            _fromUtf8("Menu_Commands_Create_CopyGeoLayer"))
+        self.Menu_Commands_Create_CopyGeoLayer.setText(
+            "CopyGeoLayer()... <copy a GeoLayer to a new GeoLayer>")
+        self.Menu_Commands_Create_GeoLayers.addAction(self.Menu_Commands_Create_CopyGeoLayer)
+        self.Menu_Commands_Create_CopyGeoLayer.triggered.connect(
+            functools.partial(self.new_command_editor, "CopyGeoLayer"))
+        # CreateGeoLayerFromGeometry
+        self.Menu_Commands_Create_CreateGeoLayerFromGeometry = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Create_CreateGeoLayerFromGeometry.setObjectName(
+            _fromUtf8("Menu_Commands_Create_CreateGeoLayerFromGeomtery"))
+        self.Menu_Commands_Create_CreateGeoLayerFromGeometry.setText(
+            "CreateGeoLayerFromGeometry()... <create a GeoLayer from input geometry data>")
+        self.Menu_Commands_Create_CreateGeoLayerFromGeometry.triggered.connect(
+            functools.partial(self.new_command_editor, "CreateGeoLayerFromGeometry"))
+        self.Menu_Commands_Create_GeoLayers.addAction(self.Menu_Commands_Create_CreateGeoLayerFromGeometry)
+
+        # Commands / Read - GeoLayers menu
+        self.Menu_Commands_Read_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Read_GeoLayers.setObjectName(_fromUtf8("Menu_Commands_Read_GeoLayers"))
+        self.Menu_Commands_Read_GeoLayers.setTitle("Read GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Read_GeoLayers.menuAction())
+        # ReadGeoLayerFromDelimitedFile
+        self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile.setObjectName(
+            _fromUtf8("Menu_Commands_GeoLayer_Read_ReadGeoLayerFromDelimitedFile"))
+        self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile.setText(
+            "ReadGeoLayerFromDelimitedFile()... <read a GeoLayer from a file in delimited file format>")
+        self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile.triggered.connect(
+            functools.partial(self.new_command_editor, "ReadGeoLayerFromDelimitedFile"))
+        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile)
         # ReadGeoLayerFromGeoJSON
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON = QtWidgets.QAction(main_window)
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON.setObjectName(
+        self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setObjectName(
             _fromUtf8("Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON"))
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON.setText(
-            "ReadGeoLayerFromGeoJSON <reads a GeoLayer from a .geojson file>")
-        self.Menu_Commands_GeoLayers_Read.addAction(self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON)
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
+        self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setText(
+            "ReadGeoLayerFromGeoJSON()... <reads a GeoLayer from a .geojson file>")
+        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON)
+        self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayerFromGeoJSON"))
+        # ReadGeoLayersFromShapefile
+        self.Menu_Commands_Read_ReadGeoLayerFromShapefile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayerFromShapefile.setObjectName(
+            _fromUtf8("GeoLayers_Read_ReadGeoLayerFromShapefile"))
+        self.Menu_Commands_Read_ReadGeoLayerFromShapefile.setText(
+            "ReadGeoLayerFromShapefile()... <reads a GeoLayer from a shapefile>")
+        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromShapefile)
+        self.Menu_Commands_Read_ReadGeoLayerFromShapefile.triggered.connect(
+            functools.partial(self.new_command_editor, "ReadGeoLayerFromShapefile"))
         # ReadGeoLayersFromFGDB
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFGDB = QtWidgets.QAction(main_window)
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFGDB.setObjectName(_fromUtf8("GeoLayers_Read_ReadGeoLayersFromFGDB"))
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFGDB.setText(
-            "ReadGeoLayersFromFGDB <reads 1+ GeoLayer(s) from the feature classes of a file geodatabase>")
-        self.Menu_Commands_GeoLayers_Read.addAction(self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFGDB)
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFGDB.triggered.connect(
+        self.Menu_Commands_Read_ReadGeoLayersFromFGDB = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setObjectName(_fromUtf8("GeoLayers_Read_ReadGeoLayersFromFGDB"))
+        self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setText(
+            "ReadGeoLayersFromFGDB()... <reads 1+ GeoLayer(s) from the feature classes of a file geodatabase>")
+        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFGDB)
+        self.Menu_Commands_Read_ReadGeoLayersFromFGDB.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayersFromFGDB"))
         # ReadGeoLayersFromFolder
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFolder = QtWidgets.QAction(main_window)
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFolder.setObjectName(_fromUtf8("GeoLayers_Read_ReadGeoLayersFromFolder"))
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFolder.setText(
-            "ReadGeoLayersFromFolder <reads 1+ GeoLayer(s) from a local folder>")
-        self.Menu_Commands_GeoLayers_Read.addAction(self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFolder)
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayersFromFolder.triggered.connect(
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setObjectName(
+            _fromUtf8("GeoLayers_Read_ReadGeoLayersFromFolder"))
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setText(
+            "ReadGeoLayersFromFolder()... <reads 1+ GeoLayer(s) from a local folder>")
+        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFolder)
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayersFromFolder"))
-        # ReadGeoLayersFromShapefile
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromShapefile = QtWidgets.QAction(main_window)
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromShapefile.setObjectName(
-            _fromUtf8("GeoLayers_Read_ReadGeoLayerFromShapefile"))
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromShapefile.setText(
-            "ReadGeoLayerFromShapefile <reads a GeoLayer from a shapefile>")
-        self.Menu_Commands_GeoLayers_Read.addAction(self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromShapefile)
-        self.Menu_Commands_GeoLayers_Read_ReadGeoLayerFromShapefile.triggered.connect(
-            functools.partial(self.new_command_editor, "ReadGeoLayerFromShapefile"))
-        # Commands / GeoLayers / Process menu
-        self.Menu_Commands_GeoLayers_Process = QtWidgets.QAction(main_window)
-        self.Menu_Commands_GeoLayers_Process.setObjectName(_fromUtf8("Menu_Commands_GeoLayers_Process"))
-        self.Menu_Commands_GeoLayers_Process.setText("Process")
-        self.Menu_Commands_GeoLayers.addAction(self.Menu_Commands_GeoLayers_Process)
-        # Commands / GeoLayers / Write menu
-        self.Menu_Commands_GeoLayers_Write = QtWidgets.QAction(main_window)
-        self.Menu_Commands_GeoLayers_Write.setObjectName(_fromUtf8("Menu_Commands_GeoLayers_Write"))
-        self.Menu_Commands_GeoLayers_Write.setText("Write")
-        self.Menu_Commands_GeoLayers.addAction(self.Menu_Commands_GeoLayers_Write)
 
-        # Commands / Tables menu
-        self.Menu_Commands_Tables = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Tables.setObjectName(_fromUtf8("Menu_Commands_Tables"))
-        self.Menu_Commands_Tables.setTitle("Tables")
-        self.Menu_Commands.addAction(self.Menu_Commands_Tables.menuAction())
-        # Commands / Tables / Read menu
-        self.Menu_Commands_Tables_Read = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Tables_Read.setObjectName(_fromUtf8("Menu_Commands_Tables_Read"))
-        self.Menu_Commands_Tables_Read.setText("Read")
-        self.Menu_Commands_Tables.addAction(self.Menu_Commands_Tables_Read)
-        # Commands / Tables / Process menu
-        self.Menu_Commands_Tables_Process = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Tables_Process.setObjectName(_fromUtf8("Menu_Commands_Tables_Process"))
-        self.Menu_Commands_Tables_Process.setText("Process")
-        self.Menu_Commands_Tables.addAction(self.Menu_Commands_Tables_Process)
-        # Commands / Tables / Write menu
-        self.Menu_Commands_Tables_Write = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Tables_Write.setObjectName(_fromUtf8("Menu_Commands_Tables_Write"))
-        self.Menu_Commands_Tables_Write.setText("Write")
-        self.Menu_Commands_Tables.addAction(self.Menu_Commands_Tables_Write)
+        # Commands / Fill GeoLayer Missing Data menu (disabled)
+        self.Menu_Commands_FillGeoLayerMissingData = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_FillGeoLayerMissingData.setObjectName(
+            _fromUtf8("Menu_Commands_FillGeoLayerMissingData"))
+        self.Menu_Commands_FillGeoLayerMissingData.setTitle("Fill GeoLayer Missing Data")
+        self.Menu_Commands_FillGeoLayerMissingData.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_FillGeoLayerMissingData.menuAction())
+
+        # Commands / Set Contents - GeoLayers menu
+        self.Menu_Commands_SetGeoLayer_Contents = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_SetGeoLayer_Contents.setObjectName(
+            _fromUtf8("Menu_Commands_SetContents_GeoLayers"))
+        self.Menu_Commands_SetGeoLayer_Contents.setTitle("Set GeoLayer Contents")
+        self.Menu_Commands.addAction(self.Menu_Commands_SetGeoLayer_Contents.menuAction())
+        # AddGeoLayerAttribute
+        self.Menu_Commands_SetContents_AddGeoLayerAttribute = QtWidgets.QAction(main_window)
+        self.Menu_Commands_SetContents_AddGeoLayerAttribute.setObjectName(
+            _fromUtf8("Menu_Commands_SetContents_AddGeoLayerAttribute"))
+        self.Menu_Commands_SetContents_AddGeoLayerAttribute.setText(
+            "AddGeoLayerAttribute()... <add an attribute to a GeoLayer>")
+        self.Menu_Commands_SetContents_AddGeoLayerAttribute.triggered.connect(
+            functools.partial(self.new_command_editor, "AddGeoLayerAttribute"))
+        self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_AddGeoLayerAttribute)
+        # RemoveGeoLayerAttributes
+        self.Menu_Commands_SetContents_RemoveGeoLayerAttributes = QtWidgets.QAction(main_window)
+        self.Menu_Commands_SetContents_RemoveGeoLayerAttributes.setObjectName(
+            _fromUtf8("Menu_Commnads_SetContents_RemoveGeoLayerAttributes"))
+        self.Menu_Commands_SetContents_RemoveGeoLayerAttributes.setText(
+            "RemoveGeoLayerAttributes()... <remove one or more attributes from GeoLayer>")
+        self.Menu_Commands_SetContents_RemoveGeoLayerAttributes.triggered.connect(
+            functools.partial(self.new_command_editor, "RemoveGeoLayerAttributes"))
+        self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_RemoveGeoLayerAttributes)
+        # RenameGeoLayerAttribute
+        self.Menu_Commands_SetContents_RenameGeoLayerAttribute = QtWidgets.QAction(main_window)
+        self.Menu_Commands_SetContents_RenameGeoLayerAttribute.setObjectName(
+            _fromUtf8("Menu_Commands_SetContents_RenameGeoLayerAttribute"))
+        self.Menu_Commands_SetContents_RenameGeoLayerAttribute.setText(
+            "RenameGeoLayerAttribute()... <rename a GeoLayer's attribute>")
+        self.Menu_Commands_SetContents_RenameGeoLayerAttribute.triggered.connect(
+            functools.partial(self.new_command_editor, "RenameGeoLayerAttribute"))
+        self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_RenameGeoLayerAttribute)
+        # SetGeoLayerCRS
+        self.Menu_Commands_SetContents_SetGeoLayerCRS = QtWidgets.QAction(main_window)
+        self.Menu_Commands_SetContents_SetGeoLayerCRS.setObjectName(
+            _fromUtf8("Menu_Commands_SetContents_SetGeoLayerCRS"))
+        self.Menu_Commands_SetContents_SetGeoLayerCRS.setText(
+            "SetGeoLayerCRS()... <sets a GeoLayer's coordinate reference system>")
+        self.Menu_Commands_SetContents_SetGeoLayerCRS.triggered.connect(
+            functools.partial(self.new_command_editor, "SetGeoLayerCRS"))
+        self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_SetGeoLayerCRS)
+        # SetGeoLayerProperty
+        self.Menu_Commands_SetContents_SetGeoLayerProperty = QtWidgets.QAction(main_window)
+        self.Menu_Commands_SetContents_SetGeoLayerProperty.setObjectName(
+            _fromUtf8("Menu_Commands_SetContents_SetGeoLayerProperty"))
+        self.Menu_Commands_SetContents_SetGeoLayerProperty.setText(
+            "SetGeoLayerProperty()... <set a GeoLayer property>")
+        self.Menu_Commands_SetContents_SetGeoLayerProperty.triggered.connect(
+            functools.partial(self.new_command_editor, "SetGeoLayerProperty"))
+        self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_SetGeoLayerProperty)
+
+        # Commands / Manipulate GeoLayer menu
+        self.Menu_Commands_Manipulate_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Manipulate_GeoLayers.setObjectName(
+            _fromUtf8("Menu_Commands_Manipulate_GeoLayers"))
+        self.Menu_Commands_Manipulate_GeoLayers.setTitle("Manipulate GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Manipulate_GeoLayers.menuAction())
+        # ClipGeoLayer
+        self.Menu_Commands_Manipulate_ClipGeoLayer = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Manipulate_ClipGeoLayer.setObjectName(
+            _fromUtf8("Menu_Commands_Manipulate_ClipGeoLayer"))
+        self.Menu_Commands_Manipulate_ClipGeoLayer.setText(
+            "ClipGeoLayer()... <clip a GeoLayer by the boundary of another GeoLayer>")
+        self.Menu_Commands_Manipulate_ClipGeoLayer.triggered.connect(
+            functools.partial(self.new_command_editor, "ClipGeoLayer"))
+        self.Menu_Commands_Manipulate_GeoLayers.addAction(self.Menu_Commands_Manipulate_ClipGeoLayer)
+        # IntersectGeoLayer
+        self.Menu_Commands_Manipulate_IntersectGeoLayer = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Manipulate_IntersectGeoLayer.setObjectName(
+            _fromUtf8("Menu_commands_Manipulate_IntersectGeoLayer"))
+        self.Menu_Commands_Manipulate_IntersectGeoLayer.setText(
+            "IntersectGeoLayer()... <intersects a GeoLayer by another GeoLayer>")
+        self.Menu_Commands_Manipulate_IntersectGeoLayer.triggered.connect(
+            functools.partial(self.new_command_editor, "IntersectGeoLayer"))
+        self.Menu_Commands_Manipulate_GeoLayers.addAction(
+            self.Menu_Commands_Manipulate_IntersectGeoLayer)
+        # MergeGeoLayers
+        self.Menu_Commands_Manipulate_MergeGeoLayers = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Manipulate_MergeGeoLayers.setObjectName(
+            _fromUtf8("Menu_Commands_Manipulate_MergeGeoLayers"))
+        self.Menu_Commands_Manipulate_MergeGeoLayers.setText(
+            "MergeGeoLayers()... <merge multiple GeoLayers into one GeoLayer>")
+        self.Menu_Commands_Manipulate_MergeGeoLayers.triggered.connect(
+            functools.partial(self.new_command_editor, "MergeGeoLayers")
+        )
+        self.Menu_Commands_Manipulate_GeoLayers.addAction(self.Menu_Commands_Manipulate_MergeGeoLayers)
+        # SimplifyGeoLayerGeometry
+        self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry.setObjectName(
+            _fromUtf8("Menu_Commands_Manipulate_SimplifyGeoLayerGeometry"))
+        self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry.setText(
+            "SimplifyGeoLayerGeometry()... <decreases the vertices in a polygon or line GeoLayer>")
+        self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry.triggered.connect(
+            functools.partial(self.new_command_editor, "SimplifyGeoLayerGeometry"))
+        self.Menu_Commands_Manipulate_GeoLayers.addAction(
+            self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry)
+
+        # Commands / Analyze GeoLayer menu (disabled)
+        self.Menu_Commands_Analyze_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Analyze_GeoLayers.setObjectName(
+            _fromUtf8("Menu_Commands_Analyze_GeoLayers"))
+        self.Menu_Commands_Analyze_GeoLayers.setTitle("Analyze GeoLayer")
+        self.Menu_Commands_Analyze_GeoLayers.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_Analyze_GeoLayers.menuAction())
+
+        # Commands / Check GeoLayer menu (disabled)
+        self.Menu_Commands_Check_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Check_GeoLayers.setObjectName(
+            _fromUtf8("Menu_Commands_Check_GeoLayers"))
+        self.Menu_Commands_Check_GeoLayers.setTitle("Check GeoLayer")
+        self.Menu_Commands_Check_GeoLayers.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_Check_GeoLayers.menuAction())
+
+        # Commands / Write GeoLayer menu
+        self.Menu_Commands_Write_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Write_GeoLayers.setObjectName(
+            _fromUtf8("Menu_Commands_Write_GeoLayers"))
+        self.Menu_Commands_Write_GeoLayers.setTitle("Write GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Write_GeoLayers.menuAction())
+        # WriteGeoLayerToDelmitedFile
+        self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile.setObjectName(
+            _fromUtf8("Menu_Commands_Write_WriteGeoLayerToDelimitedFile"))
+        self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile.setText(
+            "WriteGeoLayerToDelimitedFile()... write GeoLayer to a file in delimited file>")
+        self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteGeoLayerToDelimitedFile"))
+        self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile)
+        # WriteGeoLayerToGeoJSON
+        self.Menu_Commands_Write_WriteGeoLayerToGeoJSON = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Write_WriteGeoLayerToGeoJSON.setObjectName(
+            _fromUtf8("Menu_Commands_Write_WriteGeoLayerToGeoJSON"))
+        self.Menu_Commands_Write_WriteGeoLayerToGeoJSON.setText(
+            "WriteGeoLayerToGeoJSON()... <write GeoLayer to a file in GeoJSON format>")
+        self.Menu_Commands_Write_WriteGeoLayerToGeoJSON.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteGeoLayerToGeoJSON"))
+        self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToGeoJSON)
+        # WriteGeoLayerToKML
+        self.Menu_Commands_Write_WriteGeoLayerToKML = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Write_WriteGeoLayerToKML.setObjectName(
+            _fromUtf8("Menu_Commands_Write_WriteGeoLayerToKML"))
+        self.Menu_Commands_Write_WriteGeoLayerToKML.setText(
+            "WriteGeoLayerToKML()... <write GeoLayer to a file in KML format>")
+        self.Menu_Commands_Write_WriteGeoLayerToKML.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteGeoLayerToKML"))
+        self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToKML)
+        # WriteGeoLayerToShapefile
+        self.Menu_Commands_Write_WriteGeoLayerToShapefile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Write_WriteGeoLayerToShapefile.setObjectName(
+            _fromUtf8("Menu_Commands_Write_WriteGeoLayerToShapefile"))
+        self.Menu_Commands_Write_WriteGeoLayerToShapefile.setText(
+            "WriteGeoLayerToShapefile()... <write GeoLayer to a file shapefile format>")
+        self.Menu_Commands_Write_WriteGeoLayerToShapefile.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteGeoLayerToShapefile"))
+        self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToShapefile)
+
+        self.Menu_Commands.addSeparator()
+
+        # Commands / Datastore Processing menu
+        self.Menu_Commands_DatastoreProcessing = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_DatastoreProcessing.setObjectName(
+            _fromUtf8("Menu_Commands_DatastoreProcessing"))
+        self.Menu_Commands_DatastoreProcessing.setTitle("Datastore Processing")
+        self.Menu_Commands.addAction(self.Menu_Commands_DatastoreProcessing.menuAction())
+        # OpenDataStore
+        self.Menu_Commands_DatastoreProcessing_OpenDataStore = QtWidgets.QAction(main_window)
+        self.Menu_Commands_DatastoreProcessing_OpenDataStore.setObjectName(
+            _fromUtf8("Menu_Commands_DatastoreProcessing_OpenDataStore"))
+        self.Menu_Commands_DatastoreProcessing_OpenDataStore.setText(
+            "OpenDataStore()... <create a DataStore connection>")
+        self.Menu_Commands_DatastoreProcessing_OpenDataStore.triggered.connect(
+            functools.partial(self.new_command_editor, "OpenDataStore"))
+        self.Menu_Commands_DatastoreProcessing.addAction(self.Menu_Commands_DatastoreProcessing_OpenDataStore)
+        # ReadTableFromDataStore
+        self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore = QtWidgets.QAction(main_window)
+        self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore.setObjectName(
+            _fromUtf8("Menu_Commands_DatastoreProcessing_ReadTableFromDataStore"))
+        self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore.setText(
+            "ReadTableFromDataStore()... <read a table from a DataStore>")
+        self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore.triggered.connect(
+            functools.partial(self.new_command_editor, "ReadTableFromDataStore"))
+        self.Menu_Commands_DatastoreProcessing.addAction(self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore)
+
+        # Commands / Network Processing menu (disabled)
+        self.Menu_Commands_NetworkProcessing = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_NetworkProcessing.setObjectName(
+            _fromUtf8("Menu_Commands_NetworkProcessing"))
+        self.Menu_Commands_NetworkProcessing.setTitle("Network Processing")
+        self.Menu_Commands_NetworkProcessing.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_NetworkProcessing.menuAction())
+
+        # Commands / Spreadsheet Processing menu (disabled)
+        self.Menu_Commands_SpreadsheetProcessing = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_SpreadsheetProcessing.setObjectName(
+            _fromUtf8("Menu_Commands_SpreadsheetProcessing"))
+        self.Menu_Commands_SpreadsheetProcessing.setTitle("Spreadsheet Processing")
+        self.Menu_Commands_SpreadsheetProcessing.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_SpreadsheetProcessing.menuAction())
+
+        # Commands / Template Processing menu (disabled)
+        self.Menu_Commands_TemplateProcessing = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_TemplateProcessing.setObjectName(
+            _fromUtf8("Menu_Commands_TemplateProcessing"))
+        self.Menu_Commands_TemplateProcessing.setTitle("Template Processing")
+        self.Menu_Commands_TemplateProcessing.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_TemplateProcessing.menuAction())
+
+        # Commands / Visualiztion Processing (disabled)
+        self.Menu_Commands_VisualizationProcessing = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_VisualizationProcessing.setObjectName(
+            _fromUtf8("Menu_Commands_VisualizationProcessing"))
+        self.Menu_Commands_VisualizationProcessing.setTitle("Visualization Processing")
+        self.Menu_Commands_VisualizationProcessing.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_VisualizationProcessing.menuAction())
 
         # Commands / General - Comments menu
         self.Menu_Commands_General_Comments = QtWidgets.QMenu(self.Menu_Commands)
@@ -844,18 +1082,315 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Add to menu bar
         self.menubar.addAction(self.Menu_Commands.menuAction())
 
+        # Commands / General - File Handling
+        self.Menu_Commands_General_FileHandling = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_General_FileHandling.setObjectName(
+            _fromUtf8("Menu_Commands_General_FileHandling"))
+        self.Menu_Commands_General_FileHandling.setTitle("General - File Handling")
+        self.Menu_Commands.addAction(self.Menu_Commands_General_FileHandling.menuAction())
+        # CopyFile
+        self.Menu_Commands_General_FileHandling_CopyFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_FileHandling_CopyFile.setObjectName(
+            _fromUtf8("Menu_Commands_General_FileHandling_CopyFile"))
+        self.Menu_Commands_General_FileHandling_CopyFile.setText(
+            "CopyFile()... <copy a file to a new file>")
+        self.Menu_Commands_General_FileHandling_CopyFile.triggered.connect(
+            functools.partial(self.new_command_editor, "CopyFile"))
+        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_CopyFile)
+        # ListFiles
+        self.Menu_Commands_General_FileHandling_ListFiles = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_FileHandling_ListFiles.setObjectName(
+            _fromUtf8("Menu_Commands_General_FileHandling_ListFiles"))
+        self.Menu_Commands_General_FileHandling_ListFiles.setText(
+            "ListFiles()... <list the files and folder within a folder or a URL>")
+        self.Menu_Commands_General_FileHandling_ListFiles.triggered.connect(
+            functools.partial(self.new_command_editor, "ListFiles"))
+        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_ListFiles)
+        # RemoveFile
+        self.Menu_Commands_General_FileHandling_RemoveFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_FileHandling_RemoveFile.setObjectName(
+            _fromUtf8("Menu_Commands_General_FileHandling_RemoveFile"))
+        self.Menu_Commands_General_FileHandling_RemoveFile.setText(
+            "RemoveFile()... <remove a file>")
+        self.Menu_Commands_General_FileHandling_RemoveFile.triggered.connect(
+            functools.partial(self.new_command_editor, "RemoveFile"))
+        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_RemoveFile)
+        # UnzipFile
+        self.Menu_Commands_General_FileHandling_UnzipFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_FileHandling_UnzipFile.setObjectName(
+            _fromUtf8("Menu_Commands_General_FileHandling_UnzipFile"))
+        self.Menu_Commands_General_FileHandling_UnzipFile.setText(
+            "UnzipFile()... <unzip a file>")
+        self.Menu_Commands_General_FileHandling_UnzipFile.triggered.connect(
+            functools.partial(self.new_command_editor, "UnzipFile")
+        )
+        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_UnzipFile)
+        # WebGet
+        self.Menu_Commands_General_FileHandling_WebGet = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_FileHandling_WebGet.setObjectName(
+            _fromUtf8("Menu_Commands_General_FileHandling_WebGet"))
+        self.Menu_Commands_General_FileHandling_WebGet.setText(
+            "WebGet()... <download a file from URL>")
+        self.Menu_Commands_General_FileHandling_WebGet.triggered.connect(
+            functools.partial(self.new_command_editor, "WebGet")
+        )
+        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_WebGet)
+
+        # Commands / General - Logging and Messaging menu
+        self.Menu_Commands_General_LoggingMessaging = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_General_LoggingMessaging.setObjectName(
+            _fromUtf8("Menu_Commands_General_LoggingMessaging"))
+        self.Menu_Commands_General_LoggingMessaging.setTitle("General - Logging and Messaging")
+        self.Menu_Commands.addAction(self.Menu_Commands_General_LoggingMessaging.menuAction())
+        # Message
+        self.Menu_Commands_General_LoggingMessaging_Message = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_LoggingMessaging_Message.setObjectName(
+            _fromUtf8("Menu_Commands_General_LoggingMessaging_Message"))
+        self.Menu_Commands_General_LoggingMessaging_Message.setText(
+            "Message()... <print a message to the log file>")
+        self.Menu_Commands_General_LoggingMessaging_Message.triggered.connect(
+            functools.partial(self.new_command_editor, "Message"))
+        self.Menu_Commands_General_LoggingMessaging.addAction(self.Menu_Commands_General_LoggingMessaging_Message)
+        # StartLog
+        self.Menu_Commands_General_LoggingMessaging_StartLog = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_LoggingMessaging_StartLog.setObjectName(
+            _fromUtf8("Menu_Commands_General_LoggingMessaging_StartLog"))
+        self.Menu_Commands_General_LoggingMessaging_StartLog.setText(
+            "StartLog()... <start a new log file>")
+        self.Menu_Commands_General_LoggingMessaging_StartLog.triggered.connect(
+            functools.partial(self.new_command_editor, "StartLog"))
+        self.Menu_Commands_General_LoggingMessaging.addAction(self.Menu_Commands_General_LoggingMessaging_StartLog)
+
+        # Commands / General - Running and Properties menu
+        self.Menu_Commands_General_RunningProperties = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_General_RunningProperties.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties"))
+        self.Menu_Commands_General_RunningProperties.setTitle("General - Running and Properties")
+        self.Menu_Commands.addAction(self.Menu_Commands_General_RunningProperties.menuAction())
+        # EndIf
+        self.Menu_Commands_General_RunningProperties_EndIf = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_EndIf.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_EndIf"))
+        self.Menu_Commands_General_RunningProperties_EndIf.setText(
+            "EndIf()... <indicate the end of an 'if' block>")
+        self.Menu_Commands_General_RunningProperties_EndIf.triggered.connect(
+            functools.partial(self.new_command_editor, "EndIf"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_EndIf)
+        # EndFor
+        self.Menu_Commands_General_RunningProperties_EndFor = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_EndFor.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_EndFor"))
+        self.Menu_Commands_General_RunningProperties_EndFor.setText(
+            "EndFor()... <indicate the end of a 'for' block>")
+        self.Menu_Commands_General_RunningProperties_EndFor.triggered.connect(
+            functools.partial(self.new_command_editor, "EndFor"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_EndFor)
+        # For
+        self.Menu_Commands_General_RunningProperties_For = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_For.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_For"))
+        self.Menu_Commands_General_RunningProperties_For.setText(
+            "For()... <indicate the start of a 'for' block>")
+        self.Menu_Commands_General_RunningProperties_For.triggered.connect(
+            functools.partial(self.new_command_editor, "For"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_For)
+        # If
+        self.Menu_Commands_General_RunningProperties_If = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_If.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_If"))
+        self.Menu_Commands_General_RunningProperties_If.setText(
+            "If()... <indicate the start of an 'if' block>")
+        self.Menu_Commands_General_RunningProperties_If.triggered.connect(
+            functools.partial(self.new_command_editor, "If"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_If)
+        # RunCommands
+        self.Menu_Commands_General_RunningProperties_RunCommands = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_RunCommands.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_RunCommands"))
+        self.Menu_Commands_General_RunningProperties_RunCommands.setText(
+            "RunCommands()... <run a command file, useful to automate running all tests or a multi-step workflow>")
+        self.Menu_Commands_General_RunningProperties_RunCommands.triggered.connect(
+            functools.partial(self.new_command_editor, "RunCommands"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_RunCommands)
+        # RunProgram
+        self.Menu_Commands_General_RunningProperties_RunProgram = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_RunProgram.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_RunProgram"))
+        self.Menu_Commands_General_RunningProperties_RunProgram.setText(
+            "RunProgram()... <run a program>")
+        self.Menu_Commands_General_RunningProperties_RunProgram.triggered.connect(
+            functools.partial(self.new_command_editor, "RunProgram"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_RunProgram)
+        # SetProperty
+        self.Menu_Commands_General_RunningProperties_SetProperty = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_SetProperty.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_SetProperty"))
+        self.Menu_Commands_General_RunningProperties_SetProperty.setText(
+            "SetProperty()... <set a GeoProcessor property>")
+        self.Menu_Commands_General_RunningProperties_SetProperty.triggered.connect(
+            functools.partial(self.new_command_editor, "SetProperty"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_SetProperty)
+        # SetPropertyFromGeoLayer
+        self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer"))
+        self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer.setText(
+            "SetPropertyFromGeoLayer()... <set a GeoProcessor property from a GeoLayer property>")
+        self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer.triggered.connect(
+            functools.partial(self.new_command_editor, "SetPropertyFromGeoLayer"))
+        self.Menu_Commands_General_RunningProperties.addAction(
+            self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer)
+        # WritePropertiesToFile
+        self.Menu_Commands_General_RunningProperties_WritePropertiesToFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_WritePropertiesToFile.setObjectName(
+            _fromUtf8("Menu_Commands_General_RunningProperties_WritePropertiesToFile"))
+        self.Menu_Commands_General_RunningProperties_WritePropertiesToFile.setText(
+            "WritePropertiesToFile()... <write properties to file>")
+        self.Menu_Commands_General_RunningProperties_WritePropertiesToFile.triggered.connect(
+            functools.partial(self.new_command_editor, "WritePropertiesToFile"))
+        self.Menu_Commands_General_RunningProperties.addAction(
+            self.Menu_Commands_General_RunningProperties_WritePropertiesToFile)
+
+        # Commands / General - Test Processing menu
+        self.Menu_Commands_General_TestProcessing = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_General_TestProcessing.setObjectName(
+            _fromUtf8("Menu_Commands_General_TestProcessing"))
+        self.Menu_Commands_General_TestProcessing.setTitle("General - Test Processing")
+        self.Menu_Commands.addAction(self.Menu_Commands_General_TestProcessing.menuAction())
+        # CompareFiles
+        self.Menu_Commands_General_TestProcessing_CompareFiles = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_CompareFiles.setObjectName(
+            _fromUtf8("Menu_Commands_General_TestProcessing_CompareFiles"))
+        self.Menu_Commands_General_TestProcessing_CompareFiles.setText(
+            "CompareFiles()... <compare files and optionally warn/fail if different/same>")
+        self.Menu_Commands_General_TestProcessing_CompareFiles.triggered.connect(
+            functools.partial(self.new_command_editor, "CompareFiles"))
+        self.Menu_Commands_General_TestProcessing.addAction(
+            self.Menu_Commands_General_TestProcessing_CompareFiles)
+        # CreateRegressionTestCommandFile
+        self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile = \
+            QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile.setObjectName(
+            _fromUtf8("Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile"))
+        self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile.setText(
+            "CreateRegressionTestCommandFile()... <create a master command file to automate running all tests>")
+        self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile.triggered.connect(
+            functools.partial(self.new_command_editor, "CreateRegressionTestCommandFile"))
+        self.Menu_Commands_General_TestProcessing.addAction(
+            self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile)
+        # StartRegressionTestResultsReport
+        self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport = \
+            QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport.setObjectName(
+            _fromUtf8("Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport"))
+        self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport.setText(
+            "StartRegressionTestResultsReport()... <start (open) a file to receive regression test results>")
+        self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport.triggered.connect(
+            functools.partial(self.new_command_editor, "StartRegressionTestResultsReport"))
+        self.Menu_Commands_General_TestProcessing.addAction(
+            self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport)
+        # WriteCommandSummaryToFile
+        self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile = \
+            QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile.setObjectName(
+            _fromUtf8("Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile"))
+        self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile.setText(
+            "WriteCommandSummaryToFile()... <write a summary of command log messages to a file>")
+        self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteCommandSummaryToFile"))
+        self.Menu_Commands_General_TestProcessing.addAction(
+            self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile)
+        # WriteGeoLayerPropertiesToFile
+        self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile = \
+            QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile.setObjectName(
+            _fromUtf8("Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile"))
+        self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile.setText(
+            "WriteGeoLayerPropertiesToFile()... <write GeoLayer properties to file>")
+        self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteGeoLayerPropertiesToFile"))
+        self.Menu_Commands_General_TestProcessing.addAction(
+            self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile)
+
         # Commands-Table menu
         self.Menu_Commands_Table = QtWidgets.QMenu(self.menubar)
         self.Menu_Commands_Table.setObjectName(_fromUtf8("Menu_Commands_Table"))
         self.Menu_Commands_Table.setTitle("Commands-Table")
-        # Commands-Table / Placeholder menu
-        self.Menu_Commands_Table_Placeholder = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Table_Placeholder.setObjectName(_fromUtf8("Menu_Commands_Table_Placeholder"))
-        self.Menu_Commands_Table_Placeholder.setText("Placeholder")
-        ## self.Menu_File_Print.triggered.connect(None)
-        self.Menu_Commands_Table.addAction(self.Menu_Commands_Table_Placeholder)
+
+        # Commands / Tables / Read menu
+        self.Menu_Commands_Tables_Read = QtWidgets.QMenu(self.Menu_Commands_Table)
+        self.Menu_Commands_Tables_Read.setObjectName(_fromUtf8("Menu_Commands_Tables_Read"))
+        self.Menu_Commands_Tables_Read.setTitle("Read Table")
+        self.Menu_Commands_Table.addAction(self.Menu_Commands_Tables_Read.menuAction())
+        # ReadTableFromDataStore
+        self.Menu_Commands_Table_ReadTableFromDataStore = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Table_ReadTableFromDataStore.setObjectName(
+            _fromUtf8("Menu_Commands_Table_ReadTableFromDataStore"))
+        self.Menu_Commands_Table_ReadTableFromDataStore.setText(
+            "ReadTableFromDataStore()... <read a table from a DataStore>")
+        self.Menu_Commands_Table_ReadTableFromDataStore.triggered.connect(
+            functools.partial(self.new_command_editor, "ReadTableFromDataStore"))
+        self.Menu_Commands_Tables_Read.addAction(self.Menu_Commands_Table_ReadTableFromDataStore)
+        # ReadTableFromDelimitedFile
+        self.Menu_Commands_Table_ReadTableFromDelimitedFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Table_ReadTableFromDelimitedFile.setObjectName(
+            _fromUtf8("Menu_Commands_Table_ReadTableFromDelimitedFile"))
+        self.Menu_Commands_Table_ReadTableFromDelimitedFile.setText(
+            "ReadTableFromDelimitedFile()... <read a table from a delimited file>")
+        self.Menu_Commands_Table_ReadTableFromDelimitedFile.triggered.connect(
+            functools.partial(self.new_command_editor, "ReadTableFromDelimitedFile"))
+        self.Menu_Commands_Tables_Read.addAction(self.Menu_Commands_Table_ReadTableFromDelimitedFile)
+        # ReadTableFromExcel
+        self.Menu_Commands_Table_ReadTableFromExcel = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Table_ReadTableFromExcel.setObjectName(
+            _fromUtf8("Menu_Commands_Table_ReadTableFromExcel"))
+        self.Menu_Commands_Table_ReadTableFromExcel.setText(
+            "ReadTableFromExcel()... <read a table from an Excel file>")
+        self.Menu_Commands_Table_ReadTableFromExcel.triggered.connect(
+            functools.partial(self.new_command_editor, "ReadTableFromExcel"))
+        self.Menu_Commands_Tables_Read.addAction(self.Menu_Commands_Table_ReadTableFromExcel)
+
+        # Commands / Tables / Process menu
+        self.Menu_Commands_Tables_Process = QtWidgets.QMenu(self.Menu_Commands_Table)
+        self.Menu_Commands_Tables_Process.setObjectName(_fromUtf8("Menu_Commands_Tables_Process"))
+        self.Menu_Commands_Tables_Process.setTitle("Process Table")
+        self.Menu_Commands_Tables_Process.setEnabled(False)
+        self.Menu_Commands_Table.addAction(self.Menu_Commands_Tables_Process.menuAction())
+
+        # Commands / Tables / Write menu
+        self.Menu_Commands_Tables_Write = QtWidgets.QMenu(self.Menu_Commands_Table)
+        self.Menu_Commands_Tables_Write.setObjectName(_fromUtf8("Menu_Commands_Tables_Write"))
+        self.Menu_Commands_Tables_Write.setTitle("Write Table")
+        self.Menu_Commands_Table.addAction(self.Menu_Commands_Tables_Write.menuAction())
         # Add to menu bar
         self.menubar.addAction(self.Menu_Commands_Table.menuAction())
+        # WriteTableToDataStore
+        self.Menu_Commands_Table_WriteTableToDataStore = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Table_WriteTableToDataStore.setObjectName(
+            _fromUtf8("Menu_Commands_Table_WriteTableToDataStore"))
+        self.Menu_Commands_Table_WriteTableToDataStore.setText(
+            "WriteTableToDataStore()... <write a table to a DataStore>")
+        self.Menu_Commands_Table_WriteTableToDataStore.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteTableToDataStore"))
+        self.Menu_Commands_Tables_Write.addAction(self.Menu_Commands_Table_WriteTableToDataStore)
+        # WriteTableToDelimitedFile
+        self.Menu_Commands_Table_WriteTableToDelimitedFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Table_WriteTableToDelimitedFile.setObjectName(
+            _fromUtf8("Menu_Commands_Table_WriteTableToDelimitedFile"))
+        self.Menu_Commands_Table_WriteTableToDelimitedFile.setText(
+            "WriteTableToDelimitedFile()... <write a table to a delimited file>")
+        self.Menu_Commands_Table_WriteTableToDelimitedFile.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteTableToDelimitedFile"))
+        self.Menu_Commands_Tables_Write.addAction(self.Menu_Commands_Table_WriteTableToDelimitedFile)
+        # WriteTableToExcel
+        self.Menu_Commands_Table_WriteTableToExcel = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Table_WriteTableToExcel.setObjectName(
+            _fromUtf8("Menu_Commands_Table_WriteTableToExcel"))
+        self.Menu_Commands_Table_WriteTableToExcel.setText(
+            "WriteTableToExcel()... <write a table to an Excel file>")
+        self.Menu_Commands_Table_WriteTableToExcel.triggered.connect(
+            functools.partial(self.new_command_editor, "WriteTableToExcel"))
+        self.Menu_Commands_Tables_Write.addAction(self.Menu_Commands_Table_WriteTableToExcel)
 
         # Tools menu
         self.Menu_Tools = QtWidgets.QMenu(self.menubar)

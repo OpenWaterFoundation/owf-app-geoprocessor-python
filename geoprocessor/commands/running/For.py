@@ -43,6 +43,7 @@ class For(AbstractCommand):
         super().__init__()
         # AbstractCommand data
         self.command_name = "For"
+        self.command_description = "Indicate the start of a 'For' block"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Local data

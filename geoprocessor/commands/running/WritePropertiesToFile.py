@@ -46,6 +46,7 @@ class WritePropertiesToFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WritePropertiesToFile"
+        self.command_description = "Write properties to file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

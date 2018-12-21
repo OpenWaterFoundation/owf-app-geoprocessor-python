@@ -53,6 +53,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "ReadTableFromDelimitedFile"
+        self.command_description = "Read a table from a delimited file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

@@ -50,6 +50,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "CreateGeoLayerFromGeometry"
+        self.command_description = "Create a GeoLayer from input geometry data"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

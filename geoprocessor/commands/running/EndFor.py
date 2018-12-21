@@ -28,6 +28,7 @@ class EndFor(AbstractCommand):
         """
         super().__init__()
         self.command_name = "EndFor"
+        self.command_description = "Indicate the end of a 'For' block"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

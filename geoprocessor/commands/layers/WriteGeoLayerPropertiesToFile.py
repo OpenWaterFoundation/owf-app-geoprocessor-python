@@ -48,6 +48,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WriteGeoLayerPropertiesToFile"
+        self.command_description = "Write GeoLayer properties to file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

@@ -49,6 +49,7 @@ class WebGet(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WebGet"
+        self.command_description = "Download a file from a URL"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

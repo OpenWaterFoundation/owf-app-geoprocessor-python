@@ -30,6 +30,7 @@ class Message(AbstractCommand):
         """
         super().__init__()
         self.command_name = "Message"
+        self.command_description = "Print a Message to the log file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

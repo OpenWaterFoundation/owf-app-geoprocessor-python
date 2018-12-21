@@ -57,6 +57,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "SimplifyGeoLayerGeometry"
+        self.command_description = "Decreases the vertices in a polygon or line GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

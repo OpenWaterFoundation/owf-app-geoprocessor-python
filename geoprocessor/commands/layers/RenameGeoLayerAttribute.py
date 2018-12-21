@@ -43,6 +43,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "RenameGeoLayerAttribute"
+        self.command_description = "Rename a GeoLayer's attribute"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

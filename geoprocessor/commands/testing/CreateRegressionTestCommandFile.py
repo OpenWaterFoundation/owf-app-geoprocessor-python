@@ -38,6 +38,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         """
         super().__init__()
         self.command_name = "CreateRegressionTestCommandFile"
+        self.command_description = "Create a master command file to automate running all tests"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

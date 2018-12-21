@@ -66,6 +66,7 @@ class IntersectGeoLayer(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "IntersectGeoLayer"
+        self.command_description = "Intersects a GeoLayer by another GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

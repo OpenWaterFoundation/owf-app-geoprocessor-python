@@ -39,6 +39,7 @@ class RemoveFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "RemoveFile"
+        self.command_description = "Remove a file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

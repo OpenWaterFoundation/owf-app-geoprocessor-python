@@ -42,6 +42,7 @@ class SetGeoLayerCRS(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "SetGeoLayerCRS"
+        self.command_description = "sets a GeoLayer's coordinate reference system"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

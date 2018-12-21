@@ -10,6 +10,8 @@ class Blank(AbstractCommand.AbstractCommand):
         """
         Initialize a new instance of the command.
         """
+        self.command_name = "Blank"
+        self.command_description = "Used for blank lines"
         # Don't set the command name because don't know that there is one.
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()

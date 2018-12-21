@@ -33,6 +33,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WriteCommandSummaryToFile"
+        self.command_description = "Write a summary of command log messages to a file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

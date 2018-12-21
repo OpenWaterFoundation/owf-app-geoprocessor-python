@@ -267,6 +267,12 @@ class CommandListWidget(object):
         """
         return self.commands_List.mapToGlobal(QtCore.QPoint(0, 0))
 
+    def get_current_list_item_index(self):
+        """
+        :return: The current list widget item that is selected
+        """
+        return self.commands_List.currentRow()
+
     def group_box_resize(self, event):
         # """
         # Update the size of the gutter to ensure that it doesn't scroll and that it

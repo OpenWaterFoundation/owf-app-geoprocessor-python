@@ -39,6 +39,7 @@ class CopyFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "CopyFile"
+        self.command_description = "Copy a file to a new file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

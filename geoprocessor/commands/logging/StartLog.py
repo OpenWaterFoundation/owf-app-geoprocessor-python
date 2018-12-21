@@ -31,6 +31,7 @@ class StartLog(AbstractCommand):
         """
         super().__init__()
         self.command_name = "StartLog"
+        self.command_description = "Start a new log file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

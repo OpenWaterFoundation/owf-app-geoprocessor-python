@@ -76,6 +76,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "ReadGeoLayersFromFGDB"
+        self.command_description = "Read one or more GeoLayers from a file geodatabase"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

@@ -51,6 +51,7 @@ class WriteGeoLayerToKML(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WriteGeoLayerToKML"
+        self.command_description = "Write GeoLayer to a file in KML format"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

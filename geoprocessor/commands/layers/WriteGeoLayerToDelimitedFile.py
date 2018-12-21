@@ -70,6 +70,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WriteGeoLayerToDelimitedFile"
+        self.command_description = "Write GeoLayer to a file in delimited file format"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

@@ -61,6 +61,7 @@ class MergeGeoLayers(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "MergeGeoLayers"
+        self.command_description = "Merge multiple GeoLayers into one GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

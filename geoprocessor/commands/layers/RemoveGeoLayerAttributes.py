@@ -40,6 +40,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "RemoveGeoLayerAttributes"
+        self.command_description = "Remove one or more attributes from a GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

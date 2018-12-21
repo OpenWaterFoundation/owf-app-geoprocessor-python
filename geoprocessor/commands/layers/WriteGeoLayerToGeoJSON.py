@@ -52,6 +52,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WriteGeoLayerToGeoJSON"
+        self.command_description = "Write GeoLayer to a file in GeoJSON format"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

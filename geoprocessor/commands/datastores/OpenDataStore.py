@@ -62,6 +62,7 @@ class OpenDataStore(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "OpenDataStore"
+        self.command_description = "Create a DataStore connection."
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

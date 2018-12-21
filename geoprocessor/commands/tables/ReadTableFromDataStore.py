@@ -68,6 +68,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "ReadTableFromDataStore"
+        self.command_description = "Read a table from a DataStore"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

@@ -47,6 +47,7 @@ class CompareFiles(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "CompareFiles"
+        self.command_description = "Compare files and optionally warn/fail if different/same"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

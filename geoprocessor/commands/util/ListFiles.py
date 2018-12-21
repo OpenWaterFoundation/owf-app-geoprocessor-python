@@ -58,6 +58,7 @@ class ListFiles(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "ListFiles"
+        self.command_description = "List the files and folder within a folder or a URL"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

@@ -39,6 +39,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "StartRegressionTestResultsReport"
+        self.command_description = "Start (open) a file to receive regression test results"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     @classmethod

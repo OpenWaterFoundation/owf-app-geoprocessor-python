@@ -28,6 +28,7 @@ class EndIf(AbstractCommand):
         """
         super().__init__()
         self.command_name = "EndIf"
+        self.command_description = "Indicate the end of an 'If' block"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

@@ -71,6 +71,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WriteTableToDelimitedFile"
+        self.command_description = "Write a table to a delimited file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

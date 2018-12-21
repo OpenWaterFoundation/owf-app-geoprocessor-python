@@ -35,6 +35,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "SetPropertyFromGeoLayer"
+        self.command_description = "Set a GeoProcessor property from a GeoLayer property"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

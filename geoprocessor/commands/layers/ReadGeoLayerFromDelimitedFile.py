@@ -72,6 +72,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "ReadGeoLayerFromDelimitedFile"
+        self.command_description = "Read a GeoLayer from a file in delimited file format"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

@@ -41,6 +41,7 @@ class RunCommands(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "RunCommands"
+        self.command_description = "Run a command file, useful to automate running all tests or a multi-step workflow"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
     def check_command_parameters(self, command_parameters):

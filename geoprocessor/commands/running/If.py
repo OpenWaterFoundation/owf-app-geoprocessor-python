@@ -34,6 +34,7 @@ class If(AbstractCommand):
         super().__init__()
         # AbstractCommand data
         self.command_name = "If"
+        self.command_description = "Indicate the start of an 'If' block"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Local private data

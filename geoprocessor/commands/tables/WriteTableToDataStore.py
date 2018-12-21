@@ -67,6 +67,7 @@ class WriteTableToDataStore(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "WriteTableToDataStore"
+        self.command_description = "Write a table to a DataStore"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

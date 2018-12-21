@@ -35,6 +35,7 @@ class FreeGeoLayers(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "FreeGeoLayers"
+        self.command_description = "Removes one or more GeoLayers from the GeoProcessor"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

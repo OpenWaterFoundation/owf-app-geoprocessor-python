@@ -54,6 +54,8 @@ class CopyGeoLayer(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "CopyGeoLayer"
+        self.command_description = "Copy a GeoLayer to a new GeoLayer, optionally constraining the copy to a subset " \
+                                   "of the original features/attributes"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

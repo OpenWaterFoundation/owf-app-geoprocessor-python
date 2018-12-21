@@ -56,6 +56,7 @@ class ClipGeoLayer(AbstractCommand):
         # AbstractCommand data
         super().__init__()
         self.command_name = "ClipGeoLayer"
+        self.command_description = "Clip a GeoLayer by the boundary of another GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Class data

@@ -90,6 +90,27 @@ class GeoProcessor(object):
         # - Should always work for RunCommands but what if nested several layers?
         self.env_properties = {}
 
+    def add_command(self, command_string):
+        """
+        Add a command string to the end
+        """
+        command_factory = GeoProcessorCommandFactory()
+
+        command_object = command_factory.new_command(command_string, True)
+
+        # Initialize the parameters of the command object.
+        # Work is done in the AbstractCommand class.
+        command_object.initialize_command(command_string, self, True)
+
+        self.commands.append(command_object)
+
+        # GeoProcessorCommandFactory
+        debug = False
+        if debug:
+            command_object.print_for_debug()
+            print("First command debug:")
+            self.commands[0].print_for_debug()
+
     def add_command_processor_listener(self, listener):
         """
         Add a command processor listener, to be notified when commands are started,
@@ -1212,6 +1233,26 @@ class GeoProcessor(object):
 
         self.run_commands(command_list)
 
+    def remove_command(self, index):
+        """
+        Remove a command string at the given index
+        :param index:
+        :return:
+        """
+        del self.commands[index]
+        self.notify_command_list_processor_listener_update_commands()
+
+    def remove_all_commands(self):
+        """
+        Remove all the commands from the command list
+        :return: None
+        """
+        # Remove all commands from command list
+        del self.commands[:]
+        # Nofity the command list model that the commands list UI in CommandListWidget
+        # needs to be updated to reflect changes made to commands in GeoProcessor
+        self.notify_command_list_processor_listener_update_commands()
+
     def set_command_strings(self, command_strings):
         """
         Set the command strings and initialize the command list in the geoprocessor.
@@ -1248,47 +1289,6 @@ class GeoProcessor(object):
                 print("First command debug:")
                 self.commands[0].print_for_debug()
 
-    def add_command(self, command_string):
-        """
-        Add a command string to the end
-        """
-        command_factory = GeoProcessorCommandFactory()
-
-        command_object = command_factory.new_command(command_string, True)
-
-        # Initialize the parameters of the command object.
-        # Work is done in the AbstractCommand class.
-        command_object.initialize_command(command_string, self, True)
-
-        self.commands.append(command_object)
-
-        # GeoProcessorCommandFactory
-        debug = False
-        if debug:
-            command_object.print_for_debug()
-            print("First command debug:")
-            self.commands[0].print_for_debug()
-
-    def remove_command(self, index):
-        """
-        Remove a command string at the given index
-        :param index:
-        :return:
-        """
-        del self.commands[index]
-        self.notify_command_list_processor_listener_update_commands()
-
-    def remove_all_commands(self):
-        """
-        Remove all the commands from the command list
-        :return: None
-        """
-        # Remove all commands from command list
-        del self.commands[:]
-        # Nofity the command list model that the commands list UI in CommandListWidget
-        # needs to be updated to reflect changes made to commands in GeoProcessor
-        self.notify_command_list_processor_listener_update_commands()
-
     def set_properties(self, property_dict):
         """
         Set geoprocessor properties from the specified dictionary.
@@ -1313,3 +1313,25 @@ class GeoProcessor(object):
             property_value (object):  Value of property, can be any built-in Python type or class instance.
         """
         self.properties[property_name] = property_value
+
+    def update_command(self, index, command_string):
+        """
+        Update command with new command string
+        """
+        command_factory = GeoProcessorCommandFactory()
+
+        command_object = command_factory.new_command(command_string, True)
+
+        # Initialize the parameters of the command object.
+        # Work is done in the AbstractCommand class.
+        command_object.initialize_command(command_string, self, True)
+
+        self.commands[index] = command_object
+
+        # GeoProcessorCommandFactory
+        debug = False
+        if debug:
+            command_object.print_for_debug()
+            print("First command debug:")
+            self.commands[0].print_for_debug()
+

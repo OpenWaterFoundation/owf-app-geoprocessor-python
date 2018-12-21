@@ -241,78 +241,62 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns: None
         """
 
-        # Get the command line string of the right-clicked item in the commands_List widget.
-        cmd_line_string = self.commands_List.currentItem().text()
+        logger = logging.getLogger(__name__)
 
-        # Get the command name of the command line string. All text before the first open parenthesis.
-        command_name = command_util.parse_command_name_from_command_string(cmd_line_string)
+        # Get the original command
 
-        # Get the parameter string of the command line string. All text inside parenthesis.
-        parameter_string = command_util.parse_parameter_string_from_command_string(cmd_line_string)
+        # Create a new command to edit without affecting the old command in case of cancelled.
 
-        # Convert the parameter string into a list of key value pairs. [ParameterName1=ParameterValue1, ... ]
-        parameter_key_values = command_util.parse_parameter_string_into_key_value_pairs(parameter_string)
+        # Get the index of the currently selected command
+        index = self.command_ListWidget.get_current_list_item_index()
+        # Get the command object at that index from GeoProcessor
+        command_object = self.gp.commands[index]
 
-        # Convert the list of key value pairs into a parameter dictionary. {ParameterName1: ParameterValue1}
-        input_parameter_dictionary = command_util.parse_key_value_pairs_into_dictionary(parameter_key_values)
+        try:
+            # Create the editor for the command
+            # - initialization occurs in the dialog
+            command_editor_factory = GeoProcessorCommandEditorFactory()
+            command_editor = command_editor_factory.new_command_editor(command_object)
+        except Exception as e:
+            message="Error creating editor for new command"
+            logger.error(message, e, exc_info=True)
+            qt_util.warning_message_box(message)
+            return
 
-        # Create a QDialog window instance.
-        d = QtWidgets.QDialog()
+        # Now edit the new command in the editor
+        try:
+            # If the "OK" button is clicked within the dialog window, continue.
+            # Else, if the "Cancel" button is clicked, do nothing.
+            button_clicked = command_editor.exec_()
+            if button_clicked == QtWidgets.QDialog.Accepted:
+                # Check if all of the required parameters are filled. If so, add the command to the Command_List widget.
+                ## if ui.are_required_parameters_specified(ui.ui_commandparameters):
 
-        # Create the dialog design instance for the specific input command.
-        ## ui = self.new_command_obj(command_name)
-        ui = None
+                # Get the command string from the dialog window.
+                command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
-        # If there are not parameters, set the input_parameter_dictionary to the command_parameter_values.
-        if not input_parameter_dictionary:
-                input_parameter_dictionary = ui.command_parameter_values
+                # Update command in GeoProcessor list of commands
+                self.gp.update_command(index, command_string)
+                self.gp_model.update_command_list_ui()
 
-        # Apply the command-specific dialog design to the QDialog window.
-        ui.setupUi(d)
+                # Manually set the run all commands and clear commands buttons to enabled
+                self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
+                self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(True)
 
-        # Update the dialog window with the parameter values included in the cmd_line_string.
-        # Iterate over the dictionary entries of the input_parameter_dictionary.
-        # Each entry represents a parameter.
-        # Key: parameter name
-        # Value: existing parameter value
-        for input_parameter_name, input_parameter_value in input_parameter_dictionary.items():
+                # update the window title in case command file has been modified
+                self.update_ui_main_window_title()
 
-            # Iterate over the dictionary entries of the default command_parameter_dictionary within the dialog design
-            # instance object.
-            # Each entry represents a parameter.
-            # Key: parameter name
-            # Value: default parameter value
-            for default_parameter_name, default_parameter_value in ui.command_parameter_values.items():
+                # Update the state
+                # self.update_ui_status_commands()
+            else:
+                # Cancel was clicked so don't do anything
+                pass
 
-                # If a command parameter is NOT set to default in the cmd_line_string, set the
-                # parameter value within the dialog design instance object to the parameter value indicated by the
-                # cmd_line_string.
-                if input_parameter_name == default_parameter_name:
-                    ui.command_parameter_values[default_parameter_name] = input_parameter_value
-
-        # Update the dialog window with the parameter values from the command line string.
-        ui.refresh()
-
-        # If the "OK" button is clicked within the dialog window, continue.
-        # Else, if the "Cancel" button is clicked, do nothing.
-        if d.exec_():
-            # Get the index of the selected command (item).
-            index = self.commands_List.currentRow()
-
-            # Remove the original command (item) from the Command_List widget.
-            self.commands_List.takeItem(index)
-
-            # Get the updated command string from the dialog window.
-            command_string = ui.CommandDisplay_View_TextBrowser.toPlainText()
-
-            # Add the command string to the Command_List widget in the same location as the previous command item.
-            self.commands_List.insertItem(index, command_string)
-
-            # update the window title in case command file has been modified
-            self.update_ui_main_window_title()
-
-            # Update the command count and Command_List label to show that a command was added to the workflow.
-            self.update_ui_status_commands()
+        except Exception as e:
+            message = "Error editing new command"
+            logger.error(message, e, exc_info=True)
+            qt_util.warning_message_box(message)
+            return
 
     # TODO smalers 2018-07-24 need to review this function
     def new_command_editor(self, command_name):
@@ -1054,7 +1038,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             _fromUtf8("Menu_Commands_General_Comments_MultipleStart"))
         self.Menu_Commands_General_Comments_MultipleStart.setText("/* <start multi-line comment section> ")
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_MultipleStart)
-        #
+        # MultipleEnd
         self.Menu_Commands_General_Comments_MultipleEnd = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_MultipleEnd.setObjectName(
             _fromUtf8("Menu_Commands_General_Comments_MultipleEnd"))
@@ -1081,6 +1065,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_ExpectedStatusWarn)
         # Add to menu bar
         self.menubar.addAction(self.Menu_Commands.menuAction())
+
+        self.Menu_Commands_General_Comments.addSeparator()
+
+        # Blank
+        self.Menu_Commands_General_Comments_Blank = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_Comments_Blank.setObjectName(
+            _fromUtf8("Menu_Commands_General_Comments_Blank"))
+        self.Menu_Commands_General_Comments_Blank.setText(
+            "Blank()... <used for blank lines>")
+        self.Menu_Commands_General_Comments_Blank.triggered.connect(
+            functools.partial(self.new_command_editor, "Blank"))
+        self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_Blank)
 
         # Commands / General - File Handling
         self.Menu_Commands_General_FileHandling = QtWidgets.QMenu(self.Menu_Commands)

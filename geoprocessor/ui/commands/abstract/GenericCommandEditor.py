@@ -39,8 +39,19 @@ class GenericCommandEditor(AbstractCommandEditor):
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
         self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
 
+        # Create variable to know if we are updating an existing command
+        # or inserting a new command into the command list
+        self.update = False
+        # if command parameters have already been defined for command
+        # we know that we are updating an existing command
+        if command.command_parameters:
+            self.update = True
+
         # Setup the UI in the abstract class, which will call back to set_ui() in this class.
         self.setup_ui_core()
+
+        # Initially call refresh in case updating a command
+        self.refresh_command()
 
     def get_parameter_dict_from_ui(self):
         """
@@ -108,6 +119,10 @@ class GenericCommandEditor(AbstractCommandEditor):
                 self.parameter_LineEdit[y_parameter].setToolTip(tooltip)
             # Create a listener that reacts if the line edit field has been changed. If so, run the
             # update_command_display function.
+            # If this command is being updated add the command parameters to the text fields
+            if self.update:
+                parameter_value = self.command.get_parameter_value(parameter_name)
+                self.parameter_LineEdit[y_parameter].setText(parameter_value)
             self.parameter_LineEdit[y_parameter].textChanged.connect(self.refresh_command)
             # ----------------------------------------------------
             # Description component, optionally with default value

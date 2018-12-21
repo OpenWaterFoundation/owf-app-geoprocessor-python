@@ -91,6 +91,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # - could be command file or other files
         self.saved_file = None
 
+        # Keep track of if the user has opened a command file for deciding to save command or save command as on exit
+        self.opened_command_file = False
+
         # All event handlers and connections are configured in the setup_ui*() functions grouped by component.
 
         self.gp.add_command_processor_listener(self)
@@ -139,7 +142,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # If user selects yes to save commands
             if save_command_dialog == QtWidgets.QMessageBox.Yes:
                 # Open Save Window
-                if self.new_command_file:
+                if not self.opened_command_file:
                     self.ui_action_save_commands_as()
                 else:
                     self.ui_action_save_commands()
@@ -2623,7 +2626,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Open a new command file. Each line of the command file is a separate item in the Command_List QList Widget.
         Returns: None
         """
-        self.new_command_file = False
+        self.opened_command_file = True
 
         cmd_filepath = ""
 

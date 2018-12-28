@@ -72,7 +72,7 @@ parseCommandLine() {
 	#echo "Parsing command line..."
 	local OPTIND opt b h i o v
 	while getopts :bhi:o:v opt; do
-		echo "Command line option is ${opt}"
+		#echo "Command line option is ${opt}"
 		case $opt in
 			b) # Run in batch mode (no prompts)
 				batchMode="yes"
@@ -95,10 +95,12 @@ parseCommandLine() {
 				;;
 			\?)
 				echo "Invalid option:  -$OPTARG" >&2
+				printUsage
 				exit 1
 				;;
 			:)
 				echo "Option -$OPTARG requires an argument" >&2
+				printUsage
 				exit 1
 				;;
 		esac
@@ -114,11 +116,11 @@ printUsage() {
 	echo '  $thisScriptName -i gp-1.0.0-lin-venv.tar.gz -o $HOME/gp-venv'
 	echo '  $thisScriptName -i gptest-1.0.0-lin-venv.tar.gz -o $HOME/gptest-venv'
 	echo ""
-	echo "-b run in batch mode with no prompts (missing data will result in exit)"
-	echo "-h prints the usage"
-	echo "-i specifies the installer tar.gz file (see gp-download script)"
-	echo "-o specifies the output folder for the installer."
-	echo "-v prints the version"
+	echo "-b               Run in batch mode with no prompts (missing input will result in exit)"
+	echo "-h               Print the usage"
+	echo "-i file.tar.gz   Specify the installer tar.gz file"
+	echo "-o outputFolder  Specify the output folder for the install."
+	echo "-v               Print the version"
 	echo ""
 }
 
@@ -171,6 +173,7 @@ promptForInstallerFile() {
 			echo "/tmp folder:"
 			ls -1 gp*.tar.gz
 		fi
+		# Installer tar.gz file has not been specified so prompt for it
 		echo ""
 		read -p "Specify the GeoProcessor tar.gz file to install (q to quit): " installerTargzFile
 		if [ "${installerTargzFile}" = "q" ]; then
@@ -219,10 +222,14 @@ promptForInstallFolder() {
 			# Installing gptest
 			echo "Installation folder is typically gptest-venv or gptest-1.0.0-venv (specific to version)."
 		fi
-		read -p "Specify the folder to install into, will create if does not exist (q to quit): " installFolder
+		echo "Specify the folder to install into, will create if does not exist."
+		read -p "Specify relative to current folder or provide an absolute path (q to quit): " installFolder
 		if [ "${installFolder}" = "q" ]; then
 			# Quit the script
 			exit 0
+		elif [ -z "${installFolder}" ]; then
+			# Continue
+			:
 		else
 			break
 		fi
@@ -381,7 +388,9 @@ if [ "$batchMode" = "yes" ]; then
 		exit 1
 	fi
 else
-	promptForInstallerFile
+	if [ -z "${installerTargzFile}" ]; then
+		promptForInstallerFile
+	fi
 fi
 
 # Prompt for the install (output) folder

@@ -41,7 +41,7 @@ checkOperatingSystem()
 
 #------------------------------------------------------------------------------------------
 # Step 0. Setup.
-# Get the location where this script is located since it may have been run from any folder
+# Get the folder where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
 
 # Determine the operating system
@@ -144,6 +144,9 @@ cp -rp ${repoFolder}/geoprocessor ${buildTmpGptestFolder}
 mkdir ${buildTmpGptestFolder}/scripts
 cp ${repoFolder}/scripts/gptest ${buildTmpGptestFolder}/scripts
 cp ${repoFolder}/scripts/gptestui ${buildTmpGptestFolder}/scripts
+cp ${buildUtilFolder}/install/install-gp-venv.sh ${buildTmpGptestFolder}/scripts
+# Make sure files are executable
+chmod a+x ${buildTmpGptestFolder}/scripts/*
 
 #------------------------------------------------------------------------------------------
 # Step 3. Update the temporary files to translate from full GeoProcessor to testing version

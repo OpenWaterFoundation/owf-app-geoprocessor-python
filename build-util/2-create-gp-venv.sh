@@ -442,6 +442,7 @@ createGptestVirtualenvCygwinAndLinux() {
 		buildTmpGptestFolder="${buildTmpFolder}/tmp-gptest-${version}"
 		cp ${buildTmpGptestFolder}/scripts/gptest ${virtualenvScriptsFolder}
 		cp ${buildTmpGptestFolder}/scripts/gptestui ${virtualenvScriptsFolder}
+		cp ${buildTmpGptestFolder}/scripts/install-gp-venv.sh ${virtualenvScriptsFolder}
 	else
 		echo "[Error] operating system ${operatingSystem} is not supported for GeoProcessor copy."
 	fi

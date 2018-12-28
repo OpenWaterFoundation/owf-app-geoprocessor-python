@@ -2,7 +2,7 @@
 
 This repository contains the source code and developer documentation for the
 [Open Water Foundation (OWF)](http://openwaterfoundation.org) GeoProcessor software.
-The GeoProcessor is Python software that leverages [QGIS](https://www.qgis.org) modules to provide
+The GeoProcessor is Python software that leverages [QGIS](https://www.qgis.org) Python packages to provide
 features to automate processing geospatial data.
 
 See the following online user and developer documentation:
@@ -73,7 +73,7 @@ owf-app-geoprocessor-python/       The GeoProcessor code and documentation repos
     commands/                      Modules containing GeoProcessor commands.
     core/                          Core GeoProcessor module, containing the processor.
     util/                          Utility modules.
-  LICENSE.txt                      GeoProcessor license (being determined).
+  LICENSE.md                       GeoProcessor license (GPL v3).
   README.md                        This README file.
   scripts/                         Scripts for the deployed application.
   venv/                            Virtual environment used by PyCharm (ignored using .gitignore).
@@ -81,8 +81,8 @@ owf-app-geoprocessor-python/       The GeoProcessor code and documentation repos
 
 ## Development Environment ##
 
-The development environment consists of QGIS (Python 2 version, and Python is included with QGIS),
-Python 2 (normal install, used with MkDocs documentation and as needed), PyCharm Community Edition,
+The development environment consists of QGIS (Python 3 version, and Python is included with QGIS),
+Python 3 (used with MkDocs documentation and testing framework version), PyCharm Community Edition,
 and Git client such as Git for Windows.
 
 * See the published [GeoProcessor Developer Documentation](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/)
@@ -106,36 +106,36 @@ consistent with normal Python conventions.
 
 The GeoProcessor contains an internal functional testing framework described in the following resources:
 
-* [Developer documentation for testing tasks](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-tasks/#testing)
+* [Developer documentation for testing tasks](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-tasks/dev-tasks/#testing)
 * [owf-app-geoprocessor-python-test functional tests repository](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test)
 
 ## Contributing ##
 
-Contributions to this project can be submitted using the following options:
+Contributions to this project can be submitted using the following options.
 
 1. GeoProcessor software developers with commit privileges can write to this repository
 as per normal development Git workflow protocols.
 2. Post an issue on GitHub with suggested change (preferred for small changes).
-3. Email a maintainer (OK for collaboration but other options are preferred).
-4. Fork the repository, make changes, and do a pull request (preferred for large changes).
+3. Fork the repository, make changes, and do a pull request (preferred for large changes).
 Contents of the current master branch should be merged with the fork to minimize
 code review before committing the pull request.
 
 ## License ##
 
-A license for the software is being determined.
+The GeoProcessor is licensed under the GPL v3+ license.  See the [GPL v3 license](LICENSE.md).
 
 ## Maintainers ##
 
 The lead developers/maintainers for the GeoProcessor are OWF staff:
 
 * Steve Malers, Open Water Foundation, [steve.malers@openwaterfoundation.org](mailto:steve.malers@openwaterfoundation.org), @smalers
-* Emma Giles, Open Water Foundation, [emma.giles@openwaterfoundation.org](mailto:emma.giles@openwaterfoundation.org), @egiles16
+* Justin Rentie, Open Water Foundation, [justin.rentie@openwaterfoundation.org](mailto:justin.rentie@openwaterfoundation.org), @jurentie
 
 ## Contributors ##
 
-* Steve Malers, Open Water Foundation (@smalers)
-* Emma Giles, Open Water Foundation (@egiles16)
+Additional contributions provided by:
+
+* Emma Giles, (@egiles16)
 
 ## Release Notes ##
 

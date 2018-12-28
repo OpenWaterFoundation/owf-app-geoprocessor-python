@@ -1,3 +1,22 @@
+# GeoProcessorUI - class for main GeoProcessor UI
+#_________________________________________________________________NoticeStart_
+# GeoProcessor
+# Copyright (C) 2017-2019 Open Water Foundation
+# 
+# GeoProcessor is free software:  you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     GeoProcessor is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
+#_________________________________________________________________NoticeEnd___
+
 import platform
 
 import geoprocessor.commands.util.Comment as Comment
@@ -2324,7 +2343,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.info_message_box(
                 program_name + " " + version + " (" + version_date + ")\n" +
                 "Developed by the Open Water Foundation.\n" +
-                "The GeoProcessor automates geospatial data processing.",
+                "The GeoProcessor automates geospatial data processing.\n\n" +
+                "Copyright 2017-2019 Open Water Foundation.\n" +
+                "\n" +
+                "License GPLv3+:  GNU GPL version 3 or later\n" +
+                "\n" +
+                "There is ABSOLUTELY NO WARRANTY; for details see the\n" +
+                "'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file.\n" +
+                "This is free software: you are free to change and redistribute it\n" +
+                "under the conditions of the GPLv3 license in the LICENSE file.",
                 "About GeoProcessor")
         except Exception as e:
             # Should not happen but does during initial development and UI code swallows exceptions so output to log

@@ -1,3 +1,22 @@
+# gp - main entry point for GeoProcessor application
+#_________________________________________________________________NoticeStart_
+# GeoProcessor
+# Copyright (C) 2017-2019 Open Water Foundation
+# 
+# GeoProcessor is free software:  you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     GeoProcessor is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
+#_________________________________________________________________NoticeEnd___
+
 """
 This module provides access to the Open Water Foundation GeoProcessor tools via
 the gp application, which provides several run modes:
@@ -195,6 +214,25 @@ def print_env():
         print(item)
 
 
+def print_version():
+    """
+    Print the program version.
+    """
+    print("")
+    print("gp version " + version.app_version )
+    print("")
+    print("GeoProcessor")
+    print("Copyright 2017-2019 Open Water Foundation.")
+    print("")
+    print("License GPLv3+:  GNU GPL version 3 or later")
+    print("")
+    print("There is ABSOLUTELY NO WARRANTY; for details see the")
+    print("'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file.")
+    print("This is free software: you are free to change and redistribute it")
+    print("under the conditions of the GPLv3 license in the LICENSE file.")
+    print("")
+
+
 # This is the same as the GeoProcessorCmd.do_run() function.
 # - could reuse code but inline it for now
 def run_batch(command_file, runtime_properties):
@@ -377,8 +415,6 @@ def setup_logging(session):
     print(message)
 
 
-
-
 def setup_session(session):
     """
     Setup the application session.  Make sure application folder, etc. are created.
@@ -428,7 +464,8 @@ if __name__ == '__main__':
     # Parse the command line parameters...
     # - The -h and --help arguments are automatically included so don't need to add below.
     # - The default action is "store" which will save a variable with the same name as the option.
-    # - The --version option has special behavior, as documented in the argparse module documentation.
+    # - The --version option has special behavior, as documented in the argparse module documentation,
+    #   but use a custom print_version() function so can include the license.
     parser = argparse.ArgumentParser(description='GeoProcessor Application')
     # Assigns the command file to args.commands
     # --commands CommandFile.gp
@@ -443,10 +480,9 @@ if __name__ == '__main__':
     # Start the user interface (will store True in the 'ui' variable)
     # --ui
     parser.add_argument("--ui", action='store_true', help="Start the user interface.")
-    # Immediately prints the version using the 'version' value
+    # Print the version using (will store True in the 'version' variable)
     # --version
-    parser.add_argument("--version", help="Print program version.", action="version",
-                        version="gp " + version.app_version)
+    parser.add_argument("--version", help="Print program version.", action="store_true")
     args = parser.parse_args()
 
     # # If handling QGIS environment here, rather than in GeoProcessor
@@ -488,6 +524,9 @@ if __name__ == '__main__':
             message='Exception running UI'
             print(message)
             logger.exception(message, e, exc_info=True)
+    elif args.version:
+        # Print the version
+        print_version()
     else:
         # No arguments given to indicate whether batch, UI, etc. so start up the shell.
         print("Running GeoProcessor shell")

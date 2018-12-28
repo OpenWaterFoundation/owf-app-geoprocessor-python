@@ -1,6 +1,24 @@
 @echo off
 rem gp.bat - run the GeoProcessor, default is to start the interpreter
 rem
+rem _________________________________________________________________NoticeStart_
+rem GeoProcessor
+rem Copyright (C) 2017-2019 Open Water Foundation
+rem  
+rem GeoProcessor is free software:  you can redistribute it and/or modify
+rem     it under the terms of the GNU General Public License as published by
+rem     the Free Software Foundation, either version 3 of the License, or
+rem     (at your option) any later version.
+rem 
+rem     GeoProcessor is distributed in the hope that it will be useful,
+rem     but WITHOUT ANY WARRANTY; without even the implied warranty of
+rem     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+rem     GNU General Public License for more details.
+rem 
+rem     You should have received a copy of the GNU General Public License
+rem     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
+rem ________________________________________________________________NoticeEnd___
+rem
 rem Windows batch file to run the Open Water Foundation GeoProcessor application for QGIS
 rem - This script is for Python3/QGIS3 (QGIS LTR is not used)
 rem - This script should work on a normal Windows 7/10 computer.

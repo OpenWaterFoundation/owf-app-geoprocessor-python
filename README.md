@@ -13,6 +13,7 @@ See the following online user and developer documentation:
 The following sections provide a summary of the project repository and getting started:
 
 * [GeoProcessor Repository Folder Structure](#geoprocessor-repository-folder-structure)
+* [Links to GeoProcessor Repositories and Online Resources](#links-to-geoprocessor-repositories-and-online-resources)
 * [Development Environment](#development-environment)
 * [Git Workflow](#git-workflow)
 * [Testing](#testing)
@@ -79,6 +80,18 @@ owf-app-geoprocessor-python/       The GeoProcessor code and documentation repos
   venv/                            Virtual environment used by PyCharm (ignored using .gitignore).
 ```
 
+## Links to GeoProcessor Repositories and Online Resources ##
+
+The following are resources related to the GeoProcessor project,
+listed by repository, with links to source and deployed versions.
+
+| **Repository**                                       | **Description** | **Deployed Copy** |
+| ---------------------------------------------------- | --------------- | ----------------- |
+| `owf-app-geoprocessor-python` (this repository)      | GeoProcessor code. | [GeoProcessor Downloads ](http://software.openwaterfoundation.org/geoprocessor/) |
+| [`owf-app-geoprocessor-python/doc-dev-mkdocs-project`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/tree/master/doc-dev-mkdocs-project) | GeoProcessor developer documenation (part of this repository). | [GeoProcessor Developer Documentation ](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/) |
+| [`owf-app-geoprocessor-python-doc-user`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-doc-user) | GeoProcessor code (this repository). | [GeoProcessor User Documentation ](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/) |
+| [`owf-app-geoprocessor-python-test`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test) | GeoProcessor code (this repository). | Download from repository using clone or download zip file from GitHub website. |
+
 ## Development Environment ##
 
 The development environment consists of QGIS (Python 3 version, and Python is included with QGIS),
@@ -139,5 +152,5 @@ Additional contributions provided by:
 
 ## Release Notes ##
 
-The software is currently in pre-release development mode.
-Release notes listing GitHub issues will be added.
+See the [User Documentation Release Notes](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/appendix-release-notes/release-notes/).
+

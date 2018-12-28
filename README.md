@@ -88,9 +88,9 @@ listed by repository, with links to source and deployed versions.
 | **Repository**                                       | **Description** | **Deployed Copy** |
 | ---------------------------------------------------- | --------------- | ----------------- |
 | `owf-app-geoprocessor-python` (this repository)      | GeoProcessor code. | [GeoProcessor Downloads ](http://software.openwaterfoundation.org/geoprocessor/) |
-| [`owf-app-geoprocessor-python/doc-dev-mkdocs-project`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/tree/master/doc-dev-mkdocs-project) | GeoProcessor developer documenation (part of this repository). | [GeoProcessor Developer Documentation ](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/) |
-| [`owf-app-geoprocessor-python-doc-user`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-doc-user) | GeoProcessor code (this repository). | [GeoProcessor User Documentation ](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/) |
-| [`owf-app-geoprocessor-python-test`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test) | GeoProcessor code (this repository). | Download from repository using clone or download zip file from GitHub website. |
+| [`owf-app-geoprocessor-python/doc-dev-mkdocs-project`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/tree/master/doc-dev-mkdocs-project) (part of this repository) | GeoProcessor developer documentation. | [GeoProcessor Developer Documentation ](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/) |
+| [`owf-app-geoprocessor-python-doc-user`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-doc-user) | GeoProcessor user documentation. | [GeoProcessor User Documentation ](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/) |
+| [`owf-app-geoprocessor-python-test`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test) | GeoProcessor automated tests. | Download from repository using clone or download zip file from GitHub website. |
 
 ## Development Environment ##
 

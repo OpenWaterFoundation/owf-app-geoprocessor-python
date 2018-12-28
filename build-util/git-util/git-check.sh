@@ -4,7 +4,7 @@
 
 #-----------------------------------------------------------------NoticeStart-
 # Git Utilities
-# Copyright 2017-2018 Open Water Foundation.
+# Copyright 2017-2019 Open Water Foundation.
 # 
 # License GPLv3+:  GNU GPL version 3 or later
 # 
@@ -24,8 +24,6 @@
 # - this script does not do anything to change repositories
 # - warn if any repositories use Cygwin because mixing with Git for Windows can cause confusion in tools
 #
-
-version="1.6.0 2018-12-26"
 
 # List functions in alphabetical order
 
@@ -247,6 +245,8 @@ printUsage() {
 	echo ""
 	echo "Usage:  git-check.sh -m product-main-repo -g gitReposFolder"
 	echo ""
+	echo "Check the status of all repositories that comprise a product."
+	echo ""
 	echo "Example:"
 	echo '  git-check.sh -m owf-util-git -g $HOME/owf-dev/Util-Git/git-repos'
 	echo ""
@@ -264,7 +264,7 @@ printVersion() {
 	echo "git-check version ${version}"
 	echo ""
 	echo "Git Utilities"
-	echo "Copyright 2017-2018 Open Water Foundation."
+	echo "Copyright 2017-2019 Open Water Foundation."
 	echo ""
 	echo "License GPLv3+:  GNU GPL version 3 or later"
 	echo ""
@@ -277,6 +277,8 @@ printVersion() {
 
 # Entry point into main script
 # - call functions from above as needed
+
+version="1.7.0 2018-12-27"
 
 # Determine which echo to use, needs to support -e to output colored text
 # - normally built-in shell echo is OK, but on Debian Linux dash is used, and it does not support -e
@@ -296,7 +298,6 @@ parseCommandLine "$@"
 
 # Output some blank lines to make it easier to scroll back in window to see the start of output
 
-echo ""
 echo ""
 echo ""
 
@@ -322,13 +323,6 @@ if [ -z "${gitReposFolder}" ]; then
 	exit 1
 fi
 
-# Product development main folder
-# - top-level folder for the product
-home2=$HOME
-if [ "${operatingSystem}" = "cygwin" ]; then
-	# Expect product files to be in Windows user files location (/cygdrive/...), not Cygwin user files (/home/...)
-	home2="/cygdrive/C/Users/$USER"
-fi
 # Git repsitories folder is relative to the user's files in a standard development location, for example:
 # $HOME/                     User's files.
 #    DevFiles/               Development files grouped by a system, product line, etc.

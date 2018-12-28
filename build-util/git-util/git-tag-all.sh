@@ -14,11 +14,10 @@
 # under the conditions of the GPLv3 license in the LICENSE file.
 #-----------------------------------------------------------------NoticeEnd---
 #
-# git-clone-all.sh
+# git-tag-all.sh
 #
-# Clone all repositories
-# - this is used to set up a new development environment
-# - it is assumed that the main repository is already cloned (since these files live there)
+# Tag all repositories
+# - interactively prompt for the tag ID and commit message
 
 # Supporting functions, alphabetized
 
@@ -48,30 +47,30 @@ checkOperatingSystem()
 
 # Parse the command parameters
 parseCommandLine() {
-	local OPTIND g h m p u v
-	optstring=":g:hm:p:u:v"
+	local OPTIND g h m N v V
+	optstring=":g:hm:N:vV:"
 	while getopts $optstring opt; do
 		#echo "Command line option is ${opt}"
 		case $opt in
-			g) # -g gitRepFolder  Folder containing Git repositories
+			g) # -g gitRepoFolder  Folder containing Git repositories
 				gitReposFolder=$OPTARG
 				;;
 			h) # -h  Print usage
 				printUsage
 				exit 0
 				;;
-			m) # -m  Main repo name
+			m) # -m mainRepoName   Main repo name
 				mainRepo=$OPTARG
 				;;
-			p) # -p productHomeFolder  Specify the product home
-				echo "-p is obsolete.  Use -g instead."
-				;;
-			u) # -u repoUrl  Specify the GitHub (or other) root URL
-				remoteRootUrl=$OPTARG
+			N) # -N productName   Specify product name, used as hint for tag name and commit message
+				productName=$OPTARG
 				;;
 			v) # -v  Print the version
 				printVersion
 				exit 0
+				;;
+			V) # -V productVersion  Specify product version, used as hint for tag name and commit message
+				productVersion=$OPTARG
 				;;
 			\?)
 				echo "Invalid option:  -$OPTARG" >&2
@@ -88,25 +87,26 @@ parseCommandLine() {
 # Print the script usage
 printUsage() {
 	echo ""
-	echo "Usage:  git-clone-all.sh -m productMainRepo -g gitReposFolder -u remoteRootUrl"
+	echo "Usage:  git-tag-all.sh -m productMainRepo -g gitReposFolder -N productName -V productVersion"
 	echo ""
-	echo "Clone all repositories in a product if the repository does not exist."
+	echo "Tag all repositories in a product with tag name and commit message."
 	echo ""
 	echo "Example:"
-	echo "    git-clone-all.sh -m owf-git-util -g $HOME/owf-dev/Util-Git/git-repos -u https://github.com/OpenWaterFoundation"
+	echo "    git-tag-all.sh -m owf-git-util -g $HOME/owf-dev/Util-Git/git-repos -N GitUtil -V 1.0.0"
 	echo ""
-	echo "-g specify the folder containing 1+ Git repos for product."
-	echo "-h print the usage"
-	echo "-m specify the main repository name."
-	echo "-u specify the root URL where repositories will be found."
-	echo "-v print the version"
+	echo "-g reposFolder       Specify the folder containing 1+ Git repos for product."
+	echo "-h                   Print the usage."
+	echo "-m mainRepoName      Specify the main repository name (should match repo folder name)."
+	echo "-N productName       Specify the product name used for tag name and commit message hint."
+	echo "-v                   Print the version."
+	echo "-V productVersion    Specify the product version (e.g., 1.0.0) used for tag name and commit message hint."
 	echo ""
 }
 
 # Print the script version
 printVersion() {
 	echo ""
-	echo "git-clone-all version ${version}"
+	echo "git-tag-all version ${version}"
 	echo ""
 	echo "Git Utilities"
 	echo "Copyright 2017-2019 Open Water Foundation."
@@ -125,11 +125,14 @@ printVersion() {
 # Variables
 dryRun=false # Default is to run operationally
 #dryRun=true  # for testing
+if [ "$dryRun" = "true" ]; then
+	echo ""
+	echo "Running in dry run mode."
+fi
 
-version="1.5.0 2018-12-27"
-
-# Check the operating system to control logic
-checkOperatingSystem
+version="1.0.0 2018-12-27"
+# Product version passed in with -V
+productVersion=""
 
 # Parse the command line
 parseCommandLine "$@"
@@ -141,9 +144,15 @@ if [ -z "${gitReposFolder}" ]; then
 	printUsage
 	exit 1
 fi
-if [ -z "${remoteRootUrl}" ]; then
+if [ -z "${productName}" ]; then
 	echo ""
-	echo "The remote root URL has not been specified with -u.  Exiting."
+	echo "The product name has not been specified with -N.  Exiting."
+	printUsage
+	exit 1
+fi
+if [ -z "${productVersion}" ]; then
+	echo ""
+	echo "The product version has not been specified with -V.  Exiting."
 	printUsage
 	exit 1
 fi
@@ -183,20 +192,17 @@ if [ ! -f "${repoListFile}" ]; then
 	exit 1
 fi
 
+# Ask the user for the tag name and commit message
 while [ "1" = "1" ]
 do
 	echo ""
-	echo "Clone all repositories for the product to set up a new developer environment."
-	echo "The following is from ${repoListFile}"
+	echo "Product version: ${productVersion}"
+	read -p "Enter tag name with no spaces (e.g.: ${productName}-${productVersion}): " tagName
+	read -p "Enter commit message (e.g,: ${productName} ${productVersion} release): " tagMessage
 	echo ""
-	echo "--------------------------------------------------------------------------------"
-	cat ${repoListFile}
-	echo "--------------------------------------------------------------------------------"
-	echo ""
-	echo "All repositories that don't already exist will be cloned to ${gitReposFolder}."
-	echo "Repositories will be cloned using root URL ${remoteRootUrl}"
-	echo "You may be prompted to enter credentials."
-	read -p "Continue [y/n]?: " answer
+	echo "Tag name=${tagName}"
+	echo "Commit message=${tagMessage}"
+	read -p "Continue with tag commit [y/n]?: " answer
 	if [ "${answer}" = "y" ]
 	then
 		# Want to continue
@@ -207,9 +213,20 @@ do
 	fi
 done
 
-# Change to the main git-repos folder
-cd "${gitReposFolder}"
-# Clone each repository in the product
+# Make sure that the tag name and message are specified
+if [ -z "${tagName}" ]
+then
+	echo "Tag name must be specified.  Exiting."
+	exit 1
+fi
+if [ -z "${tagMessage}" ]
+then
+	echo "Tag commit message must be specified.  Exiting."
+	exit 1
+fi
+
+# Commit the tag on each repository in the product
+# - read the repository name from each line of the repository list file
 while IFS= read -r repoName
 do
 	# Make sure there are no carriage returns in the string
@@ -227,31 +244,29 @@ do
 		# Comment line
 		continue
 	fi
-	# Clone the repo
+	# Commit the tag
 	repoFolder="${gitReposFolder}/${repoName}"
-	repoUrl="${remoteRootUrl}/${repoName}"
 	echo "================================================================================"
-	echo "Cloning repository:  ${repoName}"
+	echo "Committing tag for repo:  ${repoName}"
 	echo "Repository folder:  ${repoFolder}"
-	echo "Repository Url:  ${repoUrl}"
 	if [ -d "${repoFolder}" ]
 	then
-		# The repository folder exists so don't cone
-		echo "Repo folder already exists so skipping:  ${repoFolder}"
-		continue
-	else
+		# The repository folder exists so cd to it and do the tag
+		cd "${repoFolder}"
 		if [ ${dryRun} = "true" ]
 		then
-			echo "Dry run:  cloning repository with:  git clone \"${repoUrl}\""
+			echo "Dry run:  Adding tag with:  git tag -a \"${tagName}\" -m \"${tagMessage}\""
+			echo "Dry run:  git push origin --tags"
 		else
-			git clone ${repoUrl}
+			echo "Adding tag with:  git tag -a \"${tagName}\" -m \"${tagMessage}\""
+			git tag -a "${tagName}" -m "${tagMessage}"
+			git push origin --tags
 		fi
+	else
+		# Git repository folder does not exist so skip
+		echo "Repository folder does not exist.  Skipping"
+		continue
 	fi
 done < ${repoListFile}
-echo "================================================================================"
 
-# List the repositories
-
-echo ""
-echo "After cloning, ${gitReposFolder} contains:"
-ls -1 ${gitReposFolder}
+exit 0

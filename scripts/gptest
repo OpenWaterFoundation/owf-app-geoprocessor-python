@@ -45,6 +45,36 @@ checkOperatingSystem()
 	echo "operatingSystem=$operatingSystem (used to check for Cygwin and filemode compatibility)"
 }
 
+# Check for and if necessary activate Python virtual environment
+# - if running in the development environment no changes are made
+# - if running in deployed environment the venv is activated if not already
+# - if the virtual environment has not be activate in the calling shell,
+#   it will be activated every time this script is run
+checkPythonVirtualEnv() {
+	echo "Checking for whether Python virtual environment (venv) needs to be activated..."
+	# First determine if running in a venv
+	# - look for venv folders bin, include, lib, scripts
+	# - development environment has geoprocessor and scripts folder
+	parentFolder=$(dirname $scriptFolder)
+	binFolder=$parentFolder/bin
+	includeFolder=$parentFolder/include
+	libFolder=$parentFolder/lib
+	scriptsFolder=$parentFolder/scripts
+	if [ -d "$binFolder" -a -d "$includeFolder" -a -d "$libFolder" -a -d "$scriptsFolder" ]; then
+		# Probably running in virtual environment
+		# Make sure the environment is activated
+		echo "Appear to be running in venv"
+		if [ "$VIRTUAL_ENV" = "" ]; then
+			echo "VIRTUAL_ENV is not set.  Activating the venv."
+			source "$binFolder/activate"
+		else
+			echo "VIRTUAL_ENV is set.  Assuming the venv is already activated."
+		fi
+	else
+		echo "Appear to be running outside of venv.  Not activating the venv."
+	fi
+}
+
 # Set the DISPLAY variable needed for X windows
 checkXWindowsDisplay() {
 	if [ -z "$DISPLAY" ]; then
@@ -149,8 +179,15 @@ runProcessor () {
 
 # Main entry point into script
 
+# Get the folder where this script is located since it may have been run from any folder
+scriptFolder=`cd $(dirname "$0") && pwd`
+
 # Parse the command parameters
 parseCommandLineLong "$@"
+
+# Setup the virtual environment (venv) if necessary
+# - this script can be run from development environment or deployed venv
+checkPythonVirtualEnv
 
 # Run the processor
 runProcessor

@@ -2,7 +2,7 @@
 (set -o igncr) 2>/dev/null && set -o igncr; # this comment is required
 # The above line ensures that the script can be run on Cygwin/Linux even with Windows CRNL
 #
-#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------NoticeStart-
 # Git Utilities
 # Copyright 2017-2018 Open Water Foundation.
 # 
@@ -12,7 +12,7 @@
 # "Disclaimer of Warranty" section of the GPLv3 license in the LICENSE file.
 # This is free software: you are free to change and redistribute it
 # under the conditions of the GPLv3 license in the LICENSE file.
-#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------NoticeEnd---
 #
 # git-clone-all.sh
 #
@@ -24,7 +24,7 @@
 dryRun=false # Default is to run operationally
 #dryRun=true  # for testing
 
-version="1.3.0 2018-11-27"
+version="1.4.0 2018-12-26"
 
 # Supporting functions
 
@@ -52,6 +52,45 @@ checkOperatingSystem()
 	echo "operatingSystem=$operatingSystem (used to check for Cygwin and filemode compatibility)"
 }
 
+# Parse the command parameters
+parseCommandLine() {
+	local OPTIND g h m p u v
+	optstring=":g:hm:p:u:v"
+	while getopts $optstring opt; do
+		#echo "Command line option is ${opt}"
+		case $opt in
+			g) # -g gitRepFolder  Folder containing Git repositories
+				gitReposFolder=$OPTARG
+				;;
+			h) # -h  Print usage
+				printUsage
+				exit 0
+				;;
+			m) # -m  Main repo name
+				mainRepo=$OPTARG
+				;;
+			p) # -p productHomeFolder  Specify the product home
+				echo "-p is obsolete.  Use -g instead."
+				;;
+			u) # -u repoUrl  Specify the GitHub (or other) root URL
+				remoteRootUrl=$OPTARG
+				;;
+			v) # -v  Print the version
+				printVersion
+				exit 0
+				;;
+			\?)
+				echo "Invalid option:  -$OPTARG" >&2
+				exit 1
+				;;
+			:)
+				echo "Option -$OPTARG requires an argument" >&2
+				exit 1
+				;;
+		esac
+	done
+}
+
 # Print the script usage
 printUsage() {
 	echo ""
@@ -60,11 +99,28 @@ printUsage() {
 	echo "Example:"
 	echo "    git-clone-all.sh -m owf-git-util -g $HOME/owf-dev/Util-Git/git-repos -u https://github.com/OpenCDSS"
 	echo ""
-	echo "-g specifies the folder containing 1+ Git repos for product."
-	echo "-h prints the usage"
-	echo "-m specifies the main repository name."
-	echo "-u specifies the root URL where repositories will be found."
-	echo "-v prints the version"
+	echo "-g specify the folder containing 1+ Git repos for product."
+	echo "-h print the usage"
+	echo "-m specify the main repository name."
+	echo "-u specify the root URL where repositories will be found."
+	echo "-v print the version"
+	echo ""
+}
+
+# Print the script version
+printVersion() {
+	echo ""
+	echo "git-clone-all version ${version}"
+	echo ""
+	echo "Git Utilities"
+	echo "Copyright 2017-2018 Open Water Foundation."
+	echo ""
+	echo "License GPLv3+:  GNU GPL version 3 or later"
+	echo ""
+	echo "There is ABSOLUTELY NO WARRANTY; for details see the"
+	echo "'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file."
+	echo "This is free software: you are free to change and redistribute it"
+	echo "under the conditions of the GPLv3 license in the LICENSE file."
 	echo ""
 }
 
@@ -73,63 +129,19 @@ printUsage() {
 # Check the operating system to control logic
 checkOperatingSystem
 
-# Parse the command parameters
-while getopts :g:hm:p:u:v opt; do
-	#echo "Command line option is ${opt}"
-	case $opt in
-		g) # Folder containing Git repositories
-			gitReposFolder=$OPTARG
-			;;
-		h) # usage
-			printUsage
-			exit 0
-			;;
-		m) # main repo
-			mainRepo=$OPTARG
-			;;
-		p) # product home
-			echo "-p is obsolete.  Use -g instead."
-			;;
-		u) # GitHub (or other) root URL
-			remoteRootUrl=$OPTARG
-			;;
-		v) # version
-			echo ""
-			echo "git-clone-all version ${version}"
-			echo ""
-			echo "Git Utilities"
-			echo "Copyright 2017-2018 Open Water Foundation."
-			echo ""
-			echo "License GPLv3+:  GNU GPL version 3 or later"
-			echo ""
-			echo "There is ABSOLUTELY NO WARRANTY; for details see the"
-			echo "'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file."
-			echo "This is free software: you are free to change and redistribute it"
-			echo "under the conditions of the GPLv3 license in the LICENSE file."
-			echo ""
-			exit 0
-			;;
-		\?)
-			echo "Invalid option:  -$OPTARG" >&2
-			exit 1
-			;;
-		:)
-			echo "Option -$OPTARG requires an argument" >&2
-			exit 1
-			;;
-	esac
-done
+# Parse the command line
+parseCommandLine "$@"
 
 if [ -z "${gitReposFolder}" ]; then
 	echo ""
 	echo "The Git repositories folder has not been specified with -g.  Exiting."
-	echo ""
+	printUsage
 	exit 1
 fi
 if [ -z "${remoteRootUrl}" ]; then
 	echo ""
 	echo "The remote root URL has not been specified with -u.  Exiting."
-	echo ""
+	printUsage
 	exit 1
 fi
 

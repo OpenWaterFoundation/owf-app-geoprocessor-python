@@ -2,7 +2,7 @@
 (set -o igncr) 2>/dev/null && set -o igncr; # this comment is required
 # The above line ensures that the script can be run on Cygwin/Linux even with Windows CRNL
 
-#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------NoticeStart-
 # Git Utilities
 # Copyright 2017-2018 Open Water Foundation.
 # 
@@ -12,7 +12,7 @@
 # "Disclaimer of Warranty" section of the GPLv3 license in the LICENSE file.
 # This is free software: you are free to change and redistribute it
 # under the conditions of the GPLv3 license in the LICENSE file.
-#-----------------------------------------------------------------------------
+#-----------------------------------------------------------------NoticeEnd---
 #
 # git-check.sh
 #
@@ -25,7 +25,7 @@
 # - warn if any repositories use Cygwin because mixing with Git for Windows can cause confusion in tools
 #
 
-version="1.5.0 2018-11-16"
+version="1.6.0 2018-12-26"
 
 # List functions in alphabetical order
 
@@ -199,7 +199,50 @@ checkRepoStatus()
 	# End code from above StackOverflow article
 }
 
+# Parse the command parameters
+parseCommandLine() {
+	local OPTIND opt g h m p v
+	optstring=":g:hm:p:v"
+	while getopts $optstring opt; do
+		#echo "Command line option is ${opt}"
+		case $opt in
+			g) # -g  Specify folder containing Git repositories
+				gitReposFolder=$OPTARG
+				;;
+			h) # -h  Print the program usage
+				printUsage
+				exit 0
+				;;
+			m) # -m mainRepoName  Specify the main repository name, assumed that repository name will match folder for repository
+				mainRepo=$OPTARG
+				;;
+			p) # -p productHome   Specify the product home, relative to $HOME, being phased out
+				echo "" 
+				echo "-p is obsolete.  Use -g instead." 
+				exit 1
+				;;
+			v) # -v  Print the program version
+				printVersion
+				exit 0
+				;;
+			\?)
+				echo "" 
+				echo "Invalid option:  -$OPTARG" >&2
+				printUsage
+				exit 1
+				;;
+			:)
+				echo "" 
+				echo "Option -$OPTARG requires an argument" >&2
+				printUsage
+				exit 1
+				;;
+		esac
+	done
+}
+
 # Print the script usage
+# - calling code must exist with appropriate code
 printUsage() {
 	echo ""
 	echo "Usage:  git-check.sh -m product-main-repo -g gitReposFolder"
@@ -207,10 +250,28 @@ printUsage() {
 	echo "Example:"
 	echo '  git-check.sh -m owf-util-git -g $HOME/owf-dev/Util-Git/git-repos'
 	echo ""
-	echo "-g specifies the folder containing 1+ Git repos for product."
-	echo "-h prints the usage"
-	echo "-m specifies the main repo name."
-	echo "-v prints the version"
+	echo "-g specify the folder containing 1+ Git repos for product."
+	echo "-h print the usage"
+	echo "-m specify the main repo name."
+	echo "-v print the version"
+	echo ""
+}
+
+# Print the script version and copyright/license notices
+# - calling code must exist with appropriate code
+printVersion() {
+	echo ""
+	echo "git-check version ${version}"
+	echo ""
+	echo "Git Utilities"
+	echo "Copyright 2017-2018 Open Water Foundation."
+	echo ""
+	echo "License GPLv3+:  GNU GPL version 3 or later"
+	echo ""
+	echo "There is ABSOLUTELY NO WARRANTY; for details see the"
+	echo "'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file."
+	echo "This is free software: you are free to change and redistribute it"
+	echo "under the conditions of the GPLv3 license in the LICENSE file."
 	echo ""
 }
 
@@ -230,51 +291,8 @@ if [ "${testEcho}" = '-e test' ]; then
 	#echo2='printf'
 fi
 
-# Parse the command parameters
-while getopts :g:hm:p:v opt; do
-	#echo "Command line option is ${opt}"
-	case $opt in
-		g) # Folder containing Git repositories
-			gitReposFolder=$OPTARG
-			;;
-		h) # Usage
-			printUsage
-			exit 0
-			;;
-		m) # Main repository name, assumed that repository name will match folder for repository
-			mainRepo=$OPTARG
-			;;
-		p) # Product home, relative to $HOME, being phased out
-			echo "" 
-			echo "-p is obsolete.  Use -g instead." 
-			exit 1
-			;;
-		v) # version
-			echo ""
-			echo "git-check version ${version}"
-			echo ""
-			echo "Git Utilities"
-			echo "Copyright 2017-2018 Open Water Foundation."
-			echo ""
-			echo "License GPLv3+:  GNU GPL version 3 or later"
-			echo ""
-			echo "There is ABSOLUTELY NO WARRANTY; for details see the"
-			echo "'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file."
-			echo "This is free software: you are free to change and redistribute it"
-			echo "under the conditions of the GPLv3 license in the LICENSE file."
-			echo ""
-			exit 0
-			;;
-		\?)
-			echo "Invalid option:  -$OPTARG" >&2
-			exit 1
-			;;
-		:)
-			echo "Option -$OPTARG requires an argument" >&2
-			exit 1
-			;;
-	esac
-done
+# Parse the command line
+parseCommandLine "$@"
 
 # Output some blank lines to make it easier to scroll back in window to see the start of output
 
@@ -300,7 +318,7 @@ checkOperatingSystem
 if [ -z "${gitReposFolder}" ]; then
 	echo ""
 	echo "The Git repositories folder is not specified with -g.  Exiting."
-	echo ""
+	printUsage
 	exit 1
 fi
 

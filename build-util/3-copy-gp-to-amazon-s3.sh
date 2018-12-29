@@ -129,8 +129,8 @@ uploadIndexHtmlFile() {
 	echo '<body>' >> $indexHtmlTmpFile
 	echo '<h1>Open Water Foundation GeoProcessor Software Downloads</h1>' >> $indexHtmlTmpFile
 	echo '<p>' >> $indexHtmlTmpFile
-	echo 'Install the GeoProcessor on Cygwin or Linux by downloading the <a href="gp-download.sh">gp-download.sh script</a> and running it in a Linux shell window.' >> $indexHtmlTmpFile
-	echo '</p>' >> $indexHtmlTmpFile
+	echo 'Install the GeoProcessor on Cygwin or Linux by downloading the <a href="download-gp.sh">download-gp.sh script</a> and running it in a Linux shell window.</p>' >> $indexHtmlTmpFile
+	echo '<p>If clicking on the link does not download the file, right-click and use "Save link as..." (or similar).</p>' >> $indexHtmlTmpFile
 	echo '</body>' >> $indexHtmlTmpFile
 	echo '</html>' >> $indexHtmlTmpFile
 	set -x

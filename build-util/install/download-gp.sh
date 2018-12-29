@@ -116,8 +116,11 @@ downloadInstaller() {
 	# Try the full download
 	echo ""
 	echo "Downloading the GeoProcessor software..."
+	if [ ! -d "/tmp/$USER" ]; then
+		mkdir /tmp/$USER
+	fi
 	tmpTargzFile=$(basename $gpVersionTargzUrl)
-	tmpTargzFilePath="/tmp/$USER-$selectedInstallerFile"
+	tmpTargzFilePath="/tmp/$USER/$selectedInstallerFile"
 	set -x
 	curl --fail -o $tmpTargzFilePath $gpVersionTargzUrl ; set errorCode=$?
 	{ set +x; } 2> /dev/null
@@ -127,7 +130,6 @@ downloadInstaller() {
 		exit 1
 	fi
 }
-
 
 # Extract the install-gp-venv.sh script to a temporary location
 # - then it can be run to move the tar.gz contents to final location

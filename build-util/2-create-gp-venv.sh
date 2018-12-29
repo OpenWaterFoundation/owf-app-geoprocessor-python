@@ -178,7 +178,67 @@ checkVenvPythonConfig () {
 	fi
 }
 
+# Copy GeoProcessor Python and other files for gptest
+# - this is run when updating the virtual environment (-u option specified for this script)
+# - files are copied from build-util/tmp* because these files are stripped of QGIS runtime references
+copyGeoProcessorPackageToVenv () {
+	# Top destination folder
+	virtualEnvFolder="gptest-${version}-${operatingSystemShort}-venv"
+	virtualenvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
+	if [ ${operatingSystem} = "cygwin" ] || [ ${operatingSystem} = "linux" ]; then
+		# Determine the specific site-packages destination folder to receive source geoprocessor folder
+		# - on Debian Linux will be something like:  venv-tmp/gptest-1.1.0-lin-venv/lib/python3.4
+		pythonLibWithVersion=`ls -1 ${virtualenvFolderPath}/lib`
+		pythonLibWithVersion=`basename ${pythonLibWithVersion}`
+		sitepackagesFolder="${virtualenvFolderPath}/lib/${pythonLibWithVersion}/site-packages"
+		if [ ! -d "${sitepackagesFolder}" ]; then
+			echo "Site packages folder ${sitepackagesFolder} does not exist.  Exiting."
+			exit 1
+		fi
+		# Source files are in the build-tmp/... folder
+		sourceGpFolder="${buildTmpFolder}/tmp-gptest-${version}/geoprocessor"
+		echo "Copying source GeoProcessor Python files to virtual environment:"
+		echo "  Source:  ${sourceGpFolder}"
+		echo "  Destination:  ${sitepackagesFolder}"
+		cp -rf ${sourceGpFolder} ${sitepackagesFolder}
+		errorCode=$?
+		if [ "$errorCode" -ne 0 ]; then
+			echo ""
+			echo "Error copying GeoProcessor folder ${sourceGpFolder}"
+		fi
+	else
+		echo "[Error] operating system ${operatingSystem} is not supported for GeoProcessor copy."
+		exit 1
+	fi
+}
+
+# Copy original GeoProcessor source scripts into temporary virtual environment for gptest
+# - OK to copy original because scripts work as is whether QGIS or not
+# - this is run when the -u option is used with this script
+copyGeoProcessorScriptsToVenv () {
+	echo "Copying GeoProcessor scripts to virtual environment..."
+	# Destination folder
+	virtualEnvFolder="gptest-${version}-${operatingSystemShort}-venv"
+	virtualenvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
+	virtualEnvScriptsFolder="$virtualenvFolderPath/scripts"
+	echo "  Source:  ${repoFolder}/scripts"
+	echo "  Destination:  ${virtualEnvScriptsFolder}"
+	if [ ${operatingSystem} = "cygwin" ] || [ ${operatingSystem} = "linux" ]; then
+		if [ ! -d "${virtualEnvScriptsFolder}" ]; then
+			echo "Scripts folder ${virtualEnvScriptsFolder} does not exist.  Exiting."
+			exit 1
+		fi
+		cp ${repoFolder}/scripts/gptest ${virtualEnvScriptsFolder}
+		cp ${repoFolder}/scripts/gptestui ${virtualEnvScriptsFolder}
+		cp ${buildUtilFolder}/install/install-gp-venv.sh ${virtualEnvScriptsFolder}
+	else
+		echo "[Error] operating system ${operatingSystem} is not supported for GeoProcessor copy."
+		exit 1
+	fi
+}
+
 # Create the Cygwin and Linux virtual environment for gptest
+# - if updateBuildTmp="true", only copy *.py files to the existing venv
 createGptestVirtualenvCygwinAndLinux() {
 	echo "Creating virtualenv for gptest for Cygwin"
 	# Check to make sure that the proper packages are installed in Cygwin
@@ -459,7 +519,58 @@ createGptestVirtualenvCygwinAndLinux() {
 	tar -czvf ${gptestTargzFile} ${virtualenvFolderBasename}
 }
 
+# Parse the command parameters
+parseCommandLine() {
+	local OPTIND opt h u
+	optstring=":hu"
+	while getopts $optstring opt; do
+		#echo "Command line option is ${opt}"
+		case $opt in
+			h) # -h  Print the usage
+				printUsage
+				exit 0
+				;;
+			u) # -u  Update the build-tmp folder with *.py files
+				updateBuildTmp="true"
+				;;
+			\?)
+				echo ""
+				echo "Invalid option:  -$OPTARG" >&2
+				printUsage
+				exit 1
+				;;
+			:)
+				echo ""
+				echo "Option -$OPTARG requires an argument" >&2
+				printUsage
+				exit 1
+				;;
+		esac
+	done
+}
+
+# Print the script usage
+printUsage() {
+	echo ""
+	echo "Usage:  2-create-gp-venv.sh [options]"
+	echo ""
+	echo "Create/update a Python virtual environment."
+	echo ""
+	echo "Example to do full virtual environment creation:"
+	echo '  2-create-gp-env.sh'
+	echo ""
+	echo "Example to update virtual environment with GeoProcessor *.py and scripts:"
+	echo '  2-create-gp-env.sh -u'
+	echo ""
+	echo "-u copy the GeoProcessor *.py and scripts to existing virtual environment"
+	echo "-h print the usage"
+	echo ""
+}
+
 # Entry point into script
+
+# Default variable values
+updateBuildTmp="false"  # Default is to do full venv creation
 
 # Determine which echo to use, needs to support -e to output colored text
 # - normally built-in shell echo is OK, but on Debian Linux dash shell is used, and it does not support -e
@@ -467,8 +578,8 @@ echo2='echo -e'
 testEcho=`echo -e test`
 if [ "${testEcho}" = '-e test' ]; then
 	# The -e option did not work as intended.
-	-using the normal /bin/echo should work
-	-printf is also an option
+	# -using the normal /bin/echo should work
+	# -printf is also an option
 	echo2='/bin/echo -e'
 	# The following does not seem to work
 	# echo2='printf'
@@ -493,6 +604,17 @@ scriptFolder=`cd $(dirname "$0") && pwd`
 
 # Check the operating system
 checkOperatingSystem
+
+# Parse the command line
+parseCommandLine "$@"
+
+if [ "$updateBuildTmp" = true ]; then
+	echo ""
+	echo "Updating GeoProcessor virtual environment by copying files (-u command option detected)..."
+else
+	echo ""
+	echo "Creating GeoProcessor virtual environment (no -u command option detected)..."
+fi
 
 # Define top-level folders - everything is relative to this below to avoid confusion
 buildUtilFolder=${scriptFolder}
@@ -537,12 +659,23 @@ fi
 checkPythonConfig
 
 # Create the virtual environment for Cygwin
-if [ ${operatingSystem} = "cygwin" ]; then
-	echo "Detected Cygwin...creating gptest virtual environment for Cygwin"
-	createGptestVirtualenvCygwinAndLinux
-elif [ ${operatingSystem} = "linux" ]; then
-	echo "Detected Linux...creating gptest virtual environment for Linux"
-	createGptestVirtualenvCygwinAndLinux
+if [ ${operatingSystem} = "cygwin" -o ${operatingSystem} = "linux" ]; then
+	echo "Detected operating system $operatingSystem"
+	if [ "$updateBuildTmp" = "true" ]; then
+		# This copies original source into the virtual environment
+		echo "Copying GeoProcessor Python source package files and scripts to venv"
+		copyGeoProcessorPackageToVenv
+		copyGeoProcessorScriptsToVenv
+	else
+		# This uses files in the build-tmp copy of the GeoProcessor (tar.gz)
+		# TODO smalers 2018-12-28 Need to also build venv for full gp distribution
+		# - add another command line option
+		echo "Creating gptest virtual environment for $operatingSystem"
+		createGptestVirtualenvCygwinAndLinux
+	fi
+else
+	echo "Unsupported operating system ${operatingSystem}.  Exiting."
+	exit 1
 fi
 
 errorOccurred="no"

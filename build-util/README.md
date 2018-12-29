@@ -32,6 +32,8 @@ The following scripts can be run in sequence to create installers and upload to 
 * `2-create-gp-venv.sh` - Linux/Cygwin script to create a Python virtual environment from previous step's files
 	+ the virtual environment will be packaged as a `tar.gz` file specific for `gp` or `gptest`,
 	operating system, and GeoProcessor version
+* `2-update-gp-venv.sh` - Linux/Cygwin script to update the Python virtual environment from `1-create-gp-tar.sh`,
+used to copy source files into venv and also strip QGIS for gptest version
 * `3-copy-gp-to-amazon-s3.sh` - Linux/Cygwin script to copy the virtual environment installer to OWF's Amazon S3 bucket
 for publishing on the [GeoProcessor downloads](http://software.openwaterfoundation.org/geoprocessor/) web page
 

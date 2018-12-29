@@ -1,0 +1,35 @@
+#!/bin/sh
+(set -o igncr) 2>/dev/null && set -o igncr; # this comment is required
+# The above line ensures that the script can be run on Cygwin/Linux even with Windows CRNL
+#
+# gptestui
+#_________________________________________________________________NoticeStart_
+# GeoProcessor
+# Copyright (C) 2017-2019 Open Water Foundation
+# 
+# GeoProcessor is free software:  you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     GeoProcessor is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
+#_________________________________________________________________NoticeEnd___
+#
+# Simple script to run the Open Water Foundation GeoProcessor application
+# user interface in development environment.
+# - if it does not work, make sure that gpdev works
+
+# Get the location where this script is located since it may have been run from any folder
+scriptFolder=`cd $(dirname "$0") && pwd`
+
+# Run the main script with full path since it may not be in the PATH
+${scriptFolder}/gpdev --ui $@
+
+# Exit with the status of the called script
+exit $?

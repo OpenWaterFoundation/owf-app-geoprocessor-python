@@ -1,0 +1,303 @@
+#!/bin/sh
+(set -o igncr) 2>/dev/null && set -o igncr; # this comment is required
+# The above line ensures that the script can be run on Cygwin/Linux even with Windows CRNL
+#
+# gp - run the geoprocessor, defaulting to command mode
+#
+#_________________________________________________________________NoticeStart_
+# GeoProcessor
+# Copyright (C) 2017-2019 Open Water Foundation
+# 
+# GeoProcessor is free software:  you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     GeoProcessor is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
+#_________________________________________________________________NoticeEnd___
+#
+# See also gpui to run the UI.
+
+# Script to run the Open Water Foundation GeoProcessor application for QGIS
+# - THIS DOES NOT CURRENTLY WORK ON LINUX BUT IS A PLACEHOLDER FOR WHEN
+#   THERE IS TIME TO RUN ON A LINUX SYSTEM WHERE QGIS IS INSTALLED
+# - This script is for Python3/QGIS3 (QGIS LTR is not used)
+# - This script should work on Linux and Cygwin running on Windows 7/10 computer
+# - The geoprocessor package must be installed in a normal location, such as
+#   QGIS Python site-packages folder.
+# - This script should be installed in the QGIS bin folder or other location
+#   that is in the PATH or otherwise can be executed.
+# - The logic of this script closely matches the gp.bat batch file.
+
+# Supporting functions
+
+# Determine the operating system that is running the script
+# - set operatingSystem to "linux", "cygwin", or "mingw" (Git Bash)
+checkOperatingSystem()
+{
+	if [ ! -z "${operatingSystem}" ]; then
+		# Have already checked operating system so return
+		return
+	fi
+	operatingSystem="unknown"
+	os=`uname | tr [a-z] [A-Z]`
+	case "${os}" in
+		CYGWIN*)
+			# Cygwin
+			operatingSystem="cygwin"
+			;;
+		LINUX*)
+			# Linux variants
+			operatingSystem="linux"
+			;;
+		MINGW*)
+			# Git Bash
+			operatingSystem="mingw"
+			;;
+	esac
+	echo "operatingSystem=${operatingSystem}"
+}
+
+# Set the DISPLAY variable needed for X windows
+checkXWindowsDisplay() {
+	if [ -z "$DISPLAY" ]; then
+		# DISPLAY environment variable is not set so set it
+		# - assume running X server and program on one computer
+		echo "Setting DISPLAY=:0.0 to work with X Windows server"
+		export DISPLAY=:0.0
+	fi
+}
+
+# Check to make sure the X Windows Server is running
+# - currently only check on Cygwin since if running on Linux X Windows is usually running
+# - if the check is not performed and X Windows server is not running, will probably see:
+#   "Could not connect to any X display"
+checkXWindowsServer() {
+	if [ ${operatingSystem} = "cygwin" ]; then
+		# Check for XWin process
+		xwinProcess=$(ps | grep -i XWin)
+		if [ -z "${xwinProcess}" ]; then
+			echo ""
+			echo "It appears that the X Windows server is not running on Cygwin."
+			xserverPath="/cygdrive/C/ProgramData/Microsoft/Windows/Start Menu/Programs/Cygwin-X/XWin Server.lnk"
+			if [ -f "${xserverPath}" ]; then
+				# Windows shortcut exists in the normal location.
+				# Run it to start the X Windows server
+				echo "Starting X Windows server by running:"
+				echo "  cygstart ${xserverPath}"
+				# See the following about running a Windows shortcut from Cygwin:
+				# https://superuser.com/questions/790128/cygwin-to-execute-windows-shortcut-files-lnk
+				cygstart "${xserverPath}"
+				# Have to wait a bit for the X Windows server to start
+				# - Loop for 10 seconds and if that is not enough continue and see what happens
+				startSeconds=$(date +%s)
+				while [ "1" = "1" ]; do
+					# Sleep 1 second to give X Windows server time to start
+					sleep 1
+					# See if the X Windows server process is found
+					xwinProcess=$(ps | grep -i XWin)
+					if [ ! -z "${xwinProcess}" ]; then
+						# X Windows server process is found
+						break
+					else
+						# See if 10 seconds has passed and if so break, assuming process won't start
+						nowSeconds=$(date +%s)
+						timediff=$(expr $nowSeconds - $startSeconds)
+						if [ "${timediff}" -gt "10" ]; then
+							break
+						fi
+					fi
+				done
+				echo "If still get errors, try starting manually with Start / Cygwin-X / XWin Server"
+			else
+				echo "Cannot determine how to automatically start the X Windows Server"
+				echo "If get an error running GeoProcessor, try starting X Windows server manually with Start / Cygwin-X / XWin Server"
+			fi
+		fi
+	fi
+}
+
+# Set the Python environment to find the correct QGIS run-time libraries for Cygwin
+# - The GEOPROCESSOR_ENV_SETUP environment variable is set to YES
+#   to indicate that setup has been done.
+# - This causes setup to occur only once if rerunning this batch file.
+# - Actually, this just sets local environment variables for some since
+#   unlike windows the shell can more easily be initialized each time the script runs
+configCygwinAndLinuxEnv () {
+	if [ "${GEOPROCESSOR_ENV_SETUP}" == "YES" ]; then
+		# Environment is already configured
+		return
+	fi
+	# If here do the setup one time first time batch file is run in a command shell
+	# Start defining QGIS GeoProcessor environment...
+
+	# Where QGIS is installed
+	
+	if [ "${operatingSystem}" = "cygwin" ]; then
+		QGIS_INSTALL_HOME=/cygdrive/C/OSGeo4W64
+	elif [ "${operatingSystem}" = "linux" ]; then
+		# TODO add later
+		echo "linux is not yet supported for Linux
+	elif [ "${operatingSystem}" = "mingw" ]; then
+		QGIS_INSTALL_HOME=/C/OSGeo4W64
+	fi
+
+	if [ ! -d "$QGIS_INSTALL_HOME" ]; then
+		# Print error message and exit
+		noQgis
+	fi
+
+	# Set the QGIS environment by calling the setup batch files that are distributed with QGIS
+	# - the following will reset the PATH and then add QGIS folders to path
+	# - therefore other programs that were found before may not be found
+	# - this effectively isolates QGIS from the system
+	# - OK to call from Cygwin or Git Bash since they somehow use the Windows PATH?
+	#export OSGEO4W_ROOT="$QGIS_INSTALL_HOME"
+	# Apparently need to use the old-style short DOS filenames
+	export OSGEO4W_ROOT="/cygdrive/c/OSGEO4~1"
+	echo "Setting up QGIS by running: $OSGEO4W_ROOT/bin/o4w_env.bat"
+	# Running a bat file does not expose the variables in this shell so set the variables here
+	# - OSGEO4W_ROOT is set above
+	# - Changes to path may not be needed so don't do yet.
+	# - Also calls $OSGEO4W_ROOT/etc/ini/*.bat to set variables for libraries/plugins? - may need to set
+	#$OSGEO4W_ROOT/bin/o4w_env.bat
+	echo "... done setting up QGIS by running: $OSGEO4W_ROOT/bin/o4w_env.bat"
+
+	# The following sets a number of QT environment variables (QT is used in the UI)
+	echo "Setting up QT5 by running: $OSGEO4W_ROOT/bin/qt5_env.bat"
+	# Similar to the above, environment variables do not propagate up so set here
+	#$OSGEO4W_ROOT/bin/qt5_env.bat
+	export PATH="$OSGEO4W_ROOT/apps/qt5/bin:$PATH"
+	export QT_PLUGIN_PATH=$OSGEO4W_ROOT/apps/Qt5/plugins
+
+	export O4W_QT_PREFIX=$OSGEO4W_ROOT/apps/Qt5
+	export O4W_QT_BINARIES=$OSGEO4W_ROOT/apps/Qt5/bin
+	export O4W_QT_PLUGINS=$OSGEO4W_ROOT/apps/Qt5/plugins
+	export O4W_QT_LIBRARIES=$OSGEO4W_ROOT/apps/Qt5/lib
+	export O4W_QT_TRANSLATIONS=$OSGEO4W_ROOT/apps/Qt5/translations
+	export O4W_QT_HEADERS=$OSGEO4W_ROOT/apps/Qt5/include
+	echo "...done setting up QT5 by running: $OSGEO4W_ROOT/bin/qt5_env.bat"
+	# The following sets:
+	# - PYTHONHOME to Python shipped with QGIS
+	# - Clears PYTHONPATH
+	# - PATH to include Python shipped with QGIS and Python scripts folder
+	echo "Setting up QT5 by running: $OSGEO4W_ROOT/bin/py3_env.bat"
+	# Similar to the above, environment variables do not propagate up so set here
+	#$OSGEO4W_ROOT/bin/py3_env.bat
+	export PYTHONPATH=""
+	export PYTHONHOME="$OSGEO4W_ROOT/apps/Python36"
+	export PATH="$OSGEO4W_ROOT/apps/Python36:$OSGEO4W_ROOT/apps/Python36/Scripts:$PATH"
+	echo "...done setting up QT5 by running: $OSGEO4W_ROOT/bin/py3_env.bat"
+
+	# Name of QGIS version to run (**for running GeoProcessor don't run QGIS but need to use correct QGIS components**).
+	# Run the latest release of the OSGeo4W QGIS by setting value to `qgis`.
+	# Running the long-term release of the OSGeo4W QGIS by setting value to `qgis-ltr` is not supported.
+	QGISNAME=qgis
+	echo "QGISNAME is $QGISNAME"
+
+	# Add QGIS to the PATH environment variable so that all QGIS, GDAL, OGR, etc. programs are found.
+	echo OSGEO4W_ROOT=$OSGEO4W_ROOT
+	export PATH="$OSGEO4W_ROOT/bin:$PATH"
+	export PATH="$PATH:$OSGEO4W_ROOT/apps/$QGISNAME/bin"
+
+	QGIS_PREFIX_PATH="$OSGEO4W_ROOT/apps/$QGISNAME"
+	export GDAL_FILENAME_IS_UTF8=YES
+	# --
+	# Set VSI cache to be used as buffer, see https://issues.qgis.org/issues/6448
+	export VSI_CACHE=TRUE
+	export VSI_CACHE_SIZE=1000000
+	# --
+
+	export QT_PLUGIN_PATH="$OSGEO4W_ROOT/apps/$QGISNAME/qtplugins:$OSGEO4W_ROOT/apps/qt5/plugins"
+
+	# Add pyQGIS libraries to the PYTHONPATH so that they are found by Python
+	export PYTHONPATH=$OSGEO4W_ROOT/apps/$QGISNAME/python:$PYTHONPATH
+	# See https://anitagraser.com/2018/01/28/porting-processing-scripts-to-qgis3/
+	export PYTHONPATH=$OSGEO4W_ROOT/apps/$QGISNAME/python/plugins:$PYTHONPATH
+	export PYTHONPATH=$OSGEO4W_ROOT/apps/Python36/lib/site-packages:$PYTHONPATH
+
+	# Indicate that the setup has been completed
+	# - this will ensure that the script when run again does not repeat setup
+	#   and keep appending to environment variables
+	export GEOPROCESSOR_ENV_SETUP=YES
+	echo "...done defining QGIS GeoProcessor environment for Cygwin"
+}
+
+# Print a message and exit if QGIS was not found
+noQgis () {
+	# QGIS install folder was not found
+	echo "QGIS standard installation folder was not found:  ${QGIS_INSTALL_HOME}"
+	exit 1
+}
+
+# Parse command line
+# - only handle some specific checks for local logic and let the called script handle command line
+parseCommandLineLong() {
+	for arg in $@ :; do
+		if [ "$arg" = "--ui" ]; then
+			# Make sure that X Window environment is set up before calling Python UI program
+			# Determine the operating system
+			checkOperatingSystem
+			# Check the X Windows DISPLAY environment variable
+			checkXWindowsDisplay
+			# Check X Server
+			checkXWindowsServer
+		fi
+	done
+}
+
+# Run Python for the GeoProcessor module
+runProcessor() {
+	# Echo environment variables for troubleshooting
+	echo ""
+	echo "Using Python3/QGIS3 for GeoProcessor"
+	echo "OSGEO4W_ROOT=$OSGEO4W_ROOT"
+	echo "PATH=$PATH"
+	echo "PYTHONHOME=$PYTHONHOME"
+	echo "PYTHONPATH=$PYTHONPATH"
+	echo "QGIS_PREFIX_PATH=$QGIS_PREFIX_PATH"
+	echo "QT_PLUGIN_PATH=$QT_PLUGIN_PATH"
+	echo ""
+
+	# Run QGIS Python with the geoprocessor module found using PYTHONPATH set above.
+	# - Must use Python 3.6 compatible with QGIS
+	# - Pass command line arguments that were passed to this bat file.
+	# "%PYTHONHOME%\python" %*
+	# Use -v to see verbose list of modules that are loaded.
+	echo "Running: $PYTHONHOME/python -m geoprocessor.app.gp $@"
+	$PYTHONHOME/python -m geoprocessor.app.gp $@
+
+	# Run the following to use the environment but be able to do imports, etc. to find modules
+	# "$PYTHONHOME\python -v
+
+	# Exit with the error level of the Python command
+	exit $?
+}
+
+# Main entry point into the script
+
+# Parse the command parameters
+parseCommandLineLong "$@"
+
+# Check the operating system
+checkOperatingSystem
+# Configure the environment (if not already configured)
+if [ "${operatingSystem}" = "cygwin" ]; then
+	configCygwinAndLinuxEnv
+elif [ "${operatingSystem}" = "linux" ]; then
+	configCygwinAndLinuxEnv
+elif [ "${os}" = "mingw" ]; then
+	echo "Operating system ${os} is not supported."
+else
+	echo "Unknown operating system ${os}"
+	exit 1
+fi
+
+# Run the processor, will exit with status
+runProcessor

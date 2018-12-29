@@ -19,7 +19,8 @@ The "test" version has the QGIS references stripped out so that the test framewo
 	starts the user interface
 	+ `gpdev` - shell script file to run the GeoProcessor application in the development environment,
 	starts the command interpreter
-	(**currently not a focus because development focuses on Windows via `gpdev.bat`**)
+	+ `gpuidev` - shell script file to run the GeoProcessor application in the development environment,
+	starts the user interface
 	+ `gptest` - shell script to run the GeoProcessor application as a test framework in deployed environment,
 	starts the command interpreter (QGIS code is stubbed out)
 	+ `gptestui` - shell script to run the GeoProcessor application as a test framework in deployed environment,

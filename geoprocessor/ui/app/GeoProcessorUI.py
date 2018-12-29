@@ -26,6 +26,7 @@ import geoprocessor.util.io_util as io_util
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.os_util as os_util
 import geoprocessor.ui.app.CommandListWidget as command_list_view
 import geoprocessor.ui.util.CommandListBackup as command_list_backup
 import geoprocessor.ui.util.qt_util as qt_util
@@ -43,6 +44,7 @@ import math
 import os
 import qgis.utils
 import qgis.gui
+import subprocess
 import sys
 import webbrowser
 import datetime
@@ -716,11 +718,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Edit.setTitle("Edit")
         # Edit / Format menu
         self.Menu_Edit_Format = QtWidgets.QAction(main_window)
-        self.Menu_Edit_Format.setObjectName(_fromUtf8("Menu_Tools_ViewLog"))
+        self.Menu_Edit_Format.setObjectName(_fromUtf8("Menu_Tools_ViewStartupLog"))
         self.Menu_Edit_Format.setText("Format")
         self.Menu_Edit.addAction(self.Menu_Edit_Format)
         # TODO add action to button
-        #self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_view_log_file)
+        #self.Menu_Tools_ViewStartupLog.triggered.connect(self.ui_action_view_startup_log_file)
         # Add Help menu to menubar
         self.menubar.addAction(self.Menu_Edit.menuAction())
 
@@ -1414,13 +1416,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Tools = QtWidgets.QMenu(self.menubar)
         self.Menu_Tools.setObjectName(_fromUtf8("Menu_Tools"))
         self.Menu_Tools.setTitle("Tools")
-        # Tools / View Log File menu
-        self.Menu_Tools_ViewLog = QtWidgets.QAction(main_window)
-        self.Menu_Tools_ViewLog.setObjectName(_fromUtf8("Menu_Tools_ViewLog"))
-        self.Menu_Tools_ViewLog.setText("View Log File")
-        self.Menu_Tools.addAction(self.Menu_Tools_ViewLog)
+        # Tools / View Startup Log File menu
+        self.Menu_Tools_ViewStartupLog = QtWidgets.QAction(main_window)
+        self.Menu_Tools_ViewStartupLog.setObjectName(_fromUtf8("Menu_Tools_ViewStartupLog"))
+        self.Menu_Tools_ViewStartupLog.setText("View Startup Log File")
+        self.Menu_Tools.addAction(self.Menu_Tools_ViewStartupLog)
         # TODO add action to button
-        self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_view_log_file)
+        self.Menu_Tools_ViewStartupLog.triggered.connect(self.ui_action_view_startup_log_file)
         # Add Help menu to menubar
         self.menubar.addAction(self.Menu_Tools.menuAction())
 
@@ -2822,14 +2824,28 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
 
-    def ui_action_view_log_file(self):
+    def ui_action_view_startup_log_file(self):
         """
         Opens the log file in the default text editor for operating system
         """
         logger = logging.getLogger(__name__)
         try:
             # TODO smalers 2018-11-21 the following works on Windows - need to support other operating systems
-            os.startfile(self.app_session.get_log_file())
+            if os_util.is_windows_os():
+                os.startfile(self.app_session.get_log_file())
+            elif os_util.is_linux_os():
+                try:
+                    subprocess.call(('xdg-open',self.app_session.get_log_file()))
+                except (AttributeError, NotImplementedError) as e2:
+                    # Log the message to help with development
+                    logger.error(message, e, exc_info=True)
+                    # Try to use nano as a default visual editor
+                    # - TODO smalers 2018-12-28 need to figure out what is installed rather than hard-code nano
+                    try:
+                        subprocess.call(('nano',self.app_session.get_log_file()))
+                    except (AttributeError, NotImplementedError) as e2:
+                        message='Error viewing log file - no application available for log file and also tried nano editor"' + self.app_session.get_log_file() + '"'
+                        qt_util.warning_message_box(message)
         except (AttributeError, NotImplementedError) as e:
             message='Error viewing log file - no application available for log file "' + self.app_session.get_log_file() + '"'
             logger.error(message, e, exc_info=True)
@@ -2940,11 +2956,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # If there is at least one command in the Command_List widget, enable the "Run All Commands" button and the
         # "Clear Commands" button. If not, disable the "Run All Commands" button and the "Clear Commands" button.
         if total_commands > 0:
-            self.commands_RunAllCommands_PushButton.setEnabled(True)
-            self.commands_ClearCommands_PushButton.setEnabled(True)
+            self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
+            self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(True)
         else:
-            self.commands_RunAllCommands_PushButton.setEnabled(False)
-            self.commands_ClearCommands_PushButton.setEnabled(False)
+            self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(False)
+            self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(False)
 
         # Count the number of selected items (each item is a command string) in the Command_List widget.
         selected_commands = len(self.command_ListWidget.commands_List.selectedItems())
@@ -2952,9 +2968,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # If there is at least one selected command in the Command_List widget, enable the "Run Selected Commands"
         # button. If not, disable the "Run Selected Commands" button.
         if selected_commands > 0:
-            self.commands_RunSelectedCommands_PushButton.setEnabled(True)
+            self.command_ListWidget.commands_RunSelectedCommands_PushButton.setEnabled(True)
         else:
-            self.commands_RunSelectedCommands_PushButton.setEnabled(False)
+            self.command_ListWidget.commands_RunSelectedCommands_PushButton.setEnabled(False)
 
         # Update the Command_List widget label to display the total and selected number of commands.
         # TODO smalers 2018-07-29 need to calculate the following values

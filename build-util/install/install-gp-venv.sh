@@ -8,7 +8,7 @@
 # For Cygwin, the software can be installed in a development environment rather
 # than cloning the repository and building a virtual environment
 
-version="1.0.0 2018-12-05"
+version="1.1.0 2018-12-28"
 
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
@@ -48,10 +48,18 @@ installFiles() {
 				tar -xzvf "${installerTargzFileAbs}"
 				didInstall="yes"
 				# Rename the top-level folder to the requested folder
+				echo "Currently in folder:  $installParentFolder"
 				echo "Renaming tar.gz top folder from ${gpTargzTopFolder} to ${installFolderAbs}"
 				installFolderAbsBasename=`basename ${installFolderAbs}`
 				if [ -d "${gpTargzTopFolder}" ]; then
 					mv ${gpTargzTopFolder} ${installFolderAbsBasename}
+					#
+					# Print final instructions to the user
+					echo ""
+					echo "Run the GeoProcessor using scripts in folder:"
+					echo "  $installFolderAbs/scripts"
+					echo ""
+					ls $installFolderAbs/scripts
 					break
 				else
 					# Error in the script logic, should not happen
@@ -141,7 +149,7 @@ printVersion() {
 	echo ""
 }
 
-# Prompt for the filename of the distribution file, for example:  gptest-1.0.0-cyg-venv
+# Prompt for the filename of the distribution file, for example:  gptest-1.0.0-cyg-venv.tar.gz
 promptForInstallerFile() {
 	while [ "1" = "1" ]; do
 		# List files that are candidates for installing
@@ -180,8 +188,9 @@ promptForInstallerFile() {
 			# Quit the script
 			exit 0
 		else
-			if [ ! -f "${insallerTargzFile}" ]; then
+			if [ ! -f "${installerTargzFile}" ]; then
 				echo "File does not exist:  ${installerTargzFile}"
+				# Loop and prompt again
 			else
 				# Get the absolute path of the install file
 				setInstallerTargzFileAbs
@@ -191,20 +200,16 @@ promptForInstallerFile() {
 				break
 			fi
 		fi
-		# Determine whether installing gp (installingWhat="gp") or gptest (installingWhat="gptest")
-		checkGptest=$(echo "$installerTargzFileAbs" | grep 'gptest' | wc -l)
-		installingWhat="gp"
-		if [ "$checkGptest" -ne 0 ]; then
-			installingWhat="gptest"
-		fi
-		echo ""
-		echo "Installing $installingWhat"
 	done
 }
 
 # Prompt for the folder to install, for example "gptest" under a product development folder.
 promptForInstallFolder() {
 	didInstall="no"
+	exampleVersion="1.0.0"
+	if [ ! -z "$installingWhatVersion" ]; then
+		exampleVersion="$installingWhatVersion"
+	fi
 	while [ "1" = "1" ]; do
 		if [ "$didInstall" = "yes" ]; then
 			# Install was completed so exit the loop
@@ -217,13 +222,15 @@ promptForInstallFolder() {
 		if [ "$installingGp" = "yes" ]; then
 			# Installing gp
 			echo ""
-			echo "Installation folder is typically gp-venv or gp-1.0.0-venv (specific to version)."
+			echo "The installation folder is typically gp-venv or gp-${exampleVersion}-venv."
+			echo "For example /home/$USER/gp-venv or /home/$USER/gp-${exampleVersion}-venv."
 		else
 			# Installing gptest
-			echo "Installation folder is typically gptest-venv or gptest-1.0.0-venv (specific to version)."
+			echo "The installation folder is typically gptest-venv or gptest-${exampleVersion}-venv."
+			echo "For example /home/$USER/gptest-venv or /home/$USER/gptest-${exampleVersion}-venv."
 		fi
 		echo "Specify the folder to install into, will create if does not exist."
-		read -p "Specify relative to current folder or provide an absolute path (q to quit): " installFolder
+		read -p "Specify relative to the current folder or provide an absolute path (q to quit): " installFolder
 		if [ "${installFolder}" = "q" ]; then
 			# Quit the script
 			exit 0
@@ -378,7 +385,7 @@ fi
 # Parse the command line.
 parseCommandLine "$@"
 
-# Prompt for the installer file
+# Prompt for the installer file (or use what was passed on the command line)
 if [ "$batchMode" = "yes" ]; then
 	# Running in batch mode, make sure that -i has been specified
 	if [ -z "${installerTargzFile}" ]; then
@@ -392,6 +399,22 @@ else
 		promptForInstallerFile
 	fi
 fi
+
+# Determine what product is being installed and what version, for use in messages
+# Determine whether installing gp (installingWhat="gp") or gptest (installingWhat="gptest")
+# - count the number of lines that the tar.gz file includes "gptest" should be 1 or 0
+checkGptest=$(echo "$installerTargzFileAbs" | grep 'gptest' | wc -l)
+installingWhat="gp"
+# Determine the version so it can be used in suggestions
+# - the tar file name is similar to gp-1.0.0-cyg-venv.tar.gz
+#   and gptest-1.0.0-cyg-venv.tar.gz
+# - use basename to make sure it is a file and not a path
+installingWhatVersion=$(basename "$installerTargzFile" | cut -d '-' -f 2 )
+if [ "$checkGptest" -ne 0 ]; then
+	installingWhat="gptest"
+fi
+echo ""
+echo "Installing $installingWhat version $installingWhatVersion"
 
 # Prompt for the install (output) folder
 if [ "$batchMode" = "yes" ]; then

@@ -83,9 +83,28 @@ checkPythonVirtualEnv() {
 		echo "Appear to be running in venv"
 		if [ "$VIRTUAL_ENV" = "" ]; then
 			echo "VIRTUAL_ENV is not set.  Activating the venv."
-			source "$binFolder/activate"
+			# Use "." below rather than "source" because "source" is not always available
+			. "$binFolder/activate"
 		else
 			echo "VIRTUAL_ENV is set.  Assuming the venv is already activated."
+		fi
+		# After activation, also check that the value of VIRTUAL_ENV is the same
+		# as the parent of the scripts folder.
+		# - if not, the user may have renamed the installation folder and the venv will not work
+		# - have to get the value of VIRTUAL_ENV from the script code rather than from environment
+		#   because "activate" will not complete
+		venvFolder=$(dirname $scriptFolder)
+		activateFile="$venvFolder/bin/activate"
+		VIRTUAL_ENV_value=$(cat $activateFile | grep 'VIRTUAL_ENV=' | cut -d '=' -f 2 | tr -d '"')
+		if [ "$VIRTUAL_ENV_value" != "$venvFolder" ]; then
+			echo ""
+			echo "VIRTUAL_ENV value ($VIRTUAL_ENV_value) in activate script"
+			echo "is not the same as scripts parent folder ($venvFolder)".
+			echo "The virtual environment folder may have been moved after installing."
+			echo "The GeoProcessor virtual environment won't work."
+			echo "Reinstall and don't move the installed folder."
+			echo "Exiting."
+			exit 1
 		fi
 	else
 		echo "Appear to be running outside of venv.  Not activating the venv."

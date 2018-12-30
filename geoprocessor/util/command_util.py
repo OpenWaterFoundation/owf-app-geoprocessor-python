@@ -1,5 +1,5 @@
 # command_util - useful utility functions for the GeoProcessor
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,7 +15,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 # Don't import class only because there are additional functions in CommandParameterMetaData
 import geoprocessor.core.CommandParameterMetadata as CommandParameterMetaData

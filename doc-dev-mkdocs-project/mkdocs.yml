@@ -9,7 +9,13 @@ pages:
 - New Developer: 'dev-new/dev-new.md'
 - Software Design: 'software-design/software-design.md'
 - UI Design: 'ui-design/ui-design.md'
-- Development Tasks: 'dev-tasks/dev-tasks.md'
+- Development Tasks:
+  - Overview: dev-tasks/overview.md
+  - Documenting: dev-tasks/documenting.md
+  - Editing: dev-tasks/editing.md
+  - Creating Installer: dev-tasks/creating-installer.md
+  - Testing: dev-tasks/testing.md
+  - Version Control: dev-tasks/version-control.md
 - Development Environment: 'dev-env/dev-env.md'
 - Troubleshooting: 'troubleshooting/troubleshooting.md'
 - Resources:

@@ -1,5 +1,5 @@
 # GeoProcessorAppSession - class to manage GeoProcessor session
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,7 +15,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 import getpass
 import logging
@@ -26,6 +26,19 @@ class GeoProcessorAppSession(object):
     """
     Manage the session, such as saving the application state.
     This is a port of the Java TSToolSession class.
+
+    The $HOME/.owf-gp/command-file-history.txt file contains a list of recently opened or saved command files,
+    with format shown below (paths will be consistent with the operating system, in the case below for Cygwin):
+
+    # GeoProcessor command file history, most recent at top, shared between GeoProcessor instances
+    /cygdrive/c/Users/sam/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python-test/test/commands/RunProgram/test-RunProgram-echo-env.gp
+    /cygdrive/c/Users/sam/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python-test/test/commands/RunProgram/test-wlgetquery-datadisp.gp
+
+    And on Windows 10:
+
+    # GeoProcessor command file history, most recent at top, shared between GeoProcessor instances
+    C:/Users/sam/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python-test/test/commands/0-Warning/test-warning-and-failure.gp
+    C:/Users/sam/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python-test/test/commands/MergeGeoLayers/test-MergeGeoLayers-Lines-AttributeMap.gp
     """
     def __init__(self):
         pass
@@ -80,7 +93,7 @@ class GeoProcessorAppSession(object):
         Get the name of the log file for the user.
 
         Returns:
-
+            The name of the log file.
         """
         log_file = os.path.join(self.get_log_folder(), "gp_" + getpass.getuser() + ".log")
         logging.info('Log file is "' + log_file + '"')
@@ -104,7 +117,7 @@ class GeoProcessorAppSession(object):
             Linux: /home/UserName/.owfgp
 
         Returns:
-            The name of the user folder
+            The name of the user folder.
         """
         user_folder = os.path.expanduser("~")
         logging.info('User folder is "' + user_folder + '"')
@@ -113,10 +126,15 @@ class GeoProcessorAppSession(object):
     def push_history(self, command_file):
         """
         Push a new command file onto history. This reads the history, updates it, and writes it.
-        This is done because if multiple StateDMI sessions are running, the will share history.
+        The new file is added at the top, corresponding to the most recent file.
+        This is done because if multiple GeoProcessor sessions are running, they will share history.
 
-        :param command_file:
-            full path to command file that has been opened
+        Args:
+            command_file:
+                 Full path to command file that has been opened.
+
+        Returns:
+            None
         """
 
         # Read the history file from the .geoprocessor file
@@ -124,52 +142,52 @@ class GeoProcessorAppSession(object):
         # Add in the first position so it will show up first in the File... Open... menu
         history.insert(0, command_file)
 
-        #print("Command File: " + command_file)
+        # print("Command File: " + command_file)
 
         # Process from back so that old duplicates are removed and recent access is always at the top of the list
-        #print("History before loop: " +  str(history))
-        max = 100
+        # print("History before loop: " +  str(history))
+        max_files = 100
         for i in reversed(list(range(0, len(history)))):
-            if(i >= 1):
+            if i >= 1:
                 old = history[i]
-                if(i >= max):
+                if i >= max_files:
                     # Trim the history to the maximum
                     del history[i]
-                elif(old == command_file or old == '' or old.startswith("#")):
+                elif old == command_file or old == '' or old.startswith("#"):
                     # Ignore comments, blank lines and duplicate to most recent access
                     del history[i]
-                    i-=1
+                    i -= 1
         self.write_history(history)
 
     def read_history(self):
         """
         Read the history of command files that have been opened.
 
-        :return:
-            list of command files recently opened, newest first
+        Returns:
+            The list of command files recently opened, newest first, with comments removed.
         """
 
-        #history_list = list(history.splitlines())
+        # history_list = list(history.splitlines())
 
-        #for line in history_list:
+        # for line in history_list:
         #    if(line.startswith("#")):
         #        history_list.remove(line)
 
-        #print(history_list)
-
+        # print(history_list)
 
         try:
             with open(self.get_history_file()) as f:
                 history = f.read().splitlines()
                 for line in history:
-                    if(line.startswith("#")):
+                    if line.startswith("#"):
+                        # Remove comments
                         history.remove(line)
                 return history
         except Exception as e:
-            #For now just swallow exception - may be because the history folder does not exist
-            #message = 'Exception opening command file history'
-            #print(message)
-            #logging.exception(message, e, exc_info=True)
+            # For now just swallow exception - may be because the history folder does not exist
+            # message = 'Exception opening command file history'
+            # print(message)
+            # logging.exception(message, e, exc_info=True)
             return []
 
     def write_history(self, history_list):
@@ -183,8 +201,8 @@ class GeoProcessorAppSession(object):
 
         # History being written (?)
 
-        line_separator = "/"
-        string_builder = "# GeoProcessor command file history, most recent at top, shared between GeoProcessor instances\n"
+        string_builder =\
+            "# GeoProcessor command file history, most recent at top, shared between GeoProcessor instances\n"
 
         try:
             for s in history_list:

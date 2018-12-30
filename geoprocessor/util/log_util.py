@@ -1,5 +1,5 @@
 # log_util - utility functions for logging
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,11 +15,11 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 """
 This module provides logging utilities for the geoprocessor package.
-The module is named 'log' to avoid conflicts with the standard Python 'logging' module.
+The module is named 'log_util' to avoid conflicts with the standard Python 'logging' module.
 Useful resources are:
 
     Python 2 logging module:  https://docs.python.org/2/library/logging.html
@@ -37,6 +37,20 @@ import getpass
 import logging
 import os
 import platform
+
+# The name of the current log file, will be reset by functions below
+__logfile_name = None
+
+
+def get_logfile_name():
+    """
+    Get the name of the logfile that is currently being used.
+
+    Returns:
+        The name of the current logfile, or None if not used.
+    """
+    global __logfile_name
+    return __logfile_name
 
 
 def initialize_logging(app_name=None, logfile_name=None, logfile_log_level=logging.INFO,
@@ -91,6 +105,9 @@ def initialize_logging(app_name=None, logfile_name=None, logfile_log_level=loggi
         log_file_handler.setLevel(logfile_log_level)
         log_file_handler.setFormatter(log_formatter)
         logger.addHandler(log_file_handler)
+        # Save the logfile as a module variable
+        global __logfile_name
+        __logfile_name = logfile_name
 
     # Configure the console handler, which defaults to stderr
     # - This is OK for startup but once a StartLog command is used the console handler should not be used
@@ -163,6 +180,11 @@ def reset_log_file_handler(logfile_name):
     new_log_file_handler.setLevel(old_log_file_handler_level)
     new_log_file_handler.setFormatter(old_log_file_handler_formatter)
     logger.addHandler(new_log_file_handler)
+
+    # Save the logfile name in the module data
+    global __logfile_name
+    __logfile_name = logfile_name
+
     # The following message will show up in the new log file
     message = 'Opened new log file: "' + logfile_name + '"'
     print('Opened new log file: "' + logfile_name + '"')

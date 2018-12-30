@@ -1,52 +1,6 @@
-# GeoProcessor / Development Tasks #
+## GeoProcessor / Development Tasks / Testing ##
 
-This documentation describes common development tasks:
-
-* [Editing Code](#editing-code)
-* [Creating Developer Documentation](#creating-developer-documentation)
-* [Creating User Documentation](#creating-user-documentation)
-* [Testing](#testing)
-	+ [Functional Tests](#functional-tests)
-	+ [Unit Tests](#unit-tests)
-* [Version Control](#version-control)
-* [Creating Installer](#creating-installer)
-
---------------------
-
-## Editing Code ##
-
-Code should be edited in an appropriate development tool.
-The Open Water Foundation has settled on PyCharm Community Edition for development.
-The following guidelines are recommended for using PyCharm:
-
-* As much as possible, follow the [Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/),
-with GeoProcessor conventions:
-	+ Module and function naming:
-		+ Package names are generally lowercase (e.g., `geoprocessor.core`)
-		+ Class names are MixedCase (e.g, `GeoProcessor` in file `geoprocessor/core/GeoProcessor.py`)
-		+ Non-class module names are lowercase
-		+ Function names are lowercase and use underscores to separate words, as needed
-	+ Module file contents:
-		+ Each class has its own file (`ClassName.py` for class named `ClassName`).
-		+ Other modules contain functions grouped by functionality.
-		For example `geoprocessor.util.string_util.py` contains utility functions that process strings.
-* Respond to PyCharm PEP warnings to fix style issues so that each file receives a check-off.
-
-## Creating Developer Documentation ##
-
-Developer documentation uses the MkDocs software.
-See the [developer documentation in the main code repository](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/doc-dev-mkdocs-project/README.md).
-The developer documentation is maintained with the code since it needs to be kept consistent with changes in the code.
-
-## Creating User Documentation ##
-
-User documentation uses the MkDocs software.
-See the [user documentation repository](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-doc-user).
-The user documentation is maintained in a separate repository because contributions may be submitted by non-programmers.
-
-## Testing ##
-
-**Need to update this once the UI is functional and is used for testing.**
+**This section needs to be updated with UI examples.**
 
 The GeoProcessor is designed to facilitate automated testing.
 Each command and workflows involving multiple commands can be tested.
@@ -228,50 +182,3 @@ Example of `geoprocessor-tests.gp.summary.html` file
 The GeoProcessor does not currently utilize unit tests such a pytest.
 However, units tests will be added in the future.
 The majority of testing currently uses the functional test framework in order to test full functionality and user experience.
-
-## Version Control ##
-
-Git and GitHub are used for version control and software developers are expected to be proficient with Git.
-A feature/topic branching model is used with the `master` branch being the main branch for deployment.
-Tags and releases are created at major milestones.
-The following `build-util` scripts are provided to facilite Git use:
-
-* `git-check-gp.sh` - check all component repositories for local and remote status
-* `git-clone-all-gp.sh` - clone all repositories after main repository is cloned
-
-## Creating Installer ##
-
-The GeoProcessor is not yet packaged via a `pip` or `pipenv` installer.
-The deployment process is evolving as the product matures.
-
-The GeoProcessor software can then be installed as per the
-[User Documentation](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/install/).
-
-### ![Cygwin](../images/cygwin-32.png) Creating Installer for Cygwin ###
-
-A Cygwin deployment is useful for testing the test framework version before creating Linux installer.
-The Cygwin environment must have been properly configured as per the [Development Environment / Cygwin](../dev-env/dev-env#cygwin) documentation.
-A Python virtual environment is created in the development environment.
-This version is not intended for distribution.
-The following steps are executed:
-
-1. Run `build-util/1-create-gp-tar.sh` to create `tar.gz` and `.zip` files that contain the `site-packages` files.
-	1. This creates temporary folders in `build-util/build-tmp` containing the Python files.
-2. Run `build-util/2-create-gp-venv.sh` to create a Python virtual environment.
-	1. This creates a virtual environment from the files in the previous step.
-3. Activate the virtual environment:  `source bin/activate`, which will define a shell function `deactivate`.
-4. Start the X Window Server to allow graphical user interface programs to run within Cygwin:
-	1. From a Cygwin terminal run `startxwin`.
-	2. Or, use the menu ***Start / Cygwin-X / XWin Server***.
-	3. Then, in the Cygwin terminal, set the `DISPLAY` variable:  `export DISPLAY=:0.0`
-4. Run the `scripts/gptest` or `scripts/gptestui` script in the virtual environment to run the GeoProcessor.
-5. Run tests to confirm functionality.
-
-### ![Linux](../images/linux-32.png) Creating Installer for Linux ###
-
-Need to complete this section, will be similar to the Cygwin steps, but run on Linux to use
-Linux Python to create the virtual environment for the test framework.
-
-### ![Windows](../images/windows-32.png) Creating Installer for Windows ###
-
-Need to complete this section, will be similar to Cygwin but step 1 files are deployed to QGIS environment.

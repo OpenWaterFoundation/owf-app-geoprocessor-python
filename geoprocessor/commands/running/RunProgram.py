@@ -1,5 +1,5 @@
 # RunProgram - command to run a program
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,7 +15,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -45,7 +45,7 @@ class RunProgram(AbstractCommand):
         CommandParameterMetadata("UseCommandShell", type("")),
         CommandParameterMetadata("IncludeParentEnvVars", type("")),
         CommandParameterMetadata("IncludeEnvVars", type("")),
-        CommandParameterMetadata("IncludeEnvVarName1", type("")),  # These are used for complex values difficult to parse
+        CommandParameterMetadata("IncludeEnvVarName1", type("")),  # Used for complex values difficult to parse
         CommandParameterMetadata("IncludeEnvVarValue1", type("")),
         CommandParameterMetadata("IncludeEnvVarName2", type("")),
         CommandParameterMetadata("IncludeEnvVarValue2", type("")),
@@ -195,7 +195,7 @@ class RunProgram(AbstractCommand):
                 # - because None would return the default, create an empty dictionary
                 # - also add SystemRoot as per Python documentation, to find DLLs.
                 env_dict = {}
-                if io_util.is_windows():
+                if os_util.is_windows_os():
                     env_dict['SystemRoot'] = os.environ['SystemRoot']
                 return env_dict
 
@@ -348,7 +348,6 @@ class RunProgram(AbstractCommand):
                 if os.path.isfile(output_file):
                     # Add the log file to output
                     self.command_processor.add_output_file(output_file)
-
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."

@@ -1,5 +1,5 @@
 # StartLog - command to (re)start the log file
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,7 +15,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -86,7 +86,7 @@ class StartLog(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            logger.warn(warning)
+            logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity

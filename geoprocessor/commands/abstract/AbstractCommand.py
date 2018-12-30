@@ -1,5 +1,5 @@
 # AbstractCommand - class that is the abstract parent class for all commands
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,7 +15,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 from geoprocessor.core.CommandStatus import CommandStatus
 import geoprocessor.util.command_util as command_util
@@ -240,14 +240,14 @@ class AbstractCommand(object):
         # Loop through all the parameters that are valid for the command.
         param_output_count = 0
         for command_parameter_meta in self.command_parameter_metadata:
+            parameter_value = self.get_parameter_value(command_parameter_meta.parameter_name,
+                                                       command_parameters=command_parameters)
             # Determine whether to output
             do_output = False
             if format_all:
                 do_output = True
             else:
                 # Only output if the parameter is not None and not a blank string
-                parameter_value = self.get_parameter_value(command_parameter_meta.parameter_name,
-                                                           command_parameters=command_parameters)
                 if (parameter_value is not None) and (str(parameter_value) != ""):
                     do_output = True
             if do_output:

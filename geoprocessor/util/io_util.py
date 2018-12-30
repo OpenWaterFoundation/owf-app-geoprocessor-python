@@ -1,5 +1,5 @@
 # io_util - input/output functions
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,7 +15,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 # - some are ported from Java IOUtil.java class
 
 import geoprocessor.util.string_util as string_util
@@ -154,9 +154,9 @@ def expand_formatter(absolute_path, formatter):
     if formatter == '%F':
 
         if extension == '':
-            print ("Warning: There is no file extension for the input file ({})".format(absolute_path))
+            print("Warning: There is no file extension for the input file ({})".format(absolute_path))
         if filename == '':
-            print ("Warning: There is no filename for the input file ({})".format(absolute_path))
+            print("Warning: There is no filename for the input file ({})".format(absolute_path))
         return "{}{}".format(filename, extension)
 
     # The %f formatter code returns the filename without the leading path and without the extension. Print warning
@@ -165,7 +165,7 @@ def expand_formatter(absolute_path, formatter):
     elif formatter == '%f':
 
         if filename == '':
-            print ("Warning: There is no filename for the input file ({})".format(absolute_path))
+            print("Warning: There is no filename for the input file ({})".format(absolute_path))
         return filename
 
     # The %P formatter code returns the filename with the leading path and with the file extension.
@@ -183,12 +183,12 @@ def expand_formatter(absolute_path, formatter):
     elif formatter == '%E':
 
         if extension == '':
-            print ("Warning: There is no file extension for the input file ({})".format(absolute_path))
+            print("Warning: There is no file extension for the input file ({})".format(absolute_path))
         return extension
 
     # Print a warning message and return None if the input formatter code is not a valid code.
     else:
-        print ("The formatter ({}) is not an option.")
+        print("The formatter ({}) is not an option.")
         return None
 
 

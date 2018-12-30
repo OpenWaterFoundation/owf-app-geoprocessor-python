@@ -1,5 +1,5 @@
 # gp - main entry point for GeoProcessor application
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,7 +15,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 """
 This module provides access to the Open Water Foundation GeoProcessor tools via
@@ -29,7 +29,7 @@ the gp application, which provides several run modes:
 The initial implementation focuses on batch and command shell.
 """
 
-#from PyQt5 import QtWidgets
+# from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication
 # from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
 
@@ -38,8 +38,8 @@ from PyQt5.QtWidgets import QApplication
 from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
 from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
 # The following are imported dynamically since need a QtApplication instance in __main__ first
-#from geoprocessor.core.GeoProcessor import GeoProcessor
-#from geoprocessor.core.CommandFileRunner import CommandFileRunner
+# from geoprocessor.core.GeoProcessor import GeoProcessor
+# from geoprocessor.core.CommandFileRunner import CommandFileRunner
 
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.io_util as io_util
@@ -144,7 +144,7 @@ class GeoProcessorCmd(cmd.Cmd):
         working_dir = os.getcwd()
         # Convert the command file to an absolute path if not already.
         command_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(working_dir, command_file))
-        #from geoprocessor.core.CommandFileRunner import CommandFileRunner
+        # from geoprocessor.core.CommandFileRunner import CommandFileRunner
         CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
         class_ = getattr(CommandFileRunner,'CommandFileRunner')
         runner = class_()
@@ -219,7 +219,7 @@ def print_version():
     Print the program version.
     """
     print("")
-    print("gp version " + version.app_version )
+    print("gp version " + version.app_version)
     print("")
     print("GeoProcessor")
     print("Copyright 2017-2019 Open Water Foundation.")
@@ -254,9 +254,9 @@ def run_batch(command_file, runtime_properties):
     logger.info("Command file=" + command_file)
     command_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(working_dir, command_file))
     logger.info("Command file (absolute)=" + command_file_absolute)
-    #from geoprocessor.core.CommandFileRunner import CommandFileRunner
+    # from geoprocessor.core.CommandFileRunner import CommandFileRunner
     CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
-    class_ = getattr(CommandFileRunner,'CommandFileRunner')
+    class_ = getattr(CommandFileRunner, 'CommandFileRunner')
     runner = class_()
     # Read the command file
     try:
@@ -332,7 +332,7 @@ def run_ui(app_session):
     # sys.exit(qtapp.exec())
 
     # The following is used when not dynamically importing modules
-    #command_processor = GeoProcessor()
+    # command_processor = GeoProcessor()
     GeoProcessor_module = importlib.import_module('geoprocessor.core.GeoProcessor')
     class_ = getattr(GeoProcessor_module, 'GeoProcessor')
     command_processor = class_()
@@ -436,7 +436,7 @@ if __name__ == '__main__':
     """
     Entry point for the OWF GeoProcessor application.
     """
-    debug=True
+    debug = True
     if debug:
         print_env()
 
@@ -445,8 +445,8 @@ if __name__ == '__main__':
     print("Initializing QApplication")
     # The following should work, and allow passing to run_ui(), but the UI does not open.
     # Instead, declare the application in run_ui(), which works.
-    #qtapp = QtWidgets.QApplication(sys.argv)
-    #qtapp = QApplication(sys.argv)
+    # qtapp = QtWidgets.QApplication(sys.argv)
+    # qtapp = QApplication(sys.argv)
     # Set global environment data that will be used by library code
     set_global_data()
     # Set up a session instance
@@ -503,7 +503,7 @@ if __name__ == '__main__':
         try:
             run_batch(args.commands, runtime_properties)
         except Exception as e:
-            message='Exception running batch'
+            message = 'Exception running batch'
             print(message)
             logger.exception(message, e, exc_info=True)
     elif args.http:
@@ -512,7 +512,7 @@ if __name__ == '__main__':
         try:
             run_http_server()
         except Exception as e:
-            message='Exception running http'
+            message = 'Exception running http'
             print(message)
             logger.exception(message, e, exc_info=True)
     elif args.ui:
@@ -521,7 +521,7 @@ if __name__ == '__main__':
         try:
             run_ui(app_session)
         except Exception as e:
-            message='Exception running UI'
+            message = 'Exception running UI'
             print(message)
             logger.exception(message, e, exc_info=True)
     elif args.version:
@@ -533,7 +533,7 @@ if __name__ == '__main__':
         try:
             run_prompt()
         except Exception as e:
-            message='Exception running shell'
+            message = 'Exception running shell'
             print(message)
             logger.exception(message, e, exc_info=True)
 
@@ -542,7 +542,7 @@ if __name__ == '__main__':
 
     # Close the regression test file
     # - If none is used then nothing is done
-    #from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
+    # from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
     StartRegressionTestResultsReport.close_regression_test_report_file()
 
     # Application exit

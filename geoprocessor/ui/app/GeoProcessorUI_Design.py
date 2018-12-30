@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # GeoProcessorUI_Design - used with Qt Designer
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -16,7 +16,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 # THIS CLASS IS NOT CURRENTLY USED BECAUSE UI COMPONENTS ARE MANUALLY CODED.
 # - Qt Designer is useful for some things but not complex GeoProcessor code.

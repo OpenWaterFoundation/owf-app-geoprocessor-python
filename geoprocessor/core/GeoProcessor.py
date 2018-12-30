@@ -1,5 +1,5 @@
 # GeoProcessor - class to process a workflow of commands
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,7 +15,7 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.core.CommandLogRecord import CommandLogRecord

@@ -1,5 +1,5 @@
 # CommandStatus - class to hold command status log records and status summary
-#_________________________________________________________________NoticeStart_
+# ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
 # 
@@ -15,11 +15,10 @@
 # 
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
-#_________________________________________________________________NoticeEnd___
+# ________________________________________________________________NoticeEnd___
 
 import geoprocessor.core.command_status_type as command_status_type
 import geoprocessor.core.command_phase_type as command_phase_type
-import logging
 
 
 class CommandStatus(object):

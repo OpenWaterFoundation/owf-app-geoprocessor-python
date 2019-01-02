@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
@@ -103,8 +103,8 @@ class CopyGeoLayer(AbstractCommand):
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to copy."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
@@ -117,8 +117,8 @@ class CopyGeoLayer(AbstractCommand):
                 acceptable_values)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -130,7 +130,7 @@ class CopyGeoLayer(AbstractCommand):
             raise ValueError(warning)
         else:
             # Refresh the phase severity
-            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_copy_geolayer(self, input_geolayer_id, output_geolayer_id, include_feats_if_expression):
         """
@@ -242,8 +242,8 @@ class CopyGeoLayer(AbstractCommand):
                 message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message,
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
@@ -253,4 +253,4 @@ class CopyGeoLayer(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

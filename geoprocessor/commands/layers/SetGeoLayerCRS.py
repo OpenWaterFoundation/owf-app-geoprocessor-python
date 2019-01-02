@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -89,8 +89,8 @@ class SetGeoLayerCRS(AbstractCommand):
             recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter CRS is a non-empty, non-None string.
         pv_CRS = self.get_parameter_value(parameter_name='CRS', command_parameters=command_parameters)
@@ -101,8 +101,8 @@ class SetGeoLayerCRS(AbstractCommand):
             recommendation = "Specify the CRS parameter to indicate the new coordinate reference system."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -114,7 +114,7 @@ class SetGeoLayerCRS(AbstractCommand):
             raise ValueError(warning)
         else:
             # Refresh the phase severity
-            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_set_crs(self, geolayer_id, crs_code):
         """
@@ -146,8 +146,8 @@ class SetGeoLayerCRS(AbstractCommand):
             message = 'The input GeoLayer ID ({}) does not exist.'.format(geolayer_id)
             recommendation = 'Specify a valid GeoLayerID.'
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the input CRS code is not a valid code, raise a FAILURE.
         if qgis_util.get_qgscoordinatereferencesystem_obj(crs_code) is None:
@@ -157,8 +157,8 @@ class SetGeoLayerCRS(AbstractCommand):
             message = 'The input CRS ({}) is not a valid CRS code.'.format(geolayer_id)
             recommendation = 'Specify a valid CRS code (EPSG codes are an approved format).'
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the input CRS code is that same as the GeoLayer's current CRS, raise a WARNING.
         if input_geolayer_exists and self.command_processor.get_geolayer(geolayer_id).get_crs():
@@ -171,8 +171,8 @@ class SetGeoLayerCRS(AbstractCommand):
                           ' CRS ({}).'.format(geolayer_id, crs_code)
                 recommendation = 'The SetGeoLayerCRS command will not run. Specify a different CRS code.'
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
         # Return the Boolean to determine if the crs should be set. If TRUE, all checks passed. If FALSE, one or many
         # checks failed.
@@ -236,8 +236,8 @@ class SetGeoLayerCRS(AbstractCommand):
                 message = "Unexpected error setting CRS ({}) of GeoLayer ({})".format(pv_CRS, pv_GeoLayerID)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -246,4 +246,4 @@ class SetGeoLayerCRS(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validators
@@ -82,8 +82,8 @@ class SetPropertyFromGeoLayer(AbstractCommand):
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to process."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # GeoLayerProperty is required
         pv_PropertyName = self.get_parameter_value(parameter_name='GeoLayerPropertyName',
@@ -93,8 +93,8 @@ class SetPropertyFromGeoLayer(AbstractCommand):
             recommendation = "Specify a property name."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # PropertyName is required
         pv_PropertyName = self.get_parameter_value(parameter_name='PropertyName', command_parameters=command_parameters)
@@ -103,8 +103,8 @@ class SetPropertyFromGeoLayer(AbstractCommand):
             recommendation = "Specify a property name."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -117,7 +117,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self):
         """
@@ -143,8 +143,8 @@ class SetPropertyFromGeoLayer(AbstractCommand):
                 message = 'Unable to find GeoLayer for GeoLayerID="' + pv_GeoLayerID + '"'
                 warning_count += 1
                 self.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, message, "Check the log file for details."))
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, "Check the log file for details."))
             else:
                 # First get the property from the GeoLayer
                 property_value = geolayer.get_property(pv_GeoLayerPropertyName)
@@ -155,12 +155,12 @@ class SetPropertyFromGeoLayer(AbstractCommand):
             message = 'Unexpected error setting property "' + pv_PropertyName + '"'
             logger.exception(message, e)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "Check the log file for details."))
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

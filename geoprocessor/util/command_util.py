@@ -19,9 +19,10 @@
 
 # Don't import class only because there are additional functions in CommandParameterMetaData
 import geoprocessor.core.CommandParameterMetadata as CommandParameterMetaData
+
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import logging
 
@@ -51,21 +52,21 @@ def append_command_status_log_records(command_status, commands):
         # Transfer the command log records from each command to the given command_status.
         status2 = command.command_status
         # Append command log records for each run mode...
-        # logs = status2.get_command_log(command_phase_type.INITIALIZATION)
+        # logs = status2.get_command_log(CommandPhaseType.INITIALIZATION)
         logs = status2.initialization_log_list
         for log_record in logs:
             # log_record.setCommandStatusProvider(csp)
-            command_status.add_to_log(command_phase_type.INITIALIZATION, log_record)
-        # logs = status2.get_command_log(command_phase_type.DISCOVERY)
+            command_status.add_to_log(CommandPhaseType.INITIALIZATION, log_record)
+        # logs = status2.get_command_log(CommandPhaseType.DISCOVERY)
         logs = status2.discovery_log_list
         for log_record in logs:
             # log_record.setCommandStatusProvider(csp);
-            command_status.add_to_log(command_phase_type.DISCOVERY, log_record)
-        # logs = status2.getCommandLog(command_phase_type.RUN)
+            command_status.add_to_log(CommandPhaseType.DISCOVERY, log_record)
+        # logs = status2.getCommandLog(CommandPhaseType.RUN)
         logs = status2.run_log_list
         for log_record in logs:
             # logRecord.setCommandStatusProvider(csp);
-            command_status.add_to_log(command_phase_type.RUN, log_record)
+            command_status.add_to_log(CommandPhaseType.RUN, log_record)
 
 
 def get_command_status_max_severity(processor):
@@ -79,11 +80,11 @@ def get_command_status_max_severity(processor):
     Returns:
         Most severe command status from all commands in a processor.
     """
-    most_severe_command_status = command_status_type.UNKNOWN
+    most_severe_command_status = CommandStatusType.UNKNOWN
     for command in processor.commands:
         status_from_command = get_highest_command_status_severity(command.command_status)
         # Message.printStatus (2,"", "Highest severity \"" + command.toString() + "\"=" + from_command.toString());
-        most_severe_command_status = command_status_type.max_severity(most_severe_command_status, status_from_command)
+        most_severe_command_status = CommandStatusType.max_severity(most_severe_command_status, status_from_command)
     return most_severe_command_status
 
 
@@ -97,25 +98,31 @@ def get_highest_command_status_severity(command_status):
     Returns:
         the highest status severity of all phases, to indicate the most severe problem with a command.
     """
-    status_severity = command_status_type.UNKNOWN
+    status_severity = CommandStatusType.UNKNOWN
     if command_status is None:
         return status_severity  # Default is UNKNOWN
 
     # Python 2 does not have enumerations like Java code so do comparisons brute force
-    phase_status = command_status.get_command_status_for_phase(command_phase_type.INITIALIZATION)
-    if command_status_type.number_value(phase_status) > command_status_type.number_value(status_severity):
+    phase_status = command_status.get_command_status_for_phase(CommandPhaseType.INITIALIZATION)
+    if phase_status is None:
+        phase_status = CommandStatusType.UNKNOWN
+    if phase_status.value > status_severity.value:
         status_severity = phase_status
 
-    phase_status = command_status.get_command_status_for_phase(command_phase_type.DISCOVERY)
-    if command_status_type.number_value(phase_status) > command_status_type.number_value(status_severity):
+    phase_status = command_status.get_command_status_for_phase(CommandPhaseType.DISCOVERY)
+    if phase_status is None:
+        phase_status = CommandStatusType.UNKNOWN
+    if phase_status.value > status_severity.value:
         status_severity = phase_status
 
-    phase_status = command_status.get_command_status_for_phase(command_phase_type.RUN)
+    phase_status = command_status.get_command_status_for_phase(CommandPhaseType.RUN)
+    if phase_status is None:
+        phase_status = CommandStatusType.UNKNOWN
     # TODO sam 2017-04-13 This can be problematic if the discovery mode had a warning or failure
     # and run mode was success.  This may occur due to dynamic files being created, etc.
     # The overall status in this case should be success.
     # Need to evaluate how this method gets called and what intelligence is used.
-    if command_status_type.number_value(phase_status) > command_status_type.number_value(status_severity):
+    if phase_status.value > status_severity.value:
         status_severity = phase_status
 
     return status_severity
@@ -228,10 +235,10 @@ def parse_parameter_string_from_command_string(command_string):
         raise ValueError(message)
 
     # Get the parameter line from the command string (in between the '(' and the ')' ).
-    parameter_string = command_string[paren_start_pos + 1: paren_end_pos]
+    parameter_string = command_string_stripped[paren_start_pos + 1: paren_end_pos]
     # Strip enclosing whitespace
     parameter_string = parameter_string.strip()
-    # print("After parsing, parameter_string=" + parameter_string)
+    print("After parsing, parameter_string=" + parameter_string)
     return parameter_string
 
 
@@ -413,7 +420,7 @@ def validate_command_parameter_names(command, warning, deprecated_parameter_name
     # Check size dynamically in case props are removed below
     # Because the dictionary size may change during iteration, can't do the following
     # for parameter_name, parameter_value in command.command_parameters.items():
-    # TODO smalers 2017-12-25 need to iterate with for to allow delete from the dictionary
+    # TODO smalers 2017-12-25 need to iterate with while to allow delete from the dictionary
     for i_parameter in range(0, len(command_parameter_names)):
         # First make sure that the parameter is in the valid parameter name list.
         # Parameters will only be checked for whether they are deprecated if they are not valid.
@@ -490,6 +497,6 @@ def validate_command_parameter_names(command, warning, deprecated_parameter_name
         #    if ( command instanceof CommandStatusProvider ) {
         status = command.command_status
         status.add_to_log(
-            command_phase_type.INITIALIZATION,
-            CommandLogRecord(command_status_type.WARNING, msg, "Specify only valid parameters - see documentation."))
+            CommandPhaseType.INITIALIZATION,
+            CommandLogRecord(CommandStatusType.WARNING, msg, "Specify only valid parameters - see documentation."))
     return warning

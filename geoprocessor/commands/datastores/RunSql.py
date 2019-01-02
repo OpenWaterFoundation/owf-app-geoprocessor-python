@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -90,8 +90,8 @@ class RunSql(AbstractCommand):
             message = "DataStoreID parameter has no value."
             recommendation = "Specify a valid DataStore ID."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that one (and only one) sql method is a non-empty and non-None string.
         is_string_list = []
@@ -107,8 +107,8 @@ class RunSql(AbstractCommand):
                 sql_method_parameter_list)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # TEMPORARY CHECK: Check that the DataStoreProcedure method is not being used. Currently disabled until future
         # development. Once developed, this check can be removed.
@@ -121,8 +121,8 @@ class RunSql(AbstractCommand):
                 recommendation = "Specify the Sql method or the SqlFile method. "
                 warning += "\n" + message
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -134,7 +134,7 @@ class RunSql(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_run_sql(self, datastore_id):
         """
@@ -218,8 +218,8 @@ class RunSql(AbstractCommand):
                 message = "Unexpected error executing the Sql statement on the {} DataStore.".format(pv_DataStoreID)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -228,4 +228,4 @@ class RunSql(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -74,7 +74,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
             test_pass_fail (str): whether the test was a success or failure (it is possible for the test to
                 be a successful even if the command file failed, if failure was expected)
             expected_status (str): the expected status (as a string)
-            max_severity (str): the maximum severity from the command file that was run.
+            max_severity (CommandStatusType): the maximum severity from the command file that was run.
             test_command_file (str): the full path to the command file that was run.
 
         Returns:
@@ -111,7 +111,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
                 # runTime + delim +
                 indicator + '{:4}'.format(test_pass_fail) + indicator + delim +
                 '{:10}'.format(expected_status) + delim +
-                '{:10}'.format(max_severity) + " " + delim + test_command_file + nl)
+                '{:10}'.format(str(max_severity)) + " " + delim + test_command_file + nl)
         # TODO smalers 2018-01-27 need to decide how to handle tables output
         """
         if StartRegressionTestResultsReport.__regression_test_table is not None:
@@ -164,8 +164,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
             recommendation = "Specify the output file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -178,7 +178,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
             raise ValueError(warning_message)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
     def close_regression_test_report_file(cls):
@@ -313,8 +313,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
             message = 'Unexpected error opening file "' + pv_OutputFile_absolute + '"'
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         except:
@@ -322,8 +322,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
             message = 'Unexpected error opening file "' + pv_OutputFile_absolute + '"'
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         if warning_count > 0:
@@ -331,4 +331,4 @@ class StartRegressionTestResultsReport(AbstractCommand):
             logger.warning(message)
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

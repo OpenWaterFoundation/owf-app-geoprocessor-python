@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -91,8 +91,8 @@ class CompareFiles(AbstractCommand):
             recommendation = "Specify the first input file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # InputFile2 is required
         pv_InputFile2 = self.get_parameter_value(parameter_name='InputFile2', command_parameters=command_parameters)
@@ -101,8 +101,8 @@ class CompareFiles(AbstractCommand):
             recommendation = "Specify the second input file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # CommentLineChar is optional, defaults to # at runtime, for now no checks
 
@@ -114,8 +114,8 @@ class CompareFiles(AbstractCommand):
             recommendation = "Specify the MatchCase parameter as blank or one of " + str(self.__choices_MatchCase)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IgnoreWhitespace is optional, defaults to True at runtime
         pv_IgnoreWhitespace = self.get_parameter_value(parameter_name='IgnoreWhitespace',
@@ -126,8 +126,8 @@ class CompareFiles(AbstractCommand):
                              str(self.__choices_IgnoreWhitespace)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # AllowedDiffCount is optional, defaults to 0 at runtime, but must be a number if specified
         pv_AllowedDiffCount = self.get_parameter_value(parameter_name='AllowedDiffCount',
@@ -137,8 +137,8 @@ class CompareFiles(AbstractCommand):
             recommendation = "Specify the allowed difference count as an integer."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IfDifferent is optional, defaults to Ignore at runtime
         pv_IfDifferent = self.get_parameter_value(parameter_name='IfDifferent',
@@ -148,8 +148,8 @@ class CompareFiles(AbstractCommand):
             recommendation = "Specify the IfDifferent parameter as blank or one of " + str(self.__choices_IfDifferent)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IfSame is optional, defaults to Ignore at runtime
         pv_IfSame = self.get_parameter_value(parameter_name='IfSame',
@@ -159,8 +159,8 @@ class CompareFiles(AbstractCommand):
             recommendation = "Specify the IfSame parameter as blank or one of " + str(self.__choices_IfSame)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -173,7 +173,7 @@ class CompareFiles(AbstractCommand):
             raise ValueError(warning_message)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
     def __read_line(cls, inf, comment_line_char, ignore_whitespace):
@@ -245,11 +245,11 @@ class CompareFiles(AbstractCommand):
         pv_IfDifferent = self.get_parameter_value('IfDifferent')
         if pv_IfDifferent is None or pv_IfDifferent == "":
             pv_IfDifferent = "Ignore"  # Default value
-        pv_IfDifferent_command_status_type = command_status_type.value_of(pv_IfDifferent, True)
+        pv_IfDifferent_CommandStatusType = CommandStatusType.value_of(pv_IfDifferent, True)
         pv_IfSame = self.get_parameter_value('IfSame')
         if pv_IfSame is None or pv_IfSame == "":
             pv_IfSame = "Ignore"  # Default value
-        pv_IfSame_command_status_type = command_status_type.value_of(pv_IfSame, True)
+        pv_IfSame_CommandStatusType = CommandStatusType.value_of(pv_IfSame, True)
 
         # Runtime checks on input
 
@@ -275,8 +275,8 @@ class CompareFiles(AbstractCommand):
                 warning_count += 1
                 message = 'The first input file does not exist: "' + pv_InputFile1_absolute + '"'
                 self.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, message,
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, message,
                                      "Verify that the first input file exists at the time the command is run."))
                 logger.warning(message)
                 input_count -= 1
@@ -285,8 +285,8 @@ class CompareFiles(AbstractCommand):
                 warning_count += 1
                 message = 'The second input file does not exist: "' + pv_InputFile2_absolute + '"'
                 self.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, message,
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, message,
                                      "Verify that the second input file exists at the time the command is run."))
                 logger.warning(message)
                 input_count -= 1
@@ -340,36 +340,36 @@ class CompareFiles(AbstractCommand):
             traceback.print_exc(file=sys.stdout)
             logger.exception(message, e)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         if diff_count > allowed_diff_count and \
-            ((pv_IfDifferent_command_status_type == command_status_type.WARNING) or
-             (pv_IfDifferent_command_status_type == command_status_type.FAILURE)):
+            ((pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING) or
+             (pv_IfDifferent_CommandStatusType == CommandStatusType.FAILURE)):
             message = "" + str(diff_count) + " lines were different, " + \
                 '{:4f}'.format(100.0*float(diff_count)/float(line_count_compared)) + \
                 "% (compared " + str(line_count_compared) + " lines)."
-            if pv_IfDifferent_command_status_type == command_status_type.WARNING:
+            if pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING:
                 logger.warning(message)
             else:
                 logger.error(message)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(pv_IfDifferent_command_status_type,
+                CommandPhaseType.RUN,
+                CommandLogRecord(pv_IfDifferent_CommandStatusType,
                                  message, "Check files because difference is not expected."))
             raise RuntimeError(message)
         if diff_count == 0 and \
-            ((pv_IfSame_command_status_type == command_status_type.WARNING) or
-             (pv_IfSame_command_status_type == command_status_type.FAILURE)):
+            ((pv_IfSame_CommandStatusType == CommandStatusType.WARNING) or
+             (pv_IfSame_CommandStatusType == CommandStatusType.FAILURE)):
             message = "No lines were different (the files are the same)."
-            if pv_IfDifferent_command_status_type == command_status_type.WARNING:
+            if pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING:
                 logger.warning(message)
             else:
                 logger.error(message)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(pv_IfSame_command_status_type,
+                CommandPhaseType.RUN,
+                CommandLogRecord(pv_IfSame_CommandStatusType,
                                  message, "Check files because match is not expected."))
             raise RuntimeError(message)
 
@@ -377,4 +377,4 @@ class CompareFiles(AbstractCommand):
             message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

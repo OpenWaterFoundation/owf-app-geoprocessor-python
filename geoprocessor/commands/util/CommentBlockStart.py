@@ -17,13 +17,13 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 
-class CommentBlockStart(AbstractCommand.AbstractCommand):
+class CommentBlockStart(AbstractCommand):
     """
     /* comment block start.
     """
@@ -36,9 +36,9 @@ class CommentBlockStart(AbstractCommand.AbstractCommand):
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()
         # Set the command status to success so that testing reports look better
-        self.command_status.initialization_status = command_status_type.SUCCESS
-        self.command_status.discovery_status = command_status_type.SUCCESS
-        self.command_status.run_status = command_status_type.SUCCESS
+        self.command_status.initialization_status = CommandStatusType.SUCCESS
+        self.command_status.discovery_status = CommandStatusType.SUCCESS
+        self.command_status.run_status = CommandStatusType.SUCCESS
 
     def initialize_command(self, command_string, processor, full_initialization):
         """
@@ -66,4 +66,4 @@ class CommentBlockStart(AbstractCommand.AbstractCommand):
         Returns:
             None.
         """
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

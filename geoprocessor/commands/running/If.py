@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
@@ -84,8 +84,8 @@ class If(AbstractCommand):
             recommendation = "Specify the Name."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Condition is required
         pv_Condition = self.get_parameter_value(parameter_name='Condition', command_parameters=command_parameters)
@@ -94,8 +94,8 @@ class If(AbstractCommand):
             recommendation = "Specify the condition."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -108,7 +108,7 @@ class If(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def get_condition_eval(self):
         """
@@ -216,16 +216,16 @@ class If(AbstractCommand):
                     recommendation = "Use == to check for equality."
                     logger.warning(message)
                     self.command_status.add_to_log(
-                        command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                        CommandPhaseType.RUN,
+                        CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
                 else:
                     message = 'Unknown condition operator for "' + pv_Condition + '"'
                     recommendation =\
                         "Make sure condition operator is supported - refer to command editor and documentation."
                     logger.warning(message)
                     self.command_status.add_to_log(
-                        command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                        CommandPhaseType.RUN,
+                        CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
                 logger.info('operator="' + op + '" pos1=' + str(pos1) + " pos2=" + str(pos2))
                 # Now evaluate the left and right sides of the condition
@@ -376,8 +376,8 @@ class If(AbstractCommand):
                         "refer to command editor and documentation."
                     logger.warning(message)
                     self.command_status.add_to_log(
-                        command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                        CommandPhaseType.RUN,
+                        CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
                 if debug:
                     logger.info("Condition evaluated to: " + str(condition_eval))
@@ -389,15 +389,15 @@ class If(AbstractCommand):
                     message = pv_Condition + " (showing ${Property} notation) evaluates to " + str(condition_eval)
                     recommendation = "Informational message."
                     self.command_status.add_to_log(
-                        command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.SUCCESS, message, recommendation))
+                        CommandPhaseType.RUN,
+                        CommandLogRecord(CommandStatusType.SUCCESS, message, recommendation))
 
                 # Always also show the expanded
                 message = str(value1) + " " + op + " " + str(value2) + " evaluates to " + str(condition_eval)
                 recommendation = "Informational message."
                 self.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.SUCCESS, message, recommendation))
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.SUCCESS, message, recommendation))
                 self.__condition_eval = condition_eval
 
         except Exception as e:
@@ -406,12 +406,12 @@ class If(AbstractCommand):
             message = 'Unexpected error in If, Name="' + pv_Name + '"'
             logger.error(message, e, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "Check the log file for details."))
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

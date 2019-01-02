@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
@@ -80,8 +80,8 @@ class SetProperty(AbstractCommand):
             recommendation = "Specify a property name."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # PropertyType is required
         pv_PropertyType = self.get_parameter_value(parameter_name='PropertyType', command_parameters=command_parameters)
@@ -90,8 +90,8 @@ class SetProperty(AbstractCommand):
             recommendation = "Specify a valid property type:  " + str(property_types)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # TODO smalers 2017-12-28 add other parameters similar to TSTool to set special values
 
@@ -106,8 +106,8 @@ class SetProperty(AbstractCommand):
                 recommendation = "Specify a property value."
                 warning += "\n" + message
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         pv_PropertyValues = self.get_parameter_value(
             parameter_name='PropertyValues', command_parameters=command_parameters)
@@ -118,16 +118,16 @@ class SetProperty(AbstractCommand):
                 recommendation = "Specify a list of values separated by commas and optional spaces."
                 warning += "\n" + message
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         if property_value_parameter_count != 1:
             message = "PropertyValue (single value) or PropertyValues (for list) parameter must be specified."
             recommendation = "Specify a single value with PropertyValue or list of values with PropertyValues."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -142,7 +142,7 @@ class SetProperty(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self):
         """
@@ -223,12 +223,12 @@ class SetProperty(AbstractCommand):
             message = 'Unexpected error setting property "' + str(pv_PropertyName) + '"'
             logger.error(message, e, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "Check the log file for details."))
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

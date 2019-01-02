@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.Table import Table
 from geoprocessor.core.Table import TableField
 from geoprocessor.core.Table import TableRecord
@@ -116,8 +116,8 @@ class ReadTableFromDataStore(AbstractCommand):
             recommendation = "Specify the TableID parameter to indicate the Table to write."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter DataStoreID is a non-empty, non-None string.
         pv_DataStoreID = self.get_parameter_value(parameter_name='DataStoreID', command_parameters=command_parameters)
@@ -128,8 +128,8 @@ class ReadTableFromDataStore(AbstractCommand):
                              "location and name of the output delimited file."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that one (and only one) selection method is a non-empty and non-None string.
         is_string_list = []
@@ -147,8 +147,8 @@ class ReadTableFromDataStore(AbstractCommand):
                 selection_method_parameter_list)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Run the checks for the Top parameter.
         pv_Top = self.get_parameter_value(parameter_name='Top', command_parameters=command_parameters)
@@ -163,8 +163,8 @@ class ReadTableFromDataStore(AbstractCommand):
                           " value ({}) will be ignored.".format(pv_Top)
                 recommendation = "To use the Top parameter, specify a value for the DataStoreTable parameter."
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.WARNING, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
             # If the DataStoreTable parameter is enabled, check that the Top parameter is an integer or None.
             if pv_DataStoreTable and not validators.validate_int(pv_Top, True, False):
@@ -172,8 +172,8 @@ class ReadTableFromDataStore(AbstractCommand):
                 message = "Top parameter value ({}) is not a valid integer value.".format(pv_Top)
                 recommendation = "Specify a positive integer for the Top parameter to specify how many rows to return."
                 warning += "\n" + message
-                self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
             # If the DataStoreTable parameter is enabled, check that the Top parameter is positive.
             elif pv_DataStoreTable and not int(pv_Top) > 0:
@@ -181,8 +181,8 @@ class ReadTableFromDataStore(AbstractCommand):
                 message = "Top parameter value ({}) is not a positive, non-zero integer value.".format(pv_Top)
                 recommendation = "Specify a positive integer for the Top parameter to specify how many rows to return."
                 warning += "\n" + message
-                self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfTableIDExists is one of the acceptable values or is None.
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
@@ -193,8 +193,8 @@ class ReadTableFromDataStore(AbstractCommand):
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
                 self.__choices_IfTableIDExists)
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -206,7 +206,7 @@ class ReadTableFromDataStore(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_read_table(self, sql_file_abs, table_id, datastore_id):
         """
@@ -536,8 +536,8 @@ class ReadTableFromDataStore(AbstractCommand):
                                                                                           pv_DataStoreID)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -546,4 +546,4 @@ class ReadTableFromDataStore(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

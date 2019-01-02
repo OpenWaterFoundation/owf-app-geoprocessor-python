@@ -36,8 +36,6 @@ import geoprocessor.util.string_util as string_util
 from PyQt5.QtCore import QVariant, QFileInfo
 
 
-
-
 # TODO smalers 2018-01-28 Evaluate whether to make this private via Pythonic underscore naming
 # QGIS application environment instance
 # "qgs" is used to match QGIS conventions (rather than "qgis")
@@ -47,7 +45,10 @@ qgs = None
 # manually updated as the GeoProcessor is developed with newer versions of QGIS. If updated accurately, GitHub will
 # memorialize the developer QGIS version used at any time within the history of the GeoProcessor. Must be a string.
 # Must be in the following format: "[major release].[minor release].[bug fix release]". Do not pad numbers.
-dev_qgis_version = "2.18.9"
+dev_qgis_version = "3.4.3"
+
+# The QgsApplication instance opened with initialize_qgis(), used to simplify application management
+qgs_app = None
 
 
 def add_feature_to_qgsvectorlayer(qgsvectorlayer, qgsgeometry):
@@ -549,10 +550,13 @@ def initialize_qgis():
 
     # Open QGIS environment
     # REF: https://github.com/OSGeo/homebrew-osgeo4mac/issues/197
-    qgs = QgsApplication([], False)
-    qgs.initQgis()
+    global qgs_app
+    qgs_app = QgsApplication([], False)
+    qgs_app.initQgis()
+    return qgs_app
 
-def  initialize_qgis_processor():
+
+def initialize_qgis_processor():
     """
     Initialize the QGIS processor environment (to call and run QGIS algorithms).
 

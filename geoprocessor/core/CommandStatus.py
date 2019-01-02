@@ -17,8 +17,8 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-import geoprocessor.core.command_status_type as command_status_type
-import geoprocessor.core.command_phase_type as command_phase_type
+from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
 
 
 class CommandStatus(object):
@@ -31,9 +31,9 @@ class CommandStatus(object):
         Initialize the instance.
         """
         # The default status of the command is UNKNOWN
-        self.initialization_status = command_status_type.UNKNOWN
-        self.discovery_status = command_status_type.UNKNOWN
-        self.run_status = command_status_type.UNKNOWN
+        self.initialization_status = CommandStatusType.UNKNOWN
+        self.discovery_status = CommandStatusType.UNKNOWN
+        self.run_status = CommandStatusType.UNKNOWN
 
         self.initialization_log_list = []
         self.discovery_log_list = []
@@ -46,43 +46,43 @@ class CommandStatus(object):
         which is the previous maximum severity and that of the new log record.
 
         Args:
-            command_phase: The command phase for the log record, e.g, command_phase_type.RUN
+            command_phase: The command phase for the log record, e.g, CommandPhaseType.RUN
             log_record: A CommandLogRecord instance.
 
         Returns:
             None.
         """
-        if command_phase == command_phase_type.INITIALIZATION:
-            self.initialization_status = command_status_type.max_severity(
+        if command_phase is CommandPhaseType.INITIALIZATION:
+            self.initialization_status = CommandStatusType.max_severity(
                 self.initialization_status, log_record.severity)
             self.initialization_log_list.append(log_record)
-        elif command_phase == command_phase_type.DISCOVERY:
-            self.discovery_status = command_status_type.max_severity(self.discovery_status, log_record.severity)
+        elif command_phase is CommandPhaseType.DISCOVERY:
+            self.discovery_status = CommandStatusType.max_severity(self.discovery_status, log_record.severity)
             self.discovery_log_list.append(log_record)
-        elif command_phase == command_phase_type.RUN:
-            self.run_status = command_status_type.max_severity(self.run_status, log_record.severity)
+        elif command_phase is CommandPhaseType.RUN:
+            self.run_status = CommandStatusType.max_severity(self.run_status, log_record.severity)
             self.run_log_list.append(log_record)
 
     def clear_log(self, command_phase=None):
         """
         Clear the CommandLogRecord list for the command.
-        The run status for all phases is set to command_status_type.UNKNOWN.
+        The run status for all phases is set to CommandStatusType.UNKNOWN.
 
         Args:
-            command_phase: Phase of running a command (see command_phase_type) or None to clear logs for all phases.
+            command_phase: Phase of running a command (see CommandPhaseType) or None to clear logs for all phases.
 
         Returns:
             None.
         """
-        if command_phase == command_phase_type.INITIALIZATION or command_phase is None:
+        if command_phase is CommandPhaseType.INITIALIZATION or command_phase is None:
             del self.initialization_log_list[:]
-            self.initialization_status = command_status_type.UNKNOWN
-        elif command_phase == command_phase_type.DISCOVERY or command_phase is None:
+            self.initialization_status = CommandStatusType.UNKNOWN
+        elif command_phase is CommandPhaseType.DISCOVERY or command_phase is None:
             del self.discovery_log_list[:]
-            self.discovery_status = command_status_type.UNKNOWN
-        elif command_phase == command_phase_type.RUN or command_phase is None:
+            self.discovery_status = CommandStatusType.UNKNOWN
+        elif command_phase is CommandPhaseType.RUN or command_phase is None:
             del self.run_log_list[:]
-            self.run_status = command_status_type.UNKNOWN
+            self.run_status = CommandStatusType.UNKNOWN
 
     def get_command_status_for_phase(self, command_phase):
         """
@@ -94,36 +94,36 @@ class CommandStatus(object):
         Returns:
             Command status for the specified command phase.
         """
-        if command_phase == command_phase_type.INITIALIZATION:
+        if command_phase is CommandPhaseType.INITIALIZATION:
             return self.initialization_status
-        elif command_phase == command_phase_type.DISCOVERY:
+        elif command_phase is CommandPhaseType.DISCOVERY:
             return self.discovery_status
-        elif command_phase == command_phase_type.RUN:
+        elif command_phase is CommandPhaseType.RUN:
             return self.run_status
         else:  # This should never happen.
-            return command_status_type.UNKNOWN
+            return CommandStatusType.UNKNOWN
 
     def get_log_count(self, phase=None, severity=None):
         """
 
         Args:
-            phase: the command phase type (e.g., command_phase_type.RUN), or None to include all phases.
-            severity: the severity (e.g., command_status_type.WARNING) of log messages to count
+            phase: the command phase type (e.g., CommandPhaseType.RUN), or None to include all phases.
+            severity: the severity (e.g., CommandStatusType.WARNING) of log messages to count
 
         Returns: the count of the log messages for the given phase and severity
         """
         log_count = 0
-        if phase == command_phase_type.INITIALIZATION or phase is None:
+        if phase is CommandPhaseType.INITIALIZATION or phase is None:
             for log_message in self.initialization_log_list:
-                if log_message.severity == severity:
+                if log_message.severity is severity:
                     log_count = log_count + 1
-        if phase == command_phase_type.DISCOVERY or phase is None:
+        if phase is CommandPhaseType.DISCOVERY or phase is None:
             for log_message in self.discovery_log_list:
-                if log_message.severity == severity:
+                if log_message.severity is severity:
                     log_count = log_count + 1
-        if phase == command_phase_type.RUN or phase is None:
+        if phase is CommandPhaseType.RUN or phase is None:
             for log_message in self.run_log_list:
-                if log_message.severity == severity:
+                if log_message.severity is severity:
                     log_count = log_count + 1
         return log_count
 
@@ -135,20 +135,20 @@ class CommandStatus(object):
         This ensures that the command has a status even if no log messages were generated.
 
         Args:
-            phase: Command phase, such as command_phase_type.RUN.
+            phase: Command phase, such as CommandPhaseType.RUN.
             severity_if_unknown: The severity to set for the phase if it is currently UNKNOWN.
-                For example, specify as command_status_type.SUCCESS to override the
-                initial command_status_type.UNKNOWN value.
+                For example, specify as CommandStatusType.SUCCESS to override the
+                initial CommandStatusType.UNKNOWN value.
 
         Returns:
             None.
         """
-        if phase == command_phase_type.INITIALIZATION:
-            if self.initialization_status == command_status_type.UNKNOWN:
+        if phase is CommandPhaseType.INITIALIZATION:
+            if self.initialization_status is CommandStatusType.UNKNOWN:
                 self.initialization_status = severity_if_unknown
-        elif phase == command_phase_type.DISCOVERY:
-            if self.discovery_status == command_status_type.UNKNOWN:
+        elif phase is CommandPhaseType.DISCOVERY:
+            if self.discovery_status is CommandStatusType.UNKNOWN:
                 self.discovery_status = severity_if_unknown
-        elif phase == command_phase_type.RUN:
-            if self.run_status == command_status_type.UNKNOWN:
+        elif phase is CommandPhaseType.RUN:
+            if self.run_status is CommandStatusType.UNKNOWN:
                 self.run_status = severity_if_unknown

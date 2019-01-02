@@ -314,17 +314,23 @@ def run_prompt():
     GeoProcessorCmd().cmdloop()
 
 
-def run_ui(app_session):
+def run_ui(ui_app_session):
     """
     Run the GeoProcessor user interface.
 
     Args:
-        app_session:  application session properties
+        ui_app_session:  application session properties for use with the UI
 
     Returns: None
     """
+    logger = logging.getLogger(__name__)
     # Trying to declare the following in the main and passing here does not seem to work.
-    app = QApplication(sys.argv)
+    # logger.info("Declaring QApplication...")
+    # print("Declaring QApplication...")
+    # The following was done previously but is redundant with the call to qgis_util.initialize_qgis() in main.
+    # app = QApplication(sys.argv)
+    # print("...back from declaring QApplication.")
+    # logger.info("...back from declaring QApplication.")
 
     # window = QtWidgets.QWidget()
     # window.show()
@@ -333,20 +339,29 @@ def run_ui(app_session):
 
     # The following is used when not dynamically importing modules
     # command_processor = GeoProcessor()
+    logger.info("Loading GeoProcessor class...")
+    print("Loading GeoProcessor class...")
     GeoProcessor_module = importlib.import_module('geoprocessor.core.GeoProcessor')
     class_ = getattr(GeoProcessor_module, 'GeoProcessor')
     command_processor = class_()
     # GeoProcessorUI derives from window = QtWidgets.QMainWindow()
     GeoProcessorUI_module = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI_module, 'GeoProcessorUI')
-    runtime_properties = {}
-    runtime_properties['AppVersion'] = version.app_version
-    runtime_properties['AppVersionDate'] = version.app_version_date
-    ui = class_(command_processor, runtime_properties, app_session)
+    ui_runtime_properties = {}
+    ui_runtime_properties['AppVersion'] = version.app_version
+    ui_runtime_properties['AppVersionDate'] = version.app_version_date
+    ui = class_(command_processor, ui_runtime_properties, ui_app_session)
+    print("back from loading GeoProcessor class.")
+    logger.info("back from loading GeoProcessor class.")
+    print("Showing the UI...")
+    logger.info("Showing the UI...")
     ui.show()
     # Enter the main loop for the application
     # - the following ensures a clean exit from the application
-    sys.exit(app.exec_())
+    if qgis_util.qgs_app is None:
+        logger.warning("QGIS application is null, cannot use PyQGIS")
+    else:
+        sys.exit(qgis_util.qgs_app.exec_())
     pass
 
 
@@ -488,7 +503,12 @@ if __name__ == '__main__':
     # # If handling QGIS environment here, rather than in GeoProcessor
     # # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once
     # # - previously used the following line of code  --->  qgis_util.initialize_qgis(r"C:\OSGeo4W64\apps\qgis")
-    qgis_util.initialize_qgis()
+    try:
+        qgs_app = qgis_util.initialize_qgis()
+    except Exception as e:
+        message = 'Error initializing QGIS application'
+        print(message)
+        logger.exception(message, e, exc_info=True)
 
     # Process configuration parameters
     runtime_properties = {}
@@ -517,13 +537,19 @@ if __name__ == '__main__':
             logger.exception(message, e, exc_info=True)
     elif args.ui:
         # Run the user interface
-        print("Running GeoProcessor UI")
+        message="Running GeoProcessor UI"
+        print(message)
+        logger.info(message)
         try:
             run_ui(app_session)
         except Exception as e:
-            message = 'Exception running UI'
+            message = 'Exception running UI (caught "Exception")'
             print(message)
             logger.exception(message, e, exc_info=True)
+        except:
+            message = 'Exception running UI (caught "except")'
+            print(message)
+            logger.exception(message)
     elif args.version:
         # Print the version
         print_version()

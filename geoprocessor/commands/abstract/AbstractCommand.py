@@ -18,6 +18,7 @@
 # ________________________________________________________________NoticeEnd___
 
 from geoprocessor.core.CommandStatus import CommandStatus
+
 import geoprocessor.util.command_util as command_util
 
 

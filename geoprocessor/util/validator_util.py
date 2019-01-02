@@ -27,8 +27,8 @@ as necessary can be defined.
 import os
 import ogr
 
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 
 import geoprocessor.util.io_util as io_util
@@ -460,16 +460,16 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         # If configured, log a FAILURE message about the failed check. Set the run_the_command boolean to False.
         if fail_response.upper() == "FAIL":
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                    message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
+                                                                                  message, recommendation))
             run_the_command = False
 
         # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to True.
         elif fail_response.upper() == "WARN":
 
             self.logger.warning(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.WARNING,
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.WARNING,
                                                             message, recommendation))
             run_the_command = True
 
@@ -477,8 +477,8 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
         elif fail_response.upper() == "WARNBUTDONOTRUN":
 
             self.logger.warning(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.WARNING,
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.WARNING,
                                                             message, recommendation))
             run_the_command = False
 

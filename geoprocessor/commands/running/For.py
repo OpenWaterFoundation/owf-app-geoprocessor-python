@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
@@ -123,8 +123,8 @@ class For(AbstractCommand):
             recommendation = "Specify the Name."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # --------------------------------
         # Iterator option 1 - use a sequence
@@ -139,8 +139,8 @@ class For(AbstractCommand):
                 recommendation = "Specify the SequenceStart as a number."
                 warning += "\n" + message
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             else:
                 if pv_SequenceStart.find(".") >= 0:
                     # Decimal
@@ -157,8 +157,8 @@ class For(AbstractCommand):
                 recommendation = "Specify the SequenceEnd as a number."
                 warning += "\n" + message
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             else:
                 if pv_SequenceEnd.find(".") >= 0:
                     # Decimal
@@ -175,8 +175,8 @@ class For(AbstractCommand):
                 recommendation = "Specify the SequenceIncrement as a number."
                 warning += "\n" + message
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             else:
                 if pv_SequenceIncrement.find(".") >= 0:
                     # Decimal
@@ -208,8 +208,8 @@ class For(AbstractCommand):
                 recommendation = "Specify the TableColumn."
                 warning += "\n" + message
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # --------------------------------
         # Only allow one of the iteration properties to be specified because otherwise the command will be confused.
@@ -218,8 +218,8 @@ class For(AbstractCommand):
             recommendation = "Specify parameters for only one iteration type."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             # Allow multiple iteration types to be set since they will be processed in order when running
             # and the preferred approach will take precedent
 
@@ -234,7 +234,7 @@ class For(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def get_name(self):
         """
@@ -266,7 +266,7 @@ class For(AbstractCommand):
                 logger.info("Initializing For() command for a list.")
                 # Initialize the loop
                 self.__set_iterator_property_value(None)
-                self.command_status.clear_log(command_phase_type.RUN)
+                self.command_status.clear_log(CommandPhaseType.RUN)
                 try:
                     # This would normally be done in run_command(), but that function is not called like other commands
                     self.iterator_object_list_index = 0
@@ -277,8 +277,8 @@ class For(AbstractCommand):
                         recommendation = "Confirm that the list property has values."
                         logger.warning(message)
                         self.command_status.add_to_log(
-                            command_phase_type.RUN,
-                            CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                            CommandPhaseType.RUN,
+                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
                     else:
                         self.iterator_object = self.iterator_list[self.iterator_object_list_index]
                     # if ( Message.isDebugOn )
@@ -295,7 +295,7 @@ class For(AbstractCommand):
                 logger.info("Initializing For() command for a sequence.")
                 # Initialize the loop
                 self.__set_iterator_property_value(None)
-                self.command_status.clear_log(command_phase_type.RUN)
+                self.command_status.clear_log(CommandPhaseType.RUN)
                 try:
                     self.iterator_object_list_index = 0
                     self.iterator_object = self.iterator_sequence_start
@@ -319,7 +319,7 @@ class For(AbstractCommand):
                 logger.info("Initializing For() command for a table.")
                 # Initialize the loop
                 self.__set_iterator_property_value(None)
-                self.command_status.clear_log(command_phase_type.RUN)
+                self.command_status.clear_log(CommandPhaseType.RUN)
                 try:
                     # Get TableID parameter value. If required, expand for ${Property} syntax.
                     pv_TableID = self.get_parameter_value(parameter_name='TableID')
@@ -346,8 +346,8 @@ class For(AbstractCommand):
                         recommendation = "Confirm that the table column has values."
                         logger.warning(message)
                         self.command_status.add_to_log(
-                            command_phase_type.RUN,
-                            CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                            CommandPhaseType.RUN,
+                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
                     else:
                         self.iterator_object = self.iterator_list[self.iterator_object_list_index]
                         # Set the other property values if configured.
@@ -482,8 +482,8 @@ class For(AbstractCommand):
                 recommendation = "Confirm that the list property has values."
                 logger.warning(message)
                 self.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             self.iterator_is_list = True
             self.iterator_is_sequence = False
             self.iterator_is_table = False

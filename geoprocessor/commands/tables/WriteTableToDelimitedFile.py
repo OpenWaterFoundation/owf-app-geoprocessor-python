@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -119,8 +119,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
             recommendation = "Specify the TableID parameter to indicate the Table to write."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter OutputFile is a non-empty, non-None string.
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
@@ -131,8 +131,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
                              "location and name of the output delimited file."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that the required parameters are valid Boolean values or None.
         parameters = ['WriteIndexColumn', 'WriteHeaderRow']
@@ -145,8 +145,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 recommendation = "Specify a valid Boolean value for the {} parameter.".format(parameter)
                 warning += "\n" + message
                 self.command_status.add_to_log(
-                    command_phase_type.INITIALIZATION,
-                    CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter ArrayFormat is one of the acceptable values or is None.
         pv_ArrayFormat = self.get_parameter_value(parameter_name="ArrayFormat", command_parameters=command_parameters)
@@ -157,8 +157,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
             recommendation = "Specify one of the acceptable values ({}) for the ArrayFormat parameter.".format(
                 self.__choices_ArrayFormat)
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter NullValueFormat is one of the acceptable values or is None.
         pv_NullValueFormat = self.get_parameter_value(parameter_name="NullValueFormat",
@@ -169,8 +169,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
             recommendation = "Specify one of the acceptable values ({}) for the NullValueFormat parameter.".format(
                 self.__choices_NullValueFormat)
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -182,7 +182,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_write_table(self, table_id, output_file_abs, delimiter, sort_columns):
         """
@@ -231,7 +231,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
                 self.warning_count += 1
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+                self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                         message, recommendation))
                 should_run_command.append(False)
 
@@ -558,8 +558,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                                                                                 pv_OutputFile)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -568,4 +568,4 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

@@ -25,6 +25,42 @@ import os
 import platform
 
 
+def get_os_distro():
+    """
+    Determine the operating system distribution, useful for showing system information
+    but not advised for checks (use the is_*_os() functions to control program logic).
+
+    Returns:
+        (str) operating system distribution as "Cygwin", "MinGW", "Debian" (Linux), "Windows 10" for Windows 10,
+        or None if unknown.
+    """
+    os_type_distro = None
+    if is_cygwin_os():
+        os_type_distro = "Cygwin"
+    elif is_mingw_os():
+        os_type_distro = "MinGW"
+    elif is_windows_os():
+        # Use the platform version
+        os_type_distro = platform.uname()[2]
+    return os_type_distro
+
+
+def get_os_type():
+    """
+    Determine the major operating system type, useful for showing system information
+    but not advised for checks (use the is_*_os() functions to control program logic).
+
+    Returns:
+        (str) operating system type as "Linux" or "Windows", or None if unknown.
+    """
+    os_type = None
+    if is_linux_os():
+        os_type = "Linux"
+    elif is_windows_os():
+        os_type = "Windows"
+    return os_type
+
+
 def is_cygwin_os():
     """
     Indicate whether the operating system is Cygwin.
@@ -32,7 +68,7 @@ def is_cygwin_os():
 
     Returns:  True if Cygwin operating system, False if not.
     """
-    if platform.uname()[0].upper().index('CYGWIN') >= 0:
+    if platform.uname()[0].upper().find('CYGWIN') >= 0:
         return True
     else:
         return False
@@ -45,6 +81,19 @@ def is_linux_os():
     Returns:  True if Linux operating system, False if not.
     """
     if os.name.upper() == 'POSIX':
+        return True
+    else:
+        return False
+
+
+def is_mingw_os():
+    """
+    Indicate whether the operating system is MinGW, such as used with Git Bash.
+    MinGW is a Linux OS but someones MinGW-specific logic must be implemented.
+
+    Returns:  True if MinGW operating system, False if not.
+    """
+    if platform.uname()[0].upper().find('MINGW') >= 0:
         return True
     else:
         return False

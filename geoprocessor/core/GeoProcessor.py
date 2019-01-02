@@ -19,8 +19,8 @@
 
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.command_util as command_util
@@ -473,7 +473,7 @@ class GeoProcessor(object):
         num_errors = 0
         for command in self.commands:
             command_status = command.command_status.run_status
-            if command_status == "FAILURE":
+            if command_status is CommandStatusType.FAILURE:
                 num_errors += 1
         return num_errors
 
@@ -485,7 +485,7 @@ class GeoProcessor(object):
         num_warnings = 0
         for command in self.commands:
             command_status = command.command_status.run_status
-            if command_status == "WARNING":
+            if command_status is CommandStatusType.WARNING:
                 num_warnings += 1
         return num_warnings
 
@@ -960,7 +960,7 @@ class GeoProcessor(object):
             # Running selected commands so reset all commands in command list
             for i_command in range(len(self.commands)):
                 command = self.commands[i_command]
-                command.command_status.clear_log(command_phase_type.RUN)
+                command.command_status.clear_log(CommandPhaseType.RUN)
 
         # Reset any properties left over from the previous run that may impact the current run.
         self.__reset_data_for_run_start()
@@ -988,7 +988,7 @@ class GeoProcessor(object):
             if command_class == 'For':
                 command.reset_command()
             # Clear the command Run log.
-            command.command_status.clear_log(command_phase_type.RUN)
+            command.command_status.clear_log(CommandPhaseType.RUN)
 
         # Run all the commands
         # - set debug = True to turn on debug messages
@@ -1078,9 +1078,9 @@ class GeoProcessor(object):
                             message = 'Error going to next iteration.'
                             logger.warning(message, exc_info=True)
                             command.command_status.add_to_log(
-                                command_phase_type.RUN,
+                                CommandPhaseType.RUN,
                                 CommandLogRecord(
-                                    command_status_type.FAILURE, message,
+                                    CommandStatusType.FAILURE, message,
                                     "Check For() command iteration data."))
                             logger.warning('Error going to next iteration.  Check For() command iteration data.')
                             # Same logic as ending the loop...
@@ -1096,8 +1096,8 @@ class GeoProcessor(object):
                                 message = 'Unable to match For loop name "' + For_command.get_name() + \
                                     '" in EndFor() commands.'
                                 command.command_status.add_to_log(
-                                    command_phase_type.RUN,
-                                    CommandLogRecord(command_status_type.FAILURE, message,
+                                    CommandPhaseType.RUN,
+                                    CommandLogRecord(CommandStatusType.FAILURE, message,
                                                      "Add a matching EndFor() command."))
                                 warning_count += 1
                                 raise RuntimeError(message)
@@ -1127,8 +1127,8 @@ class GeoProcessor(object):
                                 message = 'Unable to match For loop name "' + For_command.get_name() + \
                                     '" in EndFor() commands.'
                                 command.command_status.add_to_log(
-                                    command_phase_type.RUN,
-                                    CommandLogRecord(command_status_type.FAILURE, message,
+                                    CommandPhaseType.RUN,
+                                    CommandLogRecord(CommandStatusType.FAILURE, message,
                                                      "Add a matching EndFor() command."))
                                 raise RuntimeError(message)
                     # elif isinstance(command,EndFor):
@@ -1179,8 +1179,8 @@ class GeoProcessor(object):
                         message = 'Unable to find matching If() command for Endif(Name="' + \
                             EndIf_command.get_name() + '")'
                         command.command_status.add_to_log(
-                            command_phase_type.RUN,
-                            CommandLogRecord(command_status_type.FAILURE, message,
+                            CommandPhaseType.RUN,
+                            CommandLogRecord(CommandStatusType.FAILURE, message,
                                              "Confirm that matching If() and EndIf() commands are specified."))
                     else:
                         # Run the command so the status is set to success
@@ -1200,8 +1200,8 @@ class GeoProcessor(object):
                 # Don't raise an exception because want all commands to run as best they can, each with
                 # message logging, so that user can troubleshoot all at once rather than first error at a time
                 command.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, "See the log file for details."))
                 # Put this after the above because it may also cause an issue
                 try:
                     logger.error(message, e, exc_info=True)
@@ -1216,8 +1216,8 @@ class GeoProcessor(object):
                 # Don't raise an exception because want all commands to run as best they can, each with
                 # message logging, so that user can troubleshoot all at once rather than first error at a time
                 command.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, message, "See the log file for details."))
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, "See the log file for details."))
                 # Put this after the above because it may also cause an issue
                 try:
                     logger.error(message, exc_info=True)

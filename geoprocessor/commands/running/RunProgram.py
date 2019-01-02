@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -99,8 +99,8 @@ class RunProgram(AbstractCommand):
             recommendation = "Specify the command line."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IncludeParentEnvVars is optional, will default to True at runtime
         pv_IncludeParentEnvVars = self.get_parameter_value(parameter_name='IncludeParentEnvVars',
@@ -112,8 +112,8 @@ class RunProgram(AbstractCommand):
                              str(self.__choices_IncludeParentEnvVars)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # UseCommandShell is optional, will default to False at runtime
         pv_UseCommandShell = self.get_parameter_value(parameter_name='UseCommandShell',
@@ -125,8 +125,8 @@ class RunProgram(AbstractCommand):
                              str(self.__choices_UseCommandShell)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # TODO smalers 2018-12-16 need to make sure IncludeEnvVars and ExcludeEnvVars are valid lists
         # - for now allow any string to be specified
@@ -142,7 +142,7 @@ class RunProgram(AbstractCommand):
             raise ValueError(warning_message)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def create_env_dict(self, include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list):
         """
@@ -320,8 +320,8 @@ class RunProgram(AbstractCommand):
                 message = 'Nonzero return status running program "' + command_line_expanded + '"'
                 logger.error(message, exc_info=True)
                 self.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, message,
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, message,
                                      "See the log file for details."))
 
         except Exception as e:
@@ -329,8 +329,8 @@ class RunProgram(AbstractCommand):
             message = 'Unexpected error running program "' + command_line_expanded + '"'
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         except:
@@ -338,8 +338,8 @@ class RunProgram(AbstractCommand):
             message = 'Unexpected error running program "' + command_line_expanded + '"'
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         # If any output files were indicated, add to the command output if they exist
@@ -354,4 +354,4 @@ class RunProgram(AbstractCommand):
             logger.warning(message)
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

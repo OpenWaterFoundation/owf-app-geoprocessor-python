@@ -23,8 +23,8 @@ from geoprocessor.commands.testing.StartRegressionTestResultsReport import Start
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -85,8 +85,8 @@ class RunCommands(AbstractCommand):
             recommendation = "Specify the command file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # ExpectedStatus is optional, will default to Success at runtime
         pv_ExpectedStatus = self.get_parameter_value(parameter_name='ExpectedStatus',
@@ -98,8 +98,8 @@ class RunCommands(AbstractCommand):
                              str(self.__choices_ExpectedStatus)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -112,7 +112,7 @@ class RunCommands(AbstractCommand):
             raise ValueError(warning_message)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self):
         """
@@ -159,16 +159,37 @@ class RunCommands(AbstractCommand):
 
             runner = CommandFileRunner()
             # This will set the initial working directory of the runner to that of the command file...
-            runner.read_command_file(command_file_absolute)
+            file_found = True
+            try:
+                runner.read_command_file(command_file_absolute)
+            except FileNotFoundError as e:
+                warning_count += 1
+                message = 'File does not exist:  "' + command_file_absolute + '"'
+                self.command_status.add_to_log(
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, message,
+                                     "Confirm that the command file exists."))
+                # Set the following to skip code below
+                file_found = False
+
             # If the command file is not enabled, don't need to initialize or process
             # TODO SAM 2013-04-20 Even if disabled, will still run discovery above
             # - need to disable discovery in this case
             is_enabled = runner.is_command_file_enabled()
-            expected_status = command_status_type.SUCCESS
+            expected_status = str(CommandStatusType.SUCCESS)
             if pv_ExpectedStatus is not None:
                 expected_status = pv_ExpectedStatus
 
-            if is_enabled:
+            if not file_found:
+                # Need to add logic to indicate a failed test
+                self.command_status.add_to_log(
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(
+                        CommandStatusType.FAILURE, "Command file does not exist.",
+                        "Confirm that the command file exists."))
+                # Set the results to fail
+                test_pass_fail = self.__FAIL
+            elif is_enabled:
                 # TODO smalers, 2018-01-26 Java code set datastores here
                 # TODO SAM 2010-09-30 Need to evaluate how to share properties - issue is that built-in properties are
                 # handled explicitly whereas user-defined properties are in a list that can be easily shared.
@@ -182,18 +203,18 @@ class RunCommands(AbstractCommand):
                 # Set the CommandStatus for this command to the most severe status of the
                 # commands file that was just run.
                 max_severity = command_util.get_command_status_max_severity(runner.command_processor)
-                logger.info("Max severity from commands = " + max_severity)
+                logger.info("Max severity from commands = " + str(max_severity))
                 test_pass_fail = "????"  # Status for the test, which is not always the same as max_severity
                 if pv_ExpectedStatus is not None:
-                    # Do the following to avoid case issues
-                    if max_severity.upper() == expected_status.upper():
+                    expected_status_type = CommandStatusType.value_of(expected_status)
+                    if max_severity is expected_status_type:
                         # Expected status matches the actual so consider this a success.
                         # This should generally be used only when running a test that we expect to fail (e.g., run
                         # obsolete command or testing handling of errors).
                         self.command_status.add_to_log(
-                            command_phase_type.RUN,
-                            CommandLogRecord(command_status_type.SUCCESS,
-                                             "Severity for RunCommands (" + max_severity +
+                            CommandPhaseType.RUN,
+                            CommandLogRecord(CommandStatusType.SUCCESS,
+                                             "Severity for RunCommands (" + str(max_severity) +
                                              ") is max of commands in command file that was run - matches expected (" +
                                              expected_status + ") so RunCommands status=Success.",
                                              "Additional status messages are omitted to allow test to be success - " +
@@ -206,9 +227,9 @@ class RunCommands(AbstractCommand):
                     else:
                         # Expected status and it does NOT match the actual status so this is a failure.
                         self.command_status.add_to_log(
-                            command_phase_type.RUN,
-                            CommandLogRecord(command_status_type.SUCCESS,
-                                             "Severity for RunCommands (" + max_severity +
+                            CommandPhaseType.RUN,
+                            CommandLogRecord(CommandStatusType.SUCCESS,
+                                             "Severity for RunCommands (" + str(max_severity) +
                                              ") is max of commands in command file that was run - " +
                                              "does not match expected (" +
                                              expected_status + ") so RunCommands status=Failure.",
@@ -223,9 +244,9 @@ class RunCommands(AbstractCommand):
                     # status
                     # Expected status is not specified
                     self.command_status.add_to_log(
-                        command_phase_type.RUN,
+                        CommandPhaseType.RUN,
                         CommandLogRecord(
-                            max_severity, "Severity for RunCommands (" + max_severity +
+                            max_severity, "Severity for RunCommands (" + str(max_severity) +
                             ") is max of commands in command file that was run.",
                             "Status messages from commands that were run are appended to RunCommand status messages."))
 
@@ -236,8 +257,7 @@ class RunCommands(AbstractCommand):
                     logger.info("Appending log records")
                     command_util.append_command_status_log_records(
                         self.command_status, runner.command_processor.commands)
-                    if command_status_type.number_value(max_severity) >= \
-                            command_status_type.number_value(command_status_type.WARNING):
+                    if max_severity.value >= CommandStatusType.WARNING.value:
                         test_pass_fail = self.__FAIL
                     else:
                         test_pass_fail = self.__PASS
@@ -277,7 +297,7 @@ class RunCommands(AbstractCommand):
                 logger.info("Command file is not enabled")
                 run_time_total = 0
                 test_pass_fail = ""
-                max_severity = command_status_type.UNKNOWN
+                max_severity = CommandStatusType.UNKNOWN
                 StartRegressionTestResultsReport.append_to_regression_test_report(
                     is_enabled, run_time_total,
                     test_pass_fail, expected_status, max_severity, command_file_absolute)
@@ -289,8 +309,8 @@ class RunCommands(AbstractCommand):
             traceback.print_exc(file=sys.stdout)
             logger.error(message, e, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         except:
@@ -299,8 +319,8 @@ class RunCommands(AbstractCommand):
             traceback.print_exc(file=sys.stdout)
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         if warning_count > 0:
@@ -308,4 +328,4 @@ class RunCommands(AbstractCommand):
             logger.warning(message)
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

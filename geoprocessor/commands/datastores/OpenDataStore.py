@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.DataStore import DataStore
 
 import geoprocessor.util.command_util as command_util
@@ -109,8 +109,8 @@ class OpenDataStore(AbstractCommand):
             message = "DataStoreID parameter has no value."
             recommendation = "Specify a valid DataStore ID."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional IfDataStoreIDExists param is `Replace`, `Open`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
         pv_IfDataStoreIDExists = self.get_parameter_value(parameter_name="IfDataStoreIDExists",
@@ -123,8 +123,8 @@ class OpenDataStore(AbstractCommand):
                 format(self.__choices_IfDataStoreIDExists)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check if the ConfigFile parameter is a non-empty, non-None string.
         pv_ConfigFile = self.get_parameter_value(parameter_name="ConfigFile", command_parameters=command_parameters)
@@ -154,8 +154,8 @@ class OpenDataStore(AbstractCommand):
                     recommendation = "Specify a valid {} parameter.".format(parameter)
                     warning += "\n" + message
                     self.command_status.add_to_log(
-                        command_phase_type.INITIALIZATION,
-                        CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                        CommandPhaseType.INITIALIZATION,
+                        CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
             # Check that parameter DatabaseDialect is one of the acceptable values.
             pv_DatabaseDialect = self.get_parameter_value(parameter_name="DatabaseDialect",
@@ -167,8 +167,8 @@ class OpenDataStore(AbstractCommand):
                 recommendation = "Specify one of the acceptable values ({}) for the DatabaseDialect parameter.".format(
                     self.__choices_DatabaseDialect)
                 warning += "\n" + message
-                self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -180,7 +180,7 @@ class OpenDataStore(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_open_datastore(self, datastore_id, file_path_abs, if_datastore_id_exists):
         """
@@ -206,7 +206,7 @@ class OpenDataStore(AbstractCommand):
         # If the DataStoreID is the same as an already-existing DataStoreID, raise a WARNING, FAILURE or IGNORE
         # (depends on the value of the IfDataStoreIDExists parameter.)
         should_run_command.append(validators.run_check(self, "IsDataStoreIdUnique", "DataStoreID", datastore_id,
-                                                           None))
+                                                       None))
 
         # If the "Configuration file configures datastore" method is to be used, continue with check.
         if file_path_abs is not None:
@@ -227,8 +227,8 @@ class OpenDataStore(AbstractCommand):
                 message = "The DataStore ({}) is already open.".format(datastore_id)
                 recommendation = "Specify a DataStoreID of a closed DataStore."
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
-                                                                                            message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
+                                                                                      message, recommendation))
                 should_run_command.append(False)
 
         # Return the Boolean to determine if the process should be run.
@@ -309,8 +309,8 @@ class OpenDataStore(AbstractCommand):
                 message = "Unexpected error opening DataStore {}.".format(pv_DataStoreID)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -319,4 +319,4 @@ class OpenDataStore(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

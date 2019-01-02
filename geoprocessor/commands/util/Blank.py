@@ -17,10 +17,10 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 
-class Blank(AbstractCommand.AbstractCommand):
+class Blank(AbstractCommand):
     """
     A Blank command is used when the command contains only whitespace.
     The command does nothing when run.

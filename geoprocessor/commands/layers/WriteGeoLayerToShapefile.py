@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -104,8 +104,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to write."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter OutputFile is a non-empty, non-None string.
         # - existence of the folder will also be checked in run_command().
@@ -117,8 +117,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                              "location and name of the output spatial data file in GeoJSON format."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional ZipOutput parameter value is a valid Boolean value or is None.
         pv_ZipOutput = self.get_parameter_value(parameter_name="ZipOutput", command_parameters=command_parameters)
@@ -127,8 +127,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             recommendation = "Specify either 'True' or 'False for the ZipOutput parameter."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -140,7 +140,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_write_geolayer(self, geolayer_id, output_file_abs):
         """
@@ -169,8 +169,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
             recommendation = 'Specify a valid GeoLayerID.'
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the OutputFolder is not a valid folder, raise a FAILURE.
         output_folder = os.path.dirname(output_file_abs)
@@ -180,7 +180,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
             recommendation = 'Specify a valid relative pathname for the output file.'
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.FAILURE,
+            self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                     message, recommendation))
 
         # Return the Boolean to determine if the write process should be run. If TRUE, all checks passed. If FALSE,
@@ -241,8 +241,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                     pv_GeoLayerID)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -251,4 +251,4 @@ class WriteGeoLayerToShapefile(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

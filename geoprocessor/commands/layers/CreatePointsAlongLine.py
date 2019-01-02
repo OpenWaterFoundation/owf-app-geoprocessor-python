@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
@@ -90,8 +90,8 @@ class CreatePointsAlongLine(AbstractCommand):
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to copy."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
@@ -104,8 +104,8 @@ class CreatePointsAlongLine(AbstractCommand):
                 acceptable_values)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -117,7 +117,7 @@ class CreatePointsAlongLine(AbstractCommand):
             raise ValueError(warning)
         else:
             # Refresh the phase severity
-            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_create_points(self, input_geolayer_id, output_geolayer_id):
         """
@@ -145,8 +145,8 @@ class CreatePointsAlongLine(AbstractCommand):
             message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(input_geolayer_id)
             recommendation = 'Specify a valid GeoLayerID.'
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message,
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message,
                                                             recommendation))
 
         # If the output GeoLayer ID is the same as an already-registered GeoLayerID, react according to the
@@ -165,8 +165,8 @@ class CreatePointsAlongLine(AbstractCommand):
 
                 self.warning_count += 1
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
             # The registered GeoLayer should not be replaced. A warning should be logged.
@@ -175,8 +175,8 @@ class CreatePointsAlongLine(AbstractCommand):
                 run_copy = False
                 self.warning_count += 1
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
             # The matching IDs should cause a FAILURE.
@@ -185,8 +185,8 @@ class CreatePointsAlongLine(AbstractCommand):
                 run_copy = False
                 self.warning_count += 1
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE,
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE,
                                                                 message, recommendation))
 
         # Return the Boolean to determine if the copy process should be run. If TRUE, all checks passed. If FALSE,

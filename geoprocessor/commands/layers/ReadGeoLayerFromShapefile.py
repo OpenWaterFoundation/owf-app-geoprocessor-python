@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -118,8 +118,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             recommendation = "Specify the SpatialDataFile parameter to indicate the spatial data layer file."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is one of the acceptable values or is None.
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
@@ -131,8 +131,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                 self.__choices_IfGeoLayerIDExists)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -145,7 +145,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
         else:
             # Refresh the phase severity
-            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_read_geolayer(self, spatial_data_file_abs, geolayer_id):
 
@@ -174,8 +174,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             message = "The SpatialDataFile ({}) is not a valid file.".format(spatial_data_file_abs)
             recommendation = "Specify a valid file."
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the input spatial data file does not end in .geojson, raise a WARNING.
         if not spatial_data_file_abs.upper().endswith(".SHP"):
@@ -183,8 +183,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             message = 'The SpatialDataFile ({}) does not end with the .shp extension.'.format(spatial_data_file_abs)
             recommendation = "No recommendation logged."
             self.logger.warning(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.WARNING, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
         # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
@@ -201,8 +201,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
                 self.warning_count += 1
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
             # The registered GeoLayer should not be replaced. A warning should be logged.
@@ -211,8 +211,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                 run_read = False
                 self.warning_count += 1
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING,
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
             # The matching IDs should cause a FAILURE.
@@ -221,8 +221,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                 run_read = False
                 self.warning_count += 1
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE,
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE,
                                                                 message, recommendation))
 
         # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed. If FALSE,
@@ -279,8 +279,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                                                                                            pv_SpatialDataFile)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -289,4 +289,4 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

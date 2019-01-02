@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -104,8 +104,8 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
             recommendation = "Specify the GeoLayerID parameter to indicate the a GeoLayer."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter Tolerance is a non-empty, non-None string.
         pv_Tolerance = self.get_parameter_value(parameter_name='Tolerance', command_parameters=command_parameters)
@@ -115,8 +115,8 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
             recommendation = "Specify the Tolerance parameter to indicate the simplification extent."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter SimplifyMethod is either `DouglasPeucker` or None.
         pv_SimplifyMethod = self.get_parameter_value(parameter_name="SimplifyMethod",
@@ -129,8 +129,8 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                 acceptable_values)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `Warn`, `Fail` or None.
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
@@ -143,8 +143,8 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                 acceptable_values)
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -156,7 +156,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
             raise ValueError(warning)
         else:
             # Refresh the phase severity
-            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_simplify_geolayer(self, geolayer_id, simplified_geolayer_id):
         """
@@ -258,8 +258,8 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                 message = "Unexpected error simplifying GeoLayer {}.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -268,4 +268,4 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

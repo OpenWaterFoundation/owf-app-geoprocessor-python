@@ -17,6 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+
 class CommandLogRecord(object):
     """
     Command log record, which carries a single message and corresponding status.
@@ -27,7 +28,7 @@ class CommandLogRecord(object):
         Initialize an instance.
 
         Args:
-            command_status_type:  The command status type, such as command_status_type.SUCCESS, etc.
+            command_status_type (CommandStatusType):  The command status type, indicating severity of log record.
             problem:  The message describing the problem.
             recommendation:  The recommendation for how to resolve the problem.
             log_record_type:  The log record type, to group the messages, currently not used.

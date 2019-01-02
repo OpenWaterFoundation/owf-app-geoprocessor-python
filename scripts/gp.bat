@@ -21,11 +21,10 @@ rem ________________________________________________________________NoticeEnd___
 rem
 rem Windows batch file to run the Open Water Foundation GeoProcessor application for QGIS
 rem - This script is for Python3/QGIS3 (QGIS LTR is not used)
+rem - The script assumes an OSGeo4W64 installation - does not yet handle stand-alone QGIS installation.
+rem - Checks are done for Python 3.6 and 3.7, with latest used, to accommodate QGIS versions.
 rem - This script should work on a normal Windows 7/10 computer.
-rem - The geoprocessor package must be installed in a normal location, such as
-rem   QGIS Python site-packages folder.
-rem - This script should be installed in the QGIS bin folder or other location
-rem   that is in the PATH or otherwise can be executed.
+rem - This script and GeoProcessor should be installed in a Python Virtual Machine environment.
 
 rem Set the Python environment to find the correct run-time libraries
 rem - The GEOPROCESSOR_ENV_SETUP environment variable is set to YES
@@ -79,7 +78,10 @@ rem Add pyQGIS libraries to the PYTHONPATH so that they are found by Python
 set PYTHONPATH=%OSGEO4W_ROOT%\apps\%QGISNAME%\python;%PYTHONPATH%
 rem See https://anitagraser.com/2018/01/28/porting-processing-scripts-to-qgis3/
 set PYTHONPATH=%OSGEO4W_ROOT%\apps\%QGISNAME%\python\plugins;%PYTHONPATH%
-set PYTHONPATH=%OSGEO4W_ROOT%\apps\Python36\lib\site-packages;%PYTHONPATH%
+
+rem List the following in order so most recent is at the end
+if exist %OSGEO4W_ROOT%\apps\Python36 set PYTHONPATH=%OSGEO4W_ROOT%\apps\Python36\lib\site-packages;%PYTHONPATH%
+if exist %OSGEO4W_ROOT%\apps\Python37 set PYTHONPATH=%OSGEO4W_ROOT%\apps\Python37\lib\site-packages;%PYTHONPATH%
 
 rem Indicate that the setup has been completed
 rem - this will ensure that the script when run again does not repeat setup
@@ -110,7 +112,7 @@ echo QT_PLUGIN_PATH=%QT_PLUGIN_PATH%
 echo.
 
 rem Run QGIS Python with the geoprocessor module found using PYTHONPATH set above.
-rem - Must use Python 3.6 compatible with QGIS
+rem - Must use Python 3.6+ compatible with QGIS
 rem - Pass command line arguments that were passed to this bat file.
 rem "%PYTHONHOME%\python" %*
 rem Use -v to see verbose list of modules that are loaded.

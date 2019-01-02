@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -109,8 +109,8 @@ class MergeGeoLayers(AbstractCommand):
             recommendation = "Specify the GeoLayerIDs parameter to indicate the GeoLayers to merge."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter OutputGeoLayerID is a non-empty, non-None string.
         pv_OutputGeoLayerID = self.get_parameter_value(parameter_name='OutputGeoLayerID',
@@ -121,8 +121,8 @@ class MergeGeoLayers(AbstractCommand):
             recommendation = "Specify the OutputGeoLayerID parameter to indicate the ID of the merged GeoLayer."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -134,7 +134,7 @@ class MergeGeoLayers(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_merge(self, geolayer_id_list, output_geolayer_id):
         """
@@ -170,8 +170,8 @@ class MergeGeoLayers(AbstractCommand):
                 message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
                 recommendation = 'Specify a valid GeoLayerID.'
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If all of the input GeoLayers exist, check that the they have the same CRS and the same geometry.
         if input_geolayers_exist:
@@ -200,8 +200,8 @@ class MergeGeoLayers(AbstractCommand):
                 message = 'The input GeoLayers ({}) have different geometries ({}).'.format(geolayer_id_list, geom_list)
                 recommendation = 'Specify input GeoLayers that have the same geometry.'
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
             # If the input GeoLayers have different CRS, raise a WARNING.
             if len(set(crs_list)) > 1:
@@ -211,8 +211,8 @@ class MergeGeoLayers(AbstractCommand):
                           ' reference systems ({}).'.format(geolayer_id_list, geom_list)
                 recommendation = 'Specify input GeoLayers that have the same CRS.'
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
         # If the output_geolayer_id is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
@@ -230,8 +230,8 @@ class MergeGeoLayers(AbstractCommand):
 
                 self.warning_count += 1
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
             # The registered GeoLayer should not be replaces. A warning should be logged.
             if pv_IfGeoLayerIDExists.upper() == "WARN":
@@ -239,8 +239,8 @@ class MergeGeoLayers(AbstractCommand):
                 run_merge = False
                 self.warning_count += 1
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
             # The matching IDs should cause a FAILURE.
             elif pv_IfGeoLayerIDExists.upper() == "FAIL":
@@ -248,8 +248,8 @@ class MergeGeoLayers(AbstractCommand):
                 run_merge = False
                 self.warning_count += 1
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Return the Boolean to determine if the merge process should be run. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.
@@ -461,8 +461,8 @@ class MergeGeoLayers(AbstractCommand):
                 message = "Unexpected error merging the following GeoLayers {}.".format(pv_GeoLayerIDs)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message,
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
@@ -472,4 +472,4 @@ class MergeGeoLayers(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validators
@@ -90,8 +90,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
             recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter ExistingAttributeName is a non-empty, non-None string.
         pv_ExistingAttributeName = self.get_parameter_value(parameter_name='ExistingAttributeName',
@@ -104,8 +104,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
                              " rename."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter NewAttributeName is a non-empty, non-None string.
         pv_NewAttributeName = self.get_parameter_value(parameter_name='NewAttributeName',
@@ -116,8 +116,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
             recommendation = "Specify the NewAttributeName parameter to indicate the new name of the renamed attribute."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -129,7 +129,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
             raise ValueError(warning)
         else:
             # Refresh the phase severity
-            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_attribute_be_renamed(self, geolayer_id, existing_attribute_name, new_attribute_name):
         """
@@ -160,8 +160,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
             message = 'The input GeoLayer ID ({}) does not exist.'.format(geolayer_id)
             recommendation = 'Specify a valid GeoLayerID.'
             self.logger.error(message)
-            self.command_status.add_to_log(command_phase_type.RUN,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the input GeoLayer does exist, continue with the checks.
         else:
@@ -181,8 +181,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 recommendation = 'Specify a valid attribute name. Valid attributes for this layer are as follows: ' \
                                  '{}'.format(list_of_existing_attributes)
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
             # If the new attribute name is not unique to the attribute table, raise a FAILURE.
             if new_attribute_name in list_of_existing_attributes:
@@ -192,8 +192,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 message = 'The new attribute name ({}) is not unique.'.format(new_attribute_name)
                 recommendation = 'Specify a unique attribute name.'
                 self.logger.error(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
             # If the new attribute name is longer than 10 characters, raise a WARNING.
             if len(new_attribute_name) > 10:
@@ -204,8 +204,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 recommendation = 'If this GeoLayer will be written in shapefile format, change the attribute name to' \
                                  ' only include 10 or less characters.'
                 self.logger.warning(message)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.WARNING, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
         # Return the Boolean to determine if the attribute should be renamed. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.
@@ -245,8 +245,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
                           " to new name of '{}'.".format(pv_ExistingAttributeName, pv_GeoLayerID, pv_NewAttributeName)
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -255,4 +255,4 @@ class RenameGeoLayerAttribute(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

@@ -24,7 +24,7 @@ rem - This uses the QGIS Python as the interpreter, but development geoprocessor
 rem - Paths to files are assumed based on standard OWF development environment.
 rem - The current focus is to run on a Windows 7/10 development environment.
 rem - Use gp3.bat for production environment.
-rem - Use gptest3.sh for Linux functional testing tool.
+rem - Use gptest.sh for Linux functional testing tool.
 
 rem Set the Python environment to find the correct run-time libraries
 rem - The GEOPROCESSOR_ENV_SETUP environment variable is set to YES
@@ -38,6 +38,7 @@ echo Start defining QGIS GeoProcessor environment (done once per command shell w
 
 rem Where QGIS is installed
 SET OSGEO4W_ROOT=C:\OSGeo4W64
+echo OSGEO4W_ROOT=%OSGEO4W_ROOT%
 if not exist %OSGEO4W_ROOT% GOTO noqgis
 
 rem Set the QGIS environment by calling the setup batch files that are distributed with QGIS
@@ -77,7 +78,10 @@ rem Add pyQGIS libraries to the PYTHONPATH so that they are found by Python
 set PYTHONPATH=%OSGEO4W_ROOT%\apps\%QGISNAME%\python;%PYTHONPATH%
 rem See https://anitagraser.com/2018/01/28/porting-processing-scripts-to-qgis3/
 set PYTHONPATH=%OSGEO4W_ROOT%\apps\%QGISNAME%\python\plugins;%PYTHONPATH%
-set PYTHONPATH=%OSGEO4W_ROOT%\apps\Python36\lib\site-packages;%PYTHONPATH%
+rem List the following in order so most recent is at the end
+if exist %OSGEO4W_ROOT%\apps\Python36 set PYTHONPATH=%OSGEO4W_ROOT%\apps\Python36\lib\site-packages;%PYTHONPATH%
+if exist %OSGEO4W_ROOT%\apps\Python37 set PYTHONPATH=%OSGEO4W_ROOT%\apps\Python37\lib\site-packages;%PYTHONPATH%
+
 rem  Set the PYTHONPATH to include the geoprocessor module
 rem  - This is used in the development environment because the package has not been installed in site-packages
 rem  - Folder for libraries must contain "geoprocessor" since modules being searched for will start with that.

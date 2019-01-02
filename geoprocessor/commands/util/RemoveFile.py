@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -83,8 +83,8 @@ class RemoveFile(AbstractCommand):
             recommendation = "Specify the source file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # RemoveIfFolder must be a boolean value or None.
         pv_RemoveIfFolder = self.get_parameter_value(parameter_name='RemoveIfFolder', command_parameters=command_parameters)
@@ -93,8 +93,8 @@ class RemoveFile(AbstractCommand):
             recommendation = "Specify a valid Boolean value."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IfSourceFileNotFound is optional, will default to Warn at runtime
         pv_IfSourceFileNotFound = self.get_parameter_value(parameter_name='IfSourceFileNotFound',
@@ -106,8 +106,8 @@ class RemoveFile(AbstractCommand):
                              str(self.__choices_IfSourceFileNotFound)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -120,7 +120,7 @@ class RemoveFile(AbstractCommand):
             raise ValueError(warning_message)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self):
         """
@@ -164,15 +164,15 @@ class RemoveFile(AbstractCommand):
                 if pv_IfSourceFileNotFound == 'Warn':
                     warning_count += 1
                     self.command_status.add_to_log(
-                        command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.WARNING, message,
+                        CommandPhaseType.RUN,
+                        CommandLogRecord(CommandStatusType.WARNING, message,
                                          "Verify that the source exists at the time the command is run."))
                     logger.warning(message)
                 elif pv_IfSourceFileNotFound == 'Fail':
                     warning_count += 1
                     self.command_status.add_to_log(
-                        command_phase_type.RUN,
-                        CommandLogRecord(command_status_type.FAILURE, message,
+                        CommandPhaseType.RUN,
+                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                          "Verify that the source exists at the time the command is run."))
                     logger.warning(message)
                 input_count -= 1
@@ -192,12 +192,12 @@ class RemoveFile(AbstractCommand):
             traceback.print_exc(file=sys.stdout)
             logger.exception(message, e)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validators
@@ -74,18 +74,18 @@ class Message(AbstractCommand):
             recommendation = "Specify text for the Message parameter."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
         pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus',
                                                     command_parameters=command_parameters)
         if not validators.validate_string_in_list(pv_CommandStatus,
-                                                  command_status_type.get_command_status_types(), True, True):
+                                                  CommandStatusType.get_command_status_types_as_str(), True, True):
             message = 'The requested command status "' + pv_CommandStatus + '"" is invalid.'
             recommendation = "Specify a valid command status."
             warning += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -98,7 +98,7 @@ class Message(AbstractCommand):
             raise ValueError(warning)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self):
         """
@@ -117,27 +117,21 @@ class Message(AbstractCommand):
         pv_Message = self.get_parameter_value('Message')
         pv_CommandStatus = self.get_parameter_value('CommandStatus')
         if pv_CommandStatus is None or pv_CommandStatus == "":
-            pv_commandStatus = command_status_type.SUCCESS
+            # Default status as a string
+            pv_commandStatus = str(CommandStatusType.SUCCESS)
+        # Convert the string to the enum
+        command_status_type = CommandStatusType.value_of(pv_CommandStatus, ignore_case=True)
         message_expanded = self.command_processor.expand_parameter_value(pv_Message)
         logger.info(message_expanded)
 
         # Add a log message for the requested status type
         # - don't add to the warning count
-        if pv_CommandStatus == command_status_type.SUCCESS:
-            self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.SUCCESS, message_expanded, ""))
-        elif pv_CommandStatus == command_status_type.WARNING:
-            self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.WARNING, message_expanded, ""))
-        elif pv_CommandStatus == command_status_type.FAILURE:
-            self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message_expanded, ""))
+        self.command_status.add_to_log(
+            CommandPhaseType.RUN,
+            CommandLogRecord(command_status_type, message_expanded, ""))
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

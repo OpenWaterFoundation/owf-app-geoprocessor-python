@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -90,8 +90,8 @@ class WritePropertiesToFile(AbstractCommand):
             recommendation = "Specify the output file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IncludeProperties is optional, default to * at runtime
 
@@ -104,8 +104,8 @@ class WritePropertiesToFile(AbstractCommand):
                              str(self.__choices_WriteMode)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # FileFormat is optional, will default to NameTypeValue at runtime
         pv_FileFormat = self.get_parameter_value(parameter_name='FileFormat', command_parameters=command_parameters)
@@ -116,8 +116,8 @@ class WritePropertiesToFile(AbstractCommand):
                              str(self.__choices_FileFormat)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # SortOrder is optional, will default to None (no sort) at runtime
         pv_SortOrder = self.get_parameter_value(parameter_name='SortOrder', command_parameters=command_parameters)
@@ -128,8 +128,8 @@ class WritePropertiesToFile(AbstractCommand):
                              str(self.__choices_SortOrder)
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -142,7 +142,7 @@ class WritePropertiesToFile(AbstractCommand):
             raise ValueError(warning_message)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self):
         """
@@ -201,8 +201,8 @@ class WritePropertiesToFile(AbstractCommand):
                 warning_count += 1
                 logger.error(problem)
                 self.command_status.add_to_log(
-                    command_phase_type.RUN,
-                    CommandLogRecord(command_status_type.FAILURE, problem,
+                    CommandPhaseType.RUN,
+                    CommandLogRecord(CommandStatusType.FAILURE, problem,
                                      "See the log file for details."))
 
         except Exception as e:
@@ -211,8 +211,8 @@ class WritePropertiesToFile(AbstractCommand):
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
             logger.error(message, e, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         except:
@@ -221,8 +221,8 @@ class WritePropertiesToFile(AbstractCommand):
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         if warning_count > 0:
@@ -230,4 +230,4 @@ class WritePropertiesToFile(AbstractCommand):
             logger.warning(message)
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

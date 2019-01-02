@@ -411,25 +411,33 @@ def key_value_pair_list_to_dictionary(key_value_list):
     return dictionary
 
 
-def pattern_count(s, pattern):
+def pattern_count(s, pattern, patterns=None):
     """
     Count the number of unique (non-overlapping) instances of a pattern in a string.
 
     Args:
         s (str): String to search.
-        pattern (str): Pattern to search for.  Currently this can only be a one-character string.
+        pattern (str): String pattern to search for.  Currently this can only be a one-character string.
+        patterns (str[]): Single character string patterns to search for.
 
     Returns:
         The count of the unique instances.
     """
     count = 0
-    if s is None or pattern is None or len(pattern) < 1:
+    if s is None:
         return count
     size = len(s)
-    c = pattern[0]
     for i in range(0, size):
-        if s[i] == c:
-            count += 1
+        if pattern is not None and len(pattern) > 0:
+            if s[i] == pattern[0]:
+                count += 1
+        if patterns is not None:
+            # Loop through the patterns
+            for p in patterns:
+                if p is not None and len(p) > 0:
+                    if s[i] == p[0]:
+                        count += 1
+
     return count
 
 

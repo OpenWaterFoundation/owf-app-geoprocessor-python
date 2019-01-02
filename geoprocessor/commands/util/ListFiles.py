@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -108,15 +108,15 @@ class ListFiles(AbstractCommand):
             message = "The Folder parameter and the URL parameter cannot both be enabled in the same command."
             recommendation = "Specify only the Folder parameter or only the URL parameter."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         if not folder_is_string and not url_is_string:
             message = "Both the Folder parameter and the URL have no value."
             recommendation = "Specify EITHER the Folder parameter OR the URL parameter."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional ListFiles parameter value is a valid Boolean value or is None.
         pv_ListFiles = self.get_parameter_value(parameter_name="ListFiles", command_parameters=command_parameters)
@@ -125,8 +125,8 @@ class ListFiles(AbstractCommand):
             message = "ListFiles parameter value ({}) is not a recognized boolean value.".format(pv_ListFiles)
             recommendation = "Specify either 'True' or 'False for the ListFiles parameter."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional ListFolders parameter value is a valid Boolean value or is None.
         pv_ListFolders = self.get_parameter_value(parameter_name="ListFolders", command_parameters=command_parameters)
@@ -134,8 +134,8 @@ class ListFiles(AbstractCommand):
             message = "ListFolders parameter value ({}) is not a recognized boolean value.".format(pv_ListFolders)
             recommendation = "Specify either 'True' or 'False for the ListFolders parameter."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter ListProperty is a non-empty, non-None string.
         pv_ListProperty = self.get_parameter_value(parameter_name='ListProperty', command_parameters=command_parameters)
@@ -144,8 +144,8 @@ class ListFiles(AbstractCommand):
             message = "ListProperty parameter has no value."
             recommendation = "Specify the ListProperty parameter."
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfPropertyExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         pv_IfPropertyExists = self.get_parameter_value(parameter_name="IfPropertyExists",
@@ -159,8 +159,8 @@ class ListFiles(AbstractCommand):
             recommendation = "Specify one of the acceptable values ({}) for the IfPropertyExists parameter.".format(
                 acceptable_values)
             warning += "\n" + message
-            self.command_status.add_to_log(command_phase_type.INITIALIZATION,
-                                           CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -173,7 +173,7 @@ class ListFiles(AbstractCommand):
 
         else:
             # Refresh the phase severity
-            self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_list_files(self, folder_abs, url_abs, list_files_bool, list_dirs_bool, list_property):
         """
@@ -216,7 +216,7 @@ class ListFiles(AbstractCommand):
             message = "Both ListFiles and ListFolders are set to FALSE. There will be no output."
             recommendation = "Set at lease one of the parameters to TRUE."
             self.logger.warning(message)
-            self.command_status.add_to_log(command_phase_type.RUN, CommandLogRecord(command_status_type.WARNING,
+            self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.WARNING,
                                                                                     message, recommendation))
             should_run_command.append(True)
 
@@ -437,8 +437,8 @@ class ListFiles(AbstractCommand):
                 message = "Unexpected error running ListFiles command."
                 recommendation = "Check the log file for details."
                 self.logger.error(message, exc_info=True)
-                self.command_status.add_to_log(command_phase_type.RUN,
-                                               CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
@@ -447,4 +447,4 @@ class ListFiles(AbstractCommand):
 
         # Set command status type as SUCCESS if there are no errors.
         else:
-            self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

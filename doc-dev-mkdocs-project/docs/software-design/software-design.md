@@ -97,9 +97,8 @@ relies on `PYTHONPATH` to find QGIS libraries.
 be made more robust for general use.**
 
 * Configuration in the developer environment is accomplished by running a setup script,
-for example [run-pycharm2018.2.4-for-qgis.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build-util/run-pycharm2018.2.4-for-qgis.bat).
+for example [run-pycharm2018.2.4-for-qgis.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build-util/run-pycharm-ce-for-qgis.bat).
 	+ This script runs the QGIS `ow4_env.bat` batch file and performs additional configuration.
-	+ Newer versions of the script may be available.
 * Configuration in the runtime environment is accomplished by running the
 [`gp.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.bat) batch file on Windows
 or [`gp.sh`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.sh) script on Linux.

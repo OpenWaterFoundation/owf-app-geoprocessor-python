@@ -20,6 +20,7 @@
 
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.app_util as app_util
+import geoprocessor.util.os_util as os_util
 
 import datetime
 import getpass
@@ -28,96 +29,6 @@ import os
 import platform
 import re
 import sys
-
-
-def to_absolute_path(parent_dir, path):
-    """
-    Convert an absolute "parent_dir" and path to an absolute path.
-    If the path is already an absolute path it is returned as is.
-    If the path is a relative path, it is joined to the absolute path "parent_dir" and returned.
-    This is a port of the Java IOUtil.toAbsolutePath() method.
-
-    Args:
-        parent_dir (str): Directory to prepend to path, for example the current working directory.
-        path (str): Path to append to parent_dir to create an absolute path.
-                   If absolute, it will be returned.
-                   If relative, it will be appended to parent_dir.
-                   If the path includes "..", the directory will be truncated before appending the non-".."
-                   part of the path.
-
-    Returns:
-        The absolute path given the provided input path parts.
-    """
-    if os.path.isabs(path):
-        # No need to do anything else so return the path without modification
-        return path
-
-    # Loop through the "path".  For each occurrence of "..", knock a directory off the end of the "parent_dir"...
-
-    # Always trim any trailing directory separators off the directory paths.
-    while len(parent_dir) > 1 and parent_dir.endswith(os.sep):
-        parent_dir = parent_dir[0:len(parent_dir) - 1]
-
-    while len(path) > 1 and path.endswith(os.sep):
-        path = path[0:len(path) - 1]
-
-    path_length = len(path)
-    sep = os.sep
-    for i in range(0, path_length):
-        if path.startswith("./") or path.startswith(".\\"):
-            # No need for this in the result.
-            # Adjust the path and evaluate again.
-            path = path[2:]
-            i = -1
-            path_length = path_length - 2
-        if path.startswith("../") or path.startswith("..\\"):
-            # Remove a directory from each path.
-            pos = parent_dir.rfind(sep)
-            if pos >= 0:
-                # This will remove the separator.
-                parent_dir = parent_dir[0:pos]
-            # Adjust the path and evaluate again.
-            path = path[3:]
-            i = -1
-            path_length -= 3
-        elif path == "..":
-            # Remove a directory from each path.
-            pos = parent_dir.rfind(sep)
-            if pos >= 0:
-                parent_dir = parent_dir[0:pos]
-            # Adjust the path and evaluate again.
-            path = path[2:]
-            i = -1
-            path_length -= 2
-
-    return os.path.join(parent_dir, path)
-
-
-def verify_path_for_os(path):
-    """
-    Verify that a path is appropriate for the operating system.
-    This is a simple method that does the following:
-    - If on UNIX/LINUX, replace all \ characters with /.
-      WARNING - as implemented, this will convert UNC paths to forward slashes.
-      Windows drive letters are not changed, so this works best with relative paths.
-    - If on Windows, replace all / characters with \
-
-    Args:
-        path (str): Path to adjust.
-
-    Returns:
-        Path adjusted to be compatible with the operating system.
-    """
-    if path is None:
-        return path
-
-    platform = sys.platform
-    if platform == 'linux' or platform == 'linux2' or platform == 'cygwin' or platform == 'darwin':
-        # Convert Windows paths to Linux
-        return path.replace('\\', '/')
-    else:
-        # Assume Windows, convert paths from Linux to Windows
-        return path.replace('/', '\\')
 
 
 def expand_formatter(absolute_path, formatter):
@@ -245,7 +156,10 @@ def format_standard_file_header(comment_line_prefix='', max_width=120, is_xml=Fa
     # - need to figure out how to pass the command file name, etc.
     # progname = app_util.program_name
     progname = os.path.basename(sys.argv[0])
-    progver = app_util.program_version
+    try:
+        progver = app_util.program_properties['ProgramVersion']
+    except KeyError as e:
+        progver = "unknown"
     user = getpass.getuser()
     now = datetime.datetime.now().isoformat()
     host = platform.node()
@@ -451,6 +365,90 @@ def print_standard_file_header(ofp, comment_line_prefix='#', max_width=120, prop
     ofp.flush()
 
 
+def to_absolute_path(parent_dir, path):
+    """
+    Convert an absolute "parent_dir" and path to an absolute path.
+    If the path is already an absolute path it is returned as is.
+    If the path is a relative path, it is joined to the absolute path "parent_dir" and returned.
+
+    Args:
+        parent_dir (str): Directory to prepend to path, for example the current working directory.
+        path (str): Path to append to parent_dir to create an absolute path.
+                   If absolute, it will be returned.
+                   If relative, it will be appended to parent_dir.
+                   If the path includes "..", the directory will be truncated before appending the non-".."
+                   part of the path.
+
+    Returns:
+        The absolute path given the provided input path parts.
+    """
+    debug = False
+    if debug:
+        logger = logging.getLogger(__name__)
+    if os.path.isabs(path):
+        # No need to do anything since an absolute path so return the path without modification
+        return path
+
+    # Loop through the "path".  For each occurrence of "..", knock a directory off the end of the "parent_dir"...
+
+    # Always trim any trailing directory separators off the directory paths.
+    # - check for Windows and Linux separator because may not have been adjusted
+    while len(parent_dir) > 1 and (parent_dir.endswith('/') or (parent_dir.endswith('\\'))):
+        parent_dir = parent_dir[0:len(parent_dir) - 1]
+
+    while len(path) > 1 and (path.endswith('/') or path.endswith('\\')):
+        path = path[0:len(path) - 1]
+
+    path_length = len(path)
+    sep = os.sep
+    i = 0
+    # In the following loop the "path" is the main driver and the "parent_dir" is adjusted in parallel as needed.
+    while i < path_length:
+        if path.startswith("./") or path.startswith(".\\"):
+            # No need for this in the result.
+            # Adjust the path and evaluate again.
+            path = path[2:]
+            i = -1
+            path_length = path_length - 2
+            if debug:
+                logger.info('Detected ./, after adjust parent_dir="' + parent_dir + '" path="' + path + '"')
+        elif path.startswith("../") or path.startswith("..\\"):
+            # Remove a directory from each path.
+            # - check for Linux and Windows separator
+            pos = parent_dir.rfind('/')
+            pos2 = parent_dir.rfind('\\')
+            if pos2 > pos:
+                pos = pos2
+            if pos >= 0:
+                # This will remove the separator.
+                parent_dir = parent_dir[0:pos]
+            # Adjust the path and evaluate again.
+            path = path[3:]
+            i = -1
+            path_length = path_length - 3
+            if debug:
+                logger.info('Detected ../, after adjust parent_dir="' + parent_dir + '" path="' + path + '"')
+        elif path == "..":
+            # Remove a directory from each path.
+            # - check for Linux and Windows separator
+            pos = parent_dir.rfind('/')
+            pos2 = parent_dir.rfind('\\')
+            if pos2 > pos:
+                pos = pos2
+            if pos >= 0:
+                parent_dir = parent_dir[0:pos]
+            # Adjust the path and evaluate again.
+            path = path[2:]
+            i = -1
+            path_length = path_length - 2
+            if debug:
+                logger.info('Detected path=.., after adjust parent_dir="' + parent_dir + '" path="' + path + '"')
+        # Increment the counter since mimicking a for loop
+        i = i + 1
+
+    return os.path.join(parent_dir, path)
+
+
 def to_relative_path(root_path, rel_path):
     """
     Convert a path "path" and an absolute directory "dir" to a relative path.
@@ -478,7 +476,7 @@ def to_relative_path(root_path, rel_path):
 
     Args:
         root_path (str): the root path from which to build a relative path.
-        rel_path (str) the path for which to create the relative path from the root_path.
+        rel_path (str): the path for which to create the relative path from the root_path.
 
     Returns:
         The relative path created from the two directory structures.  This
@@ -491,48 +489,66 @@ def to_relative_path(root_path, rel_path):
         in Windows when the two directories are on different drives.  Will also be thrown
         if null or empty strings are passed in as directories.
     """
+    debug = True
+    if debug:
+        logger = logging.getLogger(__name__)
+
     # Do some simple error checking
     if root_path is None or root_path.strip() == "":
-        raise ValueError('Bad root_path "' + root_path + '"')
+        raise ValueError('Bad root_path "' + str(root_path) + '"')
     if rel_path is None or rel_path.strip() == "":
-        raise ValueError('Bad rel_path "' + rel_path + '"')
+        raise ValueError('Bad rel_path "' + str(rel_path) + '"')
 
+    # Current operating system separator (but input may use separator from other operating system)
     sep = os.sep
+    unix = os_util.is_linux_os
 
-    unix = True
+    # Figure out whether either of the paths include a drive letter for Windows
+    drive_count = 0  # Count of how many of the 2 paths have drive letter
+    drive_root = ""  # drive for "root_path"
+    drive_rel = ""  # drive for "rel_path"
+    if len(root_path) >= 2 and root_path[1:2] == ':':
+        drive_count = drive_count + 1
+        drive_root = root_path[0:1].lower()
+    if len(rel_path) >= 2 and rel_path[1:2] == ':':
+        drive_count = drive_count + 1
+        drive_rel = rel_path[0:1].lower()
 
-    if sep == "\\":
-        unix = False
-        # Operating system is running on Windows.  Check to see if the drive letters
-        # are the same for each directory -- if they aren't, the
-        # second directory can't be converted to a relative directory.
-        drive1 = root_path.lower()[0]
-        drive2 = rel_path.lower()[0]
-
-        if drive1 != drive2:
-            raise ValueError('Cannot adjust "' + rel_path + '" to relative using folder "' + root_path + '"')
+    if drive_count > 0:
+        if drive_root != drive_rel:
+            raise ValueError('Cannot adjust "' + rel_path + '" to relative using folder "' +
+                             root_path + '" because Windows drive letters are different')
 
     # Always trim any trailing folder separators off the directory paths
-    while len(root_path) > 1 and root_path.endswith(sep):
+    while (len(root_path) > 1) and (root_path.endswith('/') or root_path.endswith('\\')):
         root_path = root_path[0:len(root_path) - 1]
 
-    while len(rel_path) > 1 and rel_path.endswith(sep):
+    while (len(rel_path) > 1) and (rel_path.endswith('/') or rel_path.endswith('\\')):
         rel_path = rel_path[0:len(rel_path) - 1]
 
     # Check to see if the two paths are the same
-    if (unix and root_path == rel_path) or (not unix and root_path.upper() == rel_path.upper()):
-        return "."
+    # - do the comparison using forward slashes, and Windows is case-independent
+    if unix:
+        if root_path.replace('\\', '/') == rel_path.replace('\\', '/'):
+            return "."
+    else:
+        if root_path.upper().replace('\\', '/') == rel_path.upper().replace('\\', '/'):
+            return "."
 
     # Check to see if the rel_path dir is farther up the same branch that the root_path is on.
+    # - Windows comparison is uppercase in order to ignore case
 
-    if (unix and rel_path.startswith(root_path)) or (not unix and rel_path.upper().startswith(root_path.upper())):
+    if (unix and rel_path.replace('\\', '/').startswith(root_path.replace('\\', '/'))) or\
+            (not unix and rel_path.upper().replace('\\', '/').startswith(root_path.upper().replace('\\', '/'))):
         # At this point, it is known that rel_path is longer than root_path
         c = "" + rel_path[len(root_path)]
 
-        if c == sep:
+        if c == '/' or c == '\\':
             higher = rel_path[len(root_path):]
-            if higher.startswith(sep):
+            if higher.startswith('/') or higher.startswith('\\'):
                 higher = higher[1:]
+                if debug:
+                    logger.info("Returning 'higher':" +  higher)
             return higher
 
     # If none of the above were triggered, then the second folder
@@ -541,26 +557,47 @@ def to_relative_path(root_path, rel_path):
     # Get the final folder separator from the first folder, and
     # then start working backwards in the string to find where the
     # second folder and the first folder share folder information.
-    start = root_path.rfind(sep)
+    # - find the separator nearest the end
+    start = root_path.rfind('/')
+    start2 = root_path.rfind('\\')
+    if start2 > start:
+        start = start2
     x = 0
+    # Comparisons depend on operating system
+    # - do comparisons using forward slash strings
+    # - Linux is case-sensitive, Windows is not
+    if unix:
+        # Case dependent
+        root_path_to_check = root_path.replace('\\', '/')
+        rel_path_to_check = rel_path.replace('\\', '/')
+    else:
+        root_path_to_check = root_path.upper().replace('\\', '/')
+        rel_path_to_check = rel_path.upper().replace('\\', '/')
+    if debug:
+        logger.info('root_path_to_check="' + root_path_to_check + '"')
+        logger.info('rel_path_to_check ="' + rel_path_to_check + '"')
     for i in range(start, -1, -1):  # Want to go to >= 0, hence -1 for second value
         s = root_path[i]
 
-        if s != sep:
+        if s != '/' and s != '\\':
             # Do nothing this iteration
-            pass
+            continue
 
-        elif ((unix and rel_path[0:(i+2)] == (root_path + sep)[0:(i+2)])
-            or (not unix and rel_path.upper()[0:i+2] == (root_path + sep).upper()[0:i+2])):
-            # A common "header" in the folder name has been found.  Count the number of separators in each
+        if rel_path_to_check[0:(i+1)] == (root_path_to_check + '/')[0:(i+1)]:
+            # A common start in the folder name has been found.  Count the number of separators in each
             # folder to determine how much separation lies between the two
-            dir1seps = string_util.pattern_count(root_path[0:i], sep)
-            dir2seps = string_util.pattern_count(root_path, sep)
+            seps = {'\\', '/'}
+            dir1seps = string_util.pattern_count(root_path[0:i], None, patterns=seps)
+            dir2seps = string_util.pattern_count(root_path, None, patterns=seps)
             x = i + 1
             if x > len(rel_path):
                 x = len(rel_path)
             uncommon = rel_path[x:len(rel_path)]
             steps = dir2seps - dir1seps
+            if debug:
+                 logger.info('uncommon="' + uncommon + '"')
+                 logger.info('dir2seps=' + str(dir2seps) + ' dir1seps=' + str(dir1seps) + ' steps=' + str(steps))
+            # The returned separator is that for the operating system
             if steps == 1:
                 if uncommon.strip() == "":
                     return ".."
@@ -575,6 +612,42 @@ def to_relative_path(root_path, rel_path):
                     uncommon = ".." + sep + uncommon
             return uncommon
     return rel_path
+
+
+def verify_path_for_os(path, always_use_forward_slashes=False):
+    """
+    Verify that a path is appropriate for the operating system.
+    This is a simple method that does the following:
+    - If on UNIX/LINUX, replace all \ characters with /.
+      WARNING - as implemented, this will convert UNC paths to forward slashes.
+      Windows drive letters are not changed, so this works best with relative paths.
+    - If on Windows, replace all / characters with \
+
+    Args:
+        path (str): Path to adjust.
+        always_use_forward_slashes (bool): If False, use the native folder separator.  If True, always use /,
+            which can help avoid some issues on Windows.
+
+    Returns:
+        Path adjusted to be compatible with the operating system.
+    """
+    if path is None:
+        return path
+
+    sys_platform = sys.platform
+    if sys_platform == 'linux' or sys_platform == 'linux2' or sys_platform == 'cygwin' or sys_platform == 'darwin':
+        # Convert Windows paths to Linux
+        verified_path = path.replace('\\', '/')
+    else:
+        # Assume Windows, convert paths from Linux to Windows
+        verified_path = path.replace('/', '\\')
+
+    if always_use_forward_slashes:
+        # Always use forward slashes for the path so replace \ with /
+        return verified_path.replace('\\', '/')
+    else:
+        # Return the result from above
+        return verified_path
 
 
 def __write_property(fout, property_name, property_object, format_type):

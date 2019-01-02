@@ -21,8 +21,8 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
-import geoprocessor.core.command_phase_type as command_phase_type
-import geoprocessor.core.command_status_type as command_status_type
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -77,8 +77,8 @@ class WriteCommandSummaryToFile(AbstractCommand):
             recommendation = "Specify the output file."
             warning_message += "\n" + message
             self.command_status.add_to_log(
-                command_phase_type.INITIALIZATION,
-                CommandLogRecord(command_status_type.FAILURE, message, recommendation))
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -91,7 +91,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
             raise ValueError(warning_message)
 
         # Refresh the phase severity
-        self.command_status.refresh_phase_severity(command_phase_type.INITIALIZATION, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self):
         """
@@ -141,8 +141,8 @@ class WriteCommandSummaryToFile(AbstractCommand):
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         except:
@@ -150,8 +150,8 @@ class WriteCommandSummaryToFile(AbstractCommand):
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
             logger.error(message, exc_info=True)
             self.command_status.add_to_log(
-                command_phase_type.RUN,
-                CommandLogRecord(command_status_type.FAILURE, message,
+                CommandPhaseType.RUN,
+                CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
         if warning_count > 0:
@@ -159,7 +159,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
             logger.warning(message)
             raise RuntimeError(message)
 
-        self.command_status.refresh_phase_severity(command_phase_type.RUN, command_status_type.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)
 
     def write_command_summary(self, fp):
         """
@@ -195,16 +195,16 @@ class WriteCommandSummaryToFile(AbstractCommand):
             fp.write('<td><a href="#' + str(i) + '">' + str(i) + '</a></td>' + nl)
             # TODO smalers 2018-01-29 Why don't the commented calls work?
             # overall_status = command_util.get_highest_command_status_severity(self.command_status)
-            # initialization_status = self.command_status.get_command_status_for_phase(command_phase_type.INITIALIZATION)
+            # initialization_status = self.command_status.get_command_status_for_phase(CommandPhaseType.INITIALIZATION)
             initialization_status = command.command_status.initialization_status
-            # run_status = self.command_status.get_command_status_for_phase(command_phase_type.RUN)
+            # run_status = self.command_status.get_command_status_for_phase(CommandPhaseType.RUN)
             run_status = command.command_status.run_status
             overall_status = initialization_status
-            if command_status_type.number_value(run_status) > command_status_type.number_value(overall_status):
+            if run_status.value > overall_status.value:
                 overall_status = run_status
-            fp.write('<td class="' + overall_status + '">' + overall_status + '</td>' + nl)
-            fp.write('<td class="' + initialization_status + '">' + initialization_status + '</td>' + nl)
-            fp.write('<td class="' + run_status + '">' + run_status + '</td>' + nl)
+            fp.write('<td class="' + str(overall_status) + '">' + str(overall_status) + '</td>' + nl)
+            fp.write('<td class="' + str(initialization_status) + '">' + str(initialization_status) + '</td>' + nl)
+            fp.write('<td class="' + str(run_status) + '">' + str(run_status) + '</td>' + nl)
             fp.write('<td><code>' + command.command_string + '<code></td>' + nl)
             fp.write('</tr>' + nl + nl)
         fp.write('</table>' + nl)
@@ -219,9 +219,10 @@ class WriteCommandSummaryToFile(AbstractCommand):
             run_status = command.command_status.run_status
             fp.write('<a name="' + str(i) + '"></a>' +
                      str(i) + ":" +
-                     '<span class="' + initialization_status + '" style="border: solid; border-width: 1px;">' +
-                     'Initialization</span> <span class="' + run_status + '" style="border: solid; border-width: 1px;">'
-                     + 'Run</span><code> ' + command.command_string + '</code>' + nl)
+                     '<span class="' + str(initialization_status) + '" style="border: solid; border-width: 1px;">' +
+                     'Initialization</span> <span class="' + str(run_status) +
+                     '" style="border: solid; border-width: 1px;">'
+                     + 'Run</span><code> ' + str(command.command_string) + '</code>' + nl)
 
             fp.write('<table class="table-style-hover">' + nl)
             fp.write('<thead>' + nl)
@@ -242,8 +243,8 @@ class WriteCommandSummaryToFile(AbstractCommand):
                 fp.write('<tr>' + nl)
                 fp.write('<td>' + str(j) + '</th>' + nl)
                 fp.write('<td></td>' + nl)
-                fp.write('<td>' + command_phase_type.INITIALIZATION + '</td>' + nl)
-                fp.write('<td class="' + log_record.severity + '">' + log_record.severity + '</td>' + nl)
+                fp.write('<td>' + str(CommandPhaseType.INITIALIZATION) + '</td>' + nl)
+                fp.write('<td class="' + str(log_record.severity) + '">' + str(log_record.severity) + '</td>' + nl)
                 fp.write('<td>' + log_record.problem + '</td>' + nl)
                 fp.write('<td>' + log_record.recommendation + '</td>' + nl)
                 fp.write('</tr>' + nl)
@@ -255,8 +256,8 @@ class WriteCommandSummaryToFile(AbstractCommand):
                 fp.write('<tr>' + nl)
                 fp.write('<td>' + str(j) + '</td>' + nl)
                 fp.write('<td></td>' + nl)
-                fp.write('<td>' + command_phase_type.DISCOVERY + '</td>' + nl)
-                fp.write('<td class="' + log_record.severity + '">' + log_record.severity + '</td>' + nl)
+                fp.write('<td>' + str(CommandPhaseType.DISCOVERY) + '</td>' + nl)
+                fp.write('<td class="' + str(log_record.severity) + '">' + str(log_record.severity) + '</td>' + nl)
                 fp.write('<td>' + log_record.problem + '</td>' + nl)
                 fp.write('<td>' + log_record.recommendation + '</td>' + nl)
                 fp.write('</tr>' + nl)
@@ -268,8 +269,8 @@ class WriteCommandSummaryToFile(AbstractCommand):
                 fp.write('<tr>' + nl)
                 fp.write('<td>' + str(j) + '</td>' + nl)
                 fp.write('<td></td>' + nl)
-                fp.write('<td>' + command_phase_type.RUN + '</td>' + nl)
-                fp.write('<td class="' + log_record.severity + '">' + log_record.severity + '</td>' + nl)
+                fp.write('<td>' + str(CommandPhaseType.RUN) + '</td>' + nl)
+                fp.write('<td class="' + str(log_record.severity) + '">' + str(log_record.severity) + '</td>' + nl)
                 fp.write('<td>' + log_record.problem + '</td>' + nl)
                 fp.write('<td>' + log_record.recommendation + '</td>' + nl)
                 fp.write('</tr>' + nl)

@@ -1,4 +1,4 @@
-# printenv - simple program to print environment variables
+# printenv - simple program to print environment variables for Python
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
@@ -18,7 +18,7 @@
 # ________________________________________________________________NoticeEnd___
 
 """
-Simple main program to print environment information and object attributes,
+Simple main program to print Python environment information and object attributes,
 helpful for troubleshooting PyCharm.
 """
 
@@ -30,23 +30,18 @@ if __name__ == '__main__':
     """
     Entry point for the OWF GeoProcessor application.
     """
-    print("PYTHONPATH items:")
+    print("Python properties:")
+
+    TAB = "    ";
     for item in sys.path:
-        print(item)
+        # Replace newlines in system version
+        system_version = sys.version.replace("\r\n", " ").replace("\n", " ")
+        system_path = ''
+        for line in sys.path[1:]:
+            system_path += str(line) + '\n' + TAB + TAB
 
-    # Use code similar to the following to figure out object attributes
-    print("QApplication attributes...")
-    qtapp = QtWidgets.QApplication(sys.argv)
-    # Print application properties
-    for item in dir(qtapp):
-        print(item)
-
-    print("qgis.utils attributes...")
-    u = qgis.utils;
-    for item in dir(u):
-        print(item)
-
-    print("qgis.utils.QGis attributes...")
-    qgis = qgis.utils.Qgis;
-    for item in dir(qgis):
-        print(item)
+        print("Python Properties:\n" +
+              TAB + 'Python executable (.executable): ' + str(sys.executable) + "\n" +
+              TAB + 'Python Version (sys.version): ' + system_version + "\n" +
+              TAB + 'Python Path (sys.path):\n' +
+              TAB + TAB + system_path + "\n")

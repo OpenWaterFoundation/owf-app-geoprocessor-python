@@ -6,6 +6,8 @@
 .idea/
 venv/
 __pycache__/
+# The following is a newer convention
+venv-qgis-python37/
 
 # Ignore compiled Python files
 *.py[cod]

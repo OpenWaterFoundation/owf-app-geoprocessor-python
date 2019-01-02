@@ -17,7 +17,11 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-import platform
+from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
+from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCommandEditorFactory
+from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.io_util as io_util
@@ -28,14 +32,10 @@ import geoprocessor.ui.app.CommandListWidget as command_list_view
 import geoprocessor.ui.core.GeoProcessorListModel as gp_list_model
 import geoprocessor.ui.util.CommandListBackup as command_list_backup
 import geoprocessor.ui.util.qt_util as qt_util
-from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
-import geoprocessor.core.command_status_type as command_status_type
-import geoprocessor.core.command_phase_type as command_phase_type
-from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCommandEditorFactory
-from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 import functools
 import logging
 import os
+import platform
 import qgis.utils
 import qgis.gui
 import subprocess
@@ -1832,7 +1832,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             return
         print("in show_command_status, have " + str(len(gp.commands)) + " commands in processor from running")
         selected_command = None
-        # Ensure that the geoprocessor command list and the ui command list are synched up properly
+        # Ensure that the geoprocessor command list and the ui command list are synchronized properly
         if self.command_ListWidget.commands_List.count() != len(gp.commands):
             message = "Something has gone wrong between the geoprocessor and the ui commands list synchronization."
             logger.error(message)
@@ -1864,41 +1864,41 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
                 style = ""
 
-                if command_status.initialization_status == "WARNING":
+                if command_status.initialization_status is CommandStatusType.WARNING:
                     style = "style='background-color:yellow'"
-                elif command_status.initialization_status == "FAILURE":
+                elif command_status.initialization_status is CommandStatusType.FAILURE:
                     style = "style='background-color:#ffa8a8'"
-                elif command_status.initialization_status == "SUCCESS":
+                elif command_status.initialization_status is CommandStatusType.SUCCESS:
                     style = "style='background-color:#7dba71'"
 
                 html_string += (
                     "<tr>" +
                     "<td> INITIALIZATION </td>" +
-                    "<td " + style + ">" + command_status.initialization_status + "</td>" +
+                    "<td " + style + ">" + str(command_status.initialization_status) + "</td>" +
                     "</tr>"
                 )
 
                 style = ""
 
-                if command_status.discovery_status == "WARNING":
+                if command_status.discovery_status is CommandStatusType.WARNING:
                     style = "style='background-color:yellow'"
-                elif command_status.discovery_status == "FAILURE":
+                elif command_status.discovery_status is CommandStatusType.FAILURE:
                     style = "style='background-color:#ffa8a8'"
-                elif command_status.discovery_status == "SUCCESS":
+                elif command_status.discovery_status is CommandStatusType.SUCCESS:
                     style = "style='background-color:green'"
 
                 html_string += (
                     "<tr>" +
                     "<td> DISCOVERY </td>" +
-                    "<td " + style + ">" + command_status.discovery_status + "</td>" +
+                    "<td " + style + ">" + str(command_status.discovery_status) + "</td>" +
                     "</tr>"
                 )
 
                 style = ""
 
-                if command_status.run_status == "WARNING":
+                if command_status.run_status is CommandStatusType.WARNING:
                     style = "style='background-color:yellow'"
-                elif command_status.run_status == "FAILURE":
+                elif command_status.run_status is CommandStatusType.FAILURE:
                     style = "style='background-color:#ffa8a8'"
                 else:
                     style = "style='background-color:#7dba71'"
@@ -1906,14 +1906,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 html_string += (
                     "<tr>" +
                     "<td> RUN </td>" +
-                    "<td " + style + ">" + command_status.run_status + "</td>" +
+                    "<td " + style + ">" + str(command_status.run_status) + "</td>" +
                     "</tr>" +
                     "</table>" +
 
                     "<p><b>Command Status Details (" +
-                    str(command_status.get_log_count(phase=None, severity=command_status_type.WARNING)) +
+                    str(command_status.get_log_count(phase=None, severity=CommandStatusType.WARNING)) +
                     " warnings, " +
-                    str(command_status.get_log_count(phase=None, severity=command_status_type.FAILURE)) +
+                    str(command_status.get_log_count(phase=None, severity=CommandStatusType.FAILURE)) +
                     " failures):</p>" +
                     "<table border='1'>" +
                     "<tr style='background-color:#d0d0ff; font-weight:bold;'>" +
@@ -1927,65 +1927,65 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
                 log_count = 0
                 for log_record in command_status.initialization_log_list:
-                    if log_record.severity == command_status_type.WARNING or \
-                        log_record.severity == command_status_type.FAILURE:
+                    if log_record.severity is CommandStatusType.WARNING or \
+                        log_record.severity is CommandStatusType.FAILURE:
                         
                             style = ""
 
-                            if log_record.severity == "WARNING":
+                            if log_record.severity is CommandStatusType.WARNING:
                                 style = "style='background-color:yellow'"
-                            elif log_record.severity == "FAILURE":
+                            elif log_record.severity is CommandStatusType.FAILURE:
                                 style = "style='background-color:#ffa8a8'"
 
                             log_count = log_count + 1
                             html_string += (
                                 "<tr>" +
                                 "<td>" + str(log_count) + "</td>" +
-                                "<td>" + command_phase_type.INITIALIZATION + "</td>" +
-                                "<td " + style + ">" + log_record.severity + "</td>" +
+                                "<td>" + str(CommandPhaseType.INITIALIZATION) + "</td>" +
+                                "<td " + style + ">" + str(log_record.severity) + "</td>" +
                                 "<td>" + log_record.problem + "</td>" +
                                 "<td>" + log_record.recommendation + "</td>" +
                                 "</tr>"
                             )
                 for log_record in command_status.discovery_log_list:
-                    if log_record.severity == command_status_type.WARNING or \
-                            log_record.severity == command_status_type.FAILURE:
+                    if log_record.severity is CommandStatusType.WARNING or \
+                        log_record.severity is CommandStatusType.FAILURE:
 
-                        style = ""
+                            style = ""
 
-                        if log_record.severity == "WARNING":
-                            style = "style='background-color:yellow'"
-                        elif log_record.severity == "FAILURE":
-                            style = "style='background-color:#ffa8a8'"
+                            if log_record.severity is CommandStatusType.WARNING:
+                                style = "style='background-color:yellow'"
+                            elif log_record.severity is CommandStatusType.FAILURE:
+                                style = "style='background-color:#ffa8a8'"
 
-                        log_count = log_count + 1
-                        html_string += (
-                            "<tr>" +
-                            "<td>" + str(log_count) + "</td>" +
-                            "<td>" + command_phase_type.DISCOVERY + "</td>" +
-                            "<td " + style + ">" + log_record.severity + "</td>" +
-                            "<td>" + log_record.problem + "</td>" +
-                            "<td>" + log_record.recommendation + "</td>" +
-                            "</tr>"
-                        )
+                            log_count = log_count + 1
+                            html_string += (
+                                "<tr>" +
+                                "<td>" + str(log_count) + "</td>" +
+                                "<td>" + str(CommandPhaseType.DISCOVERY) + "</td>" +
+                                "<td " + style + ">" + str(log_record.severity) + "</td>" +
+                                "<td>" + log_record.problem + "</td>" +
+                                "<td>" + log_record.recommendation + "</td>" +
+                                "</tr>"
+                            )
                 print("Have " + str(len(command_status.run_log_list)) + " log records")
                 for log_record in command_status.run_log_list:
-                    if log_record.severity == command_status_type.WARNING or \
-                            log_record.severity == command_status_type.FAILURE:
+                    if log_record.severity is CommandStatusType.WARNING or \
+                        log_record.severity is CommandStatusType.FAILURE:
 
                         style = ""
 
-                        if log_record.severity == "WARNING":
+                        if log_record.severity is CommandStatusType.WARNING:
                             style = "style='background-color:yellow'"
-                        elif log_record.severity == "FAILURE":
+                        elif log_record.severity is CommandStatusType.FAILURE:
                             style = "style='background-color:#ffa8a8'"
 
                         log_count = log_count + 1
                         html_string += (
                             "<tr>" +
                             "<td>" + str(log_count) + "</td>" +
-                            "<td>" + command_phase_type.RUN + "</td>" +
-                            "<td " + style + ">" + log_record.severity + "</td>" +
+                            "<td>" + str(CommandPhaseType.RUN) + "</td>" +
+                            "<td " + style + ">" + str(log_record.severity) + "</td>" +
                             "<td>" + log_record.problem + "</td>" +
                             "<td>" + log_record.recommendation + "</td>" +
                             "</tr>"
@@ -2016,13 +2016,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         command_status = selected_command.command_status
         run_status = command_status.run_status
-        if run_status == "WARNING" or run_status == "FAILURE":
+        if run_status is CommandStatusType.WARNING or run_status is CommandStatusType.FAILURE:
             try:
                 html_string = (
                     "<p><b>Command Status Details (" +
-                    str(command_status.get_log_count(phase=None, severity=command_status_type.WARNING)) +
+                    str(command_status.get_log_count(phase=None, severity=CommandStatusType.WARNING)) +
                     " warnings, " +
-                    str(command_status.get_log_count(phase=None, severity=command_status_type.FAILURE)) +
+                    str(command_status.get_log_count(phase=None, severity=CommandStatusType.FAILURE)) +
                     " failures):</p>" +
                     "<table border='1'>" +
                     "<tr style='background-color:#d0d0ff; font-weight:bold;'>" +
@@ -2036,63 +2036,63 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
                 log_count = 0
                 for log_record in command_status.initialization_log_list:
-                    if log_record.severity == command_status_type.WARNING or \
-                            log_record.severity == command_status_type.FAILURE:
+                    if log_record.severity is CommandStatusType.WARNING or \
+                            log_record.severity is CommandStatusType.FAILURE:
                         style = ""
 
-                        if log_record.severity == "WARNING":
+                        if log_record.severity is CommandStatusType.WARNING:
                             style = "style='background-color:yellow'"
-                        elif log_record.severity == "FAILURE":
+                        elif log_record.severity is CommandStatusType.FAILURE:
                             style = "style='background-color:#ffa8a8'"
                         log_count = log_count + 1
                         html_string += (
                             "<tr>" +
                             "<td style='white-space:pre'>" + str(log_count) + "</td>" +
-                            "<td style='white-space:pre'>" + command_phase_type.INITIALIZATION + "</td>" +
-                            "<td " + style + ">" + log_record.severity + "</td>" +
+                            "<td style='white-space:pre'>" + str(CommandPhaseType.INITIALIZATION) + "</td>" +
+                            "<td " + style + ">" + str(log_record.severity) + "</td>" +
                             "<td style='white-space:pre'>" + log_record.problem + "</td>" +
                             "<td style='white-space:pre'>" + log_record.recommendation + "</td>" +
                             "</tr>"
                         )
                 for log_record in command_status.discovery_log_list:
-                    if log_record.severity == command_status_type.WARNING or \
-                            log_record.severity == command_status_type.FAILURE:
+                    if log_record.severity is CommandStatusType.WARNING or \
+                            log_record.severity is CommandStatusType.FAILURE:
 
                         style = ""
 
-                        if log_record.severity == "WARNING":
+                        if log_record.severity is CommandStatusType.WARNING:
                             style = "style='background-color:yellow'"
-                        elif log_record.severity == "FAILURE":
+                        elif log_record.severity is CommandStatusType.FAILURE:
                             style = "style='background-color:#ffa8a8'"
 
                         log_count = log_count + 1
                         html_string += (
                             "<tr>" +
                             "<td style='white-space:pre'>" + str(log_count) + "</td>" +
-                            "<td style='white-space:pre'>" + command_phase_type.DISCOVERY + "</td>" +
-                            "<td " + style + ">" + log_record.severity + "</td>" +
+                            "<td style='white-space:pre'>" + str(CommandPhaseType.DISCOVERY) + "</td>" +
+                            "<td " + style + ">" + str(log_record.severity) + "</td>" +
                             "<td style='white-space:pre'>" + log_record.problem + "</td>" +
                             "<td style='white-space:pre'>" + log_record.recommendation + "</td>" +
                             "</tr>"
                         )
                 # print("Have " + str(len(command_status.run_log_list)) + " log records")
                 for log_record in command_status.run_log_list:
-                    if log_record.severity == command_status_type.WARNING or \
-                            log_record.severity == command_status_type.FAILURE:
+                    if log_record.severity is CommandStatusType.WARNING or \
+                            log_record.severity is CommandStatusType.FAILURE:
 
                         style = ""
 
-                        if log_record.severity == "WARNING":
+                        if log_record.severity is CommandStatusType.WARNING:
                             style = "style='background-color:yellow'"
-                        elif log_record.severity == "FAILURE":
+                        elif log_record.severity is CommandStatusType.FAILURE:
                             style = "style='background-color:#ffa8a8'"
 
                         log_count = log_count + 1
                         html_string += (
                             "<tr>" +
                             "<td style='white-space:pre'>" + str(log_count) + "</td>" +
-                            "<td style='white-space:pre'>" + command_phase_type.RUN + "</td>" +
-                            "<td " + style + ">" + log_record.severity + "</td>" +
+                            "<td style='white-space:pre'>" + str(CommandPhaseType.RUN) + "</td>" +
+                            "<td " + style + ">" + str(log_record.severity) + "</td>" +
                             "<td style='white-space:pre'>" + log_record.problem + "</td>" +
                             "<td>" + log_record.recommendation + "</td>" +
                             "</tr>"
@@ -2376,108 +2376,146 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_help_software_system_information(self):
         """
         Display the Software/System information dialog.
+        If taken from standard Python modules, also show the module and variable name so the information
+        can be cross-checked manually if necessary.
 
         Returns: None
         """
 
-        # Format a string with content for Software/System Information:
-        TAB = "     "
-
-        properties = ""
-
-        program_name = app_util.get_property('ProgramName')
-        version = app_util.get_property('ProgramVersion')
-        version_date = app_util.get_property('ProgramVersionDate')
-        user_name = os.getlogin()
-        current_date = datetime.datetime.now()
-        # TODO @jurentie get appropriate timezone if possible
-        current_date = current_date.strftime("%c %Z")
-        host = platform.uname()[1]
-        working_dir = os.getcwd()
-
-        properties += ("System Properties Defined for Application:\n" +
-                       TAB + " Program Name: " + program_name + " " + version + " " + version_date + "\n" +
-                       TAB + " User Name: " + user_name + "\n" +
-                       TAB + " Date: " + current_date + "\n" +
-                       TAB + " Host: " + host + "\n" +
-                       TAB + " Working Directory: " + working_dir + "\n" +
-                       TAB + " Command: gpdev.bat --ui\n" +
-                       "\n")
-
-        operating_system = platform.uname()[0] + " " + platform.uname()[2]
-        version = platform.uname()[3]
-        version = version[0: version.rfind('.')]
         try:
-            architecture = os.environ["MSYSTEM_CARCH"]
-        except KeyError as e:
-            # TODO smalers 2018-11-21 Need to fix the above to be portable
-            architecture = "unknown"
+            # Local variables for operating system, used in checks below
+            is_cygwin = os_util.is_cygwin_os()
+            is_linux = os_util.is_linux_os()
+            is_mingw = os_util.is_mingw_os()
+            is_windows = os_util.is_windows_os()
+            os_type = os_util.get_os_type()
+            if os_type is None:
+                os_type = "unknown"
+            os_distro = os_util.get_os_distro()
+            if os_distro is None:
+                os_distro = "unknown"
 
-        properties += ("Operating System Information:\n" +
-                       TAB + " Name: " + operating_system + "\n" +
-                       TAB + " Version: " + version + "\n" +
-                       TAB + " System Architecture: " + architecture + "\n" +
-                       "\n")
+            # Format a string with content for Software/System Information:
+            TAB = "     "
+            properties = ""
 
-        program_home = app_util.get_property('ProgramHome')
-        program_resources_path = app_util.get_property('ProgramResourcesPath')
+            program_name = app_util.get_property('ProgramName')
+            version = app_util.get_property('ProgramVersion')
+            version_date = app_util.get_property('ProgramVersionDate')
+            user_name = os.getlogin()
+            current_date = datetime.datetime.now()
+            # TODO @jurentie get appropriate timezone if possible
+            current_date = current_date.strftime("%c %Z")
+            host = platform.uname()[1]
+            working_dir = os.getcwd()
 
-        # Replace newlines in system version
-        system_version = sys.version.replace("\r\n", " ").replace("\n", " ")
-        system_path = ''
-        for line in sys.path[1:]:
-            system_path += str(line) + '\n' + TAB + TAB
-
-        properties += ("GeoProcessor Properties:\n" +
-                       TAB + 'Program Home: ' + program_home + "\n" +
-                       TAB + 'Program Resources Path: ' + program_resources_path + "\n" +
-                       TAB + 'Python Version: ' + system_version + "\n" +
-                       TAB + 'Python Path:\n' +
-                       TAB + TAB + system_path + "\n")
-
-        # Check if QGIS is installed and in PATH
-        qgis_root = r"C:\OSGeo4W64"
-        qgis_name = "qgis"
-        qgis_installed = os.path.exists(qgis_root)
-        qgis_version = qgis.utils.Qgis.QGIS_VERSION
-
-        if qgis_installed:
-            qgis_install_string = r"QGIS installed: C:\OSGeo4W64"
-            properties += ("QGIS Properties:\n" +
-                           TAB + qgis_install_string + "\n" +
-                           TAB + "QGIS Version: " + qgis_version + "\n" +
-                           TAB + "QGIS Path Variables (set up by gpdev.bat):\n" +
-                           TAB + TAB + qgis_root + "\\bin" + "\n" +
-                           TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\\bin" + "\n" +
-                           TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\n" +
-                           TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\\qtplugins" + "\n" +
-                           TAB + TAB + qgis_root + "\\apps\\qt5\\plugins" + "\n" +
+            properties += ("System Properties Defined for Application:\n" +
+                           TAB + " Program Name: " + program_name + " " + version + " " + version_date + "\n" +
+                           TAB + " User Name: " + user_name + "\n" +
+                           TAB + " Date: " + current_date + "\n" +
+                           TAB + " Host: " + host + "\n" +
+                           TAB + " Working Directory: " + working_dir + "\n" +
+                           TAB + " Command: gpdev.bat --ui\n" +
                            "\n")
-        else:
-            qgis_install_string = r"QGIS not installed at C:\OSGeo4W64. GeoProcessor testing framework installed."
-            properties += ("QGIS Properties:\n" +
-                           TAB + qgis_install_string + "\n")
 
-        # Create Software/System Information Dialog Box
-        self.sys_info = QtWidgets.QDialog()
-        self.sys_info.resize(800, 500)
-        self.sys_info.setWindowTitle("Software/System Information")
-        self.sys_info.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-        self.sys_info.setWindowIcon(QtGui.QIcon(icon_path))
-        self.sys_info_text_browser = QtWidgets.QTextBrowser(self.sys_info)
-        self.sys_info_text_browser.setGeometry(QtCore.QRect(25, 20, 750, 450))
-        self.sys_info_text_browser.setText(properties)
-        self.sys_info_text_browser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
-        # Will implement copy button later once with a better understanding
-        # self.push_button = QtWidgets.QPushButton(self.sys_info)
-        # self.push_button.setGeometry(QtCore.QRect(300,460,75,23))
-        # self.push_button.setText("Copy")
-        # self.push_button.clicked.connect(lambda:self.copy_text(properties))
-        QtCore.QMetaObject.connectSlotsByName(self.sys_info)
-        # Reassign default resizeEvent() to resizeTextBox()
-        self.sys_info.resizeEvent = self.ui_action_resize_software_system_information_text_box
-        self.sys_info.show()
+            operating_system = platform.uname()[0] + " " + platform.uname()[2]
+            version = platform.uname()[3]
+            version = version[0: version.rfind('.')]
+            if is_windows:
+                try:
+                    architecture = os.environ["MSYSTEM_CARCH"]
+                except KeyError as e:
+                    # TODO smalers 2018-11-21 Need to fix the above to be portable
+                    architecture = "unknown"
+            else:
+                architecture = "Code not implemented to check on operating system"
+
+            properties += ("Operating System Information:\n" +
+                           TAB + " Type: " + os_type + "\n" +
+                           TAB + " Distribution: " + os_distro + "\n" +
+                           TAB + " Name (platform.uname[0] and [2]): " + operating_system + "\n" +
+                           TAB + " Version (platform.uname[3]: " + version + "\n")
+            if is_windows:
+                properties += (TAB + " System Architecture (os.environ['MSYSTEM_CARCH']: " + architecture + "\n")
+            else:
+                # Linux variant
+                # - TODO smalers 2018-12-31 need to standardize
+                properties += (TAB + " System Architecture: " + architecture + "\n")
+            properties += "\n"
+
+            program_home = app_util.get_property('ProgramHome')
+            program_resources_path = app_util.get_property('ProgramResourcesPath')
+
+            # Replace newlines in system version
+            system_version = sys.version.replace("\r\n", " ").replace("\n", " ")
+            system_path = ''
+            for line in sys.path[1:]:
+                system_path += str(line) + '\n' + TAB + TAB
+
+            properties += ("GeoProcessor Properties:\n" +
+                           TAB + 'Program Home: ' + program_home + "\n" +
+                           TAB + 'Program Resources Path: ' + program_resources_path + "\n\n")
+
+            # Python properties
+
+            properties += ("Python Properties:\n" +
+                           TAB + 'Python executable (.executable): ' + str(sys.executable) + "\n" +
+                           TAB + 'Python Version (sys.version): ' + system_version + "\n" +
+                           TAB + 'Python Path (sys.path):\n' +
+                           TAB + TAB + system_path + "\n")
+
+            # Check if QGIS is installed and in PATH
+            if is_windows:
+                qgis_root = r"C:\OSGeo4W64"
+            else:
+                # Not yet supported
+                qgis_root = "unknown (operating system not supported with QGIS)"
+            qgis_name = "qgis"
+            qgis_installed = os.path.exists(qgis_root)
+            qgis_version = qgis.utils.Qgis.QGIS_VERSION
+
+            if qgis_installed:
+                qgis_install_string = r"QGIS is installed at: " + qgis_root + "\n"
+            else:
+                qgis_install_string = r"QGIS is not installed at " + qgis_root +\
+                                      ".  The GeoProcessor testing framework is installed.\n"
+            properties += ("QGIS Properties:\n" +
+                           TAB + qgis_install_string)
+            if qgis_installed:
+                properties += (TAB + "QGIS Version: " + qgis_version + "\n" +
+                               TAB + "QGIS Path Variables (set up by GeoProcessor startup script):\n" +
+                               TAB + TAB + qgis_root + "\\bin" + "\n" +
+                               TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\\bin" + "\n" +
+                               TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\n" +
+                               TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\\qtplugins" + "\n" +
+                               TAB + TAB + qgis_root + "\\apps\\qt5\\plugins" + "\n" +
+                               "\n")
+
+            # Create Software/System Information Dialog Box
+            self.sys_info = QtWidgets.QDialog()
+            self.sys_info.resize(800, 500)
+            self.sys_info.setWindowTitle("Software/System Information")
+            self.sys_info.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+            self.sys_info.setWindowIcon(QtGui.QIcon(icon_path))
+            self.sys_info_text_browser = QtWidgets.QTextBrowser(self.sys_info)
+            self.sys_info_text_browser.setGeometry(QtCore.QRect(25, 20, 750, 450))
+            self.sys_info_text_browser.setText(properties)
+            self.sys_info_text_browser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+            # Will implement copy button later once with a better understanding
+            # self.push_button = QtWidgets.QPushButton(self.sys_info)
+            # self.push_button.setGeometry(QtCore.QRect(300,460,75,23))
+            # self.push_button.setText("Copy")
+            # self.push_button.clicked.connect(lambda:self.copy_text(properties))
+            QtCore.QMetaObject.connectSlotsByName(self.sys_info)
+            # Reassign default resizeEvent() to resizeTextBox()
+            self.sys_info.resizeEvent = self.ui_action_resize_software_system_information_text_box
+            self.sys_info.show()
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            message = 'Error getting software/system information (' + str(e) + ')'
+            logger.warning(message, e, exc_info=True)
+            qt_util.warning_message_box(message)
 
     # def copy_text(self, text):
     #     cmd='echo ' + text.strip() + '|clip'
@@ -3030,10 +3068,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         for i in range(0, self.commands_List.count()):
             # TODO jurentie may update to handle Discovery errors once implemented in GeoProcessor
             command_status = gp.commands[i].command_status.run_status
-            if command_status == "FAILURE":
+            if command_status is CommandStatusType.FAILURE:
                 self.numbered_list_error_at_row(i)
                 self.gutter_error_at_row(i)
-            elif command_status == "WARNING":
+            elif command_status is CommandStatusType.WARNING:
                 self.numbered_list_warning_at_row(i)
                 self.gutter_warning_at_row(i)
 

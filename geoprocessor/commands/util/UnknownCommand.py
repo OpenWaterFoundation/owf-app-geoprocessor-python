@@ -17,10 +17,10 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-import geoprocessor.commands.abstract.AbstractCommand as AbstractCommand
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 
-class UnknownCommand(AbstractCommand.AbstractCommand):
+class UnknownCommand(AbstractCommand):
     """
     General command class used when the GeoProcessorCommandFactory does not recognize the command.
     This allows the command to exist gracefully in a command file and command list.

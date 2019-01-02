@@ -16,7 +16,15 @@ pages:
   - Creating Installer: dev-tasks/creating-installer.md
   - Testing: dev-tasks/testing.md
   - Version Control: dev-tasks/version-control.md
-- Development Environment: 'dev-env/dev-env.md'
+- Development Environment:
+  - Overview: 'dev-env/overview.md'
+  - Python: 'dev-env/python.md'
+  - QGIS: 'dev-env/qgis.md'
+  - PyCharm: 'dev-env/pycharm.md'
+  - MkDocs: 'dev-env/mkdocs.md'
+  - Git: 'dev-env/git.md'
+  - Cygwin: 'dev-env/cygwin.md'
+  - Running the GeoProcessor: 'dev-env/running.md'
 - Troubleshooting: 'troubleshooting/troubleshooting.md'
 - Resources:
   - Resources: 'resources/resources.md'

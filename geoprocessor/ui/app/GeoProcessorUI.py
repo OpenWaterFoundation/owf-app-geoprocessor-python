@@ -2713,6 +2713,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         Returns: None
         """
+
         logger = logging.getLogger(__name__)
         self.opened_command_file = True
 
@@ -3024,7 +3025,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 _fromUtf8("Menu_File_Open_CommandFileHistory_Command_" + str(i)))
             logger.info("Setting File / Open menu [" + str(i) + "] to " + command_file)
             self.Menu_File_Open_CommandFileHistory_List[i].triggered.connect(
-                lambda checked, filename=command_file: self.ui_action_open_command_file(command_file))
+                lambda checked, filename=command_file: self.ui_action_open_command_file(filename))
             self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFileHistory_List[i])
 
     def ui_set_main_window_title(self, title):

@@ -2465,8 +2465,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         Returns: None
         """
+        # Use functions for CloseEvent override to see if user has edited command file and if so
+        # prompt user to save...
+        self.closeEvent_save_command_file()
+
+        # Set opened file to false since we are now opening a new command file
+        self.opened_command_file = False
+
         # Clear commands from geoprocessor
         self.gp_model.clear_all_commands()
+
+        # Call function to initialize necessary values for new command file
+        self.gp_model.new_command_list()
 
         # Set the title for the main window
         self.ui_set_main_window_title("commands not saved")

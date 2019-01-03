@@ -128,6 +128,13 @@ class GeoProcessorListModel(object):
         # Update the CommandListWidget UI to reflect indented commands
         self.update_command_list_ui()
 
+    def new_command_list(self):
+        # Initialize the backup command list for checking if changes were made on exit
+        self.command_list_view.set_command_list_backup()
+
+        # Notify the main ui that results should be refreshed
+        self.command_list_view.notify_main_ui_listener_refresh_results()
+
     def run_all_commands(self):
         """
         Run all commands in GeoProcessor

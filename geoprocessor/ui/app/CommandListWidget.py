@@ -135,6 +135,7 @@ class CommandListWidget(object):
         self.numbered_List.takeItem(index)
         # Get the length of the numbered list
         count = self.numbered_List.count()
+        count = self.numbered_List.count()
 
         # Update numbers past the deleted row
         for i in range(index, count):
@@ -516,7 +517,7 @@ class CommandListWidget(object):
         # Add event handler for QGroupBox resize event
         self.commands_GroupBox.resizeEvent = self.group_box_resize
         self.commands_GroupBox.setObjectName(_fromUtf8("commands_GroupBox"))
-        self.commands_GroupBox.setTitle("Commands (0 commands, 0  selected, 0 with failures, 0 with warnings)")
+        self.commands_GroupBox.setTitle("Commands (0 commands, 0 selected, 0 with failures, 0 with warnings)")
 
         # Add basic QListWidget elements to design the command list
         self.setup_ui_command_list_widget_layout()

@@ -328,7 +328,11 @@ def run_ui(ui_app_session):
     # logger.info("Declaring QApplication...")
     # print("Declaring QApplication...")
     # The following was done previously but is redundant with the call to qgis_util.initialize_qgis() in main.
-    # app = QApplication(sys.argv)
+    qt_app = None
+    if qgis_util.qgs_app is None:
+        # If QGIS is not used (such as with gptest), use Qt5 application
+        # - QgsApplication is derived from QApplication
+        qt_app = QApplication(sys.argv)
     # print("...back from declaring QApplication.")
     # logger.info("...back from declaring QApplication.")
 
@@ -359,10 +363,16 @@ def run_ui(ui_app_session):
     # Enter the main loop for the application
     # - the following ensures a clean exit from the application
     if qgis_util.qgs_app is None:
-        logger.warning("QGIS application is null, cannot use PyQGIS")
+        # QGIS is not used so use Qt5 application
+        logger.info("QGIS application is null, assuming Qt5 application")
+        if qt_app is None:
+            logger.error("Unable to initialize QApplication.  Exiting.")
+            sys.exit(1)
+        else:
+            sys.exit(qt_app.exec())
     else:
+        # QGIS is used so use its application
         sys.exit(qgis_util.qgs_app.exec_())
-    pass
 
 
 # TODO smalers 2018-07-29 is there a global dictionary similar to Python system properites?

@@ -13,7 +13,36 @@
 #   to learn how to use setup.py
 # - .zip files are also created.
 
-# Supporting functions
+# Supporting functions, alphabetized
+
+# Check code as follows to make sure QGIS is fully disabled, in deployed version (look for uncommented QGIS code).
+# - ignore the file printenv_qt5.py since it is used for testing.
+# If any issues, show an error because script needs to be fixed to ensure code will run in deployed environment
+checkGptestCode() {
+	echo ""
+	echo "Checking gptest code for QGIS references:  ${buildTmpGptestFolder}"
+	grepExclude="--exclude printenv_qt5.py"
+	totalCount="0"
+	count=$(grep $grepExclude -ir 'import qgis' ${buildTmpGptestFolder} | grep -v '#' | wc -l)
+	totalCount=$(expr $totalCount + $count)
+	if [ "$count" -ne "0" ]; then
+		# Found some lines so rerun so it is visible
+		grep $grepExclude -ir 'import qgis' ${buildTmpGptestFolder} | grep -v '#'
+	fi
+	count=$(grep $grepExclude -ir 'from qgis' ${buildTmpGptestFolder} | grep -v '#' | wc -l)
+	totalCount=$(expr $totalCount + $count)
+	if [ "$count" -ne "0" ]; then
+		# Found some lines so rerun so it is visible
+		grep $grepExclude -ir 'from qgis' ${buildTmpGptestFolder} | grep -v '#'
+	fi
+	# The following is the most generic...
+	# Check the total count and exit if references remain
+	if [ "$totalCount" -ne "0" ]; then
+		echo ""
+		${echo2} "${failColor}QGIS references have not been totally removed.  Need to fix.  Exiting.${endColor}"
+		exit 1
+	fi
+}
 
 # Determine the operating system that is running the script
 # - sets the variable operatingSystem to cygwin, linux, or mingw (Git Bash)
@@ -39,13 +68,180 @@ checkOperatingSystem()
 	echo "Detected operatingSystem=$operatingSystem"
 }
 
+# Check the Operating System Python version.
+# - See comments for checkQgisPythonVersion
+# - The osPythonVersion variable is set to a number like "36" or "37" (initialized to "unknown").
+# - The osPythonFolder is set to the location of the Python installation (parent of sys.executable).
+# - The information can be printed at the end of this script to remind if there is an incompatibility.
+checkOperatingSystemPythonVersion() {
+	if [ "$operatingSystem" = "cygwin" ]; then
+		python3ToRun=$(which python3)
+		python3ToRun1=$(echo $python3ToRun | cut -c 1)
+		if [ "$python3ToRun1" = "/" ]; then
+			python3ToRunBasename=$(basename $python3ToRun)
+			if [ "$python3ToRunBasename" != "python3" ]; then
+				echo "Operating system python3 is not found."
+			else
+				# Get the Python version from the runtime since install folder is not as clear as QGIS
+				# python3 --version output is expected to be like:  Python 3.6.4
+				osPythonVersion=$(python3 --version | cut -d ' ' -f 2 | cut -d '.' -f1,2 | tr -d '.')
+			fi
+		else
+			$echo2 "${warnColor}python3 was not found on the operating system.${endColor}"
+		fi
+	fi
+	# TODO smalers 2019-01-02 set the osPythonFolder
+	# - have to inspect the path to find the "lib" folder, etc.
+}
+
+# Check the QGIS Python version.
+# - Ideally the Cygwin and Linux Python will be the same but they may be slightly
+#   off, especially for the testing framework.  For example, QGIS may be Python 3.7
+#   and Cygwin and Linux Python may be 3.6.
+# - The qgisPythonVersion variable is set to a number like "36" or "37" (initialized to "unknown").
+# - The qgisPythonFolder i
+# - The information can be printed at the end of this script to remind if there is an incompatibility.
+checkQgisPythonVersion() {
+	if [ "$operatingSystem" = "cygwin" ]; then
+		OSGeo4W64Folder='/cygdrive/C/OSGeo4W64'
+	fi
+	if [ -d "${OSGeo4W64Folder}" ]; then
+		# Look for Python folders, should be in apps/Python36, etc.
+		# - get the newest version
+		qgisPythonFolderCount=$(ls -1 -d ${OSGeo4W64Folder}/apps/Python* | wc -l)
+		if [ "$qgisPythonFolderCount" -ne "1" ]; then
+			echo ""
+			echo "Found $qgisPythonFolderCount versions of Python in ${OSGeo4W64Folder} - assume newest is used."
+		fi
+		qgisPythonFolder=$(ls -1 -d ${OSGeo4W64Folder}/apps/Python* | sort -r | head -1)
+		qgisPythonVersion=$(basename $qgisPythonFolder | sed 's/Python//g')
+	else
+		$echo2 "${warnColor}$OSGeo4W64Folder was not found - no QGIS insalled?${endColor}"
+	fi
+}
+
+# Parse the command line and set variables to control logic
+parseCommandLine() {
+	#echo "Parsing command line..."
+	local OPTIND opt h v
+	while getopts :hv opt; do
+		#echo "Command line option is ${opt}"
+		case $opt in
+			h) # Usage
+				printUsage
+				exit 0
+				;;
+			v) # version
+				printVersion
+				exit 0
+				;;
+			\?)
+				echo "Invalid option:  -$OPTARG" >&2
+				printUsage
+				exit 1
+				;;
+			:)
+				echo "Option -$OPTARG requires an argument" >&2
+				printUsage
+				exit 1
+				;;
+		esac
+	done
+}
+
+# Print the program usage
+printUsage() {
+	echo ""
+	echo "Usage:  1-create-gp-tar.sh"
+	echo ""
+	echo "Create a temporary local copy of the GeoProcessor files into build-util/build-tmp."
+	echo "The results are packaged into gp and gptest virtual environments."
+	echo "The gptest version has QGIS code filtered out so no runtime QGIS dependency."
+	echo ""
+	echo "-h  Print the usage."
+	echo "-v  Print the version."
+	echo ""
+}
+
+# Print the program version
+printVersion() {
+	echo ""
+	echo "1-create-gp-tar.sh version ${programVersion} ${programVersionDate}"
+	echo ""
+	echo "GeoProcessor build utilities"
+	echo "Copyright 2017-2019 Open Water Foundation."
+	echo ""
+	echo "License GPLv3+:  GNU GPL version 3 or later"
+	echo ""
+	echo "There is ABSOLUTELY NO WARRANTY; for details see the"
+	echo "'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file."
+	echo "This is free software: you are free to change and redistribute it"
+	echo "under the conditions of the GPLv3 license in the LICENSE file."
+	echo ""
+}
+
+# Setup the echo command and colors
+setupEcho() {
+	# Determine which echo to use, needs to support -e to output colored text
+	# - normally built-in shell echo is OK, but on Debian Linux dash is used, and it does not support -e
+	echo2='echo -e'
+	testEcho=`echo -e test`
+	if [ "${testEcho}" = '-e test' ]; then
+		# The -e option did not work as intended.
+		# -using the normal /bin/echo should work
+		# -printf is also an option
+		echo2='/bin/echo -e'
+	fi
+
+	# Strings to change colors on output, to make it easier to indicate when actions are needed
+	# - Colors in Git Bash:  https://stackoverflow.com/questions/21243172/how-to-change-rgb-colors-in-git-bash-for-windows
+	# - Useful info:  http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
+	# - See colors:  https://en.wikipedia.org/wiki/ANSI_escape_code#Unix-like_systems
+	# - Set the background to black to eensure that white background window will clearly show colors contrasting on black.
+	# - Yellow "33" in Linux can show as brown, see:  https://unix.stackexchange.com/questions/192660/yellow-appears-as-brown-in-konsole
+	# - Tried to use RGB but could not get it to work - for now live with "yellow" as it is
+	warnColor='\e[0;40;33m' # warning - user needs to do something, 40=background black, 33=yellow
+	failColor='\e[0;40;31m' # critical issue - could be fatal, 40=background black, 31=red
+	okColor='\e[0;40;32m' # status is good, 40=background black, 32=green
+	endColor='\e[0m' # To switch back to default color
+}
+
+# Main entry point into the script
+# - TODO smalers 2019-01-01 could organize more of the following code into functions.
+
+programVersion="1.2.0"
+programVersionDate="2019-01-02"
+
+# Initialize variables
+# - QGIS Python version is set by checkQgisPythonVersion
+qgisPythonVersion="unknown"
+qgisPythonFolder="unknown"
+# - Operating system python version is set by checkOperatingSystemPythonVersion
+osPythonVersion="unknown"
+osPythonFolder="unknown"
+# Echo command is the default but check below with setupEcho function
+echo2="echo"
+
 #------------------------------------------------------------------------------------------
 # Step 0. Setup.
 # Get the folder where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
 
+# Setup echo command and colors
+# - use colored text to highlight issues
+setupEcho
+
+# Parse the command line
+parseCommandLine "$@"
+
 # Determine the operating system
+# - put this before other function calls because logic depends on operating system
 checkOperatingSystem
+
+# Check the QGIS and operating system Python versions
+# - to help ensure compatibility in testing and deployed versions
+checkQgisPythonVersion
+checkOperatingSystemPythonVersion
 
 # Define top-level folders - everything is relative to this below to avoid confusion
 repoFolder=`dirname ${scriptFolder}`
@@ -249,14 +445,23 @@ echo "Changing permissions on files..."
 find ${buildTmpGptestFolder}/geoprocessor -type f -exec chmod 744 {} \;
 
 # Update the geoprocessor/util/qgis_util.py module:
+# - comment out lines that contain "import qgis.utils"
+# - comment out lines that contain "from plugins.processing.core"
+# - comment out lines that contain "from qgis.analysis import"
 # - comment out lines that contain "from qgis.core import"
+# - comment out lines that contain "from qgis.utils import"
 # - comment out lines that contain "from processing.core.Processing import""
 # - comment out lines that contain "from PyQt4.QtCore import""
 # - Could do on one line with chained sed commands but separate lines is more readable and can test separately.
 echo "Updating geoprocessor/util/qgis_util.py to comment out QGIS module imports and references..."
+sed -i 's/^from plugins.processing.core/# from plugins.processing.core/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
+sed -i 's/^from qgis.analysis import/# from qgis.analysis import/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
 sed -i 's/^from qgis.core import/# from qgis.core import/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
+sed -i 's/^from qgis.utils import/# from qgis.utils import/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
 sed -i 's/^from processing.core.Processing import/# from processing.core.Processing import/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
 sed -i 's/^from PyQt4.QtCore import/# from PyQt4.QtCore import/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
+
+sed -i 's/^import qgis.utils/# import qgis.utils/g' ${buildTmpGptestFolder}/geoprocessor/util/qgis_util.py
 
 # Update the geoprocessor/core/GeoProcessor.py module:
 # - comment out line "import geoprocessor.util.qgis_util as qgis_util"
@@ -293,9 +498,20 @@ sed -i 's/^import ogr/# import ogr/g' ${buildTmpGptestFolder}/geoprocessor/util/
 # - comment out the call to qgis_util.initialize_qgis(...)
 # - comment out the call to qgis_util.exit_qgis(...)
 echo "Updating geoprocessor/app/gp.py to comment out QGIS initialize/stop calls ..."
-sed -i 's/qgis_util.initialize_qgis/# qgis_util.initialize_qgis/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
-sed -i 's/qgis_util.exit_qgis/# qgis_util.exit_qgis/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
+# Older version...
+# - may need to detect and use
+# sed -i 's/qgis_util.initialize_qgis/# qgis_util.initialize_qgis/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
+# New version as of GeoProcessor 1.1.0...
+# The following indicates that QGIS is not enabled for application setup
+sed -i 's/if qgis_util.qgs_app is None:/if None is None:  # if qgis_util.qgs_app is None:/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
+sed -i 's/sys.exit(qgis_util.qgs_app.exec_())/pass  # sys.exit(qgis_util.qgs_app.exec_())/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
+#
+sed -i 's/qgs_app = qgis_util.initialize_qgis/pass  # qgs_app = qgis_util.initialize_qgis/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
+sed -i 's/qgis_util.exit_qgis/pass  # qgis_util.exit_qgis/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
 sed -i 's/^import geoprocessor.util.qgis_util as qgis_util/# import geoprocessor.util.qgis_util as qgis_util/g' ${buildTmpGptestFolder}/geoprocessor/app/gp.py
+
+# Check the code to make sure QGIS references have been removed
+checkGptestCode
 
 #------------------------------------------------------------------------------------------
 # Step 4a. Tar up all the *.py files in the geoprocessor folder for gptest distribution
@@ -458,8 +674,13 @@ echo "Install files were created in ${buildTmpFolder} folder"
 echo "- Look for *.tar.gz and *.zip files"
 echo "- Install the files in the site-packages folder of the target Python 3 environment"
 echo "- The files are used to create the virtual environment via the 2-create-gp-venv script"
+echo "- The files are also used to update the virtual environment via the 2-update-gp-venv script"
 echo "- The 'geoprocessor' folder should be in a folder indicated by Python sys.path"
-echo "- Remove the existing folder before installing to make sure the latest files are installed."
+if [ ! "$qgisPythonVersion" = "osPythonVersion" ]; then
+	$echo2 "${warnColor}- QGIS Python version $qgisPythonVersion is different than latest operating system version ${osPythonVersion}.${endColor}"
+	$echo2 "${warnColor}  - May be OK if close enough but may need to take action to create a compatible virtual environment.${endColor}"
+	$echo2 "${warnColor}  - QGIS Python folder is $qgisPythonFolder${endColor}"
+fi
 echo ""
 
 # Exit with appropriate error status

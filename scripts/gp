@@ -120,6 +120,9 @@ checkXWindowsDisplay() {
 		# - assume running X server and program on one computer
 		echo "Setting DISPLAY=:0.0 to work with X Windows server"
 		export DISPLAY=:0.0
+	else
+		# DISPLAY already set
+		echo "Using DISPLAY=$DISPLAY for X Windows server."
 	fi
 }
 

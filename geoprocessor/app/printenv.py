@@ -23,8 +23,6 @@ helpful for troubleshooting PyCharm.
 """
 
 import sys
-from PyQt5 import QtWidgets
-import qgis.utils
 
 if __name__ == '__main__':
     """
@@ -32,7 +30,7 @@ if __name__ == '__main__':
     """
     print("Python properties:")
 
-    TAB = "    ";
+    TAB = "    "
     for item in sys.path:
         # Replace newlines in system version
         system_version = sys.version.replace("\r\n", " ").replace("\n", " ")

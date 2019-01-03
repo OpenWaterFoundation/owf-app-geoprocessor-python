@@ -7,7 +7,7 @@
 # Create the Python virtualenv installers for the GeoProcessor
 # - Creates the virtualenv for cygwin gptest environment, others to be created later
 
-# Supporting functions
+# Supporting functions, alphabetized
 
 # Check whether proper Cygwin packages are installed in development environment
 # - some packages (e.g., python-devel) will only be used by pip during compiles, which use system include files and libraries
@@ -126,13 +126,65 @@ checkOperatingSystem()
 	echo "Detected operatingSystem=$operatingSystem"
 }
 
+# Check the Operating System Python version.
+# - See comments for checkQgisPythonVersion
+# - The osPythonVersion variable is set to a number like "36" or "37" (initialized to "unknown").
+# - The osPythonFolder is set to the location of the Python installation (parent of sys.executable).
+# - The information can be printed at the end of this script to remind if there is an incompatibility.
+checkOperatingSystemPythonVersion() {
+	if [ "$operatingSystem" = "cygwin" ]; then
+		python3ToRun=$(which python3)
+		python3ToRun1=$(echo $python3ToRun | cut -c 1)
+		if [ "$python3ToRun1" = "/" ]; then
+			python3ToRunBasename=$(basename $python3ToRun)
+			if [ "$python3ToRunBasename" != "python3" ]; then
+				echo "Operating system python3 is not found."
+			else
+				# Get the Python version from the runtime since install folder is not as clear as QGIS
+				# python3 --version output is expected to be like:  Python 3.6.4
+				osPythonVersion=$(python3 --version | cut -d ' ' -f 2 | cut -d '.' -f1,2 | tr -d '.')
+			fi
+		else
+			$echo2 "${warnColor}python3 was not found on the operating system.${endColor}"
+		fi
+	fi
+	# TODO smalers 2019-01-02 set the osPythonFolder
+	# - have to inspect the path to find the "lib" folder, etc.
+}
+
+# Check the QGIS Python version.
+# - Ideally the Cygwin and Linux Python will be the same but they may be slightly
+#   off, especially for the testing framework.  For example, QGIS may be Python 3.7
+#   and Cygwin and Linux Python may be 3.6.
+# - The qgisPythonVersion variable is set to a number like "36" or "37" (initialized to "unknown").
+# - The qgisPythonFolder i
+# - The information can be printed at the end of this script to remind if there is an incompatibility.
+checkQgisPythonVersion() {
+	if [ "$operatingSystem" = "cygwin" ]; then
+		OSGeo4W64Folder='/cygdrive/C/OSGeo4W64'
+	fi
+	if [ -d "${OSGeo4W64Folder}" ]; then
+		# Look for Python folders, should be in apps/Python36, etc.
+		# - get the newest version
+		qgisPythonFolderCount=$(ls -1 -d ${OSGeo4W64Folder}/apps/Python* | wc -l)
+		if [ "$qgisPythonFolderCount" -ne "1" ]; then
+			echo ""
+			echo "Found $qgisPythonFolderCount versions of Python in ${OSGeo4W64Folder} - assume newest is used."
+		fi
+		qgisPythonFolder=$(ls -1 -d ${OSGeo4W64Folder}/apps/Python* | sort -r | head -1)
+		qgisPythonVersion=$(basename $qgisPythonFolder | sed 's/Python//g')
+	else
+		$echo2 "${warnColor}$OSGeo4W64Folder was not found - no QGIS insalled?${endColor}"
+	fi
+}
+
 # Check whether Python3 is installed
 checkPythonConfig() {
 	# Make sure that python3 is found
 	#--------------------------------
 	output=`python3 -c 'print("python3 found")'`
 	if [ "$output" != "python3 found" ]; then
-		echo "python3 not found.  Make sure to instally python3 in Cygwin.  Exiting."
+		echo "python3 not found.  Make sure to install python3 in Cygwin.  Exiting."
 		exit 1
 	fi
 	# Make sure it is a Cygwin/Linux version
@@ -173,7 +225,7 @@ checkVenvPythonConfig () {
 	pip3Script="${VIRTUAL_ENV}/bin/pip3"
 	lenFirstLine=`head -n1 "${pip3Script}" | wc -c`
 	if [ "$lenFirstLine" -gt 127 ]; then
-		echo "Length ($lenFirstLine) of first line of ${pip3Script} is > 127 chars.  Exiting."
+		$echo2 "${failColor}Length ($lenFirstLine) of first line of ${pip3Script} is > 127 chars.  Exiting.${endColor}"
 		exit 1
 	fi
 }
@@ -184,13 +236,13 @@ checkVenvPythonConfig () {
 copyGeoProcessorPackageToVenv () {
 	# Top destination folder
 	virtualEnvFolder="gptest-${version}-${operatingSystemShort}-venv"
-	virtualenvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
+	virtualEnvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
 	if [ ${operatingSystem} = "cygwin" ] || [ ${operatingSystem} = "linux" ]; then
 		# Determine the specific site-packages destination folder to receive source geoprocessor folder
 		# - on Debian Linux will be something like:  venv-tmp/gptest-1.1.0-lin-venv/lib/python3.4
-		pythonLibWithVersion=`ls -1 ${virtualenvFolderPath}/lib`
+		pythonLibWithVersion=`ls -1 ${virtualEnvFolderPath}/lib`
 		pythonLibWithVersion=`basename ${pythonLibWithVersion}`
-		sitepackagesFolder="${virtualenvFolderPath}/lib/${pythonLibWithVersion}/site-packages"
+		sitepackagesFolder="${virtualEnvFolderPath}/lib/${pythonLibWithVersion}/site-packages"
 		if [ ! -d "${sitepackagesFolder}" ]; then
 			echo "Site packages folder ${sitepackagesFolder} does not exist.  Exiting."
 			exit 1
@@ -219,8 +271,8 @@ copyGeoProcessorScriptsToVenv () {
 	echo "Copying GeoProcessor scripts to virtual environment..."
 	# Destination folder
 	virtualEnvFolder="gptest-${version}-${operatingSystemShort}-venv"
-	virtualenvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
-	virtualEnvScriptsFolder="$virtualenvFolderPath/scripts"
+	virtualEnvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
+	virtualEnvScriptsFolder="$virtualEnvFolderPath/scripts"
 	echo "  Source:  ${repoFolder}/scripts"
 	echo "  Destination:  ${virtualEnvScriptsFolder}"
 	if [ ${operatingSystem} = "cygwin" ] || [ ${operatingSystem} = "linux" ]; then
@@ -251,15 +303,15 @@ createGptestVirtualenvCygwinAndLinux() {
 	echo "Changing to ${virtualenvTmpFolder}"
 	cd ${virtualenvTmpFolder}
 	virtualEnvFolder="gptest-${version}-${operatingSystemShort}-venv"
-	virtualenvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
+	virtualEnvFolderPath="${virtualenvTmpFolder}/${virtualEnvFolder}"
 	# Remove the previous virtual environment for the GeoProcessor version
-	if [ -d "${virtualenvFolderPath}" ]; then
-		echo "Removing existing ${virtualenvFolderPath}"
-		rm -rf ${virtualenvFolderPath}
+	if [ -d "${virtualEnvFolderPath}" ]; then
+		echo "Removing existing ${virtualEnvFolderPath}"
+		rm -rf ${virtualEnvFolderPath}
 	fi
 	# Create the virtualenv using the Cygwin python3
-	echo "Creating virtualenv folder ${virtualenvFolderPath}"
-	#mkdir ${virtualenvFolderPath}
+	echo "Creating virtualenv folder ${virtualEnvFolderPath}"
+	#mkdir ${virtualEnvFolderPath}
 	# --system-site-packages gives the virtual environment access to the global site-packages,
 	# possibly necessary to install PyQt5 that was installed by Cygwin but is unavailable via pip
 	# However, this is bad because it mixes the environments.
@@ -269,11 +321,11 @@ createGptestVirtualenvCygwinAndLinux() {
 	# -v is verbose (use for troubleshooting temporarily but do not deploy)
 	# -p specifies the Python to copy
 	# Works on Cygwin and Linux
-	echo "Creating virtual environment with: virtualenv -v -p /usr/bin/python3 ${virtualenvFolderPath}"
-	virtualenv -p /usr/bin/python3 ${virtualenvFolderPath}
+	echo "Creating virtual environment with: virtualenv -v -p /usr/bin/python3 ${virtualEnvFolderPath}"
+	virtualenv -p /usr/bin/python3 ${virtualEnvFolderPath}
 	# Activate the virtual environment, making it the active Python
-	echo "Activating virtual environment with:  . ${virtualenvFolderPath}/bin/activate"
-	. ${virtualenvFolderPath}/bin/activate
+	echo "Activating virtual environment with:  . ${virtualEnvFolderPath}/bin/activate"
+	. ${virtualEnvFolderPath}/bin/activate
 	# Check to make sure needed tools are installed
 	# Need to upgrade the setuptools on Linux for some packages
 	# - works ok on linux with the update
@@ -292,9 +344,9 @@ createGptestVirtualenvCygwinAndLinux() {
 	checkVenvPythonConfig
 	# Install the GeoProcessor files created by the create-gp-installer.sh script.
 	# - should be something like lib/python3.6/site-packages
-	pythonLibWithVersion=`ls -1 ${virtualenvFolderPath}/lib`
+	pythonLibWithVersion=`ls -1 ${virtualEnvFolderPath}/lib`
 	pythonLibWithVersion=`basename ${pythonLibWithVersion}`
-	sitepackagesFolder="${virtualenvFolderPath}/lib/${pythonLibWithVersion}/site-packages"
+	sitepackagesFolder="${virtualEnvFolderPath}/lib/${pythonLibWithVersion}/site-packages"
 	if [ ! -d "${sitepackagesFolder}" ]; then
 		echo "Site packages folder does not exist:  ${sitepackagesFolder}"
 		echo "Aborting virtual environment setup."
@@ -497,7 +549,7 @@ createGptestVirtualenvCygwinAndLinux() {
 
 	# Copy GeoProcessor scripts for gptest
 	if [ ${operatingSystem} = "cygwin" ] || [ ${operatingSystem} = "linux" ]; then
-		virtualenvScriptsFolder="${virtualenvFolderPath}/scripts"
+		virtualenvScriptsFolder="${virtualEnvFolderPath}/scripts"
 		mkdir ${virtualenvScriptsFolder}
 		buildTmpGptestFolder="${buildTmpFolder}/tmp-gptest-${version}"
 		cp ${buildTmpGptestFolder}/scripts/gptest ${virtualenvScriptsFolder}
@@ -515,14 +567,14 @@ createGptestVirtualenvCygwinAndLinux() {
 	cd ${virtualenvTmpFolder}
 	gptestTargzFile="gptest-${version}-${operatingSystemShort}-venv.tar.gz"
 	echo "Creating file to distribute virtual environment:  ${gptestTargzFile}"
-	virtualenvFolderBasename=`basename ${virtualenvFolderPath}`
+	virtualenvFolderBasename=`basename ${virtualEnvFolderPath}`
 	tar -czvf ${gptestTargzFile} ${virtualenvFolderBasename}
 }
 
 # Parse the command parameters
 parseCommandLine() {
-	local OPTIND opt h u
-	optstring=":hu"
+	local OPTIND opt h u v
+	optstring=":huv"
 	while getopts $optstring opt; do
 		#echo "Command line option is ${opt}"
 		case $opt in
@@ -532,6 +584,10 @@ parseCommandLine() {
 				;;
 			u) # -u  Update the build-tmp folder with *.py files
 				updateBuildTmp="true"
+				;;
+			v) # version
+				printVersion
+				exit 0
 				;;
 			\?)
 				echo ""
@@ -559,54 +615,94 @@ printUsage() {
 	echo "Example to do full virtual environment creation:"
 	echo '  2-create-gp-env.sh'
 	echo ""
-	echo "Example to update virtual environment with GeoProcessor *.py and scripts:"
+	echo "Example to update virtual environment with latest GeoProcessor *.py and scripts:"
 	echo '  2-create-gp-env.sh -u'
 	echo ""
-	echo "-u copy the GeoProcessor *.py and scripts to existing virtual environment"
-	echo "-h print the usage"
+	echo "-u  Copy the GeoProcessor *.py and scripts to existing virtual environment."
+	echo "-h  Print the usage."
+	echo "-v  Print the version."
 	echo ""
+}
+
+# Print the program version
+printVersion() {
+	echo ""
+	echo "2-create-gp-venv.sh version ${programVersion} ${programVersionDate}"
+	echo ""
+	echo "GeoProcessor build utilities"
+	echo "Copyright 2017-2019 Open Water Foundation."
+	echo ""
+	echo "License GPLv3+:  GNU GPL version 3 or later"
+	echo ""
+	echo "There is ABSOLUTELY NO WARRANTY; for details see the"
+	echo "'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file."
+	echo "This is free software: you are free to change and redistribute it"
+	echo "under the conditions of the GPLv3 license in the LICENSE file."
+	echo ""
+}
+
+# Setup the echo command and colors
+setupEcho() {
+	# Determine which echo to use, needs to support -e to output colored text
+	# - normally built-in shell echo is OK, but on Debian Linux dash is used, and it does not support -e
+	echo2='echo -e'
+	testEcho=`echo -e test`
+	if [ "${testEcho}" = '-e test' ]; then
+		# The -e option did not work as intended.
+		# -using the normal /bin/echo should work
+		# -printf is also an option
+		echo2='/bin/echo -e'
+	fi
+
+	# Strings to change colors on output, to make it easier to indicate when actions are needed
+	# - Colors in Git Bash:  https://stackoverflow.com/questions/21243172/how-to-change-rgb-colors-in-git-bash-for-windows
+	# - Useful info:  http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
+	# - See colors:  https://en.wikipedia.org/wiki/ANSI_escape_code#Unix-like_systems
+	# - Set the background to black to eensure that white background window will clearly show colors contrasting on black.
+	# - Yellow "33" in Linux can show as brown, see:  https://unix.stackexchange.com/questions/192660/yellow-appears-as-brown-in-konsole
+	# - Tried to use RGB but could not get it to work - for now live with "yellow" as it is
+	boldColor='\e[0;01m' # warning - user needs to do something, 01=bold
+	warnColor='\e[0;40;33m' # warning - user needs to do something, 40=background black, 33=yellow
+	criticalColor='\e[0;40;31m' # critical issue - could be fatal, 40=background black, 31=red
+	okColor='\e[0;40;32m' # status is good, 40=background black, 32=green
+	endColor='\e[0m' # To switch back to default color
 }
 
 # Entry point into script
 
-# Default variable values
-updateBuildTmp="false"  # Default is to do full venv creation
+programVersion="1.2.0"
+programVersionDate="2019-01-02"
 
-# Determine which echo to use, needs to support -e to output colored text
-# - normally built-in shell echo is OK, but on Debian Linux dash shell is used, and it does not support -e
-echo2='echo -e'
-testEcho=`echo -e test`
-if [ "${testEcho}" = '-e test' ]; then
-	# The -e option did not work as intended.
-	# -using the normal /bin/echo should work
-	# -printf is also an option
-	echo2='/bin/echo -e'
-	# The following does not seem to work
-	# echo2='printf'
-fi
+# Initialize variables
+# - QGIS Python version is set by checkQgisPythonVersion
+qgisPythonVersion="unknown"
+qgisPythonFolder="unknown"
+# - Operating system python version is set by checkOperatingSystemPythonVersion
+osPythonVersion="unknown"
+osPythonFolder="unknown"
+# Echo command is the default but check below with setupEcho function
+echo2="echo"
+# Default is to do full venv creation (-u will set to "true)
+updateBuildTmp="false"
 
-# Strings to change colors on output, to make it easier to indicate when actions are needed
-# - Colors in Git Bash:  https://stackoverflow.com/questions/21243172/how-to-change-rgb-colors-in-git-bash-for-windows
-# - Useful info:  http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
-# - See colors:  https://en.wikipedia.org/wiki/ANSI_escape_code#Unix-like_systems
-# - Set the background to black to eensure that white background window will clearly show colors contrasting on black.
-# - Yellow "33" in Linux can show as brown, see:  https://unix.stackexchange.com/questions/192660/yellow-appears-as-brown-in-konsole
-# - Tried to use RGB but could not get it to work - for now live with "yellow" as it is
-warnColor='\e[0;40;33m' # user needs to do something, 40=background black, 33=yellow
-failColor='\e[0;40;31m' # serious issue, 40=background black, 31=red
-okColor='\e[0;40;32m' # status is good, 40=background black, 32=green
-colorEnd='\e[0m' # To switch back to default color
+# Setup the echo command for color text output
+setupEcho
 
 #------------------------------------------------------------------------------------------
 # Step 0. Setup.
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
 
+# Parse the command line
+parseCommandLine "$@"
+
 # Check the operating system
 checkOperatingSystem
 
-# Parse the command line
-parseCommandLine "$@"
+# Check the QGIS and operating system Python versions
+# - to help ensure compatibility in testing and deployed versions
+checkQgisPythonVersion
+checkOperatingSystemPythonVersion
 
 if [ "$updateBuildTmp" = true ]; then
 	echo ""
@@ -620,7 +716,9 @@ fi
 buildUtilFolder=${scriptFolder}
 repoFolder=`dirname ${buildUtilFolder}`
 buildTmpFolder="${buildUtilFolder}/build-tmp"
-#virtualenvTmpFolder="${buildUtilFolder}/virtualenv-tmp"
+# Name of the parent folder for virtual environments
+# - the following is apparently too long - sh-bang lines have limit of 127 characters
+#   virtualenvTmpFolder="${buildUtilFolder}/virtualenv-tmp"
 virtualenvTmpFolder="${buildUtilFolder}/venv-tmp"
 # Get the software version number
 versionFile="${repoFolder}/geoprocessor/app/version.py"
@@ -685,17 +783,56 @@ errorOccurred="no"
 
 if [ "${errorOccurred}" = "yes" ]
 	then
+	${echo2} ""
+	${echo2} "A warning or failure error occurred creating the virtual environment.  Check messages above."
+	${echo2} "- Partial results may have been created, such as tar.gz but not .zip"
+	${echo2} "- Maybe need to use another shell (Cygwin, Git Bash, Windows Bash, Linux)."
+	${echo2} "- Sometimes Cygwin processes die so just rerun."
+	${echo2} ""
+fi
+
+# Print information useful after this script is run.
+
+if [ "$updateBuildTmp]" ="false" ]; then
+	# The Python virtual environment was created
 	echo ""
-	echo "An error occurred creating the virtual environment.  Check messages above."
-	echo "- Partial results may have been created, such as tar.gz but not .zip"
-	echo "- Maybe need to use another shell (Cygwin, Git Bash, Windows Bash, Linux)."
-	echo "- Sometimes Cygwin drops processes so just rerun."
+	echo "Python virtual environment(s) were created in venv-tmp folder:"
+	echo ""
+	echo "  ${virtualEnvFolderPath}"
+	echo ""
+	echo "Next steps are to do one or more of the following:"
+	echo "- Run the software locally in the venv before deploying by running scripts in:  "
+	echo "  ${virtualEnvFolderPath}/scripts"
+	echo "- If source is modified, run build-util/2-update-gp-venv.sh to update above venv files."
+	echo "- Run build-util/install/install-gp.sh to install from tar.gz file to test venv before deploying."
+	echo "- Run build-util/3-copy-gp-to-amazon-s3.sh to deploy the installer to OWF Amazon S3 site."
+	echo "  Then download, install, and test in the deployed venv by running scripts."
+	echo ""
+else
+	# The Python virtual environment was updated
+	echo ""
+	echo "Python virtual environment(s) was updated in venv-tmp folder:"
+	echo ""
+	echo "  ${virtualEnvFolderPath}"
+	echo ""
+	echo "Next steps are to do one or more of the following:"
+	echo "- Run the software locally in the venv before deploying by running scripts in:  "
+	echo "  ${virtualEnvFolderPath}/scripts"
+	echo "- If source is modified, run build-util/2-update-gp-venv.sh again to update above venv files."
+	echo "- Run build-util/install/install-gp.sh to install from tar.gz file to test venv before deploying."
+	echo "- Run build-util/3-copy-gp-to-amazon-s3.sh to deploy the installer to OWF Amazon S3 site."
+	echo "  Then download, install, and test in the deployed venv by running scripts."
+	echo ""
+	${echo2} "${boldColor}It is recommended to run build-util/2-create-gp-venv.sh to do a clean create before deployment.${endColor}"
 	echo ""
 fi
 
-echo ""
-echo "Python virtual environments were created in virtualenv-tmp folder"
-echo ""
+if [ ! "$qgisPythonVersion" = "osPythonVersion" ]; then
+	$echo2 "${warnColor}- QGIS Python version $qgisPythonVersion is different than venv version ${osPythonVersion}.${endColor}"
+	$echo2 "${warnColor}  - May be OK if close enough but may need to take action to create a compatible virtual environment.${endColor}"
+	$echo2 "${warnColor}  - Use automated testing to validate the venv Python version.${endColor}"
+	$echo2 "${warnColor}  - QGIS Python folder is $qgisPythonFolder${endColor}"
+fi
 
 # Exit with appropriate error status
 if [ "${errorOccurred}" = "yes" ]

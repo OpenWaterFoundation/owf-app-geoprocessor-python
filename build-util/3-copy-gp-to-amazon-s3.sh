@@ -87,9 +87,9 @@ printUsage() {
 	echo "Copy the GeoProcessor installer files to the Amazon S3 static website folder:"
 	echo "  $s3FolderUrl"
 	echo ""
-	echo "-a awsProfile    Specify the Amazon profile to use for the upload."
-	echo "-h                  Print the usage."
-	echo "-v                  Print the version and copyright/license notice."
+	echo "-a awsProfile  Specify the Amazon profile to use for the upload."
+	echo "-h             Print the usage."
+	echo "-v             Print the version and copyright/license notice."
 	echo ""
 }
 
@@ -258,6 +258,7 @@ dryrun=""
 #dryrun="--dryrun"
 # Root location where files are to be uploaded
 s3FolderUrl="s3://software.openwaterfoundation.org/geoprocessor"
+gpDownloadUrl="http://software.openwaterfoundation.org/geoprocessor"
 awsProfile=""
 
 # File that contains output of `aws ls`, used to create catalog
@@ -273,5 +274,18 @@ checkInput
 
 # Upload the installer file to Amazon S3
 uploadInstaller
+
+# Print useful information to use after running the script
+echo ""
+echo "Python virtual environment(s) were uploaded to Amazon S3 location:"
+echo ""
+echo "  ${s3FolderUrl}"
+echo "  ${gpDownloadUrl}"
+echo ""
+echo "Next steps are to do the following:"
+echo "  -Visit the following folder to download the GeoProcessor:"
+echo "     ${gpDownloadUrl}/index.html"
+echo "  -Use the above download site to download the download-gp.sh script to install the GeoProcessor."
+echo ""
 
 exit $?

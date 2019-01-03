@@ -308,8 +308,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # update the window title in case command file has been modified
                 self.update_ui_main_window_title()
 
-                # Update the state
-                # self.update_ui_status_commands()
             else:
                 # Cancel was clicked so don't do anything
                 pass
@@ -391,8 +389,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # update the window title in case command file has been modified
                 self.update_ui_main_window_title()
 
-                # Update the state
-                # self.update_ui_status_commands()
             else:
                 # Cancel was clicked so don't do anything
                 pass
@@ -2972,7 +2968,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         Returns: None
         """
-        self.update_ui_status_commands()
         self.update_ui_status_results_geolayers()
         self.update_ui_status_results_maps()
         self.update_ui_status_results_output_files()

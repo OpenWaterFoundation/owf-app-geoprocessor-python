@@ -670,8 +670,8 @@ setupEcho() {
 
 # Entry point into script
 
-programVersion="1.2.0"
-programVersionDate="2019-01-02"
+programVersion="1.3.0"
+programVersionDate="2019-01-03"
 
 # Initialize variables
 # - QGIS Python version is set by checkQgisPythonVersion
@@ -793,7 +793,7 @@ fi
 
 # Print information useful after this script is run.
 
-if [ "$updateBuildTmp]" ="false" ]; then
+if [ "$updateBuildTmp]" = "false" ]; then
 	# The Python virtual environment was created
 	echo ""
 	echo "Python virtual environment(s) were created in venv-tmp folder:"

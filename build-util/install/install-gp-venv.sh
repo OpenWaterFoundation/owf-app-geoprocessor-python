@@ -8,7 +8,7 @@
 # For Cygwin, the software can be installed in a development environment rather
 # than cloning the repository and building a virtual environment
 
-version="1.1.0 2018-12-28"
+version="1.2.0 2019-01-02"
 
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
@@ -36,7 +36,7 @@ installFiles() {
 			if [ "$answer" = "" -o "$answer" = "y" -o "$answer" = "Y" ]; then
 				# Remove the previous install if it exists
 				if [ -d "${installFolderAbs}" ]; then
-					echo "Removing previous install ${installFolderAbs}"
+					echo "Removing existing install ${installFolderAbs}"
 					rm -rf "${installFolderAbs}"
 				fi
 				# Change to the parent of the install folder
@@ -44,22 +44,24 @@ installFiles() {
 				# Get the name of the top-level folder in the file
 				gpTargzTopFolder=`tar -tzvf "${installerTargzFileAbs}" | head -1 | tr -s ' ' | cut -d' ' -f6`
 				echo "Top level folder in installer file=$gpTargzTopFolder"
+				sleep 1
 				# Unzip the file
 				tar -xzvf "${installerTargzFileAbs}"
 				didInstall="yes"
 				# Rename the top-level folder to the requested folder
 				echo "Currently in folder:  $installParentFolder"
-				echo "Renaming tar.gz top folder from ${gpTargzTopFolder} to ${installFolderAbs}"
+				echo "Renaming tar.gz top folder shown above from ${gpTargzTopFolder} to requested ${installFolderAbs}"
 				installFolderAbsBasename=`basename ${installFolderAbs}`
 				if [ -d "${gpTargzTopFolder}" ]; then
 					mv ${gpTargzTopFolder} ${installFolderAbsBasename}
 					#
 					# Print final instructions to the user
 					echo ""
-					echo "Run the GeoProcessor using scripts in folder:"
+					echo "Run the GeoProcessor using one of the scripts from folder:"
 					echo "  $installFolderAbs/scripts"
 					echo ""
-					ls $installFolderAbs/scripts
+					ls -1 $installFolderAbs/scripts/gp* | xargs -n 1 basename
+					echo ""
 					break
 				else
 					# Error in the script logic, should not happen
@@ -118,17 +120,18 @@ parseCommandLine() {
 # Print the program usage
 printUsage() {
 	echo ""
-	echo "Usage:  gp-install-venv -i gp-installer.tar.gz -o installFolder"
+	echo "Usage:  install-gp-venv.sh -i gp-installer.tar.gz -o installFolder"
 	echo ""
 	echo "Example:"
-	echo '  $thisScriptName -i gp-1.0.0-lin-venv.tar.gz -o $HOME/gp-venv'
-	echo '  $thisScriptName -i gptest-1.0.0-lin-venv.tar.gz -o $HOME/gptest-venv'
+	echo '  install-gp-venv.sh -i gp-1.0.0-lin-venv.tar.gz -o $HOME/gp-venv'
+	echo '  install-gp-venv.sh -i gptest-1.0.0-lin-venv.tar.gz -o $HOME/gptest-venv'
+	echo '  install-gp-venv.sh      (will prompt for input and output)'
 	echo ""
-	echo "-b               Run in batch mode with no prompts (missing input will result in exit)"
-	echo "-h               Print the usage"
-	echo "-i file.tar.gz   Specify the installer tar.gz file"
+	echo "-b               Run in batch mode with no prompts (missing input will result in exit)."
+	echo "-h               Print the usage."
+	echo "-i gp.tar.gz     Specify the installer tar.gz file."
 	echo "-o outputFolder  Specify the output folder for the install."
-	echo "-v               Print the version"
+	echo "-v               Print the version."
 	echo ""
 }
 
@@ -138,7 +141,7 @@ printVersion() {
 	echo "install-gp-venv version ${version}"
 	echo ""
 	echo "GeoProcessor Installer"
-	echo "Copyright 2017-2018 Open Water Foundation."
+	echo "Copyright 2017-2019 Open Water Foundation."
 	echo ""
 	echo "License GPLv3+:  GNU GPL version 3 or later"
 	echo ""
@@ -150,13 +153,18 @@ printVersion() {
 }
 
 # Prompt for the filename of the distribution file, for example:  gptest-1.0.0-cyg-venv.tar.gz
+# - this script might be run in the development environment to test installer or
+#   when installing after a download (called by download-gp.sh).
 promptForInstallerFile() {
 	while [ "1" = "1" ]; do
 		# List files that are candidates for installing
 		# -only list folders that have some matching files
 		# -no files will output something like "ls: cannot access 'xxxx': No such file or directory
 		echo ""
-		echo "Matching gp*.tar.gz files in candidate folders are listed below (if available)..."
+		echo "The -i option was not specified on the command line."
+		echo "Therefore, select a gp*.tar.gz file to install (use mouse copy/paste)."
+		echo "Matching gp*.tar.gz files in candidate folders are listed below (if available)."
+		echo "Current folder:  $scriptFolder"
 		# Current folder...
 		count=$(ls -1 gp*.tar.gz 2> /dev/null | grep -v 'cannot' | wc -l)
 		if [ "$count" -ne 0 ]; then
@@ -164,8 +172,8 @@ promptForInstallerFile() {
 			echo "Current folder:"
 			ls -1 gp*.tar.gz
 		fi
-		# venv-tmp, used in development environment under build-util
-		if [ -d "venv-tmp" ]; then
+		# ${devVirtualEnvTmpFolder}, used in development environment under build-util
+		if [ -d "${devVirtualEnvTmpFolder}" ]; then
 			# Folder under build-util/ in development environment
 			count=$(ls -1 venv-tmp/gp*.tar.gz 2> /dev/null | grep -v 'cannot' | wc -l)
 			if [ "$count" -ne 0 ]; then
@@ -181,7 +189,7 @@ promptForInstallerFile() {
 			echo "/tmp folder:"
 			ls -1 gp*.tar.gz
 		fi
-		# Installer tar.gz file has not been specified so prompt for it
+		# Installer tar.gz file has not been specified with -i command line option so prompt for it
 		echo ""
 		read -p "Specify the GeoProcessor tar.gz file to install (q to quit): " installerTargzFile
 		if [ "${installerTargzFile}" = "q" ]; then
@@ -224,10 +232,16 @@ promptForInstallFolder() {
 			echo ""
 			echo "The installation folder is typically gp-venv or gp-${exampleVersion}-venv."
 			echo "For example /home/$USER/gp-venv or /home/$USER/gp-${exampleVersion}-venv."
+			# List the home folder as FYI
+			echo "Existing /home/$USER/gp-* folders include:"
+			ls -1 -d /home/$USER/gp-*
 		else
 			# Installing gptest
 			echo "The installation folder is typically gptest-venv or gptest-${exampleVersion}-venv."
 			echo "For example /home/$USER/gptest-venv or /home/$USER/gptest-${exampleVersion}-venv."
+			# List the home folder as FYI
+			echo "Existing /home/$USER/gptest-* folders include:"
+			ls -1 -d /home/$USER/gptest-*
 		fi
 		echo "Specify the folder to install into, will create if does not exist."
 		read -p "Specify relative to the current folder or provide an absolute path (q to quit): " installFolder
@@ -238,7 +252,24 @@ promptForInstallFolder() {
 			# Continue
 			:
 		else
-			break
+			# Warn the user about overwrite
+			if [ -d "${installFolder}" ]; then
+				$echo2 "Install folder exists:  ${installFolder}"
+				read -p "Continue with install to remove existing and then install new (y/n/q): " confirmAnswer
+				if [ "${confirmAnswer}" = "q" ]; then
+					# Quit the script
+					exit 0
+				elif [ "${confirmAnswer}" = "y" ]; then
+					# Break out of loop
+					break
+				else
+					# n or other - give a chance to pick different install folder
+					:
+				fi
+			else
+				# The install folder does not exist so break out of loop and use it
+				break
+			fi
 		fi
 	done
 	setInstallFolderAbs
@@ -273,6 +304,33 @@ setInstallFolderAbs() {
 		# Assume current folder
 		installFolderAbs="${pwdFolder}/${installFolder}"
 	fi
+}
+
+# Setup the echo command and colors
+setupEcho() {
+	# Determine which echo to use, needs to support -e to output colored text
+	# - normally built-in shell echo is OK, but on Debian Linux dash is used, and it does not support -e
+	echo2='echo -e'
+	testEcho=`echo -e test`
+	if [ "${testEcho}" = '-e test' ]; then
+		# The -e option did not work as intended.
+		# -using the normal /bin/echo should work
+		# -printf is also an option
+		echo2='/bin/echo -e'
+	fi
+
+	# Strings to change colors on output, to make it easier to indicate when actions are needed
+	# - Colors in Git Bash:  https://stackoverflow.com/questions/21243172/how-to-change-rgb-colors-in-git-bash-for-windows
+	# - Useful info:  http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
+	# - See colors:  https://en.wikipedia.org/wiki/ANSI_escape_code#Unix-like_systems
+	# - Set the background to black to eensure that white background window will clearly show colors contrasting on black.
+	# - Yellow "33" in Linux can show as brown, see:  https://unix.stackexchange.com/questions/192660/yellow-appears-as-brown-in-konsole
+	# - Tried to use RGB but could not get it to work - for now live with "yellow" as it is
+	boldColor='\e[0;01m' # warning - user needs to do something, 01=bold
+	warnColor='\e[0;40;33m' # warning - user needs to do something, 40=background black, 33=yellow
+	criticalColor='\e[0;40;31m' # critical issue - could be fatal, 40=background black, 31=red
+	okColor='\e[0;40;32m' # status is good, 40=background black, 32=green
+	endColor='\e[0m' # To switch back to default color
 }
 
 # Update virtual environment scripts to have installed path
@@ -355,42 +413,35 @@ updateVenvScripts() {
 
 # Main entry point into script
 
-installerFile=""  # path to installer tar.gz file
-installFolder=""  # path to installed folder
-batchMode="no"  # interactive is default
+# Default values
+# Path to installer tar.gz file
+installerFile=""
+# Path to installed folder
+installFolder=""
+# Interactive is default, meaning prompt for the tar.gz file to install
+batchMode="no"
+# Default echo for special characters
+echo2="echo -e"
 
-# Strings to change colors on output, to make it easier to indicate when actions are needed
-# - Colors in Git Bash:  https://stackoverflow.com/questions/21243172/how-to-change-rgb-colors-in-git-bash-for-windows
-# - Useful info:  http://webhome.csc.uvic.ca/~sae/seng265/fall04/tips/s265s047-tips/bash-using-colors.html
-# - See colors:  https://en.wikipedia.org/wiki/ANSI_escape_code#Unix-like_systems
-# - Set the background to black to eensure that white background window will clearly show colors contrasting on black.
-# - Yellow "33" in Linux can show as brown, see:  https://unix.stackexchange.com/questions/192660/yellow-appears-as-brown-in-konsole
-# - Tried to use RGB but could not get it to work - for now live with "yellow" as it is
-warningColor='\e[0;40;31m' # serious issue, 40=background black, 31=red
-endColor='\e[0m' # To switch back to default color
-
-# Determine which echo to use, needs to support -e to output colored text
-# - normally built-in shell echo is OK, but on Debian Linux dash is used, and it does not support -e
-echo2='echo -e'
-testEcho=`echo -e test`
-if [ "${testEcho}" = '-e test' ]; then
-	# The -e option did not work as intended.
-	# -using the normal /bin/echo should work
-	# -printf is also an option
-	echo2='/bin/echo -e'
-	# The following does not seem to work
-	#echo2='printf'
-fi
+# Setup the echo for color-coded output
+setupEcho
 
 # Parse the command line.
 parseCommandLine "$@"
+
+# Define top-level folders - everything is relative to this below to avoid confusion
+# - this is for the development environment
+# - in development environment this script is located in build-util/install
+devBuildUtilFolder=$(dirname ${scriptFolder})
+# Name of the parent folder for virtual environments
+devVirtualEnvTmpFolder="${devBuildUtilFolder}/venv-tmp"
 
 # Prompt for the installer file (or use what was passed on the command line)
 if [ "$batchMode" = "yes" ]; then
 	# Running in batch mode, make sure that -i has been specified
 	if [ -z "${installerTargzFile}" ]; then
 		echo ""
-		>&2 $echo2 "${warningColor}[ERROR] The installer file has not been specified with -i.${endColor}"
+		>&2 $echo2 "${warnColor}[ERROR] The installer file has not been specified with -i.${endColor}"
 		printUsage
 		exit 1
 	fi
@@ -421,7 +472,7 @@ if [ "$batchMode" = "yes" ]; then
 	# Running in batch mode, make sure that -o has been specified
 	if [ -z "${installFolder}" ]; then
 		echo ""
-		>&2 $echo2 "${warningColor}[ERROR] The install (output) folder has not been specified with -o.${endColor}"
+		>&2 $echo2 "${warnColor}[ERROR] The install (output) folder has not been specified with -o.${endColor}"
 		printUsage
 		exit 1
 	fi
@@ -432,13 +483,13 @@ fi
 # Check for the input and output again
 if [ -z "${installerTargzFileAbs}" ]; then
 	echo ""
-	>&2 $echo2 "${warningColor}[ERROR] The installer file has not been specified.  Exiting.${endColor}"
+	>&2 $echo2 "${warnColor}[ERROR] The installer file has not been specified.  Exiting.${endColor}"
 	printUsage
 	exit 1
 fi
 if [ -z "${installFolder}" ]; then
 	echo ""
-	>&2 $echo2 "${warningColor}[ERROR] The install (output) folder has not been specified.  Exiting.${endColor}"
+	>&2 $echo2 "${warnColor}[ERROR] The install (output) folder has not been specified.  Exiting.${endColor}"
 	printUsage
 	exit 1
 fi

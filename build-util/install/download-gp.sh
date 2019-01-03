@@ -88,7 +88,7 @@ checkRequiredSoftware() {
 		fi
 		exit 1
 	fi
-	fi
+	fi  #end needJq
 }
 
 # Download the installer and save to the /tmp folder
@@ -170,6 +170,65 @@ installVenv() {
 	fi
 }
 
+# Parse the command line and set variables to control logic
+parseCommandLine() {
+	#echo "Parsing command line..."
+	local OPTIND opt h v
+	while getopts :hv opt; do
+		#echo "Command line option is ${opt}"
+		case $opt in
+			h) # Usage
+				printUsage
+				exit 0
+				;;
+			v) # version
+				printVersion
+				exit 0
+				;;
+			\?)
+				echo "Invalid option:  -$OPTARG" >&2
+				printUsage
+				exit 1
+				;;
+			:)
+				echo "Option -$OPTARG requires an argument" >&2
+				printUsage
+				exit 1
+				;;
+		esac
+	done
+}
+
+# Print the program usage
+printUsage() {
+	echo ""
+	echo "Usage:  download-gp.sh"
+	echo ""
+	echo "Download and install the GeoProcessor software."
+	echo "Prompts will ask for which software version to install and installation folder."
+	echo ""
+	echo "-h  Print the usage."
+	echo "-v  Print the version."
+	echo ""
+}
+
+# Print the program version
+printVersion() {
+	echo ""
+	echo "download-gp.sh version ${programVersion} ${programVersionDate}"
+	echo ""
+	echo "GeoProcessor build utilities"
+	echo "Copyright 2017-2019 Open Water Foundation."
+	echo ""
+	echo "License GPLv3+:  GNU GPL version 3 or later"
+	echo ""
+	echo "There is ABSOLUTELY NO WARRANTY; for details see the"
+	echo "'Disclaimer of Warranty' section of the GPLv3 license in the LICENSE file."
+	echo "This is free software: you are free to change and redistribute it"
+	echo "under the conditions of the GPLv3 license in the LICENSE file."
+	echo ""
+}
+
 # Prompt for the installer file to download
 # - retrieve the catalog file from the public website to list installers
 promptForInstaller() {
@@ -222,6 +281,12 @@ promptForInstaller() {
 
 # Entry point into main script
 # - functions are called below
+
+programVersion="1.2.0"
+programVersionDate="2019-01-02"
+
+# Parse command line
+parseCommandLine "$@"
 
 # Check the operating system
 # - necessary to branch logic for Cygdrive, Linux

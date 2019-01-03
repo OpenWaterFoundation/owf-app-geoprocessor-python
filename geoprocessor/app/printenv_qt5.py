@@ -47,6 +47,6 @@ if __name__ == '__main__':
         print(item)
 
     print("qgis.utils.QGis attributes...")
-    qgis = qgis.utils.Qgis;
+    qgis = qgis.utils.Qgis
     for item in dir(qgis):
         print(item)

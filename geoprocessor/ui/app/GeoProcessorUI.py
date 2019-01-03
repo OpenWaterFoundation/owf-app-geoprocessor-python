@@ -105,9 +105,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         else:
             self.runtime_properties = runtime_properties
 
-        # Latest command file that was read or saved, parent folder is the working directory
-        self.command_file_path = None
-
         # The most recent file save location, used to help file dialog start with recent location
         # - could be command file or other files
         self.saved_file = None
@@ -405,91 +402,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
             return
-
-    def processor_run_commands(self, run_selected=False):
-        """
-        Runs the commands from the Command_List widget within the GeoProcessor.
-
-        Args:
-            run_selected:
-                Boolean. If FALSE, all commands within Command_List widget are processed. If TRUE, only selected
-                commands within Command_List widget are processed.
-
-        Returns:
-            None
-        """
-        # If ALL of the commands should be run, continue.
-        if run_selected:
-            # Update the GeoProcessor's list of commands to include only the SELECTED commands in the Command_List
-            # widget.
-            self.processor_update_commands_from_command_list(run_selected=True)
-        else:
-            # Update the GeoProcessor's list of commands to include ALL of the commands in the Command_List widget.
-            self.processor_update_commands_from_command_list()
-
-        # Runs the geoprocessor's processor_run_commands function to run the existing commands
-        # that exist in the processor.
-        print("Running commands in processor...")
-
-        # Attempting to add logic to UI design. When running gp.run_commands()
-        # to detect any errors. Currently, if errors are caught they are caught by
-        # the following try, except but I am needing a way to determine with commands
-        # caused the errors.
-        #
-        # Once determining which lines contain error or warnings appropriate icons can be added
-        # to self.numbered_List QListWidget by using self.numbered_list_error_at_row(int) or
-        # self.numbered_list_warning_at_row(int) which both take the integer representing the
-        # row to add the appropriate icon to as a single parameter.
-        #
-        # In a similar manner gutter needs to be updated to display which command line has errors
-        # or warnings. Call self.gutter_error_at_row(int) or gutter_warning_at_row(int) where int
-        # represents the row where the command line with the error or warning is.
-        self.gp.run_commands()
-
-        # Update command list to check for any errors or warnings.
-        self.update_ui_commands_list()
-
-        # Make sure width of numbered list is appropriate
-        self.numbered_List.setMinimumWidth(self.numbered_List.sizeHintForColumn(0))
-
-        # After commands have been run, update the UI Results section to reflect the output & intermediary products.
-        print("Showing processing results.")
-        self.show_results()
-
-    def processor_update_commands_from_command_list(self, run_selected=False):
-        """
-        Update the GeoProcessor's command list with the existing command strings in the Command_List widget.
-
-        Returns: None
-        """
-        # An empty list. Will hold the command strings. One item for each existing command within the Command_List
-        # widget.
-        cmd_string_list = []
-
-        # If the GeoProcessor should be updated with ALL commands, continue.
-        if run_selected:
-            # Iterate over the SELECTED items in the Command_List widget.
-            print("Setting selected " + str(len(self.commands_List.selectedItems())) + " commands in processor...")
-            for item in list(self.commands_List.selectedItems()):
-                # Add the item's text (the command string) to the cmd_string_list.
-                cmd_string_list.append(item.text())
-        else:
-            # Iterate over ALL of the items in the Command_List widget.
-            print("Setting all " + str(self.commands_List.count()) + " commands in processor...")
-            for i in range(self.commands_List.count()):
-                # Add the item's text (the command string) to the cmd_string_list.
-                cmd_string_list.append(self.commands_List.item(i).text())
-
-        # Read the command strings into GeoProcessor command objects. Pass the objects to the GeoProcessor.
-        # - Also pass the working directory corresponding to the folder that command file was read from.
-        runtime_properties = {}
-        if self.command_file_path is not None:
-            # Tell the processor the working directory
-            # - this is used to convert to/from relative paths and is also used by RunCommands
-            runtime_properties['WorkingDir'] = os.path.dirname(self.command_file_path)
-            runtime_properties['InitialWorkingDir'] = os.path.dirname(self.command_file_path)
-        self.gp.read_commands_from_command_list(cmd_string_list, runtime_properties)
-        self.gp.add_command_processor_listener(self)
 
     def setup_ui(self):
         """
@@ -2557,23 +2469,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         Returns: None
         """
-        # Clear the items from the current Command_List widget.
-        # TODO smalers 2018-07-29 check whether need to save the existing commands
-        self.commands_List.clear()
-        self.numbered_List.clear()
-        self.gutter.clear()
-
-        # Update the command count and Command_List label to show that new commands were added to the workflow.
-        self.update_ui_status_commands()
-
-        # Set the last command file
-        self.command_file_path = None  # Indicating that filename has not been specified
+        # Clear commands from geoprocessor
+        self.gp_model.clear_all_commands()
 
         # Set the title for the main window
         self.ui_set_main_window_title("commands not saved")
-
-        # New Command File
-        self.new_command_file = True
 
     def ui_action_open_attributes(self):
         # Create map window dialog box
@@ -2765,9 +2665,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set this file path as the path to save if the user click "Save Commands ..."
         self.saved_file = cmd_filepath
 
-        # Set the last command file
-        self.command_file_path = cmd_filepath
-
         # Set the title for the main window
         self.ui_set_main_window_title('"' + cmd_filepath + '"')
 
@@ -2826,9 +2723,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             file.write(all_commands_string)
             file.close()
 
-            # Save the command file name for use as the working directory
-            self.command_file_path = None
-
             # Update command file history list in GUI
             self.ui_init_file_open_recent_files()
 
@@ -2870,9 +2764,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Save the command file name in the command file history
         self.app_session.push_history(self.saved_file)
-
-        # Save the command file name for use as the working directory
-        self.command_file_path = None
 
         # Update the recent files in the File... Open menu, for the next menu access
         self.ui_init_file_open_recent_files()
@@ -3020,8 +2911,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # First disconnect the event handler that was initially set up
             self.Menu_File_Open_CommandFileHistory_List[i].triggered.disconnect()
             self.Menu_File_Open_CommandFileHistory_List[i].setText(command_file)
-            # TODO smalers 2018-12-29 should the following be the list like above?
-            self.Menu_File_Open_CommandFile.setObjectName(
+            self.Menu_File_Open_CommandFileHistory_List[i].setObjectName(
                 _fromUtf8("Menu_File_Open_CommandFileHistory_Command_" + str(i)))
             logger.info("Setting File / Open menu [" + str(i) + "] to " + command_file)
             self.Menu_File_Open_CommandFileHistory_List[i].triggered.connect(
@@ -3088,55 +2978,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.update_ui_status_results_output_files()
         self.update_ui_status_results_properties()
         self.update_ui_status_results_tables()
-
-    def update_ui_status_commands(self):
-        """
-        Update the UI status for Commands area.
-        Count the number of items (each item is a command string) in the Command_List widget. Update the total_commands
-        class variable to the current number of command items in the Command_List widget. Update the selected_commands
-        class variable to the current number of selected command items in the Command_List widget. Update the
-        Command_List widget label to display the total and selected number of commands within the widget.
-
-        Returns: None
-        """
-        print('running inside update_ui_status_commands')
-        gp = self.gp
-        # Count the number of items (each item is a command string) in the Command_List widget.
-        total_commands = len(gp.commands)
-        print("total commands: " + str(total_commands))
-        num_errors = gp.get_number_errors()
-        print("num errors: " + str(num_errors))
-        num_warnings = gp.get_number_warnings()
-        print("num warnings: " + str(num_warnings))
-
-        # If there is at least one command in the Command_List widget, enable the "Run All Commands" button and the
-        # "Clear Commands" button. If not, disable the "Run All Commands" button and the "Clear Commands" button.
-        if total_commands > 0:
-            self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
-            self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(True)
-        else:
-            self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(False)
-            self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(False)
-
-        # Count the number of selected items (each item is a command string) in the Command_List widget.
-        selected_commands = len(self.command_ListWidget.commands_List.selectedItems())
-
-        # If there is at least one selected command in the Command_List widget, enable the "Run Selected Commands"
-        # button. If not, disable the "Run Selected Commands" button.
-        if selected_commands > 0:
-            self.command_ListWidget.commands_RunSelectedCommands_PushButton.setEnabled(True)
-        else:
-            self.command_ListWidget.commands_RunSelectedCommands_PushButton.setEnabled(False)
-
-        # Update the Command_List widget label to display the total and selected number of commands.
-        # TODO smalers 2018-07-29 need to calculate the following values
-        # commands_with_failures = 0
-        # commands_with_warnings = 0
-        self.commands_GroupBox.setTitle(
-            # "Commands ({} commands, {} selected, {} with failures, {} with warnings)".format(
-            "Commands ({} commands, {} selected)".format(
-                # total_commands, selected_commands, commands_with_failures, commands_with_warnings))
-                total_commands, selected_commands))
 
     def update_ui_status_results_geolayers(self):
         """

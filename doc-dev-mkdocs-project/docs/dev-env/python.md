@@ -21,19 +21,28 @@ Therefore it is necessary to install Python and third-party packages in Windows,
 Windows is currently the primary development environment.
 See the sections below discussing the installation of each version.
 
-* [Python for QGIS](#python-for-qgis)
-* [Python 3.x](#python-3x)
+* [Install Python](#install-python)
+	+ [Python for QGIS](#python-for-qgis)
+	+ [Python 3.x](#python-3x)
+* [Install Additional Python Packages](#install-additional-python-packages)
 
 -----------------------------
 
-## Python for QGIS ##
+## Install Python ##
+
+Python must be installed consistent with the development environment and also
+support the QGIS and testing framework variants of the GeoProcessor.
+
+### Python for QGIS ###
 
 Python for QGIS is installed when installing QGIS.
 See the [QGIS installation documentation](qgis).
 
-## Python 3.x ##
+### Python 3.x ###
 
-A typical Python installation might use a version installed in a shared location (e.g., `C:\Python37` on Windows),
+A typical Python installation is used (for example on Cygwin) for the GeoProcessor testing framework
+variant, which is deployed as a virtual environment with no QGIS dependencies.
+In this case, Python might use a version installed in a shared location (e.g., `C:\Python37` on Windows),
 or in a user's account (e.g., `C:\Users\user\AppData\Local\Programs\Python...` on Windows 10).
 The latter is recommended for newer Python versions (by the installer and its documentation)
 to isolate potential negative impacts on the system from Python
@@ -63,21 +72,21 @@ In other words, the Python that is used for MkDocs may not be the QGIS or PyChar
 
 The following can be used to check the version of Python that is installed:
 
-### ![Cygwin](../images/cygwin-32.png) Cygwin ###
+#### ![Cygwin](../images/cygwin-32.png) Cygwin ####
 
 ```sh
 $ which python3
 $ python3 --version
 ```
 
-### ![Linux](../images/linux-32.png) Linux ###
+#### ![Linux](../images/linux-32.png) Linux ####
 
 ```sh
 $ which python3
 $ python3 --version
 ```
 
-### ![Windows](../images/windows-32.png) Windows ###
+#### ![Windows](../images/windows-32.png) Windows ####
 
 ```sh
 > where python3
@@ -93,19 +102,35 @@ The installed Python needs to be handled by the `build-util` scripts.**
 
 A typically Python install should be done:
 
-### ![Cygwin](../images/cygwin-32.png) Cygwin ###
+#### ![Cygwin](../images/cygwin-32.png) Cygwin ####
 
 Use the Cygwin setup tool to install Python as part of the Cygwin setup.
 See the [Cygwin Installation](cygwin) documentation.
 The version should be as near as possible to that used by QGIS.
 
-### ![Linux](../images/linux-32.png) Linux ###
+#### ![Linux](../images/linux-32.png) Linux ####
 
 Use the `apt-get` program with Python 3 that is supported on the system.
 If may be necessary to do a custom install if Python 3.7 is not available for the operating system.
 The version should be as near as possible to that used by QGIS.
 
-### ![Windows](../images/windows-32.png) Windows ###
+#### ![Windows](../images/windows-32.png) Windows ####
 
 Download and install Python for Windows.
 The version should be as near as possible to that used by QGIS.
+
+## Install Additional Python Packages ##
+
+After installing Python it will be necessary to install additional Python packages.
+
+### ![Windows](../images/windows-32.png) QGIS Development Environment ###
+
+The Windows QGIS development environment requires a number of additional packages.
+These are installed into the QGIS Python environment.
+See the [QGIS Install Additional Python Packages documentation](qgis#install-additional-python-packages).
+
+### ![Cygwin](../images/cygwin-32.png) Cygwin and ![Linux](../images/linux-32.png) Linux ###
+
+For Cygwin and Linux GeoProcessor testing framework,
+the GeoProcessor is run in a virtual environment into which are installed necessary Python
+additional packages.  No additional Python package installation is needed.

@@ -1,6 +1,17 @@
-# PyCharm #
+# GeoProcessor / Development Environment / PyCharm #
 
-PyCharm is the Python integrated development environment tool that has been chosen by OWF for development.
+* [Introduction](#introduction)
+* [Install PyCharm](#install-pycharm)
+* [Script to Run PyCharm](#script-to-run-pycharm)
+* [Configure PyCharm](#configure-pycharm)
+* [Update PyCharm to use New Python](#update-pycharm-to-use-new-python)
+
+-------------------
+
+## Introduction ##
+
+PyCharm is the Python integrated development environment tool that has been chosen by
+the Open Water Foundation for GeoProcessor development.
 Other developers may use other tools if they desire but such tools have not been investigated.
 The PyCharm Community Edition is adequate for development.
 The GitHub repository for the project is used as the PyCharm project folder
@@ -18,10 +29,14 @@ If a virtual environment is not set up, then the Python that was selected when
 the project was set up will be used (such as user's copy of Python).
 A virtual environment is recommended in order to better control development environment Python
 packages, which helps understand which packages are needed in the deployed system.
-The following image illustrates the interpreter installed in a `venv` folder
-(open the image in a new tab to view a larger image).
+The following image illustrates the interpreter installed in a generic `venv` folder,
+which is listed in the main `.gitignore` file.
 
 ![PyCharm interpreter](images/pycharm-settings-project-interpreter.png)
+
+**<p style="text-align: center;">
+General Project Python Interpreter (<a href="../images/pycharm-settings-project-interpreter.png">see full-size image</a>)
+</p>**
 
 QGIS is distributed with Python for its run-time environment,
 rather than using the user's or computer's Python or PyCharm Python.
@@ -29,11 +44,15 @@ The QGIS libraries must be made known to PyCharm in order for the GeoProcessor c
 function without errors (see the [Script to Run PyCharm](#script-to-run-pycharm) section).
 The PyCharm virtual environment Python (3.x, consistent with QGIS) will be used for development.
 The Python environment used for PyCharm can use the QGIS Python if it is specified as the project interpreter, as shown below.
-However, the GeoProcessor is typically run in the development environment using the batch file `gpdev.bat` or `gpuidev.bat`.
+However, the GeoProcessor is typically run in the development environment using the batch file `scripts/gpdev.bat` or `scripts/gpuidev.bat`.
+The following image illustrates the interpreter installed in a versioned `venv-qgis-python37` folder for clarity,
+which is listed in the main `.gitignore` file.
 
 ![PyCharm interpreter](images/pycharm-settings-project-interpreter-qgis.png)
 
-**Need to clarify the above, especially as development with QGIS/Python 3 is implemented.**
+**<p style="text-align: center;">
+QGIS Project Python Interpreter (<a href="../images/pycharm-settings-project-interpreter-qgis.png">see full-size image</a>)
+</p>**
 
 The QGIS Python can be used in a deployed environment, as long as the GeoProcessor module (`geoprocessor`) is
 installed in QGIS `site-packages` folder or `PYTHONPATH` includes the GeoProcessor module.
@@ -46,9 +65,9 @@ See the [Development Tasks / Creating Installer](../dev-tasks/creating-installer
 To run QGIS software, PyCharm and applications that use QGIS (including the GeoProcessor),
 it is best to use a batch file (Windows) or shell script (Linux).
 This ensures that the correct version of Python and additional Python modules are properly configured.
-This is discussed in the [New Developer](../dev-new/dev-new) section.
+This is discussed in the [Script to Run PyCharm](#script-to-run-pycharm) section.
 
-### Install PyCharm ##
+## Install PyCharm ##
 
 Install the PyCharm 64-bit Community Edition:
 
@@ -64,8 +83,9 @@ Once installed the software may periodically ask to install updates.
 Doing so does not appear to change the original install folder (even if the version changes)...updates seem
 to install in the same folder.
 It may be that an update only creates a new folder for a new year.
+See the next section for information about running PyCharm with configuration that uses QGIS Python.
 
-### Script to Run PyCharm ###
+## Script to Run PyCharm ##
 
 As indicated in previous sections, it is necessary to use the QGIS Python and packages in order to use the QGIS functionality.
 PyCharm must also leverage QGIS.
@@ -79,3 +99,83 @@ cloned from the repository (explained in the [New Developer](../dev-new/dev-new)
 	+ Other scripts may be added to run other versions of PyCharm or other tools
 * Linux (via terminal window):
 	+ PyCharm is currently not used in Linux for development but will be tested in the future.
+
+## Configure PyCharm ##
+
+After installing PyCharm, a few additional configuration changes should be made:
+
+1. Change the Python docstring format.
+Google docstring format has been selected due to simplicity  To configure,
+use the ***File / Settings*** menu, then ***Tools / Python Integrated Tools***.
+Then change ***Docstrings / Docstring format:*** to ***Google***.
+The ***Analyze Python code in docstrings*** choice should be checked.
+
+## Update PyCharm to use New Python ##
+
+It may be necessary to update the Python that is used in PyCharm,
+for example if a new version of QGIS is installed.
+In this case, a new virtual environment can be created and the project settings updated to use the new virtual environment.
+Update the virtual environment as follows.
+
+First start PyCharm for the GeoProcessor.
+Then select the project settings in PyCharm with ***File / Settings***.
+Then select the ***Project Interpreter*** item, as shown below.
+
+![Update Python 1](images/update-pycharm-python1.png)
+
+**Need to evaluate whether the warning shown at the bottom of the above dialog is significant.**
+The `C:\OSGeo4W64\apps\Python37` and `C:\OSGeo4W64\apps\bin` folders do not include `pip3` by default.
+
+Click on the gear icon in the upper right and select ***Show All...***, which will display the following.
+
+![Update Python 2](images/update-pycharm-python2.png)
+
+Clicking on the + icon in the upper right will show the following dialog to add a new Python interpreter.
+In this case the error is due to QGIS having been updated to version 3.7 and the
+`C:\OSGeo4W64\apps\Python36` folder no longer exists.
+
+![Update Python 3](images/update-pycharm-python3.png)
+
+To create a new virtual environment,
+use the ***Base Interpreter ...*** button to select a new QGIS Python, for example select Python37 as shown below.
+
+![Update Python 4](images/update-pycharm-python4.png)
+
+Press ***OK*** to create the virtual environment in the folder shown above.
+This may take a minute or two.
+This will only copy the core Python executable programs and files, but not `site-packages` or other third-party packages.
+Once the virtual environment is created, it will be listed in available ***Project Interpreters*** as shown in the following figure.
+
+![Update Python 5](images/update-pycharm-python5.png)
+
+Select the new virtual environment and press ***OK***.
+The following dialog will be shown showing the installed packages.
+
+![Update Python 5](images/update-pycharm-python6.png)
+
+Press ***OK*** to confirm selection of the new Python virtual environment.
+It may take a few minutes for the project to refresh using the new virtual environment.
+
+To confirm which version of Python is running,
+run the `geoprocessor/app/printenv.py` script in PyCharm (right click and run).
+Output will be similar to the following.
+Note that the Python being used is the virtual environment and that the `sys.path`
+includes QGIS libraries using old-style 8.3 paths.
+The Python path is defined in the `build-util/run-pycharm-ce-for-qgis.bat` file to run in Windows.
+
+```
+Python Properties:
+    Python executable (.executable): C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python\venv-qgis-python37\Scripts\python.exe
+    Python Version (sys.version): 3.7.0 (v3.7.0:1bf9cc5093, Jun 27 2018, 04:59:51) [MSC v.1914 64 bit (AMD64)]
+    Python Path (sys.path):
+        C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python
+        C:\OSGEO4~2\apps\Python37\lib\site-packages
+        C:\OSGEO4~2\apps\qgis\python
+        C:\OSGEO4~2\apps\qgis\python\plugins
+        C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python\venv-qgis-python37\Scripts\python37.zip
+        C:\OSGEO4~2\apps\Python37\DLLs
+        C:\OSGEO4~2\apps\Python37\lib
+        C:\OSGeo4W64\apps\Python37
+        C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python\venv-qgis-python37
+        C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python\venv-qgis-python37\lib\site-packages
+```

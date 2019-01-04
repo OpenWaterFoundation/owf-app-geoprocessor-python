@@ -1,7 +1,8 @@
 # GeoProcessor / New Developer #
 
-This documentation explains how new developers can set up the development environment for
-the GeoProcessor software.  The development environment should be set up as follows:
+This documentation explains how new developers can set up the development environment for the GeoProcessor software.
+The development environment should be set up for each of the following software components.
+Discussion of tool updates is included in the development environment page for each tool.
 
 1. Install software:
 	1. [Python](#install-python)
@@ -11,8 +12,8 @@ the GeoProcessor software.  The development environment should be set up as foll
 	5. [Git](#install-git)
 	6. [Cygwin](#install-cygwin)
 2. [Clone Repository and Configure Project](#clone-repository-and-configure-project)
-3. [Develop software as per Development Tasks](dev-tasks)
-4. [Update PyCharm to use New Python](#update-pycharm-to-use-new-python)
+3. [Run the GeoProcessor](#run-the-geoprocessor)
+4. [Develop software as per Development Tasks](#develop-software-as-per-development-tasks)
 
 -----------------
 
@@ -175,72 +176,12 @@ Pressing ***OK*** will copy needed files from the base interpreter to the virtua
 
 The environment is then ready for development.  Use the PyCharm startup script each time that PyCharm needs to be started for development.
 
-## Update PyCharm to use New Python ##
+## Run the GeoProcessor ##
 
-It may be necessary to update the Python that is used in PyCharm,
-for example if a new version of QGIS is installed.
-In this case, a new virtual environment can be created and the project settings updated to use the new virtual environment.
-Update the virtual environment as follows.
+See the [Development Environment documentation](../dev-env/running)
+for information on running the GeoProcessor in the development environment.
 
-First start PyCharm for the GeoProcessor.
-Then select the project settings in PyCharm with ***File / Settings***.
-Then select the ***Project Interpreter*** item, as shown below.
+## Develop software as per Development Tasks ##
 
-![Update Python 1](images/update-pycharm-python1.png)
-
-**Need to evaluate whether the warning shown at the bottom of the above dialog is significant.**
-The `C:\OSGeo4W64\apps\Python37` and `C:\OSGeo4W64\apps\bin` folders do not include `pip3` by default.
-
-Click on the gear icon in the upper right and select ***Show All...***, which will display the following.
-
-![Update Python 2](images/update-pycharm-python2.png)
-
-Clicking on the + icon in the upper right will show the following dialog to add a new Python interpreter.
-In this case the error is due to QGIS having been updated to version 3.7 and the
-`C:\OSGeo4W64\apps\Python36` folder no longer exists.
-
-![Update Python 3](images/update-pycharm-python3.png)
-
-To create a new virtual environment,
-use the ***Base Interpreter ...*** button to select a new QGIS Python, for example select Python37 as shown below.
-
-![Update Python 4](images/update-pycharm-python4.png)
-
-Press ***OK*** to create the virtual environment in the folder shown above.
-This may take a minute or two.
-This will only copy the core Python executable programs and files, but not `site-packages` or other third-party packages.
-Once the virtual environment is created, it will be listed in available ***Project Interpreters*** as shown in the following figure.
-
-![Update Python 5](images/update-pycharm-python5.png)
-
-Select the new virtual environment and press ***OK***.
-The following dialog will be shown showing the installed packages.
-
-![Update Python 5](images/update-pycharm-python6.png)
-
-Press ***OK*** to confirm selection of the new Python virtual environment.
-It may take a few minutes for the project to refresh using the new virtual environment.
-
-To confirm which version of Python is running,
-run the `geoprocessor/app/printenv.py` script in PyCharm (right click and run).
-Output will be similar to the following.
-Note that the Python being used is the virtual environment and that the `sys.path`
-includes QGIS libraries using old-style 8.3 paths.
-The Python path is defined in the `build-util/run-pycharm-ce-for-qgis.bat` file to run in Windows.
-
-```
-Python Properties:
-    Python executable (.executable): C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python\venv-qgis-python37\Scripts\python.exe
-    Python Version (sys.version): 3.7.0 (v3.7.0:1bf9cc5093, Jun 27 2018, 04:59:51) [MSC v.1914 64 bit (AMD64)]
-    Python Path (sys.path):
-        C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python
-        C:\OSGEO4~2\apps\Python37\lib\site-packages
-        C:\OSGEO4~2\apps\qgis\python
-        C:\OSGEO4~2\apps\qgis\python\plugins
-        C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python\venv-qgis-python37\Scripts\python37.zip
-        C:\OSGEO4~2\apps\Python37\DLLs
-        C:\OSGEO4~2\apps\Python37\lib
-        C:\OSGeo4W64\apps\Python37
-        C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python\venv-qgis-python37
-        C:\Users\sam\owf-dev\GeoProcessor\git-repos\owf-app-geoprocessor-python\venv-qgis-python37\lib\site-packages
-```
+Once the development environment is set up, various development tasks can be performed
+as per the [Development Tasks documentation](../dev-tasks/overview).

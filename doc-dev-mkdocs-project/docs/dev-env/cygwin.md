@@ -1,4 +1,4 @@
-# Cygwin #
+# GeoProcessor / Development Environment / Cygwin #
 
 Cygwin provides a Linux-like environment on Windows that can be used to
 run scripts in the Windows development environment (the other option being Git Bash).

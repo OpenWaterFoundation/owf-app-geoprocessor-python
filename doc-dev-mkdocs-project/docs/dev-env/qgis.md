@@ -1,10 +1,18 @@
-# QGIS #
+# GeoProcessor / Development Environment / QGIS #
 
 The GeoProcessor is being developed for QGIS 3.x, which uses Python 3.6+.
 QGIS is distributed with an optional long-term stable release that uses Python 2.7;
 this version was used with initial GeoProcessor development but is no longer used.
 The following resources explain how to install QGIS, and 64-bit QGIS is recommended if the
 computer operating system is 64-bit.
+
+* [Install QGIS](#install-qgis)
+* [Install Additional Python Packages](#install-additional-python-packages)
+* [QGIS Python Runtime Configuration](#qgis-python-runtime-configuration)
+
+-------------
+
+## Install QGIS ##
 
 Install QGIS using the instructions in the
 [OWF / Learn QGIS](http://learn.openwaterfoundation.org/owf-learn-qgis/install-qgis/install-qgis/) documentation.
@@ -16,7 +24,9 @@ See also:
 * For information on how QGIS is packaged, see also:
 [QGIS Version Install Experiments](../resources/qgis-version-install-experiments) for detailed background.
 
-After installing QGIS, it is necessary to install third-party Python packages that are used in the GeoProcessor.
+## Install Additional Python Packages ##
+
+After installing QGIS, it is necessary to install additional Python packages that are used in the GeoProcessor.
 Currently, these are installed in the QGIS Python environment.
 However, in the future an alternate approach may be implemented to avoid corrupting the QGIS environment.
 The deployed GeoProcessor environment uses a virtual environment that is separate from QGIS files to separate QGIS
@@ -36,6 +46,8 @@ Note that `python3 -m pip` is used instead of `pip3` because `pip3` is not avail
 |OpenPyXL|[https://openpyxl.readthedocs.io/en/stable/](https://openpyxl.readthedocs.io/en/stable/)|Reads and writes Excel 2010 xlsx/xlsm files to and from Table objects.|`python3 -m pip install openpyxl`|
 |requests (extended package)|[http://docs.python-requests.org/en/master/](http://docs.python-requests.org/en/master/)<br><br> [https://pypi.org/project/requests/](https://pypi.org/project/requests/)|Downloads data files within the [`WebGet`](../command-ref/WebGet/WebGet) command. <br><br>The `requests[security]` extension package is preferred over the core `requests` package to avoid an error that would occur when downloading a file over `https` with the [`WebGet`](../command-ref/WebGet/WebGet) command. The error that occurred when using the core `requests` package printed:<br>`requests.exceptions.SSLError: [Errno 1] _ssl.c:503: error:140770FC:SSL routines:SSL23_GET_SERVER_HELLO:unknown protocol`. <br>This error does not occur when utilizing the `requests[security]` extension package. | `python3 -m pip install requests[security]`|
 |SQLAlchemy|[http://www.sqlalchemy.org/](http://www.sqlalchemy.org/)|Enables connections to databases.|`python3 -m pip install SQLAlchemy`|
+
+## QGIS Python Runtime Configuration ##
 
 The QGIS Python installation version will vary depending on QGIS version but is generally
 configured similar to the following on Windows:

@@ -2620,6 +2620,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns: None
         """
 
+        self.closeEvent_save_command_file()
+
         logger = logging.getLogger(__name__)
         self.opened_command_file = True
 

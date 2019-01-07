@@ -419,11 +419,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
                 # Add command to GeoProcessor commands
                 # Get selected index
-                selected_index = self.command_ListWidget.commands_List.currentRow()
-                # Check to see if selected index is actually active.
-                # If so add command above this selected item.
-                if self.command_ListWidget.commands_List.item(selected_index).isSelected() == True:
-                    self.gp.add_command_at_index(command_string, selected_index)
+                selected_index = 0
+                # If there are already commands see if any are selected
+                if self.gp.commands:
+                    selected_index = self.command_ListWidget.commands_List.currentRow()
+                    # Check to see if selected index is actually active.
+                    # If so add command above this selected item.
+                    if self.command_ListWidget.commands_List.item(selected_index).isSelected() == True:
+                        self.gp.add_command_at_index(command_string, selected_index)
+                    else:
+                        self.gp.add_command(command_string)
                 else:
                     self.gp.add_command(command_string)
                 self.gp_model.update_command_list_ui()

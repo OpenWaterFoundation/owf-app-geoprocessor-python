@@ -88,6 +88,9 @@ class CommandListWidget(object):
         self.num_errors = 0
         self.num_warnings = 0
 
+        # Keep track of block comments
+        self.comment_block = False
+
         # Setup the user interface elements of the command list widget
         self.setupUi()
 
@@ -933,9 +936,14 @@ class CommandListWidget(object):
         qsize.setHeight(16)
         qsize.setWidth(self.commands_List.size().width())
         item.setSizeHint(qsize)
-        if command_string.strip()[0] == '#':
+        # Check to see if comment block started or ended
+        if command_string.strip() == "/*":
+            self.comment_block = True
+        if command_string.strip()[0] == '#' or self.comment_block == True:
             item.setForeground(QtGui.QColor(68, 121, 206))
         self.commands_List.addItem(item)
+        if command_string.strip() == "*/":
+            self.comment_block = False
 
     def update_command_list_widget(self):
         """

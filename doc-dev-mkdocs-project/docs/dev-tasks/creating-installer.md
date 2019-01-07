@@ -75,5 +75,31 @@ by running the `build-util/3-copy-gp-to-amazon-s3.sh`.
 
 ### ![Windows](../images/windows-32.png) Creating Installer for Windows ###
 
-Need to complete this section, will be similar to Cygwin and Linux but the Python virtual environment
-will need to run the QGIS version somehow.
+The installer for Windows packages the development files without modification
+and is primarily targeted to full QGIS distribution.
+
+1. Do development within Eclipse as normal.
+2. Periodically, test within a Python Virtual environment.
+Run `build-util/2-create-gp-venv.bat` to create a Python virtual environment.
+	1. This creates a virtual environment from the development files, for example:
+		1. `build-util/venv-tmp/gptest-1.1.0-win-venv` contains the virtual environment for
+		GeoProcessor for Windows.
+		2. `build-util/venv-tmp/gp-1.1.0-win-venv.zip` can be unzipped in a Windows environment.
+		3. Currently the virtual environment only provides a folder structure for `Lib\site-packages` and
+		Scripts, for `gp.bat` and `gpui.bat`.  However, in the future, the `gptest` scripts may be implemented
+		and use the distributed Python virtual environment.
+	2. Necessary components such as `pandas` are also installed using `pip3` to augment the packages
+	that are distributed with QGIS.
+3. More frequently, when code or other source files are edited and need to be tested in Linux, run `build-util/2-update-gp-venv.bat` to
+	copy source code and scripts to the virtual environment without recreating the virtual environment.
+	**This script has not been created.**
+4. Run the `build-util/venv-tmp/gp-1.1.0-win-venv/scripts/gp` or `scripts/gpui` script in the virtual environment to run the GeoProcessor.
+	1. The scripts will configure the QGIS environment and also make Python aware of the GeoProcessor files in the virtual environment.
+	2. The scripts do not currently need to activate the virtual environment (but may enable later to run `gptest` independent
+	of QGIS).
+5. Run tests with the GeoProcessor software to confirm functionality.
+6. Upload the installer to the [OWF GeoProcessor Download page](http://software.openwaterfoundation.org/geoprocessor/).
+	1. **This capability needs to be implemented.**
+	2. As a workaround, the virtual environment folder can be copied to a location such as
+	`C:\Users\user\gp-1.1.0-win-venv` or unzip the zip file contents to similar name,
+	and then run the `Scripts\gp.bat` or `Scripts\gpui.bat` batch file.

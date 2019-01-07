@@ -9,8 +9,9 @@ to edit code and run the GeoProcessor in PyCharm.
 It may also be used to initialize the virtual environment for deployment;
 however, the QGIS Python environment is a bit nonstandard and therefore a normal Python install
 is recommended for creating the Python virtual environment for testing framework deployment (see below).
-* Python 3.7 (or similar, depending on QGIS version) is used to create a virtual environment
-for the GeoProcessor testing framework, independent of QGIS Python version.
+* Python 3.7 (or similar, depending on QGIS version) is used to create a virtual environment:
+	+ for Windows, consistent wiht QGIS Python version
+	+ for the GeoProcessor testing framework, independent of QGIS Python version.
 * Python 2 or 3 is used by MkDocs to process Markdown documentation into static websites (can use the above version).
 
 **Need to evaluate whether QGIS Python can be used for Python testing framework virtual environment.**
@@ -18,12 +19,12 @@ for the GeoProcessor testing framework, independent of QGIS Python version.
 The deployed GeoProcessor environment uses a Python virtual environment with Python that is compatible
 with the operating system.
 Therefore it is necessary to install Python and third-party packages in Windows, Cygwin, and Linux.
-Windows is currently the primary development environment.
+Windows is currently the primary development environment, but testing and secondary development occurs on Cygwin and Linux.
 See the sections below discussing the installation of each version.
 
 * [Install Python](#install-python)
-	+ [Python for QGIS](#python-for-qgis)
-	+ [Python 3.x](#python-3x)
+	+ [Python for QGIS](#python-for-qgis) - currently ships with Python 3.7, and 3.6 was previously used
+	+ [Python 3.x](#python-3x) - currently 3.7 is the focus, although versions 3.4 to 3.7 have been used
 * [Install Additional Python Packages](#install-additional-python-packages)
 
 -----------------------------
@@ -123,14 +124,33 @@ The version should be as near as possible to that used by QGIS.
 
 After installing Python it will be necessary to install additional Python packages.
 
-### ![Windows](../images/windows-32.png) QGIS Development Environment ###
+### ![Cygwin](../images/cygwin-32.png) Cygwin ###
+
+For Cygwin GeoProcessor testing framework,
+the GeoProcessor is run in a virtual environment into which are installed necessary Python
+additional packages.  No additional Python package installation is needed.
+
+**Need to confirm - do need to install virturalenv.**
+
+### ![Linux](../images/linux-32.png) Linux ###
+
+For Linux GeoProcessor testing framework,
+the GeoProcessor is run in a virtual environment into which are installed necessary Python
+additional packages.  No additional Python package installation is needed.
+
+**Need to confirm - do need to install virturalenv.**
+
+### ![Windows](../images/windows-32.png) Windows QGIS Development Environment ###
 
 The Windows QGIS development environment requires a number of additional packages.
 These are installed into the QGIS Python environment.
 See the [QGIS Install Additional Python Packages documentation](qgis#install-additional-python-packages).
 
-### ![Cygwin](../images/cygwin-32.png) Cygwin and ![Linux](../images/linux-32.png) Linux ###
+For general Python version (non-QGIS version) used to create the GeoProcessor virtual environment and
+for general tasks, install the following additional packages.
 
-For Cygwin and Linux GeoProcessor testing framework,
-the GeoProcessor is run in a virtual environment into which are installed necessary Python
-additional packages.  No additional Python package installation is needed.
+| **Package**           | **Description**                  | **Installation Command**       |
+| --------------------- | -------------------------------- | ------------------------------ |
+| `mkdocs`              | MkDocs documentation software.   | `pip3 install mkdocs`          |
+| `mkdocs-material`     | MkDocs material theme.           | `pip3 install mkdocs-material` |
+| `virtualenv`          | Python virtual environment tool. | `pip3 install virtualenv`      |

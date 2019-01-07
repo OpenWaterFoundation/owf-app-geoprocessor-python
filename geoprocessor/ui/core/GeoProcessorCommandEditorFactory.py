@@ -21,6 +21,8 @@ import logging
 
 import geoprocessor.util.command_util as command_util
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
+from geoprocessor.ui.commands.editors.CommentBlockStartCommandEditor import CommentBlockStartCommandEditor
+from geoprocessor.ui.commands.editors.CommentBlockEndCommandEditor import CommentBlockEndCommandEditor
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import ReadGeoLayerFromGeoJSON_Editor
 
 
@@ -72,20 +74,15 @@ class GeoProcessorCommandEditorFactory(object):
         command_string_trimmed = command_string.strip()
         paren_pos = command_string_trimmed.find('(')
 
-        # TODO smalers 2018-07-25 Need to enable editors for special commands
-        # if len(command_string_trimmed) == 0:
-        #    # Blank line so insert a BlankCommand command.
-        #    return Blank()
 
-        # Comment line.
-        # elif command_string_trimmed.startswith('#'):
-        #    return Comment()
-
-        # elif command_string_trimmed.startswith('/*'):
-        #    return CommentBlockStart()
-
-        # elif command_string_trimmed.endswith('*/'):
-        #    return CommentBlockEnd()
+        # Create booleans to know if the command is a variation of a comment command
+        commentBlockStart = False
+        commentBlockEnd = False
+        # Special comment cases
+        if command_string_trimmed == "/*()":
+            commentBlockStart = True
+        elif command_string_trimmed == "*/()":
+            commentBlockEnd = True
 
         # The symbol '(' was found.
         # Assume command of syntax CommandName(Param1="...",Param2="...").
@@ -115,6 +112,14 @@ class GeoProcessorCommandEditorFactory(object):
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown command. Creating GenericCommandEditor for: " +
                             command_string_trimmed)
+                # If the command is a comment block start return the
+                # appropriate unique command editor
+                if commentBlockStart:
+                    return CommentBlockStartCommandEditor(command)
+                # If the command is a comment block end return the
+                # appropriate unique command editor
+                elif commentBlockEnd:
+                    return CommentBlockEndCommandEditor(command)
                 return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")

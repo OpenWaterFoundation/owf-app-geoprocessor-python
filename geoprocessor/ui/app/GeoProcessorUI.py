@@ -121,14 +121,28 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         When exiting out of the main window do checks to see if the command file has been modified.
         If modified warn user and ask if command file should be saved.
-        :param event: close event
-        :return: None
+        
+        Args:
+            event: close event
+        
+        Returns:
+            None
         """
 
         self.closeEvent_save_command_file()
         self.closeEvent_confirm_exit(event)
 
     def closeEvent_confirm_exit(self, event):
+        """
+        Prompt user with a dialog window that asks if the user really wants to exit
+        GeoProcessor.
+
+        Args:
+            event: Event being the exit button clicked
+
+        Returns:
+            None
+        """
         exit_dialog = QtWidgets.QMessageBox.question(self, 'GeoProcessor',
                                                      'Are you sure you want to exit GeoProcessor?',
                                                      QtWidgets.QMessageBox.Yes |
@@ -144,8 +158,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Before exiting check to see if the command file has been edited. If so ask if the user
         would like to save the command file.
-        :param event: close event passed down from closeEvent()
-        :return: None
+
+        Args:
+            event: close event passed down from closeEvent()
+
+        Returns: None
         """
         # Check to see if command list has been modified
         command_list_modified = self.command_ListWidget.command_list_modified()
@@ -168,16 +185,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
     def command_completed(self, icommand, ncommand, command, percent_completed, message):
         """
-        Indicate that a command has completed. The success/failure of the command is not indicated
-        :param icommand:  The command index (0+).
-        :param ncommand: The total number of commands to process
-        :param command: The reference to the command that is starting to run,
-        provided to allow future interaction with the command.
-        :param percent_completed:  If >= 0, the value can be used to indicate progress
-        running a list of commands (not the single command). If less than zero, then no
-        estimate is given for the percent complete and calling code can make its own determination
-        (e.g. ((icommand + 1)/ncommand)*100)
-        :param message:  A short message describing the status (e.g. "Running command...")
+        Indicate that a command has completed. The success/failure of the command is not indicated.
+
+        Args:
+            icommand:  The command index (0+).
+            ncommand: The total number of commands to process
+            command: The reference to the command that is starting to run,
+                provided to allow future interaction with the command.
+            percent_completed:  If >= 0, the value can be used to indicate progress
+                running a list of commands (not the single command). If less than zero, then no
+                estimate is given for the percent complete and calling code can make its own determination
+                (e.g. ((icommand + 1)/ncommand)*100)
+            message:  A short message describing the status (e.g. "Running command...")
+
+        Returns:
+            None
         """
 
         # Update the progress to indicate progress (1 to number of commands... completed).
@@ -200,15 +222,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def command_started(self, icommand, ncommand, command, percent_completed, message):
         """
         Indicate that a command has started running.
-        :param icommand: The command index (0+) in the list of commands being run (see ncommand)
-        :param ncommand: The total number of commands to process (will be selected number if running selected)
-        :param command: The reference to the command that is starting to run,
-        provided to allow future interaction with the command.
-        :param percent_completed: If >= 0, the value can be used to indicate progress
-        running a list of commands (not the single command). If less than zero, then no estimate is given
-        for the percent complete and calling code can make its own determination
-        (e.g. ((icommand +1)/ncommand)*100).
-        :param message: A short message describing the status (e.g. "Running command...")
+
+        Args:
+            icommand: The command index (0+) in the list of commands being run (see ncommand)
+            ncommand: The total number of commands to process (will be selected number if running selected)
+            command: The reference to the command that is starting to run,
+                provided to allow future interaction with the command.
+            percent_completed: If >= 0, the value can be used to indicate progress
+                running a list of commands (not the single command). If less than zero, then no estimate is given
+                for the percent complete and calling code can make its own determination
+                (e.g. ((icommand +1)/ncommand)*100).
+            message: A short message describing the status (e.g. "Running command...")
+
+        Returns:
+            None
         """
 
         # command_completed updates the progress bar after each command.
@@ -238,9 +265,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
     def delete_numbered_list_item(self, index):
         """
-        Delete the row in the numbered list and update the other numbers
-        :param index: numbered list item to be deleted
-        :return:
+        Delete the row in the numbered list and update the other numbers.
+
+        Args:
+            index: numbered list item to be deleted
+
+        Returns:
+            None
         """
         # Remove item at index
         self.numbered_List.takeItem(index)
@@ -260,7 +291,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Opens a dialog box that allows users to edit existing commands.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            Return if error is encountered
         """
 
         logger = logging.getLogger(__name__)
@@ -330,7 +365,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Args:
             command_name (str): the name of the command
 
-        Returns: None
+        Returns:
+            Return if error is encountered
         """
         logger = logging.getLogger(__name__)
         # Create a full command string, to parse in the command factory
@@ -360,6 +396,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object)
+            print("GeoProcessorUI.new_command_editor")
         except Exception as e:
             message = "Error creating editor for new command"
             logger.error(message, e, exc_info=True)
@@ -407,7 +444,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         However, subsequent customization has edited this code directly without reprocessing the '.ui' file,
         and this will continue into the future.
 
-        Returns:  None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         print("Entering setup_ui")
         main_window = self  # The main window, in this case self
@@ -467,7 +509,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # - Use the new-style approach documented here:
         # http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
         # QtCore.QMetaObject.connectSlotsByName(main_window)
-        print("Leaving setup_ui")
+        # print("Leaving setup_ui")
 
     def setup_ui_catalog(self, y_centralwidget):
         """
@@ -476,7 +518,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Args:
             y_centralwidget:  Row position in the central widget to add this component.
 
-        Returns:  None
+        Returns:
+            None
         """
         # Catalog area is in the top of the central widget
         # - enable this area later since don't currenlty have browser for layers or datastores
@@ -504,7 +547,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Args:
             y_centralwidget:  Row position in the central widget to add this component.
 
-        Returns:  None
+        Returns:
+            None
         """
         # Commands area is in the middle of the central widget
         # First the main commands area with border
@@ -971,12 +1015,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_MultipleStart.setObjectName(
             _fromUtf8("Menu_Commands_General_Comments_MultipleStart"))
         self.Menu_Commands_General_Comments_MultipleStart.setText("/* <start multi-line comment section> ")
+        self.Menu_Commands_General_Comments_MultipleStart.triggered.connect(
+            functools.partial(self.new_command_editor, "/*"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_MultipleStart)
         # MultipleEnd
         self.Menu_Commands_General_Comments_MultipleEnd = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_MultipleEnd.setObjectName(
             _fromUtf8("Menu_Commands_General_Comments_MultipleEnd"))
         self.Menu_Commands_General_Comments_MultipleEnd.setText("*/ <end multi-line comment section>")
+        self.Menu_Commands_General_Comments_MultipleEnd.triggered.connect(
+            functools.partial(self.new_command_editor, "*/"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_MultipleEnd)
         # Comments / General - Comments / Enabled menu
         self.Menu_Commands_General_Comments_Enabled = QtWidgets.QAction(main_window)
@@ -1378,7 +1426,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Args:
             y_centralwidget:  Row position in the central widget to add this component.
 
-        Returns:  None
+        Returns:
+            None
         """
         # Results area is in the bottom of the central widget
         # - Use Tab widget with vertical layout
@@ -1624,7 +1673,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Args:
             y_centralwidget:  Row position in the central widget to add this component.
 
-        Returns:  None
+        Returns:
+            None
         """
         # Set the status bar
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -1672,7 +1722,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def setup_ui_toolbar(self, main_window):
         """
         Setup UI Toolbar
-        :param main_window:
         """
 
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
@@ -1699,7 +1748,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Opens a dialog box that shows the command status.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         # Get the command that was selected
@@ -1911,6 +1964,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         command_status_dialog.exec()
 
     def show_command_status_tooltip(self, event):
+        """
+        When hovering or clicking on a numbered list item if there is an error or warning
+        display a tooltip with the command status. Called in CommandListWidget
+        when numbered list item is hovered over or clicked by the user.
+
+        Args:
+            event: Hover event over numbered list item.
+
+        Returns:
+            None
+        """
 
         gp = self.gp
         _translate = QtCore.QCoreApplication.translate
@@ -2018,7 +2082,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Populates the Results tables of the UI to reflect results of running the GeoProcessor, including
         the existing GeoLayers, Maps, Output Files, Properties, and Tables.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         # Call the specific functions for each output category
@@ -2054,7 +2122,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Populates the Results / GeoLayers display.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Remove items from the Results GeoLayers table (from a previous run).
         self.results_GeoLayers_Table.setRowCount(0)
@@ -2084,7 +2156,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Populates the Results / Maps display.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Remove items from the Results Maps table (from a previous run).
         self.results_Maps_Table.setRowCount(0)
@@ -2099,7 +2175,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Populates the Results / Output Files display.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Remove items from the Results Properties table (from a previous run).
         self.results_OutputFiles_Table.setRowCount(0)
@@ -2138,7 +2218,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Populates the Results / Properties Files display.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Remove items from the Results Properties table (from a previous run).
         self.results_Properties_Table.setRowCount(0)
@@ -2168,7 +2252,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Populates the Results / Tables Files display.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Remove items from the Results Tables table (from a previous run).
         self.results_Tables_Table.setRowCount(0)
@@ -2208,7 +2296,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             q_pos: The position of the right-click. Updated automatically within interface. Do not need to manually
                 pass a value to this variable. Used to determine where to display the popup menu.
 
-        Returns: None
+        Returns:
+            None
         """
         # Create the Qt Menu object.
         self.rightClickMenu_Commands = QtWidgets.QMenu()
@@ -2237,18 +2326,35 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.rightClickMenu_Commands.show()
 
     def ui_action_geolayers_right_click(self, q_pos):
+        """
+        On right click display a tooltip on GeoLayer selected list item with options to
+        open a map window or get the GeoLayer attributes.
 
+        Args:
+            q_pos: Position of mouse when right clicking on a GeoLayer from
+                the output table.
+
+        Returns:
+            None
+        """
+
+        # Create the right click QMenu
         self.rightClickMenu_GeoLayers = QtWidgets.QMenu()
 
+        # Add possible actions being Open Map or Attributes
         menu_item_map_command = self.rightClickMenu_GeoLayers.addAction("Open Map")
         menu_item_attributes = self.rightClickMenu_GeoLayers.addAction("Attributes")
 
+        # Connect actions to the tooltip options
         menu_item_map_command.triggered.connect(self.ui_action_open_map_window)
         menu_item_attributes.triggered.connect(self.ui_action_open_attributes)
 
+        # Using the position of the mouse on right click decide where the tooltip should
+        # be displayed
         parent_pos = self.results_GeoLayers_Table.mapToGlobal(QtCore.QPoint(0, 0))
         self.rightClickMenu_GeoLayers.move(parent_pos + q_pos)
 
+        # Show the tooltip
         self.rightClickMenu_GeoLayers.show()
 
     # TODO smalers 2018-07-24 need to make the dialog nicer, including live link to OWF website
@@ -2256,7 +2362,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Display the Help / About dialog.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         try:
             program_name = app_util.get_property('ProgramName')
@@ -2287,7 +2397,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         If taken from standard Python modules, also show the module and variable name so the information
         can be cross-checked manually if necessary.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         try:
@@ -2425,36 +2539,52 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.warning(message, e, exc_info=True)
             qt_util.warning_message_box(message)
 
-    # def copy_text(self, text):
-    #     cmd='echo ' + text.strip() + '|clip'
-    #     return subprocess.check_call(cmd, shell=True)
-
     def ui_action_map_pan(self):
         """
-        Set map tool to pan
-        :return: None
+        Set GeoLayers map dialog window to allow user to pan with the mouse
+        events.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.canvas.setMapTool(self.toolPan)
 
     def ui_action_map_resize(self, event):
         """
-        Resize map canvas when map dialog box is resized
-        :param event: Resize event
-        :return: None
+        Resize the GeoLayers map canvas when the dialog box is resized
+
+        Args:
+            event: Resize event, necessary to add even though it is not being used in order
+                for it to be recognized as a slot to respond to the given signal from the event.
+
+        Returns:
+            None
         """
         self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())
 
     def ui_action_map_zoomIn(self):
         """
-        Set map tool to zoom in
-        :return: None
+        Set the GeoLayers map window to respond to mouse events as zooming in.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.canvas.setMapTool(self.toolZoomIn)
 
     def ui_action_map_zoomOut(self):
         """
-        Set map tool to zoom out
-        :return: None
+        Set the GeoLayers map window to respond to mouse events as zooming out.
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.canvas.setMapTool(self.toolZoomOut)
 
@@ -2463,7 +2593,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Start a new command file by clearing the current commands list and unsetting the saved command file.
         Users are not required to save the command file until they take another action such as exit, or open.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Use functions for CloseEvent override to see if user has edited command file and if so
         # prompt user to save...
@@ -2482,7 +2616,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.ui_set_main_window_title("commands not saved")
 
     def ui_action_open_attributes(self):
-        # Create map window dialog box
+        """
+        Create an attributes window to be opened when user clicks on GeoLayers.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        # Create attributes window dialog box
         self.attributes_window = QtWidgets.QDialog()
         self.attributes_window.resize(800, 500)
         self.attributes_window.setWindowTitle("Attributes")
@@ -2535,7 +2678,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_open_map_window(self):
         """
         Open a map window dialog box that displays the map layers from the selected GeoLayers
-        :return: None
+
+        Args:
+            None
+            
+        Returns:
+            None
         """
 
         # Create map window dialog box
@@ -2617,7 +2765,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 the absolute path to the command file to open, if blank prompt for the file and otherwise
                 open the file
 
-        Returns: None
+        Returns:
+            None
         """
 
         self.closeEvent_save_command_file()
@@ -2738,7 +2887,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Saves the commands to a file.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         # Record the new saved command file in the command list backup class
@@ -2780,7 +2933,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Opens the GeoProcessor user documentation in the user's default browser.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         # Open the GeoProcessor user documentation in the default browser (new window).
@@ -2799,6 +2956,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_view_log_file(self):
         """
         Opens the current log file in the default text editor for operating system.
+
+        Args:
+            None
 
         Returns:
             None
@@ -2843,6 +3003,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_view_startup_log_file(self):
         """
         Opens the startup log file in the default text editor for operating system.
+
+        Args:
+            None
 
         Returns:
             None
@@ -2890,6 +3053,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         This function should be called whenever the command file history is written so that the history file and
         menu are synchronized.
 
+        Args:
+            None
+
         Returns:
             None
         """
@@ -2934,14 +3100,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Args:
             title (str): Title for main window.
 
-        Returns:  None
+        Returns:
+            None
         """
         self.setWindowTitle("GeoProcessor - " + title)  # Initial title
 
     def update_ui_main_window_title(self):
         """
         Update the main window title to reflect that the command file has been modified.
-        :return:
+
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         # Get the current window title
@@ -2961,7 +3133,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def update_ui_commands_list(self):
         """
         Once commands have been run. Loop through and check for any errors or warnings.
-        :return: None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         gp = self.gp
         for i in range(0, self.commands_List.count()):
@@ -2978,7 +3155,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status by checking data and setting various status information.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.update_ui_status_results_geolayers()
         self.update_ui_status_results_maps()
@@ -2990,8 +3171,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status for Results / GeoLayers area.
 
-        Returns: None
+        Args:
+            None
 
+        Returns:
+            None
         """
         # Count the total and selected number of rows within the GeoLayers table. Update the label to reflect counts.
         row_num = str(self.results_GeoLayers_Table.rowCount())
@@ -3016,8 +3200,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status for Results / Output Files area.
 
-        Returns: None
+        Args:
+            None
 
+        Returns:
+            None
         """
         # Count the total and selected number of rows within the Output Files table. Update the label to reflect counts.
         row_num = str(self.results_OutputFiles_Table.rowCount())
@@ -3033,7 +3220,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status for Results / GeoLayers area.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         # Count the total and selected number of rows within the Properties table. Update the label to reflect counts.
@@ -3049,8 +3240,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status for Results / Tables area.
 
-        Returns: None
+        Args:
+            None
 
+        Returns:
+            None
         """
         # Count the total and selected number of rows within the Tables table. Update the label to reflect counts.
         row_num = str(self.results_Tables_Table.rowCount())

@@ -147,11 +147,8 @@ class GeoProcessor(object):
         # Work is done in the AbstractCommand class.
         command_object.initialize_command(command_string, self, True)
 
-        # If index is 0 we need ot add command to the very top and push everything else down.
-        if index == 0:
-            self.commands.insert(0, command_object)
-        else:
-            self.commands.insert(index-1, command_object)
+        # Add command above selected command
+        self.commands.insert(index, command_object)
 
 
     def add_command_processor_listener(self, listener):

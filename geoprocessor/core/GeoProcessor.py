@@ -128,6 +128,32 @@ class GeoProcessor(object):
             print("First command debug:")
             self.commands[0].print_for_debug()
 
+    def add_command_at_index(self, command_string, index):
+        """
+        Add a command string above currently selected command in command file.
+
+        Args:
+            command_string: Command string to be inserted to the command file.
+            index: Index of the currently selected command_string
+
+        Returns:
+            None
+        """
+        command_factory = GeoProcessorCommandFactory()
+
+        command_object = command_factory.new_command(command_string, True)
+
+        # Initialize the parameters of the command object.
+        # Work is done in the AbstractCommand class.
+        command_object.initialize_command(command_string, self, True)
+
+        # If index is 0 we need ot add command to the very top and push everything else down.
+        if index == 0:
+            self.commands.insert(0, command_object)
+        else:
+            self.commands.insert(index-1, command_object)
+
+
     def add_command_processor_listener(self, listener):
         """
         Add a command processor listener, to be notified when commands are started,

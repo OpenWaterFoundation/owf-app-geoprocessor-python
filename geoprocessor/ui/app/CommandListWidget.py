@@ -44,8 +44,14 @@ class CommandListWidget(object):
 
     def __init__(self, commands_GroupBox):
         """
-        Initialize the CommandListWidget object with necessary global variables
-        :param commands_GroupBox:
+        Initialize the CommandListWidget object with necessary global variables.
+
+        Args:
+            commands_GroupBox: The GroupBox being passed from GeoProcessorUI which will
+                contain the command list widget that is built in this class.
+
+        Returns:
+            None
         """
 
         # Initialize the group box that will contain the command list widget
@@ -87,10 +93,14 @@ class CommandListWidget(object):
 
     def add_model_listener(self, listener):
         """
-        Initialize the model listener
-        :param listener: Model object that will listen for events from
-        command list widget
-        :return: None
+        Initialize the command list model listener.
+
+        Args:
+            listener: GeoProcessorListModel object that will listen for events from
+                command list widget.
+
+        Returns:
+            Return if not listener
         """
         if not listener:
             return
@@ -98,10 +108,14 @@ class CommandListWidget(object):
 
     def add_main_ui_listener(self, listener):
         """
-        Initialize the main ui listener
-        :param listener: model object that will listen for events from
-        command list widget
-        :return: None
+        Initialize the main ui listener.
+
+        Args:
+            listener: Model object that will listen for events from
+                command list widget.
+
+        Returns:
+            Return if no listener
         """
         if not listener:
             return
@@ -117,24 +131,31 @@ class CommandListWidget(object):
     @staticmethod
     def command_list_vertical_scroll(vs, value):
         """
-        Connect the vertical scrolling with command list and numbered list
-        :param vs: vertical scroll bar to update
-        :param value: the value to set the vertical scroll bar to
-        :return:
+        Connect the vertical scrolling with command list and numbered list.
+
+        Args:
+            vs: Vertical scroll bar to update.
+            value: The value to set the vertical scroll bar to.
+
+        Returns:
+            None
         """
         vs.setValue(value)
 
     def delete_numbered_list_item(self, index):
         """
         Delete the row in the numbered list and update the other numbers
-        accordingly so they are still in order
-        :param index: numbered list item to be deleted
-        :return: None
+        accordingly so they are still in order.
+
+        Args:
+            index: Index of numbered list item to be deleted.
+
+        Returns:
+            None
         """
         # Remove item at index
         self.numbered_List.takeItem(index)
         # Get the length of the numbered list
-        count = self.numbered_List.count()
         count = self.numbered_List.count()
 
         # Update numbers past the deleted row
@@ -148,9 +169,15 @@ class CommandListWidget(object):
     def event_handler_commands_list_clicked(self, event):
         """
         When clicking on a command list item also select the same
-        row in the numbered list and gutter
-        :param event: Release click event from numbered list.
-        :return: None
+        row in the numbered list and gutter.
+
+        Args:
+            event: Release click event from numbered list, necessary as a parameter
+                so that this function is recognized as a slot in response to a given signal
+                or release click event.
+
+        Returns:
+            None
         """
         # First clear previous selections from numbered list and gutter
         self.numbered_List.clearSelection()
@@ -165,19 +192,27 @@ class CommandListWidget(object):
 
     def event_handler_button_run_all_commands_clicked(self, event):
         """
-        Notify GeoProcessorListModel that the run all commands button has been clicked
-        :param event: event.. this must be a parameter in order for PyQt5 to recognize
-        it as being a function that will overwrite the default event handler
-        :return: None
+        Notify GeoProcessorListModel that the run all commands button has been clicked.
+
+        Args:
+            event: Button clicked event, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
         """
         self.notify_model_listener_main_ui_listener_run_all_commands_clicked()
 
     def event_handler_button_run_selected_commands_clicked(self, event):
         """
-        Notify GeoProcessorListModel that the run selected commands button has been clicked
-        :param index_start: Index of first command list selected
-        :param index_end: Index of last command list selected
-        :return: None
+        Notify GeoProcessorListModel that the run selected commands button has been clicked.
+
+        Args:
+            event: Button clicked event, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
         """
         selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
         selected_indices = [item.row() for item in selected_q_indices]
@@ -186,9 +221,14 @@ class CommandListWidget(object):
     def event_handler_button_clear_commands_clicked(self, event):
         """
         When clicking on the clear commands button clear all commands if none
-        individually selected or only clear the selected commands
-        :param event: clicked event
-        :return: None
+        individually selected or only clear the selected commands.
+
+        Args:
+            event: Button clicked event, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
         """
         selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
         if selected_q_indices:
@@ -222,8 +262,13 @@ class CommandListWidget(object):
 
     def event_handler_decrease_indent_button_clicked(self):
         """
-        Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked
-        :return:
+        Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
         selected_indices = [item.row() for item in selected_q_indices]
@@ -235,8 +280,13 @@ class CommandListWidget(object):
 
     def event_handler_indent_button_clicked(self):
         """
-        Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked
-        :return:
+        Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
         selected_indices = [item.row() for item in selected_q_indices]
@@ -249,9 +299,14 @@ class CommandListWidget(object):
     def event_handler_gutter_clicked(self, event):
         """
         When clicking on a gutter item also select the same
-        row in the command list and the numbered list
-        :param event:
-        :return: QListWidgetItem
+        row in the command list and the numbered list.
+
+        Args:
+            event: User click event, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
         """
         index = self.gutter.currentRow()
         self.numbered_List.setCurrentRow(index)
@@ -260,9 +315,14 @@ class CommandListWidget(object):
     def event_handler_numbered_list_item_clicked(self, event):
         """
         When clicking on a numbered list item also select the same
-        row in the command list and the gutter
-        :param event: Release click event from numbered list.
-        :return: None
+        row in the command list and the gutter.
+
+        Args:
+            event: Release click event from numbered list, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
         """
         index = self.numbered_List.currentRow()
         self.commands_List.setCurrentRow(index)
@@ -276,15 +336,24 @@ class CommandListWidget(object):
 
     def event_handler_numbered_list_item_hover(self, event):
         """
-        Notify main ui that the numbered list is being hovered over
-        :param event: event from mouseEnter event
-        :return: None
+        Notify main ui that the numbered list is being hovered over.
+
+        Args:
+            event: event from mouseEnter event
+
+        Returns:
+            None
         """
         self.notify_main_ui_listener_numbered_list_on_hover(event)
 
     def get_command_list_position(self):
         """
-        :return: the current position of command list widget which is
+        Returns the position of the mouse to display the context menu.
+
+        Args:
+            None
+
+        Returns: The current position of command list widget which is
         used in GeoProcessorUI to display the context menu on command list
         selection in the proper place
         """
@@ -292,17 +361,28 @@ class CommandListWidget(object):
 
     def get_current_list_item_index(self):
         """
-        :return: The current list widget item that is selected
+        Return the index of the current selected command list item.
+
+        Args:
+            None
+
+        Returns:
+            The current list widget item that is selected
         """
         return self.commands_List.currentRow()
 
     def group_box_resize(self, event):
-        # """
-        # Update the size of the gutter to ensure that it doesn't scroll and that it
-        # appropriately displays a good overview of all issues.
-        #
-        # :return: None
-        # """
+        """
+        Update the size of the gutter to ensure that it doesn't scroll and that it
+        appropriately displays a good overview of all issues.
+
+        Args:
+            event: Resize event, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
+        """
 
         # Get the current height of the gutter
         current_height = self.gutter.height()
@@ -340,8 +420,12 @@ class CommandListWidget(object):
     def gutter_error_at_row(self, index):
         """
         Set gutter row to red if there is a command line error on this row.
-        :param index: index of row in gutter with error
-        :return: None
+
+        Args:
+            index: Index of row in gutter with error.
+
+        Returns:
+            None
         """
         item = self.gutter.item(index)
         item.setBackground(QtCore.Qt.red)
@@ -349,98 +433,151 @@ class CommandListWidget(object):
     def gutter_warning_at_row(self, index):
         """
         Set gutter row to yellow if there is a command line warning on this row.
-        :param index: index of row in gutter with a warning
-        :return: None
+
+        Args:
+            index: Index of row in gutter with a warning.
+
+        Returns:
+            None
         """
         item = self.gutter.item(index)
         item.setBackground(QtCore.Qt.yellow)
 
     def notify_main_ui_listener_numbered_list_clicked(self):
         """
-        Notify the main ui listener that the numbered list item has been clicked
-        :return: None
+        Notify the main ui listener that the numbered list item has been clicked.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.command_main_ui_listener.show_command_status()
 
     def notify_main_ui_listener_numbered_list_on_hover(self, event):
         """
-        Notify the main ui listener that the numbered list item is being hovered over
-        :param: on hover event passed from numbered list mouseEnter event
-        :return: None
+        Notify the main ui listener that the numbered list item is being hovered over.
+
+        Args:
+            param: Hover event passed from numbered list mouseEnter event
+
+        Returns:
+            None
         """
         self.command_main_ui_listener.show_command_status_tooltip(event)
 
     def notify_main_ui_listener_right_click(self, q_pos):
         """
-        Notify the main ui listener that of a command line right click event
-        :param q_pos: the position of the context menu
-        :return: None
+        Notify the main ui listener or a command line right click event.
+
+        Args:
+            q_pos: The position of the context menu
+
+        Returns:
+            None
         """
         self.command_main_ui_listener.ui_action_command_list_right_click(q_pos)
 
     def notify_model_listener_clear_all_commands(self):
         """
-        Notify the model listener that clear commands button has been clicked
-        :return: None
+        Notify the model listener that clear commands button has been clicked.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.command_model_listener.clear_all_commands()
 
     def notify_model_listener_clear_selected_commands(self, selected_indices):
         """
-        Notify the model listener that clear selected commands has been clicked
-        :param selected_indices: A list of integers representing the index of the
-        selected commands
-        :return: None
+        Notify the model listener that clear selected commands has been clicked.
+
+        Args:
+            selected_indices: A list of integers representing the index of the
+                selected commands.
+
+        Returns:
+            None
         """
         self.command_model_listener.clear_selected_commands(selected_indices)
 
     def notify_model_listener_decrease_indent_button_clicked(self, selected_indices):
         """
-        Notify the model listener that one of the decrease indent button has been clicked
-        :param selected_indices: A list of integers representing the index of the
-        commands to decrease the indent of
-        :return: None
+        Notify the model listener that one of the decrease indent button has been clicked.
+
+        Args:
+            selected_indices: A list of integers representing the index of the
+                commands to decrease the indent of.
+
+        Returns:
+            None
         """
         self.command_model_listener.decrease_indent_command_string(selected_indices)
 
     def notify_model_listener_indent_button_clicked(self, selected_indices):
         """
-        Notify the model listener that one of the indent button has been clicked
-        :param selected_indices: A list of integers representing the index of the
-        commands to add indent to
-        :return: None
+        Notify the model listener that one of the indent button has been clicked.
+
+        Args:
+            selected_indices: A list of integers representing the index of the
+                commands to add indent to.
+
+        Returns:
+            None
         """
         self.command_model_listener.indent_command_string(selected_indices)
 
     def notify_model_listener_main_ui_listener_run_all_commands_clicked(self):
         """
-        Notify the model listener that the run all commands button has been clicked
-        :return: None
+        Notify the model listener that the run all commands button has been clicked.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.command_model_listener.run_all_commands()
         self.command_main_ui_listener.show_results()
 
     def notify_model_listener_main_ui_listener_run_selected_commands_clicked(self, selected_indices):
         """
-        Notify the model listener that the geoprocessor
-        :param selected_indices:
-        :return: None
+        Notify the model listener that the geoprocessor.
+
+        Args:
+            selected_indices: A list of integers representing the index of the
+                commands selected.
+
+        Returns:
+            None
         """
         self.command_model_listener.run_selected_commands(selected_indices)
         self.command_main_ui_listener.show_results()
 
     def notify_main_ui_listener_refresh_results(self):
         """
-        Notify the main ui that the results should be refreshed
-        :return: None
+        Notify the main ui that the results should be refreshed.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.command_main_ui_listener.show_results()
 
     def numbered_list_error_at_row(self, index):
         """
-        Add the error icon to the numbered list row with an error
-        :param index: insert icon at numbered list index where error occurred
-        :return: None
+        Add the error icon to the numbered list row with an error.
+
+        Args:
+            index: Index of numbered list item where error occurred.
+
+        Returns:
+            None
         """
         # Get item from index
         item = self.numbered_List.item(index)
@@ -454,9 +591,13 @@ class CommandListWidget(object):
 
     def numbered_list_warning_at_row(self, index):
         """
-        Add the warning icon to the numbered list row with an warning
-        :param index: insert icon at numbered list index where warning occurred
-        :return: None
+        Add the warning icon to the numbered list row with an warning.
+
+        Args:
+            index: index of numbered list item where warning occurred.
+
+        Returns:
+            None
         """
         # Get item from index
         item = self.numbered_List.item(index)
@@ -470,9 +611,13 @@ class CommandListWidget(object):
 
     def numbered_list_unknown_at_row(self, index):
         """
-        Add the unknown icon to the numbered list row with an unknown
-        :param index: insert icon at numbered list index where unknown occurred
-        :return: QListWidgetItem
+        Add the unknown icon to the numbered list row with an unknown.
+
+        Args:
+            index: index of numbered list item where unkown occurred.
+
+        Returns:
+            QListWidgetItem
         """
         item = self.numbered_List.item(index)
         # Get the unknown icon from path
@@ -483,26 +628,28 @@ class CommandListWidget(object):
         # Add icon to QListWidgetItem
         item.setIcon(error_icon)
 
-    def selected_command_list_indices(self):
-        # selected_items = self.commands_List.selectedItems()
-        # for item in selected_items:
-        #     print(self.commands_List.indexFromItem(item))
-        print(self.commands_List.selectionModel().selectedIndexes())
-
     def set_command_list(self, command_list):
         """
         Assign the command list to the passed in command list
-        coming from geoprocessor in the GeoProessorListModel
-        :param command_list: array of commands
-        :return: None
+        coming from geoprocessor in the GeoProessorListModel.
+
+        Args:
+            command_list: Array of commands
+
+        Returns: None
         """
         self.command_list = command_list
 
     def set_command_list_backup(self):
         """
         Initialize the command list backup to check against later changes of the
-        command list to see if modified
-        :return: None
+        command list to see if modified.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Update the command list backup
         self.command_list_backup.update_command_list(self.command_list)
@@ -511,7 +658,12 @@ class CommandListWidget(object):
         """
         Setup all GUI elements of the CommandListWidget Area including the command list, the numbered
         list to the left of the commands and the gutter to the right of the commands.
-        :return: None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         # Add event handler for QGroupBox resize event
@@ -540,8 +692,13 @@ class CommandListWidget(object):
 
     def setup_ui_command_list_widget_command_list(self):
         """
-        Setup the command list for the command list widget
-        :return: None
+        Setup the command list for the command list widget.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Commands area list
         self.commands_List = QtWidgets.QListWidget(self.commands_GroupBox)
@@ -571,8 +728,13 @@ class CommandListWidget(object):
 
     def setup_ui_command_list_widget_gutter(self):
         """
-        Setup the gutter to the right of the command list for command list widget
-        :return: None
+        Setup the gutter to the right of the command list for command list widget.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Gutter
         self.gutter = QtWidgets.QListWidget(self.commands_GroupBox)
@@ -587,8 +749,13 @@ class CommandListWidget(object):
 
     def setup_ui_command_list_widget_layout(self):
         """
-        Setup the layout for the command list widget
-        :return: None
+        Setup the layout for the command list widget.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Add a grid layout to group box
         self.commands_GridLayout = QtWidgets.QGridLayout(self.commands_GroupBox)
@@ -606,8 +773,13 @@ class CommandListWidget(object):
 
     def setup_ui_command_list_widget_numbered_list(self):
         """
-        Setup the numbered list to left of command list
-        :return: None
+        Setup the numbered list to left of command list.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Create a list next to command list that reflects command line numbers
         self.numbered_List = QtWidgets.QListWidget()
@@ -625,8 +797,13 @@ class CommandListWidget(object):
 
     def setup_ui_command_list_widget_button_run_selected_commands(self):
         """
-        Setup the run selected commands button for the command list widget
-        :return: None
+        Setup the run selected commands button for the command list widget.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Commands area buttons under the list
         self.commands_RunSelectedCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
@@ -642,8 +819,13 @@ class CommandListWidget(object):
 
     def setup_ui_command_list_widget_button_run_all_commands(self):
         """
-        Setup the run all commands button for the command list widget
-        :return: None
+        Setup the run all commands button for the command list widget.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.commands_RunAllCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
         self.commands_RunAllCommands_PushButton.setEnabled(False)
@@ -656,8 +838,13 @@ class CommandListWidget(object):
 
     def setup_ui_command_list_widget_button_clear_commands(self):
         """
-        Setup the clear commands button for the command list widget
-        :return: None
+        Setup the clear commands button for the command list widget.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.commands_ClearCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
         self.commands_ClearCommands_PushButton.setEnabled(False)
@@ -675,9 +862,13 @@ class CommandListWidget(object):
         reset when refreshing UI content with commands in GeoProcessor but
         we want the selected items to stay selected unless the user de-selects
         them.
-        :param selected_indices: A list of integers representing the index of the
-        selected items
-        :return: None
+
+        Args:
+            selected_indices: A list of integers representing the index of the
+                selected items
+
+        Returns:
+            None
         """
         for i in range(0, len(selected_indices)):
             index = selected_indices[i]
@@ -693,7 +884,11 @@ class CommandListWidget(object):
         class variable to the current number of selected command items in the Command_List widget. Update the
         Command_List widget label to display the total and selected number of commands within the widget.
 
-        Returns: None
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Count the number of items (each item is a command string) in the Command_List widget.
         total_commands = self.commands_List.count()
@@ -724,9 +919,13 @@ class CommandListWidget(object):
 
     def update_command_list(self, command_string):
         """
-        Add data to the command list
-        :param command_string: a command string to add to the command list
-        :return: None
+        Add data to the command list.
+
+        Args:
+            command_string: a command string to add to the command list
+
+        Returns:
+            None
         """
         item = QtWidgets.QListWidgetItem()
         item.setText(command_string.rstrip())
@@ -741,8 +940,13 @@ class CommandListWidget(object):
     def update_command_list_widget(self):
         """
         Update the command list widget from a command list that
-        has already been initialized
-        :return: None
+        has already been initialized.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
 
         # Start by clearing all data from the command list widget
@@ -762,9 +966,13 @@ class CommandListWidget(object):
     def update_numbered_list(self, index):
         """
         Add a new line to numbered list in accordance with command list
-        given the index of the command list
-        :param index: index of numbered list to add
-        :return:
+        given the index of the command list.
+
+        Args:
+            index: index of numbered list to add
+
+        Returns:
+            None
         """
         # Increment index to index starting at 1
         index += 1
@@ -778,6 +986,16 @@ class CommandListWidget(object):
         self.update_numbered_list_width()
 
     def update_numbered_list_width(self):
+        """
+        Update the width of the numbered list to allow elements to
+        fit comfortably inside it.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         largest_int = self.numbered_List.count()
         myFont = QtGui.QFont()
         string = str(largest_int)
@@ -789,7 +1007,12 @@ class CommandListWidget(object):
     def update_ui_command_list_errors(self):
         """
         Once commands have been run. Loop through and check for any errors or warnings.
-        :return: None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Start by clearing previous icons from numbered list and gutter
         for i in range(0, len(self.command_list)):
@@ -817,8 +1040,13 @@ class CommandListWidget(object):
     def update_gutter(self):
         """
         Add a new item to the gutter when a new command line has been
-        added to the command list
-        :return: None
+        added to the command list.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Add items to gutter
         item = QtWidgets.QListWidgetItem()

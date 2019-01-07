@@ -198,14 +198,13 @@ class GeoProcessorCommandFactory(object):
             # Blank line so insert a BlankCommand command.
             return Blank()
 
-        # Comment line.
+        # If the command is any variation of a comment return the
+        # appropriate unique command editor
         elif command_string_trimmed.startswith('#'):
             return Comment()
-
         elif command_string_trimmed.startswith('/*'):
             return CommentBlockStart()
-
-        elif command_string_trimmed.endswith('*/'):
+        elif command_string_trimmed.startswith('*/'):
             return CommentBlockEnd()
 
         # The symbol '(' was found.

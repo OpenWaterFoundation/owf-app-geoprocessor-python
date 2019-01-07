@@ -19,27 +19,42 @@
 
 
 class GeoProcessorListModel(object):
+    """
+    This class acts as a way to interface between the user interface components of
+    CommandListWidget.py and the logic being processed by GeoProcessor.py.
+    """
 
     def __init__(self, geoprocessor, command_list_view):
+        """
+        Initialize the class elements
+
+        Args:
+            geoprocessor: The GeoProcessor object from GeoProcessor.py
+            command_list_view: The user interface Command List Widget from CommandListWidget.py
+
+        Returns:
+            None
+        """
+        # Initialize the geoprocessor
         self.gp = geoprocessor
+        # Add the geoprocessor as a listener to be notified to changes made in this class
         self.gp.add_model_listener(self)
 
+        # Initialize the command list widget
         self.command_list_view = command_list_view
+        # Add the command list widget as a listener to be notified of changes made in this class
         self.command_list_view.add_model_listener(self)
-
-    # def add_element(self, command_string):
-    #     """
-    #     Add a command to the end of the list
-    #     :param command_string:
-    #     :return:
-    #     """
-    #     self.gp.add_command_string(command_string)
 
     def clear_all_commands(self):
         """
         Called when 'Clear Commands' button is pressed in
         CommandListWidget. Removes all commands from GeoProcessor.
-        :return: None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Remove all the commands from GeoProcessor
         self.gp.remove_all_commands()
@@ -52,9 +67,13 @@ class GeoProcessorListModel(object):
         CommandListWidget and when commands are individually selected from the
         command list. Remove the selected commands from the command list in
         GeoProcessor
-        :param selected_indices: A list of integers representing the index of
-        the selected commands to remove from GeoProcessor commands list
-        :return: None
+
+        Args:
+            selected_indices: A list of integers representing the index of
+                the selected commands to remove from GeoProcessor commands list
+
+        Returns:
+            None
         """
         size = len(selected_indices)
         # Sort the list in reverse so we remove commands from the bottom of the list up
@@ -67,11 +86,16 @@ class GeoProcessorListModel(object):
         # Update status of commands
         self.command_list_view.update_ui_status_commands()
 
-    def command_list_read(self):
+    def command_file_read(self):
         """
         After commands are read in GeoProcessor the following functions
         can be ran in CommandListWidget to update elements of the UI.
-        :return: None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Get the command list from the GeoProcessor
         command_list = self.gp.commands
@@ -93,8 +117,13 @@ class GeoProcessorListModel(object):
 
     def command_list_ran(self):
         """
-        Called after the commands have been ran in GeoProcessor
-        :return: None
+        Called after the commands have been ran in GeoProcessor.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Check for errors or warnings in CommandListWidget and update icons
         # if necessary
@@ -102,11 +131,20 @@ class GeoProcessorListModel(object):
         # Update status of commands
         self.command_list_view.update_ui_status_commands()
 
-    # def get_command_list(self):
-    #
-    #     return self.gp.get_command_list()
-
     def decrease_indent_command_string(self, selected_indices):
+        """
+        Update the GeoProcessor command list to remove white space in front of the
+        given command string in order to decrease the indent.
+        Then update the command list widget to reflect in the user interface
+        changes made in GeoProcessor.
+
+        Args:
+            selected_indices: A list of integers representing the index of the
+                selected commands to decrease indent of in GeoProcessor
+
+        Returns:
+            None
+        """
         size = len(selected_indices)
         for i in range(0, size):
             index = selected_indices[i]
@@ -116,10 +154,17 @@ class GeoProcessorListModel(object):
 
     def indent_command_string(self,selected_indices):
         """
-        Indent the selected commands in the GeoProcessor
-        :param selected_indices: A list of integers representing the index of the
-        selected commands to be indented in GeoProcessor
-        :return: None
+        Update the GeoProcessor command list to add white space in the front of the
+        given command string in order to increase the indent.
+        Then update the command list widget to reflect changes
+        made in GeoProcessor.
+
+        Args:
+            selected_indices: A list of integers representing the index of the
+                selected commands to be indented in GeoProcessor
+
+        Returns:
+            None
         """
         size = len(selected_indices)
         for i in range(0, size):
@@ -129,6 +174,16 @@ class GeoProcessorListModel(object):
         self.update_command_list_ui()
 
     def new_command_list(self):
+        """
+        Reset the command list backup in the command list widget in order to
+        be able to check if there have been any changes to the command file.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         # Initialize the backup command list for checking if changes were made on exit
         self.command_list_view.set_command_list_backup()
 
@@ -138,7 +193,12 @@ class GeoProcessorListModel(object):
     def run_all_commands(self):
         """
         Run all commands in GeoProcessor
-        :return: None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Runs the geoprocessor's processor_run_commands function to run the existing commands
         # that exist in the processor.
@@ -148,18 +208,16 @@ class GeoProcessorListModel(object):
     def run_selected_commands(self, selected_indices):
         """
         Run only the selected commands in GeoProcessor
-        :param selected_indices: A list of integers representing the index of the
-        selected commands to be ran in GeoProcessor
-        :return:
+
+        Args:
+            selected_indices: A list of integers representing the index of the
+                selected commands to be ran in GeoProcessor
+
+        Returns:
+            None
         """
         print("Running selected commands in processor...")
         self.gp.run_selected_commands(selected_indices)
-
-    # def initialize_command_list(self):
-    #
-    #     self.command_list_view.initialize_command_list_backup()
-    #     self.command_list_view.update_command_list_widget()
-    #     self.command_list_view.enable_buttons()
 
     def update_command_list_backup(self):
         """
@@ -167,14 +225,24 @@ class GeoProcessorListModel(object):
         whatever the current state of the command list is in the CommandListWidget
         class, which is updated whenever changes are made to the command list in
         GeoProcessor
-        :return: None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.command_list_view.set_command_list_backup()
 
     def update_command_list_ui(self):
         """
         Update the commands list UI in CommandListWidget
-        :return: None
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         # Get the current state of the commands list from GeoProcessor
         command_list = self.gp.commands

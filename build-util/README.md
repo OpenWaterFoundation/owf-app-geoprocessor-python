@@ -29,8 +29,11 @@ The following scripts can be run in sequence to create installers and upload to 
 	+ Output is in the `build-tmp` folder
 	+ Was previously used to distribute `tar.gz` file for `site-package` but the next script
 	now builds a Python virtual environment using the files
+* `2-create-gp-venv.bat` - Windows batch file to create a Python virtual environment from development files
+	+ the virtual environment is packaged as a `zip` file specific for `gp` (may add `gptest` later)
+	and GeoProcessor version - Python venv is included but not currently used
 * `2-create-gp-venv.sh` - Linux/Cygwin script to create a Python virtual environment from previous step's files
-	+ the virtual environment will be packaged as a `tar.gz` file specific for `gp` or `gptest`,
+	+ the virtual environment is packaged as a `tar.gz` file specific for `gptest` (may add `gp later),
 	operating system, and GeoProcessor version
 * `2-update-gp-venv.sh` - Linux/Cygwin script to update the Python virtual environment from `1-create-gp-tar.sh`,
 used to copy source files into venv and also strip QGIS for gptest version

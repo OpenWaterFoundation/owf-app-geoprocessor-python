@@ -22,8 +22,13 @@ rem Simple Windows batch file to run the Open Water Foundation GeoProcessor appl
 rem user interface.
 rem - If it does not work, make sure that gp.bat works.
 
+rem Determine the folder that the script was called in
+rem - includes the trailing backslash
+set scriptFolder=%~dp0
+
 rem Call the GeoProcessor in UI mode.
-call gp --ui
+rem - use the full path because 'gp' may not be in the PATH
+call "%scriptFolder%\gp" --ui
 
 rem Exit with the error level of the gp.bat command
 exit /b %ERRORLEVEL%

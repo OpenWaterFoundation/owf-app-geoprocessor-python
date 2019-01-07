@@ -17,10 +17,7 @@ A non-QGIS distribution is also available,
 in order to use the GeoProcessor workflow as a "function test" framework.
 Additional environments may be supported depending on funding and developer resources.
 
-**The GeoProcessor software is currently under development at the Open Water Foundation.
-Documentation and tests are being published to facilitate collaboration and evaluation by potential software users.
-The software will be published as an open source software project once a critical mass of initial functionality is
-in place, with appropriate tests and documentation.**
+**The GeoProcessor software is currently under development as an open source software projet at the Open Water Foundation.**
 
 ## About the Open Water Foundation ##
 

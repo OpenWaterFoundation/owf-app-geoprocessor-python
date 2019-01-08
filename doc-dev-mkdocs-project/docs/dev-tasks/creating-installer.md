@@ -78,7 +78,7 @@ by running the `build-util/3-copy-gp-to-amazon-s3.sh`.
 The installer for Windows packages the development files without modification
 and is primarily targeted to full QGIS distribution.
 
-1. Do development within Eclipse as normal.
+1. Do development within PyCharm as normal.
 2. Periodically, test within a Python Virtual environment.
 Run `build-util/2-create-gp-venv.bat` to create a Python virtual environment.
 	1. This creates a virtual environment from the development files, for example:
@@ -86,7 +86,7 @@ Run `build-util/2-create-gp-venv.bat` to create a Python virtual environment.
 		GeoProcessor for Windows.
 		2. `build-util/venv-tmp/gp-1.1.0-win-venv.zip` can be unzipped in a Windows environment.
 		3. Currently the virtual environment only provides a folder structure for `Lib\site-packages` and
-		Scripts, for `gp.bat` and `gpui.bat`.  However, in the future, the `gptest` scripts may be implemented
+		`Scripts`, for `gp.bat` and `gpui.bat`.  However, in the future, the `gptest` scripts may be implemented
 		and use the distributed Python virtual environment.
 	2. Necessary components such as `pandas` are also installed using `pip3` to augment the packages
 	that are distributed with QGIS.
@@ -99,7 +99,10 @@ Run `build-util/2-create-gp-venv.bat` to create a Python virtual environment.
 	of QGIS).
 5. Run tests with the GeoProcessor software to confirm functionality.
 6. Upload the installer to the [OWF GeoProcessor Download page](http://software.openwaterfoundation.org/geoprocessor/).
-	1. **This capability needs to be implemented.**
-	2. As a workaround, the virtual environment folder can be copied to a location such as
-	`C:\Users\user\gp-1.1.0-win-venv` or unzip the zip file contents to similar name,
-	and then run the `Scripts\gp.bat` or `Scripts\gpui.bat` batch file.
+	1. Run the `build-util/3-copy-gp-win-to-amazon-s3.sh` batch file to upload the latest Windows installer.
+	2. Run the `build-util/3-copy-gp-to-amazon-s3.sh` script to upload a Cygwin/Linux version and update the
+	catalog file - this is necessary because the script above does not create the catalog file or `index.html` file.
+	**Need to update the first script above to handle Windows installer update.**
+7. Test the installer.  Download the Windows installer from the
+	[GeoProcessor Downloads](http://software.openwaterfoundation.org/geoprocessor/) page.
+	1. Then run the `Scripts\gp.bat` or `Scripts\gpui.bat` batch file.

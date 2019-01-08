@@ -372,7 +372,7 @@ def run_ui(ui_app_session):
             sys.exit(qt_app.exec())
     else:
         # QGIS is used so use its application
-        sys.exit(qgis_util.qgs_app.exec_())
+        qgis_util.qgs_app.exec_()
 
 
 # TODO smalers 2018-07-29 is there a global dictionary similar to Python system properites?

@@ -398,7 +398,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object)
-            print("GeoProcessorUI.new_command_editor")
         except Exception as e:
             message = "Error creating editor for new command"
             logger.error(message, e, exc_info=True)
@@ -2810,7 +2809,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # A browser window will appear to allow the user to browse to the desired command file.
             # The absolute pathname of the command file is added to the cmd_filepath variable.
             cmd_filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", last_opened_folder)[0]
-            print("command filepath: " + cmd_filepath)
             if not cmd_filepath:
                 return
         else:
@@ -3102,7 +3100,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.Menu_File_Open_CommandFileHistory_List[i].setText(command_file)
             self.Menu_File_Open_CommandFileHistory_List[i].setObjectName(
                 _fromUtf8("Menu_File_Open_CommandFileHistory_Command_" + str(i)))
-            logger.info("Setting File / Open menu [" + str(i) + "] to " + command_file)
             self.Menu_File_Open_CommandFileHistory_List[i].triggered.connect(
                 lambda checked, filename=command_file: self.ui_action_open_command_file(filename))
             self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFileHistory_List[i])

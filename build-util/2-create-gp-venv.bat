@@ -14,8 +14,21 @@ set startingFolder=%CD%
 set scriptFolder=%~dp0
 echo scriptFolder=%scriptFolder%
 
-rem Determine the GeoProcessor version
-set gpVersion=1.2.0dev
+rem Determine the GeoProcessor version file that includes line similar to:  app_version = "1.1.0"
+rem - extract from the version.py file
+rem - see useful commands:  https://www.dostips.com/DtTipsStringManipulation.php
+echo.
+echo Determining GeoProcessor version from version.py file
+set gpTempFile=%TMP%\2-create-gp-venv.bat.tmp
+rem The following will result in quoted version such as: "1.2.0dev"
+findstr app_version %scriptFolder%..\geoprocessor\app\version.py | findstr /v _date > %gpTempFile%
+set /p versionFullLine=<%gpTempFile%
+echo versionFullLine=%versionFullLine%
+rem Remove the leading app_version
+set versionQuoted=%versionFullLine:app_version =%
+set gpVersion=%versionQuoted:~3,-1%
+echo.
+echo GeoProcessor version determined to be:  %version%
 
 rem Determine the base Python for the virtual environment
 set basePython=python3

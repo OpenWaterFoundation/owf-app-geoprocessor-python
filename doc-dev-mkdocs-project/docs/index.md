@@ -13,11 +13,12 @@ PyCharm project files are not included in the repository.
 The primary development environment at the Open Water Foundation
 is currently Windows 10 using the latest stable QGIS 3.x release.
 The primary deployment environments are Windows 7/10, and Ubuntu/Debian Linux.
-A non-QGIS distribution is also available,
-in order to use the GeoProcessor workflow as a "function test" framework.
+A QGIS-based `gp` distribution is available on Windows for geospatial processing.
+A non-QGIS `gptest` distribution is also available,
+in order to use the GeoProcessor workflow as a function test framework.
 Additional environments may be supported depending on funding and developer resources.
 
-**The GeoProcessor software is currently under development as an open source software projet at the Open Water Foundation.**
+**The GeoProcessor software is currently under development as an open source software project at the Open Water Foundation.**
 
 ## About the Open Water Foundation ##
 
@@ -46,7 +47,7 @@ which provides documentation for installing and using the GeoProcessor.
 ## License ##
 
 The OWF GeoProcessor developer documentation is licensed under the
-[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0).
+[Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0).
 
 ## Source Repository on GitHub ##
 

@@ -124,18 +124,57 @@ uploadIndexHtmlFile() {
 	echo '<meta http-equiv="Pragma" content="no-cache" />' >> $indexHtmlTmpFile
 	echo '<meta http-equiv="Expires" content="0" />' >> $indexHtmlTmpFile
 	echo '<meta charset="utf-8"/>' >> $indexHtmlTmpFile
+	echo '<style>' >> $indexHtmlTmpFile
+	echo '   body { font-family: "Trebuchet MS", Helvetica, sans-serif !important; }' >> $indexHtmlTmpFile
+	echo '   table { border: 1px solid black; }' >> $indexHtmlTmpFile
+	echo '</style>' >> $indexHtmlTmpFile
 	echo '<title>GeoProcessor Downloads</title>' >> $indexHtmlTmpFile
 	echo '</head>' >> $indexHtmlTmpFile
 	echo '<body>' >> $indexHtmlTmpFile
 	echo '<h1>Open Water Foundation GeoProcessor Software Downloads</h1>' >> $indexHtmlTmpFile
+	echo '<p>The GeoProcessor software is available for Cygwin, Linux, and Windows.  See the <a href="http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/appendix-install/install/">GeoProcessor installation documentation</a>.</p>' >> $indexHtmlTmpFile
+	echo '<p>Multiple versions of the GeoProcessor can be installed on a computer.</p>' >> $indexHtmlTmpFile
+	echo '<h2>Windows Download</h2>' >> $indexHtmlTmpFile
 	echo '<p>' >> $indexHtmlTmpFile
-	echo 'Install the GeoProcessor on Cygwin or Linux by downloading the <a href="download-gp.sh">download-gp.sh script</a> and running it in a Linux shell window.</p>' >> $indexHtmlTmpFile
+	echo 'Install the GeoProcessor on Windows by downloading a zip file (see Available Download Files below) and extracting to a folder in user files such as <code>gp-1.1.0-venv</code>.' >> $indexHtmlTmpFile
+	echo 'Then run <code>Scripts/gpui.bat</code> in an Windows command prompt window to start the GeoProcessor.' >> $indexHtmlTmpFile
+	echo '</p>' >> $indexHtmlTmpFile
+	echo '<h2>Cygwin and Linux Download</h2>' >> $indexHtmlTmpFile
+	echo '<p>' >> $indexHtmlTmpFile
+	echo 'Install the GeoProcessor on Cygwin and Linux by downloading the <a href="download-gp.sh">download-gp.sh script</a> and running it in a shell window.' >> $indexHtmlTmpFile
+	echo '<b>Do not download directly using files below.</b>' >> $indexHtmlTmpFile
+	echo '</p>' >> $indexHtmlTmpFile
 	echo '<p>If clicking on the link does not download the file, right-click and use "Save link as..." (or similar).</p>' >> $indexHtmlTmpFile
+	echo '<h2>Available Download Files</h2>' >> $indexHtmlTmpFile
+	echo '<p>' >> $indexHtmlTmpFile
+	echo 'The <code>gp</code> downloads require that QGIS is also installed.  The <code>gptest</code> downloads do not require QGIS.' >> $indexHtmlTmpFile
+	echo 'See <a href="http://learn.openwaterfoundation.org/owf-learn-qgis/install-qgis/install-qgis/">OWF Learn QGIS</a> documentation for installing QGIS.' >> $indexHtmlTmpFile
+	echo '</p>' >> $indexHtmlTmpFile
+	echo '<p>Download files that include <code>dev</code> in the filename are development versions that can be installed to see the latest features that are under development.</p>' >> $indexHtmlTmpFile
+	echo '<p>Download files that include <code>cyg</code> in the filename are for Cygwin, <code>lin</code> are for Linux, and <code>win</code> are for Windows.</p>' >> $indexHtmlTmpFile
+	echo '<p>If clicking on the link does not download the file, right-click and use "Save link as..." (or similar).</p>' >> $indexHtmlTmpFile
+	echo '<table>' >> $indexHtmlTmpFile
+	# List the available download files
+	echo '<tr><th>All Download File</th></tr>' >> $indexHtmlTmpFile
+	# Change to the folder where *.zip and *.tar.gz files are and list, with names like:
+	#     gp-1.2.0dev-win-venv.zip
+	#     gptest-1.0.0-cyg-venv.tar.gz
+	cd ${virtualenvTmpFolder}
+	ls -1 *.zip *.tar.gz | sort -r | awk '
+		{
+			# Download file is the full line
+			downloadFile = $1
+			# Version is the second part of he download file, dash-delimited
+			split(downloadFile,downloadFileParts,"-")
+			downloadFileVersion=downloadFileParts[2]
+			printf "<tr><td><a href=\"%s/%s\"><code>%s</code></a></td></tr>", downloadFileVersion, downloadFile, downloadFile
+		}' >> $indexHtmlTmpFile
+	echo '</table>' >> $indexHtmlTmpFile
 	echo '</body>' >> $indexHtmlTmpFile
 	echo '</html>' >> $indexHtmlTmpFile
-	set -x
+	# set -x
 	aws s3 cp $indexHtmlTmpFile $s3IndexHtmlUrl ${dryrun} --profile "$awsProfile" ; errorCode=$?
-	{ set +x; } 2> /dev/null
+	# { set +x; } 2> /dev/null
 	if [ $errorCode -ne 0 ]; then
 		echo ""
 		echo "[Error] Error uploading index.html file."
@@ -151,7 +190,7 @@ uploadInstaller() {
 	# Step 1. Upload the installer file for the current version
 	#         - use copy to force upload
 	echo "Uploading GeoProcessor installation file"
-	set -x
+	# set -x
 	s3virtualenvGptestTargzUrl="${s3FolderUrl}/$gpVersion/$virtualenvGptestTargzFile"
 	if [ ! -f "$virtualenvGptestTargzPath" ]; then
 		echo ""
@@ -159,7 +198,7 @@ uploadInstaller() {
 		exit 1
 	fi
 	aws s3 cp $virtualenvGptestTargzPath $s3virtualenvGptestTargzUrl ${dryrun} --profile "$awsProfile" ; errorCode=$?
-	{ set +x; } 2> /dev/null
+	# { set +x; } 2> /dev/null
 	if [ $errorCode -ne 0 ]; then
 		echo ""
 		echo "[Error] Error uploading GeoProcessor installer file."
@@ -193,9 +232,9 @@ uploadInstaller() {
 	#         - for now upload in same format as generated by aws s3 ls command
 	echo "Uploading catalog file"
 	s3CatalogTxtFileUrl="${s3FolderUrl}/catalog.txt"
-	set -x
+	# set -x
 	aws s3 cp $tmpS3CatalogPath $s3CatalogTxtFileUrl ${dryrun} --profile "$awsProfile" ; errorCode=$?
-	{ set +x; } 2> /dev/null
+	# { set +x; } 2> /dev/null
 	if [ $errorCode -ne 0 ]; then
 		echo ""
 		echo "[Error] Error uploading GeoProcessor catalog file."
@@ -206,9 +245,9 @@ uploadInstaller() {
 	# Step 4. Upload the download-gp.sh script, which is needed to download
 	echo "Uploading download-gp.sh script"
 	s3DownloadScriptUrl="${s3FolderUrl}/download-gp.sh"
-	set -x
+	# set -x
 	aws s3 cp $buildUtilFolder/install/download-gp.sh $s3DownloadScriptUrl ${dryrun} --profile "$awsProfile" ; errorCode=$?
-	{ set +x; } 2> /dev/null
+	# { set +x; } 2> /dev/null
 	if [ $errorCode -ne 0 ]; then
 		echo ""
 		echo "[Error] Error uploading download-gp.sh script file."

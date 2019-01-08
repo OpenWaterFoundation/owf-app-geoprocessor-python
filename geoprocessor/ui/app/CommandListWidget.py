@@ -936,12 +936,13 @@ class CommandListWidget(object):
         qsize.setHeight(16)
         qsize.setWidth(self.commands_List.size().width())
         item.setSizeHint(qsize)
-        # Check to see if comment block started or ended
         if command_string.strip() == "/*":
             self.comment_block = True
+        # Check to see if comment block started or ended
         if command_string.strip()[0] == '#' or self.comment_block == True:
             item.setForeground(QtGui.QColor(68, 121, 206))
         self.commands_List.addItem(item)
+
         if command_string.strip() == "*/":
             self.comment_block = False
 
@@ -961,6 +962,8 @@ class CommandListWidget(object):
         self.commands_List.clear()
         self.numbered_List.clear()
         self.gutter.clear()
+
+        self.comment_block = False
 
         # Loop through command_list from geoprocessor and add data to command list widget
         for i, command in enumerate(self.command_list):

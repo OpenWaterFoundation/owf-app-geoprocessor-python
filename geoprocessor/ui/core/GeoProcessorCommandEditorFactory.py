@@ -23,6 +23,7 @@ import geoprocessor.util.command_util as command_util
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
 from geoprocessor.ui.commands.editors.CommentBlockStartCommandEditor import CommentBlockStartCommandEditor
 from geoprocessor.ui.commands.editors.CommentBlockEndCommandEditor import CommentBlockEndCommandEditor
+from geoprocessor.ui.commands.editors.CommentCommandEditor import CommentCommandEditor
 from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import ReadGeoLayerFromGeoJSON_Editor
 
 
@@ -76,10 +77,14 @@ class GeoProcessorCommandEditorFactory(object):
 
 
         # Create booleans to know if the command is a variation of a comment command
+        comment = False
         commentBlockStart = False
         commentBlockEnd = False
+
         # Special comment cases
-        if command_string_trimmed == "/*()":
+        if command_string_trimmed == "#()":
+            comment = True
+        elif command_string_trimmed == "/*()":
             commentBlockStart = True
         elif command_string_trimmed == "*/()":
             commentBlockEnd = True
@@ -112,9 +117,13 @@ class GeoProcessorCommandEditorFactory(object):
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown command. Creating GenericCommandEditor for: " +
                             command_string_trimmed)
+                # If the command is a basic comment return the appropriate
+                # unique command editor
+                if comment:
+                    return CommentCommandEditor(command)
                 # If the command is a comment block start return the
                 # appropriate unique command editor
-                if commentBlockStart:
+                elif commentBlockStart:
                     return CommentBlockStartCommandEditor(command)
                 # If the command is a comment block end return the
                 # appropriate unique command editor

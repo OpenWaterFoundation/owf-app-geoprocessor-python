@@ -371,6 +371,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             Return if error is encountered
         """
         logger = logging.getLogger(__name__)
+        # Check to see if command is a comment block with "#"
+        comment_block = False
+        if command_name == "#":
+            comment_block = True
         # Create a full command string, to parse in the command factory
         command_string = command_name + "()"
         # Create a new command object for the command name using the command factory
@@ -425,11 +429,39 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # Check to see if selected index is actually active.
                     # If so add command above this selected item.
                     if self.command_ListWidget.commands_List.item(selected_index).isSelected() == True:
-                        self.gp.add_command_at_index(command_string, selected_index)
+                        # If we are working with a comment block with potential multiple lines
+                        # we must add those lines individually to the geoprocessor
+                        if comment_block == True:
+                            command_string_by_line = command_string.splitlines()
+                            for command in command_string_by_line:
+                                command = "# " + command
+                                self.gp.add_command_at_index(command, selected_index)
+                                selected_index += 1
+                        # Otherwise just add the command line to the geoprocessor
+                        else:
+                            self.gp.add_command_at_index(command_string, selected_index)
+                    else:
+                        # If we are working with a comment block with potential multiple lines
+                        # we must add those lines individually to the geoprocessor
+                        if comment_block == True:
+                            command_string_by_line = command_string.splitlines()
+                            for command in command_string_by_line:
+                                command = "# " + command
+                                self.gp.add_command(command)
+                        # Otherwise just add the command line to the geoprocessor
+                        else:
+                            self.gp.add_command(command_string)
+                else:
+                    # If we are working with a comment block with potential multiple lines
+                    # we must add those lines individually to the geoprocessor
+                    if comment_block == True:
+                        command_string_by_line = command_string.splitlines()
+                        for command in command_string_by_line:
+                            command = "# " + command
+                            self.gp.add_command(command)
+                    # Otherwise just add the command line to the geoprocessor
                     else:
                         self.gp.add_command(command_string)
-                else:
-                    self.gp.add_command(command_string)
                 self.gp_model.update_command_list_ui()
 
                 # Manually set the run all commands and clear commands buttons to enabled
@@ -1022,6 +1054,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_Single = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_Single.setObjectName(_fromUtf8("Menu_Commands_General_Comments_Single"))
         self.Menu_Commands_General_Comments_Single.setText("# comments <enter 1+ comments each starting with #>")
+        self.Menu_Commands_General_Comments_Single.triggered.connect(
+            functools.partial(self.new_command_editor, "#"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_Single)
         # Comments / General - Comments / Multi-line menus
         self.Menu_Commands_General_Comments_MultipleStart = QtWidgets.QAction(main_window)

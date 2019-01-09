@@ -1123,6 +1123,11 @@ class GeoProcessor(object):
                     command.print_for_debug()
 
                 if not in_comment and If_stack_ok_to_run:
+                    # The following message brackets any command class run_command messages that may be generated
+                    message = '-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
+                        command.command_string
+                    # print(message)
+                    logger.info(message)
                     # notify listener that commands have started running
                     self.notify_command_processor_listeners_of_command_started(i_command, n_commands, command)
 
@@ -1298,6 +1303,10 @@ class GeoProcessor(object):
                     # Reevaluate If stack
                     If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
                     logger.debug('...back from running command')
+                # The following message brackets any command class run_command messages that may be generated
+                message = '<- End processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
+                          command.command_string
+                logger.info(message)
                 # logger.info("Notify Command Processor Listener of Command Completed")
                 # Notify listener that commands are finished running
                 self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)

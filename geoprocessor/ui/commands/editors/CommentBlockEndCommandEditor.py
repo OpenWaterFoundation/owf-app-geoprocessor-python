@@ -103,9 +103,27 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
         if command.command_parameters:
             self.update = True
 
+    def add_ui_horizontal_separator(self):
+        # Create a line (frame object with special specifications). Add the line to the Dialog window.
+        # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
+        # The frame object, Separator, separates the command description from the input form section of the Dialog box.
+        self.Separator = QtWidgets.QFrame(self)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
+        self.Separator.setSizePolicy(sizePolicy)
+        self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
+        self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.Separator.setObjectName(_fromUtf8("Separator"))
+        self.grid_layout_row = self.grid_layout_row + 1
+        self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
+
     def setup_ui_core(self):
         # Set up the editor core elements, which apply to any command.
         self.setup_ui_core_top()
+        # Add separator
+        self.add_ui_horizontal_separator()
         # Set up the core components at the bottom
         self.setup_ui_core_bottom()
 
@@ -203,7 +221,7 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
         description_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
         description_Frame.setObjectName(_fromUtf8("Command_Description"))
         self.grid_layout_row = self.grid_layout_row + 1
-        self.grid_layout.addWidget(description_Frame, self.grid_layout_row, 0, 1, 8)
+        self.grid_layout.addWidget(description_Frame, self.grid_layout_row, 0, 1, 0)
 
         # Create a grid layout object. Apply to the Command_Description frame object.
         # Set the name of the grid layout object.

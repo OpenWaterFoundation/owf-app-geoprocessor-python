@@ -200,7 +200,7 @@ class GeoProcessorCommandFactory(object):
 
         # If the command is any variation of a comment return the
         # appropriate unique command editor
-        elif command_string_trimmed.startswith('#'):
+        if command_string_trimmed.startswith('#'):
             return Comment()
         elif command_string_trimmed.startswith('/*'):
             return CommentBlockStart()

@@ -491,11 +491,15 @@ s3FolderUrl="s3://software.openwaterfoundation.org/geoprocessor"
 gpDownloadUrl="http://software.openwaterfoundation.org/geoprocessor"
 # Specify the following with -a
 awsProfile=""
-# Whether operating systems are included in upload
+# Defaults for whether operating systems are included in upload
+# - default is to upload all but change when Windows is not involved
 includeCygwin="yes"
 includeLinux="yes"
 includeMingw="yes"
 includeWindows="yes"
+if [ $operatingSystem = "yes" ]; then
+	includeWindows="no"
+fi
 
 # File that contains output of `aws ls`, used to create catalog
 user=

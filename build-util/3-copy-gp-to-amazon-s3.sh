@@ -43,36 +43,92 @@ checkOperatingSystem()
 			operatingSystemShort="min"
 			;;
 	esac
+	echo ""
 	echo "Detected operatingSystem=$operatingSystem operatingSystemShort=$operatingSystemShort"
+	echo ""
 }
 
 # Parse the command parameters
+# - use the getopt command line program so long options can be handled
 parseCommandLine() {
-	local OPTIND opt a h v
-	optstring=":a:hv"
-	while getopts $optstring opt; do
+	# Special case when no options are specified (-a is required)
+	if [ "$#" -eq 0 ]; then
+		printUsage
+		exit 0
+	fi
+	# Single character options
+	optstring="a:hv"
+	# Long options
+	optstringLong="help,include-cygwin::,include-mingw::,include-windows::,version"
+	# Parse the options using getopt command
+	GETOPT_OUT=$(getopt --options $optstring --longoptions $optstringLong -- "$@")
+	exitCode=$?
+	if [ $exitCode -ne 0 ]; then
+		echo ""
+		printUsage
+		exit 1
+	fi
+	# The following constructs the command by concatenating arguments
+	eval set -- "$GETOPT_OUT"
+	# Loop over the options
+	while true; do
 		#echo "Command line option is ${opt}"
-		case $opt in
-			a) # -a awsProfile  Specify Amazon web service profile file
-				awsProfile=$OPTARG
+		case "$1" in
+			-a) # -a awsProfile  Specify Amazon web service profile file
+				awsProfile=$2
+				shift 2
 				;;
-			h) # -h  Print the program usage
+			-h|--help) # -h or --help  Print the program usage
 				printUsage
 				exit 0
 				;;
-			v) # -v  Print the program version
+			--include-cygwin) # --include-cygwin=yes|no  Include the Cygwin installer for upload
+				case "$2" in
+					"") # Nothing specified so default to yes
+						includeCygwin="yes"
+						shift 2
+						;;
+					*) # yes or no has been specified
+						includeCygwin=$2
+						shift 2
+						;;
+				esac
+				;;
+			--include-mingw) # --include-mingw=yes|no  Include the MinGW installer for upload
+				case "$2" in
+					"") # Nothing specified so default to yes
+						includeMingw="yes"
+						shift 2
+						;;
+					*) # yes or no has been specified
+						includeMingw=$2
+						shift 2
+						;;
+				esac
+				;;
+			--include-windows) # --include-windows=yes|no  Include the Windows installer for upload (not just Cygwin)
+				case "$2" in
+					"") # Nothing specified so default to yes
+						includeWindows="yes"
+						shift 2
+						;;
+					*) # yes or no has been specified
+						includeWindows=$2
+						shift 2
+						;;
+				esac
+				;;
+			-v|--version) # -v or --version  Print the program version
 				printVersion
 				exit 0
 				;;
-			\?)
-				echo "" 
-				echo "Invalid option:  -$OPTARG" >&2
-				printUsage
-				exit 1
+			--) # No more arguments
+				shift
+				break
 				;;
-			:)
+			*) # Unknown option
 				echo "" 
-				echo "Option -$OPTARG requires an argument" >&2
+				echo "Invalid option $1." >&2
 				printUsage
 				exit 1
 				;;
@@ -88,9 +144,12 @@ printUsage() {
 	echo "Copy the GeoProcessor installer files to the Amazon S3 static website folder:"
 	echo "  $s3FolderUrl"
 	echo ""
-	echo "-a awsProfile  Specify the Amazon profile to use for the upload."
-	echo "-h             Print the usage."
-	echo "-v             Print the version and copyright/license notice."
+	echo "-a awsProfile         Specify the Amazon profile to use for the upload."
+	echo "-h or --help          Print the usage."
+	echo "--include-cygwin=no   Turn off Cygwin upload (default is include)."
+	echo "--include-mingw=no    Turn off MinGW upload (default is include)."
+	echo "--include-window=no   Turn off Windows upload (default is include)."
+	echo "-v or --version       Print the version and copyright/license notice."
 	echo ""
 }
 
@@ -270,26 +329,67 @@ uploadIndexHtmlFile_Table() {
 }
 
 # Upload local installer files to Amazon S3
-# - includes the tar.gz file and catalog file used by download-gp.sh
+# - includes the tar.gz and .zip files and catalog file used by download-gp.sh
+# - for Linux variants upload gptest, for windows upload gp
 uploadInstaller() {
 	# The location of the installer is
 	# ===========================================================================
 	# Step 1. Upload the installer file for the current version
 	#         - use copy to force upload
-	echo "Uploading GeoProcessor installation file"
-	# set -x
-	s3virtualenvGptestTargzUrl="${s3FolderUrl}/$gpVersion/$virtualenvGptestTargzFile"
-	if [ ! -f "$virtualenvGptestTargzPath" ]; then
-		echo ""
-		echo "Installer file does not exist:  $virtualenvGptestTargzPath"
-		exit 1
+	# The following handles Cygwin, Linux, and MinGW uploads
+	includeNix="yes"
+	if [ "$operatingSystem" = "cygwin" ]; then
+		# On Cygwin, can turn off
+		includeNix=$installCygwin
+	elif [ "$operatingSystem" = "linux" ]; then
+		# On Linux, can turn off
+		includeNix="$installLinux"
+	elif [ "$operatingSystem" = "mingw" ]; then
+		# On MinGW, can turn off
+		includeNix="$installMingw"
 	fi
-	aws s3 cp $virtualenvGptestTargzPath $s3virtualenvGptestTargzUrl ${dryrun} --profile "$awsProfile" ; errorCode=$?
-	# { set +x; } 2> /dev/null
-	if [ $errorCode -ne 0 ]; then
-		echo ""
-		echo "[Error] Error uploading GeoProcessor installer file."
-		exit 1
+	if [ "$includeNix" = "yes" ]; then
+		echo "Uploading GeoProcessor installation file for $operatingSystem"
+		# set -x
+		s3virtualenvGptestTargzUrl="${s3FolderUrl}/$gpVersion/$virtualenvGptestTargzFile"
+		if [ ! -f "$virtualenvGptestTargzPath" ]; then
+			echo ""
+			echo "Installer file does not exist:  $virtualenvGptestTargzPath"
+			exit 1
+		fi
+		aws s3 cp $virtualenvGptestTargzPath $s3virtualenvGptestTargzUrl ${dryrun} --profile "$awsProfile" ; errorCode=$?
+		# { set +x; } 2> /dev/null
+		if [ $errorCode -ne 0 ]; then
+			echo ""
+			echo "[Error] Error uploading GeoProcessor installer file for $operatingSystem."
+			echo "        Use --include-${operatingSystemShort}=no to ignore installer upload for $operatingSystem."
+			exit 1
+		fi
+	else
+		echo "Skip uploading GeoProcessor installation file for $operatingSystem"
+		sleep 1
+	fi
+	# The following handles Windows upload when run on Cygwin
+	if [ "$includeWindows" = "yes" ]; then
+		echo "Uploading GeoProcessor installation file for Windows"
+		# set -x
+		s3virtualenvGpZipUrl="${s3FolderUrl}/$gpVersion/$virtualenvGpZipFile"
+		if [ ! -f "$virtualenvGpZipPath" ]; then
+			echo ""
+			echo "Installer file does not exist:  $virtualenvGpZipPath"
+			exit 1
+		fi
+		aws s3 cp $virtualenvGpZipPath $s3virtualenvGpZipUrl ${dryrun} --profile "$awsProfile" ; errorCode=$?
+		# { set +x; } 2> /dev/null
+		if [ $errorCode -ne 0 ]; then
+			echo ""
+			echo "[Error] Error uploading GeoProcessor installer file for Windows."
+			echo "        Use --include-win=no to ignore Windows installer for upload."
+			exit 1
+		fi
+	else
+		echo "Skip uploading GeoProcessor installation file for Windows"
+		sleep 1
 	fi
 	# ===========================================================================
 	# Step 2. List files on Amazon S3 and create a catalog file
@@ -353,11 +453,11 @@ uploadInstaller() {
 
 # Get the location where this script is located since it may have been run from any folder
 programName=$(basename $0)
-programVersion="1.1.0"
-programVersionDate="2019-01-08"
+programVersion="1.3.0"
+programVersionDate="2019-01-09"
 
 # Check the operating system
-# - used to make logic decisions and for some file/folder names
+# - used to make logic decisions and for some file/folder names so do first
 checkOperatingSystem
 
 # Define top-level folders - everything is relative to this below to avoid confusion
@@ -371,10 +471,14 @@ buildTmpFolder="${buildUtilFolder}/build-tmp"
 # app_version_date = "2018-07-24"
 gpVersionFile="${repoFolder}/geoprocessor/app/version.py"
 gpVersion=`cat ${gpVersionFile} | grep app_version -m 1 | cut -d '=' -f 2 | tr -d " " | tr -d '"'`
-# Folders for the virtual environment installer
+# Folder for the virtual environment installer
 virtualenvTmpFolder="${buildUtilFolder}/venv-tmp"
+# File for the tar.gz file (Linux variants)
 virtualenvGptestTargzPath="$virtualenvTmpFolder/gptest-${gpVersion}-${operatingSystemShort}-venv.tar.gz"
 virtualenvGptestTargzFile=$(basename $virtualenvGptestTargzPath)
+# File for the zip file (Windows)
+virtualenvGpZipPath="$virtualenvTmpFolder/gp-${gpVersion}-win-venv.zip"
+virtualenvGpZipFile=$(basename $virtualenvGpZipPath)
 # TODO smalers 2018-12-26 enable QGIS and ArcGIS Pro GP installer
 #virtualenvGpTargzFile="$virtualenvTmpFolder/gp-$gpVersion.tar.gz"
 
@@ -385,7 +489,17 @@ dryrun=""
 # Root location where files are to be uploaded
 s3FolderUrl="s3://software.openwaterfoundation.org/geoprocessor"
 gpDownloadUrl="http://software.openwaterfoundation.org/geoprocessor"
+# Specify the following with -a
 awsProfile=""
+# Defaults for whether operating systems are included in upload
+# - default is to upload all but change when Windows is not involved
+includeCygwin="yes"
+includeLinux="yes"
+includeMingw="yes"
+includeWindows="yes"
+if [ $operatingSystem = "yes" ]; then
+	includeWindows="no"
+fi
 
 # File that contains output of `aws ls`, used to create catalog
 user=

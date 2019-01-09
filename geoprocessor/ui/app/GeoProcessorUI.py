@@ -2357,6 +2357,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.rightClickMenu_Commands.addSeparator()
         menu_item_increase_indent_command = self.rightClickMenu_Commands.addAction("Increase Indent")
         menu_item_decrease_indent_command = self.rightClickMenu_Commands.addAction("Decrease Indent")
+        self.rightClickMenu_Commands.addSeparator()
+        self.menu_item_convert_to_command = self.rightClickMenu_Commands.addAction("Convert selected commands to "
+                                                                              "# comments")
+        self.menu_item_convert_from_command = self.rightClickMenu_Commands.addAction("Convert selected commands from "
+                                                                                     "# comments")
 
         # Connect the menu options to the appropriate actions.
         menu_item_command_status.triggered.connect(self.show_command_status)

@@ -267,6 +267,30 @@ class GeoProcessor(object):
         if not output_file_abs_path in self.output_files:
             self.output_files.append(output_file_abs_path)
 
+    def convert_command_line_to_comment(self, index):
+        """
+        Convert a command line in the command file to a comment
+
+        Args:
+            index: Index of command line that should be converted to a comment
+
+        Returns:
+            None
+        """
+        command_factory = GeoProcessorCommandFactory()
+
+        command_string = self.commands[index].command_string
+        command_string = "# " + command_string
+
+        command_object = command_factory.new_command(command_string, True)
+
+        # Initialize the parameters of the command object.
+        # Work is done in the AbstractCommand class.
+        command_object.initialize_command(command_string, self, True)
+
+        # Add command above selected command
+        self.commands[index] = command_object
+
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):
         """

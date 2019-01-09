@@ -267,9 +267,9 @@ class GeoProcessor(object):
         if not output_file_abs_path in self.output_files:
             self.output_files.append(output_file_abs_path)
 
-    def convert_command_line_to_comment(self, index):
+    def convert_command_line_to_comment(self, selected_indices):
         """
-        Convert a command line in the command file to a comment
+        Convert a command line in the command file to a comment.
 
         Args:
             index: Index of command line that should be converted to a comment
@@ -279,17 +279,52 @@ class GeoProcessor(object):
         """
         command_factory = GeoProcessorCommandFactory()
 
-        command_string = self.commands[index].command_string
-        command_string = "# " + command_string
+        for index in selected_indices:
+            command_string = self.commands[index].command_string
+            # Do nothing if already a comment
+            if command_string.startswith("#"):
+                return
 
-        command_object = command_factory.new_command(command_string, True)
+            command_string = "# " + command_string
 
-        # Initialize the parameters of the command object.
-        # Work is done in the AbstractCommand class.
-        command_object.initialize_command(command_string, self, True)
+            command_object = command_factory.new_command(command_string, True)
 
-        # Add command above selected command
-        self.commands[index] = command_object
+            # Initialize the parameters of the command object.
+            # Work is done in the AbstractCommand class.
+            command_object.initialize_command(command_string, self, True)
+
+            # Add command above selected command
+            self.commands[index] = command_object
+
+    def convert_command_line_from_comment(self, selected_indices):
+        """
+        Convert a command line in the command file from a comment.
+
+        Args:
+            index: Index of command line that should be converted from a comment
+
+        Returns:
+            Return if not a comment
+        """
+        command_factory = GeoProcessorCommandFactory()
+
+        for index in selected_indices:
+            command_string = self.commands[index].command_string
+
+            # Check to see if actually a comment...
+            if command_string.startswith("#"):
+                command_string = command_string[2:]
+
+                command_object = command_factory.new_command(command_string, True)
+
+                # Initialize the parameters of the command object.
+                # Work is done in the AbstractCommand class.
+                command_object.initialize_command(command_string, self, True)
+
+                # Add command above selected command
+                self.commands[index] = command_object
+            else:
+                return
 
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):

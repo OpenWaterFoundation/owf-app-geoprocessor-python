@@ -2357,20 +2357,56 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.rightClickMenu_Commands.addSeparator()
         menu_item_increase_indent_command = self.rightClickMenu_Commands.addAction("Increase Indent")
         menu_item_decrease_indent_command = self.rightClickMenu_Commands.addAction("Decrease Indent")
+        self.rightClickMenu_Commands.addSeparator()
+        menu_item_convert_to_command = self.rightClickMenu_Commands.addAction("Convert selected command(s) to "
+                                                                              "# comments")
+        menu_item_convert_from_command = self.rightClickMenu_Commands.addAction("Convert selected command(s) from "
+                                                                                     "# comments")
 
         # Connect the menu options to the appropriate actions.
         menu_item_command_status.triggered.connect(self.show_command_status)
         menu_item_edit_command.triggered.connect(self.edit_command_editor)
         menu_item_delete_command.triggered.connect(self.command_ListWidget.event_handler_button_clear_commands_clicked)
+
         menu_item_increase_indent_command.triggered.connect(self.command_ListWidget.event_handler_indent_button_clicked)
         menu_item_decrease_indent_command.triggered.connect(
             self.command_ListWidget.event_handler_decrease_indent_button_clicked)
+
+        menu_item_convert_to_command.triggered.connect(self.ui_action_command_list_right_click_convert_to_command)
+        menu_item_convert_from_command.triggered.connect(self.ui_action_command_list_right_click_convert_from_command)
 
         # Set the position on the right-click menu to appear at the click point.
         parent_pos = self.command_ListWidget.commands_List.mapToGlobal(QtCore.QPoint(0, 0))
         self.rightClickMenu_Commands.move(parent_pos + q_pos)
 
         self.rightClickMenu_Commands.show()
+
+    def ui_action_command_list_right_click_convert_to_command(self):
+        """
+        Convert the selected command list item to a comment in geoprocessor.
+        Returns:
+            None
+        """
+        selected_q_indices = self.command_ListWidget.commands_List.selectionModel().selectedIndexes()
+        selected_indices = [item.row() for item in selected_q_indices]
+
+        self.gp.convert_command_line_to_comment(selected_indices)
+
+        self.gp_model.update_command_list_ui()
+
+    def ui_action_command_list_right_click_convert_from_command(self):
+        """
+        Convert the selected command list item from a comment in geoprocessor.
+        Returns:
+            None
+        """
+        selected_q_indices = self.command_ListWidget.commands_List.selectionModel().selectedIndexes()
+        selected_indices = [item.row() for item in selected_q_indices]
+
+        self.gp.convert_command_line_from_comment(selected_indices)
+
+        self.gp_model.update_command_list_ui()
+        pass
 
     def ui_action_geolayers_right_click(self, q_pos):
         """

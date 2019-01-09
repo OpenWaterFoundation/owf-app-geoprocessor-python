@@ -238,7 +238,6 @@ def parse_parameter_string_from_command_string(command_string):
     parameter_string = command_string_stripped[paren_start_pos + 1: paren_end_pos]
     # Strip enclosing whitespace
     parameter_string = parameter_string.strip()
-    print("After parsing, parameter_string=" + parameter_string)
     return parameter_string
 
 

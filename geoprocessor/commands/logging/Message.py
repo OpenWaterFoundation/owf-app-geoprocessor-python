@@ -122,7 +122,7 @@ class Message(AbstractCommand):
         # Convert the string to the enum
         command_status_type = CommandStatusType.value_of(pv_CommandStatus, ignore_case=True)
         message_expanded = self.command_processor.expand_parameter_value(pv_Message)
-        logger.info(message_expanded)
+        # logger.info(message_expanded)
 
         # Add a log message for the requested status type
         # - don't add to the warning count

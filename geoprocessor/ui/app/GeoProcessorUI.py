@@ -348,7 +348,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object)
             if comment_block:
-                print(comment_block_text)
                 command_editor.set_text(comment_block_text)
         except Exception as e:
             message = "Error creating editor for new command"
@@ -370,9 +369,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
                 # Update command in GeoProcessor list of commands
                 if comment:
-                    command_string = "# " + command_string
-                self.gp.update_command(index, command_string)
-                self.gp_model.update_command_list_ui()
+                    if comment_block:
+                        command_string_by_line = command_string.splitlines()
+                        for i, line in enumerate(command_string_by_line):
+                            line = "# " + line
+                            index = selected_indices[i]
+                            self.gp.update_command(index, line)
+                            self.gp_model.update_command_list_ui()
+                            index += 1
+                    else:
+                        command_string = "# " + command_string
+                        self.gp.update_command(index, command_string)
+                        self.gp_model.update_command_list_ui()
 
                 # Manually set the run all commands and clear commands buttons to enabled
                 self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)

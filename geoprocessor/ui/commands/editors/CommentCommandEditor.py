@@ -132,7 +132,10 @@ class CommentCommandEditor(QtWidgets.QDialog):
 
     def set_text(self, text):
         """
-        Set the text in the text browser for the command editor
+        Set the text in the text browser for the command editor. If text is being
+        added dynamically it will be from a comment already inserted into the command file.
+        We want to remove the '#' at the front to make the insertion of comment command
+        lines easier.
 
         Args:
             text: String to insert as text in the command editor.
@@ -140,6 +143,8 @@ class CommentCommandEditor(QtWidgets.QDialog):
         Returns:
             None
         """
+        text = text.replace("# ", "")
+        text = text.replace("#", "")
         self.CommandDisplay_View_TextBrowser.setText(text)
 
     def setup_ui_core(self):

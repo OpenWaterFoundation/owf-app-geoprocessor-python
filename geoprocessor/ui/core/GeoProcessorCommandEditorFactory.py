@@ -75,9 +75,6 @@ class GeoProcessorCommandEditorFactory(object):
         command_string_trimmed = command_string.strip()
         paren_pos = command_string_trimmed.find('(')
 
-        print(command_string_trimmed)
-
-
         # Create booleans to know if the command is a variation of a comment command
         comment = False
         commentBlockStart = False
@@ -119,12 +116,9 @@ class GeoProcessorCommandEditorFactory(object):
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown command. Creating GenericCommandEditor for: " +
                             command_string_trimmed)
-
-                print("inside this code block")
                 # If the command is a basic comment return the appropriate
                 # unique command editor
                 if comment:
-                    print("inside this if statement")
                     return CommentCommandEditor(command)
                 # If the command is a comment block start return the
                 # appropriate unique command editor
@@ -147,7 +141,6 @@ class GeoProcessorCommandEditorFactory(object):
                 # If the command is a basic comment return the appropriate
                 # unique command editor
                 if comment:
-                    print("inside this if statement")
                     return CommentCommandEditor(command)
                 # If the command is a comment block start return the
                 # appropriate unique command editor

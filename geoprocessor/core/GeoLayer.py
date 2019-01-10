@@ -99,7 +99,8 @@ class GeoLayer(object):
             attribute_type (str): the attribute field type.
                 Can be int (int), double (real number), string (text) or date.
 
-        Return: None.
+        Returns:
+            None.
         """
 
         # Run processing in the qgis utility function.
@@ -109,7 +110,7 @@ class GeoLayer(object):
         """
         Create a copy of the GeoLayer.
 
-        Arg:
+        Args:
             copied_geolayer_id(str): The ID of the output copied GeoLayer.
 
         Returns:
@@ -158,7 +159,7 @@ class GeoLayer(object):
         """
         Returns the GeoLayer's geometry in desired format.
 
-        Arg:
+        Args:
             geom_format: the desired geometry format. QGIS format by default.
 
         Returns:
@@ -219,11 +220,12 @@ class GeoLayer(object):
         """
         Populates the attribute of all features with a common attribute value (string value).
 
-        Arg:
+        Args:
             attribute_name: the name of the attribute to populate.
             attribute_value: the string to populate as the attributes' values
 
-        Returns: None
+        Returns:
+            None
         """
 
         # Run processing in the qgis utility function.
@@ -233,10 +235,11 @@ class GeoLayer(object):
         """
         Removes an attribute of the GeoLayer.
 
-        Arg:
+        Args:
             attribute_name: the name of the attribute to remove.
 
-        Returns: None
+        Returns:
+            None
         """
 
         # Run processing in the qgis utility function.
@@ -246,13 +249,14 @@ class GeoLayer(object):
         """
         Removes attributes of the GeoLayer depending on the glob-style input patterns
 
-        Arg:
+        Args:
             keep_pattern (list): a list of glob-style patterns of attributes to keep (will not be removed)
                 Default: None. All attributes will be kept (if remove_pattern is default).
             remove_pattern (list): a list of glob-style patterns of attributes to remove
                 Default: None. All attributes will be kept.
 
-        Returns: None
+        Returns:
+            None
         """
 
         # Run processing in the qgis utility function.
@@ -262,11 +266,12 @@ class GeoLayer(object):
         """
         Renames an attribute.
 
-        Arg:
+        Args:
             attribute_name (str):  The original attribute name.
             new_attribute_name (str): The new attribute name.
 
-        Returns: None
+        Returns:
+            None
         """
 
         # Run processing in the qgis utility function.

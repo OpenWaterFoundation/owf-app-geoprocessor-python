@@ -19,6 +19,7 @@
 
 from datetime import datetime
 
+import logging
 import os
 
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
@@ -54,16 +55,17 @@ qgs_app = None
 
 def add_feature_to_qgsvectorlayer(qgsvectorlayer, qgsgeometry):
     """
-    Add a feature to the input QGSVectorLayer.
+    Add a feature to the input QgsVectorLayer.
     * Adds the geometry of the feature with the QgsGeometry object.
     * Can add feature ID (not yet built into this function).
     * Can add attributes (not yet built into this function).
 
     Args:
-        qgsvectorlayer (object): the QgsVectorLayer object that the feature will be added to
-        qgsgeometry (object): the QgsGeometry of the feature to be added
+        qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object that the feature will be added to
+        qgsgeometry (QgsGeometry): the QgsGeometry of the feature to be added
 
-    Return: None
+    Returns:
+        None
     """
 
     # Get the data provider of the QgsVectorLayer object.
@@ -82,15 +84,19 @@ def add_feature_to_qgsvectorlayer(qgsvectorlayer, qgsgeometry):
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type):
     """
-    Adds an attribute to a Qgs Vector Layer object.
+    Adds an attribute to a QgsVectorLayer object.
 
     Args:
-        qgsvectorlayer (object): a Qgs Vector Layer object
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object to be updated
         attribute_name (str): the name of the attribute to add
         attribute_type (str): the attribute field type. Can be int (integer), double (real number), string (text) or
-         date.
+                              date.
 
-    Return: None.
+    Return:
+        None.
+
+    Raises:
+        ValueError:  If the input is an invalid attribute type or the attribute already exists.
     """
 
     # Start the data provider for the input QgsVectorLayer.
@@ -99,30 +105,31 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
     # Check that the attribute name is not already a name in the QgsVectorLayer.
     if attribute_name not in [attribute.name() for attribute in qgsvectorlayer_data.fields()]:
 
-        try:
+        # Add the attribute field to the GeoLater
+        if attribute_type.upper() == "INT":
+            qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Int)])
+        elif attribute_type.upper() == "DOUBLE":
+            qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Double)])
+        elif attribute_type.upper() == "STRING":
+            qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.String)])
+        elif attribute_type.upper() == "DATE":
+            qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Date)])
+        else:
+            valid_attribute_types = ["int", "double", "string", "date"]
+            message = "Error message: The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
+                      "include: {}".format(attribute_type, valid_attribute_types)
+            logger = logging.getLogger(__name__)
+            logger.error(message)
+            raise ValueError(message)
 
-            # Add the attribute field to the GeoLater
-            if attribute_type.upper() == "INT":
-                qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Int)])
-            elif attribute_type.upper() == "DOUBLE":
-                qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Double)])
-            elif attribute_type.upper() == "STRING":
-                qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.String)])
-            elif attribute_type.upper() == "DATE":
-                qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Date)])
-            else:
-                valid_attribute_types = ["int", "double", "string", "date"]
-                print ("Error message: The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
-                      "include: {}".format(attribute_type, valid_attribute_types))
+        qgsvectorlayer.updateFields()
 
-            qgsvectorlayer.updateFields()
-
-        except:
-            print ("An error occurred.")
-
-    # Print an error message if the input attribute name is already an existing attribute name.
     else:
-        print ("Error message: The attribute_name ({}) is an already existing attribute name.".format(attribute_name))
+        # Print an error message if the input attribute name is already an existing attribute name.
+        logger = logging.getLogger(__name__)
+        message = "Error message: The attribute_name ({}) is an existing attribute name.".format(attribute_name)
+        logger.error(message)
+        raise ValueError(message)
 
 
 def create_qgsgeometry(geometry_format, geometry_input_as_string):
@@ -137,7 +144,9 @@ def create_qgsgeometry(geometry_format, geometry_input_as_string):
         geometry_input_as_string (str): the geometry data to convert to QGSGeometry object. Data must match the
             correct syntax for the geometry format value.
 
-    Returns: If geometry_format is valid, returns QgsGeometry. If not, returns None.
+    Returns:
+        - QgsGeometry object if geometry_format is valid,
+        - None if the geometry is invalid.
     """
 
     # If the geometry format is well-known text, return the corresponding QgsGeometry object.
@@ -155,7 +164,7 @@ def create_qgsgeometry(geometry_format, geometry_input_as_string):
 
     # If the geometry format is unknown, return None.
     else:
-       return None
+        return None
 
 
 def create_qgsvectorlayer(geometry, crs_code, layer_name):
@@ -167,10 +176,13 @@ def create_qgsvectorlayer(geometry, crs_code, layer_name):
         crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
         layer_name (str): the name of the new QgsVectorLayer (this is not the GeoLayer ID)
 
-    Return:
-        If the new QgsVectorLayer object is valid, return the QgsVectorLayer object. If it is not valid, return None.
-    """
+    Raises:
+        ValueError if the input to create the layer is invalid.
 
+    Return:
+        - QgsVectorLayer object if the new QgsVectorLayer object is valid
+        - None if input is not valid
+    """
 
     # Create the QgsVectorLayer object with the geometry, the CRS and the layer name information.
     layer = QgsVectorLayer("{}?crs={}".format(geometry, crs_code), layer_name, "memory")
@@ -178,6 +190,11 @@ def create_qgsvectorlayer(geometry, crs_code, layer_name):
     # If the QgsVectorLayer object is valid, return it.
     if layer.isValid():
         return layer
+    else:
+        message = 'Error creating layer "' + str(layer_name) + '"'
+        logger = logging.getLogger(__name__)
+        logger.warning(message)
+        raise ValueError(message)
 
 
 def deepcopy_qqsvectorlayer(qgsvectorlayer):
@@ -187,9 +204,10 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer):
     QgsVectorLayer object.
 
     Args:
-        qgsvectorlayer (object): the QgsVectorLayer object to deep copy.
+        qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object to deep copy.
 
-    Returns: The deep copied QgsVectorLater object.
+    Returns:
+        The deep copied QgsVectorLater object.
     """
 
     # REF: https://gis.stackexchange.com/questions/205947/duplicating-layer-in-memory-using-pyqgis
@@ -242,6 +260,16 @@ def exit_qgis():
 
 
 def get_extent_from_geolayers(selected_geolayers):
+    """
+    Return the maximum extent for a list of geolayers.
+    If a single point, add +1.0 in the coordinate direction.
+
+    Args:
+        selected_geolayers:
+
+    Returns:
+
+    """
     xmin = float("inf")
     xmax = -float("inf")
     ymin = float("inf")
@@ -266,18 +294,20 @@ def get_extent_from_geolayers(selected_geolayers):
         ymin -= 1.0
         ymax += 1.0
 
-    return qgis.core.QgsRectangle(xmin,ymin,xmax,ymax)
+    return qgis.core.QgsRectangle(xmin, ymin, xmax, ymax)
+
 
 def get_features_matching_expression(qgsvectorlayer, qgs_expression):
     """
     Returns the QgsFeature objects of the features that match the input QgsExpression.
 
     Args:
-        qgsvectorlayer (object): the QgsVectorLayer object to evaluate.
-        qgs_expression (object): the QgsExpression object to filter the QgsVectorLayer's features.
+        qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object to evaluate.
+        qgs_expression (QgsExpression): the QgsExpression object to filter the QgsVectorLayer's features.
 
-    Returns: A list of QgsFeature objects of features that match the input qgs_expression. If no features match the
-    input expression, return an empty list.
+    Returns:
+        - A list of QgsFeature objects of features that match the input qgs_expression.
+        - Empty list if no features match the input expression.
     """
 
     # A list to hold the QgsFeature objects that match the QgsExpression.
@@ -311,11 +341,12 @@ def get_features_not_matching_expression(qgsvectorlayer, qgs_expression):
     Returns the QgsFeature objects of the features that do not match the input QgsExpression.
 
     Args:
-        qgsvectorlayer (object): the QgsVectorLayer object to evaluate.
-        qgs_expression (object): the QgsExpression object to filter the QgsVectorLayer's features.
+        qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object to evaluate.
+        qgs_expression (QgsExpression): the QgsExpression object to filter the QgsVectorLayer's features.
 
-    Returns: A list of QgsFeature objects of features that do not match the input qgs_expression. If all features
-     match the input expression, return an empty list.
+    Returns:
+        A list of QgsFeature objects of features that do not match the input qgs_expression.
+        Return an empty list if all features match the input expression.
     """
 
     # A list to hold the QgsFeature objects that do not match the QgsExpression.
@@ -349,10 +380,11 @@ def get_geometrytype_qgis(qgsvectorlayer):
     Returns the input QgsVectorLayer's geometry in QGIS format (returns text, not enumerator).
     REF: https://qgis.org/api/1.8/classQGis.html
 
-    Arg:
-        qgsvectorlayer (object): a Qgs Vector Layer object
+    Args:
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
 
-    Returns: Appropriate geometry in QGIS format (returns text, not enumerator).
+    Returns:
+        Appropriate geometry in QGIS format (returns text, not enumerator).
     """
 
     # The QGIS geometry type enumerator dictionary.
@@ -372,18 +404,19 @@ def get_geometrytype_qgis_from_wkt(wkt_string):
 
     Args:
         wkt_string (str): a Well-Known Text string
-        REF: https://en.wikipedia.org/wiki/Well-known_text
+        See https://en.wikipedia.org/wiki/Well-known_text
 
-    Return:
-        If the WKT geometry is recognized, return the QGIS geometry equivalent. Otherwise, return None.
+    Returns:
+        - the QGIS geometry equivalent if the WKT geometry is recognized.
+        - None if input is not recognized
     """
 
     # A dictionary of QGIS geometry types and their corresponding WKT geometry types.
     # Key: the QGIS geometry types
     # Value: a list of corresponding WKT geometry types (all uppercase)
     QGIS_WKT_geom_conversion_dic = {"Point": ["POINT", "MULTIPOINT"],
-                                   "Polygon": ["POLYGON", "MULTIPOLYGON"],
-                                   "LineString": ["LINESTRING", "MULTILINESTRING"]}
+                                    "Polygon": ["POLYGON", "MULTIPOLYGON"],
+                                    "LineString": ["LINESTRING", "MULTILINESTRING"]}
 
     # Get the WKT geometry type from a Well-Known Text string. Capitalize the characters of the geometry type.
     wkt_geometry_type = (wkt_string.split('(')[0]).strip().upper()
@@ -401,10 +434,11 @@ def get_geometrytype_wkb(qgsvectorlayer):
     Returns the input QgsVectorLayer's geometry in WKB format (returns text, not enumerator).
     REF: https://qgis.org/api/1.8/classQGis.html
 
-    Arg:
-        qgsvectorlayer (object): a Qgs Vector Layer object
+    Args:
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
 
-    Returns: Appropriate geometry in WKB format (returns text, not enumerator).
+    Returns:
+        Appropriate geometry in WKB format (returns text, not enumerator).
     """
 
     # The WKB geometry type enumerator dictionary.
@@ -433,11 +467,12 @@ def get_qgis_version_developer(int_version=True):
     Returns the version of the QGIS software used to develop the GeoProcessor.
     Can return the int version (ex: 21809) or the string version (ex:2.18.09).
 
-    Arg:
+    Args:
         int_version (boolean): If TRUE, the developer QGIS version will be returned as an integer.
             If FALSE, the developer QGIS version will be returned as a string.
 
-    Return: The developer QGIS version.
+    Returns:
+        The developer QGIS version.
     """
 
     # Convert the string version of the developer QGIS version into an int. The minor release version and the bug fix
@@ -462,9 +497,12 @@ def get_qgis_version_developer(int_version=True):
 def get_qgis_version_int():
     """
     Returns the version (int) of the initiated QGIS software.
-    example: 21809
 
-    Return: The QGIS version (int).
+    Example:
+        21809
+
+    Returns:
+        The QGIS version (int).
     """
 
     # TODO smalers 2018-05-28 the following was version 2
@@ -475,26 +513,32 @@ def get_qgis_version_int():
 def get_qgis_version_name():
     """
     Returns the version name of the initiated QGIS software.
-    example: Las Palmas
 
-    Return: The QGIS version name (string).
+    Example:
+        Las Palmas
+
+    Returns:
+        The QGIS version name (string).
     """
 
     # TODO smalers 2018-05-28 the following was version 2
-    #return qgis.utils.QGis.QGIS_RELEASE_NAME
+    # return qgis.utils.QGis.QGIS_RELEASE_NAME
     return qgis.utils.Qgis.QGIS_RELEASE_NAME
 
 
 def get_qgis_version_str():
     """
     Returns the version (string) of the initiated QGIS software.
-    example: "2.18.9"
 
-    Return: The QGIS version (string).
+    Example:
+        "2.18.9"
+
+    Returns:
+        The QGIS version (string).
     """
 
     # TODO smalers 2018-05-28 the following was version 2
-    #return qgis.utils.QGis.QGIS_VERSION
+    # return qgis.utils.QGis.QGIS_VERSION
     return qgis.utils.Qgis.QGIS_VERSION
 
 
@@ -507,7 +551,8 @@ def get_qgscoordinatereferencesystem_obj(crs_code):
     Args:
         crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
 
-    Returns: The QgsCoordinateReferenceSystem object. If not valid, returns None.
+    Returns:
+        The QgsCoordinateReferenceSystem object. If not valid, returns None.
     """
 
     # Check if the crs_code is valid. If so, return the QgsCoordinateReferenceSystem object.
@@ -527,9 +572,11 @@ def get_qgsexpression_obj(expression_as_string):
 
     Args:
         expression_as_string (str): a string representing a QgsExpression
-        REF: https://docs.qgis.org/2.8/en/docs/user_manual/working_with_vector/expression.html
+        See https://docs.qgis.org/2.8/en/docs/user_manual/working_with_vector/expression.html
 
-    Returns: The QgsExpression object. If not valid, returns None.
+    Returns:
+        - QgsExpression object, if valid.
+        - None if not valid.
   """
 
     # Check if the expression_as_string is valid. If so, return the QgsExpression object.
@@ -546,7 +593,8 @@ def initialize_qgis():
     Initialize the QGIS environment.  This typically needs to be done only once when the application starts.
     This is expected to be called once when an application starts, before any geoprocessing tasks.
 
-    Returns: None.
+    Returns:
+        None
     """
 
     # Open QGIS environment
@@ -568,7 +616,8 @@ def initialize_qgis_processor():
     """
     Initialize the QGIS processor environment (to call and run QGIS algorithms).
 
-    Returns: the initialized qgis processor object.
+    Returns:
+        The initialized qgis processor object.
     """
 
     pr = Processing.Processing()
@@ -583,17 +632,17 @@ def initialize_qgis_processor():
 
 
 def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_value):
-
     """
     Populates an attribute of a QgsVectorLayer with a single attribute value. If the attribute already has a value,
     the value will be overwritten with the new input attribute value. All features will have the same attribute value.
 
     Args:
-        qgsvectorlayer (object): a Qgs Vector Layer object
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
         attribute_name (str): the name of the attribute to populate
         attribute_value (str): the string to populate as the attributes' values
 
-    Returns: None.
+    Returns:
+        None
     """
 
     # Get the index of the attribute to populate.
@@ -608,7 +657,7 @@ def populate_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_
     for feature in qgsvectorlayer.getFeatures():
 
         # Rename/populate the features attribute with the desired input attribute value.
-        qgsvectorlayer.dataProvider().changeAttributeValues({feature.id():attr})
+        qgsvectorlayer.dataProvider().changeAttributeValues({feature.id(): attr})
 
 
 def read_qgsrasterlayer_from_file(spatial_data_file_abs):
@@ -618,7 +667,11 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs):
     Args:
         spatial_data_file_abs (str): the full pathname to a spatial data file
 
-    Returns: A QGSRasterLayer object containing the data from the input spatial data file.
+    Raises:
+        IOError if the file is invalid.
+
+    Returns:
+        A QGSRasterLayer object containing the data from the input spatial data file.
     """
 
     # Get the filename and basename of the input raster file.
@@ -635,7 +688,10 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs):
 
     # If the created QGSRasterLayer object is invalid, print an error message and return None.
     else:
-        print ("The QGSRasterLayer object ({}) is invalid.".format(spatial_data_file_abs))
+        message = 'The QGSRasterLayer for file "{}" is invalid.'.format(spatial_data_file_abs)
+        logger = logging.getLogger(__name__)
+        logger.warning(message)
+        raise IOError(message)
 
 
 def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs, delimiter, crs, wkt_col_name):
@@ -648,9 +704,11 @@ def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs, delimiter, c
         crs (str): the coordinate reference system (in EPSG code)
         wkt_col_name (str): the name of the field/column containing the WKT geometry data
 
+    Raises:
+        IOError if the file is invalid.
+
     Returns:
-        A QGSVectorLayer object containing the data from the input delimited file. If the QgsVectorLayer is not
-         valid, return None.
+        - A QGSVectorLayer object containing the data from the input delimited file.
     """
 
     # Instantiate the QGSVectorLayer object. Must include the following:
@@ -666,7 +724,10 @@ def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs, delimiter, c
     if qgsvectorlayer.isValid():
         return qgsvectorlayer
     else:
-        return None
+        logger = logging.getLogger(__name__)
+        message = 'The QGSVectorLayer object for delimited file "{}" is invalid.'.format(delimited_file_abs)
+        logger.warning(message)
+        raise IOError(message)
 
 
 def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs, delimiter, crs, x_col_name, y_col_name):
@@ -679,6 +740,9 @@ def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs, delimiter, cr
         crs (str): the coordinate reference system (in EPSG code)
         x_col_name (str): the name of the field containing the x coordinates
         y_col_name(str): the name of the filed containing the y coordinates
+
+    Raises:
+        IOError if the file is invalid.
 
     Returns:
         A QGSVectorLayer object containing the data from the input delimited file. If the QgsVectorLayer is not
@@ -700,7 +764,10 @@ def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs, delimiter, cr
     if qgsvectorlayer.isValid():
         return qgsvectorlayer
     else:
-        return None
+        logger = logging.getLogger(__name__)
+        message = 'The QGSVectorLayer object for file "{}" is invalid.'.format(delimited_file_abs)
+        logger.warning(message)
+        raise IOError(message)
 
 
 def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs, worksheet_index=0):
@@ -710,6 +777,9 @@ def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs, worksheet_index
     Args:
         excel_workbook_abs (str): the full pathname to an excel workbook
         worksheet_index (str or int): the index of the worksheet to read. First is 0, second is 1 ...
+
+    Raises:
+        IOError if the file is invalid.
 
     Returns:
         A QGSVectorLayer object containing the data from the input excel worksheet (tables). If the QgsVectorLayer is
@@ -727,7 +797,11 @@ def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs, worksheet_index
     if qgsvectorlayer.isValid():
         return qgsvectorlayer
     else:
-        print("The QGSVectorLayer object ({} worksheet {}) is invalid.".format(excel_workbook_abs, str(worksheet_index)))
+        message = 'The QGSVectorLayer for Excel file "{}" worksheet {} is invalid.'.format(
+                  excel_workbook_abs, str(worksheet_index))
+        logger = logging.getLogger(__name__)
+        logger.warning(message)
+        raise IOError(message)
 
 
 def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
@@ -735,11 +809,15 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
     """
     Reads a feature class in a file geodatabase and returns a QGSVectorLayerObject.
 
+    Raises:
+        IOError if the geodatabase layer is invalid.
+
     Args:
         file_gdb_path_abs (str): the full pathname to a file geodatabase
         feature_class (str): the name of the feature class to read
 
-    Returns: A QGSVectorLayer object containing the data from the input feature class.
+    Returns:
+        A QGSVectorLayer object containing the data from the input feature class.
     """
 
     # Instantiate the QGSVectorLayer object.
@@ -765,9 +843,11 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
 
     # If the created QGSVectorLayer object is invalid, print an error message and return None.
     else:
-        print("The QGSVectorLayer object from file geodatabase ({}) feature class ({}) is invalid.".format(
-            file_gdb_path_abs, feature_class))
-        return None
+        message = 'The QGSVectorLayer from file geodatabase "{}" feature class "{}" is invalid.'.format(
+                   file_gdb_path_abs, feature_class)
+        logger = logging.getLogger(__name__)
+        logger.warning(message)
+        raise IOError(message)
 
 
 def read_qgsvectorlayer_from_file(spatial_data_file_abs):
@@ -778,8 +858,11 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
     Args:
         spatial_data_file_abs (str): the full pathname to a spatial data file
 
-    Returns: A QGSVectorLayer object containing the data from the input spatial data file.
+    Raises:
+        IOError if the geodatabase layer is invalid.
 
+    Returns:
+        A QGSVectorLayer object containing the data from the input spatial data file.
     """
 
     # Instantiate the QGSVectorLayer object.
@@ -802,24 +885,28 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
 
     # If the created QGSVectorLayer object is invalid, print an error message and return None.
     else:
-        print("The QGSVectorLayer object ({}) is invalid.".format(spatial_data_file_abs))
+        message = 'The QGSVectorLayer for file "{}" is invalid.'.format(spatial_data_file_abs)
+        logger = logging.getLogger(__name__)
+        logger.warning(message)
+        raise IOError(message)
 
 
 def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
     """
-    Deletes an attribute of a Qgs Vector Layer object.
+    Deletes an attribute of a QgsVectorLayer object.
 
     Args:
-        qgsvectorlayer (object): a Qgs Vector Layer object
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
         attribute_name (str): the name of the attribute to delete
 
-    Return: None.
+    Returns:
+        None
     """
 
-    # Iterate over the attributes in the Qgs Vector Layer object.
+    # Iterate over the attributes in the QgsVectorLayer object.
     for attribute in qgsvectorlayer.fields():
 
-        # If the Qgs Vector Layer attribute name matches the parameter attribute_name, continue.
+        # If the QgsVectorLayer attribute name matches the parameter attribute_name, continue.
         if attribute.name().upper() == attribute_name.upper():
 
             # Get the index of the attribute to be deleted.
@@ -834,13 +921,15 @@ def remove_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name):
 
 def remove_qgsvectorlayer_attributes(qgsvectorlayer, keep_patterns, remove_patterns):
     """
-    Deletes attributes of a Qgs Vector Layer object depending on the keep and remove patterns.
+    Deletes attributes of a QgsVectorLayer object depending on the keep and remove patterns.
 
-    qgsvectorlayer (object): a Qgs Vector Layer object
-    keep_patterns (list): a list of glob-style patterns of attributes to keep (will not be removed)
-    remove_patterns (list): a list of glob-style patterns of attributes to remove
+    Args:
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
+        keep_patterns (list): a list of glob-style patterns of attributes to keep (will not be removed)
+        remove_patterns (list): a list of glob-style patterns of attributes to remove
 
-    Return: None
+    Return:
+        None
     """
 
     # Get a list of all of the attributes of the Qgs Vector Layer.
@@ -860,10 +949,11 @@ def remove_qgsvectorlayer_features(qgsvectorlayer, list_of_feature_ids):
     Removes features from a QgsVectorLayer.
 
     Args:
-        qgsvectorlayer (object): a Qgs Vector Layer object
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
         list_of_feature_ids (list of ints): a list of ids of the features to remove
 
-    Return: None
+    Returns:
+        None
     """
 
     # Delete the features from the QgsVectorLayer object.
@@ -873,16 +963,16 @@ def remove_qgsvectorlayer_features(qgsvectorlayer, list_of_feature_ids):
 def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribute_name):
     # TODO egiles 2018-01-18 Create a warning if the new_attribute_name is longer than 10 characters but do not raise
     # TODO  an error
-
     """
-    Renames an attribute of a Qgs Vector Layer object.
+    Renames an attribute of a QgsVectorLayer object.
 
     Args:
-        qgsvectorlayer (object): a Qgs Vector Layer object
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
         attribute_name (str): the original attribute name to change
         new_attribute_name (str): the new attribute name to rename
 
-    Return: None.
+    Returns:
+        None.
     """
 
     # Iterate over the attributes in the Qgs Vector Layer object.
@@ -918,14 +1008,15 @@ def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer, output_file, crs, geo
         6. optional layerOptions (specific to driver name) REF: http://www.gdal.org/drv_csv.html
 
     Args:
-        qgsvectorlayer (object): the QGSVectorLayer object
+        qgsvectorlayer (QgsVectorLayer): the QGSVectorLayer object
         output_file (str): the full pathname to the output file (do not include .csv extension)
         crs (str): the output coordinate reference system in EPSG code
         geometry_type (str): the type of geometry to export ( `AS_WKT`, `AS_XYZ`, `AS_XY` or `AS_YX`)
         separator (str): the symbol to use as the delimiter of the output delimited file (`COMMA`, `SEMICOLON`,
            `TAB` or `SPACE`)
 
-    Returns: None
+    Returns:
+        None
     """
 
     # Write the QgsVectorLayer object to a spatial data file in CSV format.
@@ -954,13 +1045,14 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer, output_file, crs, precision)
         6. optional layerOptions (specific to driver name) : for GeoJSON, coordinate precision is defined
 
     Args:
-        qgsvectorlayer (object): the QGSVectorLayer object
+        qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object
         output_file (str): the full pathname to the output file (do not include .shp extension)
         crs (str): the output coordinate reference system in EPSG code
         precision (int): a integer at or between 0 and 15 that determines the number of decimal places to include
             in the output geometry
 
-    Returns: None
+    Returns:
+        None
     """
 
     # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
@@ -993,12 +1085,13 @@ def write_qgsvectorlayer_to_kml(qgsvectorlayer, output_file, crs, name_field, de
             3D geometries and must be one of the valid KML options.
 
     Args:
-        qgsvectorlayer (object): the QGSVectorLayer object
+        qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object
         output_file (str): the full pathname to the output file (do not include .shp extension)
         crs (str): the output coordinate reference system in EPSG code
         name_field (str): the field holding the
 
-    Returns: None
+    Returns:
+        None
     """
 
     # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
@@ -1027,11 +1120,12 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer, output_file, crs):
         5. driver name for the output file
 
     Args:
-        qgsvectorlayer (object): the QGSVectorLayer object
+        qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object
         output_file (str): the full pathname to the output file (do not include .shp extension)
         crs (str): the output coordinate reference system in EPSG code
 
-    Return: None
+    Returns:
+        None
     """
 
     # Write the QgsVectorLayer object to a spatial data file in Shapefile format.

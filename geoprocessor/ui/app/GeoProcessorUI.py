@@ -3018,7 +3018,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
 
         Returns:
-            None
+            Return if no file name specified
         """
 
         # Record the new saved command file in the command list backup class
@@ -3044,6 +3044,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Open a browser for the user to select a location and filename to save the command file. Set the most recent
         # file save location.
         self.saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As')[0]
+
+        if self.saved_file == "":
+            return
 
         # Write the commands to the file.
         file = open(self.saved_file, 'w')

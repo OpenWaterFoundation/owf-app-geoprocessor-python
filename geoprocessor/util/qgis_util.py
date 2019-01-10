@@ -34,6 +34,7 @@ from plugins.processing.core import Processing
 import geoprocessor.util.string_util as string_util
 
 from PyQt5.QtCore import QVariant, QFileInfo
+from PyQt5 import QtCore
 
 
 # TODO smalers 2018-01-28 Evaluate whether to make this private via Pythonic underscore naming
@@ -551,6 +552,13 @@ def initialize_qgis():
     # Open QGIS environment
     # REF: https://github.com/OSGeo/homebrew-osgeo4mac/issues/197
     global qgs_app
+    # A warning like similar to the following may be shown unless the following line of code is added.
+    # - See https://bugreports.qt.io/browse/QTBUG-51379
+    # -------
+    # Qt WebEngine seems to be initialized from a plugin. Please set Qt::AA_ShareOpenGLContexts using
+    #   QCoreApplication::setAttribute before constructing QGuiApplication
+    # -------
+    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
     qgs_app = QgsApplication([], False)
     qgs_app.initQgis()
     return qgs_app

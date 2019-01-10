@@ -43,7 +43,7 @@ The following scripts can be run in sequence to create installers and upload to 
 	for publishing on the [GeoProcessor downloads](http://software.openwaterfoundation.org/geoprocessor/) web page
 
 * Windows:
-	+ No "1" script is uses - source files are copied directly into the virtual environment.
+	+ No "1" script is used - source files are copied directly into the virtual environment.
 	+ `2-create-gp-venv.bat` - Windows batch file to create a Python virtual environment from development files
 		- the virtual environment is packaged as a `zip` file specific for `gp` (may add `gptest` later)
 		and GeoProcessor version - Python venv is included but not currently used
@@ -51,16 +51,11 @@ The following scripts can be run in sequence to create installers and upload to 
 	used to copy source files into venv.
 	+ Use the "3" script to copy Cygwin, Linux, and Windows files to the Amazon S3 bucket.
 
-The following scripts are used by the above install scripts:
-
-* `install/download-gp.sh` - used with Cygwin and Linux to download and install from the software download site
-* `install/install-gp-venv.sh` - called from `download-gp.sh` to complete the software installation
-
 ## Scripts to Install the GeoProcessor ##
 
 The following scripts are used to install the software.
 They are packaged in the installer and the `download-gp.sh` script is provided
 on the downloads page to download to help with the installation.
 
-* `install/download-gp.sh` - run to download and install the GeoProcessor
-* `install-gp-venv.sh` - called by `download-gp.sh`, installs the software after it is downloaded
+* `install/download-gp.sh` - used with Cygwin and Linux to download and install from the software download site
+* `install/install-gp-venv.sh` - called from `download-gp.sh` to complete the software installation

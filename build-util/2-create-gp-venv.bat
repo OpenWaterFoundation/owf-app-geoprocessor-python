@@ -82,11 +82,12 @@ if exist %USERPROFILE%\AppData\Local\Programs\Python\Python36\python.exe goto us
 goto noPythonForVenv
 :userPython37
 virtualenv -p %USERPROFILE%\AppData\Local\Programs\Python\Python37\python.exe %gpVenvFolder%
-goto copyGeoProcessorFiles
+goto activateVenv
 :userPython36
 virtualenv -p %USERPROFILE%\AppData\Local\Programs\Python\Python36\python.exe %gpVenvFolder%
-goto copyGeoProcessorFiles
+goto activateVenv
 
+:activateVenv
 rem Change into the virtual environment, activate, and install packages
 echo Changing to folder %gpVenvFolder%
 cd "%gpVenvFolder%"

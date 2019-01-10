@@ -1853,22 +1853,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         #   the command object can be retrieved
 
         # Create command status dialog box
-        command_status_dialog = QtWidgets.QDialog()
-        command_status_dialog.resize(600, 290)
-        command_status_dialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+        self.command_status_dialog = QtWidgets.QDialog()
+        self.command_status_dialog.resize(600, 290)
+        self.command_status_dialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         # Add window title
-        command_status_dialog.setWindowTitle("GeoProcessor - Command Status")
+        self.command_status_dialog.setWindowTitle("GeoProcessor - Command Status")
         # Add icon to window
         icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-        command_status_dialog.setWindowIcon(QtGui.QIcon(icon_path))
-        command_status_dialog.setObjectName("Command Status Dialog")
+        self.command_status_dialog.setWindowIcon(QtGui.QIcon(icon_path))
+        self.command_status_dialog.setObjectName("Command Status Dialog")
 
         # Create a grid layout for dialog box
-        grid_layout = QtWidgets.QGridLayout(command_status_dialog)
+        grid_layout = QtWidgets.QGridLayout(self.command_status_dialog)
         grid_layout.setObjectName("Command Status Grid Layout")
 
         # Add a text browser for the content
-        command_status_text_browser = QtWidgets.QTextBrowser(command_status_dialog)
+        command_status_text_browser = QtWidgets.QTextBrowser(self.command_status_dialog)
         command_status_text_browser.setObjectName("Command Status Text Browser")
 
         grid_layout.addWidget(command_status_text_browser, 0, 0, 1, 1)
@@ -2052,7 +2052,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         _translate = QtCore.QCoreApplication.translate
         command_status_text_browser.setHtml(_translate("Dialog", html_string))
 
-        command_status_dialog.exec()
+        # self.setWindowModality(QtCore.Qt.NonModal)
+        # command_status_dialog.setModal(False)
+        # print("modality: ")
+        # print(command_status_dialog.isModal())
+        # print(self.isModal())
+        self.command_status_dialog.setModal(False)
+        self.command_status_dialog.show()
 
     def show_command_status_tooltip(self, event):
         """
@@ -3018,7 +3024,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
 
         Returns:
-            None
+            Return if no file name specified
         """
 
         # Record the new saved command file in the command list backup class
@@ -3044,6 +3050,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Open a browser for the user to select a location and filename to save the command file. Set the most recent
         # file save location.
         self.saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As')[0]
+
+        if self.saved_file == "":
+            return
 
         # Write the commands to the file.
         file = open(self.saved_file, 'w')

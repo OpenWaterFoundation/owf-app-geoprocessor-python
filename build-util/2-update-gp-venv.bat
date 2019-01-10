@@ -1,5 +1,5 @@
 @echo off
-rem gpuidev.bat
+rem 2-update-gp-venv.bat
 rem _________________________________________________________________NoticeStart_
 rem GeoProcessor
 rem Copyright (C) 2017-2019 Open Water Foundation
@@ -18,16 +18,16 @@ rem     You should have received a copy of the GNU General Public License
 rem     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 rem _________________________________________________________________NoticeEnd___
 rem
-rem Windows batch file to run the Open Water Foundation GeoProcessor application, UI mode in developer environment
-rem - if it does not work, run gpdev.bat first to troubleshoot
+rem Update the Windows virtual environment with current code files
+rem - this way it is not necessary to recreate the virtual environment from scratch
 
 rem Determine the folder that the script was called in
 rem - includes the trailing backslash
 set scriptFolder=%~dp0
 
-rem Call the GeoProcessor in UI mode for development environment.
-rem - use the full path because 'gpdev' may not be in the PATH
-call "%scriptFolder%\gpdev.bat" --ui
+rem Call the create batch file in UI mode.
+rem - use the full path because 'gp' may not be in the PATH
+call "%scriptFolder%\2-create-gp-venv.bat" -u -z
 
-rem Exit with the error level of the above batch file
+rem Exit with the error level of the gp.bat command
 exit /b %ERRORLEVEL%

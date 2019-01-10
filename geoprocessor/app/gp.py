@@ -30,6 +30,7 @@ The initial implementation focuses on batch and command shell.
 """
 
 # from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication
 # from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
 
@@ -332,6 +333,10 @@ def run_ui(ui_app_session):
     if qgis_util.qgs_app is None:
         # If QGIS is not used (such as with gptest), use Qt5 application
         # - QgsApplication is derived from QApplication
+        # The following line is needed for initialization
+        # - If not there is a warning about WebEngine initialization
+        # - See similar code in qgis_util.initialize_qgis() for more information
+        QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
         qt_app = QApplication(sys.argv)
     # print("...back from declaring QApplication.")
     # logger.info("...back from declaring QApplication.")

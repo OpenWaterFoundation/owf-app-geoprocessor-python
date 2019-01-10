@@ -430,6 +430,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         Return: None
         """
 
+        print("Update the command display!")
+
         # Iterate over the command parameters.
         for command_parameter in self.parameters_list:
 

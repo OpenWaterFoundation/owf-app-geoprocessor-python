@@ -200,28 +200,31 @@ rem - the following will reset the PATH and then add QGIS folders to path
 rem - therefore other programs that were found before may not be found
 rem - this effectively isolates QGIS from the system
 rem - same batch file name as for OSGeo4W install
+rem echo Calling QGIS setup batch file:  %QGIS_SA_ROOT%\bin\o4w_env.bat
 call "%QGIS_SA_ROOT%\bin\o4w_env.bat"
 rem The following sets a number of QT environment variables (QT is used in the UI)
 rem - same batch file name as for OSGeo4W install
+rem echo Calling Qt setup batch file:  %QGIS_SA_ROOT%\bin\qt5_env.bat
 call "%QGIS_SA_ROOT%\bin\qt5_env.bat"
 rem The following sets:
 rem - PYTHONHOME to Python shipped with QGIS install
 rem - Clears PYTHONPATH
 rem - PATH to include Python shipped with QGIS and Python scripts folder
 rem - same batch file name as for OSGeo4W install
+rem echo Calling Python 3 setup batch file:  %QGIS_SA_ROOT%\bin\py3_env.bat
 call "%QGIS_SA_ROOT%\bin\py3_env.bat"
 
 rem Name of QGIS version to run (**for running GeoProcessor don't run QGIS but need to use correct QGIS components**).
 rem Run the latest release of the OSGeo4W QGIS by setting value to `qgis`.
 rem Running the long-term release of the OSGeo4W QGIS by setting value to `qgis-ltr` is not supported.
-SET QGIS_SA_NAME=qgis
-echo QGIS_SA_NAME is %QGIS_SA_NAME%
+SET QGISNAME=qgis
+echo QGISNAME is %QGISNAME%
 
 rem Add QGIS to the PATH environment variable so that all QGIS, GDAL, OGR, etc. programs are found.
 set PATH=%QGIS_SA_ROOT%\bin;%PATH%
-set PATH=%PATH%;%QGIS_SA_ROOT%\apps\%QGIS_SA_NAME%\bin
+set PATH=%PATH%;%QGIS_SA_ROOT%\apps\%QGISNAME%\bin
 
-set QGIS_SA_PREFIX_PATH=%QGIS_SA_ROOT%\apps\%QGIS_SA_NAME%
+set QGIS_PREFIX_PATH=%QGIS_SA_ROOT%\apps\%QGISNAME%
 set GDAL_FILENAME_IS_UTF8=YES
 rem --
 rem Set VSI cache to be used as buffer, see https://issues.qgis.org/issues/6448
@@ -229,12 +232,12 @@ set VSI_CACHE=TRUE
 set VSI_CACHE_SIZE=1000000
 rem --
 
-set QT_PLUGIN_PATH=%QGIS_SA_ROOT%\apps\%QGIS_SA_NAME%\qtplugins;%QGIS_SA_ROOT%\apps\qt5\plugins
+set QT_PLUGIN_PATH=%QGIS_SA_ROOT%\apps\%QGISNAME%\qtplugins;%QGIS_SA_ROOT%\apps\qt5\plugins
 
 rem Add pyQGIS libraries to the PYTHONPATH so that they are found by Python
-set PYTHONPATH=%QGIS_SA_ROOT%\apps\%QGIS_SA_NAME%\python;%PYTHONPATH%
+set PYTHONPATH=%QGIS_SA_ROOT%\apps\%QGISNAME%\python;%PYTHONPATH%
 rem See https://anitagraser.com/2018/01/28/porting-processing-scripts-to-qgis3/
-set PYTHONPATH=%QGIS_SA_ROOT%\apps\%QGIS_SA_NAME%\python\plugins;%PYTHONPATH%
+set PYTHONPATH=%QGIS_SA_ROOT%\apps\%QGISNAME%\python\plugins;%PYTHONPATH%
 
 rem List the following in order so most recent is at the end
 if exist %QGIS_SA_ROOT%\apps\Python36 set PYTHONPATH=%QGIS_SA_ROOT%\apps\Python36\lib\site-packages;%PYTHONPATH%
@@ -266,6 +269,7 @@ exit /b 1
 rem Echo environment variables for troubleshooting
 echo.
 echo Using Python3/standalone QGIS3 for GeoProcessor
+echo QGIS_SA_INSTALL_HOME=%QGIS_SA_INSTALL_HOME%
 echo PATH=%PATH%
 echo PYTHONHOME=%PYTHONHOME%
 echo PYTHONPATH=%PYTHONPATH%

@@ -281,9 +281,6 @@ class GeoProcessor(object):
 
         for index in selected_indices:
             command_string = self.commands[index].command_string
-            # Do nothing if already a comment
-            if command_string.startswith("#"):
-                return
 
             command_string = "# " + command_string
 

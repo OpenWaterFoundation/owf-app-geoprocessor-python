@@ -75,6 +75,8 @@ class GeoProcessorCommandEditorFactory(object):
         command_string_trimmed = command_string.strip()
         paren_pos = command_string_trimmed.find('(')
 
+        print(command_string_trimmed)
+
 
         # Create booleans to know if the command is a variation of a comment command
         comment = False
@@ -82,11 +84,11 @@ class GeoProcessorCommandEditorFactory(object):
         commentBlockEnd = False
 
         # Special comment cases
-        if command_string_trimmed == "#()":
+        if command_string.startswith("#"):
             comment = True
-        elif command_string_trimmed == "/*()":
+        elif command_string.startswith("/*"):
             commentBlockStart = True
-        elif command_string_trimmed == "*/()":
+        elif command_string.startswith("*/"):
             commentBlockEnd = True
 
         # The symbol '(' was found.
@@ -117,9 +119,12 @@ class GeoProcessorCommandEditorFactory(object):
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown command. Creating GenericCommandEditor for: " +
                             command_string_trimmed)
+
+                print("inside this code block")
                 # If the command is a basic comment return the appropriate
                 # unique command editor
                 if comment:
+                    print("inside this if statement")
                     return CommentCommandEditor(command)
                 # If the command is a comment block start return the
                 # appropriate unique command editor
@@ -139,6 +144,19 @@ class GeoProcessorCommandEditorFactory(object):
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown syntax. Creating GenericCommandEditor for: " +
                             command_string_trimmed)
+                # If the command is a basic comment return the appropriate
+                # unique command editor
+                if comment:
+                    print("inside this if statement")
+                    return CommentCommandEditor(command)
+                # If the command is a comment block start return the
+                # appropriate unique command editor
+                elif commentBlockStart:
+                    return CommentBlockStartCommandEditor(command)
+                # If the command is a comment block end return the
+                # appropriate unique command editor
+                elif commentBlockEnd:
+                    return CommentBlockEndCommandEditor(command)
                 return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")

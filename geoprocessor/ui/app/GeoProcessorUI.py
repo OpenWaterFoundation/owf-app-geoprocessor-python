@@ -311,11 +311,45 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Get the command object at that index from GeoProcessor
         command_object = self.gp.commands[index]
 
+        # Check to see if working with block comments
+        comment = False
+        comment_block = False
+        comment_block_text = ""
+        if command_object.command_string.startswith("#"):
+            comment = True
+
+            # Check if comment is comment block
+            selected_q_indices = self.command_ListWidget.commands_List.selectionModel().selectedIndexes()
+            selected_indices = [item.row() for item in selected_q_indices]
+            size_commands = len(selected_indices)
+            if size_commands:
+                comment_block = True
+            # Sort selections in ascending order
+            selected_indices.sort()
+            # Check to see if selected command lines are all in order
+            num = selected_indices[0]
+            for index in selected_indices:
+                if index != num:
+                    if index != num + 1:
+                        comment_block = False
+                num += 1
+            # Check to see that all selected are also comments
+            for i in selected_indices:
+                command_object = self.gp.commands[i]
+                command_string = command_object.command_string
+                if command_string.startswith("#"):
+                    comment_block_text += command_string + "\n"
+                else:
+                    comment_block = False
+
         try:
             # Create the editor for the command
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object)
+            if comment_block:
+                print(comment_block_text)
+                command_editor.set_text(comment_block_text)
         except Exception as e:
             message = "Error creating editor for new command"
             logger.error(message, e, exc_info=True)
@@ -335,6 +369,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
                 # Update command in GeoProcessor list of commands
+                if comment:
+                    command_string = "# " + command_string
                 self.gp.update_command(index, command_string)
                 self.gp_model.update_command_list_ui()
 

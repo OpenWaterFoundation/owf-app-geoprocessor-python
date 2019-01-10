@@ -270,6 +270,7 @@ class GenericCommandEditor(AbstractCommandEditor):
 
         Returns:  None
         """
+
         # Loop through the command parameter metadata and retrieve the values from editor components
         try:
             y_parameter = -1

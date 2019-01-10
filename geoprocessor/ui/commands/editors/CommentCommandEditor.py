@@ -130,6 +130,18 @@ class CommentCommandEditor(QtWidgets.QDialog):
         """
         hs.setValue(value)
 
+    def set_text(self, text):
+        """
+        Set the text in the text browser for the command editor
+
+        Args:
+            text: String to insert as text in the command editor.
+
+        Returns:
+            None
+        """
+        self.CommandDisplay_View_TextBrowser.setText(text)
+
     def setup_ui_core(self):
         # Set up QDialog specifications
         self.setup_ui_window()
@@ -213,6 +225,17 @@ class CommentCommandEditor(QtWidgets.QDialog):
         self.CommandDisplay_View_Font.setPointSize(10)
         self.CommandDisplay_View_TextBrowser.setFont(self.CommandDisplay_View_Font)
         self.CommandDisplay_View_TextBrowser.setWordWrapMode(QtGui.QTextOption.NoWrap)
+        # Do not display default command string when editing a new comment
+        # If command_string is default reset to empty
+        command_string = self.command.command_string
+        if command_string == "#()":
+            command_string = ""
+        elif command_string.startswith("#"):
+            if command_string[1] == " ":
+                command_string = command_string[2:]
+            else:
+                command_string = command_string[1:]
+        self.CommandDisplay_View_TextBrowser.setText(command_string)
         #self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
         #self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
         ##html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \

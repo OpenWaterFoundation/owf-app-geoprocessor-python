@@ -336,7 +336,13 @@ def run_ui(ui_app_session):
         # The following line is needed for initialization
         # - If not there is a warning about WebEngine initialization
         # - See similar code in qgis_util.initialize_qgis() for more information
-        QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+        try:
+            QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+        except Exception as e:
+            # This happens when the current development Python packages are different than runtime
+            print("Error calling QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)")
+            print("- possibly due to Python API version issue")
+            print("- ignoring exception and starting the application")
         qt_app = QApplication(sys.argv)
     # print("...back from declaring QApplication.")
     # logger.info("...back from declaring QApplication.")

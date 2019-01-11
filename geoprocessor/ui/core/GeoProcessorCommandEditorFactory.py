@@ -21,10 +21,9 @@ import logging
 
 import geoprocessor.util.command_util as command_util
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
-from geoprocessor.ui.commands.editors.CommentBlockStartCommandEditor import CommentBlockStartCommandEditor
-from geoprocessor.ui.commands.editors.CommentBlockEndCommandEditor import CommentBlockEndCommandEditor
-from geoprocessor.ui.commands.editors.CommentCommandEditor import CommentCommandEditor
-from geoprocessor.ui.commands.layers.ReadGeoLayerFromGeoJSON_Editor import ReadGeoLayerFromGeoJSON_Editor
+from geoprocessor.ui.commands.util.CommentBlockStartEditor import CommentBlockStartEditor
+from geoprocessor.ui.commands.util.CommentBlockEndEditor import CommentBlockEndEditor
+from geoprocessor.ui.commands.util.CommentEditor import CommentEditor
 
 
 class GeoProcessorCommandEditorFactory(object):
@@ -45,6 +44,7 @@ class GeoProcessorCommandEditorFactory(object):
         # Use the following for error-handling - total number of unknown commands
         self.command_unknown_count = 0
 
+    @classmethod
     def new_command_editor(self, command, create_unknown_command_if_not_recognized=True):
         """
         Creates the editor for a command based on the command line of the command file.
@@ -72,8 +72,8 @@ class GeoProcessorCommandEditorFactory(object):
 
         # Get command name from the first part of the command.
         command_string = command.command_string
-        command_string_trimmed = command_string.strip()
-        paren_pos = command_string_trimmed.find('(')
+        command_string_stripped = command_string.strip()
+        paren_pos = command_string_stripped.find('(')
 
         # Create booleans to know if the command is a variation of a comment command
         comment = False
@@ -81,11 +81,11 @@ class GeoProcessorCommandEditorFactory(object):
         commentBlockEnd = False
 
         # Special comment cases
-        if command_string.startswith("#"):
+        if command_string_stripped.startswith("#"):
             comment = True
-        elif command_string.startswith("/*"):
+        elif command_string_stripped.startswith("/*"):
             commentBlockStart = True
-        elif command_string.startswith("*/"):
+        elif command_string_stripped.startswith("*/"):
             commentBlockEnd = True
 
         # The symbol '(' was found.
@@ -93,7 +93,7 @@ class GeoProcessorCommandEditorFactory(object):
         if paren_pos != -1:
 
             # Get command name from command string, command name is before the first open parenthesis.
-            command_name = command_util.parse_command_name_from_command_string(command_string_trimmed)
+            command_name = command_util.parse_command_name_from_command_string(command_string_stripped)
 
             # Initialize the command editor class object if it is a valid command.
             # - only some commands have custom editors, depending on whether time has been spent building an editor
@@ -115,19 +115,19 @@ class GeoProcessorCommandEditorFactory(object):
             # Don't know the command so create an UnknownCommand or throw an exception.
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown command. Creating GenericCommandEditor for: " +
-                            command_string_trimmed)
+                            command_string_stripped)
                 # If the command is a basic comment return the appropriate
                 # unique command editor
                 if comment:
-                    return CommentCommandEditor(command)
+                    return CommentEditor(command)
                 # If the command is a comment block start return the
                 # appropriate unique command editor
                 elif commentBlockStart:
-                    return CommentBlockStartCommandEditor(command)
+                    return CommentBlockStartEditor(command)
                 # If the command is a comment block end return the
                 # appropriate unique command editor
                 elif commentBlockEnd:
-                    return CommentBlockEndCommandEditor(command)
+                    return CommentBlockEndEditor(command)
                 return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")
@@ -137,19 +137,19 @@ class GeoProcessorCommandEditorFactory(object):
         else:
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown syntax. Creating GenericCommandEditor for: " +
-                            command_string_trimmed)
+                            command_string_stripped)
                 # If the command is a basic comment return the appropriate
                 # unique command editor
                 if comment:
-                    return CommentCommandEditor(command)
+                    return CommentEditor(command)
                 # If the command is a comment block start return the
                 # appropriate unique command editor
                 elif commentBlockStart:
-                    return CommentBlockStartCommandEditor(command)
+                    return CommentBlockStartEditor(command)
                 # If the command is a comment block end return the
                 # appropriate unique command editor
                 elif commentBlockEnd:
-                    return CommentBlockEndCommandEditor(command)
+                    return CommentBlockEndEditor(command)
                 return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")

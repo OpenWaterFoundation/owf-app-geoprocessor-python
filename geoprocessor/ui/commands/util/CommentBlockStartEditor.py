@@ -1,4 +1,4 @@
-# AbstractCommandEditor - parent class for all command editors
+# CommentStartEndEditor - editor for /* command editor
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
@@ -38,17 +38,15 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
-# Combining code from GenericCommandEditor and AbstractCommandEditor to create
-# one stand alone editor
 
-
-class CommentBlockEndCommandEditor(QtWidgets.QDialog):
+class CommentBlockStartEditor(QtWidgets.QDialog):
     """
-    Abstract command editor used as parent of command editor dialog implementations.
-    This class maintains core layout information and provides functions to add components.
+    Unique command editor created specifically for the command comment block start.
+    This class is a standalone class that combines the attributes of AbstractCommandEditor and
+    GenericCommandEditor
     """
 
-    #def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
+    # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
     def __init__(self, command):
         """
         Initialize the Abstract Dialog instance.
@@ -74,12 +72,12 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
         # input field
         # KEY (str): the command parameter name
         # VALUE (obj): the associated Qt Widget input field
-        #self.input_edit_objects = {}
+        # self.input_edit_objects = {}
 
         # "command_parameter_current_values" is a dictionary that holds the command parameters and their current values
         # KEY (str): the name of the command parameter
         # VALUE (str): the entered value of the command parameter
-        #self.command_parameter_current_values = current_values
+        # self.command_parameter_current_values = current_values
 
         # Initialize components that will be used
         self.CommandDisplay_View_TextBrowser = None
@@ -148,15 +146,15 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
         Returns:  None
         """
         # Set the window title to the command name
-        self.setObjectName("CommentBlockEnd")
-        self.setWindowTitle("Comment Block End")
+        self.setObjectName("CommentBlockStart")
+        self.setWindowTitle("Comment Block Start")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
         self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # Because components are added to the UI the dialog will have a size.
         # - don't set the size unless a dialog misbehaves, perhaps a maximum size
-        #self.resize(684, 404)
+        # self.resize(684, 404)
 
         # Add a grid layout for components to be added
         self.grid_layout = QtWidgets.QGridLayout(self)
@@ -179,18 +177,18 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
         # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
         self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(self)
         self.CommandDisplay_View_TextBrowser.setObjectName("CommandDisplay_View_TextBrowser")
-        self.CommandDisplay_View_TextBrowser.setText("*/")
+        self.CommandDisplay_View_TextBrowser.setText("/*")
         self.CommandDisplay_View_TextBrowser.setReadOnly(True)
         self.CommandDisplay_View_TextBrowser.setMaximumHeight(60)
-        #self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
-        #self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
-        ##html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
-        ##       "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
-        ##       "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
-        ##       " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
-        ##       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
-        ##       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
-        ##self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
+        # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
+        # self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
+        # #html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
+        # #       "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
+        # #       "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
+        # #       " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
+        # #       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
+        # #       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
+        # #self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
         self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
 
     def setup_ui_core_command_buttons(self):
@@ -233,12 +231,11 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
         self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
-        self.Command_Description_Label.setText("This command ends a multi-line comment block, which is useful for "
+        self.Command_Description_Label.setText("This command starts a multi-line comment block, which is useful for "
                                                "commenting out multiple commands.\n"
-                                               "Use the /* command to start the comment block.\n"
+                                               "Use the */ command to end the comment block.\n"
                                                "See also the # command for commenting single lines.\n")
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
-
 
     def update_command_display(self):
         """
@@ -248,7 +245,8 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
         function is responsible for reading the inputs, creating the updated string representation of the command and
         updating the CommandDisplay widget.
 
-        Return: None
+        Returns:
+            None
         """
 
         # Iterate over the command parameters.
@@ -306,10 +304,11 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
         """
         Get the value within a QtGui.Widget object.
 
-        Arg:
+        Args:
             obj (obj): the a QtGui.Widget object to read the value from
 
-        Return: the value within the QtGui.Widget object
+        Returns:
+            the value within the QtGui.Widget object
         """
 
         # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
@@ -324,4 +323,3 @@ class CommentBlockEndCommandEditor(QtWidgets.QDialog):
 
         # Return the value within the input QtGui.Widget object.
         return value
-

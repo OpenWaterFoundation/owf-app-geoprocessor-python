@@ -59,7 +59,7 @@ checkOperatingSystem()
 			operatingSystem="mingw"
 			;;
 	esac
-	echo "operatingSystem=$operatingSystem (used to check for Cygwin and filemode compatibility)"
+	echo "operatingSystem=$operatingSystem"
 }
 
 # Check for and if necessary activate Python virtual environment
@@ -211,7 +211,7 @@ runProcessor () {
 	else
 		# Python 3 version was not found
                 echo ""
-                echo "Cannot determine available python 2 available to run processor."
+                echo "Cannot determine available python 3 available to run processor."
                 exit 1
         fi
 }

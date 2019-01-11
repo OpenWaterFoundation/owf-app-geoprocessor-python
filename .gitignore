@@ -9,6 +9,9 @@ __pycache__/
 # The following is a newer convention
 venv-qgis-python37/
 
+# Ignore "junk" and other files often used for work
+junk
+
 # Ignore compiled Python files
 *.py[cod]
 

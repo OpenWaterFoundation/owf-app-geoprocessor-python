@@ -1,4 +1,4 @@
-
+# CommentEditor - editor for Comment command
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
@@ -39,14 +39,14 @@ except AttributeError:
         return QtWidgets.QApplication.translate(context, text, disambig)
 
 
-class CommentCommandEditor(QtWidgets.QDialog):
+class CommentEditor(QtWidgets.QDialog):
     """
-    Unique command editor created specifically for the command comment block start.
+    Command editor dialog for one or more # comments.
     This class is a standalone class that combines the attributes of AbstractCommandEditor and
     GenericCommandEditor
     """
 
-    #def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
+    # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
     def __init__(self, command):
         """
         Initialize the Abstract Dialog instance.
@@ -117,6 +117,70 @@ class CommentCommandEditor(QtWidgets.QDialog):
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
 
+    def get_command_string_list(self):
+        """
+        Return the command strings corresponding to the commands, can be an empty list (but using the editor to
+        delete all existing comments is not usually done).
+        This function can be called by the main GeoProcessorUI after editing to retrieve the result of the edit.
+
+        Returns:
+            A list of strings corresponding to each comment line.
+        """
+        # First split the text area using newline delimiter
+        command_text = self.CommandDisplay_View_TextBrowser.toPlainText()
+        command_string_list = []
+        if len(command_text) == 0:
+            # Return an empty list, which should be handled in calling code.
+            return command_string_list
+        else:
+            # Split the text by newlines according to Python universal newlines
+            command_string_list = command_text.splitlines()
+            # Add the # with determined indent
+            # Verify that each line edited by user starts with #
+            for i in range(len(command_string_list)):
+                command_string_stripped = command_string_list[i].strip()
+                # Check if the stripped line starts with # and if so, it is OK
+                # - otherwise, add # at the start, indented appropriately
+                if not command_string_stripped.startswith('#'):
+                    # Figure out how many spaces to indent by examining the comment lines
+                    # - assume that indent should be consistent with nearest previous indented, commented line
+                    # - if that is not found, search after the current line
+                    # - repeat this logic for each line to allow
+                    indent = ""
+                    for j in range(i-1,0,-1):
+                        indent_pos = command_string_list[j].find('#')
+                        if indent_pos >= 0:
+                            # Found a previous comment line so use its indent
+                            # - the following one-liner sets the indent to the number of spaces
+                            indent += ' ' * indent_pos
+                    command_string_list[i] = indent + "# " + command_string_list[i]
+            # Return a list with one item for each line that was edited
+            return command_string_list
+
+    def get_current_value(self, obj):
+        """
+        Get the value within a QtGui.Widget object.
+
+        Args:
+            obj (obj): the a QtGui.Widget object to read the value from
+
+        Returns:
+            the value within the QtGui.Widget object
+        """
+
+        # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
+        # value when one works.
+        # Reads LineEdit widgets.
+        try:
+            value = obj.text()
+
+        # Reads ComboBox widgets.
+        except:
+            value = obj.currentText()
+
+        # Return the value within the input QtGui.Widget object.
+        return value
+
     def horizontal_scroll(self, hs, value):
         """
         Connect the horizontal scrolling with command list and numbered list.
@@ -134,8 +198,6 @@ class CommentCommandEditor(QtWidgets.QDialog):
         """
         Set the text in the text browser for the command editor. If text is being
         added dynamically it will be from a comment already inserted into the command file.
-        We want to remove the '#' at the front to make the insertion of comment command
-        lines easier.
 
         Args:
             text: String to insert as text in the command editor.
@@ -143,8 +205,8 @@ class CommentCommandEditor(QtWidgets.QDialog):
         Returns:
             None
         """
-        text = text.replace("# ", "")
-        text = text.replace("#", "")
+        # text = text.replace("# ", "")
+        # text = text.replace("#", "")
         self.CommandDisplay_View_TextBrowser.setText(text)
 
     def setup_ui_core(self):
@@ -160,7 +222,10 @@ class CommentCommandEditor(QtWidgets.QDialog):
         # This will wire up the signals and slots depending on names.
         # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
         # - don't do this because not using QtDesigner
-        #QtCore.QMetaObject.connectSlotsByName(self)
+        # QtCore.QMetaObject.connectSlotsByName(self)
+
+        # Make sure the text area has the focus since that is where input will be typed
+        self.CommandDisplay_View_TextBrowser.setFocus()
 
     def setup_ui_window(self):
         """
@@ -179,7 +244,8 @@ class CommentCommandEditor(QtWidgets.QDialog):
         """
         Setup core UI components at the bottom of the dialog.
 
-        Returns:  None
+        Returns:
+            None
         """
         self.setup_ui_core_ruler()
         self.setup_ui_core_command_area()
@@ -190,7 +256,8 @@ class CommentCommandEditor(QtWidgets.QDialog):
         """
         Setup core UI components at the top of the dialog.
 
-        Returns:  None
+        Returns:
+            None
         """
         # Set the window title to the command name
         self.setObjectName("Comment")
@@ -201,7 +268,7 @@ class CommentCommandEditor(QtWidgets.QDialog):
 
         # Because components are added to the UI the dialog will have a size.
         # - don't set the size unless a dialog misbehaves, perhaps a maximum size
-        #self.resize(684, 404)
+        # self.resize(684, 404)
 
         # Add a grid layout for components to be added
         self.grid_layout = QtWidgets.QGridLayout(self)
@@ -233,23 +300,28 @@ class CommentCommandEditor(QtWidgets.QDialog):
         # Do not display default command string when editing a new comment
         # If command_string is default reset to empty
         command_string = self.command.command_string
+        # TODO smalers 2019-01-10 Need to remove the following after review
+        # - existing comments should be shown as is without stripping the leading #
         if command_string == "#()":
+            # Special case for new comment
             command_string = ""
-        elif command_string.startswith("#"):
-            if command_string[1] == " ":
-                command_string = command_string[2:]
-            else:
-                command_string = command_string[1:]
+        # elif command_string.startswith("#"):
+        #     if len(command_string) == 1:
+        #         command_string = ""
+        #     elif command_string[1] == " ":
+        #         command_string = command_string[2:]
+        #     else:
+        #         command_string = command_string[1:]
         self.CommandDisplay_View_TextBrowser.setText(command_string)
-        #self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
-        #self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
-        ##html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
-        ##       "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
-        ##       "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
-        ##       " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
-        ##       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
-        ##       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
-        ##self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
+        # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
+        # self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
+        # #html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
+        # #       "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
+        # #       "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
+        # #       " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
+        # #       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
+        # #       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
+        # #self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
         self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 4, -1)
 
     def setup_ui_core_command_buttons(self):
@@ -292,10 +364,11 @@ class CommentCommandEditor(QtWidgets.QDialog):
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
         self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
-        self.Command_Description_Label.setText("Enter one or more comments (leading # will be added automatically "
-                                               "if not shown).\n"
+        self.Command_Description_Label.setText("Enter one or more comments.\n"
+                                               "If not present, # will be automatically added when OK is pressed."
+                                               "# at the start of existing lines will be shown.\n"
                                                "See also the /* and */ commands for multi-line comments, which are "
-                                               "useful for commenting out multiple commands")
+                                               "useful for commenting out multiple commands.")
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
     def update_command_display(self):
@@ -306,7 +379,8 @@ class CommentCommandEditor(QtWidgets.QDialog):
         function is responsible for reading the inputs, creating the updated string representation of the command and
         updating the CommandDisplay widget.
 
-        Return: None
+        Returns:
+            None
         """
 
         # Iterate over the command parameters.
@@ -393,27 +467,3 @@ class CommentCommandEditor(QtWidgets.QDialog):
         hs2 = self.CommandDisplay_View_Ruler.horizontalScrollBar()
         hs1.valueChanged.connect(functools.partial(self.horizontal_scroll, hs2))
         hs2.valueChanged.connect(functools.partial(self.horizontal_scroll, hs1))
-
-    def get_current_value(self, obj):
-        """
-        Get the value within a QtGui.Widget object.
-
-        Arg:
-            obj (obj): the a QtGui.Widget object to read the value from
-
-        Return: the value within the QtGui.Widget object
-        """
-
-        # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
-        # value when one works.
-        # Reads LineEdit widgets.
-        try:
-            value = obj.text()
-
-        # Reads ComboBox widgets.
-        except:
-            value = obj.currentText()
-
-        # Return the value within the input QtGui.Widget object.
-        return value
-

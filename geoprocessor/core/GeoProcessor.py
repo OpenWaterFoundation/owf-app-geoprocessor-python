@@ -109,7 +109,10 @@ class GeoProcessor(object):
 
     def add_command(self, command_string):
         """
-        Add a command string to the end
+        Add a command string to the end.
+
+        Args:
+            command_string (str):  command as string to add
         """
         command_factory = GeoProcessorCommandFactory()
 
@@ -125,7 +128,8 @@ class GeoProcessor(object):
         debug = False
         if debug:
             command_object.print_for_debug()
-            print("First command debug:")
+            logger = logging.getLogger(__name__)
+            logger.debug("First command debug:")
             self.commands[0].print_for_debug()
 
     def add_command_at_index(self, command_string, index):
@@ -133,8 +137,8 @@ class GeoProcessor(object):
         Add a command string above currently selected command in command file.
 
         Args:
-            command_string: Command string to be inserted to the command file.
-            index: Index of the currently selected command_string
+            command_string (str): Command string to be inserted to the command file.
+            index (int): Index of the currently selected command_string
 
         Returns:
             None
@@ -150,12 +154,14 @@ class GeoProcessor(object):
         # Add command above selected command
         self.commands.insert(index, command_object)
 
-
     def add_command_processor_listener(self, listener):
         """
         Add a command processor listener, to be notified when commands are started,
         progress made, and completed. This is useful to allow calling software to report progress.
         If the listener has already been added, the listener will remain in the list in the original order.
+
+        Args:
+            listener: a command list model
         """
 
         # Use arrays to make a little simpler than Vectors to use later...
@@ -167,49 +173,6 @@ class GeoProcessor(object):
                 return
         self.command_processor_listener_array.append(listener)
 
-    def add_model_listener(self, listener):
-        """
-        Add the command list model listener, to be notified when changes have taken place
-        in the logic of the processor. This model is meant to be an interface to allow
-        communication between the processor and the user interface. Changes made to the internal
-        workings and logic of the processor need to be reflected visually to communicate with the user.
-
-        Args:
-            listener: a command list model
-
-        Returns: None
-
-        """
-
-        if not listener:
-            return
-        for listener_from_array in self.command_list_model_listener_array:
-            if listener_from_array == listener:
-                return
-        self.command_list_model_listener_array.append(listener)
-
-    def add_geolayer(self, geolayer):
-        """
-        Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
-        existing GeoLayer will be overwritten with the input GeoLayer.
-
-        Args:
-            geolayer: instance of a GeoLayer object
-
-        Return: None
-        """
-
-        # Iterate over the existing GeoLayers.
-        for existing_geolayer in self.geolayers:
-
-            # If an existing GeoLayer has the same ID as the input GeoLayer, remove the existing GeoLayer from the
-            # geolayers list.
-            if existing_geolayer.id == geolayer.id:
-                self.free_geolayer(existing_geolayer)
-
-        # Add the input GeoLayer to the geolayers list.
-        self.geolayers.append(geolayer)
-
     def add_datastore(self, datastore):
         """
         Add a DataStore object to the datastores list. If the DataStore already exists with the same DataStore ID, the
@@ -218,7 +181,8 @@ class GeoProcessor(object):
         Args:
             datastore: instance of a DataStore object
 
-        Return: None
+        Returns:
+            None
         """
 
         # Iterate over the existing DataStores.
@@ -232,6 +196,66 @@ class GeoProcessor(object):
         # Add the input DataStore to the datastores list.
         self.datastores.append(datastore)
 
+    def add_geolayer(self, geolayer):
+        """
+        Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
+        existing GeoLayer will be overwritten with the input GeoLayer.
+
+        Args:
+            geolayer: instance of a GeoLayer object
+
+        Returns:
+            None
+        """
+
+        # Iterate over the existing GeoLayers.
+        for existing_geolayer in self.geolayers:
+
+            # If an existing GeoLayer has the same ID as the input GeoLayer, remove the existing GeoLayer from the
+            # geolayers list.
+            if existing_geolayer.id == geolayer.id:
+                self.free_geolayer(existing_geolayer)
+
+        # Add the input GeoLayer to the geolayers list.
+        self.geolayers.append(geolayer)
+
+    def add_model_listener(self, listener):
+        """
+        Add the command list model listener, to be notified when changes have taken place
+        in the logic of the processor. This model is meant to be an interface to allow
+        communication between the processor and the user interface. Changes made to the internal
+        workings and logic of the processor need to be reflected visually to communicate with the user.
+
+        Args:
+            listener: a command list model
+
+        Returns:
+            None
+
+        """
+
+        if not listener:
+            return
+        for listener_from_array in self.command_list_model_listener_array:
+            if listener_from_array == listener:
+                return
+        self.command_list_model_listener_array.append(listener)
+
+    def add_output_file(self, output_file_abs_path):
+        """
+        Add an Output File (absolute path string) to the output_path list.
+
+        Args:
+            output_file_abs_path(str): A string representing the full pathname to an output file.
+
+        Returns:
+            None
+        """
+
+        # Only add the output file path if it does not already exist within the list.
+        if output_file_abs_path not in self.output_files:
+            self.output_files.append(output_file_abs_path)
+
     def add_table(self, table):
         """
         Add a Table object to the tables list. If a Table already exists with the same Table ID, the existing Table
@@ -240,7 +264,8 @@ class GeoProcessor(object):
         Args:
             table: instance of a Table object
 
-        Return: None
+        Returns:
+            None
         """
 
         # Iterate over the existing Tables.
@@ -253,52 +278,12 @@ class GeoProcessor(object):
         # Add the input Table to the tables list.
         self.tables.append(table)
 
-    def add_output_file(self, output_file_abs_path):
-        """
-        Add an Output File (absolute path string) to the output_path list.
-
-
-        output_file_abs_path: A string representing the full pathname to an output file.
-
-        Return: None
-        """
-
-        # Only add the output file path if it does not already exist within the list.
-        if not output_file_abs_path in self.output_files:
-            self.output_files.append(output_file_abs_path)
-
-    def convert_command_line_to_comment(self, selected_indices):
-        """
-        Convert a command line in the command file to a comment.
-
-        Args:
-            index: Index of command line that should be converted to a comment
-
-        Returns:
-            None
-        """
-        command_factory = GeoProcessorCommandFactory()
-
-        for index in selected_indices:
-            command_string = self.commands[index].command_string
-
-            command_string = "# " + command_string
-
-            command_object = command_factory.new_command(command_string, True)
-
-            # Initialize the parameters of the command object.
-            # Work is done in the AbstractCommand class.
-            command_object.initialize_command(command_string, self, True)
-
-            # Add command above selected command
-            self.commands[index] = command_object
-
     def convert_command_line_from_comment(self, selected_indices):
         """
         Convert a command line in the command file from a comment.
 
         Args:
-            index: Index of command line that should be converted from a comment
+            selected_indices (int []): Indices of command lines that should be converted from a comment.
 
         Returns:
             Return if not a comment
@@ -323,6 +308,49 @@ class GeoProcessor(object):
             else:
                 return
 
+    def convert_command_line_to_comment(self, selected_indices):
+        """
+        Convert a command line in the command file to a comment.
+
+        Args:
+            selected_indices (int []): Indices of command lines that should be converted from a comment.
+
+        Returns:
+            None
+        """
+        command_factory = GeoProcessorCommandFactory()
+
+        for index in selected_indices:
+            command_string = self.commands[index].command_string
+
+            command_string = "# " + command_string
+
+            command_object = command_factory.new_command(command_string, True)
+
+            # Initialize the parameters of the command object.
+            # Work is done in the AbstractCommand class.
+            command_object.initialize_command(command_string, self, True)
+
+            # Add command above selected command
+            self.commands[index] = command_object
+
+    def decrease_indent_command_string(self, index):
+        """
+        Remove an indent from the front of the command string. If there are multiple
+        indents this only removes space representing a single indent.
+
+        Args:
+            index: The index of the command string to decrease the indent from
+
+        Returns:
+            None
+        """
+        current_command = self.commands[index].command_string
+        front_of_string = current_command[:4]
+        if front_of_string == '    ':  # indent is 4 characters
+            current_command = current_command[4:]
+            self.commands[index].command_string = current_command
+
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack):
         """
@@ -332,9 +360,9 @@ class GeoProcessor(object):
         All conditions must be true for nested if statements to allow execution of commands in the block.
 
         Args:
-            If_command_stack: list of If commands to check.
+            If_command_stack (If[]): list of If commands to check.
 
-        Return:
+        Returns:
             True if all the If commands evaluate to True, False otherwise.
         """
         for i_if_command in range(len(If_command_stack)):
@@ -349,17 +377,19 @@ class GeoProcessor(object):
         This function is a port of the Java TSCommandProcessorUtil.expandParameterValue() method.
 
         Args:
-            parameter_value: Command parameter value as string to expand.
+            parameter_value (str): Command parameter value as string to expand.
                 The parameter value can include ${Property} notation to indicate a processor property.
-            command:  A command instance (will be used in the future if command property syntax needs to be expanded,
+            command (Command):
+                A command instance (will be used in the future if command property syntax needs to be expanded,
                 for example using syntax ${c:Property}).
 
         Returns:
             Expanded parameter value string.
         """
         debug = False  # For developers
+        logger = logging.getLogger(__name__)
         if debug:
-            print('parameter_value=' + str(parameter_value))
+            logger.debug('parameter_value=' + str(parameter_value))
         if parameter_value is None or len(parameter_value) == 0:
             # Just return what was provided.
             return parameter_value
@@ -379,7 +409,7 @@ class GeoProcessor(object):
         delim_start_len = 2  # Length of start delimiter for ${, will be changed if ${env:
         delim_end = "}"  # End of property
         while search_pos < len(parameter_value):
-            found_pos_start = -1 # Indicates no ${ notation of any kind
+            found_pos_start = -1  # Indicates no ${ notation of any kind
             # First see if any "${env:" strings. using uppercase conversion to allow any case
             found_pos_env_start = parameter_value.upper().find(delim_env_start, search_pos)
             if found_pos_env_start >= 0:
@@ -408,11 +438,11 @@ class GeoProcessor(object):
             # Message.printStatus(2, routine, "Found " + delimStart + " at position [" + found_pos_start + "]")
             if debug:
                 if found_pos_start >= 0:
-                    print("Found " + delim_start + " at position [" + str(found_pos_start) + "]")
+                    logger.debug("Found " + delim_start + " at position [" + str(found_pos_start) + "]")
             # Get the name of the property
             prop_name = parameter_value[(found_pos_start + delim_start_len):found_pos_end]
             if debug:
-                print('Property name is "' + prop_name + '"')
+                logger.debug('Property name is "' + prop_name + '"')
             # Try to get the property from the processor
             # TODO smalers 2007-12-23 Evaluate whether to skip None.  For now show "None" in result.
             propval = None
@@ -421,22 +451,22 @@ class GeoProcessor(object):
                 if found_pos_env_start >= 0:
                     # Looking up an environment variable
                     if debug:
-                        print('Getting property value for environment variable "' + prop_name + '"')
+                        logger.debug('Getting property value for environment variable "' + prop_name + '"')
                     propval = os.environ[prop_name]
                 else:
                     # Looking up a normal property
                     if debug:
-                        print('Getting property value for "' + prop_name + '"')
+                        logger.debug('Getting property value for "' + prop_name + '"')
                     propval = self.get_property(prop_name)
                 if debug:
-                    print('Property value is "' + propval + '"')
+                    logger.debug('Property value is "' + propval + '"')
                 # The following should work for all representations as long as str() does not truncate
                 # TODO smalers 2017-12-28 confirm that Python shows numbers with full decimal, not scientific notation.
                 propval_string = "" + str(propval)
             except Exception as e:
                 # Keep the original literal value to alert user that property could not be expanded
                 if debug:
-                    print('Exception getting the property value from the processor')
+                    logger.debug('Exception getting the property value from the processor')
                 propval_string = delim_start + prop_name + delim_end
             if propval is None:
                 # Keep the original literal value to alert user that property could not be expanded
@@ -462,20 +492,9 @@ class GeoProcessor(object):
             if debug:
                 #    Message.printDebug( 1, routine, "Expanded parameter value is \"" + parameter_value +
                 #    "\" searchpos is now " + searchPos + " in string \"" + parameter_value + "\"" )
-                print('Expanded parameter value is "' + parameter_value +
+                logger.debug('Expanded parameter value is "' + parameter_value +
                       '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"')
         return parameter_value
-
-    def free_geolayer(self, geolayer):
-        """
-        Removes a GeoLayer object from the geolayers list.
-
-        Args:
-            geolayer: instance of a GeoLayer object
-
-        Return: None
-        """
-        self.geolayers.remove(geolayer)
 
     def free_datastore(self, datastore):
         """
@@ -484,18 +503,32 @@ class GeoProcessor(object):
         Args:
             datastore: instance of a DataStore object
 
-        Return: None
+        Returns:
+            None
         """
         self.datastores.remove(datastore)
+
+    def free_geolayer(self, geolayer):
+        """
+        Removes a GeoLayer object from the geolayers list.
+
+        Args:
+            geolayer: instance of a GeoLayer object
+
+        Return:
+            None
+        """
+        self.geolayers.remove(geolayer)
 
     def free_table(self, table):
         """
         Removes a Table object from the tables list.
 
         Args:
-            table: instance of a Table object
+            table (Table): instance of a Table object
 
-        Return: None
+        Returns:
+            None
         """
         self.tables.remove(table)
 
@@ -530,7 +563,7 @@ class GeoProcessor(object):
         """
         Reads the DataStore objects in the datastores list and returns a list of the available DataStore ids.
 
-        Return:
+        Returns:
             List of available DataStore IDS.
         """
 
@@ -565,7 +598,9 @@ class GeoProcessor(object):
     def get_number_errors(self):
         """
         Return the number of errors in commands.
-        :return: Number of errors in commands list.
+
+        Returns
+            Number of errors in commands list.
         """
         num_errors = 0
         for command in self.commands:
@@ -577,7 +612,9 @@ class GeoProcessor(object):
     def get_number_warnings(self):
         """
         Return the number of errors in commands.
-        :return: Number of errors in commands list.
+
+        Returns:
+            Number of errors in commands list.
         """
         num_warnings = 0
         for command in self.commands:
@@ -585,6 +622,30 @@ class GeoProcessor(object):
             if command_status is CommandStatusType.WARNING:
                 num_warnings += 1
         return num_warnings
+
+    def get_property(self, property_name, if_not_found_val=None):
+        """
+        Get a GeoProcessor property, case-specific.
+
+        Args:
+            property_name (str):  Name of the property for which a value is retrieved.
+            if_not_found_val (object):  Value to return if the property is not found
+                (None is default or otherwise throw an exception).
+
+        Returns:
+            The object matching the requested property name.
+        """
+        try:
+            return self.properties[property_name]
+        except KeyError:
+            if if_not_found_val is None:
+                # Requested that None is returned if not found so do it
+                # print('Property not found so returning None')
+                return None
+            else:
+                # Let the exception from not finding a key in the dictionary be raised
+                # print('Property not found so throwing exception')
+                raise
 
     def get_table(self, table_id):
         """
@@ -604,59 +665,21 @@ class GeoProcessor(object):
         # Did not find the requested identifier so return None
         return None
 
-    def get_property(self, property_name, if_not_found_val=None):
-        """
-        Get a GeoProcessor property, case-specific.
-
-        Args:
-            property_name:  Name of the property for which a value is retrieved.
-            if_not_found_val:  Value to return if the property is not found
-                (None is default or otherwise throw an exception).
-        """
-        try:
-            return self.properties[property_name]
-        except KeyError:
-            if if_not_found_val is None:
-                # Requested that None is returned if not found so do it
-                # print('Property not found so returning None')
-                return None
-            else:
-                # Let the exception from not finding a key in the dictionary be raised
-                # print('Property not found so throwing exception')
-                raise
-
     def indent_command_string(self, index):
         """
         Add an indent to the front of the command string using a predetermined
-        amount of white space (TAB)
+        amount of white space (TAB).
 
         Args:
-            index: The index of the command string to indent
+            index (int): The index of the command string to indent
 
-        Returns: None
-
+        Returns:
+            None
         """
-        TAB = "    "
+        TAB = "    "  # 4 characters
         current_command = self.commands[index].command_string
         current_command = TAB + current_command
         self.commands[index].command_string = current_command
-
-    def decrease_indent_command_string(self, index):
-        """
-        Remove an indent from the front of the command string. If there are multiple
-        indents this only removes space representing a single indent.
-
-        Args:
-            index: The index of the command string to decrease the indent from
-
-        Returns: None
-
-        """
-        current_command = self.commands[index].command_string
-        front_of_string = current_command[:4]
-        if front_of_string == '    ':
-            current_command = current_command[4:]
-            self.commands[index].command_string = current_command
 
     @classmethod
     def __lookup_endfor_command_index(cls, command_list, for_name):
@@ -664,8 +687,8 @@ class GeoProcessor(object):
         Lookup the command index for the EndFor() command with requested name.
 
         Args:
-            command_list: list of commands to check
-            for_name: the name of the "For" name to find
+            command_list (Command[]): list of commands to check
+            for_name (str): the name of the "For" name to find
 
         Returns:
             The index (0+) of the EndFor() command that matches the specified name.
@@ -684,8 +707,8 @@ class GeoProcessor(object):
         Lookup the command index for the For() command with requested name.
 
         Args:
-            command_list: list of commands to check
-            for_name: the name of the "For" name to find
+            command_list (Command[]): list of commands to check
+            for_name (str): the name of the "For" name to find
 
         Returns:
             Command if found, otherwise -1
@@ -704,8 +727,8 @@ class GeoProcessor(object):
         Lookup the command for the If() command with requested name.
 
         Args:
-            If_command_stack: list of If commands that are active.
-            if_name: the name of the "If" command to find
+            If_command_stack (If[]): list of If commands that are active.
+            if_name (str): the name of the "If" command to find
 
         Returns:
             The matching If() command instance.
@@ -720,9 +743,6 @@ class GeoProcessor(object):
         Notify the GeoProcessorListModel that the command file has been read
         into the command list.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -732,10 +752,7 @@ class GeoProcessor(object):
 
     def notify_command_list_processor_listener_of_all_commands_completed(self):
         """
-        Notify the GeoProcessorListModel that the command list has been run
-
-        Args:
-            None
+        Notify the GeoProcessorListModel that the command list has been run.
 
         Returns:
             None
@@ -747,10 +764,7 @@ class GeoProcessor(object):
     def notify_command_list_processor_listener_update_commands(self):
         """
         Notify the GeoProcessorListModel that the commands list UI in CommandListWidget
-        need to be updated to reflect changes made to commands list in GeoProcessor
-
-        Args:
-            None
+        need to be updated to reflect changes made to commands list in GeoProcessor.
 
         Returns:
             None
@@ -764,10 +778,10 @@ class GeoProcessor(object):
         Notify registered command processor listeners about a command being cancelled.
 
         Args:
-            icommand: The index (0+) of the command that is cancelled.
-            ncommand: The number of commands being processed. This will often be the
+            icommand (int): The index (0+) of the command that is cancelled.
+            ncommand (int): The number of commands being processed. This will often be the
                 total number of commands but calling code may process a subset.
-            command: The instance of the nearest command that is being called.
+            command (Command): The instance of the nearest command that is being called.
 
         Returns:
             None
@@ -781,10 +795,10 @@ class GeoProcessor(object):
         Notify registered command process listeners about a command completing.
 
         Args:
-            icommand: The index (0+) of the command that is completing.
-            ncommand: The number of commands being processed. This will often be the
+            icommand (int): The index (0+) of the command that is completing.
+            ncommand (int): The number of commands being processed. This will often be the
                 total number of commands but calling code may process a subset.
-            command: The instance of the command that is completing.
+            command (Command): The instance of the command that is completing.
 
         Returns:
             None
@@ -798,10 +812,10 @@ class GeoProcessor(object):
         Notify registed command processor listeners about a command starting.
 
         Args:
-            icommand: The index (0+) of the command that is starting.
-            ncommand: The number of commands being processed. This will often be the
+            icommand (int): The index (0+) of the command that is starting.
+            ncommand (int): The number of commands being processed. This will often be the
                 total number of commands but calling code may process a subset.
-            command: The instance of the command that is starting
+            command (Command): The instance of the command that is starting.
 
         Returns:
             None
@@ -846,7 +860,7 @@ class GeoProcessor(object):
         Returns:
             None
         """
-
+        logger = logging.getLogger(__name__)
         # Remove all items within the geoprocessor from the previous run.
         self.commands = []
         self.properties = {}
@@ -896,7 +910,7 @@ class GeoProcessor(object):
             debug = False
             if debug:
                 command_object.print_for_debug()
-                print("First command debug:")
+                logger.debug("First command debug:")
                 self.commands[0].print_for_debug()
 
         # Let the command list processor know that the commands have been read from the command file
@@ -908,11 +922,12 @@ class GeoProcessor(object):
 
         Args:
             command_file_strings (list): list of strings. Each item of the list represents one command line string.
-            runtime_properties (dict): dictrionary of runtime properties, in particular 'WorkingDir'
+            runtime_properties (dict): dictionary of runtime properties, in particular 'WorkingDir'
 
         Returns:
             None
         """
+        logger = logging.getLogger(__name__)
 
         # Remove all items within the geoprocessor from the previous run.
         self.commands = []
@@ -932,7 +947,7 @@ class GeoProcessor(object):
             pass
         # TODO smalers 2018-07-24 Need to evaluate whether initial folder is also needed,
         # such as for redundant calls by RunCommands()
-        #self.properties["InitialWorkingDir"] = ??
+        # self.properties["InitialWorkingDir"] = ??
 
         # Iterate over each line in the command file.
         for command_file_string in command_file_strings:
@@ -953,8 +968,36 @@ class GeoProcessor(object):
             debug = False
             if debug:
                 command_object.print_for_debug()
-                print("First command debug:")
+                logger.debug("First command debug:")
                 self.commands[0].print_for_debug()
+
+    def remove_all_commands(self):
+        """
+        Remove all the commands from the command list>
+
+        Returns:
+            None
+        """
+        # Remove all commands from command list
+        del self.commands[:]
+        # Notify the command list model that the commands list UI in CommandListWidget
+        # needs to be updated to reflect changes made to commands in GeoProcessor
+        self.notify_command_list_processor_listener_update_commands()
+
+    def remove_command(self, index):
+        """
+        Remove a command at the given index.
+
+        Args:
+            index (int): The index of the command to remove from the commands list
+
+        Returns:
+            None
+        """
+        del self.commands[index]
+        # Notify the command list processor that the command list now needs to be updated in
+        # the user interface.
+        self.notify_command_list_processor_listener_update_commands()
 
     def __reset_data_for_run_start(self, append_results=False):
         """
@@ -994,10 +1037,8 @@ class GeoProcessor(object):
         This function is called by the run_commands() function before processing any commands.
         This function is ported from the Java TSCommandProperties.resetWorkflowProperties() method.
 
-        Args:
+        Returns:
             None
-
-        Returns: None
         """
 
         # Java code uses separate properties rather than Python using one dictionary.
@@ -1407,7 +1448,7 @@ class GeoProcessor(object):
         if warning_count > 0:
             message = "Errors found in processing commands."
             logger.error(message)
-            #raise RuntimeError(message)
+            # raise RuntimeError(message)
 
         self.notify_command_list_processor_listener_of_all_commands_completed()
 
@@ -1417,11 +1458,11 @@ class GeoProcessor(object):
 
     def run_selected_commands(self, selected_indices, command_list=None, run_properties=None, env_properties=None):
         """
-        Run only the selected commands from the command list
+        Run only the selected commands from the command list.
 
         Args:
-            selected_indices: The indices of the selected commands to run
-            command_list: The entire command list if necessary
+            selected_indices (int[]): The indices of the selected commands to run
+            command_list (Command[]): The entire command list if necessary
             run_properties: Any run properties specified
             env_properties: Any environment properties specified
 
@@ -1440,37 +1481,6 @@ class GeoProcessor(object):
         # Pass the newly created command list to run_commands to run only the selected commands
         self.run_commands(command_list)
 
-    def remove_command(self, index):
-        """
-        Remove a command string at the given index
-
-        Args:
-            index: The index of the command to remove from the commands list
-
-        Returns:
-            None
-        """
-        del self.commands[index]
-        # Notify the command list processor that the command list now needs to be updated in
-        # the user interface.
-        self.notify_command_list_processor_listener_update_commands()
-
-    def remove_all_commands(self):
-        """
-        Remove all the commands from the command list
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        # Remove all commands from command list
-        del self.commands[:]
-        # Nofity the command list model that the commands list UI in CommandListWidget
-        # needs to be updated to reflect changes made to commands in GeoProcessor
-        self.notify_command_list_processor_listener_update_commands()
-
     def set_command_strings(self, command_strings):
         """
         Set the command strings and initialize the command list in the geoprocessor.
@@ -1479,11 +1489,12 @@ class GeoProcessor(object):
         and test framework is in place.
 
         Args:
-            command_strings:  List of command strings.
+            command_strings (str[]):  List of command strings.
 
         Returns:
             None
         """
+        logger = logging.getLogger(__name__)
 
         # Create an instance of the GeoProcessorCommandFactory.
         command_factory = GeoProcessorCommandFactory()
@@ -1507,7 +1518,7 @@ class GeoProcessor(object):
             debug = False
             if debug:
                 command_object.print_for_debug()
-                print("First command debug:")
+                logger.debug("First command debug:")
                 self.commands[0].print_for_debug()
 
     def set_properties(self, property_dict):
@@ -1527,7 +1538,7 @@ class GeoProcessor(object):
 
     def set_property(self, property_name, property_value):
         """
-        Set a geoprocessor property
+        Set a geoprocessor property.
 
         Args:
             property_name (str):  Property name.
@@ -1540,12 +1551,11 @@ class GeoProcessor(object):
 
     def update_command(self, index, command_string):
         """
-        If the command has been edited by a command editor it must be updated in
-        the command list.
+        If the command has been edited by a command editor it must be updated in the command list.
 
         Args:
-            Index: the index of the command string to update
-            command_string: The new command string to initialize a new command that will
+            index (int): the index of the command string to update
+            command_string (str): The new command string to initialize a new command that will
                 replace the old command in that position.
 
         Returns:
@@ -1565,6 +1575,6 @@ class GeoProcessor(object):
         debug = False
         if debug:
             command_object.print_for_debug()
-            print("First command debug:")
+            logger = logging.getLogger(__name__)
+            logger.debug("First command debug:")
             self.commands[0].print_for_debug()
-

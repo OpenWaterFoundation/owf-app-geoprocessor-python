@@ -71,6 +71,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     """
 
     def __init__(self, geoprocessor, runtime_properties, app_session):
+        """
+        Initialize the GeoProcessorUI class instance.
+
+        Args:
+            geoprocessor (GeoProcessor):  the instance of the GeoProcessor to use with the UI
+            runtime_properties (dict): properties to use at runtime
+            app_session (GeoProcessorAppSession): application session instance
+        """
         # Old way was to initialize generically
         # super().__init__()
 
@@ -161,10 +169,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Before exiting check to see if the command file has been edited. If so ask if the user
         would like to save the command file.
 
-        Args:
-            event: close event passed down from closeEvent()
-
-        Returns: None
+        Returns:
+            None
         """
         # Check to see if command list has been modified
         command_list_modified = self.command_ListWidget.command_list_modified()
@@ -190,15 +196,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Indicate that a command has completed. The success/failure of the command is not indicated.
 
         Args:
-            icommand:  The command index (0+).
-            ncommand: The total number of commands to process
-            command: The reference to the command that is starting to run,
+            icommand (int):  The command index (0+).
+            ncommand (int): The total number of commands to process
+            command (Command): The reference to the command that is starting to run,
                 provided to allow future interaction with the command.
-            percent_completed:  If >= 0, the value can be used to indicate progress
+            percent_completed (float):  If >= 0, the value can be used to indicate progress
                 running a list of commands (not the single command). If less than zero, then no
                 estimate is given for the percent complete and calling code can make its own determination
                 (e.g. ((icommand + 1)/ncommand)*100)
-            message:  A short message describing the status (e.g. "Running command...")
+            message (str):  A short message describing the status (e.g. "Running command...")
 
         Returns:
             None
@@ -226,15 +232,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Indicate that a command has started running.
 
         Args:
-            icommand: The command index (0+) in the list of commands being run (see ncommand)
-            ncommand: The total number of commands to process (will be selected number if running selected)
-            command: The reference to the command that is starting to run,
+            icommand (int): The command index (0+) in the list of commands being run (see ncommand)
+            ncommand (int): The total number of commands to process (will be selected number if running selected)
+            command (Command): The reference to the command that is starting to run,
                 provided to allow future interaction with the command.
-            percent_completed: If >= 0, the value can be used to indicate progress
+            percent_completed (float): If >= 0, the value can be used to indicate progress
                 running a list of commands (not the single command). If less than zero, then no estimate is given
                 for the percent complete and calling code can make its own determination
                 (e.g. ((icommand +1)/ncommand)*100).
-            message: A short message describing the status (e.g. "Running command...")
+            message (str): A short message describing the status (e.g. "Running command...")
 
         Returns:
             None
@@ -270,7 +276,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Delete the row in the numbered list and update the other numbers.
 
         Args:
-            index: numbered list item to be deleted
+            index (int): numbered list item to be deleted, 0+.
 
         Returns:
             None
@@ -291,13 +297,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     # TODO smalers 2018-07-24 need to review this function
     def edit_command_editor(self):
         """
-        Opens a dialog box that allows users to edit existing commands.
-
-        Args:
-            None
+        Opens a dialog box to edit an existing command.
 
         Returns:
-            Return if error is encountered
+            None
         """
 
         logger = logging.getLogger(__name__)
@@ -306,48 +309,81 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Create a new command to edit without affecting the old command in case of cancelled.
 
-        # Get the index of the currently selected command
-        index = self.command_ListWidget.get_current_list_item_index()
-        # Get the command object at that index from GeoProcessor
-        command_object = self.gp.commands[index]
+        # FIXME smalers 2019-01-10 start rework so can make a release
+        # Get the list of selected indices.
+        # - ensure that if any are comments that all are comments and are contiguous
+        # The following returns a list of PyQt5.QtCore.QModelIndex, an empty list if somehow none are selected
+        selected_q_indices = self.command_ListWidget.commands_List.selectionModel().selectedIndexes()
+        # Convert to simple integer list with 0 as first row
+        selected_indices = [item.row() for item in selected_q_indices]
+        # Sort selections in ascending order
+        selected_indices.sort()
+        num_selected = len(selected_indices)
+        num_selected_are_comments = 0
+        # Get the count of how many of the selected commands are comments
+        for index in selected_indices:
+            if self.gp.commands[index].command_string.strip().startswith('#'):
+                num_selected_are_comments = num_selected_are_comments + 1
+        if (num_selected_are_comments > 0) and (num_selected != num_selected_are_comments):
+            # The selected commands have at least one comment but are not all comments, don't allow the edit
+            # - could improve this to only automatically edit the first contiguous block comments or ask the user
+            #   whether to edit the first contiguous block
+            qt_util.warning_message_box('Cannot edit # comments when other commands are also selected.')
+            return
+        # FIXME smalers 2019-01-10 end rework so can make a release
 
         # Check to see if working with block comments
+        # FIXME smalers 2019-01-10 are both of the following needed?  Logic below does not require both.
         comment = False
         comment_block = False
-        comment_block_text = ""
-        if command_object.command_string.startswith("#"):
+        comment_block_text = ""  # Will contain newline-separated comment lines
+        if num_selected_are_comments > 0:
+            # Detected that a block of 1+ comment lines are edited.
+            # - additional logic because this is different than a normal command editor that edits a single command.
             comment = True
-
-            # Check if comment is comment block
-            selected_q_indices = self.command_ListWidget.commands_List.selectionModel().selectedIndexes()
-            selected_indices = [item.row() for item in selected_q_indices]
-            size_commands = len(selected_indices)
-            if size_commands:
-                comment_block = True
-            # Sort selections in ascending order
-            selected_indices.sort()
-            # Check to see if selected command lines are all in order
-            num = selected_indices[0]
+            comment_block = True
+            # Check to see if selected comments are contiguous
+            contiguous = True
+            num = selected_indices[0]  # First selected command index
             for index in selected_indices:
                 if index != num:
+                    # Check all but first index
                     if index != num + 1:
-                        comment_block = False
+                        # Not in a contiguous sequence
+                        contiguous = False
+                        break
                 num += 1
-            # Check to see that all selected are also comments
-            for i in selected_indices:
-                command_object = self.gp.commands[i]
+            if not contiguous:
+                qt_util.warning_message_box('Cannot edit the selected # comments because they are not contiguous.')
+                return
+            # If here the comments are verified to be a contiguous block of # comments.
+            # The Comment command editor takes a string with newlines separating multiple command lines.
+            for index in selected_indices:
+                # The object is used to retrieve the command string and also to create a command editor
+                # using the factory below.
+                command_object = self.gp.commands[index]
+                if index != selected_indices[0]:
+                    # Add a newline separator
+                    comment_block_text += "\n"
                 command_string = command_object.command_string
-                if command_string.startswith("#"):
-                    comment_block_text += command_string + "\n"
-                else:
-                    comment_block = False
+                comment_block_text += command_string
+        else:
+            # Editing a one-line command.
+            # - get the index of the single currently selected command for first selected command
+            # - TODO smalers 2019-01-10 why is the call different than other index calls above?
+            index = self.command_ListWidget.get_current_list_item_index()
+            # Get the command object at that index from GeoProcessor
+            command_object = self.gp.commands[index]
 
+        # The following code is used for all commands, including comments:
+        # - create a command editor using the factory
         try:
             # Create the editor for the command
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object)
             if comment_block:
+                # Comment block editor is for 1+ comment lines separated by newline as formed above
                 command_editor.set_text(comment_block_text)
         except Exception as e:
             message = "Error creating editor for new command"
@@ -361,6 +397,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Else, if the "Cancel" button is clicked, do nothing.
             button_clicked = command_editor.exec_()
             if button_clicked == QtWidgets.QDialog.Accepted:
+                # OK button was clicked in the editor.
                 # Check if all of the required parameters are filled. If so, add the command to the Command_List widget.
                 # if ui.are_required_parameters_specified(ui.ui_commandparameters):
 
@@ -370,17 +407,37 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Update command in GeoProcessor list of commands
                 if comment:
                     if comment_block:
-                        command_string_by_line = command_string.splitlines()
-                        for i, line in enumerate(command_string_by_line):
-                            line = "# " + line
-                            index = selected_indices[i]
-                            self.gp.update_command(index, line)
+                        # The editor will result in 0+ newline-separated comments
+                        # - let the command editor deal with formatting
+                        # - the get_text() function is similar to TSTool Command_JDialog.getText().
+                        command_string_list = command_editor.get_command_string_list()
+                        # Update or insert into the geoprocessor
+                        # - the number of comments as per num_selected_are_comments may be different from the
+                        #   number of comments returned from the editor
+                        # First, remove the selected comments from before
+                        # - remove at the same index for the number of original comments since contiguous
+                        for i in range(len(selected_indices)):
+                            self.gp.remove_command(selected_indices[0])
+                        # Second, add the new comments at the same position as before
+                        # - add in reverse order so the shifting results in correct order
+                        # - TODO smalers 2019-01-10 need to confirm all case, including working with empty command list
+                        for command_string in reversed(command_string_list):
+                            self.gp.add_command_at_index(command_string, selected_indices[0])
+                            # TODO smalers 2019-01-10 can the following be called once?
                             self.gp_model.update_command_list_ui()
-                            index += 1
                     else:
-                        command_string = "# " + command_string
-                        self.gp.update_command(index, command_string)
-                        self.gp_model.update_command_list_ui()
+                        # FIXME smalers 2019-01-10
+                        # - apparently used for a single line of # comment
+                        # - why is this needed when the above should handle case of single (or no) lines?
+                        # command_string = "# " + command_string
+                        # self.gp.update_command(index, command_string)
+                        # self.gp_model.update_command_list_ui()
+                        pass
+                else:
+                    # FIXME smalers 2019-01-10
+                    # - what happens to normal commands that are edited?
+                    # - need comments to explain that
+                    pass
 
                 # Manually set the run all commands and clear commands buttons to enabled
                 self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
@@ -394,7 +451,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 pass
 
         except Exception as e:
-            message = "Error editing new command"
+            message = "Error editing existing command"
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
             return
@@ -412,7 +469,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             command_name (str): the name of the command
 
         Returns:
-            Return if error is encountered
+            Null if error is encountered
         """
         logger = logging.getLogger(__name__)
         # Check to see if command is a comment block with "#"
@@ -533,10 +590,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         However, subsequent customization has edited this code directly without reprocessing the '.ui' file,
         and this will continue into the future.
 
-
-        Args:
-            None
-
         Returns:
             None
         """
@@ -605,7 +658,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Set up the Catalog area of the UI.
 
         Args:
-            y_centralwidget:  Row position in the central widget to add this component.
+            y_centralwidget (int):  Row position in the central widget to add this component.
 
         Returns:
             None
@@ -634,7 +687,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Set up the Commands area of the UI.
 
         Args:
-            y_centralwidget:  Row position in the central widget to add this component.
+            y_centralwidget (int):  Row position in the central widget to add this component.
 
         Returns:
             None
@@ -661,7 +714,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Args:
             main_window: the main window that will be initialized with components (same as self in this case).
 
-        Returns:  None
+        Returns:
+            None
         """
         # Menu bar for the application
         self.menubar = QtWidgets.QMenuBar(main_window)
@@ -1515,7 +1569,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Set up the Results area of the UI.
 
         Args:
-            y_centralwidget:  Row position in the central widget to add this component.
+            y_centralwidget (int):  Row position in the central widget to add this component.
 
         Returns:
             None
@@ -1762,7 +1816,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Set up the Status area of the UI.
 
         Args:
-            y_centralwidget:  Row position in the central widget to add this component.
+            MainWindow: instance of main window
+            y_centralwidget (int):  Row position in the central widget to add this component.
 
         Returns:
             None
@@ -1813,6 +1868,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def setup_ui_toolbar(self, main_window):
         """
         Setup UI Toolbar
+
+        Args:
+            main_window: main window instance
+
+        Returns:
+            None
         """
 
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
@@ -1838,9 +1899,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def show_command_status(self):
         """
         Opens a dialog box that shows the command status.
-
-        Args:
-            None
 
         Returns:
             None
@@ -2179,9 +2237,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Populates the Results tables of the UI to reflect results of running the GeoProcessor, including
         the existing GeoLayers, Maps, Output Files, Properties, and Tables.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -2219,9 +2274,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Populates the Results / GeoLayers display.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -2253,9 +2305,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Populates the Results / Maps display.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -2271,9 +2320,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def show_results_output_files(self):
         """
         Populates the Results / Output Files display.
-
-        Args:
-            None
 
         Returns:
             None
@@ -2315,9 +2361,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Populates the Results / Properties Files display.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -2348,9 +2391,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def show_results_tables(self):
         """
         Populates the Results / Tables Files display.
-
-        Args:
-            None
 
         Returns:
             None
@@ -2390,7 +2430,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 
         Arg:
-            q_pos: The position of the right-click. Updated automatically within interface. Do not need to manually
+            q_pos (int): The position of the right-click. Updated automatically within interface. Do not need to manually
                 pass a value to this variable. Used to determine where to display the popup menu.
 
         Returns:
@@ -2434,6 +2474,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_command_list_right_click_convert_to_command(self):
         """
         Convert the selected command list item to a comment in geoprocessor.
+
         Returns:
             None
         """
@@ -2447,6 +2488,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_command_list_right_click_convert_from_command(self):
         """
         Convert the selected command list item from a comment in geoprocessor.
+
         Returns:
             None
         """
@@ -2464,7 +2506,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         open a map window or get the GeoLayer attributes.
 
         Args:
-            q_pos: Position of mouse when right clicking on a GeoLayer from
+            q_pos (int): Position of mouse when right clicking on a GeoLayer from
                 the output table.
 
         Returns:
@@ -2494,9 +2536,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_help_about(self):
         """
         Display the Help / About dialog.
-
-        Args:
-            None
 
         Returns:
             None
@@ -2529,9 +2568,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Display the Software/System information dialog.
         If taken from standard Python modules, also show the module and variable name so the information
         can be cross-checked manually if necessary.
-
-        Args:
-            None
 
         Returns:
             None
@@ -2675,11 +2711,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
     def ui_action_map_pan(self):
         """
-        Set GeoLayers map dialog window to allow user to pan with the mouse
-        events.
-
-        Args:
-            None
+        Set GeoLayers map dialog window to allow user to pan with the mouse events.
 
         Returns:
             None
@@ -2688,7 +2720,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
     def ui_action_map_resize(self, event):
         """
-        Resize the GeoLayers map canvas when the dialog box is resized
+        Resize the GeoLayers map canvas when the dialog box is resized.
 
         Args:
             event: Resize event, necessary to add even though it is not being used in order
@@ -2703,9 +2735,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Set the GeoLayers map window to respond to mouse events as zooming in.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -2714,8 +2743,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_map_zoomOut(self):
         """
         Set the GeoLayers map window to respond to mouse events as zooming out.
-        Args:
-            None
 
         Returns:
             None
@@ -2726,9 +2753,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Start a new command file by clearing the current commands list and unsetting the saved command file.
         Users are not required to save the command file until they take another action such as exit, or open.
-
-        Args:
-            None
 
         Returns:
             None
@@ -2752,9 +2776,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_open_attributes(self):
         """
         Create an attributes window to be opened when user clicks on GeoLayers.
-
-        Args:
-            None
 
         Returns:
             None
@@ -2811,11 +2832,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
     def ui_action_open_map_window(self):
         """
-        Open a map window dialog box that displays the map layers from the selected GeoLayers
+        Open a map window dialog box that displays the map layers from the selected GeoLayers.
 
-        Args:
-            None
-            
         Returns:
             None
         """
@@ -2966,7 +2984,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Print the command file.
         This is currently not enabled other than to print a dialog.
 
-        Returns: None
+        Returns:
+            None
         """
         # Set the title for the main window
         qt_util.info_message_box("Printing features have not yet been implemented.")
@@ -2974,8 +2993,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_resize_software_system_information_text_box(self, event):
         """
         Resize the text box for the Software/System Information dialog window.
-        :param event: Resize Event
-        :return: None
+
+        Args:
+            event: Resize Event
+
+        Returns:
+            None
         """
         self.sys_info_text_browser.resize(self.sys_info.width()-50, self.sys_info.height()-50)
 
@@ -2983,7 +3006,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Saves the commands to a previously saved file location (overwrite).
 
-        Returns: None
+        Returns:
+            None
         """
 
         # Record the new saved command file in the command list backup class
@@ -3020,11 +3044,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Saves the commands to a file.
 
-        Args:
-            None
-
         Returns:
-            Return if no file name specified
+            None if no file name specified.
         """
 
         # Record the new saved command file in the command list backup class
@@ -3065,12 +3086,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Update the recent files in the File... Open menu, for the next menu access
         self.ui_init_file_open_recent_files()
 
-    def ui_action_view_documentation(self):
+    @classmethod
+    def ui_action_view_documentation(cls):
         """
         Opens the GeoProcessor user documentation in the user's default browser.
-
-        Args:
-            None
 
         Returns:
             None
@@ -3089,12 +3108,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
 
+    @classmethod
     def ui_action_view_log_file(self):
         """
         Opens the current log file in the default text editor for operating system.
-
-        Args:
-            None
 
         Returns:
             None
@@ -3139,9 +3156,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def ui_action_view_startup_log_file(self):
         """
         Opens the startup log file in the default text editor for operating system.
-
-        Args:
-            None
 
         Returns:
             None
@@ -3188,9 +3202,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         The menu will then be properly updated when opening a new command file.
         This function should be called whenever the command file history is written so that the history file and
         menu are synchronized.
-
-        Args:
-            None
 
         Returns:
             None
@@ -3244,9 +3255,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the main window title to reflect that the command file has been modified.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -3269,9 +3277,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Once commands have been run. Loop through and check for any errors or warnings.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -3290,9 +3295,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status by checking data and setting various status information.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -3305,9 +3307,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def update_ui_status_results_geolayers(self):
         """
         Update the UI status for Results / GeoLayers area.
-
-        Args:
-            None
 
         Returns:
             None
@@ -3322,8 +3321,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status for Results / Maps area.
 
-        Returns: None
-
+        Returns:
+            None
         """
         # Count the total and selected number of rows within the Maps table. Update the label to reflect counts.
         row_num = str(self.results_Maps_Table.rowCount())
@@ -3334,9 +3333,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def update_ui_status_results_output_files(self):
         """
         Update the UI status for Results / Output Files area.
-
-        Args:
-            None
 
         Returns:
             None
@@ -3355,9 +3351,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status for Results / GeoLayers area.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -3375,9 +3368,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         Update the UI status for Results / Tables area.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -3385,4 +3375,3 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         row_num = str(self.results_Tables_Table.rowCount())
         slct_row_num = str(len(set(index.row() for index in self.results_Tables_Table.selectedIndexes())))
         self.results_Tables_GroupBox.setTitle("Tables ({} Tables, {} selected)".format(row_num, slct_row_num))
-

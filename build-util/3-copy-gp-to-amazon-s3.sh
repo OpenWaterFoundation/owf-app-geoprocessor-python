@@ -340,13 +340,13 @@ uploadInstaller() {
 	includeNix="yes"
 	if [ "$operatingSystem" = "cygwin" ]; then
 		# On Cygwin, can turn off
-		includeNix=$installCygwin
+		includeNix=$includeCygwin
 	elif [ "$operatingSystem" = "linux" ]; then
 		# On Linux, can turn off
-		includeNix="$installLinux"
+		includeNix="$includeLinux"
 	elif [ "$operatingSystem" = "mingw" ]; then
 		# On MinGW, can turn off
-		includeNix="$installMingw"
+		includeNix="$includeMingw"
 	fi
 	if [ "$includeNix" = "yes" ]; then
 		echo "Uploading GeoProcessor installation file for $operatingSystem"
@@ -497,7 +497,7 @@ includeCygwin="yes"
 includeLinux="yes"
 includeMingw="yes"
 includeWindows="yes"
-if [ $operatingSystem = "yes" ]; then
+if [ $operatingSystem = "linux" ]; then
 	includeWindows="no"
 fi
 

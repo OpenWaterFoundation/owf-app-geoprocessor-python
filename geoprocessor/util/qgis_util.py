@@ -606,7 +606,13 @@ def initialize_qgis():
     # Qt WebEngine seems to be initialized from a plugin. Please set Qt::AA_ShareOpenGLContexts using
     #   QCoreApplication::setAttribute before constructing QGuiApplication
     # -------
-    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+    try:
+        QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+    except Exception as e:
+        # This happens when the current development Python packages are different than runtime
+        print("Error calling QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)")
+        print("- possibly due to Python API version issue")
+        print("- ignoring exception and starting the application")
     qgs_app = QgsApplication([], False)
     qgs_app.initQgis()
     return qgs_app

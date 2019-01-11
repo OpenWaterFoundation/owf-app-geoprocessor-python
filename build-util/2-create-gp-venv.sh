@@ -226,6 +226,7 @@ checkVenvPythonConfig () {
 	lenFirstLine=`head -n1 "${pip3Script}" | wc -c`
 	if [ "$lenFirstLine" -gt 127 ]; then
 		$echo2 "${failColor}Length ($lenFirstLine) of first line of ${pip3Script} is > 127 chars.  Exiting.${endColor}"
+		$echo2 "May need to shorten path of development environment such as use GP instead of GeoProcessor."
 		exit 1
 	fi
 }
@@ -719,6 +720,7 @@ buildTmpFolder="${buildUtilFolder}/build-tmp"
 # Name of the parent folder for virtual environments
 # - the following is apparently too long - sh-bang lines have limit of 127 characters
 #   virtualenvTmpFolder="${buildUtilFolder}/virtualenv-tmp"
+# - if this does not work, shorten the development environment folder from GeoProcessor to GP
 virtualenvTmpFolder="${buildUtilFolder}/venv-tmp"
 # Get the software version number
 versionFile="${repoFolder}/geoprocessor/app/version.py"

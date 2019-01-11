@@ -309,15 +309,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Create a new command to edit without affecting the old command in case of cancelled.
 
-        # FIXME smalers 2019-01-10 start rework so can make a release
         # Get the list of selected indices.
         # - ensure that if any are comments that all are comments and are contiguous
         # The following returns a list of PyQt5.QtCore.QModelIndex, an empty list if somehow none are selected
-        selected_q_indices = self.command_ListWidget.commands_List.selectionModel().selectedIndexes()
-        # Convert to simple integer list with 0 as first row
-        selected_indices = [item.row() for item in selected_q_indices]
-        # Sort selections in ascending order
-        selected_indices.sort()
+
+        selected_indices = self.command_ListWidget.get_current_list_items_indices()
         num_selected = len(selected_indices)
         num_selected_are_comments = 0
         # Get the count of how many of the selected commands are comments
@@ -330,17 +326,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             #   whether to edit the first contiguous block
             qt_util.warning_message_box('Cannot edit # comments when other commands are also selected.')
             return
-        # FIXME smalers 2019-01-10 end rework so can make a release
 
         # Check to see if working with block comments
-        # FIXME smalers 2019-01-10 are both of the following needed?  Logic below does not require both.
-        comment = False
         comment_block = False
         comment_block_text = ""  # Will contain newline-separated comment lines
         if num_selected_are_comments > 0:
             # Detected that a block of 1+ comment lines are edited.
             # - additional logic because this is different than a normal command editor that edits a single command.
-            comment = True
             comment_block = True
             # Check to see if selected comments are contiguous
             contiguous = True
@@ -370,7 +362,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         else:
             # Editing a one-line command.
             # - get the index of the single currently selected command for first selected command
-            # - TODO smalers 2019-01-10 why is the call different than other index calls above?
             index = self.command_ListWidget.get_current_list_item_index()
             # Get the command object at that index from GeoProcessor
             command_object = self.gp.commands[index]
@@ -405,7 +396,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
                 # Update command in GeoProcessor list of commands
-                if comment:
+                if num_selected_are_comments > 0:
                     if comment_block:
                         # The editor will result in 0+ newline-separated comments
                         # - let the command editor deal with formatting
@@ -423,21 +414,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                         # - TODO smalers 2019-01-10 need to confirm all case, including working with empty command list
                         for command_string in reversed(command_string_list):
                             self.gp.add_command_at_index(command_string, selected_indices[0])
-                            # TODO smalers 2019-01-10 can the following be called once?
-                            self.gp_model.update_command_list_ui()
-                    else:
-                        # FIXME smalers 2019-01-10
-                        # - apparently used for a single line of # comment
-                        # - why is this needed when the above should handle case of single (or no) lines?
-                        # command_string = "# " + command_string
-                        # self.gp.update_command(index, command_string)
-                        # self.gp_model.update_command_list_ui()
-                        pass
-                else:
-                    # FIXME smalers 2019-01-10
-                    # - what happens to normal commands that are edited?
-                    # - need comments to explain that
-                    pass
+
+                # Update the command list to match the status of GeoProcessor
+                self.gp_model.update_command_list_ui()
 
                 # Manually set the run all commands and clear commands buttons to enabled
                 self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)

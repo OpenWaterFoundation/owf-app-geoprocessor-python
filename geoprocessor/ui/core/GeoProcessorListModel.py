@@ -50,9 +50,6 @@ class GeoProcessorListModel(object):
         Called when 'Clear Commands' button is pressed in
         CommandListWidget. Removes all commands from GeoProcessor.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -91,9 +88,6 @@ class GeoProcessorListModel(object):
         After commands are read in GeoProcessor the following functions
         can be ran in CommandListWidget to update elements of the UI.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -118,9 +112,6 @@ class GeoProcessorListModel(object):
     def command_list_ran(self):
         """
         Called after the commands have been ran in GeoProcessor.
-
-        Args:
-            None
 
         Returns:
             None
@@ -178,9 +169,6 @@ class GeoProcessorListModel(object):
         Reset the command list backup in the command list widget in order to
         be able to check if there have been any changes to the command file.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -193,9 +181,6 @@ class GeoProcessorListModel(object):
     def run_all_commands(self):
         """
         Run all commands in GeoProcessor
-
-        Args:
-            None
 
         Returns:
             None
@@ -226,9 +211,6 @@ class GeoProcessorListModel(object):
         class, which is updated whenever changes are made to the command list in
         GeoProcessor
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -237,9 +219,6 @@ class GeoProcessorListModel(object):
     def update_command_list_ui(self):
         """
         Update the commands list UI in CommandListWidget
-
-        Args:
-            None
 
         Returns:
             None

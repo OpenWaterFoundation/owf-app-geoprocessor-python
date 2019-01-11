@@ -267,8 +267,7 @@ class CommandListWidget(object):
         """
         Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked.
 
-        Args:
-            None
+
 
         Returns:
             None
@@ -284,9 +283,6 @@ class CommandListWidget(object):
     def event_handler_indent_button_clicked(self):
         """
         Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked.
-
-        Args:
-            None
 
         Returns:
             None
@@ -353,9 +349,6 @@ class CommandListWidget(object):
         """
         Returns the position of the mouse to display the context menu.
 
-        Args:
-            None
-
         Returns: The current position of command list widget which is
         used in GeoProcessorUI to display the context menu on command list
         selection in the proper place
@@ -366,13 +359,24 @@ class CommandListWidget(object):
         """
         Return the index of the current selected command list item.
 
-        Args:
-            None
-
         Returns:
             The current list widget item that is selected
         """
         return self.commands_List.currentRow()
+
+    def get_current_list_items_indices(self):
+        """
+        Return the selected indices from selected command list items.
+
+        Returns:
+            An array of integers representing the selected indices from command list.
+            Sorted in ascending order
+        """
+        # Update numbered list and gutter with selections
+        selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
+        selected_indices = [item.row() for item in selected_q_indices]
+        selected_indices.sort()
+        return selected_indices
 
     def group_box_resize(self, event):
         """
@@ -450,9 +454,6 @@ class CommandListWidget(object):
         """
         Notify the main ui listener that the numbered list item has been clicked.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -485,9 +486,6 @@ class CommandListWidget(object):
     def notify_model_listener_clear_all_commands(self):
         """
         Notify the model listener that clear commands button has been clicked.
-
-        Args:
-            None
 
         Returns:
             None
@@ -537,9 +535,6 @@ class CommandListWidget(object):
         """
         Notify the model listener that the run all commands button has been clicked.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -563,9 +558,6 @@ class CommandListWidget(object):
     def notify_main_ui_listener_refresh_results(self):
         """
         Notify the main ui that the results should be refreshed.
-
-        Args:
-            None
 
         Returns:
             None
@@ -648,9 +640,6 @@ class CommandListWidget(object):
         Initialize the command list backup to check against later changes of the
         command list to see if modified.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -661,9 +650,6 @@ class CommandListWidget(object):
         """
         Setup all GUI elements of the CommandListWidget Area including the command list, the numbered
         list to the left of the commands and the gutter to the right of the commands.
-
-        Args:
-            None
 
         Returns:
             None
@@ -696,9 +682,6 @@ class CommandListWidget(object):
     def setup_ui_command_list_widget_command_list(self):
         """
         Setup the command list for the command list widget.
-
-        Args:
-            None
 
         Returns:
             None
@@ -733,9 +716,6 @@ class CommandListWidget(object):
         """
         Setup the gutter to the right of the command list for command list widget.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -753,9 +733,6 @@ class CommandListWidget(object):
     def setup_ui_command_list_widget_layout(self):
         """
         Setup the layout for the command list widget.
-
-        Args:
-            None
 
         Returns:
             None
@@ -778,9 +755,6 @@ class CommandListWidget(object):
         """
         Setup the numbered list to left of command list.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -802,9 +776,6 @@ class CommandListWidget(object):
         """
         Setup the run selected commands button for the command list widget.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -824,9 +795,6 @@ class CommandListWidget(object):
         """
         Setup the run all commands button for the command list widget.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -842,9 +810,6 @@ class CommandListWidget(object):
     def setup_ui_command_list_widget_button_clear_commands(self):
         """
         Setup the clear commands button for the command list widget.
-
-        Args:
-            None
 
         Returns:
             None
@@ -886,9 +851,6 @@ class CommandListWidget(object):
         class variable to the current number of command items in the Command_List widget. Update the selected_commands
         class variable to the current number of selected command items in the Command_List widget. Update the
         Command_List widget label to display the total and selected number of commands within the widget.
-
-        Args:
-            None
 
         Returns:
             None
@@ -951,9 +913,6 @@ class CommandListWidget(object):
         Update the command list widget from a command list that
         has already been initialized.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -1001,9 +960,6 @@ class CommandListWidget(object):
         Update the width of the numbered list to allow elements to
         fit comfortably inside it.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -1018,9 +974,6 @@ class CommandListWidget(object):
     def update_ui_command_list_errors(self):
         """
         Once commands have been run. Loop through and check for any errors or warnings.
-
-        Args:
-            None
 
         Returns:
             None
@@ -1052,9 +1005,6 @@ class CommandListWidget(object):
         """
         Add a new item to the gutter when a new command line has been
         added to the command list.
-
-        Args:
-            None
 
         Returns:
             None

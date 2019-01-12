@@ -1,4 +1,4 @@
-# command_status_type - command status types
+# CommandStatusType - command status types
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation

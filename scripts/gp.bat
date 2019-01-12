@@ -1,4 +1,4 @@
-rem @echo off
+@echo off
 rem gp.bat - run the GeoProcessor
 rem - the default is to start the interpreter but can run gpui.bat to run UI
 rem
@@ -21,15 +21,35 @@ rem     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 rem ________________________________________________________________NoticeEnd___
 rem
 rem Windows batch file to run the Open Water Foundation GeoProcessor application for QGIS
+rem - Run in the deployed environment
 rem - This script is for Python3/QGIS3 (QGIS LTR is not used)
-rem - The script handles OSGeo4W64 or standalone installation
+rem - The script handles OSGeo4W64 and standalone QGIS installation
 rem - Checks are done for Python 3.6 and 3.7, with latest used, to accommodate QGIS versions.
 rem - This script should work on a normal Windows 7/10 computer.
 rem - This script and GeoProcessor should be installed in a Python Virtual Machine environment.
-rem
-rem Determine the folder that the script was called in
+
+rem Determine the folder that the script exists in
+rem - used to provide path relative to the GeoProcessor files
 rem - includes the trailing backslash
 set scriptFolder=%~dp0
+
+rem The script version can be different from the GeoProcessor Python version
+rem - this version is just used to help track changes to this script
+set gpBatVersion=1.0.0
+set gpBatVersionDate=2019-01-11
+
+rem Evaluate command options, using Windows-style options
+rem - the / options are handled here, consistent with Windows
+rem - the dash options will be handled by the called Python program
+rem - the /o option will only try to run the OSGeo4W QGIS install,
+rem   useful for development and troubleshooting
+rem - the /s option will only try to run the standalone QGIS install,
+rem   useful for development and troubleshooting
+if "%1%"=="/h" goto printUsage
+if "%1%"=="/o" goto runOsgeoQgis
+if "%1%"=="/s" goto runStandaloneQgis
+if "%1%"=="/v" goto printVersion
+if "%1%"=="/?" goto printUsage
 
 rem Figure out whether to run the C:\OSGeo4W64 or C:\Program Files\QGIS N.N version
 rem - Ideally the most recent compatible version is used (but may be hard to code in .bat file)
@@ -50,8 +70,11 @@ if exist "C:\Program Files\QGIS 3.5" goto runStandaloneQgis
 if exist "C:\Program Files\QGIS 3.4" goto runStandaloneQgis
 
 rem Easier to test OSGeo4W because no product version in path
+rem - Try to future-proof by checking Python versions that have not yet been released
 SET QGIS_INSTALL_HOME=C:\OSGeo4W64
 SET OSGEO4W_ROOT=%QGIS_INSTALL_HOME%
+if exist "%OSGEO4W_ROOT%\apps\Python39" goto runOsgeoQgis
+if exist "%OSGEO4W_ROOT%\apps\Python38" goto runOsgeoQgis
 if exist "%OSGEO4W_ROOT%\apps\Python37" goto runOsgeoQgis
 if exist "%OSGEO4W_ROOT%\apps\Python36" goto runOsgeoQgis
 
@@ -127,7 +150,10 @@ rem Indicate that the setup has been completed
 rem - this will ensure that the script when run again does not repeat setup
 rem   and keep appending to environment variables
 set OSGEO_GP_ENV_SETUP=YES
-echo ...done defining QGIS GeoProcessor environment
+
+rem Set the window title to indicate how configured so as to avoid confusion
+title GeoProcessor OSGeo4W QGIS environment to run gp.bat and gpui.bat (don't run gpdev.bat or gpuidev.bat)
+echo ...done defining QGIS GeoProcessor environment (done once per command shell window) 
 goto runOsgeoQgis2
 
 rem ========== END GeoProcessor setup steps to be done once ===========================
@@ -143,7 +169,7 @@ exit /b 1
 
 rem Echo environment variables for troubleshooting
 echo.
-echo Using Python3/QGIS3 for GeoProcessor
+echo Using OSGeo4W Python3/QGIS3 for GeoProcessor
 echo PATH=%PATH%
 echo PYTHONHOME=%PYTHONHOME%
 echo PYTHONPATH=%PYTHONPATH%
@@ -252,6 +278,9 @@ rem Indicate that the setup has been completed
 rem - this will ensure that the script when run again does not repeat setup
 rem   and keep appending to environment variables
 set SA_GP_ENV_SETUP=YES
+
+rem Set the window title to indicate how configured so as to avoid confusion
+title GeoProcessor standalone QGIS environment to run gp.bat and gpui.bat (don't run gpdev.bat or gpuidev.bat)
 echo ...done defining QGIS GeoProcessor environment
 goto runStandaloneQgis2
 
@@ -290,6 +319,33 @@ rem "%PYTHONHOME%\python" -v
 
 rem Exit with the error level of the Python command
 exit /b %ERRORLEVEL%
+
+rem =======================================================================
+rem Below here are one-off goto targets that each end with exit
+
+:printUsage
+rem Print the program usage
+echo.
+echo Usage:  gp.bat [options]
+echo.
+echo Run the GeoProcessor in deployed environment on Windows.
+echo This batch file sets up the deployed environment and calls the Python GeoProcessor.
+echo All command line options for the batch file are passed to the Python GeoProcessor.
+echo.
+echo -h    Print usage for Python GeoProcessor.
+echo /h    Print usage of this gp.bat batch file.
+echo /o    Run the OSGeo4W version of QGIS (even if standalone QGIS is available).
+echo /s    Run the standalone version of QGIS (even if OSGeo4W QGIS is available).
+echo /v    Print version of this gp.bat batch file.
+echo.
+exit /b 0
+
+:printVersion
+rem Print the program version
+echo.
+echo gp.bat version %gpBatVersion% %gpBatVersionDate%
+echo.
+exit /b 0
 
 :qgisVersionUnknown
 rem The QGIS version is not know, used by OSGeo4W and standalone QGIS

@@ -20,6 +20,7 @@
 import logging
 
 import geoprocessor.util.command_util as command_util
+from geoprocessor.ui.commands.abstract.AbstractCommandEditor_Simple import AbstractCommandEditor_Simple
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
 from geoprocessor.ui.commands.util.CommentBlockStartEditor import CommentBlockStartEditor
 from geoprocessor.ui.commands.util.CommentBlockEndEditor import CommentBlockEndEditor
@@ -128,7 +129,14 @@ class GeoProcessorCommandEditorFactory(object):
                 # appropriate unique command editor
                 elif commentBlockEnd:
                     return CommentBlockEndEditor(command)
-                return GenericCommandEditor(command)
+
+                # Check to see what kind of editor needs to be returned for
+                # the given command
+                editor_type = command.command_metadata['EditorType']
+                if editor_type == "Simple":
+                    return AbstractCommandEditor_Simple(command)
+                else:
+                    return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")
                 raise ValueError('Unrecognized command "' + command_string + '"')

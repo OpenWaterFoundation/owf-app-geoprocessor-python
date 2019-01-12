@@ -69,6 +69,21 @@ class WebGet(AbstractCommand):
         self.command_description = "Download a file from a URL"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
+        # New metadata for working with simple command editor
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'Download a file from a URL'
+        self.command_metadata['EditorType'] = 'Simple'
+
+        self.parameter_input_metadata = {}
+        self.parameter_input_metadata['URL.Group'] = None
+        self.parameter_input_metadata['URL.Description'] = 'Must specify.'
+        self.parameter_input_metadata['URL.Label'] = 'URL'
+        self.parameter_input_metadata['URL.Tooltip'] = 'Specify the URL from which to read content.'
+        self.parameter_input_metadata['URL.Required'] = True
+        self.parameter_input_metadata['URL.Values'] = None
+        self.parameter_input_metadata['URL.DefaultValue'] = None
+        self.parameter_input_metadata['URL.FileSelectorType'] = 'Read'
+
         # Class data
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)

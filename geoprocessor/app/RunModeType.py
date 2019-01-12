@@ -1,4 +1,4 @@
-# command_phase_types - command phase types
+# RunMode - run modes for the GeoProcessor application
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
@@ -17,34 +17,43 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-"""
-Possible values of command phase.
-When the code migrates to Python 3 this can be replaced with an Enum named CommandPhaseType.
-
-INITIALIZATION:  Creation and initialization of the command.
-DISCOVERY:  Run the command in discovery mode.
-RUN:  Run the command completely.
-"""
-
-INITIALIZATION = 'INITIALIZATION'
-DISCOVERY = 'DISCOVERY'
-RUN = 'RUN'
+from enum import Enum
 
 
-def get_command_status_types(sort=False):
+class RunModeType(Enum):
     """
-    Return the list of valid command phases.
+    Enumeration for GeoProcessor application run type.
 
-    Args:
-        sort:  If True, sort alphabetically.  If False, return in order of execution (default).
+    String representation is uppercase because it is mainly used internally:
 
-    Returns:
-        The list of phase types, for example for use in command parameter choice.
+    BATCH:  Run in batch mode.
+    HTTP:   Run the command in discovery mode.
+    SHELL:  Run the GeoProcessor command prompt shell.
+    UI:     Run the interactive user interface.
 
+    Numerical values are ordered in alphabetical order.
     """
-    if sort:
-        # Sort alphabetically
-        return [DISCOVERY, INITIALIZATION, RUN]
-    else:
+    BATCH = 1
+    HTTP = 2
+    SHELL = 3
+    UI = 4
+
+    @classmethod
+    def get_run_modes(cls):
+        """
+        Return the list of valid run modes.
+
+        Returns:
+            The list of run modes;
+        """
         # Return in order of processing order.
-        return [INITIALIZATION, DISCOVERY, RUN]
+        return [RunModeType.BATCH, RunModeType.HTTP, RunModeType.SHELL, RunModeType.UI]
+
+    def __str__(self):
+        """
+        Format the enumeration value as a string - just return the name.
+
+        Returns:
+
+        """
+        return self.name

@@ -18,6 +18,11 @@
 # ________________________________________________________________NoticeEnd___
 # - allows use of application-specific data by other modules
 
+import geoprocessor.util.os_util as os_util
+
+import os
+import sys
+
 # Dictionary containing program properties
 program_properties = {}
 
@@ -39,6 +44,25 @@ def get_property(property_name):
     try:
         return program_properties[property_name]
     except KeyError as e:
+        return None
+
+
+def get_qgis_install_folder():
+    """
+    Return the top-level folder where QGIS is installed for the version being used at run-time.
+    This should only be called if is_qgis_osgeo() and/or is_qgis_standalone() return true.
+    Currently returns the QGIS_PREFIX_PATH environment variable.
+
+    Returns:
+        - The top-level folder where QGIS is installed.
+        - None if QGIS is not installed.
+    """
+    if is_qgis_install_osgeo():
+        return os.environ.get('QGIS_PREFIX_PATH')
+    elif is_qgis_install_standalone():
+        return os.environ.get('QGIS_PREFIX_PATH')
+    else:
+        # QGIS not installed
         return None
 
 
@@ -71,6 +95,82 @@ def init_properties():
     program_properties['ProgramVersion'] = ""
     # Program version, for example YYYY-MM-DD
     program_properties['ProgramVersionDate'] = ""
+
+
+def is_gp():
+    """
+    Indicate whether running the full GeoProcessor (gp).
+    This checks the Python that is being used.
+    If QGIS is installed and being used, return True.
+
+    See also:
+        is_gptest()
+
+    Returns:
+        True if the application is the full GeoProcessor, or False if not.
+    """
+    if is_qgis_install_osgeo() or is_qgis_install_standalone():
+        return True
+    else:
+        return False
+
+
+def is_gptest():
+    """
+    Indicate whether running the GeoProcessor testing framework (gptest).
+
+    Returns:
+        True if the application is the testing framework GeoProcessor, or False if not.
+    """
+    if is_gp():
+        return False
+    else:
+        return True
+
+
+def is_qgis_install_osgeo():
+    """
+    Indicate whether running the OSGeo4W QGIS installation.
+    On Windows, If Python is located in folder 'C:/OSGeo4W64', it is an OSGeo install.
+
+    Returns:
+        True if the application is the OSGeo4W QGIS installation, or False if not.
+    """
+    executable = str(sys.executable).upper()
+    if os_util.is_windows_os():
+        # Check the executable path, which may be old-style C:\OSGEO4~1, etc.
+        if executable.find(r':\OSGEO4') > 0:
+            # Running the Python shipped with OSGeo4W installation
+            return True
+
+    # Fall through.
+    return False
+
+
+def is_qgis_install_standalone():
+    """
+    Indicate whether running standalone QGIS installation.
+    On Windows, If Python is located in folder 'C:/Program Files/QGIS', it is a standalone install.
+
+    See also:
+        is_qgis_osgeo()
+
+    Returns:
+        True if the application is the standalone QGIS installation, or False if not.
+    """
+    executable = str(sys.executable).upper()
+    if os_util.is_windows_os():
+        # Check the executable path
+        if executable.find(r'\PROGRAM FILES\QGIS') > 0:
+            # Running the Python shipped with stand-alone version of QGIS
+            return True
+        elif (executable.find(r'\PROGRA~') > 0) and (executable.find(r'\QGIS3') > 0):
+            # Running the Python shipped with stand-alone version of QGIS
+            # - old-style is something like C:\PROGRA~1\QGIS3~1.4\...
+            return True
+
+    # Fall through.
+    return False
 
 
 def set_property(property_name, property_value):

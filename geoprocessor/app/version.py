@@ -25,3 +25,5 @@ app_copyright = "Copyright 2017-2019, Open Water Foundation"
 app_license = "GPL 3.0"
 app_version = "1.3.0dev"
 app_version_date = "2019-01-11"
+
+# Adjust the application name if testing framework to avoid confusion

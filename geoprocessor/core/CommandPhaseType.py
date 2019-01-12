@@ -1,4 +1,4 @@
-# command_phase_types - command phase types
+# CommandPhaseType - command phase types
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation

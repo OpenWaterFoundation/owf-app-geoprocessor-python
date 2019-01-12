@@ -28,7 +28,8 @@ set scriptFolder=%~dp0
 
 rem Call the GeoProcessor in UI mode.
 rem - use the full path because 'gp' may not be in the PATH
-call "%scriptFolder%\gp" --ui
+rem - this batch file may be called with /s or /u so pass arguments to general batch file
+call "%scriptFolder%\gp" --ui %*
 
 rem Exit with the error level of the gp.bat command
 exit /b %ERRORLEVEL%

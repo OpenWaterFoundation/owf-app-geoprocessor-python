@@ -2599,14 +2599,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             current_date = current_date.strftime("%c %Z")
             host = platform.uname()[1]
             working_dir = os.getcwd()
+            program_home = app_util.get_property('ProgramHome')
+            program_resources_path = app_util.get_property('ProgramResourcesPath')
 
-            properties += ("System Properties Defined for Application:\n" +
-                           TAB + " Program Name: " + program_name + " " + version + " " + version_date + "\n" +
-                           TAB + " User Name: " + user_name + "\n" +
-                           TAB + " Date: " + current_date + "\n" +
-                           TAB + " Host: " + host + "\n" +
-                           TAB + " Working Directory: " + working_dir + "\n" +
-                           TAB + " Command: gpdev.bat --ui\n" +
+            properties += ("GeoProcessor Application and Session Information:\n" +
+                           TAB + "Program Name: " + program_name + " " + version + " " + version_date + "\n" +
+                           TAB + "User Name: " + user_name + "\n" +
+                           TAB + "Date: " + current_date + "\n" +
+                           TAB + "Host: " + host + "\n" +
+                           TAB + "Working Directory: " + working_dir + "\n" +
+                           TAB + "Command: gpdev.bat --ui\n" +
+                           TAB + 'Program Home: ' + program_home + "\n" +
+                           TAB + 'Program Resources Path: ' + program_resources_path + "\n" +
                            "\n")
 
             operating_system = platform.uname()[0] + " " + platform.uname()[2]
@@ -2622,30 +2626,23 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 architecture = "Code not implemented to check on operating system"
 
             properties += ("Operating System Information:\n" +
-                           TAB + " Type: " + os_type + "\n" +
-                           TAB + " Distribution: " + os_distro + "\n" +
-                           TAB + " Name (platform.uname[0] and [2]): " + operating_system + "\n" +
-                           TAB + " Version (platform.uname[3]): " + version + "\n")
+                           TAB + "Type: " + os_type + "\n" +
+                           TAB + "Distribution: " + os_distro + "\n" +
+                           TAB + "Name (platform.uname[0] and [2]): " + operating_system + "\n" +
+                           TAB + "Version (platform.uname[3]): " + version + "\n")
             if is_windows:
-                properties += (TAB + " System Architecture (os.environ['MSYSTEM_CARCH']: " + architecture + "\n")
+                properties += (TAB + "System Architecture (os.environ['MSYSTEM_CARCH']: " + architecture + "\n")
             else:
                 # Linux variant
                 # - TODO smalers 2018-12-31 need to standardize
-                properties += (TAB + " System Architecture: " + architecture + "\n")
+                properties += (TAB + "System Architecture: " + architecture + "\n")
             properties += "\n"
-
-            program_home = app_util.get_property('ProgramHome')
-            program_resources_path = app_util.get_property('ProgramResourcesPath')
 
             # Replace newlines in system version
             system_version = sys.version.replace("\r\n", " ").replace("\n", " ")
             system_path = ''
             for line in sys.path[1:]:
                 system_path += str(line) + '\n' + TAB + TAB
-
-            properties += ("GeoProcessor Properties:\n" +
-                           TAB + 'Program Home: ' + program_home + "\n" +
-                           TAB + 'Program Resources Path: ' + program_resources_path + "\n\n")
 
             # Python properties
 
@@ -2656,31 +2653,57 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                            TAB + 'Python Path (sys.path):\n' +
                            TAB + TAB + system_path + "\n")
 
-            # Check if QGIS is installed and in PATH
-            if is_windows:
-                qgis_root = r"C:\OSGeo4W64"
+            # Check if QGIS is being used at runtime
+            # - may want to provide information about what is installed even if not used at runtime but
+            #   that could be confusing and documentation troubleshooting can help figure out issues
+            qgis_install_type = "Unknown"
+            if app_util.is_qgis_install_standalone():
+                qgis_install_type = "Standalone installation"
+                qgis_install_folder = app_util.get_qgis_install_folder()
+            elif app_util.is_qgis_install_osgeo():
+                qgis_install_type = "OSGeo4W installation"
+                qgis_install_folder = app_util.get_qgis_install_folder()
             else:
-                # Not yet supported
-                qgis_root = "unknown (operating system not supported with QGIS)"
+                qgis_install_type = "Unknown"
             qgis_name = "qgis"
-            qgis_installed = os.path.exists(qgis_root)
             qgis_version = qgis.utils.Qgis.QGIS_VERSION
 
-            if qgis_installed:
-                qgis_install_string = r"QGIS is installed at: " + qgis_root + "\n"
+            # The QGIS environment variables are set by configuration scripts prior to running Python GeoProcessor
+            # - output in case they are useful for troubleshooting
+            # - use str() to sensure that None values won't cause problems
+            if qgis_install_type == "Unknown":
+                # QGIS does not appear to be used at runtime so provide minimal information
+                properties += (
+                            "QGIS Properties:\n" +
+                            TAB + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
+                            TAB + "The GeoProcessor testing framework is being used without QGIS dependencies.\n"
+                )
             else:
-                qgis_install_string = r"QGIS is not installed at " + qgis_root +\
-                                      ".  The GeoProcessor testing framework is installed.\n"
-            properties += ("QGIS Properties:\n" +
-                           TAB + qgis_install_string)
-            if qgis_installed:
-                properties += (TAB + "QGIS Version: " + qgis_version + "\n" +
-                               TAB + "QGIS Path Variables (set up by GeoProcessor startup script):\n" +
-                               TAB + TAB + qgis_root + "\\bin" + "\n" +
-                               TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\\bin" + "\n" +
-                               TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\n" +
-                               TAB + TAB + qgis_root + "\\apps\\" + qgis_name + "\\qtplugins" + "\n" +
-                               TAB + TAB + qgis_root + "\\apps\\qt5\\plugins" + "\n" +
+                qgis_root = ""
+                properties += (
+                               "QGIS Properties:\n" +
+                               TAB + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
+                               TAB + "QGIS Installation Folder: " + str(qgis_install_folder) + "\n" +
+                               TAB + "QGIS Version: " + str(qgis_version) + "\n" +
+                               TAB + "QGIS Environment Variables (set up by QGIS and GeoProcessor startup scripts):\n" +
+                               TAB + TAB + "GDAL_DATA: " + str(os.environ.get('GDAL_DATA')) + "\n" +
+                               TAB + TAB + "GDAL_DRIVER_PATH: " + str(os.environ.get('GDAL_DRIVER_PATH')) + "\n" +
+                               TAB + TAB + "GDAL_FILENAME_IS_UTF8: " + str(os.environ.get('GDAL_FILENAME_IS_UTF8')) +
+                               "\n" +
+                               TAB + TAB + "GEOTIFF_CSV: " + str(os.environ.get('GEOTIFF_CSV')) + "\n" +
+                               TAB + TAB + "OSGEO4W_ROOT: " + str(os.environ.get('OSGEO4W_ROOT')) + "\n" +
+                               TAB + TAB + "O4W_QT_BINARIES: " + str(os.environ.get('O4W_QT_BINARIES')) + "\n" +
+                               TAB + TAB + "O4W_QT_DOC: " + str(os.environ.get('O4W_QT_DOC')) + "\n" +
+                               TAB + TAB + "O4W_QT_HEADERS: " + str(os.environ.get('O4W_QT_HEADERS')) + "\n" +
+                               TAB + TAB + "O4W_QT_LIBRARIES: " + str(os.environ.get('O4W_QT_LIBRARIES')) + "\n" +
+                               TAB + TAB + "O4W_QT_PLUGINS: " + str(os.environ.get('O4W_QT_PLUGINS')) + "\n" +
+                               TAB + TAB + "O4W_QT_PREFIX: " + str(os.environ.get('O4W_QT_PREFIX')) + "\n" +
+                               TAB + TAB + "O4W_QT_TRANSLATIONS: " + str(os.environ.get('O4W_QT_TRANSLATION')) + "\n" +
+                               TAB + TAB + "PYTHONHOME: " + str(os.environ.get('PYTHONHOME')) + "\n" +
+                               TAB + TAB + "QGIS_PREFIX_PATH: " + str(os.environ.get('QGIS_PREFIX_PATH')) + "\n" +
+                               TAB + TAB + "QT_PLUGIN_PATH: " + str(os.environ.get('QT_PLUGIN_PATH')) + "\n" +
+                               TAB + TAB + "VSI_CACHE: " + str(os.environ.get('VSI_CACHE')) + "\n" +
+                               TAB + TAB + "VSI_CACHE_SIZE: " + str(os.environ.get('VSI_CACHE_SIZE')) + "\n" +
                                "\n")
 
             # Create Software/System Information Dialog Box
@@ -2691,7 +2714,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
             self.sys_info.setWindowIcon(QtGui.QIcon(icon_path))
             self.sys_info_text_browser = QtWidgets.QTextBrowser(self.sys_info)
-            self.sys_info_text_browser.setGeometry(QtCore.QRect(25, 20, 750, 450))
+            self.sys_info_text_browser.setGeometry(QtCore.QRect(25, 20, 750, 550))
             self.sys_info_text_browser.setText(properties)
             self.sys_info_text_browser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
             # Will implement copy button later once with a better understanding

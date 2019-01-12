@@ -231,9 +231,6 @@ class CommentEditor(QtWidgets.QDialog):
         """
         Setup specific elements in relation to the entire window.
 
-        Args:
-            None
-
         Returns:
             None
         """
@@ -300,18 +297,10 @@ class CommentEditor(QtWidgets.QDialog):
         # Do not display default command string when editing a new comment
         # If command_string is default reset to empty
         command_string = self.command.command_string
-        # TODO smalers 2019-01-10 Need to remove the following after review
         # - existing comments should be shown as is without stripping the leading #
         if command_string == "#()":
             # Special case for new comment
             command_string = ""
-        # elif command_string.startswith("#"):
-        #     if len(command_string) == 1:
-        #         command_string = ""
-        #     elif command_string[1] == " ":
-        #         command_string = command_string[2:]
-        #     else:
-        #         command_string = command_string[1:]
         self.CommandDisplay_View_TextBrowser.setText(command_string)
         # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
         # self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))

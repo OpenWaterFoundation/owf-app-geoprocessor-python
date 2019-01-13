@@ -4,18 +4,30 @@ This documentation explains how new developers can set up the development enviro
 The development environment should be set up for each of the following software components.
 Discussion of tool updates is included in the development environment page for each tool.
 
-1. Install software:
+1. [Create Folders for Development](#create-folders-for-development)
+2. Install software:
 	1. [Python](#install-python)
 	2. [QGIS](#install-qgis)
 	3. [PyCharm](#install-pycharm)
 	4. [MkDocs](#install-mkdocs)
 	5. [Git](#install-git)
 	6. [Cygwin](#install-cygwin)
-2. [Clone Repository and Configure Project](#clone-repository-and-configure-project)
-3. [Run the GeoProcessor](#run-the-geoprocessor)
-4. [Develop software as per Development Tasks](#develop-software-as-per-development-tasks)
+3. [Clone Repository and Configure Project](#clone-repository-and-configure-project)
+4. [Run the GeoProcessor](#run-the-geoprocessor)
+5. [Develop software as per Development Tasks](#develop-software-as-per-development-tasks)
 
 -----------------
+
+## Create Folders for Development ##
+
+Folders need to be created to hold the GeoProcessor development files.
+Instructions are provided for each step that folders need to be created.
+The [Clone Repository and Configure Project](#clone-repository-and-configure-project)
+step describes creating folders.
+
+See the following:
+
+* [Development Environment Folders](../dev-env/folders)
 
 ## Install Python ##
 
@@ -93,7 +105,8 @@ The GeoProcessor code project is maintained within a single GitHub repository.
 Additional repositories are used for user documentation and functional tests.
 This allows progress to occur in all areas, while only requiring Python expertise in the code project.
 
-Once set up, scripts within the project will use relative paths (using `..`) or will refer to known absolute paths
+Once set up, scripts within the project will determine the folder for the script and
+use paths relative to the script folder.
 by determining the folder that a script is run in and appending to that path.
 The following folder structure is the recommended folder structure for organizing the GeoProcessor project.
 Each of the folders under `git-repos` matches the name of a GitHub repository.
@@ -102,7 +115,7 @@ Each of the folders under `git-repos` matches the name of a GitHub repository.
 C:\Users\user\owf-dev\                         Top-level development folder (Windows).
 /home/user/owf-dev/                            Top-level development folder (Linux).
 /cygdrive/C/Users/user/owf-dev/                Top-level development folder (Cygwin).
-  GeoProcessor/                                Product folder.
+  GeoProcessor or GP/                          Product folder (see note below).
     git-repos/                                 Git repositories for the GeoProcessor.
       owf-app-geoprocessor-arcpy/              Code repository for ArcGIS version (only if developing ArcGIS version).
       owf-app-geoprocessor-python/             Code repository.
@@ -115,6 +128,9 @@ C:\Users\user\owf-dev\                         Top-level development folder (Win
 To set up a new project:
 
 1. Create a folder inclusive of the `git-repos` level.
+**The virtual environment folder in the developer environment involves `hashbang` (`#!`)
+paths that are limited to 127 characters.  If this limit is exceeded, use a shorter product-level
+folder indicated above, such as `GP` rather than `GeoProcessor`.**
 2. Clone the main component repository into `git-repos`: `owf-app-geoprocessor-python`.
 3. Run the `build-util/git-clone-all-gp.sh` script to clone the other repositories (if they don't already exist).
 
@@ -141,44 +157,68 @@ This will rely on a Python virtual environment.
 
 ![Create project 1](images/create-project1.png)
 
-Select ***Create New Project***.
+**<p style="text-align: center;">
+PyCharm Startup Screen (<a href="../images/create-project1.png">see full-size image</a>)
+</p>**
+
+Select ***Create New Project*** (can also use ***File / New Project...*** if initial screen is not available).
 Then select the folder that was cloned from GitHub, similar to the following.
 Note that the `owf-app-geoprocessor-python` repository's `.gitignore` file indicates to ignore all PyCharm project files.
-The user documentation and functional test repositories do not need to be known to PyCharm.
-**The following image needs to be updated to use a Python 3.x base interpreter.
-The QGIS Python version can be determined by checking folder names in the `C:\OSGeo4W64\apps` folder,
-which will use `Python3x` for recent release and may include `Python27` for the long-term stable release
-if installed.**
+The user documentation and functional test repositories do not need to be known to PyCharm;
+therefore, only the `owf-app-geoprocessor-python` repository needs to be known to PyCharm.
+The QGIS Python version to be used for the base interpreter can be determined by checking folder names in the `C:\OSGeo4W64\apps` folder,
+which will use `Python3x` for recent release and may include `Python27` for the long-term stable release if installed. 
+For example, use the `Python37` version or later, based on what is distributed with OSGeo4W QGIS.
 
 ![Create project 2](images/create-project2.png)
 
-PyCharm may display a warning:
+**<p style="text-align: center;">
+Specify Python Interpreter for the Project (<a href="../images/create-project2.png">see full-size image</a>)
+</p>**
+
+PyCharm may display a warning because a new project is being created in a folder that contains existing files:
 
 ![Create project 3](images/create-project3.png)
 
-Press ***Yes***.
+**<p style="text-align: center;">
+New Project Warning for Existing Files (<a href="../images/create-project3.png">see full-size image</a>)
+</p>**
+
+Press ***Yes*** because the files from the cloned Git repository will be used for the project.
 The project will be created/imported and the main PyCharm interface will be shown, with project files listed,
 as shown in the following image.
 Note that the project name in the upper left of the file listing matches the Git repository name.
-Note also that PyCharm warns about no interpreter being defined.
+
+If a warning is shown about no interpreter being configured as in the following figure,
+an interpreter can be added as described below.
 
 ![Create project 4](images/create-project4.png)
 
+**<p style="text-align: center;">
+New Project after Git Repository Files are Imported (<a href="../images/create-project4.png">see full-size image</a>)
+</p>**
+
 To add an interpreter, use the ***File / Settings*** menu and then ***Project: owf-app-geoprocessor-python / Project Interpreter***.
 Indicate that a new environment should be used, which will create a virtual environment as shown in the following image.
-Select a base interpreter that is Python 3.x consistent with QGIS Python version,
-since that is what will be used in the deployed environment.
-**The QGIS Python distribution is not a standard Python distribution folder structure so don't use it for the base interpreter.**
-Pressing ***OK*** will copy needed files from the base interpreter to the virtual environment.
-**The following image needs to be updated to indicate Python 3.x.**
+Select the base interpreter from the QGIS Python distribution to
+ensure consistency between the development environment and the GeoProcessor that will be deployed.
+The [script that is used to run Python for GeoProcessor development](../dev-env/pycharm#script-to-run-pycharm)
+configures the environment to ensure that necessary Python packages and QGIS software are found.
 
 ![Create project 5](images/create-project5.png)
 
-The environment is then ready for development.  Use the PyCharm startup script each time that PyCharm needs to be started for development.
+**<p style="text-align: center;">
+Specifying the Python Interpreter (<a href="../images/create-project5.png">see full-size image</a>)
+</p>**
+
+Pressing ***OK*** will copy needed files from the base interpreter to the virtual environment.
+The environment is then ready for development.
+Use the [PyCharm run script](../dev-env/pycharm#script-to-run-pycharm)
+each time that PyCharm needs to be started for development.
 
 ## Run the GeoProcessor ##
 
-See the [Development Environment documentation](../dev-env/running)
+See the [Development Environment / Running the GeoProcessor documentation](../dev-env/running)
 for information on running the GeoProcessor in the development environment.
 
 ## Develop software as per Development Tasks ##

@@ -92,7 +92,8 @@ Run `build-util/2-create-gp-venv.bat` to create a Python virtual environment.
 	that are distributed with QGIS.
 3. More frequently, when code or other source files are edited and need to be tested in Linux, run `build-util/2-update-gp-venv.bat` to
 	copy source code and scripts to the virtual environment without recreating the virtual environment.
-	**This script has not been created.**
+	This script **does not** re-create the zip file, which is needed to upload to the GeoProcessor downloads page.
+	Run the `2-create-gp-venv.bat` batch file to create the installer for deployment.
 4. Run the `build-util/venv-tmp/gp-1.1.0-win-venv/scripts/gp` or `scripts/gpui` script in the virtual environment to run the GeoProcessor.
 	1. The scripts will configure the QGIS environment and also make Python aware of the GeoProcessor files in the virtual environment.
 	2. The scripts do not currently need to activate the virtual environment (but may enable later to run `gptest` independent
@@ -102,7 +103,8 @@ Run `build-util/2-create-gp-venv.bat` to create a Python virtual environment.
 	1. Run the `build-util/3-copy-gp-win-to-amazon-s3.sh` batch file to upload the latest Windows installer.
 	2. Run the `build-util/3-copy-gp-to-amazon-s3.sh` script to upload a Cygwin/Linux version and update the
 	catalog file - this is necessary because the script above does not create the catalog file or `index.html` file.
-	**Need to update the first script above to handle Windows installer update.**
+	This script, when run on Cygwin, will also update the Windows installer zip file.
+	Therefore, prepare the Windows installer file first and then process the Cygwin installer.
 7. Test the installer.  Download the Windows installer from the
 	[GeoProcessor Downloads](http://software.openwaterfoundation.org/geoprocessor/) page.
 	1. Then run the `Scripts\gp.bat` or `Scripts\gpui.bat` batch file.

@@ -191,7 +191,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
         logger = logging.getLogger(__name__)
         if cls.__regression_test_fp is None:
             # Regression test file was never opened
-            logger.info("Regression report file is None")
+            # - this is not important to most users, especially if not running tests
+            # logger.info("Regression report file is None")
             return
 
         nl = os.linesep
@@ -309,15 +310,6 @@ class StartRegressionTestResultsReport(AbstractCommand):
             logger.info('Opened regression test results report file "' + pv_OutputFile_absolute + '"')
 
         except Exception as e:
-            warning_count += 1
-            message = 'Unexpected error opening file "' + pv_OutputFile_absolute + '"'
-            logger.error(message, exc_info=True)
-            self.command_status.add_to_log(
-                CommandPhaseType.RUN,
-                CommandLogRecord(CommandStatusType.FAILURE, message,
-                                 "See the log file for details."))
-
-        except:
             warning_count += 1
             message = 'Unexpected error opening file "' + pv_OutputFile_absolute + '"'
             logger.error(message, exc_info=True)

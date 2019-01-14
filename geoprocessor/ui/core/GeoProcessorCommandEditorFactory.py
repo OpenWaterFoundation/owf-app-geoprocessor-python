@@ -20,6 +20,7 @@
 import logging
 
 import geoprocessor.util.command_util as command_util
+from geoprocessor.ui.commands.abstract.AbstractCommandEditor_Simple import AbstractCommandEditor_Simple
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
 from geoprocessor.ui.commands.util.CommentBlockStartEditor import CommentBlockStartEditor
 from geoprocessor.ui.commands.util.CommentBlockEndEditor import CommentBlockEndEditor
@@ -45,7 +46,7 @@ class GeoProcessorCommandEditorFactory(object):
         self.command_unknown_count = 0
 
     @classmethod
-    def new_command_editor(self, command, create_unknown_command_if_not_recognized=True):
+    def new_command_editor(self, command, app_session, create_unknown_command_if_not_recognized=True):
         """
         Creates the editor for a command based on the command line of the command file.
         This can be called in the following cases:
@@ -128,7 +129,17 @@ class GeoProcessorCommandEditorFactory(object):
                 # appropriate unique command editor
                 elif commentBlockEnd:
                     return CommentBlockEndEditor(command)
-                return GenericCommandEditor(command)
+
+                # Check to see what kind of editor needs to be returned for
+                # the given command
+
+                try:
+                    command.command_metadata
+                    editor_type = command.command_metadata['EditorType']
+                    if editor_type == "Simple":
+                        return AbstractCommandEditor_Simple(command, app_session)
+                except:
+                    return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")
                 raise ValueError('Unrecognized command "' + command_string + '"')

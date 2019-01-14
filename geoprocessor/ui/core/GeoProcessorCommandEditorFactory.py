@@ -46,7 +46,7 @@ class GeoProcessorCommandEditorFactory(object):
         self.command_unknown_count = 0
 
     @classmethod
-    def new_command_editor(self, command, create_unknown_command_if_not_recognized=True):
+    def new_command_editor(self, command, app_session, create_unknown_command_if_not_recognized=True):
         """
         Creates the editor for a command based on the command line of the command file.
         This can be called in the following cases:
@@ -133,9 +133,12 @@ class GeoProcessorCommandEditorFactory(object):
                 # Check to see what kind of editor needs to be returned for
                 # the given command
                 editor_type = command.command_metadata['EditorType']
+                print("editor type: ")
+                print(editor_type)
                 if editor_type == "Simple":
-                    return AbstractCommandEditor_Simple(command)
+                    return AbstractCommandEditor_Simple(command, app_session)
                 else:
+                    print("before GenericCommandEditor")
                     return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")

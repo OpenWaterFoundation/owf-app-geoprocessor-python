@@ -43,7 +43,7 @@ except AttributeError:
 
 class AbstractCommandEditor_Simple(AbstractCommandEditor):
 
-    def __init__(self, command):
+    def __init__(self, command, app_session):
         """
         Initialize the Abstract Dialog instance.
 
@@ -58,6 +58,7 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                 Key: the name of the command parameter
                 Value: the entered value of the command parameter
         """
+
         super().__init__(command)
 
         # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
@@ -65,6 +66,11 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
 
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
         self.parameter_LineEdit = [None] * len(self.command.command_parameter_metadata)
+        # Array of drop down menus
+        self.drop_down_menu = [None] * len(self.command.command_parameter_metadata)
+
+        # This is a session object to keep track of session variables such as command file history
+        self.app_session = app_session
 
         # "command_description" is the description of the GeoProcessor command that the Dialog box is representing
         ##self.command_description = command_description
@@ -358,7 +364,7 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
         parameter_GridLayout.setObjectName("Command_Parameters_Layout")
 
         # Add entry fields for each parameter
-        y_parameter = -1
+        self.y_parameter = -1
         for command_parameter_metadata in self.command.command_parameter_metadata:
             # # Parse through the parameter metadata and locate all the parameters
             # # that are specific to the parameter that we are working with
@@ -373,56 +379,139 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             #     # If the parameter name matches we want to get it's metadata
             #     if command_parameter_metadata.parameter_name == parameter_name:
             #         print(parameter_value)
+
+            # Parameter input metatata
+            input_metadata = self.command.parameter_input_metadata
+
+            # Get the parameter name for retrieving all other parameter variables from
+            # parameter_input_metadata
+            parameter_name = command_parameter_metadata.parameter_name
+            print("")
+            print("---------------------------------")
+            print("parameter name: " + parameter_name)
+            print("---------------------------------")
+            # Get all the parameter values from parameter_input_metadata
+            # Group
+            request_key = parameter_name + "." + "Group"
+            print("request key: " + request_key)
+            parameter_group = input_metadata[request_key]
+            print("parameter group: " + parameter_group)
+            print("---------------------------------")
+            # Description
+            request_key = parameter_name + "." + "Description"
+            print("request key: " + request_key)
+            parameter_description = input_metadata[request_key]
+            print("parameter description: " + parameter_description)
+            print("---------------------------------")
+            # Label
+            request_key = parameter_name + "." + "Label"
+            print("request key: " + request_key)
+            parameter_label = input_metadata[request_key]
+            print("parameter label: " + parameter_label)
+            print("---------------------------------")
+            # Tooltip
+            request_key = parameter_name + "." + "Tooltip"
+            print("request key: " + request_key)
+            parameter_tooltip = input_metadata[request_key]
+            print("parameter tooltip: " + parameter_tooltip)
+            print("---------------------------------")
+            # Required
+            request_key = parameter_name + "." + "Required"
+            print("request key: " + request_key)
+            parameter_required = input_metadata[request_key]
+            print("parameter required: ")
+            print(parameter_required)
+            print("---------------------------------")
+            # Values
+            request_key = parameter_name + "." + "Values"
+            print("request key: " + request_key)
+            parameter_values = input_metadata[request_key]
+            print("parameter values: ")
+            print(parameter_values)
+            print("---------------------------------")
+            # Default Value
+            request_key = parameter_name + "." + "DefaultValue"
+            print("request key: " + request_key)
+            parameter_defaultValue = input_metadata[request_key]
+            print("parameter default values: " + parameter_defaultValue)
+            print("---------------------------------")
+            # File Selector Type
+            request_key = parameter_name + "." + "FileSelectorType"
+            print("request key: " + request_key)
+            parameter_fileSelectorType = input_metadata[request_key]
+            print("parameter file selector type: " + parameter_fileSelectorType)
+            print("---------------------------------")
+            print("")
+
             # Parameters listed in logical order
-            y_parameter = y_parameter + 1
+            self.y_parameter = self.y_parameter + 1
             # ---------------
             # Label component
             # ---------------
-
-            # Get parameter name from parameter_input_metadata:
-            # What are we looking for?
-            str = command_parameter_metadata.parameter_name + "." + "Label"
-            print(command_parameter_metadata.parameter_name)
-            print(self.command.parameter_input_metadata["URL.Label"])
-            parameter_name = command_parameter_metadata.parameter_name
             parameter_Label = QtWidgets.QLabel(parameter_Frame)
             parameter_Label.setObjectName("Command_Parameter_Label")
             parameter_Label.setText(parameter_name + ":")
             parameter_Label.setAlignment(QtCore.Qt.AlignRight) # |QtCore.Qt.AlignCenter)
             # Allow expanding horizontally
             parameter_Label.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)
-            parameter_GridLayout.addWidget(parameter_Label, y_parameter, 0, 1, 1)
+            parameter_GridLayout.addWidget(parameter_Label, self.y_parameter, 0, 1, 1)
             # --------------------
             # Text entry component
             # --------------------
-            self.parameter_LineEdit[y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
-            self.parameter_LineEdit[y_parameter].setObjectName(parameter_name)
-            parameter_GridLayout.addWidget(self.parameter_LineEdit[y_parameter], y_parameter, 1, 1, 1)
-            tooltip = command_parameter_metadata.editor_tooltip
-            if tooltip is not None:
-                self.parameter_LineEdit[y_parameter].setToolTip(tooltip)
-            # Create a listener that reacts if the line edit field has been changed. If so, run the
-            # update_command_display function.
-            # If this command is being updated add the command parameters to the text fields
-            if self.update:
-                parameter_value = self.command.get_parameter_value(parameter_name)
-                self.parameter_LineEdit[y_parameter].setText(parameter_value)
-            self.parameter_LineEdit[y_parameter].textChanged.connect(self.refresh_command)
+            if parameter_values != "":
+                self.drop_down_menu[self.y_parameter] = QtWidgets.QComboBox(parameter_Frame)
+                self.drop_down_menu[self.y_parameter].setObjectName(_fromUtf8("Drop_Down_Menu"))
+                self.drop_down_menu[self.y_parameter].setEditable(True)
+                # Add a blank item so that there is not an initial response for the drop down
+                self.drop_down_menu[self.y_parameter].addItem("")
+                for i, value in enumerate(parameter_values):
+                   self.drop_down_menu[self.y_parameter].addItem(value)
+                parameter_GridLayout.addWidget(self.drop_down_menu[self.y_parameter], self.y_parameter, 2, 1, 1)
+            else:
+                self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
+                self.parameter_LineEdit[self.y_parameter].setObjectName(parameter_name)
+                parameter_GridLayout.addWidget(self.parameter_LineEdit[self.y_parameter], self.y_parameter, 2, 1, 1)
+                tooltip = command_parameter_metadata.editor_tooltip
+                if tooltip is not None:
+                    self.parameter_LineEdit[self.y_parameter].setToolTip(tooltip)
+                # Create a listener that reacts if the line edit field has been changed. If so, run the
+                # update_command_display function.
+                # If this command is being updated add the command parameters to the text fields
+                if self.update:
+                    parameter_value = self.command.get_parameter_value(parameter_name)
+                    self.parameter_LineEdit[self.y_parameter].setText(parameter_value)
+                self.parameter_LineEdit[self.y_parameter].textChanged.connect(self.refresh_command)
+                if parameter_fileSelectorType != "":
+                    # -----------------
+                    # Add a button
+                    # -----------------
+                    self.load_file_button = QtWidgets.QPushButton(parameter_Frame)
+                    self.load_file_button.setObjectName(_fromUtf8("Open_File_Button"))
+                    self.load_file_button.setText(_translate("Dialog", "...", None))
+                    self.load_file_button.setToolTip("Open a file.")
+                    self.load_file_button.clicked.connect(self.ui_action_open_file, self.y_parameter)
+                    parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 3, 1, 1)
             # ----------------------------------------------------
             # Description component, optionally with default value
             # ----------------------------------------------------
-            parameter_description = command_parameter_metadata.parameter_description
-            parameter_desc_Label = QtWidgets.QLabel(parameter_Frame)
-            parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
-            parameter_desc = command_parameter_metadata.parameter_description
-            if parameter_desc is None:
+            # If we are not working with a file opening text option add labels to the right
+            if parameter_fileSelectorType == "":
+                parameter_desc_Label = QtWidgets.QLabel(parameter_Frame)
+                parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
                 parameter_desc = ""
-            default_value = command_parameter_metadata.default_value
-            if default_value is not None:
-                parameter_desc = parameter_desc + " (default=" + default_value + ")"
-            parameter_desc_Label.setText(parameter_desc)
-            parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
-            parameter_GridLayout.addWidget(parameter_desc_Label, y_parameter, 3, 4, 1)
+                if parameter_required:
+                    parameter_desc += "Required"
+                if parameter_description != "":
+                    if parameter_desc != "":
+                        parameter_desc += " - "
+                    parameter_desc += parameter_description
+                if parameter_defaultValue != "":
+                    if parameter_desc != "":
+                        parameter_desc += " - "
+                    parameter_desc = parameter_desc + " (default=" + parameter_defaultValue + ")"
+                parameter_desc_Label.setText(parameter_desc)
+                # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
+                parameter_GridLayout.addWidget(parameter_desc_Label, self.y_parameter, 4, 1, 1)
 
     def refresh_command(self):
         """
@@ -447,14 +536,79 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                 parameter_name = command_parameter_metadata.parameter_name
                 parameter_value = self.parameter_LineEdit[y_parameter].text()
                 if parameter_value is not None and parameter_value != "":
+                    print("command string1: " + command_string)
+                    print("sep: " + sep)
+                    print("parameter_name: " + parameter_name)
+                    print("parameter_value: " + parameter_value)
                     command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
+                    print("command string2: " + command_string)
+            print("I am groot")
+            print("command string3: ")
+            print(command_string)
             command_string = command_string + ")"
+            print("command string4: " + command_string)
             self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
         except Exception as e:
             message="Error refreshing command from parameters"
             logger = logging.getLogger(__name__)
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
+
+    def ui_action_open_file(self, y_parameter):
+        """
+        Open a command file. Each line of the command file is a separate item in the Command_List QList Widget.
+        If the existing commands have not been saved, the user is prompted to ask if they should be saved.
+
+        Args:
+            filename (str):
+                the absolute path to the command file to open, if blank prompt for the file and otherwise
+                open the file
+
+        Returns:
+            None
+        """
+
+        print("inside ui_action_open_file")
+
+        logger = logging.getLogger(__name__)
+        self.opened_file = True
+
+        # The "..." QPushButton has been selected, in which case the user is
+        # browsing for a file. For now open users home folder.
+        folder = self.app_session.get_user_folder()
+
+        # A browser window will appear to allow the user to browse to the desired command file.
+        # The absolute pathname of the command file is added to the cmd_filepath variable.
+        filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", folder)[0]
+        if not filepath:
+            return
+
+        self.parameter_LineEdit[y_parameter].setText(filepath)
+
+        # # Read the command file in GeoProcessor
+        # # GeoProcessor should handle necessary event handling and notify
+        # # the GeoProessorListModel to update the User Interface
+        # try:
+        #     self.gp.read_command_file(cmd_filepath)
+        # except FileNotFoundError as e:
+        #     # The file should exist but may have been deleted outside of the UI
+        #     message = 'Selected command file does not exist (maybe deleted or renamed?):\n"' + cmd_filepath + '"'
+        #     logger.warning(message, e, exc_info=True)
+        #     qt_util.warning_message_box(message)
+        #     # Return so history is not changed to include a file that does not exist
+        #     return
+
+        # Push new command onto history
+        # self.app_session.push_history(cmd_filepath)
+
+        # Set this file path as the path to save if the user click "Save Commands ..."
+        # self.saved_file = cmd_filepath
+
+        # Set the title for the main window
+        # self.ui_set_main_window_title('"' + cmd_filepath + '"')
+
+        # Update recently opened files in file menu
+        # self.ui_init_file_open_recent_files()
 
     def update_command_display(self):
         """

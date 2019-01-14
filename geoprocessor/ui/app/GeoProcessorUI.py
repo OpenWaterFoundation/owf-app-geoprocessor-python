@@ -372,7 +372,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Create the editor for the command
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
-            command_editor = command_editor_factory.new_command_editor(command_object)
+            command_editor = command_editor_factory.new_command_editor(command_object, self.app_session)
             if comment_block:
                 # Comment block editor is for 1+ comment lines separated by newline as formed above
                 command_editor.set_text(comment_block_text)
@@ -481,7 +481,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Create the editor for the command
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
-            command_editor = command_editor_factory.new_command_editor(command_object)
+            command_editor = command_editor_factory.new_command_editor(command_object, self.app_session)
         except Exception as e:
             message = "Error creating editor for new command"
             logger.error(message, e, exc_info=True)

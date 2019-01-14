@@ -287,8 +287,17 @@ class GenericCommandEditor(AbstractCommandEditor):
                 parameter_name = command_parameter_metadata.parameter_name
                 parameter_value = self.parameter_LineEdit[y_parameter].text()
                 if parameter_value is not None and parameter_value != "":
+                    print("command string1: " + command_string)
+                    print("sep: " + sep)
+                    print("parameter_name: " + parameter_name)
+                    print("parameter_value: " + parameter_value)
                     command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
+                    print("command string2: " + command_string)
+            print("I am groot")
+            print("command string3: ")
+            print(command_string)
             command_string = command_string + ")"
+            print("command string4: " + command_string)
             self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
         except Exception as e:
             message="Error refreshing command from parameters"

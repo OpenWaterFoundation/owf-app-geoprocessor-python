@@ -97,6 +97,9 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
         # Setup the UI in the abstract class, which will call back to set_ui() in this class.
         self.setup_ui_core()
 
+        # Initially call refresh in case updating a command
+        self.refresh_command()
+
     def are_required_parameters_specified(self, ui_command_parameter_list):
         """
         Checks if the required parameters of a command are specified by the user in the command dialog window.
@@ -386,62 +389,31 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             # Get the parameter name for retrieving all other parameter variables from
             # parameter_input_metadata
             parameter_name = command_parameter_metadata.parameter_name
-            print("")
-            print("---------------------------------")
-            print("parameter name: " + parameter_name)
-            print("---------------------------------")
             # Get all the parameter values from parameter_input_metadata
             # Group
             request_key = parameter_name + "." + "Group"
-            print("request key: " + request_key)
             parameter_group = input_metadata[request_key]
-            print("parameter group: " + parameter_group)
-            print("---------------------------------")
             # Description
             request_key = parameter_name + "." + "Description"
-            print("request key: " + request_key)
             parameter_description = input_metadata[request_key]
-            print("parameter description: " + parameter_description)
-            print("---------------------------------")
             # Label
             request_key = parameter_name + "." + "Label"
-            print("request key: " + request_key)
             parameter_label = input_metadata[request_key]
-            print("parameter label: " + parameter_label)
-            print("---------------------------------")
             # Tooltip
             request_key = parameter_name + "." + "Tooltip"
-            print("request key: " + request_key)
             parameter_tooltip = input_metadata[request_key]
-            print("parameter tooltip: " + parameter_tooltip)
-            print("---------------------------------")
             # Required
             request_key = parameter_name + "." + "Required"
-            print("request key: " + request_key)
             parameter_required = input_metadata[request_key]
-            print("parameter required: ")
-            print(parameter_required)
-            print("---------------------------------")
             # Values
             request_key = parameter_name + "." + "Values"
-            print("request key: " + request_key)
             parameter_values = input_metadata[request_key]
-            print("parameter values: ")
-            print(parameter_values)
-            print("---------------------------------")
             # Default Value
             request_key = parameter_name + "." + "DefaultValue"
-            print("request key: " + request_key)
             parameter_defaultValue = input_metadata[request_key]
-            print("parameter default values: " + parameter_defaultValue)
-            print("---------------------------------")
             # File Selector Type
             request_key = parameter_name + "." + "FileSelectorType"
-            print("request key: " + request_key)
             parameter_fileSelectorType = input_metadata[request_key]
-            print("parameter file selector type: " + parameter_fileSelectorType)
-            print("---------------------------------")
-            print("")
 
             # Parameters listed in logical order
             self.y_parameter = self.y_parameter + 1
@@ -466,6 +438,7 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                 self.drop_down_menu[self.y_parameter].addItem("")
                 for i, value in enumerate(parameter_values):
                    self.drop_down_menu[self.y_parameter].addItem(value)
+                self.drop_down_menu[self.y_parameter].currentIndexChanged.connect(self.refresh_command)
                 parameter_GridLayout.addWidget(self.drop_down_menu[self.y_parameter], self.y_parameter, 2, 1, 1)
             else:
                 self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
@@ -489,7 +462,9 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                     self.load_file_button.setObjectName(_fromUtf8("Open_File_Button"))
                     self.load_file_button.setText(_translate("Dialog", "...", None))
                     self.load_file_button.setToolTip("Open a file.")
-                    self.load_file_button.clicked.connect(self.ui_action_open_file, self.y_parameter)
+                    print("Y PARAM: " + str(self.y_parameter))
+                    self.load_file_button.clicked.connect(
+                         lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param))
                     parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 3, 1, 1)
             # ----------------------------------------------------
             # Description component, optionally with default value
@@ -534,19 +509,14 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                 else:
                     sep = ","
                 parameter_name = command_parameter_metadata.parameter_name
-                parameter_value = self.parameter_LineEdit[y_parameter].text()
+                try:
+                    parameter_value = self.parameter_LineEdit[y_parameter].text()
+                except:
+                    parameter_value = self.drop_down_menu[y_parameter].itemText(
+                        self.drop_down_menu[y_parameter].currentIndex())
                 if parameter_value is not None and parameter_value != "":
-                    print("command string1: " + command_string)
-                    print("sep: " + sep)
-                    print("parameter_name: " + parameter_name)
-                    print("parameter_value: " + parameter_value)
                     command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
-                    print("command string2: " + command_string)
-            print("I am groot")
-            print("command string3: ")
-            print(command_string)
             command_string = command_string + ")"
-            print("command string4: " + command_string)
             self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
         except Exception as e:
             message="Error refreshing command from parameters"
@@ -569,6 +539,8 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
         """
 
         print("inside ui_action_open_file")
+        print("y_param: " + str(y_parameter))
+        print(type(y_parameter))
 
         logger = logging.getLogger(__name__)
         self.opened_file = True

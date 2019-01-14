@@ -201,7 +201,6 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         Returns:  None
         """
-        print('setup ui core top')
         # Set the window title to the command name
         self.setObjectName(_fromUtf8(self.command.command_name))
         self.setWindowTitle(self.command.command_name)

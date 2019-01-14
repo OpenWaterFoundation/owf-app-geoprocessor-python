@@ -132,13 +132,13 @@ class GeoProcessorCommandEditorFactory(object):
 
                 # Check to see what kind of editor needs to be returned for
                 # the given command
-                editor_type = command.command_metadata['EditorType']
-                print("editor type: ")
-                print(editor_type)
-                if editor_type == "Simple":
-                    return AbstractCommandEditor_Simple(command, app_session)
-                else:
-                    print("before GenericCommandEditor")
+
+                try:
+                    command.command_metadata
+                    editor_type = command.command_metadata['EditorType']
+                    if editor_type == "Simple":
+                        return AbstractCommandEditor_Simple(command, app_session)
+                except:
                     return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")

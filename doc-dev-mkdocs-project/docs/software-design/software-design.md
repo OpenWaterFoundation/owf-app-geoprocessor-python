@@ -1,5 +1,7 @@
 # GeoProcessor / Software Design #
 
+**This section needs to be reviewed once the UI command editors are implemented.**
+
 The GeoProcessor software design leverages Python features and best practices
 while incorporating TSTool design elements.
 

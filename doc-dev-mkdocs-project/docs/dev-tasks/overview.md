@@ -3,8 +3,9 @@
 This documentation describes common development tasks.
 Details are provided on other pages.
 
+* [Version Control](version-control)
 * [Editing Code](editing)
 * [Documenting](documenting)
+* [Running](running)
 * [Testing](testing)
-* [Version Control](version-control)
 * [Creating Installer](creating-installer)

@@ -3,11 +3,16 @@
 There is often a need to automate processing of spatial data, ranging from simple to complex tasks.
 For example, the Open Water Foundation often processes spatial data related to water resources,
 such as processing river basin data to better understand water resources issues.
-Although open source and commercial Geographic Information Systems (GIS) software tools are available,
+Although open source (e.g., QGIS) and commercial (e.g., Esri ArcGIS)
+Geographic Information Systems (GIS) software tools are available,
 the features of these tools are limited and in some cases are expensive to purchase.
 There is a need for tools that can automate spatial data processing without requiring extensive GIS skills.
 
 ## GeoProcessor Features ##
+
+The GeoProcessor provides a command language for automating geospatial data processing in workflows.
+This allows processing to be efficiently repeated and workflows can be shared between GeoProcessor software users.
+Workflows can be maintained in version control.
 
 See the [GeoProcessor documentation for users](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/)
 documentation for users, which explains the GeoProcessor features.

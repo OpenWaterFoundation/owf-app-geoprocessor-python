@@ -29,7 +29,6 @@ the gp application, which provides several run modes:
 The initial implementation focuses on batch and command shell.
 """
 
-# from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication
 # from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
@@ -58,7 +57,6 @@ import logging
 import os
 import platform
 import sys
-import traceback
 
 
 class GeoProcessorCmd(cmd.Cmd):
@@ -74,33 +72,35 @@ class GeoProcessorCmd(cmd.Cmd):
     Because the docstrings are usd for user help, documentation for functions is provided in in-lined comments.
     """
     def __init__(self, qtapp=None):
-        # Old style cmd.Cmd parent class in Python 2.7 does not inherit from object so be careful calling super().
-        is_new_style_class = True
-        try:
-            is_new_style_class = issubclass(cmd.Cmd, object)
-        except TypeError:
-            is_new_style_class = False
-        if is_new_style_class:
-            super(GeoProcessorCmd, self).__init__()
-        else:
-            cmd.Cmd.__init__(self)
+        # Initialize parent
+        super().__init__()
+        if qtapp is None:  # Put this here to get rid of PyCharm warning about qtapp not being used
+            pass
+
         self.prompt = "gp> "
 
         print('Running GeoProcessor shell')
         print('  - Current working directory is:  ' + os.getcwd())
         print('  - Type help at ' + self.prompt + ' to see options')
 
-    def do_exit(self, line):
+    @classmethod
+    def do_exit(cls, line):
         """
-        Exit the geoprocessor command shell.
+        Exit the geoprocessor command shell, same as "quit".
         """
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+            pass
         exit(0)
 
-    def do_printenv(self, line):
+    @classmethod
+    def do_printenv(cls, line):
         """
         Print information about the runtime environment.
         Run in the shell with:  printenv
         """
+        logger = logging.getLogger(__name__)
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+            pass
         print("Python version (sys.version) = " + sys.version)
         # Print value of environment variables that impact Python, alphabetized.
         # - skip the more esoteric ones
@@ -110,7 +110,7 @@ class GeoProcessorCmd(cmd.Cmd):
         for env_var in env_vars:
             try:
                 print(env_var + " = " + os.environ[env_var])
-            except:
+            except KeyError:
                 print(env_var + " = not defined")
         print("os.getcwd() = " + os.getcwd())
         print("platform.architecture = " + str(platform.architecture()))
@@ -124,19 +124,34 @@ class GeoProcessorCmd(cmd.Cmd):
         print("user = " + getpass.getuser())
         # GeoProcessor information, such as properties
         GeoProcessor = importlib.import_module('geoprocessor.core.GeoProcessor')
-        class_ = getattr(GeoProcessor,'GeoProcessor')
+        class_ = getattr(GeoProcessor, 'GeoProcessor')
         processor = class_()
         print("GeoProcessor properties:")
         for property_name, property_value in processor.properties.items():
             print(property_name + " = " + str(property_value))
 
-    def do_EOF(self, line):
+    @classmethod
+    def do_EOF(cls, line):
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+            pass
         return True
 
-    def do_run(self, line):
+    @classmethod
+    def do_quit(cls, line):
+        """
+        Quit the geoprocessor command shell, same as "exit".
+        """
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+            pass
+        exit(0)
+
+    @classmethod
+    def do_run(cls, line):
         """
         Run the command file from the command line using syntax:  run command-file
         """
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+            pass
         logger = logging.getLogger(__name__)
         command_file = line
         if command_file is None:
@@ -145,9 +160,13 @@ class GeoProcessorCmd(cmd.Cmd):
         working_dir = os.getcwd()
         # Convert the command file to an absolute path if not already.
         command_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(working_dir, command_file))
+        # Make sure the file exists so ugly exception is not printed
+        if not os.path.isfile(command_file_absolute):
+            print("File does not exist, cannot run:  " + command_file_absolute)
+            return
         # from geoprocessor.core.CommandFileRunner import CommandFileRunner
         CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
-        class_ = getattr(CommandFileRunner,'CommandFileRunner')
+        class_ = getattr(CommandFileRunner, 'CommandFileRunner')
         runner = class_()
         # Read the command file
         try:
@@ -156,33 +175,35 @@ class GeoProcessorCmd(cmd.Cmd):
             # Would be nice to use FileNotFoundError but that is Python 3.3+
             message = 'Error:  Command file "' + command_file_absolute + '" was not found.'
             print(message)
-            logger.exception(message, e)
-        except:
+            logger.error(message, exc_info=True)
+        except Exception as e2:
             message = 'Error reading command file.'
-            logger.error(message)
+            logger.error(message, exc_info=True)
             print(message)
         # Run the command file
         try:
             runner.run_commands()
-        except:
+        except Exception as e:
             message = 'Error running command file.'
             print(message)
-            traceback.print_exc(file=sys.stdout)
-            logger.error(message)
+            logger.error(message, exc_info=True)
 
         logger.info("GeoProcessor properties after running:")
         for property_name, property_value in runner.get_processor().properties.items():
             logger.info(property_name + " = " + str(property_value))
         print("See log file for more information.")
 
-    def do_ui(self, line):
+    @classmethod
+    def do_ui(cls, line):
         """
         Run the command file from the command line using syntax:  run command-file
         """
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+            pass
         run_ui(app_session)
 
     def postloop(self):
-        print
+        print()
 
 
 def parse_command_line_properties(property_list):
@@ -266,12 +287,11 @@ def run_batch(command_file, runtime_properties):
         # Would be nice to use FileNotFoundError but that is Python 3.3+
         message = 'Error:  Command file "' + command_file_absolute + '" was not found.'
         print(message)
-        logger.exception(message, e)
+        logger.error(message, exc_info=True)
         return
-    except:
+    except Exception as e2:
         message = 'Error reading command file "' + command_file_absolute + '".'
-        traceback.print_exc(file=sys.stdout)
-        logger.error(message)
+        logger.error(message, exc_info=True)
         print(message)
         return
     # Run the command file
@@ -279,10 +299,9 @@ def run_batch(command_file, runtime_properties):
         # Pass the runtime properties to supplement default properties and those created in the command file
         runner.run_commands(env_properties=runtime_properties)
         logger.info("At end of gp.run_batch")
-    except:
+    except Exception as e:
         message = 'Error running command file.'
         print(message)
-        traceback.print_exc(file=sys.stdout)
         logger.error(message, exc_info=True)
         return
     finally:
@@ -362,7 +381,7 @@ def run_ui(ui_app_session):
     # GeoProcessorUI derives from window = QtWidgets.QMainWindow()
     GeoProcessorUI_module = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI_module, 'GeoProcessorUI')
-    ui_runtime_properties = {}
+    ui_runtime_properties = dict()  # PyCharm complains if = {} is used
     ui_runtime_properties['AppVersion'] = version.app_version
     ui_runtime_properties['AppVersionDate'] = version.app_version_date
     ui = class_(command_processor, ui_runtime_properties, ui_app_session)
@@ -377,7 +396,7 @@ def run_ui(ui_app_session):
         # QGIS is not used so use Qt5 application
         logger.info("QGIS application is null, assuming Qt5 application")
         if qt_app is None:
-            logger.error("Unable to initialize QApplication.  Exiting.")
+            logger.error("Unable to initialize QApplication.  Exiting.", exc_info=True)
             sys.exit(1)
         else:
             sys.exit(qt_app.exec())
@@ -397,6 +416,7 @@ def set_global_data():
     """
     # Determine the absolute path to the application, useful later when trying to find resources such as
     # configuration and image
+    logger = logging.getLogger(__name__)
     try:
         ps = os.sep
         app_util.set_property('ProgramCopyright', version.app_copyright)
@@ -424,7 +444,9 @@ def set_global_data():
         app_util.set_property('ProgramVersion', version.app_version)
         app_util.set_property('ProgramVersionDate', version.app_version_date)
     except Exception as e:
-        print("Error setting up program data.")
+        message = "Error setting up program data."
+        print(message)
+        logger.error(message, exc_info=True)
 
 
 def setup_logging(session):
@@ -495,7 +517,7 @@ if __name__ == '__main__':
     # - A default log file is created in the users .owfgp/log folder.
     # - The log file will be closed and another restarted by the StartLog() command.
     setup_logging(app_session)
-    logger = logging.getLogger(__name__)
+    logger_main = logging.getLogger(__name__)
 
     # Parse the command line parameters...
     # - The -h and --help arguments are automatically included so don't need to add below.
@@ -526,51 +548,47 @@ if __name__ == '__main__':
     # # - previously used the following line of code  --->  qgis_util.initialize_qgis(r"C:\OSGeo4W64\apps\qgis")
     try:
         qgs_app = qgis_util.initialize_qgis()
-    except Exception as e:
-        message = 'Error initializing QGIS application'
-        print(message)
-        logger.exception(message, e, exc_info=True)
+    except Exception as e_app:
+        err_message = 'Error initializing QGIS application'
+        print(err_message)
+        logger_main.exception(err_message, e_app, exc_info=True)
 
     # Process configuration parameters
-    runtime_properties = {}
+    runtime_properties_cl = {}
     if args.p:
         print("-p options: " + str(args.p))
-        runtime_properties = parse_command_line_properties(args.p)
+        runtime_properties_cl = parse_command_line_properties(args.p)
 
     # Launch a GeoProcessor based on command line parameters that control run mode
     if args.commands:
         # A command file has been specified so run the batch processor.
         print("Running GeoProcessor batch")
         try:
-            run_batch(args.commands, runtime_properties)
-        except Exception as e:
-            message = 'Exception running batch'
-            print(message)
-            logger.exception(message, e, exc_info=True)
+            run_batch(args.commands, runtime_properties_cl)
+        except Exception as e_batch:
+            err_message = 'Exception running batch'
+            print(err_message)
+            logger_main.exception(err_message, e_batch, exc_info=True)
     elif args.http:
         # Run the http server
         print("Running GeoProcessor http server")
         try:
             run_http_server()
-        except Exception as e:
-            message = 'Exception running http'
-            print(message)
-            logger.exception(message, e, exc_info=True)
+        except Exception as e_http:
+            err_message = 'Exception running http'
+            print(err_message)
+            logger_main.exception(err_message, e_http, exc_info=True)
     elif args.ui:
         # Run the user interface
-        message="Running GeoProcessor UI"
-        print(message)
-        logger.info(message)
+        err_message = "Running GeoProcessor UI"
+        print(err_message)
+        logger_main.info(err_message)
         try:
             run_ui(app_session)
-        except Exception as e:
-            message = 'Exception running UI (caught "Exception")'
-            print(message)
-            logger.exception(message, e, exc_info=True)
-        except:
-            message = 'Exception running UI (caught "except")'
-            print(message)
-            logger.exception(message)
+        except Exception as e_ui:
+            err_message = 'Exception running UI (caught "Exception")'
+            print(err_message)
+            logger_main.exception(err_message, e_ui, exc_info=True)
     elif args.version:
         # Print the version
         print_version()
@@ -579,10 +597,10 @@ if __name__ == '__main__':
         print("Running GeoProcessor shell")
         try:
             run_prompt()
-        except Exception as e:
-            message = 'Exception running shell'
-            print(message)
-            logger.exception(message, e, exc_info=True)
+        except Exception as e_prompt:
+            err_message = 'Exception running shell'
+            print(err_message)
+            logger_main.exception(err_message, e_prompt, exc_info=True)
 
     # Exit QGIS environment
     qgis_util.exit_qgis()

@@ -3,6 +3,7 @@
 This documentation provides resources to learn how to develop the
 Open Water Foundation (OWF) GeoProcessor software,
 which automates processing spatial data.
+**The GeoProcessor software is under development as an open source software project at the Open Water Foundation.**
 
 This documentation is intended for GeoProcessor developers that have experience with Python,
 QGIS Python libraries, and Python development environment.
@@ -12,13 +13,11 @@ PyCharm project files are not included in the repository.
 
 The primary development environment at the Open Water Foundation
 is currently Windows 10 using the latest stable QGIS 3.x release.
-The primary deployment environments are Windows 7/10, and Ubuntu/Debian Linux.
+The primary deployment environments are Windows 7/10, Cygwin, and Ubuntu/Debian Linux.
 A QGIS-based `gp` distribution is available on Windows for geospatial processing.
 A non-QGIS `gptest` distribution is also available,
 in order to use the GeoProcessor workflow as a function test framework.
 Additional environments may be supported depending on funding and developer resources.
-
-**The GeoProcessor software is currently under development as an open source software project at the Open Water Foundation.**
 
 ## About the Open Water Foundation ##
 
@@ -47,7 +46,9 @@ which provides documentation for installing and using the GeoProcessor.
 ## License ##
 
 The OWF GeoProcessor developer documentation is licensed under the
-[Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0).
+[Creative Commons Attribution 4.0 International CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0).
+
+The GeoProcessor software license is distributed under GPL v3 license.
 
 ## Source Repository on GitHub ##
 

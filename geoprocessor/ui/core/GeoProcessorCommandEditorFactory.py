@@ -134,7 +134,6 @@ class GeoProcessorCommandEditorFactory(object):
                 # the given command
 
                 try:
-                    command.command_metadata
                     editor_type = command.command_metadata['EditorType']
                     if editor_type == "Simple":
                         return AbstractCommandEditor_Simple(command, app_session)

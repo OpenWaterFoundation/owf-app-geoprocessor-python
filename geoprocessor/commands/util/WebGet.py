@@ -102,7 +102,7 @@ class WebGet(AbstractCommand):
         self.parameter_input_metadata['Username.Label'] = 'Username'
         self.parameter_input_metadata['Username.Tooltip'] = ('Specify a valid username to access a private URL file.')
         self.parameter_input_metadata['Username.Required'] = False
-        self.parameter_input_metadata['Username.Values'] = ["1", "2", "3"]
+        self.parameter_input_metadata['Username.Values'] = ["jurentie", "smalers", "kswaim"]
         self.parameter_input_metadata['Username.DefaultValue'] = ""
         self.parameter_input_metadata['Username.FileSelectorType'] = ""
 
@@ -112,7 +112,7 @@ class WebGet(AbstractCommand):
         self.parameter_input_metadata['Password.Label'] = 'Password'
         self.parameter_input_metadata['Password.Tooltip'] = ('Specify a valid password to access a private URL file.')
         self.parameter_input_metadata['Password.Required'] = False
-        self.parameter_input_metadata['Password.Values'] = ["3", "2", "1"]
+        self.parameter_input_metadata['Password.Values'] = ""
         self.parameter_input_metadata['Password.DefaultValue'] = ""
         self.parameter_input_metadata['Password.FileSelectorType'] = ""
 

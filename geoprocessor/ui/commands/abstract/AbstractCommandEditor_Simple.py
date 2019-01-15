@@ -359,7 +359,7 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
         parameter_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
         parameter_Frame.setObjectName("Command_Parameters")
         self.grid_layout_row = self.grid_layout_row + 1
-        self.grid_layout.addWidget(parameter_Frame, self.grid_layout_row, 0, 1, 8)
+        self.grid_layout.addWidget(parameter_Frame, self.grid_layout_row, 0, 1, -1)
 
         # Create a grid layout object. Apply to the Command_Parameters frame object.
         # Set the name of the grid layout object.
@@ -427,6 +427,7 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             # Allow expanding horizontally
             parameter_Label.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)
             parameter_GridLayout.addWidget(parameter_Label, self.y_parameter, 0, 1, 1)
+            parameter_GridLayout.setColumnStretch(0,0)
             # --------------------
             # Text entry component
             # --------------------
@@ -439,14 +440,15 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                 for i, value in enumerate(parameter_values):
                    self.drop_down_menu[self.y_parameter].addItem(value)
                 self.drop_down_menu[self.y_parameter].currentIndexChanged.connect(self.refresh_command)
-                parameter_GridLayout.addWidget(self.drop_down_menu[self.y_parameter], self.y_parameter, 2, 1, 1)
+                parameter_GridLayout.addWidget(self.drop_down_menu[self.y_parameter], self.y_parameter, 1, 1, 2)
             else:
                 self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
                 self.parameter_LineEdit[self.y_parameter].setObjectName(parameter_name)
-                parameter_GridLayout.addWidget(self.parameter_LineEdit[self.y_parameter], self.y_parameter, 2, 1, 1)
+                parameter_GridLayout.addWidget(self.parameter_LineEdit[self.y_parameter], self.y_parameter, 1, 1, 4)
+                parameter_GridLayout.setColumnStretch(1, 4)
                 tooltip = command_parameter_metadata.editor_tooltip
-                if tooltip is not None:
-                    self.parameter_LineEdit[self.y_parameter].setToolTip(tooltip)
+                if parameter_tooltip != "":
+                    self.parameter_LineEdit[self.y_parameter].setToolTip(parameter_tooltip)
                 # Create a listener that reacts if the line edit field has been changed. If so, run the
                 # update_command_display function.
                 # If this command is being updated add the command parameters to the text fields
@@ -462,10 +464,10 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                     self.load_file_button.setObjectName(_fromUtf8("Open_File_Button"))
                     self.load_file_button.setText(_translate("Dialog", "...", None))
                     self.load_file_button.setToolTip("Open a file.")
-                    print("Y PARAM: " + str(self.y_parameter))
+                    self.load_file_button.setMaximumWidth(50)
                     self.load_file_button.clicked.connect(
                          lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param))
-                    parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 3, 1, 1)
+                    parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 6, 1, 1)
             # ----------------------------------------------------
             # Description component, optionally with default value
             # ----------------------------------------------------
@@ -476,17 +478,19 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                 parameter_desc = ""
                 if parameter_required:
                     parameter_desc += "Required"
+                else:
+                    parameter_desc += "Optional"
                 if parameter_description != "":
                     if parameter_desc != "":
                         parameter_desc += " - "
                     parameter_desc += parameter_description
                 if parameter_defaultValue != "":
-                    if parameter_desc != "":
-                        parameter_desc += " - "
-                    parameter_desc = parameter_desc + " (default=" + parameter_defaultValue + ")"
+                    parameter_desc += " (default=" + parameter_defaultValue + ")"
+                else:
+                    parameter_desc += " (default=None)"
                 parameter_desc_Label.setText(parameter_desc)
                 # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
-                parameter_GridLayout.addWidget(parameter_desc_Label, self.y_parameter, 4, 1, 1)
+                parameter_GridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
 
     def refresh_command(self):
         """
@@ -537,10 +541,6 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
         Returns:
             None
         """
-
-        print("inside ui_action_open_file")
-        print("y_param: " + str(y_parameter))
-        print(type(y_parameter))
 
         logger = logging.getLogger(__name__)
         self.opened_file = True

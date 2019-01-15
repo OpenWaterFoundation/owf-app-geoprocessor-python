@@ -89,6 +89,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # - each addition should increment before adding a component
         self.grid_layout_row = -1
 
+        # Set initial size of window
+        self.resize(500,300)
+
 
     def add_ui_horizontal_separator(self):
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
@@ -223,12 +226,24 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Create a label object to the Dialog window.
         # Set the alignment, the name, and the text of the label.
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
+        commandArea_Frame = QtWidgets.QFrame(self)
+        commandArea_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        commandArea_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        commandArea_Frame.setObjectName("Command_Parameters")
+        self.grid_layout_row = self.grid_layout_row + 1
+        self.grid_layout.addWidget(commandArea_Frame, self.grid_layout_row, 0, 1, -1)
+
+        # Create a grid layout object. Apply to the Command_Parameters frame object.
+        # Set the name of the grid layout object.
+        commandArea_GridLayout = QtWidgets.QGridLayout(commandArea_Frame)
+        commandArea_GridLayout.setObjectName("Command_Parameters_Layout")
+
         self.grid_layout_row = self.grid_layout_row + 1
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
         self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
         self.CommandDisplay_Label.setText(_translate("Dialog", "Command: ", None))
-        self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 2, 1)
+        commandArea_GridLayout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 1, 1)
         # Create a text edit object. Add the text edit object to the Dialog window.
         # Set the size, the name and the html of the text edit object.
         # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
@@ -245,9 +260,22 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         ##       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
         ##       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
         ##self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
-        self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
+        commandArea_GridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
 
     def setup_ui_core_command_buttons(self):
+
+        buttons_Frame = QtWidgets.QFrame(self)
+        buttons_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        buttons_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        buttons_Frame.setObjectName("Command_Parameters")
+        self.grid_layout_row = self.grid_layout_row + 1
+        self.grid_layout.addWidget(buttons_Frame, self.grid_layout_row, 0, 1, -1)
+
+        # Create a grid layout object. Apply to the Command_Parameters frame object.
+        # Set the name of the grid layout object.
+        buttons_GridLayout = QtWidgets.QGridLayout(buttons_Frame)
+        buttons_GridLayout.setObjectName("Command_Parameters_Layout")
+
         # Create a button box object. Add the button box object to the Dialog window.
         # Set the orientation, the standard buttons, the name and the connections of the button box object.
         # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
@@ -261,7 +289,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.OK_Cancel_Buttons.accepted.connect(self.accept)
         self.OK_Cancel_Buttons.rejected.connect(self.reject)
         self.grid_layout_row = self.grid_layout_row + 1
-        self.grid_layout.addWidget(self.OK_Cancel_Buttons, self.grid_layout_row, 6, 1, 2)
+        buttons_GridLayout.addWidget(self.OK_Cancel_Buttons, self.grid_layout_row, 6, 1, 2)
 
     def setup_ui_core_command_description(self):
         """
@@ -429,8 +457,6 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         Return: None
         """
-
-        print("Update the command display!")
 
         # Iterate over the command parameters.
         for command_parameter in self.parameters_list:

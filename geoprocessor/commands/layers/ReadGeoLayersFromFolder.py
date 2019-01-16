@@ -79,9 +79,16 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "ReadGeoLayersFromFolder"
+        # Description for menu "Command()... <description>"
         self.command_description = "Read GeoLayers from a folder"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command reads one or more GeoLayer(s) from a local folder.'
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

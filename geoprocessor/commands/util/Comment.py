@@ -31,14 +31,24 @@ class Comment(AbstractCommand):
         """
         Initialize a new instance of the command.
         """
-        # Use hash for the command name
-        self.command_name = "#"
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()
         # Set the command status to success so that testing reports look better
         self.command_status.initialization_status = CommandStatusType.SUCCESS
         self.command_status.discovery_status = CommandStatusType.SUCCESS
         self.command_status.run_status = CommandStatusType.SUCCESS
+
+        # Use hash for the command name for menu and window title
+        self.command_name = "#"
+        # Description for menu "Command()... <description>"
+        self.command_description = "Single line comment"
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = ('Single-line comments start with #. Spaces and tabs before the '
+                                                'comment character is allowed. Comments cannot be added after '
+                                                'commands - comments must exist on their own command line.')
+        self.command_metadata['EditorType'] = 'CommentEditor'
 
     def initialize_command(self, command_string, processor, full_initialization):
         """

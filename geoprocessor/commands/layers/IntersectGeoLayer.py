@@ -82,9 +82,16 @@ class IntersectGeoLayer(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "IntersectGeoLayer"
+        # Description for menu "Command()... <description>"
         self.command_description = "Intersects a GeoLayer by another GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        self.command_metadata = {}
+        self.command_metadata['Description'] = ('This command extracts the overlapping portions of features in the '
+                                                'input GeoLayer and the intersect GeoLayer.')
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

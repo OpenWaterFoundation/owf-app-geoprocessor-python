@@ -49,9 +49,16 @@ class WriteCommandSummaryToFile(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "WriteCommandSummaryToFile"
+        # Description for menu "Command()... <description>"
         self.command_description = "Write a summary of command log messages to a file"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command writes command logging messages to a summary file.'
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

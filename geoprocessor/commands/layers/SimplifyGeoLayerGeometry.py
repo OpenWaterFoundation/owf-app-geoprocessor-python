@@ -73,9 +73,18 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "SimplifyGeoLayerGeometry"
+        # Description for menu "Command()... <description>"
         self.command_description = "Decreases the vertices in a polygon or line GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = ('This command decreases the number of vertices within the geometries '
+                                                'for each feature of a GeoLayer.\nThis command is useful when the file '
+                                                'size of a GeoLayer is too large.')
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

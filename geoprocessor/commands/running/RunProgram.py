@@ -71,9 +71,18 @@ class RunProgram(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "RunProgram"
+        # Description for menu "Command()... <description>
         self.command_description = "Run a program"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'The RunProgram command runs an external program, given the full ' \
+                                               'command line, and waits until the program is finished before ' \
+                                               'processing additional commands. '
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

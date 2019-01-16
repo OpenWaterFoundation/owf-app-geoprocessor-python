@@ -31,14 +31,24 @@ class CommentBlockEnd(AbstractCommand):
         """
         Initialize a new instance of the command.
         """
-        # Command name is the comment block end.
-        self.command_name = "*/"
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()
         # Set the command status to success so that testing reports look better
         self.command_status.initialization_status = CommandStatusType.SUCCESS
         self.command_status.discovery_status = CommandStatusType.SUCCESS
         self.command_status.run_status = CommandStatusType.SUCCESS
+
+        # Command name is the comment block end for menu and for window title.
+        self.command_name = "*/"
+        # Description for menu "Command()... <description>"
+        self.command_description = "End of multi-line comment block."
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = ('Multiple-line comments end with */. Spaces and tabs at the start '
+                                                'of the comment line are OK. Additional text before the comment '
+                                                'indicator is allowed.')
+        self.command_metadata['EditorType'] = 'CommentBlockEndEditor'
 
     def initialize_command(self, command_string, processor, full_initialization):
         """

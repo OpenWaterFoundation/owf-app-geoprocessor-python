@@ -74,9 +74,17 @@ class ListFiles(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "ListFiles"
+        # Description for menu "Command()... <description>"
         self.command_description = "List the files and folder within a folder or a URL"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'The ListFiles command lists the files and folders within a folder or ' \
+                                               'a URL. '
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

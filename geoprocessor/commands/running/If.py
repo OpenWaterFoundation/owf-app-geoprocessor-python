@@ -50,9 +50,17 @@ class If(AbstractCommand):
         """
         super().__init__()
         # AbstractCommand data
+        # Name of command for menu and window title
         self.command_name = "If"
+        # Description for menu "Command()... <description>"
         self.command_description = "Indicate the start of an 'If' block"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'The If command evaluates a conditional statement and if true will ' \
+                                               'result in the commands between If and matching EndIf being executed. '
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Local private data
         self.__condition_eval = True  # The result of evaluating the condition

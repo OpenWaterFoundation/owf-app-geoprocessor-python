@@ -65,13 +65,15 @@ class WebGet(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "WebGet"
+        # Description for menu "Command()... <description>"
         self.command_description = "Download a file from a URL"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # New metadata for working with simple command editor
+        # Command metadata for command editor display
         self.command_metadata = {}
-        self.command_metadata['Description'] = 'Download a file from a URL'
+        self.command_metadata['Description'] = 'Download a file from a URL.'
         self.command_metadata['EditorType'] = 'Simple'
 
         self.parameter_input_metadata = {}

@@ -70,10 +70,18 @@ class CopyGeoLayer(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "CopyGeoLayer"
+        # Description for menu "Command()... <description>"
         self.command_description = "Copy a GeoLayer to a new GeoLayer, optionally constraining the copy to a subset " \
                                    "of the original features/attributes"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = ('This command copies a GeoLayer to a new GeoLayer, optionally '
+                                                'constraining the copy to a subset of the original features.')
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

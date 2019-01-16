@@ -55,9 +55,18 @@ class StartRegressionTestResultsReport(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "StartRegressionTestResultsReport"
+        # Description for menu "Command()... <description>
         self.command_description = "Start (open) a file to receive regression test results"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command starts a report file (' \
+                                               'and optionally results table) to be written to as regression tests ' \
+                                               'are run. '
+        self.command_metadata['EditorType'] = 'Generic'
 
     @classmethod
     def append_to_regression_test_report(cls, is_enabled, run_time_ms, test_pass_fail, expected_status,

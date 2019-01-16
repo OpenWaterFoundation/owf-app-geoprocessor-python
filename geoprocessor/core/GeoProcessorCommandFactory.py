@@ -70,6 +70,9 @@ from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
 from geoprocessor.commands.util.CommentBlockStart import CommentBlockStart
 from geoprocessor.commands.util.CopyFile import CopyFile
+from geoprocessor.commands.util.EnabledFalse import EnabledFalse
+from geoprocessor.commands.util.ExpectedStatusFailure import ExpectedStatusFailure
+from geoprocessor.commands.util.ExpectedStatusWarning import ExpectedStatusWarning
 from geoprocessor.commands.util.ListFiles import ListFiles
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
@@ -94,7 +97,7 @@ class GeoProcessorCommandFactory(object):
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
         "ADDGEOLAYERATTRIBUTE": AddGeoLayerAttribute(),
-        "BLANKCOMMAND": Blank(),  # Actually has no name, is whitespace only
+        "BLANK": Blank(),  # Actually has no name, is whitespace only
         "CLIPGEOLAYER": ClipGeoLayer(),
         "CLOSEDATASTORE": CloseDataStore(),
         "COMMENT": Comment(),
@@ -105,8 +108,11 @@ class GeoProcessorCommandFactory(object):
         "COPYGEOLAYER": CopyGeoLayer(),
         "CREATEGEOLAYERFROMGEOMETRY": CreateGeoLayerFromGeometry(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
+        "ENABLEDFALSE": EnabledFalse(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
+        "EXPECTEDSTATUSFAILURE": ExpectedStatusFailure(),
+        "EXPECTEDSTATUSWARNING": ExpectedStatusWarning(),
         "FOR": For(),
         "FREEGEOLAYERS": FreeGeoLayers(),
         "IF": If(),
@@ -194,14 +200,17 @@ class GeoProcessorCommandFactory(object):
         command_string_trimmed = command_string.strip()
         paren_pos = command_string_trimmed.find('(')
 
-        if len(command_string_trimmed) == 0:
-            # Blank line so insert a BlankCommand command.
-            return Blank()
-
         # If the command is any variation of a comment return the
         # appropriate unique command editor
         if command_string_trimmed.startswith('#'):
-            return Comment()
+            if command_string_trimmed == "#@enabled False()":
+                return EnabledFalse()
+            elif command_string_trimmed == "#@expectedStatus Failure()":
+                return ExpectedStatusFailure()
+            elif command_string_trimmed == "#@expectedStatus Warning()":
+                return ExpectedStatusWarning()
+            else:
+                return Comment()
         elif command_string_trimmed.startswith('/*'):
             return CommentBlockStart()
         elif command_string_trimmed.startswith('*/'):
@@ -232,6 +241,8 @@ class GeoProcessorCommandFactory(object):
                 # - Alphabetize the commands.
                 if command_name_upper == "ADDGEOLAYERATTRIBUTE":
                     return AddGeoLayerAttribute()
+                elif command_name_upper == "BLANK":
+                    return Blank()
                 elif command_name_upper == "CLIPGEOLAYER":
                     return ClipGeoLayer()
                 # Comment, CommentBlockStart, and CommentBlockEnd are checked for above

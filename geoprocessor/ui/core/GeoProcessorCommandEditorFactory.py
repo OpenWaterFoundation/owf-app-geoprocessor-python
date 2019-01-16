@@ -22,9 +22,8 @@ import logging
 import geoprocessor.util.command_util as command_util
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor_Simple import AbstractCommandEditor_Simple
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
-from geoprocessor.ui.commands.util.CommentBlockStartEditor import CommentBlockStartEditor
-from geoprocessor.ui.commands.util.CommentBlockEndEditor import CommentBlockEndEditor
-from geoprocessor.ui.commands.util.CommentEditor import CommentEditor
+from geoprocessor.ui.commands.util.InsertLineEditor import InsertLineEditor
+from geoprocessor.ui.commands.util.InsertLineRulerEditor import InsertLineRulerEditor
 
 
 class GeoProcessorCommandEditorFactory(object):
@@ -76,18 +75,6 @@ class GeoProcessorCommandEditorFactory(object):
         command_string_stripped = command_string.strip()
         paren_pos = command_string_stripped.find('(')
 
-        # Create booleans to know if the command is a variation of a comment command
-        comment = False
-        commentBlockStart = False
-        commentBlockEnd = False
-
-        # Special comment cases
-        if command_string_stripped.startswith("#"):
-            comment = True
-        elif command_string_stripped.startswith("/*"):
-            commentBlockStart = True
-        elif command_string_stripped.startswith("*/"):
-            commentBlockEnd = True
 
         # The symbol '(' was found.
         # Assume command of syntax CommandName(Param1="...",Param2="...").
@@ -117,26 +104,19 @@ class GeoProcessorCommandEditorFactory(object):
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown command. Creating GenericCommandEditor for: " +
                             command_string_stripped)
-                # If the command is a basic comment return the appropriate
-                # unique command editor
-                if comment:
-                    return CommentEditor(command)
-                # If the command is a comment block start return the
-                # appropriate unique command editor
-                elif commentBlockStart:
-                    return CommentBlockStartEditor(command)
-                # If the command is a comment block end return the
-                # appropriate unique command editor
-                elif commentBlockEnd:
-                    return CommentBlockEndEditor(command)
-
-                # Check to see what kind of editor needs to be returned for
-                # the given command
-
+                # Check to see if command has editor type specified
+                # IF so return the specified editor type
+                # otherwise return a generic command editor
                 try:
                     editor_type = command.command_metadata['EditorType']
                     if editor_type == "Simple":
                         return AbstractCommandEditor_Simple(command, app_session)
+                    if editor_type == "Generic":
+                        return GenericCommandEditor(command)
+                    if editor_type == "InsertLineRulerEditor":
+                        return InsertLineRulerEditor(command)
+                    if editor_type == "InsertLineEditor":
+                        return InsertLineEditor(command)
                 except:
                     return GenericCommandEditor(command)
             else:
@@ -148,19 +128,21 @@ class GeoProcessorCommandEditorFactory(object):
             if create_unknown_command_if_not_recognized:
                 logger.info("Command line is unknown syntax. Creating GenericCommandEditor for: " +
                             command_string_stripped)
-                # If the command is a basic comment return the appropriate
-                # unique command editor
-                if comment:
-                    return CommentEditor(command)
-                # If the command is a comment block start return the
-                # appropriate unique command editor
-                elif commentBlockStart:
-                    return CommentBlockStartEditor(command)
-                # If the command is a comment block end return the
-                # appropriate unique command editor
-                elif commentBlockEnd:
-                    return CommentBlockEndEditor(command)
-                return GenericCommandEditor(command)
+                # Check to see if command has editor type specified
+                # IF so return the specified editor type
+                # otherwise return a generic command editor
+                try:
+                    editor_type = command.command_metadata['EditorType']
+                    if editor_type == "Simple":
+                        return AbstractCommandEditor_Simple(command, app_session)
+                    if editor_type == "Generic":
+                        return GenericCommandEditor(command)
+                    if editor_type == "InsertLineRulerEditor":
+                        return InsertLineRulerEditor(command)
+                    if editor_type == "InsertLineEditor":
+                        return InsertLineEditor(command)
+                except:
+                    return GenericCommandEditor(command)
             else:
                 logger.warning("Command line is unknown syntax.")
                 raise ValueError('Unrecognized command "' + command_string + '"')

@@ -48,7 +48,7 @@ class Comment(AbstractCommand):
         self.command_metadata['Description'] = ('Single-line comments start with #. Spaces and tabs before the '
                                                 'comment character is allowed. Comments cannot be added after '
                                                 'commands - comments must exist on their own command line.')
-        self.command_metadata['EditorType'] = 'CommentEditor'
+        self.command_metadata['EditorType'] = 'InsertLineRulerEditor'
 
     def initialize_command(self, command_string, processor, full_initialization):
         """

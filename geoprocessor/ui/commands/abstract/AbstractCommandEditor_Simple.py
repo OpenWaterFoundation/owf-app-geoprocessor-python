@@ -440,6 +440,9 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                 for i, value in enumerate(parameter_values):
                    self.drop_down_menu[self.y_parameter].addItem(value)
                 self.drop_down_menu[self.y_parameter].currentIndexChanged.connect(self.refresh_command)
+                tooltip = command_parameter_metadata.editor_tooltip
+                if parameter_tooltip != "":
+                    self.drop_down_menu[self.y_parameter].setToolTip(parameter_tooltip)
                 parameter_GridLayout.addWidget(self.drop_down_menu[self.y_parameter], self.y_parameter, 1, 1, 2)
             else:
                 self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
@@ -485,9 +488,9 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                         parameter_desc += " - "
                     parameter_desc += parameter_description
                 if parameter_defaultValue != "":
-                    parameter_desc += " (default=" + parameter_defaultValue + ")"
+                    parameter_desc += " (default=" + parameter_defaultValue + ")."
                 else:
-                    parameter_desc += " (default=None)"
+                    parameter_desc += " (default=None)."
                 parameter_desc_Label.setText(parameter_desc)
                 # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
                 parameter_GridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)

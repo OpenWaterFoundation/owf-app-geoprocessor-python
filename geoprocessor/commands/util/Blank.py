@@ -41,7 +41,7 @@ class Blank(AbstractCommand):
         self.command_metadata = {}
         self.command_metadata['Description'] = 'This command is a placeholder for blank lines, which contain only ' \
                                                'whitespace characters (spaces and tabs). '
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata['EditorType'] = 'InsertLineEditor'
 
     def initialize_command(self, command_string, processor, full_initialization):
         """

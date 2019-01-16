@@ -48,7 +48,7 @@ class CommentBlockEnd(AbstractCommand):
         self.command_metadata['Description'] = ('Multiple-line comments end with */. Spaces and tabs at the start '
                                                 'of the comment line are OK. Additional text before the comment '
                                                 'indicator is allowed.')
-        self.command_metadata['EditorType'] = 'CommentBlockEndEditor'
+        self.command_metadata['EditorType'] = 'InsertLineEditor'
 
     def initialize_command(self, command_string, processor, full_initialization):
         """

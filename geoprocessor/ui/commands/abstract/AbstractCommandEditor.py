@@ -91,6 +91,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         # Set initial size of window
         self.resize(500,300)
+        # Set the maximum width of a command editor
+        self.setMaximumWidth(800)
 
 
     def add_ui_horizontal_separator(self):
@@ -314,6 +316,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout_2.addItem(spacerItem, 2, 0, 1, 1)
 
+
         # Create a push button. Add the button to the Command_Description frame object.
         # Set the name, the button text and the connection of the push button.
         # The push button, View_Documentation_Button, displays the command's online user documentation when clicked.
@@ -329,7 +332,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
         self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
-        self.Command_Description_Label.setText(self.command.command_description)
+        self.Command_Description_Label.setText(self.command.command_metadata['Description'])
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
     # def setupUi_Abstract(self, Dialog):

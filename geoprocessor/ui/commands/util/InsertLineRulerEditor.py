@@ -1,4 +1,4 @@
-# CommentBlockEndEditor - editor for */ command editor
+# CommentEditor - editor for Comment command
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
@@ -38,14 +38,12 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
-# Combining code from GenericCommandEditor and AbstractCommandEditor to create
-# one stand alone editor
 
-
-class CommentBlockEndEditor(QtWidgets.QDialog):
+class InsertLineRulerEditor(QtWidgets.QDialog):
     """
-    Abstract command editor used as parent of command editor dialog implementations.
-    This class maintains core layout information and provides functions to add components.
+    Command editor dialog for one or more # comments.
+    This class is a standalone class that combines the attributes of AbstractCommandEditor and
+    GenericCommandEditor
     """
 
     # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
@@ -74,12 +72,12 @@ class CommentBlockEndEditor(QtWidgets.QDialog):
         # input field
         # KEY (str): the command parameter name
         # VALUE (obj): the associated Qt Widget input field
-        # self.input_edit_objects = {}
+        #self.input_edit_objects = {}
 
         # "command_parameter_current_values" is a dictionary that holds the command parameters and their current values
         # KEY (str): the name of the command parameter
         # VALUE (str): the entered value of the command parameter
-        # self.command_parameter_current_values = current_values
+        #self.command_parameter_current_values = current_values
 
         # Initialize components that will be used
         self.CommandDisplay_View_TextBrowser = None
@@ -119,7 +117,101 @@ class CommentBlockEndEditor(QtWidgets.QDialog):
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
 
+    def get_command_string_list(self):
+        """
+        Return the command strings corresponding to the commands, can be an empty list (but using the editor to
+        delete all existing comments is not usually done).
+        This function can be called by the main GeoProcessorUI after editing to retrieve the result of the edit.
+
+        Returns:
+            A list of strings corresponding to each comment line.
+        """
+        # First split the text area using newline delimiter
+        command_text = self.CommandDisplay_View_TextBrowser.toPlainText()
+        command_string_list = []
+        if len(command_text) == 0:
+            # Return an empty list, which should be handled in calling code.
+            return command_string_list
+        else:
+            # Split the text by newlines according to Python universal newlines
+            command_string_list = command_text.splitlines()
+            # Add the # with determined indent
+            # Verify that each line edited by user starts with #
+            for i in range(len(command_string_list)):
+                command_string_stripped = command_string_list[i].strip()
+                # Check if the stripped line starts with # and if so, it is OK
+                # - otherwise, add # at the start, indented appropriately
+                if not command_string_stripped.startswith('#'):
+                    # Figure out how many spaces to indent by examining the comment lines
+                    # - assume that indent should be consistent with nearest previous indented, commented line
+                    # - if that is not found, search after the current line
+                    # - repeat this logic for each line to allow
+                    indent = ""
+                    for j in range(i-1,0,-1):
+                        indent_pos = command_string_list[j].find('#')
+                        if indent_pos >= 0:
+                            # Found a previous comment line so use its indent
+                            # - the following one-liner sets the indent to the number of spaces
+                            indent += ' ' * indent_pos
+                    command_string_list[i] = indent + "# " + command_string_list[i]
+            # Return a list with one item for each line that was edited
+            return command_string_list
+
+    def get_current_value(self, obj):
+        """
+        Get the value within a QtGui.Widget object.
+
+        Args:
+            obj (obj): the a QtGui.Widget object to read the value from
+
+        Returns:
+            the value within the QtGui.Widget object
+        """
+
+        # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
+        # value when one works.
+        # Reads LineEdit widgets.
+        try:
+            value = obj.text()
+
+        # Reads ComboBox widgets.
+        except:
+            value = obj.currentText()
+
+        # Return the value within the input QtGui.Widget object.
+        return value
+
+    def horizontal_scroll(self, hs, value):
+        """
+        Connect the horizontal scrolling with command list and numbered list.
+
+        Args:
+            hs: Horizontal scroll bar to update.
+            value: The value to set the horizontal scroll bar to.
+
+        Returns:
+            None
+        """
+        hs.setValue(value)
+
+    def set_text(self, text):
+        """
+        Set the text in the text browser for the command editor. If text is being
+        added dynamically it will be from a comment already inserted into the command file.
+
+        Args:
+            text: String to insert as text in the command editor.
+
+        Returns:
+            None
+        """
+        # text = text.replace("# ", "")
+        # text = text.replace("#", "")
+        self.CommandDisplay_View_TextBrowser.setText(text)
+
     def setup_ui_core(self):
+        # Set up QDialog specifications
+        self.setup_ui_window()
         # Set up the editor core elements, which apply to any command.
         self.setup_ui_core_top()
         # Add separator
@@ -132,24 +224,41 @@ class CommentBlockEndEditor(QtWidgets.QDialog):
         # - don't do this because not using QtDesigner
         # QtCore.QMetaObject.connectSlotsByName(self)
 
+        # Make sure the text area has the focus since that is where input will be typed
+        self.CommandDisplay_View_TextBrowser.setFocus()
+
+    def setup_ui_window(self):
+        """
+        Setup specific elements in relation to the entire window.
+
+        Returns:
+            None
+        """
+        # Set the size of the window
+        self.resize(1150, 300)
+
     def setup_ui_core_bottom(self):
         """
         Setup core UI components at the bottom of the dialog.
 
-        Returns:  None
+        Returns:
+            None
         """
+        self.setup_ui_core_ruler()
         self.setup_ui_core_command_area()
+        self.setup_ui_horizontal_scrolling()
         self.setup_ui_core_command_buttons()
 
     def setup_ui_core_top(self):
         """
         Setup core UI components at the top of the dialog.
 
-        Returns:  None
+        Returns:
+            None
         """
         # Set the window title to the command name
-        self.setObjectName("CommentBlockEnd")
-        self.setWindowTitle("Comment Block End")
+        self.setObjectName("InsertLineRulerEditor")
+        self.setWindowTitle("Edit # Comments")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
         self.setWindowIcon(QtGui.QIcon(icon_path))
@@ -172,16 +281,29 @@ class CommentBlockEndEditor(QtWidgets.QDialog):
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
         self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
-        self.CommandDisplay_Label.setText(_translate("Dialog", "Command: ", None))
-        self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 2, 1)
+        self.CommandDisplay_Label.setText(_translate("Dialog", "Comments: ", None))
+        self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 4, 1)
         # Create a text edit object. Add the text edit object to the Dialog window.
         # Set the size, the name and the html of the text edit object.
         # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
         self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(self)
         self.CommandDisplay_View_TextBrowser.setObjectName("CommandDisplay_View_TextBrowser")
-        self.CommandDisplay_View_TextBrowser.setText("*/")
-        self.CommandDisplay_View_TextBrowser.setReadOnly(True)
-        self.CommandDisplay_View_TextBrowser.setMaximumHeight(60)
+        self.CommandDisplay_View_TextBrowser.setMaximumHeight(200)
+        self.CommandDisplay_View_Font = QtGui.QFont("Monospace")
+        self.CommandDisplay_View_Font.setStyleHint(QtGui.QFont.TypeWriter)
+        self.CommandDisplay_View_Font.setPointSize(10)
+        self.CommandDisplay_View_TextBrowser.setFont(self.CommandDisplay_View_Font)
+        self.CommandDisplay_View_TextBrowser.setWordWrapMode(QtGui.QTextOption.NoWrap)
+        # Do not display default command string when editing a new comment
+        # If command_string is default reset to empty
+        command_string = self.command.command_string
+        # - existing comments should be shown as is without stripping the leading #
+        if command_string == "#()":
+            # Special case for new comment
+            command_string = ""
+        if command_string.endswith("()"):
+            command_string = command_string[:-2]
+        self.CommandDisplay_View_TextBrowser.setText(command_string)
         # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
         # self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
         # #html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
@@ -191,7 +313,7 @@ class CommentBlockEndEditor(QtWidgets.QDialog):
         # #       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
         # #       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
         # #self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
-        self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
+        self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 4, -1)
 
     def setup_ui_core_command_buttons(self):
         # Create a button box object. Add the button box object to the Dialog window.
@@ -206,7 +328,7 @@ class CommentBlockEndEditor(QtWidgets.QDialog):
         self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Ok).setToolTip("Save edits to command.")
         self.OK_Cancel_Buttons.accepted.connect(self.accept)
         self.OK_Cancel_Buttons.rejected.connect(self.reject)
-        self.grid_layout_row = self.grid_layout_row + 1
+        self.grid_layout_row = self.grid_layout_row + 4
         self.grid_layout.addWidget(self.OK_Cancel_Buttons, self.grid_layout_row, 6, 1, 2)
 
     def setup_ui_core_command_description(self):
@@ -233,10 +355,11 @@ class CommentBlockEndEditor(QtWidgets.QDialog):
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
         self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
-        self.Command_Description_Label.setText("This command ends a multi-line comment block, which is useful for "
-                                               "commenting out multiple commands.\n"
-                                               "Use the /* command to start the comment block.\n"
-                                               "See also the # command for commenting single lines.\n")
+        self.Command_Description_Label.setText("Enter one or more comments.\n"
+                                               "If not present, # will be automatically added when OK is pressed."
+                                               "# at the start of existing lines will be shown.\n"
+                                               "See also the /* and */ commands for multi-line comments, which are "
+                                               "useful for commenting out multiple commands.")
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
     def update_command_display(self):
@@ -302,26 +425,36 @@ class CommentBlockEndEditor(QtWidgets.QDialog):
         # Update the Command Display Qt Widget to display the dynamic command display text.
         self.CommandDisplay_View_TextBrowser.setText(display)
 
-    def get_current_value(self, obj):
-        """
-        Get the value within a QtGui.Widget object.
+    def setup_ui_core_ruler(self):
+        # Create a text box that shows a ruler across the top of the comments section
+        self.grid_layout_row = self.grid_layout_row + 1
+        self.CommandDisplay_View_Ruler = QtWidgets.QTextEdit(self)
+        self.CommandDisplay_View_Ruler.setObjectName("CommandDisplay_View_Ruler")
+        self.CommandDisplay_View_Font = QtGui.QFont("Monospace")
+        self.CommandDisplay_View_Font.setStyleHint(QtGui.QFont.TypeWriter)
+        self.CommandDisplay_View_Font.setPointSize(10)
+        self.CommandDisplay_View_Ruler.setFont(self.CommandDisplay_View_Font)
+        self.CommandDisplay_View_Ruler.setText("0         10        20        30        40        50        "
+                                               "60        70        80        90        100       110\n"
+                                               "0123456789012345678901234567890123456789012345678901234567890123456789"
+                                               "012345678901234567890123456879012345678901234567890")
+        self.CommandDisplay_View_Ruler.setReadOnly(True)
+        self.CommandDisplay_View_Ruler.setMaximumHeight(45)
+        self.CommandDisplay_View_Ruler.setFrameStyle(QtWidgets.QFrame.NoFrame)
+        self.CommandDisplay_View_Ruler.setWordWrapMode(QtGui.QTextOption.NoWrap)
+        self.CommandDisplay_View_Ruler.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.CommandDisplay_View_Ruler.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        Args:
-            obj (obj): the a QtGui.Widget object to read the value from
+        self.grid_layout.addWidget(self.CommandDisplay_View_Ruler, self.grid_layout_row, 1, 1, -1)
+
+    def setup_ui_horizontal_scrolling(self):
+        """
+        Connect the horizontal scrolling between the comment editor and the ruler up top.
 
         Returns:
-            the value within the QtGui.Widget object
+            None
         """
-
-        # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
-        # value when one works.
-        # Reads LineEdit widgets.
-        try:
-            value = obj.text()
-
-        # Reads ComboBox widgets.
-        except:
-            value = obj.currentText()
-
-        # Return the value within the input QtGui.Widget object.
-        return value
+        hs1 = self.CommandDisplay_View_TextBrowser.horizontalScrollBar()
+        hs2 = self.CommandDisplay_View_Ruler.horizontalScrollBar()
+        hs1.valueChanged.connect(functools.partial(self.horizontal_scroll, hs2))
+        hs2.valueChanged.connect(functools.partial(self.horizontal_scroll, hs1))

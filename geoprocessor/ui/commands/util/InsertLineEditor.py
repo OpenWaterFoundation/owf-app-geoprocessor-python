@@ -1,4 +1,4 @@
-# CommentStartEndEditor - editor for /* command editor
+# CommentBlockEndEditor - editor for */ command editor
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
@@ -38,12 +38,14 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
+# Combining code from GenericCommandEditor and AbstractCommandEditor to create
+# one stand alone editor
 
-class CommentBlockStartEditor(QtWidgets.QDialog):
+
+class InsertLineEditor(QtWidgets.QDialog):
     """
-    Unique command editor created specifically for the command comment block start.
-    This class is a standalone class that combines the attributes of AbstractCommandEditor and
-    GenericCommandEditor
+    Abstract command editor used as parent of command editor dialog implementations.
+    This class maintains core layout information and provides functions to add components.
     """
 
     # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
@@ -128,7 +130,7 @@ class CommentBlockStartEditor(QtWidgets.QDialog):
         # This will wire up the signals and slots depending on names.
         # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
         # - don't do this because not using QtDesigner
-        #QtCore.QMetaObject.connectSlotsByName(self)
+        # QtCore.QMetaObject.connectSlotsByName(self)
 
     def setup_ui_core_bottom(self):
         """
@@ -146,8 +148,8 @@ class CommentBlockStartEditor(QtWidgets.QDialog):
         Returns:  None
         """
         # Set the window title to the command name
-        self.setObjectName("CommentBlockStart")
-        self.setWindowTitle("Comment Block Start")
+        self.setObjectName("InsertLineCommand")
+        self.setWindowTitle("Edit " + self.command.command_name + " command")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
         self.setWindowIcon(QtGui.QIcon(icon_path))
@@ -177,7 +179,13 @@ class CommentBlockStartEditor(QtWidgets.QDialog):
         # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
         self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(self)
         self.CommandDisplay_View_TextBrowser.setObjectName("CommandDisplay_View_TextBrowser")
-        self.CommandDisplay_View_TextBrowser.setText("/*")
+        command_string = self.command.command_string
+        print(command_string)
+        if command_string == "Blank()":
+            command_string = ""
+        if command_string.endswith("()"):
+            command_string = command_string[:-2]
+        self.CommandDisplay_View_TextBrowser.setText(command_string)
         self.CommandDisplay_View_TextBrowser.setReadOnly(True)
         self.CommandDisplay_View_TextBrowser.setMaximumHeight(60)
         # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
@@ -231,9 +239,9 @@ class CommentBlockStartEditor(QtWidgets.QDialog):
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
         self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
-        self.Command_Description_Label.setText("This command starts a multi-line comment block, which is useful for "
+        self.Command_Description_Label.setText("This command ends a multi-line comment block, which is useful for "
                                                "commenting out multiple commands.\n"
-                                               "Use the */ command to end the comment block.\n"
+                                               "Use the /* command to start the comment block.\n"
                                                "See also the # command for commenting single lines.\n")
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 

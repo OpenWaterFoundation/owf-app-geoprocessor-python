@@ -894,7 +894,6 @@ class CommandListWidget(object):
         """
         # If inserting blank line
         if not command_string:
-            print("here")
             item = QtWidgets.QListWidgetItem()
             item.setText("")
             qsize = QtCore.QSize()
@@ -910,7 +909,6 @@ class CommandListWidget(object):
         qsize.setHeight(16)
         qsize.setWidth(self.commands_List.size().width())
         item.setSizeHint(qsize)
-        print(command_string.strip())
         if command_string.strip() == "/*":
             self.comment_block = True
         # Check to see if comment block started or ended

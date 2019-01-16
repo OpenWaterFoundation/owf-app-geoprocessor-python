@@ -149,7 +149,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         """
         # Set the window title to the command name
         self.setObjectName("InsertLineCommand")
-        self.setWindowTitle("Edit " + self.command.command_name + " command")
+        self.setWindowTitle("Edit " + self.command.command_string + " command")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
         self.setWindowIcon(QtGui.QIcon(icon_path))
@@ -180,7 +180,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(self)
         self.CommandDisplay_View_TextBrowser.setObjectName("CommandDisplay_View_TextBrowser")
         command_string = self.command.command_string
-        print(command_string)
+
         if command_string == "Blank()":
             command_string = ""
         if command_string.endswith("()"):

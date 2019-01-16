@@ -63,8 +63,39 @@ class RemoveFile(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = {}
-        self.command_metadata['Description'] = 'The RemoveFile command removes a file from the file system. '
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata['Description'] = 'The RemoveFile command removes a file from the file system.'
+        self.command_metadata['EditorType'] = 'Simple'
+
+        # Paramater metadata
+        self.parameter_input_metadata = {}
+        # SourceFile
+        self.parameter_input_metadata['SourceFile.Group'] = ""
+        self.parameter_input_metadata['SourceFile.Description'] = ""
+        self.parameter_input_metadata['SourceFile.Label'] = 'File to remove'
+        self.parameter_input_metadata['SourceFile.Tooltip'] = "Specify the file to remove or use ${Property} notation."
+        self.parameter_input_metadata['SourceFile.Required'] = True
+        self.parameter_input_metadata['SourceFile.Values'] = ""
+        self.parameter_input_metadata['SourceFile.DefaultValue'] = ""
+        self.parameter_input_metadata['SourceFile.FileSelectorType'] = "Read"
+        # SourceFile
+        self.parameter_input_metadata['IfSourceFileNotFound.Group'] = ""
+        self.parameter_input_metadata['IfSourceFileNotFound.Description'] = "action if file not found"
+        self.parameter_input_metadata['IfSourceFileNotFound.Label'] = "If not found?"
+        self.parameter_input_metadata['IfSourceFileNotFound.Tooltip'] = ("Specify the file to remove or use ${Property}"
+                                                                         "notation.")
+        self.parameter_input_metadata['IfSourceFileNotFound.Required'] = False
+        self.parameter_input_metadata['IfSourceFileNotFound.Values'] = ["Ignore", "Warn", "Fail"]
+        self.parameter_input_metadata['IfSourceFileNotFound.DefaultValue'] = "Warn"
+        self.parameter_input_metadata['IfSourceFileNotFound.FileSelectorType'] = ""
+        # SourceFile
+        self.parameter_input_metadata['RemoveIfFolder.Group'] = ""
+        self.parameter_input_metadata['RemoveIfFolder.Description'] = ""
+        self.parameter_input_metadata['RemoveIfFolder.Label'] = "Remove if folder"
+        self.parameter_input_metadata['RemoveIfFolder.Tooltip'] = ""
+        self.parameter_input_metadata['RemoveIfFolder.Required'] = False
+        self.parameter_input_metadata['RemoveIfFolder.Values'] = ["True", "False"]
+        self.parameter_input_metadata['RemoveIfFolder.DefaultValue'] = "False"
+        self.parameter_input_metadata['RemoveIfFolder.FileSelectorType'] = ""
 
     def check_command_parameters(self, command_parameters):
         """

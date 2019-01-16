@@ -79,10 +79,181 @@ class RunProgram(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = {}
-        self.command_metadata['Description'] = 'The RunProgram command runs an external program, given the full ' \
-                                               'command line, and waits until the program is finished before ' \
-                                               'processing additional commands. '
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata['Description'] = ("The RunProgram command runs an external program, given the full "
+                                                "command line, and waits until the program is finished before "
+                                                "processing additional commands. ")
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Parameter metadata
+        self.parameter_input_metadata = {}
+        # CommandLine
+        self.parameter_input_metadata['CommandLine.Group'] = ""
+        self.parameter_input_metadata['CommandLine.Description'] = "command line with arguments"
+        self.parameter_input_metadata['CommandLine.Label'] = "Command to run"
+        self.parameter_input_metadata['CommandLine.Tooltip'] = ""
+        self.parameter_input_metadata['CommandLine.Required'] = True
+        self.parameter_input_metadata['CommandLine.Values'] = ""
+        self.parameter_input_metadata['CommandLine.DefaultValue'] = ""
+        self.parameter_input_metadata['CommandLine.FileSelectorType'] = ""
+        # UseCommandShell
+        self.parameter_input_metadata['UseCommandShell.Group'] = ""
+        self.parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
+        self.parameter_input_metadata['UseCommandShell.Label'] = "Use command shell"
+        self.parameter_input_metadata['UseCommandShell.Tooltip'] = ""
+        self.parameter_input_metadata['UseCommandShell.Required'] = False
+        self.parameter_input_metadata['UseCommandShell.Values'] = ["False", "True"]
+        self.parameter_input_metadata['UseCommandShell.DefaultValue'] = "False"
+        self.parameter_input_metadata['UseCommandShell.FileSelectorType'] = ""
+        # IncludeParentEnvVars
+        self.parameter_input_metadata['IncludeParentEnvVars.Group'] = ""
+        self.parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
+        self.parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include Parent Environment Variables"
+        self.parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = ("Indicate whether the parent environment "
+                                                                         "variables should be passed to the program run"
+                                                                         "environment.")
+        self.parameter_input_metadata['IncludeParentEnvVars.Required'] = False
+        self.parameter_input_metadata['IncludeParentEnvVars.Values'] = ["True", "False"]
+        self.parameter_input_metadata['IncludeParentEnvVars.DefaultValue'] = "True"
+        self.parameter_input_metadata['IncludeParentEnvVars.FileSelectorType'] = ""
+        # IncludeEnvVars
+        self.parameter_input_metadata['IncludeEnvVars.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVars.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVars.Label'] = "Include Environment Variables"
+        self.parameter_input_metadata['IncludeEnvVars.Tooltip'] = ("Specify environment variables to be defined "
+                                                                   "for the program run environment.")
+        self.parameter_input_metadata['IncludeEnvVars.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVars.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVars.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVars.FileSelectorType'] = ""
+        # IncludeEnvVarName1
+        self.parameter_input_metadata['IncludeEnvVarName1.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName1.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName1.Label'] = 'Include Environment Variable Name 1'
+        self.parameter_input_metadata['IncludeEnvVarName1.Tooltip'] = ("Specify the name of as single environment "
+                                                                       "variable to be defined for the program run "
+                                                                       "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarName1.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarName1.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName1.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName1.FileSelectorType'] = ""
+        # IncludeEnvVarValue1
+        self.parameter_input_metadata['IncludeEnvVarValue1.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue1.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue1.Label'] = 'Include Environment Variable Value 1'
+        self.parameter_input_metadata['IncludeEnvVarValue1.Tooltip'] = ("Specify the value of as single environment "
+                                                                        "variable to be defined for the program run "
+                                                                        "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarValue1.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarValue1.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue1.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue1.FileSelectorType'] = ""
+        # IncludeEnvVarName2
+        self.parameter_input_metadata['IncludeEnvVarName2.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName2.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName2.Label'] = 'Include Environment Variable Name 2'
+        self.parameter_input_metadata['IncludeEnvVarName2.Tooltip'] = ("Specify the name of as single environment "
+                                                                       "variable to be defined for the program run "
+                                                                       "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarName2.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarName2.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName2.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName2.FileSelectorType'] = ""
+        # IncludeEnvVarValue2
+        self.parameter_input_metadata['IncludeEnvVarValue2.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue2.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue2.Label'] = 'Include Environment Variable Value 2'
+        self.parameter_input_metadata['IncludeEnvVarValue2.Tooltip'] = ("Specify the value of as single environment "
+                                                                        "variable to be defined for the program run "
+                                                                        "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarValue2.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarValue2.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue2.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue2.FileSelectorType'] = ""
+        # IncludeEnvVarName3
+        self.parameter_input_metadata['IncludeEnvVarName3.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName3.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName3.Label'] = 'Include Environment Variable Name 3'
+        self.parameter_input_metadata['IncludeEnvVarName3.Tooltip'] = ("Specify the name of as single environment "
+                                                                       "variable to be defined for the program run "
+                                                                       "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarName3.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarName3.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName3.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName3.FileSelectorType'] = ""
+        # IncludeEnvVarValue3
+        self.parameter_input_metadata['IncludeEnvVarValue3.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue3.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue3.Label'] = 'Include Environment Variable Value 3'
+        self.parameter_input_metadata['IncludeEnvVarValue3.Tooltip'] = ("Specify the value of as single environment "
+                                                                        "variable to be defined for the program run "
+                                                                        "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarValue3.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarValue3.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue3.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue3.FileSelectorType'] = ""
+        # IncludeEnvVarName4
+        self.parameter_input_metadata['IncludeEnvVarName4.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName4.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName4.Label'] = 'Include Environment Variable Name 4'
+        self.parameter_input_metadata['IncludeEnvVarName4.Tooltip'] = ("Specify the name of as single environment "
+                                                                       "variable to be defined for the program run "
+                                                                       "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarName4.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarName4.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName4.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName4.FileSelectorType'] = ""
+        # IncludeEnvVarValue4
+        self.parameter_input_metadata['IncludeEnvVarValue4.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue4.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue4.Label'] = 'Include Environment Variable Value 4'
+        self.parameter_input_metadata['IncludeEnvVarValue4.Tooltip'] = ("Specify the value of as single environment "
+                                                                        "variable to be defined for the program run "
+                                                                        "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarValue4.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarValue4.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue4.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue4.FileSelectorType'] = ""
+        # IncludeEnvVarName5
+        self.parameter_input_metadata['IncludeEnvVarName5.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName5.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName5.Label'] = 'Include Environment Variable Name 5'
+        self.parameter_input_metadata['IncludeEnvVarName5.Tooltip'] = ("Specify the name of as single environment "
+                                                                       "variable to be defined for the program run "
+                                                                       "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarName5.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarName5.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName5.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarName5.FileSelectorType'] = ""
+        # IncludeEnvVarValue5
+        self.parameter_input_metadata['IncludeEnvVarValue5.Group'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue5.Description'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue5.Label'] = 'Include Environment Variable Value 5'
+        self.parameter_input_metadata['IncludeEnvVarValue5.Tooltip'] = ("Specify the value of as single environment "
+                                                                        "variable to be defined for the program run "
+                                                                        "environment. ")
+        self.parameter_input_metadata['IncludeEnvVarValue5.Required'] = False
+        self.parameter_input_metadata['IncludeEnvVarValue5.Values'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue5.DefaultValue'] = ""
+        self.parameter_input_metadata['IncludeEnvVarValue5.FileSelectorType'] = ""
+        # ExcludeEnvVars
+        self.parameter_input_metadata['ExcludeEnvVars.Group'] = ""
+        self.parameter_input_metadata['ExcludeEnvVars.Description'] = ""
+        self.parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude Environment Variables'
+        self.parameter_input_metadata['ExcludeEnvVars.Tooltip'] = ("Specify environment variables to be removed "
+                                                                   "from the program run environment.")
+        self.parameter_input_metadata['ExcludeEnvVars.Required'] = False
+        self.parameter_input_metadata['ExcludeEnvVars.Values'] = ""
+        self.parameter_input_metadata['ExcludeEnvVars.DefaultValue'] = ""
+        self.parameter_input_metadata['ExcludeEnvVars.FileSelectorType'] = ""
+        # OutputFiles
+        self.parameter_input_metadata['OutputFiles.Group'] = ""
+        self.parameter_input_metadata['OutputFiles.Description'] = ""
+        self.parameter_input_metadata['OutputFiles.Label'] = "Output Files"
+        self.parameter_input_metadata['OutputFiles.Tooltip'] = "Specify the output file."
+        self.parameter_input_metadata['OutputFiles.Required'] = False
+        self.parameter_input_metadata['OutputFiles.Values'] = ""
+        self.parameter_input_metadata['OutputFiles.DefaultValue'] = ""
+        self.parameter_input_metadata['OutputFiles.FileSelectorType'] = "Write"
 
     def check_command_parameters(self, command_parameters):
         """

@@ -56,7 +56,19 @@ class StartLog(AbstractCommand):
         # Command metadata for command editor display
         self.command_metadata = {}
         self.command_metadata['Description'] = 'The StartLog command (re)starts the log file.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata['EditorType'] = 'Simple'
+
+        # Parameter metadata
+        self.parameter_input_metadata = {}
+        self.parameter_input_metadata["LogFile.Group"] = ""
+        self.parameter_input_metadata["LogFile.Description"] = ""
+        self.parameter_input_metadata["LogFile.Label"] = "Log File"
+        self.parameter_input_metadata["LogFile.Tooltip"] = "Specify the path to the log file to write, " \
+                                                          "can use ${Property} notation. "
+        self.parameter_input_metadata["LogFile.Required"] = True
+        self.parameter_input_metadata["LogFile.Values"] = ""
+        self.parameter_input_metadata["LogFile.DefaultValue"] = ""
+        self.parameter_input_metadata["LogFile.FileSelectorType"] = "Read"
 
     def check_command_parameters(self, command_parameters):
         """

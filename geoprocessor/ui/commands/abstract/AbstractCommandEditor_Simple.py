@@ -384,7 +384,10 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             #         print(parameter_value)
 
             # Parameter input metatata
-            input_metadata = self.command.parameter_input_metadata
+            try:
+                input_metadata = self.command.parameter_input_metadata
+            except:
+                print("Error: Could not find parameter input metadata in command file")
 
             # Get the parameter name for retrieving all other parameter variables from
             # parameter_input_metadata

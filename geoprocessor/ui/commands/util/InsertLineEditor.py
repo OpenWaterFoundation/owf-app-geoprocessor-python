@@ -180,7 +180,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(self)
         self.CommandDisplay_View_TextBrowser.setObjectName("CommandDisplay_View_TextBrowser")
         command_string = self.command.command_string
-        print(command_string)
+
         if command_string == "Blank()":
             command_string = ""
         if command_string.endswith("()"):

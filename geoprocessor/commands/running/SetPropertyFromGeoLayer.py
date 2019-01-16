@@ -51,9 +51,17 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "SetPropertyFromGeoLayer"
+        # Description for menu "Command()... <description>
         self.command_description = "Set a GeoProcessor property from a GeoLayer property"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'The SetPropertyFromGeoLayer command sets the value of a property used ' \
+                                               'by the processor, by using the value of a GeoLayer property. '
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

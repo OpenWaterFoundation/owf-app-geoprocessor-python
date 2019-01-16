@@ -44,9 +44,19 @@ class EndFor(AbstractCommand):
         Initialize the command instance.
         """
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "EndFor"
+        # Description for menu "Command()... <description>"
         self.command_description = "Indicate the end of a 'For' block"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = ('This command ends a block of commands that start with a For command. '
+                                                'The For and EndFor commands must have the same value for the Name '
+                                                'parameter to allow the processor to determine the start and end '
+                                                'of the block.')
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

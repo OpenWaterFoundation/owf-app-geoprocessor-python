@@ -46,9 +46,16 @@ class Message(AbstractCommand):
         Initialize the command instance.
         """
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "Message"
+        # Description for menu "Command()... <description>
         self.command_description = "Print a Message to the log file"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'The Message command prints a status message to the log file.'
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

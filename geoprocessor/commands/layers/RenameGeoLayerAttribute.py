@@ -59,9 +59,16 @@ class RenameGeoLayerAttribute(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "RenameGeoLayerAttribute"
+        # Description for menu "Command()... <description>"
         self.command_description = "Rename a GeoLayer's attribute"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command renames a single attribute in a GeoLayer.'
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

@@ -86,9 +86,16 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "WriteGeoLayerToDelimitedFile"
+        # Description for menu "Command()... <description>"
         self.command_description = "Write GeoLayer to a file in delimited file format"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command writes a GeoLayer to a delimited file.'
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

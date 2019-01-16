@@ -1150,17 +1150,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_MultipleEnd.triggered.connect(
             functools.partial(self.new_command_editor, "*/"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_MultipleEnd)
+        self.Menu_Commands_General_Comments.addSeparator()
         # Comments / General - Comments / Enabled menu
-        self.Menu_Commands_General_Comments_Enabled = QtWidgets.QAction(main_window)
-        self.Menu_Commands_General_Comments_Enabled.setObjectName(_fromUtf8("Menu_Commands_General_Comments_Enabled"))
-        self.Menu_Commands_General_Comments_Enabled.setText("#@enabled False <disables the test>")
-        self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_Enabled)
+        self.Menu_Commands_General_Comments_EnabledFalse = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_Comments_EnabledFalse.setObjectName(_fromUtf8("Menu_Commands_General_Comments_Enabled"))
+        self.Menu_Commands_General_Comments_EnabledFalse.setText("#@enabled False <disables the test>")
+        self.Menu_Commands_General_Comments_EnabledFalse.triggered.connect(
+            functools.partial(self.new_command_editor, "#@enabled False"))
+        self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_EnabledFalse)
         # Comments / General - Comments / Expected Status menus
         self.Menu_Commands_General_Comments_ExpectedStatusFail = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_ExpectedStatusFail.setObjectName(
             _fromUtf8("Menu_Commands_General_Comments_ExpectedStatusFail"))
         self.Menu_Commands_General_Comments_ExpectedStatusFail.setText(
             "#@expectedStatus Failure <used to test commands>")
+        self.Menu_Commands_General_Comments_ExpectedStatusFail.triggered.connect(
+            functools.partial(self.new_command_editor, "#@expectedStatus Failure"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_ExpectedStatusFail)
         #
         self.Menu_Commands_General_Comments_ExpectedStatusWarn = QtWidgets.QAction(main_window)
@@ -1168,6 +1173,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             _fromUtf8("Menu_Commands_General_Comments_ExpectedStatusWarn"))
         self.Menu_Commands_General_Comments_ExpectedStatusWarn.setText(
             "#@expectedStatus Warning <used to test commands>")
+        self.Menu_Commands_General_Comments_ExpectedStatusWarn.triggered.connect(
+            functools.partial(self.new_command_editor, "#@expectedStatus Warning"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_ExpectedStatusWarn)
         # Add to menu bar
         self.menubar.addAction(self.Menu_Commands.menuAction())

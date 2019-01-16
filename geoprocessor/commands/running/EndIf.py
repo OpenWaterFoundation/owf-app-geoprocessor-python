@@ -44,9 +44,19 @@ class EndIf(AbstractCommand):
         Initialize the command instance.
         """
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "EndIf"
+        # Description for menu "Command()... <description>"
         self.command_description = "Indicate the end of an 'If' block"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = ('This command ends a block of commands that start with an If '
+                                                'command.\nThe If and EndIf commands must have the same value '
+                                                'for the Name parameter to\nallow the command processor to determine '
+                                                'the start and end of the block.')
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

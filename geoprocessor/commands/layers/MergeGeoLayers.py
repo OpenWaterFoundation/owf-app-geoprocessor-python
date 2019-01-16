@@ -77,9 +77,16 @@ class MergeGeoLayers(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "MergeGeoLayers"
+        # Description for menu "Command()... <description>"
         self.command_description = "Merge multiple GeoLayers into one GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command merges two or more GeoLayers into one GeoLayer.'
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

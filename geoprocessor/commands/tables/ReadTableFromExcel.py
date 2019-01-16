@@ -64,9 +64,16 @@ class ReadTableFromExcel(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "ReadTableFromExcel"
+        # Description for menu "Command()... <description>"
         self.command_description = "Read a table from an Excel file"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command reads a Table from an Excel file.'
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

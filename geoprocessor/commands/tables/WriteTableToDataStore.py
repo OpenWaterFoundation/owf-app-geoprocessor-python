@@ -83,9 +83,17 @@ class WriteTableToDataStore(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "WriteTableToDataStore"
+        # Description for menu "Command()... <description>"
         self.command_description = "Write a table to a DataStore"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = ('This command processes each row in a Table and executes and '
+                                                'SQL statement to insert the row into a database DataStore.')
+        self.command_metadata['EditorType'] = 'Generic'
 
         # Class data
         self.warning_count = 0

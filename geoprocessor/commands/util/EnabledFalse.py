@@ -1,18 +1,18 @@
-# /* - command for comment block start
+# # - command for single line comment starting with #
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
-# 
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -23,9 +23,9 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 
-class CommentBlockStart(AbstractCommand):
+class EnabledFalse(AbstractCommand):
     """
-    /* comment block start.
+    # comment.
     """
     def __init__(self):
         """
@@ -38,17 +38,18 @@ class CommentBlockStart(AbstractCommand):
         self.command_status.discovery_status = CommandStatusType.SUCCESS
         self.command_status.run_status = CommandStatusType.SUCCESS
 
-        # Command name is the comment block start.
-        self.command_name = "/*"
+        # Use hash for the command name for menu and window title
+        self.command_name = "#@Enabled False"
         # Description for menu "Command()... <description>"
-        self.command_description = "End of multi-line comment block"
+        self.command_description = "Used to disable command for tests"
 
         # Command metadata for command editor display
         self.command_metadata = {}
-        self.command_metadata['Description'] = ('Multiple-line comments start with /*. Spaces and tabs at the start '
-                                                'of the comment line are OK. Additional text after the comment '
-                                                'indicator is allowed.')
-        self.command_metadata['EditorType'] = 'InsertLineEditor'
+        self.command_metadata['Description'] = ('Enter one of more comments (leading # will be added automatically '
+                                                'if not shown). \n'
+                                                'See also the /* and */ commands for multi-line comments, '
+                                                'which are useful for commenting out multiple commands.')
+        self.command_metadata['EditorType'] = 'InsertLineRulerEditor'
 
     def initialize_command(self, command_string, processor, full_initialization):
         """
@@ -66,12 +67,11 @@ class CommentBlockStart(AbstractCommand):
 
         # Set data in the parent class, but do not attempt to parse the command since unknown syntax
         full_initialization = False
-        super(CommentBlockStart, self).initialize_command(command_string, processor, full_initialization)
+        super(EnabledFalse, self).initialize_command(command_string, processor, full_initialization)
 
     def run_command(self):
         """
         Run the command.  Does nothing since comments cause no action.
-        The command type is examined in the processor to know when a comment block is starting.
 
         Returns:
             None.

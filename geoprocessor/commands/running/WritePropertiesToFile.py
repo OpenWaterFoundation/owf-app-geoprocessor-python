@@ -62,9 +62,16 @@ class WritePropertiesToFile(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "WritePropertiesToFile"
+        # Description for menu "Command()... <description>"
         self.command_description = "Write properties to file"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command writes command processor properties to a file.'
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

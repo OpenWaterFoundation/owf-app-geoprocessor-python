@@ -57,9 +57,20 @@ class RunCommands(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "RunCommands"
+        # Description for menu "Command()... <description>"
         self.command_description = "Run a command file, useful to automate running all tests or a multi-step workflow"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'The RunCommands command runs a command file using a separate command ' \
+                                               'processor as a “child” of the main processor.\nThis command can be ' \
+                                               'used to manage workflow where multiple commands files are run, ' \
+                                               'and is also used extensively for testing,\nwhere a test suite consists ' \
+                                               'of running separate test case command files. '
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

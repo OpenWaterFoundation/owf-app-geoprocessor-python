@@ -57,9 +57,16 @@ class CopyFile(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
+        # Name of command for menu and window title
         self.command_name = "CopyFile"
+        # Description for menu "Command()... <description>"
         self.command_description = "Copy a file to a new file"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'The CopyFile command copies a source file to a destination.'
+        self.command_metadata['EditorType'] = 'Generic'
 
     def check_command_parameters(self, command_parameters):
         """

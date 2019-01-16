@@ -29,11 +29,19 @@ class Blank(AbstractCommand):
         """
         Initialize a new instance of the command.
         """
-        self.command_name = "Blank"
-        self.command_description = "Used for blank lines"
         # Don't set the command name because don't know that there is one.
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()
+        # Name of command for menu and window title
+        self.command_name = "Blank"
+        # Description for menu "Command()... <description>"
+        self.command_description = "Used for blank lines"
+
+        # Command metadata for command editor display
+        self.command_metadata = {}
+        self.command_metadata['Description'] = 'This command is a placeholder for blank lines, which contain only ' \
+                                               'whitespace characters (spaces and tabs). '
+        self.command_metadata['EditorType'] = 'InsertLineEditor'
 
     def initialize_command(self, command_string, processor, full_initialization):
         """

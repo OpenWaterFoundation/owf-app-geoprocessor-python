@@ -208,7 +208,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         """
         # Set the window title to the command name
         self.setObjectName(_fromUtf8(self.command.command_name))
-        self.setWindowTitle(self.command.command_name)
+        self.setWindowTitle("Edit " + self.command.command_string + " command")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
         self.setWindowIcon(QtGui.QIcon(icon_path))

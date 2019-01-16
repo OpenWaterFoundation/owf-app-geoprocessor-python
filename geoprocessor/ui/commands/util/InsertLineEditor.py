@@ -149,7 +149,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         """
         # Set the window title to the command name
         self.setObjectName("InsertLineCommand")
-        self.setWindowTitle("Edit " + self.command.command_name + " command")
+        self.setWindowTitle("Edit " + self.command.command_string + " command")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
         self.setWindowIcon(QtGui.QIcon(icon_path))

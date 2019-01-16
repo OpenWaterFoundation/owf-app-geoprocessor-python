@@ -140,11 +140,16 @@ configCygwinAndLinuxEnv () {
 	# Where QGIS is installed
 	
 	if [ "${operatingSystem}" = "cygwin" ]; then
+		echo "cygwin is not yet supported for QGIS - run gptest or gptestui instead"
+		exit 1
 		QGIS_INSTALL_HOME=/cygdrive/C/OSGeo4W64
 	elif [ "${operatingSystem}" = "linux" ]; then
 		# TODO add later
-		echo "linux is not yet supported for Linux
+		echo "linux is not yet supported for QGIS - run gptest or gptestui instead"
+		exit 1
 	elif [ "${operatingSystem}" = "mingw" ]; then
+		echo "mingw is not yet supported"
+		exit 1
 		QGIS_INSTALL_HOME=/C/OSGeo4W64
 	fi
 

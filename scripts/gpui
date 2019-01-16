@@ -24,8 +24,64 @@
 # Simple script to run the Open Water Foundation GeoProcessor application user interface.
 # - if it does not work, make sure that gp works
 
+# Supporting functions, alphabetized
+
+# Determine the operating system that is running the script
+# - sets the variable operatingSystem to cygwin, linux, or mingw (Git Bash)
+checkOperatingSystem()
+{
+	if [ ! -z "${operatingSystem}" ]; then
+		# Have already checked operating system so return
+		return
+	fi
+	operatingSystem="unknown"
+	os=`uname | tr [a-z] [A-Z]`
+	case "${os}" in
+		CYGWIN*)
+			operatingSystem="cygwin"
+			;;
+		LINUX*)
+			operatingSystem="linux"
+			;;
+		MINGW*)
+			operatingSystem="mingw"
+			;;
+	esac
+	# echo "Detected operatingSystem=$operatingSystem"
+}
+
+# Function to set the title of the terminal so can better identify what it is being used for
+# - see:  https://askubuntu.com/questions/22413/how-to-change-gnome-terminal-title
+# - this is done
+setTerminalTitle () {
+	checkOperatingSystem
+	if [ "${operatingSystem}" = cygwin ]; then
+		# A simple title is OK
+		# - the environment gets set in a subshell so does not continue after closing this shell
+		title="GeoProcessor (gp run with gpui)"
+	elif [ "${operatingSystem}" = linux ]; then
+		# A simple title is OK
+		# - the environment gets set in a subshell so does not continue after closing this shell
+		title="GeoProcessor (gp run with gpui)"
+	elif [ "${operatingSystem}" = linux ]; then
+		# MinGW has not been tested
+		title="GeoProcessor (gp run with gpui) running on MinGW has not been tested"
+	else
+		# Unknown operating system, don't know if environment will work
+		title="GeoProcessor (gp run with gpui) unknown operating system - may not work"
+	fi
+	# Set the title
+	echo -ne "\033]0;${title}\007"
+}
+
+# Main entry point into the script
 # Get the location where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
+
+# Set the terminal title to help users know this is a window where GeoProcessor is being run
+# - the title will persist after the program is run, but that is generally OK
+# - this is particularly useful for software developers that have multiple windows opened and can get confused
+setTerminalTitle
 
 # Run the GeoProcessor using the main script
 ${scriptFolder}/gp --ui $@

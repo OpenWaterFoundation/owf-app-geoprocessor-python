@@ -69,10 +69,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "ReadTableFromDelimitedFile"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Read a table from a delimited file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display

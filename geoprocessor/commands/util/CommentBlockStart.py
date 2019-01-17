@@ -38,10 +38,7 @@ class CommentBlockStart(AbstractCommand):
         self.command_status.discovery_status = CommandStatusType.SUCCESS
         self.command_status.run_status = CommandStatusType.SUCCESS
 
-        # Command name is the comment block start.
         self.command_name = "/*"
-        # Description for menu "Command()... <description>"
-        self.command_description = "End of multi-line comment block"
 
         # Command metadata for command editor display
         self.command_metadata = {}

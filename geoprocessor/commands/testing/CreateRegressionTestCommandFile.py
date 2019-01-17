@@ -54,10 +54,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         Initialize a new instance of the command.
         """
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "CreateRegressionTestCommandFile"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Create a master command file to automate running all tests"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display

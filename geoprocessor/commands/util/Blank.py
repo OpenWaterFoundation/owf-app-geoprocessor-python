@@ -32,10 +32,7 @@ class Blank(AbstractCommand):
         # Don't set the command name because don't know that there is one.
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "Blank"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Used for blank lines"
 
         # Command metadata for command editor display
         self.command_metadata = {}

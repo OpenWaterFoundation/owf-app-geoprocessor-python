@@ -57,10 +57,7 @@ class RunCommands(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "RunCommands"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Run a command file, useful to automate running all tests or a multi-step workflow"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display

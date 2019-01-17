@@ -77,10 +77,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "ReadGeoLayerFromGeoJSON"
-        # Description for menu "Command()... <description>"
-        self.command_description = "read a GeoLayer from a file in GeoJSON format"
         self.command_parameter_metadata = self.__command_parameter_metadata
         self.choices_IfGeoLayerIDExists = self.__choices_IfGeoLayerIDExists
 

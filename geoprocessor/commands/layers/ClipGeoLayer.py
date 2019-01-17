@@ -72,10 +72,7 @@ class ClipGeoLayer(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "ClipGeoLayer"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Clip a GeoLayer by the boundary of another GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display

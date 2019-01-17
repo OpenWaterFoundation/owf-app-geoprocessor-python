@@ -64,10 +64,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "WriteGeoLayerPropertiesToFile"
-        # Description for menu "Commands()... <description>"
-        self.command_description = "Write GeoLayer properties to file"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display

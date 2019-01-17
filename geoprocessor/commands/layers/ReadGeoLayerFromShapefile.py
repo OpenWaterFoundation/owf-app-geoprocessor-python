@@ -91,9 +91,55 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command reads a GeoLayer from a file in Esri Shapefile format.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command reads a GeoLayer from a file in Esri Shapefile format."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # SpatialDataFile
+        self.parameter_input_metadata['SpatialDataFile.Group'] = ""
+        self.parameter_input_metadata['SpatialDataFile.Description'] = "GeoJSON file to read"
+        self.parameter_input_metadata['SpatialDataFile.Label'] = "Spatial Data File"
+        self.parameter_input_metadata['SpatialDataFile.Tooltip'] = ("The Esri Shapefile to read (relative or absolute "
+                                                                    "path; must end in .shp). ${Property} syntax is "
+                                                                    "recognized.")
+        self.parameter_input_metadata['SpatialDataFile.Required'] = True
+        self.parameter_input_metadata['SpatialDataFile.Values'] = ""
+        self.parameter_input_metadata['SpatialDataFile.DefaultValue'] = ""
+        self.parameter_input_metadata['SpatialDataFile.FileSelectorType'] = "Read"
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Group'] = ""
+        self.parameter_input_metadata['GeoLayerID.Description'] = "a GeoLayer identifier"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = ("A GeoLayer identifier. Formatting characters and ${"
+                                                               "Property} syntax is recognized.")
+        self.parameter_input_metadata['GeoLayerID.Required'] = False
+        self.parameter_input_metadata['GeoLayerID.Values'] = ""
+        self.parameter_input_metadata['GeoLayerID.DefaultValue'] = ("The GeoJSON filename without the leading path "
+                                                                    "and without the file extension.")
+        self.parameter_input_metadata['GeoLayerID.FileSelectorType'] = ""
+        # IfGeoLayerIDExists
+        self.parameter_input_metadata['IfGeoLayerIDExists.Group'] = ""
+        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "URL to read content"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID Exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+            "The action that occurs if the GeoLayerID already exists "
+            "within the GeoProcessor.\n"
+            "Replace : The existing GeoLayer "
+            "within the GeoProcessor is overwritten with the new"
+            "GeoLayer. No warning is logged.\n"
+            "ReplaceAndWarn: The existing "
+            "GeoLayer within the GeoProcessor is overwritten with the new "
+            "GeoLayer. A warning is logged. \n"
+            "Warn : The new GeoLayer is "
+            "not created. A warning is logged. \n"
+            "Fail : The new GeoLayer is "
+            "not created. A fail message is logged.")
+        self.parameter_input_metadata['IfGeoLayerIDExists.Required'] = True
+        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ""
+        self.parameter_input_metadata['IfGeoLayerIDExists.DefaultValue'] = ""
+        self.parameter_input_metadata['IfGeoLayerIDExists.FileSelectorType'] = "Read"
 
         # Class data
         self.warning_count = 0

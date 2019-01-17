@@ -53,9 +53,31 @@ class Message(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'The Message command prints a status message to the log file.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "The Message command prints a status message to the log file."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # Message
+        self.parameter_input_metadata['Message.Group'] = ""
+        self.parameter_input_metadata['Message.Description'] = "message to print"
+        self.parameter_input_metadata['Message.Label'] = "Message"
+        self.parameter_input_metadata['Message.Tooltip'] = ("The message to print. Can be specified using ${Property}.")
+        self.parameter_input_metadata['Message.Required'] = True
+        self.parameter_input_metadata['Message.Values'] = ""
+        self.parameter_input_metadata['Message.DefaultValue'] = ""
+        self.parameter_input_metadata['Message.FileSelectorType'] = ""
+        # CommandStatus
+        self.parameter_input_metadata['CommandStatus.Group'] = ""
+        self.parameter_input_metadata['CommandStatus.Description'] = "status that should result from command"
+        self.parameter_input_metadata['CommandStatus.Label'] = "Command Status"
+        self.parameter_input_metadata['CommandStatus.Tooltip'] = ("Indicate the status that should result from "
+                                                                  "running the command: SUCCESS, WARNING, FAILURE.")
+        self.parameter_input_metadata['CommandStatus.Required'] = False
+        self.parameter_input_metadata['CommandStatus.Values'] = ""
+        self.parameter_input_metadata['CommandStatus.DefaultValue'] = "SUCCESS"
+        self.parameter_input_metadata['CommandStatus.FileSelectorType'] = ""
 
     def check_command_parameters(self, command_parameters):
         """

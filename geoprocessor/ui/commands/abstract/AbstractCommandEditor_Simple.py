@@ -425,7 +425,7 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             # ---------------
             parameter_Label = QtWidgets.QLabel(parameter_Frame)
             parameter_Label.setObjectName("Command_Parameter_Label")
-            parameter_Label.setText(parameter_name + ":")
+            parameter_Label.setText(parameter_label + ":")
             parameter_Label.setAlignment(QtCore.Qt.AlignRight) # |QtCore.Qt.AlignCenter)
             # Allow expanding horizontally
             parameter_Label.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)

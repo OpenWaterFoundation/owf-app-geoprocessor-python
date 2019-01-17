@@ -16,7 +16,8 @@ while incorporating TSTool design elements.
 * [Logging](#logging) - logging processing progress
 * [GeoLayer Class](#geolayer-class) - main class for storing vector layers
 * [gp Application](#gp-application) - application to manage using GeoProcessor instance in different run modes
-* [Graphical User Interface](#graphical-user-interface) - interactive interface
+* [User Interface](#user-interface) - user interface
+* [User Interface (Old)](#user-interface-old) - user interface (old)
 * [Built-in Test Framework](#built-in-test-framework) - used to run functional tests
 * [Future Design Elements](#future-design-elements) - as-yet implemented features
 
@@ -403,12 +404,19 @@ The Python module is run using one of the following command-line scripts:
 * [gp.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.bat) - Windows batch file
 * [gp.sh](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/scripts/gp.sh) - Linux shell script
 
-## Graphical User Interface ##
+## User Interface ##
 
-The graphical user interface (UI) for the GeoProcessor allows users to edit and run command workflows.
-Ideally the interface will be similar to TSTool but with features to view spatial data.
-The UI is run from the `run_ui` function in the `gp` module.
+The user interface (UI) for the GeoProcessor allows users to edit and run command workflows.
+The UI is run from the `run_ui` function in the `geoprocessor/app/gp` module.
 See the [UI Design](../ui-design/ui-design) section.
+
+## User Interface (Old) ##
+
+**This is the old documentation.**
+
+The user interface (UI) for the GeoProcessor allows users to edit and run command workflows.
+The UI is run from the `run_ui` function in the `geoprocessor/app/gp` module.
+See the [UI Design](../ui-design-old/ui-design-old) section.
 
 ## Built-in Test Framework ##
 

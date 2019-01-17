@@ -1,74 +1,78 @@
 # GeoProcessor / User Interface (UI) Design #
 
-**This documentation needs to be fully reviewed and updated.**
+**This is the old documentation - keep it for reference until the UI Design documentation is updated.**
 
-* [Overview](#overview)
-* [User Interface Terms](#user-interface-terms)
-* [Package Structure](#package-structure)
-* Main UI:
-	+ The [GeoProcessorUI Class](#geoprocessorui-class) - the main UI class
-	+ The [CommandListWidget Class](#commandlistwidget-class) - widget class to display and manage commands
-	+ The [GeoProcessorCommandEditorFactory Class](#geoprocessorcommandeditorfactory-class) - widget class to display and manage commands
-* Command Editor UI:
-	+ The [AbstractCommandEditor Class](#abstractcommandeditor-class) - parent class for all command editors
-	+ The [GenericCommandEditor Class](#genericcommandeditor-class) - default command editor
-	+ The [SimpleCommandEditor Class](#simplecommandeditor-class) - simple one panel editor
-	+ The [TabbedCommandEditor Class](#tabbedcommandeditor-class) - tabbed panel editor
-	+ [`Command` Class Input Metadata](#command-class-input-metadata) - configuring command editors
-* Utility Modules:
-	+ to be added
-* [Resources](#resources)
+- [Overview](#overview)
+- [User Interface Terms](#user-interface-terms)
+- [Folder Structure](#folder-structure)
+- [The Main Window](#the-main-window)
+- [The AbstractDialog class](#the-abstractcommand_editor-class)
+- [The CommandDialog class](#creating-a-command-dialog-window)
+- [List of Completed Command Dialog Windows](#list-of-commands-with-command-dialog-windows)
+- [Resources](#resources)
 
 ------------------
 
 ## Overview
 
 This documentation explains the current user interface design. 
-To the main actions of the UI are used as follows
+The design is still in implementation phase and can be redesigned in the future if needed. 
+The GeoProcessor user interface is functional but is limited.
+It has the following functionality: 
 
-1. Start the GeoProcessor user interface using an instance of `GeoProcessorUI` class.
-2. Use the ***File / Open Command File*** menu to open a command file.
-3. The command file will appear in the ***Command List***, implemented using the `CommandListWidget` class. 
+- Open a command file to view in the user interface
+- Save a command file from the user interface to a new output file (`Save Command File...`)
+- Save a command file from the user interface to an existing file (`Save Command File As...`) 
+- Add a new `ReadGeoLayerFromGeoJSON` command via a pop-up window dialog
+- Edit an existing `ReadGeoLayerFromGeoJSON` command via a pop-up window dialog 
+- Check that all required command parameters are specified by the user before the command is added to the `command list` ui component
+- Clear a single command from the `command list` ui component (a right-click `Delete Command` action)
+- Clear the selected commands from the `command list` ui component
+- Clear all commands from the `command list` ui component
+- Select one or more commands in the `command list` ui component
+- Run the selected commands from the `command list` ui component
+- Run all commands from the `command list` ui component
+
+As mentioned above, 
+the only command that is fully functional within the GeoProcessor user interface is `ReadGeoLayerFromGeoJSON`. 
+However, the infrastructure to build `command dialog` windows for the other GeoProcessor commands has already 
+been constructed and can be used to quickly construct the UI functionality for the other commands. 
+This documentation explains the UI software infrastructure in detail and can be followed to construct the 
+remaining commands within the user interface. 
+
+Although the other commands are not fully functional within the user interface, 
+those commands can still be run within the user interface.  
+`"fully functional within the user interface"` only means that there is not yet a `command dialog` window created for that command. 
+The reading of a command file and the running of that command file is performed within the GeoProcessor `/core` code. 
+To run a command file within the UI, follow the instructions below:
+
+1. Start the GeoProcessor user interface.
+2. Click ***File / Open Command File***.
+3. Browse to and select the command file of interest. 
+4. The command file will appear in the `command list` ui component. 
 Each line of the command file is a unique line in the `command list` ui component
-4. Click the ***Run Commands*** button. 
-The GeoProcessor instance used by the UI will run the commands.
-5. Right click on a command in the command list and select ***Edit Command*** to edit a command.
+5. Click the ***Run Commands*** button. 
+This will read the text within the `command list` ui component and 
+will pass that string to the GeoProcessor `core` code to be parsed, read and run. 
+The GeoProcessor runs with a single string input. 
+All parsing and running of the command occurs within the `core` code. 
 
-The user interface is implemented by the following classes and modules, listed in order of general to specific,
-with sections below to provide more details.
+The entire user interface is built within 3 main sections. 
 
-1. Main UI
-	1. The [`GeoProcessorUI` class](#geoprocessorui-class)
-		* creates the main window user interface
-		* controls the actions that take place on the main window
-	2. The [`CommandListWidget` class](#commandlistwidget-class)
-		* is the visual component of MVC pattern that displays the list of commands
-		* has an instance of `GeoProcessorListModel`, which is the model part of MVC pattern and has an instance of `GeoProcessor`
-	3. The [`GeoProcessorCommandEditorFactory` class](#geoprocessorcommandeditorfactory-class)
-		* determines which instance of command editor to create from command
-2. Command Editor
-	1. The [`AbstractCommandEditor` class](#the-abstractcommandeditor-class)
-		* parent class to all command editor classes 
-		* creates the features of the `command dialog` windows that are consistent across all `command dialog` windows 
-		* controls the actions that take place consistently across all `command dialog` windows 
-	2. The [`GenericCommandEditor` class](#genericcommandeditor-class)
-		* command class `command_metatdata['EditorType']'='Generic'` or is not specifies and defaults to this editor
-		* child class to the AbstractCommandEditor class
-		* instantiates editor UI components in one panel (no tabs)
-		* layout is simple list of parameter and corresponding value using text fields
-	3. The [`SimpleCommandEditor` class](#simplecommandeditor-class)
-		* command class `command_metatdata['EditorType']'='Simple'`
-		* child class to the AbstractCommandEditor class
-		* instantiates editor UI components in one panel (no tabs)
-		* layout is controlled by `parameter_input_metatdata` in each command class
-	4. The [`TabbedCommandEditor` class](#tabbedcommandeditor-class)
-		* command class `command_metatdata['EditorType']'='Tabbed'`
-		* child class to the AbstractCommandEditor class
-		* instantiates editor UI components in a tabbed panel
-		* layout is controlled by `parameter_input_metatdata` in each command class
-3. UI utility classes:
-	1. The [ui_util](#ui_util)
-		* does not currently exist?  Where is reusable UI code?
+1. [The GeoProcessor Main Application Window class](#the-main-window)
+	- creates the main window user interface
+	- controls the actions that take place on the main window
+2. [The AbstractDialog class](#the-abstractcommand_editor-class)
+	- parent class to all CommandDialog classes 
+	- creates the features of the `command dialog` windows that are consistent across all `command dialog` windows 
+	- controls the actions that take place consistently across all `command dialog` windows 
+3. [The CommandDialog classes](#creating-a-command-dialog-window)
+	- child class to the AbstractDialog class
+	- one class for each GeoProcessor command
+	- creates the features of the `command dialog` windows that are unique to the command
+	- controls the actions that take place uniquely in the `command dialog` window of the command 
+	
+These main UI sections are explained in detail below. 
 
 ## User Interface Terms
 
@@ -78,43 +82,56 @@ with sections below to provide more details.
 |Command Editor Window|The user interface window that allows the user to create a new command or edit an existing command. There is one `command editor` window for each GeoProcessor command. The command editor window has input fields used to enter the values for the command parameters.| <a href = "images/command_dialog_window.png">![Command Dialog Window](command_dialog_window.png)</a>|
 |Command List UI Component|A subset of the GeoProcessor main window that holds the commands of the command file. There is one line within the `command list` ui component for each command of the command file.|<a href = "images/command_list_ui_component.png">![Command List UI Component](command_list_ui_component.png)</a>|
 
-## Package Structure ##
-
-The following illustrates teh organization of UI-related classes and modules.
+## Folder Structure
 
 ```
-geoprocessor/
-  ui/                                   Contains all files relating to the UI. 
-   app/                                 Contains all files relating to the UI main window.
-     CommandListWidget.py               Widget to display and interact with the command list.
-     GeoProcessorUI.py                  The main UI.
-     GeoProcessorUI_Design.py           Used to prototype with UI components using the UI Designer software,
-                                        not used in the application.
-   commands/                            Contains all files relating to the GeoProcessor command editors.
-     abstract/                          Contains all files relating to the abstract (general) command editors.
-       AbstractCommandEditor.py         Parent class for all command editors.
-       GenericCommandEditor.py          Default command editor that uses Parameter: Value layout.
-       SimpleCommandEditor.py           Command editor that uses simple layout.
-       TabbedCommandEditor.py           Command editor that uses tabbed layout.
-     commands/                          Specific command editors, when above editors do not suffice.
-        datastores/
-        layers/
-        logging/
-        running/
-        tables/
-        testing/
-        util/
-          InsertLineEditor.py           Simple single-line editor, such as for comment block start and stop commands.
-          InsertLineRulerEditor.py      Editory for multi-line comments.
-     util/
-        command_parameter.py            Useful functions for parsing and processing commands.
+ui/										Contains all files relating to the UI. 
+	app/								Contains all files relating to the UI main window.
+    	GeoProcessorUI.py				Controls the signals/slots of the UI main window. 
+        GeoProcessorUI_Design.py		Controls the window design of the UI main window. 
+	commands/							Contains all files relating to the GeoProcessor commands. 
+    	abstract/						Contains all files relating to the abstract command. 
+			AbstractCommand_Editor.py	Controls the design and the signals/slots shared among the UI command dialog windows.
+    	datastores/						Contains all files relating to the command dialog windows of the DataStore commands. 
+        layers/							Contains all files relating to the command dialog windows of the GeoLayers commands.
+        logging/						Contains all files relating to the command dialog windows of the logging commands.
+        running/						Contains all files relating to the command dialog windows of the running commands.
+        tables/							Contains all files relating to the command dialog windows of the Tables commands.
+        testing/						Contains all files relating to the command dialog windows of the testing commands.
+        util/							Contains all files relating to the command dialog windows of the utility commands.
+    util/								Contains all UI utility files. 
+        command_parameter.py			Class that holds UI information for each command parameter. 
+        config.py						Class that holds global variables that change infrequently. 
 ```
 
-## `GeoProcessorUI` Class ##
+Each GeoProcessor command should have its own `command dialog` window. 
+In initial development, only a select number of the commands have a `command dialog` window.
+See the [List of Commands with Command Dialog Windows](#list-of-commands-with-command-dialog-windows) 
+for information about which commands already have a `command dialog` window and which commands need ui development. 
+Future development must take place to create `command dialog` windows for the remaining GeoProcessor commands. 
+The [List of Commands with Command Dialog Windows](#list-of-commands-with-command-dialog-windows) 
+list should be updated as future development occurs. 
+Once all current GeoProcessor commands have `command dialog` windows, the creation of new commands should include a ui component. 
+For example, the workflow of creating commands should follow these steps:
 
-The `geoprocessor/ui/app/GeoProcesssorUI` class...
+1. Create a functional command in the core GeoProcessor code.
+2. Create tests for the command.
+3. Create documentation for the command.
+4. Review the command with the GeoProcessor review team (Steve Malers).
+5. Edit the code, tests and documentation to address concerns in the review.
+6. Create a UI `command dialog` window for the command. 
 
-**Need to update...**
+## The Main Window
+
+The code for the GeoProcessor main window user interface is held within the `ui/app` folder.
+There are two scripts that make up the entire main window user interface. 
+
+
+The first is the `GeoProcessorUI_Design.py` script.
+This script is responsible for the main window design and structure. 
+For example, if the developer wanted to add another button to the main window, 
+the creation of that button would take place in the `GeoProcessorUI_Design.py` script.
+Changing the size, text or any other design features for a main window object would also be completed in this script. 
 
 The second is the `GeoProcessorUI.py` script.
 This script is responsible for all of the actions and listeners that occur in the main window user interface.
@@ -125,19 +142,10 @@ Any actions that take place in the main window should be configured in this scri
 For example, there is a function within the `GeoProcessorUI` class that clears all of the commands in the 
 [Command List UI Component](images/command_list_ui_component.png) when the `Clear Commands` button is clicked.
 
-## `CommandListWidget` Class ##
+## The AbstractCommand_Editor Class
 
-**Need to describe...**
-
-## `GeoProcessorCommandEditorFactory` Class ##
-
-**Need to describe...**
-
-## `AbstractCommandEditor` Class
-
-The `AbstractCommandEditor` class is the parent class to all GeoProcessor command editors.
-
-**Need to describe...**
+The `abstract command` class is the parent class to all GeoProcessor `command_dialog` window classes. 
+It holds configurations consistent among *all* GeoProcessor `command_dialog` windows. 
 
 ### Imports 
 
@@ -289,9 +297,7 @@ The path of the selected file is entered in the provided `qt_widget`
 The `are_required_parameters_selected()` function is triggered when the `OK` button is clicked on a `command dialog` window. 
 This function checks that all of the required command parameters have entered input values. 
 
-## `GenericCommandEditor` Class ##
-
-**Need to update...**
+## Creating a `Command Dialog` Window
 
 To develop a `command dialog` window  with the single-tab design, use the `ReadGeoLayerFromGeoJSON_Editor.py` script as a template. 
 
@@ -468,44 +474,91 @@ requires an index to set rather than the text.
 
 	Example: `self.SpatialDataFile_LineEdit.setText(spatialdatafile_value)`	
 
-## `SimpleCommandEditor` Class ##
+## List of Commands with Command Dialog Windows
 
-**Need to describe...**
+The List of Commands with Command Dialog Windows provides an overview about which 
+commands already have a `command dialog` window and which ones still need their `command dialog` windows developed. 
+An **X** in the *Command Dialog Window Completed* column demonstrates that a `command dialog` 
+window has been developed for that command.
+The *Recommended Dialog Window Type* column provides a suggestion about which `command dialog` 
+window design to use for that command. 
 
-## `TabbedCommandEditor` Class ##
+Commands that have multiple modes should have a multiple tabs within its `command dialog` window - 
+one tab for each mode. 
+For example, the 
+[For()](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/For/For/) 
+command can iterate over a list, a sequence, or a table. 
+Each one of these options should be in its own tab.
+Other command only have one mode so their `command dialog` windows should only have one pane (single-tab). 
+For example, the 
+[ReadGeoLayerFromGeoJSON()]() command can only read one GeoLayer from one GeoJSON file in one mode. 
 
-**Need to describe...**
+As of *2018/07/18*, a `command dialog` window class has only been created for a single-tab command. 
+Use the `ReadGeoLayerFromGeoJSON()` `command dialog` window class as a template for creating other single-tab command windows.
+A `command dialog` window class needs to be created for a multi-tab command window to act as the template for the other multi-tab command windows.
 
-## `Command` Class Input Metadata ##
+Update the contents of the list as development occurs. 
 
-The following properties are used in the `command.parameter_metadata` dictionary to configure the command editory UI,
-for command-level information.
+|GeoProcessor Command|Recommended Dialog Window Type|Command Dialog Window Completed|
+|-||:-:|
+|AddGeoLayerAttribute|Single-Tab||
+|Blank|Single-Tab||
+|ClipGeoLayer|Single-Tab||
+|CompareFiles|Single-Tab||
+|CopyFile|Single-Tab||
+|CopyGeoLayer|Single-Tab||
+|CloseDataStore|Single-Tab||
+|CreateGeoLayerFromGeometry|Multi-Tab||
+|CreateRegressionTestCommandFile|Single-Tab||
+|EndFor|Single-Tab||
+|EndIf|Single-Tab||
+|For|Multi-Tab||
+|FreeGeoLayers|Single-Tab||
+|If|Single-Tab||
+|IntersectGeoLayer|Single-Tab||
+|ListFiles|Multi-Tab||
+|MergeGeoLayers|Single-Tab||
+|Message|Single-Tab||
+|OpenDataStore|Multi-Tab||
+|ReadGeoLayerFromDelimitedFile|Multi-Tab||
+|ReadGeoLayerFromGeoJSON|Single-Tab|**X**|
+|ReadGeoLayerFromShapefile|Single-Tab||
+|ReadGeoLayersFromFGDB|Multi-Tab||
+|ReadGeoLayersFromFolder|Single-Tab||
+|ReadTableFromDataStore|Multi-Tab||
+|ReadTableFromDelimitedFile|Single-Tab||
+|ReadTableFromExcel|Single-Tab||
+|RemoveFile|Single-Tab||
+|RemoveGeoLayerAttributes|Single-Tab||
+|RenameGeoLayerAttribute|Single-Tab||
+|RunCommands|Single-Tab||
+|RunProgram|Single-Tab||
+|RunSql|Single-Tab||
+|SetGeoLayerCRS|Single-Tab||
+|SetGeoLayerProperty|Single-Tab||
+|SetProperty|Single-Tab||
+|SetPropertyFromGeoLayer|Single-Tab||
+|SimplifyGeoLayerGeometry|Multi-Tab||
+|StartLog|Single-Tab||
+|StartRegressionTestResultsReport|Single-Tab||
+|UnknownCommand|Single-Tab||
+|UnzipFile|Single-Tab||
+|WebGet|Single-Tab||
+|WriteCommandSummaryToFile|Single-Tab||
+|WriteGeoLayerPropertiesToFile|Single-Tab||
+|WriteGeoLayerToDelimitedFile|Single-Tab||
+|WriteGeoLayerToGeoJSON|Single-Tab||
+|WriteGeoLayerToKML|Single-Tab||
+|WriteGeoLayerToShapefile|Single-Tab||
+|WritePropertiesToFile|Single-Tab||
+|WriteTableToDataStore|Multi-Tab||
+|WriteTableToDelimitedFile|Single-Tab||
+|WriteTableToExcel|Single-Tab||
+|Comment|Single-Tab||
+|CommentBlockStart|Single-Tab||
+|CommentBlockEnd|Single-Tab||
 
-| **Property**         | **Description** | **Default** |
-| -------------------- | --------------- | ----------- |
-| `Description`        | Description of the command to display at the top of the command dialog. Can this be HTML with embedded link? | Command name. |
-| `EditorType`         | What type of editor to use, `Simple` or `Tabbed` (maybe make this an enumeration). |
-
-
-The following properties are used in the `command.parameter_input_metadata` dictionary to configure the
-`SimpleCommandEditor` and `TabbedCommandEditor` for parameter-level information.
-The `ParameterName` will be replaced with the actual parameter name.
-The properties can be specified for each parameter for a command.
-
-| **Parameter Property**            | **Description** | **Default** |
-|-----------------------------------|-----------------|-------------|
-| `ParameterName.DefaultValue`      | The default value as a string, as if the user entered into the component, to be shown in the description. |
-| `ParameterName.Description`       | The description to be shown on the right-side of the editor. | No description is shown. |
-| `ParameterName.FileSelector.Type` | Indicate the type of selector as enumeration `Read`, `Write`.  Will result in `...` button to browse for fall. |
-| `ParameterName.FileSelector.?`    | Need some way to indicate default file extension, recognized extensions and descriptions | |
-| `ParameterName.FileSelector.?`    | Perhaps need a way to set the dimension of a text field or text area. Dialogs are kind of ugly when text fields span the entire width.  Maybe use the concept of number of columns? | |
-| `ParameterName.Group`             | The group (tab) used to group parameters, such as `Input`. | No group used - use simple editor. |
-| `ParameterName.Label`             | The label to be shown to the left` of the component. | Parameter name. |
-| `ParameterName.Required`          | Indicate whether required:  `Required`, `Optional`, or maybe something more complex. | Must be specified. |
-| `ParameterName.Tooltip`           | The tooltip to be shown when moused over the input component. | No tooltip is shown. |
-| `ParameterName.Values`            | Indicate a list of values to show in choices, may need a way to dynamically populate (lambda?). |
-
-## Resources ##
+## Resources
 
 - [Qt Documentation: Qt5 Layout Management](http://doc.qt.io/qt-5/layout.html)
 - [Qt Documentation: Qt Widget Classes](http://doc.qt.io/qt-5/qtwidgets-module.html)

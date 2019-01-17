@@ -20,7 +20,7 @@
 import logging
 
 import geoprocessor.util.command_util as command_util
-from geoprocessor.ui.commands.abstract.AbstractCommandEditor_Simple import AbstractCommandEditor_Simple
+from geoprocessor.ui.commands.abstract.SimpleCommandEditor import AbstractCommandEditor_Simple
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
 from geoprocessor.ui.commands.util.InsertLineEditor import InsertLineEditor
 from geoprocessor.ui.commands.util.InsertLineRulerEditor import InsertLineRulerEditor

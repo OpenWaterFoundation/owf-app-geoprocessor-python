@@ -78,14 +78,14 @@ class RunProgram(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
+        self.command_metadata = dict()
         self.command_metadata['Description'] = ("The RunProgram command runs an external program, given the full "
                                                 "command line, and waits until the program is finished before "
                                                 "processing additional commands. ")
         self.command_metadata['EditorType'] = "Simple"
 
         # Parameter metadata
-        self.parameter_input_metadata = {}
+        self.parameter_input_metadata = dict()
         # CommandLine
         self.parameter_input_metadata['CommandLine.Group'] = ""
         self.parameter_input_metadata['CommandLine.Description'] = "command line with arguments"

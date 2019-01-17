@@ -9,6 +9,7 @@ pages:
 - New Developer: 'dev-new/dev-new.md'
 - Software Design: 'software-design/software-design.md'
 - UI Design: 'ui-design/ui-design.md'
+- UI Design (Old): 'ui-design-old/ui-design-old.md'
 - Development Tasks:
   - Overview: dev-tasks/overview.md
   - Version Control: dev-tasks/version-control.md

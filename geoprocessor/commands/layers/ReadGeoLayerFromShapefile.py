@@ -84,10 +84,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        # New command editor for menu and window title
         self.command_name = "ReadGeoLayerFromShapefile"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Read a GeoLayer from a file in Shapefile format"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display

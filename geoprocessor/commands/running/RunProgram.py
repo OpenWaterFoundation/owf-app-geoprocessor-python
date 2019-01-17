@@ -71,10 +71,7 @@ class RunProgram(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "RunProgram"
-        # Description for menu "Command()... <description>
-        self.command_description = "Run a program"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display

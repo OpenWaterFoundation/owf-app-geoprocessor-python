@@ -40,8 +40,6 @@ class Comment(AbstractCommand):
 
         # Use hash for the command name for menu and window title
         self.command_name = "#"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Single line comment"
 
         # Command metadata for command editor display
         self.command_metadata = {}

@@ -59,10 +59,7 @@ class For(AbstractCommand):
         """
         super().__init__()
         # AbstractCommand data
-        # Name of command for menu and window title
         self.command_name = "For"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Indicate the start of a 'For' block"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display

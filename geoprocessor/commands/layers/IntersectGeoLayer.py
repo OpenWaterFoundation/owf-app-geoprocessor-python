@@ -82,10 +82,7 @@ class IntersectGeoLayer(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        # Name of command for menu and window title
         self.command_name = "IntersectGeoLayer"
-        # Description for menu "Command()... <description>"
-        self.command_description = "Intersects a GeoLayer by another GeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         self.command_metadata = {}

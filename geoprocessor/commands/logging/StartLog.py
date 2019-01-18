@@ -66,7 +66,8 @@ class StartLog(AbstractCommand):
         self.parameter_input_metadata["LogFile.Required"] = True
         self.parameter_input_metadata["LogFile.Values"] = ""
         self.parameter_input_metadata["LogFile.DefaultValue"] = ""
-        self.parameter_input_metadata["LogFile.FileSelectorType"] = "Read"
+        self.parameter_input_metadata["LogFile.FileSelector.Type"] = "Read"
+        self.parameter_input_metadata["LogFile.FileSelector.Title"] = "Select Log File"
 
     def check_command_parameters(self, command_parameters):
         """
@@ -130,7 +131,7 @@ class StartLog(AbstractCommand):
                 self.command_processor.expand_parameter_value(pv_LogFile)))
 
         try:
-            # Change the GeoProcesssor logger to use the specified file
+            # Change the GeoProcessor logger to use the specified file
             # - The initial application log file will be closed.
             log_util.reset_log_file_handler(log_file_absolute)
             # Add the log file to output

@@ -51,13 +51,20 @@ class GenericCommandEditor(AbstractCommandEditor):
     def __init__(self, command):
         """
         Create the generic command editor dialog box, used to edit commands that don't have a specific editor.
+
+        Args:
+            command (command obj): this is a command object passed from GeoProcessorCommandEditorFactory
         """
         # Initialize the parent abstract editor
         # - this will do basic setup of the dialog
         super().__init__(command)
 
+        # Keep track of command object
+        self.command = command
+
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
-        self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
+        #self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
+        self.parameter_LineEdit = dict()
 
         # Create variable to know if we are updating an existing command
         # or inserting a new command into the command list
@@ -73,13 +80,22 @@ class GenericCommandEditor(AbstractCommandEditor):
         # Initially call refresh in case updating a command
         self.refresh_command()
 
+    def check_input(self):
+        # Get the command string from the command display text box
+        command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
+        # Initialize the parameters of the command object.
+        self.command.initialize_command(command_string, self, True)
+
+        # Check parameters
+        self.command.check_command_parameters(self.command.command_parameters)
+
     def get_parameter_dict_from_ui(self):
         """
         Get the list of parameters from the UI, used to validate the parameters.
 
         Returns:
         """
-        param_dict = {}
+        param_dict = dict()
         for parameter_LineEdit in self.parameter_LineEdit:
             param_name = parameter_LineEdit.getObjectName()
             param_value = parameter_LineEdit.getText()
@@ -131,19 +147,19 @@ class GenericCommandEditor(AbstractCommandEditor):
             # --------------------
             # Text entry component
             # --------------------
-            self.parameter_LineEdit[y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
-            self.parameter_LineEdit[y_parameter].setObjectName(parameter_name)
-            parameter_GridLayout.addWidget(self.parameter_LineEdit[y_parameter], y_parameter, 1, 1, 1)
+            self.parameter_LineEdit[parameter_name] = QtWidgets.QLineEdit(parameter_Frame)
+            self.parameter_LineEdit[parameter_name].setObjectName(parameter_name)
+            parameter_GridLayout.addWidget(self.parameter_LineEdit[parameter_name], y_parameter, 1, 1, 1)
             tooltip = command_parameter_metadata.editor_tooltip
             if tooltip is not None:
-                self.parameter_LineEdit[y_parameter].setToolTip(tooltip)
+                self.parameter_LineEdit[parameter_name].setToolTip(tooltip)
             # Create a listener that reacts if the line edit field has been changed. If so, run the
             # update_command_display function.
             # If this command is being updated add the command parameters to the text fields
             if self.update:
                 parameter_value = self.command.get_parameter_value(parameter_name)
-                self.parameter_LineEdit[y_parameter].setText(parameter_value)
-            self.parameter_LineEdit[y_parameter].textChanged.connect(self.refresh_command)
+                self.parameter_LineEdit[parameter_name].setText(parameter_value)
+            self.parameter_LineEdit[parameter_name].textChanged.connect(self.refresh_command)
             # ----------------------------------------------------
             # Description component, optionally with default value
             # ----------------------------------------------------
@@ -270,7 +286,6 @@ class GenericCommandEditor(AbstractCommandEditor):
 
         Returns:  None
         """
-
         # Loop through the command parameter metadata and retrieve the values from editor components
         try:
             y_parameter = -1
@@ -285,7 +300,7 @@ class GenericCommandEditor(AbstractCommandEditor):
                 else:
                     sep = ","
                 parameter_name = command_parameter_metadata.parameter_name
-                parameter_value = self.parameter_LineEdit[y_parameter].text()
+                parameter_value = self.parameter_LineEdit[parameter_name].text()
                 if parameter_value is not None and parameter_value != "":
                     command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
             command_string = command_string + ")"

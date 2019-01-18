@@ -108,6 +108,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Values'] = ""
         self.parameter_input_metadata['GeoLayerID.DefaultValue'] = (
            "The GeoJSON filename without the leading path and without the file extension.")
+        self.parameter_input_metadata['GeoLayerID.FileSelector.Type'] = ""
         # IfGeoLayerIDExists
         self.parameter_input_metadata['IfGeoLayerIDExists.Group'] = ""
         self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "URL to read content"

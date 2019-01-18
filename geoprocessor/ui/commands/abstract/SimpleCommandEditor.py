@@ -54,24 +54,21 @@ class SimpleCommandEditor(AbstractCommandEditor):
         Initialize the Abstract Dialog instance.
 
         Args:
-            command_name (str): the name of the GeoProcessor command that the Dialog box is representing
-            command_description (str): the description of the GeoProcessor command that the Dialog box is representing
-            parameter_count (int): the number of command parameters of the GeoProcessor command that the Dialog box is
-                representing
-            command_parameters (list): a list of string representing the command parameter names (in order) of the
-                GeoProcessor command that the Dialog box is representing
-            current_values (dic):  a dictionary that holds the command parameters and their current values
-                Key: the name of the command parameter
-                Value: the entered value of the command parameter
+            command (command obj): a command object passed in from GeoProcessorCommandEditorFactory
+            app_session (object): the app session passed down from GeoProcessorUI used to open files in the
+                users home directory.
         """
 
         super().__init__(command)
+
+        self.command = command
 
         # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
         self.command_name = command.command_name
 
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
         self.parameter_LineEdit = [None] * len(self.command.command_parameter_metadata)
+        #self.parameter_LineEdit = dict()
         # Array of drop down menus
         self.drop_down_menu = [None] * len(self.command.command_parameter_metadata)
 
@@ -133,6 +130,15 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
         # Return the specified Boolean.
         return specified
+
+    def check_input(self):
+        # Get the command string from the command display text box
+        command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
+        # Initialize the parameters of the command object.
+        self.command.initialize_command(command_string, self, True)
+
+        # Check parameters
+        self.command.check_command_parameters(self.command.command_parameters)
 
     def configureComboBox(self, combobox, parameter_name, choice_list, tooltip=None):
         """
@@ -590,9 +596,21 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param, self.load_file_button))
                 parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 6, 1, 1)
             else:
-                # Default is a text field
-                # TODO smalers 2019-01-17 Need to add
-                pass
+                # File selector, indicated by `FileSelector.Type` property
+                self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
+                self.parameter_LineEdit[self.y_parameter].setObjectName(parameter_name)
+                parameter_GridLayout.addWidget(self.parameter_LineEdit[self.y_parameter], self.y_parameter, 1, 1, 4)
+                parameter_GridLayout.setColumnStretch(1, 4)
+                tooltip = command_parameter_metadata.editor_tooltip
+                if parameter_tooltip != "":
+                    self.parameter_LineEdit[self.y_parameter].setToolTip(parameter_tooltip)
+                # Create a listener that reacts if the line edit field has been changed. If so, run the
+                # update_command_display function.
+                # If this command is being updated add the command parameters to the text fields
+                if self.update:
+                    parameter_value = self.command.get_parameter_value(parameter_name)
+                    self.parameter_LineEdit[self.y_parameter].setText(parameter_value)
+                self.parameter_LineEdit[self.y_parameter].textChanged.connect(self.refresh_command)
 
             # Set column width for text entry fields
             parameter_GridLayout.setColumnMinimumWidth(1, 350)

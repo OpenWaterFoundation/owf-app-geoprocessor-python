@@ -159,6 +159,8 @@ class AbstractCommand(object):
             Nothing.
         """
 
+        self.command_parameters = dict()
+
         # Get the parameter string from the command string
         # (this is the string within the parenthesis of a command string).
         parameter_string = command_util.parse_parameter_string_from_command_string(command_string)

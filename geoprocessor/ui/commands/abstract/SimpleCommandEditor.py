@@ -67,11 +67,14 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
         super().__init__(command)
 
+        self.command = command
+
         # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
         self.command_name = command.command_name
 
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
-        self.parameter_LineEdit = [None] * len(self.command.command_parameter_metadata)
+        # self.parameter_LineEdit = [None] * len(self.command.command_parameter_metadata)
+        self.parameter_LineEdit = dict()
         # Array of drop down menus
         self.drop_down_menu = [None] * len(self.command.command_parameter_metadata)
 
@@ -133,6 +136,15 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
         # Return the specified Boolean.
         return specified
+
+    def check_input(self):
+        # Get the command string from the command display text box
+        command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
+        # Initialize the parameters of the command object.
+        self.command.initialize_command(command_string, self, True)
+
+        # Check parameters
+        self.command.check_command_parameters(self.command.command_parameters)
 
     def configureComboBox(self, combobox, parameter_name, choice_list, tooltip=None):
         """
@@ -367,7 +379,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     sep = ","
                 parameter_name = command_parameter_metadata.parameter_name
                 try:
-                    parameter_value = self.parameter_LineEdit[y_parameter].text()
+                    parameter_value = self.parameter_LineEdit[parameter_name].text()
                 except:
                     parameter_value = self.drop_down_menu[y_parameter].itemText(
                         self.drop_down_menu[y_parameter].currentIndex())
@@ -556,20 +568,20 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 parameter_GridLayout.addWidget(self.drop_down_menu[self.y_parameter], self.y_parameter, 1, 1, 2)
             elif parameter_fileSelectorType != "":
                 # File selector, indicated by `FileSelector.Type` property
-                self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
-                self.parameter_LineEdit[self.y_parameter].setObjectName(parameter_name)
-                parameter_GridLayout.addWidget(self.parameter_LineEdit[self.y_parameter], self.y_parameter, 1, 1, 4)
+                self.parameter_LineEdit[parameter_name] = QtWidgets.QLineEdit(parameter_Frame)
+                self.parameter_LineEdit[parameter_name].setObjectName(parameter_name)
+                parameter_GridLayout.addWidget(self.parameter_LineEdit[parameter_name], self.y_parameter, 1, 1, 4)
                 parameter_GridLayout.setColumnStretch(1, 4)
                 tooltip = command_parameter_metadata.editor_tooltip
                 if parameter_tooltip != "":
-                    self.parameter_LineEdit[self.y_parameter].setToolTip(parameter_tooltip)
+                    self.parameter_LineEdit[parameter_name].setToolTip(parameter_tooltip)
                 # Create a listener that reacts if the line edit field has been changed. If so, run the
                 # update_command_display function.
                 # If this command is being updated add the command parameters to the text fields
                 if self.update:
                     parameter_value = self.command.get_parameter_value(parameter_name)
-                    self.parameter_LineEdit[self.y_parameter].setText(parameter_value)
-                self.parameter_LineEdit[self.y_parameter].textChanged.connect(self.refresh_command)
+                    self.parameter_LineEdit[parameter_name].setText(parameter_value)
+                self.parameter_LineEdit[parameter_name].textChanged.connect(self.refresh_command)
                 # -----------------
                 # Add a "..." button
                 # -----------------
@@ -590,9 +602,21 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param, self.load_file_button))
                 parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 6, 1, 1)
             else:
-                # Default is a text field
-                # TODO smalers 2019-01-17 Need to add
-                pass
+                # File selector, indicated by `FileSelector.Type` property
+                self.parameter_LineEdit[parameter_name] = QtWidgets.QLineEdit(parameter_Frame)
+                self.parameter_LineEdit[parameter_name].setObjectName(parameter_name)
+                parameter_GridLayout.addWidget(self.parameter_LineEdit[parameter_name], self.y_parameter, 1, 1, 4)
+                parameter_GridLayout.setColumnStretch(1, 4)
+                tooltip = command_parameter_metadata.editor_tooltip
+                if parameter_tooltip != "":
+                    self.parameter_LineEdit[parameter_name].setToolTip(parameter_tooltip)
+                # Create a listener that reacts if the line edit field has been changed. If so, run the
+                # update_command_display function.
+                # If this command is being updated add the command parameters to the text fields
+                if self.update:
+                    parameter_value = self.command.get_parameter_value(parameter_name)
+                    self.parameter_LineEdit[parameter_name].setText(parameter_value)
+                self.parameter_LineEdit[parameter_name].textChanged.connect(self.refresh_command)
 
             # Set column width for text entry fields
             parameter_GridLayout.setColumnMinimumWidth(1, 350)
@@ -626,7 +650,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     if len(parameter_defaultValue) > 15:
                         parameter_desc += " (default=see tooltip)"
                         parameter_tooltip += "\n(default=" + parameter_defaultValue + ")."
-                        self.parameter_LineEdit[self.y_parameter].setToolTip(parameter_tooltip)
+                        self.parameter_LineEdit[parameter_name].setToolTip(parameter_tooltip)
                     else:
                         parameter_desc += " (default=" + parameter_defaultValue + ")."
                 else:
@@ -715,7 +739,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # - should be able to figure out the component to setText using the parameter name rather than a
         #   y-position.  This is a nuance but for code clarity a parameter name rather than int is easier to
         #   unerstand and also for troubleshooting.
-        self.parameter_LineEdit[y_parameter].setText(filepath)
+        self.parameter_LineEdit[parameter_name].setText(filepath)
 
         # # Read the command file in GeoProcessor
         # # GeoProcessor should handle necessary event handling and notify

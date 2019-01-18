@@ -75,10 +75,9 @@ class GeoProcessorCommandEditorFactory(object):
         command_string_stripped = command_string.strip()
         paren_pos = command_string_stripped.find('(')
 
-
-        # The symbol '(' was found.
+        # The character '(' was found.
         # Assume command of syntax CommandName(Param1="...",Param2="...").
-        if paren_pos != -1:
+        if paren_pos > 0:
 
             # Get command name from command string, command name is before the first open parenthesis.
             command_name = command_util.parse_command_name_from_command_string(command_string_stripped)
@@ -102,6 +101,8 @@ class GeoProcessorCommandEditorFactory(object):
             # If here the command name was not matched and additional steps are taken to throw an error.
             # Don't know the command so create an UnknownCommand or throw an exception.
             if create_unknown_command_if_not_recognized:
+                # TODO smalers 2019-01-18 Need to discuss with Justin
+                # - the following message is printed every time, inaccurately
                 logger.info("Command line is unknown command. Creating GenericCommandEditor for: " +
                             command_string_stripped)
                 # Check to see if command has editor type specified

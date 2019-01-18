@@ -440,7 +440,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             parameter_defaultValue = ""
             parameter_fileSelectorType = ""
 
-            # Parameter input metatata
+           # First get all recognized Parameter input metatata
             try:
                 input_metadata = self.command.parameter_input_metadata
 
@@ -488,11 +488,21 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 except:
                     logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
                 # File Selector Type
-                request_key = parameter_name + "." + "FileSelectorType"
+                # - new is FileSelector.Type
+                # - old is FileSelectorType
+                request_key1 = parameter_name + "." + "FileSelector.Type"
                 try:
-                    parameter_fileSelectorType = input_metadata[request_key]
+                    parameter_fileSelectorType = input_metadata[request_key1]
                 except:
-                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+                    # Old...
+                    request_key2 = parameter_name + "." + "FileSelectorType"
+                    try:
+                        parameter_fileSelectorType = input_metadata[request_key2]
+                        logger.warning('Need to convert FileSelectorType to FileSelector.Type for command ' +
+                                       self.command_name)
+                    except:
+                        logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key1 +
+                                    " or " + request_key2)
 
             except Exception as e:
                 logger.info("Could not find necessary parameter_input_metadata in " + parameter_name + " command file. "
@@ -501,7 +511,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             # Parameters listed in logical order
             self.y_parameter = self.y_parameter + 1
             # ---------------
-            # Label component
+            # Label component, consistent for all input component types
             # ---------------
             # try:
             #     parameter_label
@@ -531,6 +541,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             #     logger.error(message, e, exc_info=True)
             #     qt_util.warning_message_box(message)
             if parameter_values != "":
+                # ComboBox, indicated by `Values` property
                 self.drop_down_menu[self.y_parameter] = QtWidgets.QComboBox(parameter_Frame)
                 self.drop_down_menu[self.y_parameter].setObjectName(_fromUtf8("Drop_Down_Menu"))
                 self.drop_down_menu[self.y_parameter].setEditable(True)
@@ -543,7 +554,8 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 if parameter_tooltip != "":
                     self.drop_down_menu[self.y_parameter].setToolTip(parameter_tooltip)
                 parameter_GridLayout.addWidget(self.drop_down_menu[self.y_parameter], self.y_parameter, 1, 1, 2)
-            else:
+            elif parameter_fileSelectorType != "":
+                # File selector, indicated by `FileSelector.Type` property
                 self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
                 self.parameter_LineEdit[self.y_parameter].setObjectName(parameter_name)
                 parameter_GridLayout.addWidget(self.parameter_LineEdit[self.y_parameter], self.y_parameter, 1, 1, 4)
@@ -558,18 +570,29 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     parameter_value = self.command.get_parameter_value(parameter_name)
                     self.parameter_LineEdit[self.y_parameter].setText(parameter_value)
                 self.parameter_LineEdit[self.y_parameter].textChanged.connect(self.refresh_command)
-                if parameter_fileSelectorType != "":
-                    # -----------------
-                    # Add a button
-                    # -----------------
-                    self.load_file_button = QtWidgets.QPushButton(parameter_Frame)
-                    self.load_file_button.setObjectName(_fromUtf8("Open_File_Button"))
-                    self.load_file_button.setText(_translate("Dialog", "...", None))
-                    self.load_file_button.setToolTip("Open a file.")
-                    self.load_file_button.setMaximumWidth(50)
-                    self.load_file_button.clicked.connect(
-                         lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param))
-                    parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 6, 1, 1)
+                # -----------------
+                # Add a "..." button
+                # -----------------
+                request_key = parameter_name + "." + "FileSelector.Button.Tooltip"
+                select_file_button_tooltip = ""
+                try:
+                    parameter_defaultValue = input_metadata[request_key]
+                except:
+                    # Default...
+                    file_selector_button_tooltip = "Browse for file"
+                self.load_file_button = QtWidgets.QPushButton(parameter_Frame)
+                # Object name has parameter at front, which can be parsed out in event-handling code
+                self.load_file_button.setObjectName(_fromUtf8(parameter_name + ".FileSelector.Button"))
+                self.load_file_button.setText(_translate("Dialog", "...", None))
+                self.load_file_button.setToolTip(file_selector_button_tooltip)
+                self.load_file_button.setMaximumWidth(50)
+                self.load_file_button.clicked.connect(
+                    lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param, self.load_file_button))
+                parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 6, 1, 1)
+            else:
+                # Default is a text field
+                # TODO smalers 2019-01-17 Need to add
+                pass
 
             # Set column width for text entry fields
             parameter_GridLayout.setColumnMinimumWidth(1, 350)
@@ -587,6 +610,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             #     qt_util.warning_message_box(message)
             # If we are not working with a file opening text option add labels to the right
             if parameter_fileSelectorType == "":
+                # Not a file selector
                 parameter_desc_Label = QtWidgets.QLabel(parameter_Frame)
                 parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
                 parameter_desc = ""
@@ -630,15 +654,14 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # Add the full path of the selected file string to the specified input Qt Widget.
         qt_widget.setText(file_name_text)
 
-    def ui_action_open_file(self, y_parameter):
+    def ui_action_open_file(self, y_parameter, event_button):
         """
         Open a command file. Each line of the command file is a separate item in the Command_List QList Widget.
         If the existing commands have not been saved, the user is prompted to ask if they should be saved.
 
         Args:
-            filename (str):
-                the absolute path to the command file to open, if blank prompt for the file and otherwise
-                open the file
+            y_parameter (int): the y-position in layout for the button
+            event_button (QPushButton): the instance of the button for which the event is generated
 
         Returns:
             None
@@ -651,12 +674,47 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # browsing for a file. For now open users home folder.
         folder = self.app_session.get_user_folder()
 
-        # A browser window will appear to allow the user to browse to the desired command file.
+        # Get properties to configure the file selector.
+        # - use the object name to parse out the parameter name
+        object_name = event_button.objectName()
+        print("object_name=" + str(object_name))
+        parameter_name = object_name.split(".")[0]
+        request_key = parameter_name + "." + "FileSelector.Title"
+        select_file_title = "Select file"
+        try:
+            # The following should match ParameterName.FileSelectorTitle
+            select_file_title = self.command.parameter_input_metadata[request_key]
+        except:
+            # Default was specified above...
+            pass
+
+        # Get the existing value in the text field, which will correspond to the parameter name value
+        # TODO smalers 2019-01-18 here for StartLog should be able to get a parameter value and do logic like:
+        # existing_file = self.command.command_parameters[parameter_name]
+        # if existing_file != "":
+        #      # The command has an existing file so open up the same folder
+        #      if absolute_path(existing_file):
+        #          # Pass absolute path to selector...
+        #      else:
+        #          # Form the full path from working directory and the existing file
+        #          # - not sure whether the selector accepts a folder or handles an existing filename
+        #          path = io_util.to_absolute_path()
+
+        # A browser window will appear to allow the user to browse to the desired file.
         # The absolute pathname of the command file is added to the cmd_filepath variable.
-        filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", folder)[0]
+        filepath = QtWidgets.QFileDialog.getOpenFileName(self, select_file_title, folder)[0]
+
+        # TODO smalers 2019-01-18 need to make this work
+        # Convert the selected file path to relative path by default, using the command file folder as the working
+        # directory.
+        # filepath = io_util.to_relative_path()
         if not filepath:
             return
 
+        # TODO smalers 2019-01-18 why is this needed?
+        # - should be able to figure out the component to setText using the parameter name rather than a
+        #   y-position.  This is a nuance but for code clarity a parameter name rather than int is easier to
+        #   unerstand and also for troubleshooting.
         self.parameter_LineEdit[y_parameter].setText(filepath)
 
         # # Read the command file in GeoProcessor

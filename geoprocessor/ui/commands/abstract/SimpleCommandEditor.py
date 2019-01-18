@@ -528,6 +528,10 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                     self.load_file_button.clicked.connect(
                          lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param))
                     parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 6, 1, 1)
+
+            # Set column width for text entry fields
+            parameter_GridLayout.setColumnMinimumWidth(1, 350)
+            
             # ----------------------------------------------------
             # Description component, optionally with default value
             # ----------------------------------------------------
@@ -553,7 +557,12 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                         parameter_desc += " - "
                     parameter_desc += parameter_description
                 if parameter_defaultValue != "":
-                    parameter_desc += " (default=" + parameter_defaultValue + ")."
+                    if len(parameter_defaultValue) > 15:
+                        parameter_desc += " (default=see tooltip)"
+                        parameter_tooltip += "\n(default=" + parameter_defaultValue + ")."
+                        self.parameter_LineEdit[self.y_parameter].setToolTip(parameter_tooltip)
+                    else:
+                        parameter_desc += " (default=" + parameter_defaultValue + ")."
                 else:
                     parameter_desc += " (default=None)."
                 parameter_desc_Label.setText(parameter_desc)

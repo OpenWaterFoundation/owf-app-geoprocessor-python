@@ -1,4 +1,4 @@
-# AbstractCommandEditor_Tabbed - class for tabbed command editors
+# TabbedCommandEditor - class for tabbed command editors
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
@@ -37,7 +37,8 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
-class AbstractCommandEditor_Tabbed(AbstractCommandEditor):
+
+class TabbedCommandEditor(AbstractCommandEditor):
 
     def __init__(self, command):
         """

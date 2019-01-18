@@ -679,6 +679,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # self.commands_GridLayout = QtWidgets.QGridLayout(self.commands_GroupBox)
 
         self.command_ListWidget = command_list_view.CommandListWidget(self.commands_GroupBox)
+        # Add double click event
+        self.command_ListWidget.commands_List.itemDoubleClicked.connect(self.edit_command_editor)
 
         # Add listener
         self.command_ListWidget.add_main_ui_listener(self)

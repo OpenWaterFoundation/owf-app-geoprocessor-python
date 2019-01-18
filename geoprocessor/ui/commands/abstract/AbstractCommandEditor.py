@@ -45,7 +45,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
     This class maintains core layout information and provides functions to add components.
     """
 
-    #def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
+    # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
     def __init__(self, command):
         """
         Initialize the Abstract Dialog instance.
@@ -71,12 +71,12 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # input field
         # KEY (str): the command parameter name
         # VALUE (obj): the associated Qt Widget input field
-        #self.input_edit_objects = {}
+        # self.input_edit_objects = {}
 
         # "command_parameter_current_values" is a dictionary that holds the command parameters and their current values
         # KEY (str): the name of the command parameter
         # VALUE (str): the entered value of the command parameter
-        #self.command_parameter_current_values = current_values
+        # self.command_parameter_current_values = current_values
 
         # Initialize components that will be used
         self.CommandDisplay_View_TextBrowser = None
@@ -90,10 +90,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.grid_layout_row = -1
 
         # Set initial size of window
-        self.resize(500,300)
+        self.resize(500, 300)
         # Set the maximum width of a command editor
         self.setMaximumWidth(800)
-
 
     def add_ui_horizontal_separator(self):
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
@@ -189,7 +188,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # This will wire up the signals and slots depending on names.
         # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
         # - don't do this because not using QtDesigner
-        #QtCore.QMetaObject.connectSlotsByName(self)
+        # QtCore.QMetaObject.connectSlotsByName(self)
 
     def setup_ui_core_bottom(self):
         """
@@ -208,14 +207,14 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         """
         # Set the window title to the command name
         self.setObjectName(_fromUtf8(self.command.command_name))
-        self.setWindowTitle("Edit " + self.command.command_string + " command")
+        self.setWindowTitle("Edit " + self.command.command_name + " command")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
+        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
         self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # Because components are added to the UI the dialog will have a size.
         # - don't set the size unless a dialog misbehaves, perhaps a maximum size
-        #self.resize(684, 404)
+        # self.resize(684, 404)
 
         # Add a grid layout for components to be added
         self.grid_layout = QtWidgets.QGridLayout(self)
@@ -242,7 +241,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         self.grid_layout_row = self.grid_layout_row + 1
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
-        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
         self.CommandDisplay_Label.setText(_translate("Dialog", "Command: ", None))
         commandArea_GridLayout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 1, 1)
@@ -253,15 +252,15 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.CommandDisplay_View_TextBrowser.setObjectName("CommandDisplay_View_TextBrowser")
         self.CommandDisplay_View_TextBrowser.setReadOnly(True)
         self.CommandDisplay_View_TextBrowser.setMaximumHeight(60)
-        #self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
-        #self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
-        ##html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
-        ##       "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
-        ##       "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
-        ##       " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
-        ##       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
-        ##       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
-        ##self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
+        # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
+        # self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
+        # #html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
+        # #       "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
+        # #       "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
+        # #       " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
+        # #       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
+        # #       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
+        # #self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
         commandArea_GridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
 
     def setup_ui_core_command_buttons(self):
@@ -283,7 +282,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
         self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(self)
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
-        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.OK_Cancel_Buttons.setObjectName(_fromUtf8("OK_Cancel_Buttons"))
         self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Cancel).setToolTip(
             "Cancel command edit and ignore changes.")
@@ -315,7 +314,6 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Create a spacer. Add the spacer to the Command_Description frame object.
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout_2.addItem(spacerItem, 2, 0, 1, 1)
-
 
         # Create a push button. Add the button to the Command_Description frame object.
         # Set the name, the button text and the connection of the push button.
@@ -393,7 +391,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
     #
     #     # Create a line (frame object with special specifications). Add the line to the Dialog window.
     #     # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
-    #     # The frame object, Separator, separates the command description from the input form section of the Dialog box.
+    #     # The frame object, Separator, separates the command description from the input form section of
+    #     # the Dialog box.
     #     self.Separator = QtWidgets.QFrame(Dialog)
     #     sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
     #     sizePolicy.setHorizontalStretch(0)
@@ -535,7 +534,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             # - open in a new tab or if this fails open a new window
             webbrowser.open_new_tab(command_doc_url)
         except Exception as e:
-            message='Error opening command documentation using  URL "' + command_doc_url + '"'
+            message = 'Error opening command documentation using  URL "' + command_doc_url + '"'
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
 

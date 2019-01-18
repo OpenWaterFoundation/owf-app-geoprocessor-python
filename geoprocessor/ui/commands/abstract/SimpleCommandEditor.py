@@ -1,4 +1,4 @@
-# AbstractCommandEditor_Simple - class for simple command editors
+# SimpleCommandEditor - class for simple command editors
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
@@ -19,13 +19,15 @@
 
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
-import functools
-import webbrowser
 
 import geoprocessor.ui.util.qt_util as qt_util
+import geoprocessor.util.app_util as app_util
 
+import functools
 import logging
+import webbrowser
 
 try:
     _fromUtf8 = lambda s: s
@@ -41,7 +43,11 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
-class AbstractCommandEditor_Simple(AbstractCommandEditor):
+
+class SimpleCommandEditor(AbstractCommandEditor):
+    """
+    Class for command editor using single-panel layout configured with parameter_input_metadata.
+    """
 
     def __init__(self, command, app_session):
         """
@@ -73,15 +79,15 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
         self.app_session = app_session
 
         # "command_description" is the description of the GeoProcessor command that the Dialog box is representing
-        ##self.command_description = command_description
+        # #self.command_description = command_description
 
         # "parameter_count" is the number of command parameters of the GeoProcessor command that the Dialog box is
         # representing
-        ##self.parameter_count = parameter_count
+        # #self.parameter_count = parameter_count
 
         # "parameters_list" is a list of strings representing the command parameter names (in order) of the
         # GeoProcessor command that the Dialog box is representing
-        ##self.parameters_list = command_parameters
+        # #self.parameters_list = command_parameters
 
         # "input_edit_objects" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
@@ -92,7 +98,7 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
         # "command_parameter_current_values" is a dictionary that holds the command parameters and their current values
         # KEY (str): the name of the command parameter
         # VALUE (str): the entered value of the command parameter
-        ##self.command_parameter_current_values = current_values
+        # #self.command_parameter_current_values = current_values
 
         # Setup the UI in the abstract class, which will call back to set_ui() in this class.
         self.setup_ui_core()
@@ -127,6 +133,82 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
 
         # Return the specified Boolean.
         return specified
+
+    def configureComboBox(self, combobox, parameter_name, choice_list, tooltip=None):
+        """
+        Configure a QtGui.QComboBox object that meets the standards of the GeoProceossor's command dialog window.
+
+        Args:
+            combobox(obj): a QtGui.QComboBox object
+            parameter_name (str): the name of the command parameter that is using the combobox field
+            choice_list (list): a list of available values for the command parameter
+            tooltip (str): optional. The text that will display in a pop-up when the user mouses over the
+                QtGui.QComboBox object. This is a good place to expand description of the parameter/parameter values.
+
+        Return: None
+        """
+
+        # Get the dialog box row index that is used to display the command parameter objects
+        # This is a dynamic index that takes into consideration the order of the command's parameters.
+        row_index = self.parameters_list.index(parameter_name) + 2
+
+        # Set the combo box's object name (XXX_ComboBox where XXX is the name of the command parameter).
+        combobox.setObjectName(_fromUtf8("{}_ComboBox".format(parameter_name)))
+
+        # Add "spaces" to the ComboBox for each of the available options including a blank option to display that an
+        # option has not been selected.
+        for i in range(len(choice_list) + 1):
+            combobox.addItem(_fromUtf8(""))
+
+        # Add the combo box field to the Dialog box in the correct row. Command combo box fields will always start in
+        # the second column (1) and will occupy 1 column and 2 rows.
+        self.gridLayout.addWidget(combobox, row_index, 1, 1, 2)
+
+        # Set the combo box default option to the blank option - the first (0) in the list of choices.
+        combobox.setItemText(0, _fromUtf8(""))
+
+        # Add the text associated with each parameter option to the appropriate ComboBox "space".
+        for i in range(len(choice_list)):
+            combobox.setItemText(i+1, _translate("Dialog", choice_list[i], None))
+
+        # If tool tip text has been specified, add the desired text as tool tip text.
+        if tooltip:
+            combobox.setToolTip(_translate("Dialog", tooltip, None))
+
+        # Add the QtGui.QComboBox object to the dictionary of input edit objects. Use the parameter name as the key
+        # and the QtGui.QComboBox object as the value.
+        self.input_edit_objects[parameter_name] = combobox
+
+        # Create a listener that reacts if the ComboBox field has been changed. If so, run the
+        # update_command_display function.
+        combobox.currentIndexChanged.connect(self.update_command_display)
+
+    def configureDescriptionLabel(self, label, parameter_name, text):
+        """
+        Configure a QtGui.QLabel object (parameter description label) that meets the standards of the GeoProcessor's
+        command dialog window.
+
+        Args:
+            label (obj): a QtGui.QLabel object
+            parameter_name (str): the name of the command parameter that is using the label
+            text (str): the parameter description to use as the label text
+
+        Return: None
+        """
+
+        # Get the dialog box row index that is used to display the command parameter objects
+        # This is a dynamic index that takes into consideration the order of the command's parameters.
+        row_index = self.parameters_list.index(parameter_name) + 2
+
+        # Set the label's object name (XXX_Description_Label where XXX is the name of the command parameter).
+        label.setObjectName(_fromUtf8("{}_Description_Label".format(parameter_name)))
+
+        # Add the label to the Dialog box in the correct row. Command description labels will always be in the
+        # third-to-last column (5), and will occupy 1 column and 3 rows.
+        self.gridLayout.addWidget(label, row_index, 5, 1, 3)
+
+        # Set the text of the label to be the command parameter description.
+        label.setText(_translate("Dialog", text, None))
 
     def configureLabel(self, label, parameter_name):
         """
@@ -240,82 +322,6 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
         # the user to browse to a local file.
         tool_button.clicked.connect(functools.partial(self.select_file, line_edit_obj_affected))
 
-    def configureDescriptionLabel(self, label, parameter_name, text):
-        """
-        Configure a QtGui.QLabel object (parameter description label) that meets the standards of the GeoProcessor's
-        command dialog window.
-
-        Args:
-            label (obj): a QtGui.QLabel object
-            parameter_name (str): the name of the command parameter that is using the label
-            text (str): the parameter description to use as the label text
-
-        Return: None
-        """
-
-        # Get the dialog box row index that is used to display the command parameter objects
-        # This is a dynamic index that takes into consideration the order of the command's parameters.
-        row_index = self.parameters_list.index(parameter_name) + 2
-
-        # Set the label's object name (XXX_Description_Label where XXX is the name of the command parameter).
-        label.setObjectName(_fromUtf8("{}_Description_Label".format(parameter_name)))
-
-        # Add the label to the Dialog box in the correct row. Command description labels will always be in the
-        # third-to-last column (5), and will occupy 1 column and 3 rows.
-        self.gridLayout.addWidget(label, row_index, 5, 1, 3)
-
-        # Set the text of the label to be the command parameter description.
-        label.setText(_translate("Dialog", text, None))
-
-    def configureComboBox(self, combobox, parameter_name, choice_list, tooltip=None):
-        """
-        Configure a QtGui.QComboBox object that meets the standards of the GeoProceossor's command dialog window.
-
-        Args:
-            combobox(obj): a QtGui.QComboBox object
-            parameter_name (str): the name of the command parameter that is using the combobox field
-            choice_list (list): a list of available values for the command parameter
-            tooltip (str): optional. The text that will display in a pop-up when the user mouses over the
-                QtGui.QComboBox object. This is a good place to expand description of the parameter/parameter values.
-
-        Return: None
-        """
-
-        # Get the dialog box row index that is used to display the command parameter objects
-        # This is a dynamic index that takes into consideration the order of the command's parameters.
-        row_index = self.parameters_list.index(parameter_name) + 2
-
-        # Set the combo box's object name (XXX_ComboBox where XXX is the name of the command parameter).
-        combobox.setObjectName(_fromUtf8("{}_ComboBox".format(parameter_name)))
-
-        # Add "spaces" to the ComboBox for each of the available options including a blank option to display that an
-        # option has not been selected.
-        for i in range(len(choice_list) + 1):
-            combobox.addItem(_fromUtf8(""))
-
-        # Add the combo box field to the Dialog box in the correct row. Command combo box fields will always start in
-        # the second column (1) and will occupy 1 column and 2 rows.
-        self.gridLayout.addWidget(combobox, row_index, 1, 1, 2)
-
-        # Set the combo box default option to the blank option - the first (0) in the list of choices.
-        combobox.setItemText(0, _fromUtf8(""))
-
-        # Add the text associated with each parameter option to the appropriate ComboBox "space".
-        for i in range(len(choice_list)):
-            combobox.setItemText(i+1, _translate("Dialog", choice_list[i], None))
-
-        # If tool tip text has been specified, add the desired text as tool tip text.
-        if tooltip:
-            combobox.setToolTip(_translate("Dialog", tooltip, None))
-
-        # Add the QtGui.QComboBox object to the dictionary of input edit objects. Use the parameter name as the key
-        # and the QtGui.QComboBox object as the value.
-        self.input_edit_objects[parameter_name] = combobox
-
-        # Create a listener that reacts if the ComboBox field has been changed. If so, run the
-        # update_command_display function.
-        combobox.currentIndexChanged.connect(self.update_command_display)
-
     def get_current_value(self, obj):
         """
         Get the value within a QtGui.Widget object.
@@ -338,6 +344,42 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
 
         # Return the value within the input QtGui.Widget object.
         return value
+
+    def refresh_command(self):
+        """
+        Update the command string.
+
+        Returns:  None
+        """
+
+        # Loop through the command parameter metadata and retrieve the values from editor components
+        try:
+            y_parameter = -1
+            # Initial part of command string
+            command_string = self.command.command_name + "("
+            # Add all parameters to the command string
+            for command_parameter_metadata in self.command.command_parameter_metadata:
+                # Parameters listed in logical order
+                y_parameter = y_parameter + 1
+                if y_parameter == 0:
+                    sep = ""
+                else:
+                    sep = ","
+                parameter_name = command_parameter_metadata.parameter_name
+                try:
+                    parameter_value = self.parameter_LineEdit[y_parameter].text()
+                except:
+                    parameter_value = self.drop_down_menu[y_parameter].itemText(
+                        self.drop_down_menu[y_parameter].currentIndex())
+                if parameter_value is not None and parameter_value != "":
+                    command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
+            command_string = command_string + ")"
+            self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
+        except Exception as e:
+            message = "Error refreshing command from parameters"
+            logger = logging.getLogger(__name__)
+            logger.error(message, e, exc_info=True)
+            qt_util.warning_message_box(message)
 
     def setup_ui(self):
         """
@@ -472,7 +514,7 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             parameter_Label = QtWidgets.QLabel(parameter_Frame)
             parameter_Label.setObjectName("Command_Parameter_Label")
             parameter_Label.setText(parameter_label + ":")
-            parameter_Label.setAlignment(QtCore.Qt.AlignRight) # |QtCore.Qt.AlignCenter)
+            parameter_Label.setAlignment(QtCore.Qt.AlignRight)  # |QtCore.Qt.AlignCenter)
             # Allow expanding horizontally
             parameter_Label.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)
             parameter_GridLayout.addWidget(parameter_Label, self.y_parameter, 0, 1, 1)
@@ -569,41 +611,24 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
                 # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
                 parameter_GridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
 
-    def refresh_command(self):
+    @staticmethod
+    def select_file(qt_widget):
         """
-        Update the command string.
+        Opens a file browser to allow a user to select a file through a Qt predefined user interface. The path of the
+        selected file is added to the qt_widget Qt Widget input field.
 
-        Returns:  None
+        Args:
+            qt_widget (obj): the Qt Widget that will display the full path of the selected file
+
+        Returns:
+            None
         """
 
-        # Loop through the command parameter metadata and retrieve the values from editor components
-        try:
-            y_parameter = -1
-            # Initial part of command string
-            command_string = self.command.command_name + "("
-            # Add all parameters to the command string
-            for command_parameter_metadata in self.command.command_parameter_metadata:
-                # Parameters listed in logical order
-                y_parameter = y_parameter + 1
-                if y_parameter == 0:
-                    sep = ""
-                else:
-                    sep = ","
-                parameter_name = command_parameter_metadata.parameter_name
-                try:
-                    parameter_value = self.parameter_LineEdit[y_parameter].text()
-                except:
-                    parameter_value = self.drop_down_menu[y_parameter].itemText(
-                        self.drop_down_menu[y_parameter].currentIndex())
-                if parameter_value is not None and parameter_value != "":
-                    command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
-            command_string = command_string + ")"
-            self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
-        except Exception as e:
-            message="Error refreshing command from parameters"
-            logger = logging.getLogger(__name__)
-            logger.error(message, e, exc_info=True)
-            qt_util.warning_message_box(message)
+        # Open the browser for file selection. Save the full path of the selected file as a string.
+        file_name_text = QtWidgets.QFileDialog.getOpenFileName()[0]
+
+        # Add the full path of the selected file string to the specified input Qt Widget.
+        qt_widget.setText(file_name_text)
 
     def ui_action_open_file(self, y_parameter):
         """
@@ -723,31 +748,26 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
 
     def view_documentation(self):
         """
-        Opens the command's user documentation in the default browser.
+        View the command's user documentation in the default browser.
 
-        Return: None
+        Returns:
+            None
         """
-
-        # The url of the command's user documentation.
-        command_doc_url = "{}command-ref/{}/{}/".format(self.user_doc_url, self.command_name, self.command_name)
 
         # Open the command's user documentation in the default browser.
-        webbrowser.open_new(command_doc_url)
-
-    @staticmethod
-    def select_file(qt_widget):
-        """
-        Opens a file browser to allow a user to select a file through a Qt predefined user interface. The path of the
-        selected file is added to the qt_widget Qt Widget input field.
-
-        Args:
-            qt_widget (obj): the Qt Widget that will display the full path of the selected file
-
-        Return: None
-        """
-
-        # Open the browser for file selection. Save the full path of the selected file as a string.
-        file_name_text = QtWidgets.QFileDialog.getOpenFileName()[0]
-
-        # Add the full path of the selected file string to the specified input Qt Widget.
-        qt_widget.setText(file_name_text)
+        logger = logging.getLogger(__name__)
+        command_doc_url = None
+        try:
+            user_doc_url = app_util.get_property('ProgramUserDocumentationUrl')
+            if user_doc_url is None:
+                qt_util.warning_message_box("Can't view documentation...no application configuration value for '" +
+                                            "ProgramUserDocumenationUrl'")
+                return
+            command_doc_url = "{}/command-ref/{}/{}/".format(user_doc_url, self.command_name, self.command_name)
+            # message = "Displaying command documentation using URL: " + user_doc_url
+            # logger.info(message)
+            webbrowser.open_new_tab(command_doc_url)
+        except Exception as e:
+            message = 'Error viewing documentation for url "' + str(command_doc_url) + '"'
+            logger.error(message, e, exc_info=True)
+            qt_util.warning_message_box(message)

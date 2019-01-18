@@ -347,6 +347,8 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
 
         """
 
+        logger = logging.getLogger(__name__)
+
         # The AbstractCommandEditor sets up the editor by:
         # 1. Initializes the dialog.
         # 2. Setting up standard editor top.
@@ -383,46 +385,90 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             #     if command_parameter_metadata.parameter_name == parameter_name:
             #         print(parameter_value)
 
-            # Parameter input metatata
-            try:
-                input_metadata = self.command.parameter_input_metadata
-            except:
-                print("Error: Could not find parameter input metadata in command file")
-
             # Get the parameter name for retrieving all other parameter variables from
             # parameter_input_metadata
             parameter_name = command_parameter_metadata.parameter_name
-            # Get all the parameter values from parameter_input_metadata
-            # Group
-            request_key = parameter_name + "." + "Group"
-            parameter_group = input_metadata[request_key]
-            # Description
-            request_key = parameter_name + "." + "Description"
-            parameter_description = input_metadata[request_key]
-            # Label
-            request_key = parameter_name + "." + "Label"
-            parameter_label = input_metadata[request_key]
-            # Tooltip
-            request_key = parameter_name + "." + "Tooltip"
-            parameter_tooltip = input_metadata[request_key]
-            # Required
-            request_key = parameter_name + "." + "Required"
-            parameter_required = input_metadata[request_key]
-            # Values
-            request_key = parameter_name + "." + "Values"
-            parameter_values = input_metadata[request_key]
-            # Default Value
-            request_key = parameter_name + "." + "DefaultValue"
-            parameter_defaultValue = input_metadata[request_key]
-            # File Selector Type
-            request_key = parameter_name + "." + "FileSelectorType"
-            parameter_fileSelectorType = input_metadata[request_key]
+
+            parameter_group = ""
+            parameter_description = ""
+            parameter_label = parameter_name
+            parameter_tooltip = ""
+            parameter_required = ""
+            parameter_values = ""
+            parameter_defaultValue = ""
+            parameter_fileSelectorType = ""
+
+            # Parameter input metatata
+            try:
+                input_metadata = self.command.parameter_input_metadata
+
+                # Get all the parameter values from parameter_input_metadata
+                # Group
+                request_key = parameter_name + "." + "Group"
+                try:
+                    parameter_group = input_metadata[request_key]
+                except:
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+                # Description
+                request_key = parameter_name + "." + "Description"
+                try:
+                    parameter_description = input_metadata[request_key]
+                except:
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+                # Label
+                request_key = parameter_name + "." + "Label"
+                try:
+                    parameter_label = input_metadata[request_key]
+                except:
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+                # Tooltip
+                request_key = parameter_name + "." + "Tooltip"
+                try:
+                    parameter_tooltip = input_metadata[request_key]
+                except:
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+                # Required
+                request_key = parameter_name + "." + "Required"
+                try:
+                    parameter_required = input_metadata[request_key]
+                except:
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+                # Values
+                request_key = parameter_name + "." + "Values"
+                try:
+                    parameter_values = input_metadata[request_key]
+                except:
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+                # Default Value
+                request_key = parameter_name + "." + "DefaultValue"
+                try:
+                    parameter_defaultValue = input_metadata[request_key]
+                except:
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+                # File Selector Type
+                request_key = parameter_name + "." + "FileSelectorType"
+                try:
+                    parameter_fileSelectorType = input_metadata[request_key]
+                except:
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key)
+
+            except Exception as e:
+                logger.info("Could not find necessary parameter_input_metadata in " + parameter_name + " command file. "
+                            "Defaulting to generic command editor.")
 
             # Parameters listed in logical order
             self.y_parameter = self.y_parameter + 1
             # ---------------
             # Label component
             # ---------------
+            # try:
+            #     parameter_label
+            # except Exception as e:
+            #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
+            #               ". Could not build simple command editor. Defaulting to generic command editor. " \
+            #               "See log file for more details."
+            #     logger.error(message, e, exc_info=True)
+            #     qt_util.warning_message_box(message)
             parameter_Label = QtWidgets.QLabel(parameter_Frame)
             parameter_Label.setObjectName("Command_Parameter_Label")
             parameter_Label.setText(parameter_label + ":")
@@ -434,6 +480,14 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             # --------------------
             # Text entry component
             # --------------------
+            # try:
+            #     parameter_values, parameter_tooltip, parameter_fileSelectorType
+            # except Exception as e:
+            #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
+            #               ". Could not build simple command editor. Defaulting to generic command editor. " \
+            #               "See log file for more details."
+            #     logger.error(message, e, exc_info=True)
+            #     qt_util.warning_message_box(message)
             if parameter_values != "":
                 self.drop_down_menu[self.y_parameter] = QtWidgets.QComboBox(parameter_Frame)
                 self.drop_down_menu[self.y_parameter].setObjectName(_fromUtf8("Drop_Down_Menu"))
@@ -477,6 +531,14 @@ class AbstractCommandEditor_Simple(AbstractCommandEditor):
             # ----------------------------------------------------
             # Description component, optionally with default value
             # ----------------------------------------------------
+            # try:
+            #     parameter_required, parameter_description, parameter_defaultValue
+            # except Exception as e:
+            #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
+            #               ". Could not build simple command editor. Defaulting to generic command editor. " \
+            #               "See log file for more details."
+            #     logger.error(message, e, exc_info=True)
+            #     qt_util.warning_message_box(message)
             # If we are not working with a file opening text option add labels to the right
             if parameter_fileSelectorType == "":
                 parameter_desc_Label = QtWidgets.QLabel(parameter_Frame)

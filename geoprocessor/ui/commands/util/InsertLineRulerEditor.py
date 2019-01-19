@@ -19,10 +19,8 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import geoprocessor.util.app_util as app_util
-import geoprocessor.ui.util.qt_util as qt_util
 import functools
 import logging
-import webbrowser
 
 try:
     _fromUtf8 = lambda s: s
@@ -42,25 +40,15 @@ except AttributeError:
 class InsertLineRulerEditor(QtWidgets.QDialog):
     """
     Command editor dialog for one or more # comments.
-    This class is a standalone class that combines the attributes of AbstractCommandEditor and
-    GenericCommandEditor
+    This class is a standalone class used to edit a multi-line command, in particular # comments.
     """
 
-    # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
     def __init__(self, command):
         """
-        Initialize the Abstract Dialog instance.
+        Initialize the editor instance.
 
         Args:
-            command_name (str): the name of the GeoProcessor command that the Dialog box is representing
-            # command_description (str): the description of the GeoProcessor command that the Dialog box is representing
-            # parameter_count (int): the number of command parameters of the GeoProcessor command that the Dialog box is
-            #    representing
-            # command_parameters (list): a list of string representing the command parameter names (in order) of the
-            #    GeoProcessor command that the Dialog box is representing
-            # current_values (dic):  a dictionary that holds the command parameters and their current values
-            #    Key: the name of the command parameter
-            #    Value: the entered value of the command parameter
+            command (derived from AbstractCommnd): the command to edit
         """
         # Call the parent class
         super().__init__()
@@ -72,12 +60,12 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         # input field
         # KEY (str): the command parameter name
         # VALUE (obj): the associated Qt Widget input field
-        #self.input_edit_objects = {}
+        # self.input_edit_objects = {}
 
         # "command_parameter_current_values" is a dictionary that holds the command parameters and their current values
         # KEY (str): the name of the command parameter
         # VALUE (str): the entered value of the command parameter
-        #self.command_parameter_current_values = current_values
+        # self.command_parameter_current_values = current_values
 
         # Initialize components that will be used
         self.CommandDisplay_View_TextBrowser = None
@@ -93,18 +81,22 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         # Set up the UI for the command editor window
         self.setup_ui_core()
 
-        # Create variable to know if we are updating an existing command
-        # or inserting a new command into the command list
+        # Create variable to know whether updating an existing command or inserting a new command into the command list.
         self.update = False
-        # if command parameters have already been defined for command
-        # we know that we are updating an existing command
+
+        # If command parameters have already been defined for the command, know that are updating an existing command.
         if command.command_parameters:
             self.update = True
 
     def add_ui_horizontal_separator(self):
-        # Create a line (frame object with special specifications). Add the line to the Dialog window.
-        # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
-        # The frame object, Separator, separates the command description from the input form section of the Dialog box.
+        """
+        Create a line (frame object with special specifications). Add the line to the Dialog window.
+        Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
+        The frame object, Separator, separates the command description from the input form section of the Dialog box.
+
+        Returns:
+            None
+        """
         self.Separator = QtWidgets.QFrame(self)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -126,6 +118,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         Returns:
             A list of strings corresponding to each comment line.
         """
+        logger = logging.getLogger(__name__)
         # First split the text area using newline delimiter
         command_text = self.CommandDisplay_View_TextBrowser.toPlainText()
         command_string_list = []
@@ -144,8 +137,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
                 if not command_string_stripped.startswith('#'):
                     # Figure out how many spaces to indent by examining the comment lines
                     # - assume that indent should be consistent with nearest previous indented, commented line
-                    # - if that is not found, search after the current line
-                    # - repeat this logic for each line to allow
+                    # - if that is not found, search after the current line (TODO smalers 2019-01-18 need to do)
                     indent = ""
                     for j in range(i-1,0,-1):
                         indent_pos = command_string_list[j].find('#')
@@ -153,6 +145,8 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
                             # Found a previous comment line so use its indent
                             # - the following one-liner sets the indent to the number of spaces
                             indent += ' ' * indent_pos
+                            break
+                    logger.info('indent_pos determined to be ' + str(indent_pos))
                     command_string_list[i] = indent + "# " + command_string_list[i]
             # Return a list with one item for each line that was edited
             return command_string_list
@@ -260,7 +254,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         self.setObjectName("InsertLineRulerEditor")
         self.setWindowTitle("Edit # Comments")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
+        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
         self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # Because components are added to the UI the dialog will have a size.
@@ -279,7 +273,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
         self.grid_layout_row = self.grid_layout_row + 1
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
-        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
         self.CommandDisplay_Label.setText(_translate("Dialog", "Comments: ", None))
         self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 4, 1)
@@ -321,7 +315,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
         self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(self)
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
-        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.OK_Cancel_Buttons.setObjectName(_fromUtf8("OK_Cancel_Buttons"))
         self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Cancel).setToolTip(
             "Cancel command edit and ignore changes.")

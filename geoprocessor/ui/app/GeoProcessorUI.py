@@ -294,7 +294,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 num = num - 1
                 self.numbered_List.item(i).setText(str(num))
 
-    # TODO smalers 2018-07-24 need to review this function
     def edit_command_editor(self):
         """
         Opens a dialog box to edit an existing command.
@@ -400,7 +399,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                         # - let the command editor deal with formatting
                         # - the get_text() function is similar to TSTool Command_JDialog.getText().
                         command_string_list = command_editor.get_command_string_list()
-                        # Update or insert into the geoprocessor
+                        # Update or insert into the GeoProcessor
                         # - the number of comments as per num_selected_are_comments may be different from the
                         #   number of comments returned from the editor
                         # First, remove the selected comments from before
@@ -498,17 +497,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # - the editor will check command parameters for validity
         # - if command parameters are validated, the user can press "OK" to accept the new command
         # - if command parameters do not validate, the user can press "Cancel"
-        # TODO - smalers 2019-01-18 how to determine which was clicked at this point given that dialog handles
-        #        its own button events?
         try:
-            # If the "OK" button is clicked within the dialog window, continue.
+            # If the "OK" button is clicked within the dialog window, commit he edits to the command list.
             # Else, if the "Cancel" button is clicked, do nothing.
             button_clicked = command_editor.exec_()
             if button_clicked == QtWidgets.QDialog.Accepted:
-                print("here")
                 # Get the command string from the dialog window.
                 # - Note that this does not use the instance of the command modified by the editor,
-                #   but uses the string corresponding to that command
+                #   but uses the string corresponding to that command.
                 command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
                 # Add the command to the GeoProcessor commands.
@@ -1391,8 +1387,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_CompareFiles)
         # CreateRegressionTestCommandFile
-        self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile = \
-            QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile.setObjectName(
             _fromUtf8("Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile"))
         self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile.setText(
@@ -1402,8 +1397,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile)
         # StartRegressionTestResultsReport
-        self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport = \
-            QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport.setObjectName(
             _fromUtf8("Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport"))
         self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport.setText(
@@ -1413,8 +1407,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport)
         # WriteCommandSummaryToFile
-        self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile = \
-            QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile.setObjectName(
             _fromUtf8("Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile"))
         self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile.setText(
@@ -1424,8 +1417,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile)
         # WriteGeoLayerPropertiesToFile
-        self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile = \
-            QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile.setObjectName(
             _fromUtf8("Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile"))
         self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile.setText(

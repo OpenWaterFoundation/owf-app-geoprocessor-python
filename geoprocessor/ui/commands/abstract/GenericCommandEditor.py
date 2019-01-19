@@ -62,8 +62,12 @@ class GenericCommandEditor(AbstractCommandEditor):
         # Keep track of command object
         self.command = command
 
+        # Indicate if an error status is currently in effect, due to invalid parameters
+        # - will be set in check_input() and is checked in ui_action_ok_clicked()
+        self.error_wait = False
+
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
-        #self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
+        # self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
         self.parameter_LineEdit = dict()
 
         # Create variable to know if we are updating an existing command
@@ -81,14 +85,36 @@ class GenericCommandEditor(AbstractCommandEditor):
         self.refresh_command()
 
     def check_input(self):
+        """
+        Check the parameter values shown in the editor to make sure all values are valid.
+        If any invalid parameters are detected, set self.error_wait = True so ui_action_ok_clicked() can
+        keep the editor open to fix the issue(s).
+
+        Returns:
+            None.
+        """
+        logger = logging.getLogger(__name__)
         # Get the command string from the command display text box
         command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
+        logger.info('Checking command parameter input using command string:' + str(command_string))
         # Initialize the parameters of the command object.
+        # - TODO smalers 2019-01-18 this will modify the contents of the command, needs to be a new instance from
+        #        what is in an existing command or else could corrupt the original data if invalid or cancel is
+        #        then pressed
         self.command.initialize_command(command_string, self, True)
 
-        # Check parameters
-        self.command.check_command_parameters(self.command.command_parameters)
+        self.error_wait = False
+        try:
+            # Check command parameters
+            self.command.check_command_parameters(self.command.command_parameters)
+        except Exception as e:
+            message = str(e)
+            # Indicate that an error occurred
+            self.error_wait = True
+            logger.info(message)
+            qt_util.warning_message_box(message)
 
+    # TODO smalers 2019-01-18 can this function be removed?
     def get_parameter_dict_from_ui(self):
         """
         Get the list of parameters from the UI, used to validate the parameters.
@@ -105,8 +131,8 @@ class GenericCommandEditor(AbstractCommandEditor):
         """
         Set up the dialog UI elements.  This generic editor provides text fields for each property.
 
-        Returns: None
-
+        Returns:
+            None
         """
 
         # The AbstractCommandEditor sets up the editor by:
@@ -232,7 +258,8 @@ class GenericCommandEditor(AbstractCommandEditor):
     #     # Initialize a Qt QComboBox object for the IfGeoLayerIDExists input field.
     #     self.IfGeoLayerIDExists_ComboBox = QtWidgets.QComboBox(Dialog)
     #
-    #     # Configure the input combo box to be populated with the available choices for the IfGeoLayerIDExists parameter.
+    #     # Configure the input combo box to be populated with the available choices for the
+    #     # IfGeoLayerIDExists parameter.
     #     self.configureComboBox(self.IfGeoLayerIDExists_ComboBox, UiDialog.cp_IfGeoLayerIDExists.name,
     #                            UiDialog.command_obj.choices_IfGeoLayerIDExists,
     #                            tooltip=UiDialog.cp_IfGeoLayerIDExists.tooltip)
@@ -310,3 +337,38 @@ class GenericCommandEditor(AbstractCommandEditor):
             logger = logging.getLogger(__name__)
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
+
+    def ui_action_cancel_clicked(self):
+        """
+        Handle clicking on cancel button:
+
+        1. What happens?
+
+        Returns:
+            None
+        """
+        # To cancel, call the standard reject() function, which will set the return value.
+        # - this allows the return value to be checked in the calling code
+        self.reject()
+
+    def ui_action_ok_clicked(self):
+        """
+        Handle clicking on OK button:
+
+        1. The parameters in the input components are validated.
+        2. If OK, exit by calling accept()
+        3. If not OK, the editor stays open until the user corrects or presses Cancel.
+
+        Returns:
+            None
+        """
+        # Check the input
+        self.check_input()
+        if self.error_wait:
+            # User was shown a dialog and had to acknowledge it, so here just ignore the "OK"
+            pass
+        else:
+            # No error so OK to exit
+            # - call the standard accept() function to set the return value
+            self.accept()
+

@@ -89,7 +89,7 @@ class StartLog(AbstractCommand):
         # LogFile is required
         pv_LogFile = self.get_parameter_value(parameter_name='LogFile', command_parameters=command_parameters)
         if not validators.validate_string(pv_LogFile, False, False):
-            message = "LogFile parameter has no value."
+            message = "The log file must be specified."
             recommendation = "Specify the log file."
             warning += "\n" + message
             self.command_status.add_to_log(

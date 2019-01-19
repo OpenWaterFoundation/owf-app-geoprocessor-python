@@ -388,56 +388,40 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Else, if the "Cancel" button is clicked, do nothing.
             button_clicked = command_editor.exec_()
             if button_clicked == QtWidgets.QDialog.Accepted:
-                # OK button was clicked in the editor.
-                # Check if all of the required parameters are filled. If so, add the command to the Command_List widget.
-                # if ui.are_required_parameters_specified(ui.ui_commandparameters):
+                # OK button was clicked in the editor and validation passed so OK to use the changes.
 
-                # Boolean to determine whether or not there is an error with command parameters
-                command_parameter_warning = False
-                try:
-                    # Call command editor's check input to see if parameters are okay
-                    command_editor.check_input()
-                except:
-                    message = "Error creating new command. Please check command parameters."
-                    logger.info(message)
-                    qt_util.warning_message_box(message)
-                    command_parameter_warning = True
+                # Get the command string from the dialog window.
+                command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
-                # If there are no errors in the parameters continue with adding the command to the command list
-                if command_parameter_warning == False:
+                # Update command in GeoProcessor list of commands
+                if num_selected_are_comments > 0:
+                    if comment_block:
+                        # The editor will result in 0+ newline-separated comments
+                        # - let the command editor deal with formatting
+                        # - the get_text() function is similar to TSTool Command_JDialog.getText().
+                        command_string_list = command_editor.get_command_string_list()
+                        # Update or insert into the geoprocessor
+                        # - the number of comments as per num_selected_are_comments may be different from the
+                        #   number of comments returned from the editor
+                        # First, remove the selected comments from before
+                        # - remove at the same index for the number of original comments since contiguous
+                        for i in range(len(selected_indices)):
+                            self.gp.remove_command(selected_indices[0])
+                        # Second, add the new comments at the same position as before
+                        # - add in reverse order so the shifting results in correct order
+                        # - TODO smalers 2019-01-10 need to confirm all case, including working with empty command list
+                        for command_string in reversed(command_string_list):
+                            self.gp.add_command_at_index(command_string, selected_indices[0])
 
-                    # Get the command string from the dialog window.
-                    command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
+                # Update the command list to match the status of GeoProcessor
+                self.gp_model.update_command_list_ui()
 
-                    # Update command in GeoProcessor list of commands
-                    if num_selected_are_comments > 0:
-                        if comment_block:
-                            # The editor will result in 0+ newline-separated comments
-                            # - let the command editor deal with formatting
-                            # - the get_text() function is similar to TSTool Command_JDialog.getText().
-                            command_string_list = command_editor.get_command_string_list()
-                            # Update or insert into the geoprocessor
-                            # - the number of comments as per num_selected_are_comments may be different from the
-                            #   number of comments returned from the editor
-                            # First, remove the selected comments from before
-                            # - remove at the same index for the number of original comments since contiguous
-                            for i in range(len(selected_indices)):
-                                self.gp.remove_command(selected_indices[0])
-                            # Second, add the new comments at the same position as before
-                            # - add in reverse order so the shifting results in correct order
-                            # - TODO smalers 2019-01-10 need to confirm all case, including working with empty command list
-                            for command_string in reversed(command_string_list):
-                                self.gp.add_command_at_index(command_string, selected_indices[0])
+                # Manually set the run all commands and clear commands buttons to enabled
+                self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
+                self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(True)
 
-                    # Update the command list to match the status of GeoProcessor
-                    self.gp_model.update_command_list_ui()
-
-                    # Manually set the run all commands and clear commands buttons to enabled
-                    self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
-                    self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(True)
-
-                    # update the window title in case command file has been modified
-                    self.update_ui_main_window_title()
+                # update the window title in case command file has been modified
+                self.update_ui_main_window_title()
 
             else:
                 # Cancel was clicked so don't do anything
@@ -449,12 +433,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box(message)
             return
 
-    # TODO smalers 2018-07-24 need to review this function
     def new_command_editor(self, command_name):
         """
-        Opens the dialog window for the selected command, editing a new command.  If the users clicks
-        "OK" within the dialog window, the command string (with the desired parameter values)
-        is added to the Command_List widget within the Main Window user interface.
+        Opens the dialog window for the selected command, editing a new command.
+        This function is called when the user selects a Command menu item.
+        If the users clicks "OK" within the dialog window, the command is added to the Command_List widget
+        within the Main Window user interface.
         Other UI components are also updated - including the total and selected command count, the
         Command_List Widget Label, and the GeoProcessor's list of commands.
 
@@ -462,7 +446,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             command_name (str): the name of the command
 
         Returns:
-            Null if error is encountered
+            None (results of the function are propagated to the command list)
         """
         logger = logging.getLogger(__name__)
         # Check to see if command is a comment block with "#"
@@ -470,6 +454,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         if command_name == "#":
             comment_block = True
         # Create a full command string, to parse in the command factory
+        # - TODO smalers 2019-01-18 This is cumbersome
+        # - the command factory should be able to handle Command() as well as #, /*, */ without adding () to all here
         command_string = command_name + "()"
         # Create a new command object for the command name using the command factory
         try:
@@ -477,109 +463,111 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             # Initialize the command object (without parameters).
             # Work is done in the GeoProcessorCommandFactory class.
-            create_unknown_command_if_not_recognized = False
+            create_unknown_command_if_not_recognized = False  # Results in UnknownCommand instance
             command_object = command_factory.new_command(
                 command_string,
                 create_unknown_command_if_not_recognized)
 
-            # Initialize the parameters of the command object.
-            # Work is done in the AbstractCommand class.
-            command_object.initialize_command(command_string, self, True)
+            # Initialize additional command object data.
+            # - work is done in the AbstractCommand class
+            # - the processor is set in the command
+            # - full_initialization parses the command string, which won't do much here since new and no parameters
+            full_initialization = True
+            command_object.initialize_command(command_string, self.gp_model.gp, full_initialization)
         except Exception as e:
-            message = "Error creating new command"
+            message = "Error creating new command, unable to edit for command string: " + command_string
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
+        # If here, a new command instance was successfully created above, but could be an UnknownCommand instance.
+        # Use the command object to create a corresponding editor based on the command's
+        # command_metadata[`EditorType`] value.
         try:
             # Create the editor for the command
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object, self.app_session)
         except Exception as e:
-            message = "Error creating editor for new command"
+            message = "Error creating editor for new command:  " + str(command_object.command_string)
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
-        # Now edit the new command in the editor
+        # Now edit the new command in the editor.
+        # - the editor will check command parameters for validity
+        # - if command parameters are validated, the user can press "OK" to accept the new command
+        # - if command parameters do not validate, the user can press "Cancel"
+        # TODO - smalers 2019-01-18 how to determine which was clicked at this point given that dialog handles
+        #        its own button events?
         try:
             # If the "OK" button is clicked within the dialog window, continue.
             # Else, if the "Cancel" button is clicked, do nothing.
             button_clicked = command_editor.exec_()
             if button_clicked == QtWidgets.QDialog.Accepted:
-                # Check if all of the required parameters are filled. If so, add the command to the Command_List widget.
-                # if ui.are_required_parameters_specified(ui.ui_commandparameters):
-                command_parameter_warning = False
-                try:
-                    command_editor.check_input()
-                except:
-                    message = "Error creating new command. Please check command parameters."
-                    logger.info(message)
-                    qt_util.warning_message_box(message)
-                    command_parameter_warning = True
+                print("here")
+                # Get the command string from the dialog window.
+                # - Note that this does not use the instance of the command modified by the editor,
+                #   but uses the string corresponding to that command
+                command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
-                if not command_parameter_warning:
-                    print("here")
-                    # Get the command string from the dialog window.
-                    command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
-
-                    # Add command to GeoProcessor commands
-                    # Get selected index
-                    selected_index = 0
-                    # If there are already commands see if any are selected
-                    if self.gp.commands:
-                        selected_index = self.command_ListWidget.commands_List.currentRow()
-                        # Check to see if selected index is actually active.
-                        # If so add command above this selected item.
-                        if self.command_ListWidget.commands_List.item(selected_index).isSelected() == True:
-                            # If we are working with a comment block with potential multiple lines
-                            # we must add those lines individually to the geoprocessor
-                            if comment_block == True:
-                                command_string_by_line = command_string.splitlines()
-                                for command in command_string_by_line:
-                                    command = "# " + command
-                                    self.gp.add_command_at_index(command, selected_index)
-                                    selected_index += 1
-                            # Otherwise just add the command line to the geoprocessor
-                            else:
-                                self.gp.add_command_at_index(command_string, selected_index)
+                # Add the command to the GeoProcessor commands.
+                # Get the first selected index.
+                selected_index = 0
+                # If there are already commands in the command list, see if any are selected.
+                if self.gp.commands:
+                    selected_index = self.command_ListWidget.commands_List.currentRow()
+                    # Check to see if selected index is actually active.
+                    # If so add command above this selected item.
+                    if self.command_ListWidget.commands_List.item(selected_index).isSelected():
+                        # If working with a comment block with potential multiple lines,
+                        # must add those lines individually to the GeoProcessor.
+                        if comment_block:
+                            command_string_by_line = command_string.splitlines()
+                            for command in command_string_by_line:
+                                command = "# " + command
+                                self.gp.add_command_at_index(command, selected_index)
+                                selected_index += 1
+                        # Otherwise just add the command line to the GeoProcessor.
                         else:
-                            # If we are working with a comment block with potential multiple lines
-                            # we must add those lines individually to the geoprocessor
-                            if comment_block == True:
-                                command_string_by_line = command_string.splitlines()
-                                for command in command_string_by_line:
-                                    command = "# " + command
-                                    self.gp.add_command(command)
-                            # Otherwise just add the command line to the geoprocessor
-                            else:
-                                self.gp.add_command(command_string)
+                            self.gp.add_command_at_index(command_string, selected_index)
                     else:
-                        # If we are working with a comment block with potential multiple lines
-                        # we must add those lines individually to the geoprocessor
-                        if comment_block == True:
+                        # If working with a comment block with potential multiple lines,
+                        # must add those lines individually to the GeoProcessor.
+                        if comment_block:
                             command_string_by_line = command_string.splitlines()
                             for command in command_string_by_line:
                                 command = "# " + command
                                 self.gp.add_command(command)
-                        # Otherwise just add the command line to the geoprocessor
+                        # Otherwise just add the command line to the GeoProcessor.
                         else:
                             self.gp.add_command(command_string)
-                    self.gp_model.update_command_list_ui()
+                else:
+                    # If working with a comment block with potential multiple lines,
+                    # must add those lines individually to the GeoProcessor.
+                    if comment_block:
+                        command_string_by_line = command_string.splitlines()
+                        for command in command_string_by_line:
+                            command = "# " + command
+                            self.gp.add_command(command)
+                    # Otherwise just add the command line to the GeoProcessor.
+                    else:
+                        self.gp.add_command(command_string)
+                self.gp_model.update_command_list_ui()
 
-                    # Manually set the run all commands and clear commands buttons to enabled
-                    self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
-                    self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(True)
+                # Manually set the 'Run all commands' and 'Clear commands' buttons to enabled
+                self.command_ListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
+                self.command_ListWidget.commands_ClearCommands_PushButton.setEnabled(True)
 
-                    # update the window title in case command file has been modified
-                    self.update_ui_main_window_title()
+                # Update the window title in case command file has been modified.
+                self.update_ui_main_window_title()
 
             else:
-                # Cancel was clicked so don't do anything
+                # Cancel was clicked so don't do anything.
                 pass
 
         except Exception as e:
+            # Unexpected error.
             message = "Error editing new command"
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)
@@ -2459,10 +2447,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         menu_item_increase_indent_command = self.rightClickMenu_Commands.addAction("Increase Indent")
         menu_item_decrease_indent_command = self.rightClickMenu_Commands.addAction("Decrease Indent")
         self.rightClickMenu_Commands.addSeparator()
-        menu_item_convert_to_command = self.rightClickMenu_Commands.addAction("Convert selected command(s) to "
-                                                                              "# comments")
-        menu_item_convert_from_command = self.rightClickMenu_Commands.addAction("Convert selected command(s) from "
-                                                                                     "# comments")
+        menu_item_convert_to_command = self.rightClickMenu_Commands.addAction(
+            "Convert selected command(s) to # comments")
+        menu_item_convert_from_command = self.rightClickMenu_Commands.addAction(
+            "Convert selected command(s) from # comments")
 
         # Connect the menu options to the appropriate actions.
         menu_item_command_status.triggered.connect(self.show_command_status)

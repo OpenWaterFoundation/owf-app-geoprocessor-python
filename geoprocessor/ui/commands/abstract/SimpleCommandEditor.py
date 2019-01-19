@@ -2,17 +2,17 @@
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2019 Open Water Foundation
-# 
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -46,7 +46,7 @@ except AttributeError:
 
 class SimpleCommandEditor(AbstractCommandEditor):
     """
-    Class for command editor using single-panel layout configured with parameter_input_metadata.
+    Class for command editor using single-panel layout configured with command parameter_input_metadata.
     """
 
     def __init__(self, command, app_session):
@@ -74,6 +74,10 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
         # This is a session object to keep track of session variables such as command file history
         self.app_session = app_session
+
+        # Indicate if an error status is currently in effect, due to invalid parameters
+        # - will be set in check_input() and is checked in ui_action_ok_clicked()
+        self.error_wait = False
 
         # "command_description" is the description of the GeoProcessor command that the Dialog box is representing
         # #self.command_description = command_description
@@ -132,13 +136,34 @@ class SimpleCommandEditor(AbstractCommandEditor):
         return specified
 
     def check_input(self):
+        """
+        Check the parameter values shown in the editor to make sure all values are valid.
+        If any invalid parameters are detected, set self.error_wait = True so ui_action_ok_clicked() can
+        keep the editor open to fix the issue(s).
+
+        Returns:
+            None.
+        """
+        logger = logging.getLogger(__name__)
         # Get the command string from the command display text box
         command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
+        logger.info('Checking command parameter input using command string:' + str(command_string))
         # Initialize the parameters of the command object.
+        # - TODO smalers 2019-01-18 this will modify the contents of the command, needs to be a new instance from
+        #        what is in an existing command or else could corrupt the original data if invalid or cancel is
+        #        then pressed
         self.command.initialize_command(command_string, self, True)
 
-        # Check parameters
-        self.command.check_command_parameters(self.command.command_parameters)
+        self.error_wait = False
+        try:
+            # Check command parameters
+            self.command.check_command_parameters(self.command.command_parameters)
+        except Exception as e:
+            message = str(e)
+            # Indicate that an error occurred
+            self.error_wait = True
+            logger.info(message)
+            qt_util.warning_message_box(message)
 
     def configureComboBox(self, combobox, parameter_name, choice_list, tooltip=None):
         """
@@ -596,7 +621,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param, self.load_file_button))
                 parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 6, 1, 1)
             else:
-                # File selector, indicated by `FileSelector.Type` property
+                # LineEdit (text field), default if properties don't indicate any other component
                 self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
                 self.parameter_LineEdit[self.y_parameter].setObjectName(parameter_name)
                 parameter_GridLayout.addWidget(self.parameter_LineEdit[self.y_parameter], self.y_parameter, 1, 1, 4)
@@ -672,6 +697,41 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # Add the full path of the selected file string to the specified input Qt Widget.
         qt_widget.setText(file_name_text)
 
+    def ui_action_cancel_clicked(self):
+        """
+        Handle clicking on cancel button:
+
+        1. What happens?
+
+        Returns:
+            None
+        """
+        # To cancel, call the standard reject() function, which will set the return value.
+        # - this allows the return value to be checked in the calling code
+        self.reject()
+
+    def ui_action_ok_clicked(self):
+        """
+        Handle clicking on OK button:
+
+        1. The parameters in the input components are validated.
+        2. If OK, exit by calling accept()
+        3. If not OK, the editor stays open until the user corrects or presses Cancel.
+
+        Returns:
+            None
+        """
+        # Check the input
+        self.check_input()
+        if self.error_wait:
+            # User was shown a warning dialog and had to acknowledge it, so here just ignore the "OK"
+            # - errors in input parameters need to be fixed before OK works
+            pass
+        else:
+            # No error so OK to exit
+            # - call the standard accept() function to set the return value
+            self.accept()
+
     def ui_action_open_file(self, y_parameter, event_button):
         """
         Open a command file. Each line of the command file is a separate item in the Command_List QList Widget.
@@ -732,12 +792,12 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # TODO smalers 2019-01-18 why is this needed?
         # - should be able to figure out the component to setText using the parameter name rather than a
         #   y-position.  This is a nuance but for code clarity a parameter name rather than int is easier to
-        #   unerstand and also for troubleshooting.
+        #   understand and also for troubleshooting.
         self.parameter_LineEdit[y_parameter].setText(filepath)
 
         # # Read the command file in GeoProcessor
         # # GeoProcessor should handle necessary event handling and notify
-        # # the GeoProessorListModel to update the User Interface
+        # # the GeoProcessorListModel to update the User Interface
         # try:
         #     self.gp.read_command_file(cmd_filepath)
         # except FileNotFoundError as e:

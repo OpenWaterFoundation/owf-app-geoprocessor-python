@@ -83,7 +83,7 @@ class AbstractCommand(object):
 
         Returns:  Metadata for the requested parameter name, or None if not found.
         """
-        # Loop through the list of command pareters and find a matching item.
+        # Loop through the list of command parameters and find a matching item.
         # Ignore case in the comparison.
         for parameter_metadata in self.command_parameter_metadata:
             if parameter_metadata.parameter_name.upper() == parameter_name.upper():

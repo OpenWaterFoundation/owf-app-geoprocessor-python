@@ -45,21 +45,12 @@ class AbstractCommandEditor(QtWidgets.QDialog):
     This class maintains core layout information and provides functions to add components.
     """
 
-    # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
     def __init__(self, command):
         """
         Initialize the Abstract Dialog instance.
 
         Args:
-            command_name (str): the name of the GeoProcessor command that the Dialog box is representing
-            # command_description (str): the description of the GeoProcessor command that the Dialog box is representing
-            # parameter_count (int): the number of command parameters of the GeoProcessor command that the Dialog box is
-            #    representing
-            # command_parameters (list): a list of string representing the command parameter names (in order) of the
-            #    GeoProcessor command that the Dialog box is representing
-            # current_values (dic):  a dictionary that holds the command parameters and their current values
-            #    Key: the name of the command parameter
-            #    Value: the entered value of the command parameter
+            command (derived from AbstractCommand): the GeoProcessor command to edit
         """
         # Call the parent class
         super().__init__()
@@ -280,17 +271,44 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Create a button box object. Add the button box object to the Dialog window.
         # Set the orientation, the standard buttons, the name and the connections of the button box object.
         # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
-        self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(self)
-        self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
-        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.OK_Cancel_Buttons.setObjectName(_fromUtf8("OK_Cancel_Buttons"))
-        self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Cancel).setToolTip(
-            "Cancel command edit and ignore changes.")
-        self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Ok).setToolTip("Save edits to command.")
-        self.OK_Cancel_Buttons.accepted.connect(self.accept)
-        self.OK_Cancel_Buttons.rejected.connect(self.reject)
+        self.dialog_ButtonBox = QtWidgets.QDialogButtonBox(self)
+        self.dialog_ButtonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.dialog_ButtonBox.setObjectName(_fromUtf8("dialog_ButtonBox"))
         self.grid_layout_row = self.grid_layout_row + 1
-        buttons_GridLayout.addWidget(self.OK_Cancel_Buttons, self.grid_layout_row, 6, 1, 2)
+        use_builtin_buttons = False  # True will cause standard Cancel and Ok buttons to be added
+        if use_builtin_buttons:
+            self.dialog_ButtonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+            self.dialog_ButtonBox.button(QtWidgets.QDialogButtonBox.Cancel).setToolTip(
+                "Cancel command edit and ignore changes.")
+            self.dialog_ButtonBox.button(QtWidgets.QDialogButtonBox.Ok).setToolTip("Save edits to command.")
+            self.dialog_ButtonBox.accepted.connect(self.accept)
+            self.dialog_ButtonBox.rejected.connect(self.reject)
+        else:
+            # New design where buttons are added to enable event handling
+            # OK button
+            # ---------
+            self.ok_button = QtWidgets.QPushButton("OK")
+            # Object name has parameter at front, which can be parsed out in event-handling code
+            self.ok_button.setObjectName(_fromUtf8("OK"))
+            self.ok_button.setToolTip("Save edits to command.")
+            # self.ok_button.clicked.connect(
+                # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
+            # Use action role because action is handled in the dialog
+            self.dialog_ButtonBox.addButton(self.ok_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
+            self.ok_button.clicked.connect(self.ui_action_ok_clicked)
+            # Cancel button
+            # ---------
+            self.cancel_button = QtWidgets.QPushButton("Cancel")
+            # Object name has parameter at front, which can be parsed out in event-handling code
+            self.cancel_button.setObjectName(_fromUtf8("Cancel"))
+            self.cancel_button.setToolTip("Cancel without saving edits to command.")
+            # self.cancel_button.clicked.connect(
+            # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
+            # Use action role because action is handled in the dialog
+            self.dialog_ButtonBox.addButton(self.cancel_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
+            self.cancel_button.clicked.connect(self.ui_action_cancel_clicked)
+        # Button box is added regardless of how buttons are defined
+        buttons_GridLayout.addWidget(self.dialog_ButtonBox, self.grid_layout_row, 6, 1, 2)
 
     def setup_ui_core_command_description(self):
         """

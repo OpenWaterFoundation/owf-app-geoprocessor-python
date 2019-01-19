@@ -42,7 +42,7 @@ class Comment(AbstractCommand):
         self.command_name = "#"
 
         # Command metadata for command editor display
-        self.command_metadata = {}
+        self.command_metadata = dict()
         self.command_metadata['Description'] = ('Single-line comments start with #. Spaces and tabs before the '
                                                 'comment character is allowed. Comments cannot be added after '
                                                 'commands - comments must exist on their own command line.')

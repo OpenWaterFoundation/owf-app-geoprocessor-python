@@ -275,38 +275,30 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.dialog_ButtonBox.setOrientation(QtCore.Qt.Horizontal)
         self.dialog_ButtonBox.setObjectName(_fromUtf8("dialog_ButtonBox"))
         self.grid_layout_row = self.grid_layout_row + 1
-        use_builtin_buttons = False  # True will cause standard Cancel and Ok buttons to be added
-        if use_builtin_buttons:
-            self.dialog_ButtonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-            self.dialog_ButtonBox.button(QtWidgets.QDialogButtonBox.Cancel).setToolTip(
-                "Cancel command edit and ignore changes.")
-            self.dialog_ButtonBox.button(QtWidgets.QDialogButtonBox.Ok).setToolTip("Save edits to command.")
-            self.dialog_ButtonBox.accepted.connect(self.accept)
-            self.dialog_ButtonBox.rejected.connect(self.reject)
-        else:
-            # New design where buttons are added to enable event handling
-            # OK button
-            # ---------
-            self.ok_button = QtWidgets.QPushButton("OK")
-            # Object name has parameter at front, which can be parsed out in event-handling code
-            self.ok_button.setObjectName(_fromUtf8("OK"))
-            self.ok_button.setToolTip("Save edits to command.")
-            # self.ok_button.clicked.connect(
-                # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
-            # Use action role because action is handled in the dialog
-            self.dialog_ButtonBox.addButton(self.ok_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
-            self.ok_button.clicked.connect(self.ui_action_ok_clicked)
-            # Cancel button
-            # ---------
-            self.cancel_button = QtWidgets.QPushButton("Cancel")
-            # Object name has parameter at front, which can be parsed out in event-handling code
-            self.cancel_button.setObjectName(_fromUtf8("Cancel"))
-            self.cancel_button.setToolTip("Cancel without saving edits to command.")
-            # self.cancel_button.clicked.connect(
+        # Add buttons to enable event handling
+        # - use custom buttons rather than defaultsa because events need to be handled
+        # OK button
+        # ---------
+        self.ok_button = QtWidgets.QPushButton("OK")
+        # Object name has parameter at front, which can be parsed out in event-handling code
+        self.ok_button.setObjectName(_fromUtf8("OK"))
+        self.ok_button.setToolTip("Save edits to command.")
+        # self.ok_button.clicked.connect(
             # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
-            # Use action role because action is handled in the dialog
-            self.dialog_ButtonBox.addButton(self.cancel_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
-            self.cancel_button.clicked.connect(self.ui_action_cancel_clicked)
+        # Use action role because action is handled in the dialog
+        self.dialog_ButtonBox.addButton(self.ok_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
+        self.ok_button.clicked.connect(self.ui_action_ok_clicked)
+        # Cancel button
+        # ---------
+        self.cancel_button = QtWidgets.QPushButton("Cancel")
+        # Object name has parameter at front, which can be parsed out in event-handling code
+        self.cancel_button.setObjectName(_fromUtf8("Cancel"))
+        self.cancel_button.setToolTip("Cancel without saving edits to command.")
+        # self.cancel_button.clicked.connect(
+        # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
+        # Use action role because action is handled in the dialog
+        self.dialog_ButtonBox.addButton(self.cancel_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
+        self.cancel_button.clicked.connect(self.ui_action_cancel_clicked)
         # Button box is added regardless of how buttons are defined
         buttons_GridLayout.addWidget(self.dialog_ButtonBox, self.grid_layout_row, 6, 1, 2)
 

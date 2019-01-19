@@ -24,9 +24,11 @@ from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractComm
 
 import geoprocessor.ui.util.qt_util as qt_util
 import geoprocessor.util.app_util as app_util
+import geoprocessor.util.io_util as io_util
 
 import functools
 import logging
+import os
 import webbrowser
 
 try:
@@ -588,6 +590,10 @@ class SimpleCommandEditor(AbstractCommandEditor):
             elif parameter_fileSelectorType != "":
                 # File selector, indicated by `FileSelector.Type` property
                 self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
+                # New-style management.
+                # - save a reference to the input field to look up later
+                # - should only be one one input component per parameter (ignore labels, etc. that don't provide input)
+                self.input_edit_objects[parameter_name] = self.parameter_LineEdit[self.y_parameter]
                 self.parameter_LineEdit[self.y_parameter].setObjectName(parameter_name)
                 parameter_GridLayout.addWidget(self.parameter_LineEdit[self.y_parameter], self.y_parameter, 1, 1, 4)
                 parameter_GridLayout.setColumnStretch(1, 4)
@@ -611,15 +617,16 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 except:
                     # Default...
                     file_selector_button_tooltip = "Browse for file"
-                self.load_file_button = QtWidgets.QPushButton(parameter_Frame)
+                self.select_file_button = QtWidgets.QPushButton(parameter_Frame)
                 # Object name has parameter at front, which can be parsed out in event-handling code
-                self.load_file_button.setObjectName(_fromUtf8(parameter_name + ".FileSelector.Button"))
-                self.load_file_button.setText(_translate("Dialog", "...", None))
-                self.load_file_button.setToolTip(file_selector_button_tooltip)
-                self.load_file_button.setMaximumWidth(50)
-                self.load_file_button.clicked.connect(
-                    lambda clicked, y_param=self.y_parameter: self.ui_action_open_file(y_param, self.load_file_button))
-                parameter_GridLayout.addWidget(self.load_file_button, self.y_parameter, 6, 1, 1)
+                self.select_file_button.setObjectName(_fromUtf8(parameter_name + ".FileSelector.Button"))
+                self.select_file_button.setText(_translate("Dialog", "...", None))
+                self.select_file_button.setToolTip(file_selector_button_tooltip)
+                self.select_file_button.setMaximumWidth(50)
+                self.select_file_button.clicked.connect(
+                    lambda clicked, y_param=self.y_parameter: self.ui_action_select_file(y_param,
+                                                                                         self.select_file_button))
+                parameter_GridLayout.addWidget(self.select_file_button, self.y_parameter, 6, 1, 1)
             else:
                 # LineEdit (text field), default if properties don't indicate any other component
                 self.parameter_LineEdit[self.y_parameter] = QtWidgets.QLineEdit(parameter_Frame)
@@ -732,25 +739,25 @@ class SimpleCommandEditor(AbstractCommandEditor):
             # - call the standard accept() function to set the return value
             self.accept()
 
-    def ui_action_open_file(self, y_parameter, event_button):
+    def ui_action_select_file(self, y_parameter, event_button):
         """
-        Open a command file. Each line of the command file is a separate item in the Command_List QList Widget.
-        If the existing commands have not been saved, the user is prompted to ask if they should be saved.
+        Open a file selector dialog to select an input or output file (or folder) to be used as a command
+        parameter value.
 
         Args:
-            y_parameter (int): the y-position in layout for the button
-            event_button (QPushButton): the instance of the button for which the event is generated
+            y_parameter (int): the y-position in layout for the button, used to access components.
+            TODO smalers 2019-01-18 need to move to dictionary of components.
+            event_button (QPushButton): the instance of the button for which the event is generated.
+            Use to get the parameter name, so as to get other parameter/component data.
 
         Returns:
             None
         """
 
         logger = logging.getLogger(__name__)
-        self.opened_file = True
 
-        # The "..." QPushButton has been selected, in which case the user is
-        # browsing for a file. For now open users home folder.
-        folder = self.app_session.get_user_folder()
+        # Initialize folder to None and determine below with several checks.
+        folder_start = None
 
         # Get properties to configure the file selector.
         # - use the object name to parse out the parameter name
@@ -762,63 +769,65 @@ class SimpleCommandEditor(AbstractCommandEditor):
         try:
             # The following should match ParameterName.FileSelectorTitle
             select_file_title = self.command.parameter_input_metadata[request_key]
-        except:
+        except KeyError:
             # Default was specified above...
             pass
 
-        # Get the existing value in the text field, which will correspond to the parameter name value
-        # TODO smalers 2019-01-18 here for StartLog should be able to get a parameter value and do logic like:
-        # existing_file = self.command.command_parameters[parameter_name]
-        # if existing_file != "":
-        #      # The command has an existing file so open up the same folder
-        #      if absolute_path(existing_file):
-        #          # Pass absolute path to selector...
-        #      else:
-        #          # Form the full path from working directory and the existing file
-        #          # - not sure whether the selector accepts a folder or handles an existing filename
-        #          path = io_util.to_absolute_path()
+        # Get the existing value in the text field, which will correspond to the parameter name value.
+        # - if specified as absolute path, use it as is
+        # - if a relative path, append to the working directory or if that is not available the user's home folder
+        input_LineEdit = None
+        working_dir = self.command.command_processor.get_property('WorkingDir')
+        user_folder = self.app_session.get_user_folder()
+        try:
+            input_LineEdit = self.input_edit_objects[parameter_name]
+            # Get the parameter value
+            parameter_value = input_LineEdit.text()
+            # If the parameter is empty or null
+            if parameter_value is None or parameter_value == "":
+                # Try to set the folder to the working directory first
+                if working_dir is not None:
+                    folder_start = working_dir
+                else:
+                    # Finally, use the user's home folder
+                    folder_start = self.app_session.get_user_folder()
+            else:
+                # The parameter is specified.
+                if os.path.isabs(parameter_value):
+                    # The input is an absolute path so use as is
+                    folder_start = parameter_value
+                else:
+                    # The input is relative to the working directory so append to working directory with
+                    # filesystem separator.
+                    if working_dir is not None:
+                        folder_start = io_util.to_absolute_path(working_dir, parameter_value)
+                    else:
+                        folder_start = io_util.to_absolute_path(user_folder, parameter_value)
+        except KeyError:
+            # Can't determine the input component so will assume the working directory, if available
+            if working_dir is not None:
+                folder_start = working_dir
+            else:
+                # Finally, use the user's home folder
+                folder_start = user_folder
 
         # A browser window will appear to allow the user to browse to the desired file.
         # The absolute pathname of the command file is added to the cmd_filepath variable.
-        filepath = QtWidgets.QFileDialog.getOpenFileName(self, select_file_title, folder)[0]
+        filepath_selected = QtWidgets.QFileDialog.getOpenFileName(self, select_file_title, folder_start)[0]
 
-        # TODO smalers 2019-01-18 need to make this work
-        # Convert the selected file path to relative path by default, using the command file folder as the working
-        # directory.
-        # filepath = io_util.to_relative_path()
-        if not filepath:
+        if not filepath_selected:
+            # The file selection was canceled
             return
+
+        # Convert the selected file path to relative path, using the command file folder as the working directory.
+        if working_dir is not None:
+            filepath_selected = io_util.to_relative_path(working_dir, filepath_selected)
 
         # TODO smalers 2019-01-18 why is this needed?
         # - should be able to figure out the component to setText using the parameter name rather than a
         #   y-position.  This is a nuance but for code clarity a parameter name rather than int is easier to
         #   understand and also for troubleshooting.
-        self.parameter_LineEdit[y_parameter].setText(filepath)
-
-        # # Read the command file in GeoProcessor
-        # # GeoProcessor should handle necessary event handling and notify
-        # # the GeoProcessorListModel to update the User Interface
-        # try:
-        #     self.gp.read_command_file(cmd_filepath)
-        # except FileNotFoundError as e:
-        #     # The file should exist but may have been deleted outside of the UI
-        #     message = 'Selected command file does not exist (maybe deleted or renamed?):\n"' + cmd_filepath + '"'
-        #     logger.warning(message, e, exc_info=True)
-        #     qt_util.warning_message_box(message)
-        #     # Return so history is not changed to include a file that does not exist
-        #     return
-
-        # Push new command onto history
-        # self.app_session.push_history(cmd_filepath)
-
-        # Set this file path as the path to save if the user click "Save Commands ..."
-        # self.saved_file = cmd_filepath
-
-        # Set the title for the main window
-        # self.ui_set_main_window_title('"' + cmd_filepath + '"')
-
-        # Update recently opened files in file menu
-        # self.ui_init_file_open_recent_files()
+        self.parameter_LineEdit[y_parameter].setText(filepath_selected)
 
     def update_command_display(self):
         """

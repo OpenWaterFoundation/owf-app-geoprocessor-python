@@ -146,7 +146,6 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
                             # - the following one-liner sets the indent to the number of spaces
                             indent += ' ' * indent_pos
                             break
-                    logger.info('indent_pos determined to be ' + str(indent_pos))
                     command_string_list[i] = indent + "# " + command_string_list[i]
             # Return a list with one item for each line that was edited
             return command_string_list

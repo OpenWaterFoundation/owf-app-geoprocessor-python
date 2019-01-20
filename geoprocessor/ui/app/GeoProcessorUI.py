@@ -23,6 +23,8 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCommandEditorFactory
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 
+from sip import SIP_VERSION_STR  # Used for info, others extracted from above objects
+
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.log_util as log_util
@@ -2617,7 +2619,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             # Python properties
 
-            properties += ("Python Properties:\n" +
+            properties += ("Python Information:\n" +
                            TAB + 'Python Executable (sys.executable): ' + str(sys.executable) + "\n" +
                            TAB + 'Python Version (sys.version): ' + system_version + "\n" +
                            TAB + 'Python Bit Size: ' + str(8*struct.calcsize("P")) + "\n" +
@@ -2645,7 +2647,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             if qgis_install_type == "Unknown":
                 # QGIS does not appear to be used at runtime so provide minimal information
                 properties += (
-                            "QGIS Properties:\n" +
+                            "QGIS Information:\n" +
                             TAB + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
                             TAB + "The GeoProcessor testing framework is being used without QGIS dependencies.\n"
                 )
@@ -2676,6 +2678,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                                TAB + TAB + "VSI_CACHE: " + str(os.environ.get('VSI_CACHE')) + "\n" +
                                TAB + TAB + "VSI_CACHE_SIZE: " + str(os.environ.get('VSI_CACHE_SIZE')) + "\n" +
                                "\n")
+
+            # Add information for Qt
+
+            properties += (
+                 "Qt Properties (used for graphics):\n" +
+                 TAB + "Qt Version: " + QtCore.QT_VERSION_STR + "\n" +
+                 TAB + "SIP Version: " + SIP_VERSION_STR + "\n" +
+                 TAB + "PyQt Version: " + Qt.PYQT_VERSION_STR + "\n" +
+                 "\n")
 
             # Create Software/System Information Dialog Box
             self.sys_info = QtWidgets.QDialog()

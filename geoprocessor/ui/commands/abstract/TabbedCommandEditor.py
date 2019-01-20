@@ -20,22 +20,11 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
+
+import geoprocessor.ui.util.qt_util as qt_util
+
 import functools
 import webbrowser
-
-try:
-    _fromUtf8 = lambda s: s
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtWidgets.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtWidgets.QApplication.translate(context, text, disambig)
 
 
 class TabbedCommandEditor(AbstractCommandEditor):
@@ -126,7 +115,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
 
         # Set the label's object name (XXX_Label where XXX is the name of the command parameter).
-        label.setObjectName(_fromUtf8("{}_Label".format(parameter_name)))
+        label.setObjectName(qt_util.from_utf8("{}_Label".format(parameter_name)))
 
         # Get the dialog box row index that is used to display the command parameter objects
         # This is a dynamic index that takes into consideration the order of the command's parameters.
@@ -137,7 +126,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.gridLayout.addWidget(label, row_index, 0, 1, 1)
 
         # Set the text of the label to be the name of the command parameter.
-        label.setText(_translate("Dialog", "{}: ".format(parameter_name), None))
+        label.setText(qt_util.translate("Dialog", "{}: ".format(parameter_name), None))
 
     def configureLineEdit(self, line_edit, parameter_name, long=False, placeholder_text=None, tooltip=None):
         """
@@ -158,7 +147,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         """
 
         # Set the line edit's object name (XXX_LineEdit where XXX is the name of the command parameter).
-        line_edit.setObjectName(_fromUtf8("{}_LineEdit".format(parameter_name)))
+        line_edit.setObjectName(qt_util.from_utf8("{}_LineEdit".format(parameter_name)))
 
         # Get the dialog box row index that is used to display the command parameter objects
         # This is a dynamic index that takes into consideration the order of the command's parameters.
@@ -176,11 +165,11 @@ class TabbedCommandEditor(AbstractCommandEditor):
 
         # If placeholder text has been specified, add the desired text as placeholder text.
         if placeholder_text:
-            line_edit.setPlaceholderText(_translate("Dialog", placeholder_text, None))
+            line_edit.setPlaceholderText(qt_util.translate("Dialog", placeholder_text, None))
 
         # If tool tip text has been specified, add the desired text as tool tip text.
         if tooltip:
-            line_edit.setToolTip(_translate("Dialog", tooltip, None))
+            line_edit.setToolTip(qt_util.translate("Dialog", tooltip, None))
 
         # Create a listener that reacts if the line edit field has been changed. If so, run the
         # update_command_display function.
@@ -204,11 +193,11 @@ class TabbedCommandEditor(AbstractCommandEditor):
         """
 
         # Set the tool buttons's object name (XXX_ToolButton where XXX is the name of the command parameter).
-        tool_button.setObjectName(_fromUtf8("{}_ToolButton".format(parameter_name)))
+        tool_button.setObjectName(qt_util.from_utf8("{}_ToolButton".format(parameter_name)))
 
         # Set the tool button's text. (Default value is `...` but this can be pulled out into a function argument if
         # needed.)
-        tool_button.setText(_translate("Dialog", "...", None))
+        tool_button.setText(qt_util.translate("Dialog", "...", None))
 
         # Get the dialog box row index that is used to display the command parameter objects
         # This is a dynamic index that takes into consideration the order of the command's parameters.
@@ -240,14 +229,14 @@ class TabbedCommandEditor(AbstractCommandEditor):
         row_index = self.parameters_list.index(parameter_name) + 2
 
         # Set the label's object name (XXX_Description_Label where XXX is the name of the command parameter).
-        label.setObjectName(_fromUtf8("{}_Description_Label".format(parameter_name)))
+        label.setObjectName(qt_util.from_utf8("{}_Description_Label".format(parameter_name)))
 
         # Add the label to the Dialog box in the correct row. Command description labels will always be in the
         # third-to-last column (5), and will occupy 1 column and 3 rows.
         self.gridLayout.addWidget(label, row_index, 5, 1, 3)
 
         # Set the text of the label to be the command parameter description.
-        label.setText(_translate("Dialog", text, None))
+        label.setText(qt_util.translate("Dialog", text, None))
 
     def configureComboBox(self, combobox, parameter_name, choice_list, tooltip=None):
         """
@@ -268,27 +257,27 @@ class TabbedCommandEditor(AbstractCommandEditor):
         row_index = self.parameters_list.index(parameter_name) + 2
 
         # Set the combo box's object name (XXX_ComboBox where XXX is the name of the command parameter).
-        combobox.setObjectName(_fromUtf8("{}_ComboBox".format(parameter_name)))
+        combobox.setObjectName(qt_util.from_utf8("{}_ComboBox".format(parameter_name)))
 
         # Add "spaces" to the ComboBox for each of the available options including a blank option to display that an
         # option has not been selected.
         for i in range(len(choice_list) + 1):
-            combobox.addItem(_fromUtf8(""))
+            combobox.addItem(qt_util.from_utf8(""))
 
         # Add the combo box field to the Dialog box in the correct row. Command combo box fields will always start in
         # the second column (1) and will occupy 1 column and 2 rows.
         self.gridLayout.addWidget(combobox, row_index, 1, 1, 2)
 
         # Set the combo box default option to the blank option - the first (0) in the list of choices.
-        combobox.setItemText(0, _fromUtf8(""))
+        combobox.setItemText(0, qt_util.from_utf8(""))
 
         # Add the text associated with each parameter option to the appropriate ComboBox "space".
         for i in range(len(choice_list)):
-            combobox.setItemText(i+1, _translate("Dialog", choice_list[i], None))
+            combobox.setItemText(i+1, qt_util.translate("Dialog", choice_list[i], None))
 
         # If tool tip text has been specified, add the desired text as tool tip text.
         if tooltip:
-            combobox.setToolTip(_translate("Dialog", tooltip, None))
+            combobox.setToolTip(qt_util.translate("Dialog", tooltip, None))
 
         # Add the QtGui.QComboBox object to the dictionary of input edit objects. Use the parameter name as the key
         # and the QtGui.QComboBox object as the value.
@@ -333,14 +322,14 @@ class TabbedCommandEditor(AbstractCommandEditor):
 
         # Set the name, the initial size and the window title (the name of the command) of the Dialog window object.
         # The Dialog window object, Dialog, represents the entire dialog window.
-        Dialog.setObjectName(_fromUtf8("Dialog"))
+        Dialog.setObjectName(qt_util.from_utf8("Dialog"))
         Dialog.resize(684, 404)
-        Dialog.setWindowTitle(_translate("Dialog", self.command_name, None))
+        Dialog.setWindowTitle(qt_util.translate("Dialog", self.command_name, None))
 
         # Create a grid layout object. Apply the grid layout to the Dialog window object.
         # Set the name of the grid layout object.
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
+        self.gridLayout.setObjectName(qt_util.from_utf8("gridLayout"))
 
         # Create a frame object. Add the frame object to the Dialog window.
         # Set the shape, the shadow, and the name of the frame object.
@@ -348,13 +337,13 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.Command_Description = QtWidgets.QFrame(Dialog)
         self.Command_Description.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.Command_Description.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.Command_Description.setObjectName(_fromUtf8("Command_Description"))
+        self.Command_Description.setObjectName(qt_util.from_utf8("Command_Description"))
         self.gridLayout.addWidget(self.Command_Description, 0, 0, 1, 8)
 
         # Create a grid layout object. Apply to the Command_Description frame object.
         # Set the name of the grid layout object.
         self.gridLayout_2 = QtWidgets.QGridLayout(self.Command_Description)
-        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
+        self.gridLayout_2.setObjectName(qt_util.from_utf8("gridLayout_2"))
 
         # Create a spacer. Add the spacer to the Command_Description frame object.
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -364,8 +353,8 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # Set the name, the button text and the connection of the push button.
         # The push button, View_Documentation_Button, displays the command's online user documentation when clicked.
         self.View_Documentation_Button = QtWidgets.QPushButton(self.Command_Description)
-        self.View_Documentation_Button.setObjectName(_fromUtf8("View_Documentation_Button"))
-        self.View_Documentation_Button.setText(_translate("Dialog", "  View Documentation  ", None))
+        self.View_Documentation_Button.setObjectName(qt_util.from_utf8("View_Documentation_Button"))
+        self.View_Documentation_Button.setText(qt_util.translate("Dialog", "  View Documentation  ", None))
         self.View_Documentation_Button.clicked.connect(self.view_documentation)
         self.gridLayout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
 
@@ -373,8 +362,8 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # Set the name and the text of the label.
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(self.Command_Description)
-        self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
-        self.Command_Description_Label.setText(_translate("Dialog", self.command_description, None))
+        self.Command_Description_Label.setObjectName(qt_util.from_utf8("Command_Description_Label"))
+        self.Command_Description_Label.setText(qt_util.translate("Dialog", self.command_description, None))
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
@@ -388,7 +377,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.Separator.setSizePolicy(sizePolicy)
         self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.Separator.setObjectName(_fromUtf8("Separator"))
+        self.Separator.setObjectName(qt_util.from_utf8("Separator"))
         self.gridLayout.addWidget(self.Separator, 1, 0, 1, 8)
 
         # Create a button box object. Add the button box object to the Dialog window.
@@ -397,7 +386,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(Dialog)
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
         self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        self.OK_Cancel_Buttons.setObjectName(_fromUtf8("OK_Cancel_Buttons"))
+        self.OK_Cancel_Buttons.setObjectName(qt_util.from_utf8("OK_Cancel_Buttons"))
         self.OK_Cancel_Buttons.accepted.connect(Dialog.accept)
         self.OK_Cancel_Buttons.rejected.connect(Dialog.reject)
         self.gridLayout.addWidget(self.OK_Cancel_Buttons, self.parameter_count + 4, 6, 1, 2)
@@ -408,14 +397,14 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(Dialog)
         self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
         self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
-        self.CommandDisplay_View_TextBrowser.setObjectName(_fromUtf8("CommandDisplay_View_TextBrowser"))
+        self.CommandDisplay_View_TextBrowser.setObjectName(qt_util.from_utf8("CommandDisplay_View_TextBrowser"))
         html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
                "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
                "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
                " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
                " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
                "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
-        self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
+        self.CommandDisplay_View_TextBrowser.setHtml(qt_util.translate("Dialog", html, None))
         self.gridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.parameter_count + 3, 1, 1, -1)
 
         # Create a label object to the Dialog window.
@@ -423,8 +412,8 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
         self.CommandDisplay_Label = QtWidgets.QLabel(Dialog)
         self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
-        self.CommandDisplay_Label.setText(_translate("Dialog", "Command: ", None))
+        self.CommandDisplay_Label.setObjectName(qt_util.from_utf8("CommandDisplay_Label"))
+        self.CommandDisplay_Label.setText(qt_util.translate("Dialog", "Command: ", None))
         self.gridLayout.addWidget(self.CommandDisplay_Label, self.parameter_count + 3, 0, 1, 1)
 
         # Create a spacer. Add the spacer to the Dialog window.
@@ -497,19 +486,6 @@ class TabbedCommandEditor(AbstractCommandEditor):
 
         # Update the Command Display Qt Widget to display the dynamic command display text.
         self.CommandDisplay_View_TextBrowser.setText(display)
-
-    def view_documentation(self):
-        """
-        Opens the command's user documentation in the default browser.
-
-        Return: None
-        """
-
-        # The url of the command's user documentation.
-        command_doc_url = "{}command-ref/{}/{}/".format(self.user_doc_url, self.command_name, self.command_name)
-
-        # Open the command's user documentation in the default browser.
-        webbrowser.open_new(command_doc_url)
 
     @staticmethod
     def select_file(qt_widget):

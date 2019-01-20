@@ -24,20 +24,6 @@ import functools
 import logging
 import webbrowser
 
-try:
-    _fromUtf8 = lambda s: s
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtWidgets.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtWidgets.QApplication.translate(context, text, disambig)
-
 
 class AbstractCommandEditor(QtWidgets.QDialog):
     """
@@ -144,7 +130,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.Separator.setSizePolicy(sizePolicy)
         self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.Separator.setObjectName(_fromUtf8("Separator"))
+        self.Separator.setObjectName(qt_util.from_utf8("Separator"))
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
 
@@ -204,27 +190,27 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         row_index = self.parameters_list.index(parameter_name) + 2
 
         # Set the combo box's object name (XXX_ComboBox where XXX is the name of the command parameter).
-        combobox.setObjectName(_fromUtf8("{}_ComboBox".format(parameter_name)))
+        combobox.setObjectName(qt_util.from_utf8("{}_ComboBox".format(parameter_name)))
 
         # Add "spaces" to the ComboBox for each of the available options including a blank option to display that an
         # option has not been selected.
         for i in range(len(choice_list) + 1):
-            combobox.addItem(_fromUtf8(""))
+            combobox.addItem(qt_util.from_utf8(""))
 
         # Add the combo box field to the Dialog box in the correct row. Command combo box fields will always start in
         # the second column (1) and will occupy 1 column and 2 rows.
         self.gridLayout.addWidget(combobox, row_index, 1, 1, 2)
 
         # Set the combo box default option to the blank option - the first (0) in the list of choices.
-        combobox.setItemText(0, _fromUtf8(""))
+        combobox.setItemText(0, qt_util.from_utf8(""))
 
         # Add the text associated with each parameter option to the appropriate ComboBox "space".
         for i in range(len(choice_list)):
-            combobox.setItemText(i+1, _translate("Dialog", choice_list[i], None))
+            combobox.setItemText(i+1, qt_util.translate("Dialog", choice_list[i], None))
 
         # If tool tip text has been specified, add the desired text as tool tip text.
         if tooltip:
-            combobox.setToolTip(_translate("Dialog", tooltip, None))
+            combobox.setToolTip(qt_util.translate("Dialog", tooltip, None))
 
         # Add the QtGui.QComboBox object to the dictionary of input edit objects. Use the parameter name as the key
         # and the QtGui.QComboBox object as the value.
@@ -252,14 +238,14 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         row_index = self.parameters_list.index(parameter_name) + 2
 
         # Set the label's object name (XXX_Description_Label where XXX is the name of the command parameter).
-        label.setObjectName(_fromUtf8("{}_Description_Label".format(parameter_name)))
+        label.setObjectName(qt_util.from_utf8("{}_Description_Label".format(parameter_name)))
 
         # Add the label to the Dialog box in the correct row. Command description labels will always be in the
         # third-to-last column (5), and will occupy 1 column and 3 rows.
         self.gridLayout.addWidget(label, row_index, 5, 1, 3)
 
         # Set the text of the label to be the command parameter description.
-        label.setText(_translate("Dialog", text, None))
+        label.setText(qt_util.translate("Dialog", text, None))
 
     def configureLabel(self, label, parameter_name):
         """
@@ -277,7 +263,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
 
         # Set the label's object name (XXX_Label where XXX is the name of the command parameter).
-        label.setObjectName(_fromUtf8("{}_Label".format(parameter_name)))
+        label.setObjectName(qt_util.from_utf8("{}_Label".format(parameter_name)))
 
         # Get the dialog box row index that is used to display the command parameter objects
         # This is a dynamic index that takes into consideration the order of the command's parameters.
@@ -288,7 +274,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.gridLayout.addWidget(label, row_index, 0, 1, 1)
 
         # Set the text of the label to be the name of the command parameter.
-        label.setText(_translate("Dialog", "{}: ".format(parameter_name), None))
+        label.setText(qt_util.translate("Dialog", "{}: ".format(parameter_name), None))
 
     def configureLineEdit(self, line_edit, parameter_name, long=False, placeholder_text=None, tooltip=None):
         """
@@ -309,7 +295,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         """
 
         # Set the line edit's object name (XXX_LineEdit where XXX is the name of the command parameter).
-        line_edit.setObjectName(_fromUtf8("{}_LineEdit".format(parameter_name)))
+        line_edit.setObjectName(qt_util.from_utf8("{}_LineEdit".format(parameter_name)))
 
         # Get the dialog box row index that is used to display the command parameter objects
         # This is a dynamic index that takes into consideration the order of the command's parameters.
@@ -327,11 +313,11 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         # If placeholder text has been specified, add the desired text as placeholder text.
         if placeholder_text:
-            line_edit.setPlaceholderText(_translate("Dialog", placeholder_text, None))
+            line_edit.setPlaceholderText(qt_util.translate("Dialog", placeholder_text, None))
 
         # If tool tip text has been specified, add the desired text as tool tip text.
         if tooltip:
-            line_edit.setToolTip(_translate("Dialog", tooltip, None))
+            line_edit.setToolTip(qt_util.translate("Dialog", tooltip, None))
 
         # Create a listener that reacts if the line edit field has been changed. If so, run the
         # update_command_display function.
@@ -355,11 +341,11 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         """
 
         # Set the tool buttons's object name (XXX_ToolButton where XXX is the name of the command parameter).
-        tool_button.setObjectName(_fromUtf8("{}_ToolButton".format(parameter_name)))
+        tool_button.setObjectName(qt_util.from_utf8("{}_ToolButton".format(parameter_name)))
 
         # Set the tool button's text. (Default value is `...` but this can be pulled out into a function argument if
         # needed.)
-        tool_button.setText(_translate("Dialog", "...", None))
+        tool_button.setText(qt_util.translate("Dialog", "...", None))
 
         # Get the dialog box row index that is used to display the command parameter objects
         # This is a dynamic index that takes into consideration the order of the command's parameters.
@@ -466,8 +452,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.grid_layout_row = self.grid_layout_row + 1
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
         self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
-        self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
-        self.CommandDisplay_Label.setText(_translate("Dialog", "Command: ", None))
+        self.CommandDisplay_Label.setObjectName(qt_util.from_utf8("CommandDisplay_Label"))
+        self.CommandDisplay_Label.setText(qt_util.translate("Dialog", "Command: ", None))
         commandArea_GridLayout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 1, 1)
         # Create a text edit object. Add the text edit object to the Dialog window.
         # Set the size, the name and the html of the text edit object.
@@ -506,7 +492,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
         self.dialog_ButtonBox = QtWidgets.QDialogButtonBox(self)
         self.dialog_ButtonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.dialog_ButtonBox.setObjectName(_fromUtf8("dialog_ButtonBox"))
+        self.dialog_ButtonBox.setObjectName(qt_util.from_utf8("dialog_ButtonBox"))
         self.grid_layout_row = self.grid_layout_row + 1
         # Add buttons to enable event handling
         # - use custom buttons rather than defaultsa because events need to be handled
@@ -514,7 +500,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # ---------
         self.ok_button = QtWidgets.QPushButton("OK")
         # Object name has parameter at front, which can be parsed out in event-handling code
-        self.ok_button.setObjectName(_fromUtf8("OK"))
+        self.ok_button.setObjectName(qt_util.from_utf8("OK"))
         self.ok_button.setToolTip("Save edits to command.")
         # self.ok_button.clicked.connect(
         # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
@@ -525,7 +511,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # ---------
         self.cancel_button = QtWidgets.QPushButton("Cancel")
         # Object name has parameter at front, which can be parsed out in event-handling code
-        self.cancel_button.setObjectName(_fromUtf8("Cancel"))
+        self.cancel_button.setObjectName(qt_util.from_utf8("Cancel"))
         self.cancel_button.setToolTip("Cancel without saving edits to command.")
         # self.cancel_button.clicked.connect(
         # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
@@ -545,14 +531,14 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         description_Frame = QtWidgets.QFrame(self)
         description_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         description_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        description_Frame.setObjectName(_fromUtf8("Command_Description"))
+        description_Frame.setObjectName(qt_util.from_utf8("Command_Description"))
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(description_Frame, self.grid_layout_row, 0, 1, 8)
 
         # Create a grid layout object. Apply to the Command_Description frame object.
         # Set the name of the grid layout object.
         self.gridLayout_2 = QtWidgets.QGridLayout(description_Frame)
-        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
+        self.gridLayout_2.setObjectName(qt_util.from_utf8("gridLayout_2"))
 
         # Create a spacer. Add the spacer to the Command_Description frame object.
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -562,8 +548,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Set the name, the button text and the connection of the push button.
         # The push button, View_Documentation_Button, displays the command's online user documentation when clicked.
         self.View_Documentation_Button = QtWidgets.QPushButton(description_Frame)
-        self.View_Documentation_Button.setObjectName(_fromUtf8("View_Documentation_Button"))
-        self.View_Documentation_Button.setText(_translate("Dialog", "  View Documentation  ", None))
+        self.View_Documentation_Button.setObjectName(qt_util.from_utf8("View_Documentation_Button"))
+        self.View_Documentation_Button.setText(qt_util.translate("Dialog", "  View Documentation  ", None))
         self.View_Documentation_Button.setToolTip("View command documentation in web browser.")
         self.View_Documentation_Button.clicked.connect(self.view_documentation)
         self.gridLayout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
@@ -572,7 +558,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Set the name and the text of the label.
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
-        self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
+        self.Command_Description_Label.setObjectName(qt_util.from_utf8("Command_Description_Label"))
         self.Command_Description_Label.setText(self.command.command_metadata['Description'])
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
@@ -583,7 +569,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         Returns:  None
         """
         # Set the window title to the command name
-        self.setObjectName(_fromUtf8(self.command.command_name))
+        self.setObjectName(qt_util.from_utf8(self.command.command_name))
         self.setWindowTitle("Edit " + self.command.command_name + " command")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
@@ -595,7 +581,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         # Add a grid layout for components to be added
         self.grid_layout = QtWidgets.QGridLayout(self)
-        self.grid_layout.setObjectName(_fromUtf8("gridLayout"))
+        self.grid_layout.setObjectName(qt_util.from_utf8("gridLayout"))
 
         self.setup_ui_core_command_description()
         self.add_ui_horizontal_separator()
@@ -662,29 +648,47 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Update the Command Display Qt Widget to display the dynamic command display text.
         self.CommandDisplay_View_TextBrowser.setText(display)
 
-    def view_documentation(self):
+    def view_documentation(self, ref_command_name=None):
         """
-        Opens the command's user documentation in the default browser.
+        View the command's user documentation in the default browser.
 
-        Return: None
+        Args:
+            ref_command_name (str):  Command name for command reference, defaults to the command name.
+
+        Returns:
+            None
         """
 
-        # The url of the command's user documentation.
+        # Open the command's user documentation in the default browser.
         logger = logging.getLogger(__name__)
         command_doc_url = None
-        print('Showing documentation')
+        command_name = self.command.command_name
+        if ref_command_name is not None and ref_command_name != "":
+            # Use the specific command name for documentation
+            # TODO smalers 2019-01-19 why does ref_command_name have a value of False here?
+            # logger.info("Viewing documentation for command name '" + str(command_name) +
+            #             "' ref='"+str(ref_command_name)+"'")
+            # command_name = ref_command_name
+            pass
         try:
-            command_doc_url = app_util.get_property('ProgramUserDocumentationUrl')
-            # Append more information for the specific command
-            command_doc_url = "{}/command-ref/{}/{}/".format(command_doc_url,
-                                                             self.command.command_name, self.command.command_name)
-            message = "Displaying documentation for command using URL: " + command_doc_url
-            print(message)
-            logger.info(message)
+            user_doc_url = app_util.get_property('ProgramUserDocumentationUrl')
+            if user_doc_url is None:
+                qt_util.warning_message_box(
+                    "Can't view documentation...no application configuration value for 'ProgramUserDocumenationUrl'")
+                return
+            # Append the command name to the documentation
+            logger.info("Now, command name '" + str(command_name) + "'")
+            command_doc_url = "{}/command-ref/{}/{}/".format(user_doc_url, command_name, command_name)
+            # message = "Displaying command documentation using URL: " + command_doc_url
+            # logger.info(message)
             # Open the command's user documentation in the default browser.
             # - open in a new tab or if this fails open a new window
-            webbrowser.open_new_tab(command_doc_url)
+            try:
+                webbrowser.open_new_tab(command_doc_url)
+            except Exception:
+                # Try the other variant, may work on different operating system
+                webbrowser.open(command_doc_url)
         except Exception as e:
-            message = 'Error opening command documentation using  URL "' + command_doc_url + '"'
+            message = 'Error viewing command documentation using url "' + str(command_doc_url) + '"'
             logger.error(message, e, exc_info=True)
             qt_util.warning_message_box(message)

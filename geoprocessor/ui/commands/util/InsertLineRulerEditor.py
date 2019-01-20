@@ -18,23 +18,12 @@
 # ________________________________________________________________NoticeEnd___
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 import geoprocessor.util.app_util as app_util
+import geoprocessor.ui.util.qt_util as qt_util
+
 import functools
 import logging
-
-try:
-    _fromUtf8 = lambda s: s
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtWidgets.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtWidgets.QApplication.translate(context, text, disambig)
 
 
 class InsertLineRulerEditor(QtWidgets.QDialog):
@@ -105,7 +94,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         self.Separator.setSizePolicy(sizePolicy)
         self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.Separator.setObjectName(_fromUtf8("Separator"))
+        self.Separator.setObjectName(qt_util.from_utf8("Separator"))
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
 
@@ -262,7 +251,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
 
         # Add a grid layout for components to be added
         self.grid_layout = QtWidgets.QGridLayout(self)
-        self.grid_layout.setObjectName(_fromUtf8("gridLayout"))
+        self.grid_layout.setObjectName(qt_util.from_utf8("gridLayout"))
 
         self.setup_ui_core_command_description()
 
@@ -273,8 +262,8 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         self.grid_layout_row = self.grid_layout_row + 1
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
         self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
-        self.CommandDisplay_Label.setObjectName(_fromUtf8("CommandDisplay_Label"))
-        self.CommandDisplay_Label.setText(_translate("Dialog", "Comments: ", None))
+        self.CommandDisplay_Label.setObjectName(qt_util.from_utf8("CommandDisplay_Label"))
+        self.CommandDisplay_Label.setText(qt_util.translate("Dialog", "Comments: ", None))
         self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 4, 1)
         # Create a text edit object. Add the text edit object to the Dialog window.
         # Set the size, the name and the html of the text edit object.
@@ -305,7 +294,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         # #       " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
         # #       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
         # #       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
-        # #self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
+        # #self.CommandDisplay_View_TextBrowser.setHtml(qt_util.translate("Dialog", html, None))
         self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 4, -1)
 
     def setup_ui_core_command_buttons(self):
@@ -315,7 +304,7 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(self)
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
         self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.OK_Cancel_Buttons.setObjectName(_fromUtf8("OK_Cancel_Buttons"))
+        self.OK_Cancel_Buttons.setObjectName(qt_util.from_utf8("OK_Cancel_Buttons"))
         self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Cancel).setToolTip(
             "Cancel command edit and ignore changes.")
         self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Ok).setToolTip("Save edits to command.")
@@ -334,20 +323,20 @@ class InsertLineRulerEditor(QtWidgets.QDialog):
         description_Frame = QtWidgets.QFrame(self)
         description_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         description_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        description_Frame.setObjectName(_fromUtf8("Command_Description"))
+        description_Frame.setObjectName(qt_util.from_utf8("Command_Description"))
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(description_Frame, self.grid_layout_row, 0, 1, 0)
 
         # Create a grid layout object. Apply to the Command_Description frame object.
         # Set the name of the grid layout object.
         self.gridLayout_2 = QtWidgets.QGridLayout(description_Frame)
-        self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
+        self.gridLayout_2.setObjectName(qt_util.from_utf8("gridLayout_2"))
 
         # Create a label. Add the label to the Command_Description frame object.
         # Set the name and the text of the label.
         # The label, Command_Description_Label, briefly describes the command.
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
-        self.Command_Description_Label.setObjectName(_fromUtf8("Command_Description_Label"))
+        self.Command_Description_Label.setObjectName(qt_util.from_utf8("Command_Description_Label"))
         self.Command_Description_Label.setText("Enter one or more comments.\n"
                                                "If not present, # will be automatically added when OK is pressed."
                                                "# at the start of existing lines will be shown.\n"

@@ -27,21 +27,6 @@ import geoprocessor.ui.util.qt_util as qt_util
 
 import logging
 
-try:
-    fromUtf8 = lambda s: s
-except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtWidgets.QApplication.UnicodeUTF8
-
-    def _translate(context, text, disambig):
-        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtWidgets.QApplication.translate(context, text, disambig)
-
 
 class GenericCommandEditor(AbstractCommandEditor):
     """

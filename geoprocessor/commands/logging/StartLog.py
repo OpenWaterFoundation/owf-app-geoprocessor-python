@@ -53,7 +53,7 @@ class StartLog(AbstractCommand):
         # Command metadata for command editor display
         self.command_metadata = dict()
         self.command_metadata['Description'] = \
-            '(Re)start the log file.  This is useful when it is desirable to have a log file saved for a command file.'
+            '(Re)start the log file.  This is useful when it is desirable to save a log file for a command file.'
         self.command_metadata['EditorType'] = 'Simple'
 
         # Parameter metadata
@@ -61,11 +61,11 @@ class StartLog(AbstractCommand):
         self.parameter_input_metadata["LogFile.Group"] = ""
         self.parameter_input_metadata["LogFile.Description"] = ""
         self.parameter_input_metadata["LogFile.Label"] = "Log file"
-        self.parameter_input_metadata["LogFile.Tooltip"] = "Specify the path to the log file to write, " \
-                                                           "can use ${Property} notation."
+        self.parameter_input_metadata["LogFile.Tooltip"] =\
+            "Specify the path to the log file to write, can use ${Property} notation."
         self.parameter_input_metadata["LogFile.Required"] = True
         self.parameter_input_metadata["LogFile.Values"] = ""
-        self.parameter_input_metadata["LogFile.DefaultValue"] = ""
+        self.parameter_input_metadata["LogFile.Value.Default"] = ""
         self.parameter_input_metadata["LogFile.FileSelector.Type"] = "Read"
         self.parameter_input_metadata["LogFile.FileSelector.Title"] = "Select Log File"
 

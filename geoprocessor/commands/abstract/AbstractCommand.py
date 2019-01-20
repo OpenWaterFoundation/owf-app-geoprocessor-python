@@ -127,9 +127,10 @@ class AbstractCommand(object):
         Initialize the command by setting the processor and parsing parameters.
 
         Args:
-            command_string:  The full command string.
-            processor:  The GeoProcessor instance, which is set in the new command.
-            full_initialization:  Indicates whether to
+            command_string (str):  The full command string.
+            processor (GeoProcessor):  The GeoProcessor instance, which is set in the new command.
+            full_initialization (bool):  Indicates whether to call parse_command to fully initialize
+                                            (otherwise just sets the command string and GeoProcessor)
         """
         # Set the command string
         # - strip off the whitespace on the right such as newline (may be present if reading from a file)
@@ -207,7 +208,7 @@ class AbstractCommand(object):
         Format the internal command data into the command string that users see.
         This version of the function should only be used by commands that follow CommandName(Param1="Value1",...)
         syntax and should otherwise be overloaded in the specific command class.
-        Only parameters that have been specified (values are not None and not empty strings)
+        Only parameters that have been specified (values that are not None and are not empty strings)
         will be output by default to minimize command length.
         The order of parameters is given by the get_parameter_metadata() function,
         which indicates a logical order (input first, group by feature, etc.).
@@ -232,12 +233,17 @@ class AbstractCommand(object):
             command_parameters = self.command_parameters
         # First part of command is the indent from the original command
         command_string_formatted = ""
-        for i_command in range[0:len(self.command_string) - 1]:
-            if self.command_string[i_command] == " ":
-                command_string_formatted = command_string_formatted + " "
-            else:
-                # No more spaces at front of the command
-                break
+        # TODO smalers 2019-01-19 need to fix this logic to indent the correct number
+        # - if formatting/editing an existing command the indent should be retained
+        # - if formatting/editing a new command, the indent needs to be determined from previous commands
+        do_indent = False
+        if do_indent:
+            for i_command in range[0:len(self.command_string) - 1]:
+                if self.command_string[i_command] == " ":
+                    command_string_formatted = command_string_formatted + " "
+                else:
+                    # No more spaces at front of the command
+                    break
         # Append the command name and starting parenthesis
         command_string_formatted = command_string_formatted + self.command_name + "("
         # Loop through all the parameters that are valid for the command.
@@ -262,6 +268,8 @@ class AbstractCommand(object):
                 # - lists will be output as ['a', 'b', 'c'] or [1, 2, 3], OK for now but will have to handle parsing
                 command_string_formatted = command_string_formatted + command_parameter_meta.parameter_name + '="' + \
                     str(parameter_value) + '"'
+                # Increment the counter
+                param_output_count = param_output_count + 1
         # Append the trailing parenthesis
         command_string_formatted = command_string_formatted + ")"
         return command_string_formatted

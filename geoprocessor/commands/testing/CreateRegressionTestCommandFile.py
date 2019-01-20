@@ -59,44 +59,37 @@ class CreateRegressionTestCommandFile(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = "This command is used for software " \
-                                               "testing and validation of workflow processes. "
+        self.command_metadata['Description'] = (
+            "This command is used for software functional testing and validation of workflow processes.\n"
+            "It searches all folders in the selected folder to find tests to run.")
         self.command_metadata['EditorType'] = "Simple"
 
         # Parameter Metadata
         self.parameter_input_metadata = dict()
         # SearchFolder
-        self.parameter_input_metadata['SearchFolder.Group'] = ""
         self.parameter_input_metadata['SearchFolder.Description'] = ""
-        self.parameter_input_metadata['SearchFolder.Label'] = "Search Folder"
-        self.parameter_input_metadata['SearchFolder.Tooltip'] = ("The folder to search for regression test command "
-                                                                 "files. All subfolders will also be searched. Can "
-                                                                 "use ${Property}.")
+        self.parameter_input_metadata['SearchFolder.Label'] = "Search folder"
+        self.parameter_input_metadata['SearchFolder.Tooltip'] = (
+            "The folder to search for regression test command files. "
+            "All subfolders will also be searched. Can use ${Property}.")
         self.parameter_input_metadata['SearchFolder.Required'] = True
-        self.parameter_input_metadata['SearchFolder.Values'] = ""
-        self.parameter_input_metadata['SearchFolder.DefaultValue'] = ""
-        # TODO jurentie 01-17-19 should this be read?
-        self.parameter_input_metadata['SearchFolder.FileSelectorType'] = "Read"
+        self.parameter_input_metadata['SearchFolder.FileSelector.Type'] = "Read"
+        self.parameter_input_metadata['SearchFolder.FileSelector.Button.Tooltip'] = "Browse for folder"
+        self.parameter_input_metadata['SearchFolder.FileSelector.Tile'] = "Select folder to search for tests"
+        self.parameter_input_metadata['SearchFolder.FileSelector.SelectFolder'] = True
         # OutputFile
-        self.parameter_input_metadata['OutputFile.Group'] = ""
         self.parameter_input_metadata['OutputFile.Description'] = "property file to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output File"
-        self.parameter_input_metadata['OutputFile.Tooltip'] = ("The property file to write, as an absolute path or "
-                                                               "relative to the command file, can use ${Property}.")
+        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
+        self.parameter_input_metadata['OutputFile.Tooltip'] = (
+            "The property file to write, as an absolute path or relative to the command file, can use ${Property}.")
         self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Values'] = ""
-        self.parameter_input_metadata['OutputFile.DefaultValue'] = ""
-        self.parameter_input_metadata['OutputFile.FileSelectorType'] = "Write"
+        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
         # FilenamePattern
-        self.parameter_input_metadata['FilenamePattern.Group'] = ""
         self.parameter_input_metadata['FilenamePattern.Description'] = "pattern to find command files"
-        self.parameter_input_metadata['FilenamePattern.Label'] = "Filename Pattern"
-        self.parameter_input_metadata['FilenamePattern.Tooltip'] = ("Pattern to find GeoProcessor command files, using * "
-                                                               "wildcards.")
-        self.parameter_input_metadata['FilenamePattern.Required'] = False
-        self.parameter_input_metadata['FilenamePattern.Values'] = ""
-        self.parameter_input_metadata['FilenamePattern.DefaultValue'] = "test-*.gp"
-        self.parameter_input_metadata['FilenamePattern.FileSelectorType'] = ""
+        self.parameter_input_metadata['FilenamePattern.Label'] = "Filename pattern"
+        self.parameter_input_metadata['FilenamePattern.Tooltip'] = (
+            "Pattern to find GeoProcessor command files, using * wildcards.")
+        self.parameter_input_metadata['FilenamePattern.Value.Default'] = "test-*.gp"
 
     def check_command_parameters(self, command_parameters):
         """

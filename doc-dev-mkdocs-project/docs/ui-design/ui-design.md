@@ -481,29 +481,34 @@ requires an index to set rather than the text.
 The following properties are used in the `command.parameter_metadata` dictionary to configure the command editory UI,
 for command-level information.
 
-| **Property**         | **Description** | **Default** |
+| **Property**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;         | **Description** | **Default** |
 | -------------------- | --------------- | ----------- |
 | `Description`        | Description of the command to display at the top of the command dialog. Can this be HTML with embedded link? | Command name. |
-| `EditorType`         | What type of editor to use, `Simple` or `Tabbed` (maybe make this an enumeration). |
+| `EditorType`         | What type of editor to use, `Generic`, `Simple` or `Tabbed` (maybe make this an enumeration). | `Generic` |
 
 
 The following properties are used in the `command.parameter_input_metadata` dictionary to configure the
 `SimpleCommandEditor` and `TabbedCommandEditor` for parameter-level information.
-The `ParameterName` will be replaced with the actual parameter name.
+The parameter property is prefixed with `ParameterName.` will be replaced with the actual parameter name.
 The properties can be specified for each parameter for a command.
 
-| **Parameter Property**            | **Description** | **Default** |
-|-----------------------------------|-----------------|-------------|
-| `ParameterName.DefaultValue`      | The default value as a string, as if the user entered into the component, to be shown in the description. |
-| `ParameterName.Description`       | The description to be shown on the right-side of the editor. | No description is shown. |
-| `ParameterName.FileSelector.Type` | Indicate the type of selector as enumeration `Read`, `Write`.  Will result in `...` button to browse for fall. |
-| `ParameterName.FileSelector.?`    | Need some way to indicate default file extension, recognized extensions and descriptions | |
-| `ParameterName.FileSelector.?`    | Perhaps need a way to set the dimension of a text field or text area. Dialogs are kind of ugly when text fields span the entire width.  Maybe use the concept of number of columns? | |
-| `ParameterName.Group`             | The group (tab) used to group parameters, such as `Input`. | No group used - use simple editor. |
-| `ParameterName.Label`             | The label to be shown to the left` of the component. | Parameter name. |
-| `ParameterName.Required`          | Indicate whether required:  `Required`, `Optional`, or maybe something more complex. | Must be specified. |
-| `ParameterName.Tooltip`           | The tooltip to be shown when moused over the input component. | No tooltip is shown. |
-| `ParameterName.Values`            | Indicate a list of values to show in choices, may need a way to dynamically populate (lambda?). |
+| **Parameter Property**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;            | **Description** | **Default** |
+|-------------------------------|-----------------|-------------|
+| `Description`                 | The description to be shown on the right-side of the editor, will be prefixed by value of `Required` if specified, and postfixed with value of `DefaultValue` if specified. | Format using the specified parts. |
+| `FileSelector.Button.Tooltip` | Indicate the type of selector as enumeration `Read`, `Write`.  Will result in `...` button to browse for file or folder. | `Browse for file` or `Browse for folder`. |
+| `FileSelector.SelectFolder`   | Whether the select selects a folder. | `False` - select a file. |
+| `FileSelector.Title`          | Title of the file selector. | `Select file` if  selecting a file and `Select folder` if selecting a folder. |
+| `FileSelector.Type`           | Indicate the type of selector as enumeration `Read`, `Write`.  Will result in `...` button to browse for file or folder. | The parameter does not use a file selector. |
+| `FileSelector.?`              | Need some way to indicate default file extension, recognized extensions and descriptions | |
+| `FileSelector.?`              | Perhaps need a way to set the dimension of a text field or text area. Dialogs are kind of ugly when text fields span the entire width.  Maybe use the concept of number of columns? | |
+| `Group`                       | The group (tab) used to group parameters, such as `Input`. | No group used - use simple editor. |
+| `Label`                       | The label to be shown to the left` of the component. | Parameter name. |
+| `Required`                    | Indicate whether required:  `Required`, `Optional`, or maybe something more complex. | `False` - parameter is optional. |
+| `Tooltip`                     | The tooltip to be shown when moused over the input component. | No tooltip is shown. | Tooltip is not set for component. |
+| `Value.Default`               | The default data value as a string, as if the user entered into the component, to be shown in the description. | Must be specified for choice, defaults blank for text field. |
+| `Value.DefaultForDisplay`     | The default to dispaly as a string, used in input component.  For example, specify an empty string to enter into a combobox. | |
+| `Values`                      | Indicate a list of values to show in choices, as an array of strings, for example: `[ "", "Value1", "Value2" ]` | Values are only used for combobox. |
+| `Values.Editable`             | Whether the parameter is editable, as a bool `True` or `False`.   An editable combobox allows text to be entered. | `True` for text fields, `False` for combobox. |
 
 ## Resources ##
 

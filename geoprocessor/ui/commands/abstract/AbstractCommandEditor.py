@@ -18,8 +18,11 @@
 # ________________________________________________________________NoticeEnd___
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 import geoprocessor.util.app_util as app_util
+import geoprocessor.util.os_util as os_util
 import geoprocessor.ui.util.qt_util as qt_util
+
 import functools
 import logging
 import webbrowser
@@ -442,7 +445,13 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         commandArea_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
         commandArea_Frame.setObjectName("Command_Parameters")
         self.grid_layout_row = self.grid_layout_row + 1
-        self.grid_layout.addWidget(commandArea_Frame, self.grid_layout_row, 0, 1, -1)
+        # TODO smalers 2019-01-20 Need to understand why things work differently on each OS
+        if os_util.is_linux_os() and not os_util.is_cygwin_os():
+            # Full Linux
+            self.grid_layout.addWidget(commandArea_Frame, self.grid_layout_row, 0, 1, 1)
+        else:
+            # Cygwin and Windows
+            self.grid_layout.addWidget(commandArea_Frame, self.grid_layout_row, 0, 1, -1)
 
         # Create a grid layout object. Apply to the Command_Parameters frame object.
         # Set the name of the grid layout object.
@@ -471,7 +480,13 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # #       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
         # #       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
         # #self.CommandDisplay_View_TextBrowser.setHtml(_translate("Dialog", html, None))
-        commandArea_GridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
+        # TODO smalers 2019-01-20 Need to understand why things work differently on each OS
+        if os_util.is_linux_os() and not os_util.is_cygwin_os():
+            # Full Linux
+            commandArea_GridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, 1)
+        else:
+            # Cygwin and Windows
+            commandArea_GridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
 
     def setup_ui_core_command_buttons(self):
 

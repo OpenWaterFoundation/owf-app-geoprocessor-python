@@ -601,6 +601,254 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.setup_ui_core_command_description()
         self.add_ui_horizontal_separator()
 
+    def setup_ui_parameter_combobox(self, parameter_name,
+                                    parameter_ValueDefaultForDisplay,
+                                    parameter_Tooltip,
+                                    parameter_Values,
+                                    parameter_ValuesEditable):
+        """
+        Add combobox UI components for a command parameter.
+
+        Args:
+            parameter_name (str):  Parameter name, used for troubleshooting
+            parameter_ValueDefaultForDisplay (str):  Display value corresponding to Value.Default, added to
+            parameter_Tooltip (str):  Tooltip text.
+            parameter_Values (str):  List of values for list, comma-delimited
+            parameter_ValuesEditable (bool):  Whether the list of values is editable in the text field.
+
+        Returns:
+            None
+        """
+        # try:
+        #     parameter_Values, parameter_Tooltip, parameter_FileSelectorType
+        # except Exception as e:
+        #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
+        #               ". Could not build simple command editor. Defaulting to generic command editor. " \
+        #               "See log file for more details."
+        #     logger.error(message, e, exc_info=True)
+        #     qt_util.warning_message_box(message)
+        # ComboBox, indicated by 'Values' property
+        debug = True
+        if self.debug:
+            logger = logging.getLogger(__name__)
+            logger.info("For parameter '" + parameter_name + "', adding combobox")
+        parameter_QComboBox = QtWidgets.QComboBox(self.parameter_QFrame)
+        parameter_QComboBox.setObjectName(qt_util.from_utf8("Drop_Down_Menu"))
+        parameter_QComboBox.setEditable(True)
+        # Handle blank value at start of the list
+        # - a blank item is not automatically added but will be added if Value.DefaultForDisplay is ""
+        # - the Values list can also have a blank at the start
+        # - considering the above, only add one blank at the beginning
+        # Add a blank item so that there is not an initial response for the drop down
+        if parameter_ValueDefaultForDisplay is not None:
+            parameter_QComboBox.addItem(parameter_ValueDefaultForDisplay)
+        # Add values in the 'Values' list, but don't re-add Value.DefaultForDisplay
+        for i, value in enumerate(parameter_Values):
+            parameter_QComboBox.addItem(value)
+        # Add an event to refresh the command if anything changes
+        parameter_QComboBox.currentIndexChanged.connect(self.refresh_ui)
+        if parameter_Tooltip is not None and parameter_Tooltip != "":
+            parameter_QComboBox.setToolTip(parameter_Tooltip)
+        # Set whether editable
+        parameter_QComboBox.setEditable(parameter_ValuesEditable)
+        self.parameter_QGridLayout.addWidget(parameter_QComboBox, self.y_parameter, 1, 1, 2)
+        # Add the component to the list maintained to get values out of UI components
+        self.input_ui_components[parameter_name] = parameter_QComboBox
+
+    def setup_ui_parameter_description(self, parameter_name,
+                                       parameter_ValueDefault,
+                                       parameter_Description,
+                                       parameter_Required,
+                                       parameter_Tooltip):
+        """
+        Add description UI components for a command parameter.
+        This is not done for file selector component.
+
+        Args:
+            parameter_name (str):  Parameter name, used for troubleshooting
+            parameter_ValueDefault (str):  Parameter default value if not specified.
+            parameter_Description (str):  Parameter description, before combining with other data here.
+            parameter_Required (boolean):  Whether the parameter is required.
+            parameter_Tooltip (str):  Tooltip text.
+
+        Returns:
+            None
+        """
+        # try:
+        #     parameter_Required, parameter_Description, parameter_ValueDefault
+        # except Exception as e:
+        #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
+        #               ". Could not build simple command editor. Defaulting to generic command editor. " \
+        #               "See log file for more details."
+        #     logger.error(message, e, exc_info=True)
+        #     qt_util.warning_message_box(message)
+        debug = True
+        if self.debug:
+            logger = logging.getLogger(__name__)
+            logger.info("For parameter '" + parameter_name + "', adding description")
+        parameter_desc_Label = QtWidgets.QLabel(self.parameter_QFrame)
+        parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
+        parameter_desc = ""
+        if parameter_Required:
+            parameter_desc += "Required"
+        else:
+            parameter_desc += "Optional"
+        if parameter_Description != "":
+            if parameter_desc != "":
+                parameter_desc += " - "
+            parameter_desc += parameter_Description
+        if parameter_ValueDefault is not None and parameter_ValueDefault != "":
+            if len(parameter_ValueDefault) > 15:
+                # Default value is long so don't show in full description and put in the input component toolip
+                parameter_desc += " (default=see tooltip)"
+                parameter_Tooltip += "\n(default=" + parameter_ValueDefault + ")."
+                # Update the tooltip for the input component
+                try:
+                    parameter_ui_component = self.input_ui_components[parameter_name]
+                    parameter_ui_component.setToolTip(parameter_Tooltip)
+                except KeyError:
+                    # Should not happen
+                    pass
+            else:
+                # Default value is short so show in the full description
+                parameter_desc += " (default=" + parameter_ValueDefault + ")."
+        else:
+            parameter_desc += " (default=None)."
+        parameter_desc_Label.setText(parameter_desc)
+        # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
+        self.parameter_QGridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
+
+    def setup_ui_parameter_file_selector(self, input_metadata, parameter_name, parameter_Tooltip):
+        """
+        Add file selector UI components for a command parameter.
+
+        Args:
+            input_metadata (dict):  input metadata, to retrieve additional properties
+            parameter_name (str):  Parameter name.
+            parameter_Tooltip (str):  Tooltip to be used for the main text field.
+
+        Returns:
+            None
+        """
+        debug = True
+        if self.debug:
+            logger = logging.getLogger(__name__)
+            logger.info("For parameter '" + parameter_name + "', adding file selector")
+        # Create the text field that will receive the file path
+        parameter_QLineEdit = QtWidgets.QLineEdit(self.parameter_QFrame)
+        parameter_QLineEdit.setObjectName(parameter_name)
+        self.parameter_QGridLayout.addWidget(parameter_QLineEdit, self.y_parameter, 1, 1, 4)
+        self.parameter_QGridLayout.setColumnStretch(1, 4)
+        if parameter_Tooltip != "":
+            parameter_QLineEdit.setToolTip(parameter_Tooltip)
+        # Create a listener that reacts if the line edit field has been changed. If so, run the
+        # refresh_ui function.
+        # If this command is being updated add the command parameters to the text fields
+        if self.update:
+            parameter_value = self.command.get_parameter_value(parameter_name)
+            parameter_QLineEdit.setText(parameter_value)
+        parameter_QLineEdit.textChanged.connect(self.refresh_ui)
+        # Save the UI component
+        self.input_ui_components[parameter_name] = parameter_QLineEdit
+        # -----------------
+        # Add a "..." button
+        # -----------------
+        request_key = parameter_name + "." + "FileSelector.SelectFolder"
+        select_folder = False
+        try:
+            # The following should match ParameterName.FileSelector.SelectFolder
+            select_folder = self.command.parameter_input_metadata[request_key]
+        except KeyError:
+            # Default was specified above...
+            pass
+        request_key = parameter_name + "." + "FileSelector.Button.Tooltip"
+        file_selector_button_tooltip = ""
+        try:
+            file_selector_button_tooltip = input_metadata[request_key]
+        except KeyError:
+            # Default...
+            if select_folder:
+                file_selector_button_tooltip = "Browse for folder"
+            else:
+                file_selector_button_tooltip = "Browse for file"
+        parameter_select_file_QPushButton = QtWidgets.QPushButton(self.parameter_QFrame)
+        # Object name has parameter at front, which can be parsed out in event-handling code
+        # - IMPORTANT - don't change the object name without changing elsewhere
+        parameter_select_file_QPushButton.setObjectName(qt_util.from_utf8(parameter_name + ".FileSelector.Button"))
+        parameter_select_file_QPushButton.setText(qt_util.translate("Dialog", "...", None))
+        if file_selector_button_tooltip != "":
+            parameter_select_file_QPushButton.setToolTip(file_selector_button_tooltip)
+        parameter_select_file_QPushButton.setMaximumWidth(50)
+        parameter_select_file_QPushButton.clicked.connect(
+            lambda clicked, y_param=self.y_parameter: self.ui_action_select_file(y_param,
+                                                                                 parameter_select_file_QPushButton))
+        self.parameter_QGridLayout.addWidget(parameter_select_file_QPushButton, self.y_parameter, 6, 1, 1)
+
+    def setup_ui_parameter_label(self, parameter_name, parameter_Label):
+        """
+        Add label UI components for a command parameter.
+
+        Args:
+            parameter_name (str):  Parameter name.
+            parameter_Label (str):  Parameter label, for start of input line.
+
+        Returns:
+            None
+        """
+        # try:
+        #     parameter_Label
+        # except Exception as e:
+        #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
+        #               ". Could not build simple command editor. Defaulting to generic command editor. " \
+        #               "See log file for more details."
+        #     logger.error(message, e, exc_info=True)
+        #     qt_util.warning_message_box(message)
+        debug = True
+        if self.debug:
+            logger = logging.getLogger(__name__)
+            logger.info("For parameter '" + parameter_name + "', adding label")
+        # Increment the y-position in the GridLayout since starting a new row in the UI
+        self.y_parameter = self.y_parameter + 1
+        parameter_QLabel = QtWidgets.QLabel(self.parameter_QFrame)
+        parameter_QLabel.setObjectName("Command_Parameter_Label")
+        parameter_QLabel.setText(parameter_Label + ":")
+        parameter_QLabel.setAlignment(QtCore.Qt.AlignRight)  # |QtCore.Qt.AlignCenter)
+        # Allow expanding horizontally
+        parameter_QLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)
+        self.parameter_QGridLayout.addWidget(parameter_QLabel, self.y_parameter, 0, 1, 1)
+        self.parameter_QGridLayout.setColumnStretch(0,0)
+
+    def setup_ui_parameter_text_field(self, parameter_name, parameter_Tooltip):
+        """
+        Add text field (Qt LineEdit) UI components for a command parameter.
+
+        Args:
+            parameter_name (str):  Parameter name.
+            parameter_Tooltip (str):  Tooltip text.
+
+        Returns:
+            None
+        """
+        debug = True
+        if self.debug:
+            logger = logging.getLogger(__name__)
+            logger.info("For parameter '" + parameter_name + "', adding label")
+        parameter_QLineEdit = QtWidgets.QLineEdit(self.parameter_QFrame)
+        parameter_QLineEdit.setObjectName(parameter_name)
+        self.parameter_QGridLayout.addWidget(parameter_QLineEdit, self.y_parameter, 1, 1, 4)
+        self.parameter_QGridLayout.setColumnStretch(1, 4)
+        if parameter_Tooltip != "":
+            parameter_QLineEdit.setToolTip(parameter_Tooltip)
+        # Create a listener that reacts if the line edit field has been changed. If so, run the
+        # refresh_ui function.
+        # If this command is being updated add the command parameters to the text fields
+        if self.update:
+            parameter_value = self.command.get_parameter_value(parameter_name)
+            parameter_QLineEdit.setText(parameter_value)
+        parameter_QLineEdit.textChanged.connect(self.refresh_ui)
+        # Add the component to the list maintained to get values out of UI components
+        self.input_ui_components[parameter_name] = parameter_QLineEdit
+
     def update_command_display(self):
         """
         Each command dialog box has a command display that shows the string representation of the command with the

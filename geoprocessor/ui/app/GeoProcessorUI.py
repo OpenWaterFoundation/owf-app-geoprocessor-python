@@ -2649,7 +2649,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 properties += (
                             "QGIS Information:\n" +
                             TAB + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
-                            TAB + "The GeoProcessor testing framework is being used without QGIS dependencies.\n"
+                            TAB + "The GeoProcessor testing framework is being used without QGIS dependencies.\n" +
+                            "\n"
                 )
             else:
                 qgis_root = ""
@@ -2682,7 +2683,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Add information for Qt
 
             properties += (
-                 "Qt Properties (used for graphics):\n" +
+                 "Qt Information (used for graphics):\n" +
                  TAB + "Qt Version: " + QtCore.QT_VERSION_STR + "\n" +
                  TAB + "SIP Version: " + SIP_VERSION_STR + "\n" +
                  TAB + "PyQt Version: " + Qt.PYQT_VERSION_STR + "\n" +

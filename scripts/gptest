@@ -33,7 +33,8 @@
 # cygwinUname=`uname -a | grep -i cygwin`
 
 # Save all the arguments so they can be used as a global argument in the function
-# - might be a way to pass to the runProcessor function
+# - the command line is parsed in this script to check --ui and --python
+#   but otherwise all arguments are passed to the Python gp.py
 allArgs=$@
 
 # Supporting functions
@@ -173,30 +174,81 @@ checkXWindowsServer() {
 	fi
 }
 
-# Parse command line
-# - only handle some specific checks for local logic and let the called script handle command line
-parseCommandLineLong() {
-	for arg in $@ :; do
-		if [ "$arg" = "--ui" ]; then
-			# Make sure that X Window environment is set up before calling Python UI program
-			# Determine the operating system
-			checkOperatingSystem
-			# Check the X Windows DISPLAY environment variable
-			checkXWindowsDisplay
-			# Check X Server
-			checkXWindowsServer
-		fi
-	done
+# Parse the command line and set variables to control logic
+# - all the original command line options are passed to Python when running in normal mode
+# - additionally, --ui is detected and additional environment set up for X Windows and Python virtual environment
+# - if --python is specified, then the Python interpreter is started without launching the GeoProcessor
+parseCommandLine() {
+    # Indicate specification for single character options
+    # - 1 colon after an option indicates that an argument is required
+    # - 2 colons after an option indicates that an argument is optional, must use -o=argument syntax
+    optstring="c:hp:v"
+    # Indicate specification for long options
+    # - 1 colon after an option indicates that an argument is required
+    # - 2 colons after an option indicates that an argument is optional, must use --option=argument syntax
+    optstringLong="commands:,http,python,ui,version"
+    # Parse the options using getopt command
+    # - the -- is a separator between getopt options and parameters to be parsed
+    # - output is simple space-delimited command line
+    # - error message will be printed if unrecognized option or missing parameter but status will be 0
+    # - if an optional argument is not specified, output will include empty string ''
+    GETOPT_OUT=$(getopt --options $optstring --longoptions $optstringLong -- "$@")
+    exitCode=$?
+    if [ $exitCode -ne 0 ]; then
+        echo ""
+        printUsage
+        exit 1
+    fi
+    # The following constructs the command by concatenating arguments
+    # - the $1, $2, etc. variables are set as if typed on the command line
+    # - special cases like --option=value and missing optional arguments are generically handled
+    #   as separate parameters so shift can be done below
+    eval set -- "$GETOPT_OUT"
+    # Loop over the options
+    # - include all options recognized by gp.py so that getopt does not complain
+    # - the error handling will catch cases were argument is missing
+    # - shift over the known number of options/arguments
+    while true; do
+        #echo "Command line option is $opt"
+        case "$1" in
+            -h) # -h  Ignore since Python program will use
+                shift 1
+                ;;
+            --python) # --python  Run Python interpreter without running GeoProcessor
+                runMode="python"
+                shift 1
+                ;;
+            --ui) # --ui  Print the version
+                # Setup the environment
+                runMode="ui"
+                setupUiEnvironment
+                shift 1
+                ;;
+            -v) # -h  Ignore since Python program will use
+                shift 1
+                ;;
+            --) # No more arguments
+                shift
+                break
+                ;;
+            *) # Unknown option - OK because will pass to the Python gp.py program, which will handle
+                #echo ""
+                #echo "Invalid option $1." >&2
+                #printUsage
+                #exit 1
+                ;;
+        esac
+    done
 }
 
 # Function to run Python version 3
 runProcessor () {
 	# python3 can be used for Python 3.
-        # Version is printed to stderr or stdout so a bit tricker to redirect
+	# Version is printed to stderr or stdout so a bit tricker to redirect
 	pythonExe="python3"
-        # First try the general Python launcher
-        pythonVersion=`${pythonExe} --version 2>&1 | cut -d ' ' -f 2 | cut -d . -f 1`
-        if [ "${pythonVersion}" = "3" ]
+	# First try the general Python launcher
+	pythonVersion=`${pythonExe} --version 2>&1 | cut -d ' ' -f 2 | cut -d . -f 1`
+	if [ "${pythonVersion}" = "3" ]
 		then
 		# Python 3 version was found
 		# - run geoprocessor/app/gp.py
@@ -205,15 +257,33 @@ runProcessor () {
 		#export PYTHONPATH="$PYTHONPATH:$OSGEO4W_ROOT/apps/qgis/python"
 		#export PYTHONPATH="$PYTHONPATH:$OSGEO4W_ROOT/apps/qgis/python/plugins"
 		#export PYTHONPATH="$PYTHONPATH:$OSGEO4W_ROOT/apps/Python27/Lib/site-packages"
-		echo ""
-		echo "Running the geoprocessor for Python3..."
-		${pythonExe} -m geoprocessor.app.gp ${allArgs}
+		if [ "$runMode" = "python" ]; then
+			echo ""
+			echo "Running python3 using GeoProcessor environment"
+			echo "Will need to import modules at the Python interpreter prompt."
+			${pythonExe}
+		else
+			echo ""
+			echo "Running the GeoProcessor for Python3..."
+			${pythonExe} -m geoprocessor.app.gp ${allArgs}
+		fi
 	else
 		# Python 3 version was not found
-                echo ""
-                echo "Cannot determine available python 3 available to run processor."
-                exit 1
-        fi
+		echo ""
+		echo "Cannot determine available python 3 available to run processor."
+		exit 1
+	fi
+}
+
+# Set up the UI environment
+setupUiEnvironment() {
+	# Make sure that X Window environment is set up before calling Python UI program
+	# Determine the operating system
+	checkOperatingSystem
+	# Check the X Windows DISPLAY environment variable
+	checkXWindowsDisplay
+	# Check X Server
+	checkXWindowsServer
 }
 
 # Main entry point into script
@@ -221,8 +291,11 @@ runProcessor () {
 # Get the folder where this script is located since it may have been run from any folder
 scriptFolder=`cd $(dirname "$0") && pwd`
 
+# Run mode is mainly used to handle --python
+runMode=""
+
 # Parse the command parameters
-parseCommandLineLong "$@"
+parseCommandLine "$@"
 
 # Setup the virtual environment (venv) if necessary
 # - this script can be run from development environment or deployed venv

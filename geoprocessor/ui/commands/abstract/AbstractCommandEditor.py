@@ -505,7 +505,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # self.ok_button.clicked.connect(
         # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
         # Use action role because action is handled in the dialog
-        self.dialog_ButtonBox.addButton(self.ok_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
+        self.dialog_ButtonBox.addButton(self.ok_button, QtWidgets.QDialogButtonBox.ActionRole)
         self.ok_button.clicked.connect(self.ui_action_ok_clicked)
         # Cancel button
         # ---------
@@ -516,7 +516,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # self.cancel_button.clicked.connect(
         # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
         # Use action role because action is handled in the dialog
-        self.dialog_ButtonBox.addButton(self.cancel_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole)
+        self.dialog_ButtonBox.addButton(self.cancel_button, QtWidgets.QDialogButtonBox.ActionRole)
         self.cancel_button.clicked.connect(self.ui_action_cancel_clicked)
         # Button box is added regardless of how buttons are defined
         buttons_GridLayout.addWidget(self.dialog_ButtonBox, self.grid_layout_row, 6, 1, 2)

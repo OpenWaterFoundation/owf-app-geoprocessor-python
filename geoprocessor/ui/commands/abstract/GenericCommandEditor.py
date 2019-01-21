@@ -47,9 +47,25 @@ class GenericCommandEditor(AbstractCommandEditor):
         # Keep track of command object
         self.command = command
 
+        # Turn localized debug on/off, useful for development
+        # - should be False for production release
+        # - this causes logger.info messages to be printed
+        # - later can convert to logger.debug if still needed
+        self.debug = True
+
         # Indicate if an error status is currently in effect, due to invalid parameters
         # - will be set in check_input() and is checked in ui_action_ok_clicked()
         self.error_wait = False
+
+        # Indicate whether first time refresh_ui is called
+        # - the first time the UI components may be initialized from data
+        self.first_refresh_ui = True
+
+        # "input_ui_components" is a dictionary that relates each command parameter with its associated Qt Widget
+        # input field
+        # KEY (str): the command parameter name
+        # VALUE (obj): the associated Qt Widget input component
+        self.input_ui_components = {}
 
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
         # self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
@@ -63,11 +79,14 @@ class GenericCommandEditor(AbstractCommandEditor):
         if command.command_parameters:
             self.update = True
 
+        # The row position in the self.parameter_QGridLayout, used in setup_ui() and its helper functions.
+        self.y_parameter = -1
+
         # Setup the UI in the abstract class, which will call back to set_ui() in this class.
         self.setup_ui_core()
 
         # Initially call refresh in case updating a command
-        self.refresh_command()
+        self.refresh_ui()
 
     def check_input(self):
         """
@@ -99,18 +118,130 @@ class GenericCommandEditor(AbstractCommandEditor):
             logger.info(message)
             qt_util.warning_message_box(message)
 
-    # TODO smalers 2019-01-18 can this function be removed?
-    def get_parameter_dict_from_ui(self):
+    def refresh_ui(self):
         """
-        Get the list of parameters from the UI, used to validate the parameters.
+        This function is called to ensure that the UI and command are consistent in the UI:
+
+        1. The first time called:
+            - Make sure the UI is up to date with initial command parameters
+        2. Every time called:
+            - Update the command string from values in the UI components.
+            - Only non-empty values are set in the string.
 
         Returns:
+            None
         """
-        param_dict = dict()
-        for parameter_LineEdit in self.parameter_LineEdit:
-            param_name = parameter_LineEdit.getObjectName()
-            param_value = parameter_LineEdit.getText()
-            param_dict[param_name] = param_value
+
+        logger = logging.getLogger(__name__)
+        if self.first_refresh_ui:
+            # The setup_ui() function will have constructed all necessary UI components.
+            # However, they may not be populated with values so do that here:
+            # - in particular set combobox selections
+            # - TODO smalers 2019-01-19 figure out how strict to be on case-specific
+            for command_parameter_metadata in self.command.command_parameter_metadata:
+                # Parameters listed in logical order such as input / analysis / output
+                parameter_name = command_parameter_metadata.parameter_name
+                # The parameter value comes from the command
+                # - if a new command most values will not be set
+                # - if an existing command then need to make sure all previous data is handled
+                parameter_value = self.command.get_parameter_value(parameter_name)
+                try:
+                    # Get the UI input component for the parameter
+                    parameter_ui = self.input_ui_components[parameter_name]
+                    # Based on the UI component type, retrieve the parameter value
+                    # - check the object type with isinstance
+                    # - use the class name for logging, should agree with object type
+                    ui_type = parameter_ui.__class__.__name__
+                    # But try the isinstance
+                    if isinstance(parameter_ui, QtWidgets.QLineEdit):
+                        parameter_ui.setText(parameter_value)
+                    else:
+                        # Should not happen
+                        logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
+                                       parameter_name + "' - code problem.")
+                        continue
+                except KeyError as e:
+                    # Should not happen because all parameters should have at least a text field.
+                    message = "No input component for parameter '" + parameter_name + "' - code problem."
+                    logger.warning(message)
+                    logger.error(message, e, exc_info=True)
+                    continue
+            # Set the following so won't do this initialization again
+            self.first_refresh_ui = False
+
+        # Always do the following to transfer UI component values to the full command string at the bottom of editor.
+        # UI components should be fully initialized and contain values that match the command parameters
+        # - loop through all UI components, extract the values from the components (by component type)
+        #   and use to update the command string
+
+        # Loop through the command parameter metadata and retrieve the values from editor components
+        try:
+            # Add all parameters to a temporary dictionary
+            parameters_from_ui = dict()
+            for command_parameter_metadata in self.command.command_parameter_metadata:
+                # Parameters listed in logical order such as input / analysis / output
+                parameter_name = command_parameter_metadata.parameter_name
+                parameter_value = None
+                try:
+                    # Get the UI input component for the parameter
+                    parameter_ui = self.input_ui_components[parameter_name]
+                    # Based on the UI component type, retrieve the parameter value
+                    # - check the object type with isinstance
+                    # - use the class name for logging, should agree with object type
+                    ui_type = parameter_ui.__class__.__name__
+                    # But try the isinstance
+                    if isinstance(parameter_ui, QtWidgets.QLineEdit):
+                        parameter_value = parameter_ui.text()
+                    else:
+                        # Should not happen
+                        logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
+                                        parameter_name + "' - code problem.")
+                        continue
+                    # If here a parameter value was determined
+                    # - TODO smalers 2019-01-19 need to be a bit careful with empty string values
+                    #        such as checking the parameter's default value
+                    if parameter_value is not None and parameter_value != "":
+                        parameters_from_ui[parameter_name] = parameter_value
+                except KeyError as e:
+                    # Should not happen because all parameters should have at least a text field.
+                    message = "No input component for parameter '" + parameter_name + "' - code problem."
+                    logger.warning(message)
+                    logger.error(message, e, exc_info=True)
+                    continue
+            # Have a dictionary of parameters extracted from UI components
+            # - format the command string using the command instance
+            # - this does not change the command string in the command instance
+            command_string = self.command.to_string(parameters_from_ui)
+            self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
+        except Exception as e:
+            message = "Error refreshing command from parameters"
+            logger = logging.getLogger(__name__)
+            logger.error(message, e, exc_info=True)
+            qt_util.warning_message_box(message)
+
+        # try:
+        #     y_parameter = -1
+        #     # Initial part of command string
+        #     command_string = self.command.command_name + "("
+        #     # Add all parameters to the command string
+        #     for command_parameter_metadata in self.command.command_parameter_metadata:
+        #         # Parameters listed in logical order
+        #         y_parameter = y_parameter + 1
+        #         if y_parameter == 0:
+        #             sep = ""
+        #         else:
+        #             sep = ","
+        #         parameter_name = command_parameter_metadata.parameter_name
+        #         parameter_value = self.parameter_LineEdit[parameter_name].text()
+        #         if parameter_value is not None and parameter_value != "":
+        #             command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
+        #     command_string = command_string + ")"
+        #     self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
+        # except Exception as e:
+        #     message="Error refreshing command from parameters"
+        #     logger = logging.getLogger(__name__)
+        #     logger.error(message, e, exc_info=True)
+        #     qt_util.warning_message_box(message)
 
     def setup_ui(self):
         """
@@ -120,208 +251,94 @@ class GenericCommandEditor(AbstractCommandEditor):
             None
         """
 
+        logger = logging.getLogger(__name__)
+
         # The AbstractCommandEditor sets up the editor by:
         # 1. Initializes the dialog.
         # 2. Setting up standard editor top.
         # 3. Calls this method to set up command editor specifics.
         #    Set up a simple list of command parameter text fields
         # 4. Setting up the standard editor bottom.
+
         # Set up an area for a list of parameters
-        parameter_Frame = QtWidgets.QFrame(self)
-        parameter_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        parameter_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        parameter_Frame.setObjectName("Command_Parameters")
+        self.parameter_QFrame = QtWidgets.QFrame(self)
+        self.parameter_QFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.parameter_QFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.parameter_QFrame.setObjectName("Command_Parameters")
         self.grid_layout_row = self.grid_layout_row + 1
-        self.grid_layout.addWidget(parameter_Frame, self.grid_layout_row, 0, 1, 8)
+        self.grid_layout.addWidget(self.parameter_QFrame, self.grid_layout_row, 0, 1, -1)
 
         # Create a grid layout object. Apply to the Command_Parameters frame object.
         # Set the name of the grid layout object.
-        parameter_GridLayout = QtWidgets.QGridLayout(parameter_Frame)
-        parameter_GridLayout.setObjectName("Command_Parameters_Layout")
+        self.parameter_QGridLayout = QtWidgets.QGridLayout(self.parameter_QFrame)
+        self.parameter_QGridLayout.setObjectName("Command_Parameters_Layout")
 
         # Add entry fields for each parameter
-        y_parameter = -1
+        self.y_parameter = -1
         for command_parameter_metadata in self.command.command_parameter_metadata:
-            # Parameters listed in logical order
-            y_parameter = y_parameter + 1
-            # ---------------
-            # Label component
-            # ---------------
+            # Get the parameter name for retrieving all other parameter variables
+            # - the command parameter_input_metadata dictionary contains UI configuration properties
+            # - each dictionary key starts with `ParameterName.', for example 'LogFile.Label'
             parameter_name = command_parameter_metadata.parameter_name
-            parameter_Label = QtWidgets.QLabel(parameter_Frame)
-            parameter_Label.setObjectName("Command_Parameter_Label")
-            parameter_Label.setText(parameter_name + ":")
-            parameter_Label.setAlignment(QtCore.Qt.AlignRight) # |QtCore.Qt.AlignCenter)
-            # Allow expanding horizontally
-            parameter_Label.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)
-            parameter_GridLayout.addWidget(parameter_Label, y_parameter, 0, 1, 1)
+
+            # Parameters listed in logical order, from left to right
+            # ---------------
+            # Leftmost UI component, which is the label
+            # ---------------
+            # Label component, consistent for all input component types
+            # ---------------
+            parameter_Label = parameter_name
+            self.setup_ui_parameter_label(parameter_name, parameter_Label)
+
             # --------------------
             # Text entry component
             # --------------------
-            self.parameter_LineEdit[parameter_name] = QtWidgets.QLineEdit(parameter_Frame)
-            self.parameter_LineEdit[parameter_name].setObjectName(parameter_name)
-            parameter_GridLayout.addWidget(self.parameter_LineEdit[parameter_name], y_parameter, 1, 1, 1)
-            tooltip = command_parameter_metadata.editor_tooltip
-            if tooltip is not None:
-                self.parameter_LineEdit[parameter_name].setToolTip(tooltip)
-            # Create a listener that reacts if the line edit field has been changed. If so, run the
-            # update_command_display function.
-            # If this command is being updated add the command parameters to the text fields
-            if self.update:
-                parameter_value = self.command.get_parameter_value(parameter_name)
-                self.parameter_LineEdit[parameter_name].setText(parameter_value)
-            self.parameter_LineEdit[parameter_name].textChanged.connect(self.refresh_command)
-            # ----------------------------------------------------
-            # Description component, optionally with default value
-            # ----------------------------------------------------
-            parameter_description = command_parameter_metadata.parameter_description
-            parameter_desc_Label = QtWidgets.QLabel(parameter_Frame)
-            parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
-            parameter_desc = command_parameter_metadata.parameter_description
-            if parameter_desc is None:
-                parameter_desc = ""
-            default_value = command_parameter_metadata.default_value
-            if default_value is not None:
-                parameter_desc = parameter_desc + " (default=" + default_value + ")"
-            parameter_desc_Label.setText(parameter_desc)
-            parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
-            parameter_GridLayout.addWidget(parameter_desc_Label, y_parameter, 3, 4, 1)
+            # --------------------
+            # LineEdit (text field)
+            # - default if properties don't indicate any other component
+            # --------------------
+            parameter_Tooltip = None
+            try:
+                parameter_Tooltip = command_parameter_metadata.editor_tooltip
+            except KeyError:
+                # Default is an empty string
+                # - components should check for None or empty string and not set tooltip in this case
+                parameter_Tooltip = ""
+            self.setup_ui_parameter_text_field(parameter_name, parameter_Tooltip)
 
-    # def setupUi(self, Dialog):
-    #     """
-    #     # Configure the Dialog window with the features that are consistent across all GeoProcessor command dialog
-    #     # windows.
-    #     self.setupUi_Abstract(Dialog)
-    #
-    #     # SpatialDataFile ##
-    #     # Initialize a Qt QLabel object for the SpatialDataFile label.
-    #     UiDialog.SpatialDataFile_Label = QtWidgets.QLabel(Dialog)
-    #
-    #     # Configure the label to display the parameter name and align with the left side of the dialog window.
-    #     self.configureLabel(UiDialog.SpatialDataFile_Label, UiDialog.cp_SpatialDataFile.name)
-    #
-    #     # Initialize a Qt QLineEdit object for the SpatialDataFile input field.
-    #     self.SpatialDataFile_LineEdit = QtWidgets.QLineEdit(Dialog)
-    #
-    #     # Configure the input field to be extra long, display the placeholder description and include tooltip help.
-    #     self.configureLineEdit(self.SpatialDataFile_LineEdit, UiDialog.cp_SpatialDataFile.name, long=True,
-    #                            placeholder_text=UiDialog.cp_SpatialDataFile.description,
-    #                            tooltip=UiDialog.cp_SpatialDataFile.tooltip)
-    #
-    #     # Initialize a Qt QToolButton to open a browser to select a file for the SpatialDataFile parameter.
-    #     self.SpatialDataFile_ToolButton = QtWidgets.QToolButton(Dialog)
-    #
-    #     # Configure the button to link the selection to the SpatialDataFile_LineEdit input field.
-    #     self.configureToolButton(self.SpatialDataFile_ToolButton, UiDialog.cp_SpatialDataFile.name,
-    #                              self.SpatialDataFile_LineEdit)
-    #
-    #     # GeoLayerID ##
-    #     # Initialize a Qt QLabel object for the GeoLayerID label.
-    #     UiDialog.GeoLayerID_Label = QtWidgets.QLabel(Dialog)
-    #
-    #     # Configure the label to display the parameter name and align with the left side of the dialog window.
-    #     self.configureLabel(UiDialog.GeoLayerID_Label, UiDialog.cp_GeoLayerID.name)
-    #
-    #     # Initialize a Qt QLineEdit object for the GeoLayerID input field.
-    #     self.GeoLayerID_LineEdit = QtWidgets.QLineEdit(Dialog)
-    #
-    #     # Configure the input field to include tooltip help.
-    #     self.configureLineEdit(self.GeoLayerID_LineEdit, UiDialog.cp_GeoLayerID.name,
-    #                            tooltip=UiDialog.cp_GeoLayerID.tooltip)
-    #
-    #     # Initialize a Qt QLabel object for the GeoLayerID description.
-    #     UiDialog.GeoLayerID_Description_Label = QtWidgets.QLabel(Dialog)
-    #
-    #     # Configure the label to display the GeoLayerID parameter description.
-    #     self.configureDescriptionLabel(UiDialog.GeoLayerID_Description_Label, UiDialog.cp_GeoLayerID.name,
-    #                                    UiDialog.cp_GeoLayerID.description)
-    #
-    #     # IfGeoLayerIDExists ##
-    #     # Initialize a Qt QLabel object for the IfGeoLayerIDExists label.
-    #     UiDialog.IfGeoLayerIDExists_Label = QtWidgets.QLabel(Dialog)
-    #
-    #     # Initialize a Qt QComboBox object for the IfGeoLayerIDExists input field.
-    #     self.IfGeoLayerIDExists_ComboBox = QtWidgets.QComboBox(Dialog)
-    #
-    #     # Configure the input combo box to be populated with the available choices for the
-    #     # IfGeoLayerIDExists parameter.
-    #     self.configureComboBox(self.IfGeoLayerIDExists_ComboBox, UiDialog.cp_IfGeoLayerIDExists.name,
-    #                            UiDialog.command_obj.choices_IfGeoLayerIDExists,
-    #                            tooltip=UiDialog.cp_IfGeoLayerIDExists.tooltip)
-    #
-    #     # Initialize a Qt QLabel object for the IfGeoLayerIDExists description.
-    #     UiDialog.IfGeoLayerIDExists_Description_Label = QtWidgets.QLabel(Dialog)
-    #
-    #     # Configure the label to display the IfGeoLayerIDExists parameter description.
-    #     self.configureDescriptionLabel(UiDialog.IfGeoLayerIDExists_Description_Label,
-    #                                    UiDialog.cp_IfGeoLayerIDExists.name,
-    #                                    UiDialog.cp_IfGeoLayerIDExists.description)
-    #     """
-    #     return
+            # # ----------------------------------------------------
+            # # Description component, optionally with default value
+            # # ----------------------------------------------------
+            parameter_Description = None
+            try:
+                parameter_description = command_parameter_metadata.parameter_description
+            except KeyError:
+                parameter_Description = ""
+            self.setup_ui_parameter_description(parameter_name, parameter_description)
 
-    def refresh(self):
+    def setup_ui_parameter_description(self, parameter_name, parameter_desc):
         """
-        This updates the dialog box with the previously defined parameter values when editing a command within the UI.
+        Override function in AbstractCommand class to add a description if it is specified
+        in the command_parameter_metadata. This description will not be as specific as is
+        in TabbedCommandEditor or SimpleCommandEditor, therefore there is a need for an overriden
+        function.
+
+        Args:
+            parameter_name (str) : the name of the parameter
+            parameter_desc (str) : description coming from the command_parameter_metadata
+
+        Returns:
+
         """
-
-        # Get the values of the previously-defined command dialog box. Assign to static variables before updating
-        # the command dialog window. As the command dialog window is updated, the command_parameter_values
-        # dictionary is altered.
-        spatialdatafile_value = self.command_parameter_values["SpatialDataFile"]
-        geolayerid_value = self.command_parameter_values["GeoLayerID"]
-        ifgeolayeridexists_value = self.command_parameter_values["IfGeoLayerIDExists"]
-
-        # Set the text of the SpatialDataFile input field to the predefined value of the SpatialDataFile parameter.
-        self.SpatialDataFile_LineEdit.setText(spatialdatafile_value)
-
-        # Set the text of the SpatialDataFile input field to the predefined value of the SpatialDataFile parameter.
-        self.GeoLayerID_LineEdit.setText(geolayerid_value)
-
-        # If the predefined IfGeoLayerIDExists parameter value is within one of the available options, the index of
-        # the value in the ComboBox object is the index of the value in the options list plus one. The one accounts
-        #  for the blank option that is available in the ComboBox but is not in the available options list.
-        ## if ifgeolayeridexists_value in UiDialog.command_obj.choices_IfGeoLayerIDExists:
-            ## index = UiDialog.command_obj.choices_IfGeoLayerIDExists.index(ifgeolayeridexists_value) + 1
-
-        # If the predefined IfGeoLayerIDExists parameter value is NOT within one of the available options, set the
-        # index to the location of the blank option.
-        ## else:
-            ## index = 0
-
-        # Set the value of the IfGeoLayerIDExists combo box to the predefined value of the IfGeoLayerIDExists parameter.
-        # Combo boxes are set by indexes rather than by text.
-        ## self.IfGeoLayerIDExists_ComboBox.setCurrentIndex(index)
-
-    def refresh_command(self):
-        """
-        Update the command string.
-
-        Returns:  None
-        """
-        # Loop through the command parameter metadata and retrieve the values from editor components
-        try:
-            y_parameter = -1
-            # Initial part of command string
-            command_string = self.command.command_name + "("
-            # Add all parameters to the command string
-            for command_parameter_metadata in self.command.command_parameter_metadata:
-                # Parameters listed in logical order
-                y_parameter = y_parameter + 1
-                if y_parameter == 0:
-                    sep = ""
-                else:
-                    sep = ","
-                parameter_name = command_parameter_metadata.parameter_name
-                parameter_value = self.parameter_LineEdit[parameter_name].text()
-                if parameter_value is not None and parameter_value != "":
-                    command_string = command_string + sep + parameter_name + '="' + parameter_value + '"'
-            command_string = command_string + ")"
-            self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
-        except Exception as e:
-            message="Error refreshing command from parameters"
+        debug = True
+        if self.debug:
             logger = logging.getLogger(__name__)
-            logger.error(message, e, exc_info=True)
-            qt_util.warning_message_box(message)
+            logger.info("For parameter '" + parameter_name + "', adding description")
+        parameter_desc_Label = QtWidgets.QLabel(self.parameter_QFrame)
+        parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
+        parameter_desc_Label.setText(parameter_desc)
+        # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
+        self.parameter_QGridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
 
     def ui_action_cancel_clicked(self):
         """

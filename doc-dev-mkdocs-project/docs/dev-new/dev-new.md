@@ -27,7 +27,7 @@ step describes creating folders.
 
 See the following:
 
-* [Development Environment Folders](../dev-env/folders)
+* [Development Environment Folders](../dev-env/folders.md)
 
 ## Install Python ##
 
@@ -46,7 +46,7 @@ for the GeoProcessor testing framework, independent of QGIS Python version.
 
 See the following:
 
-* [Development Environment / Python](../dev-env/python)
+* [Development Environment / Python](../dev-env/python.md)
 
 ## Install QGIS ##
 
@@ -57,7 +57,7 @@ GeoProcessor modules are installed in the `site-packages` folder of the GeoProce
 are made known to the QGIS Python at runtime.
 See the following:
 
-* [Development Environment / QGIS](../dev-env/qgis)
+* [Development Environment / QGIS](../dev-env/qgis.md)
 
 ## Install PyCharm ##
 
@@ -69,14 +69,14 @@ The PyCharm Python virtual environment will be used to run the GeoProcessor in t
 with QGIS libraries added via the `PYTHONPATH` environment variable in the PyCharm run script and `scripts` run scripts.
 See the following:
 
-* [Development Environment / PyCharm](../dev-env/pycharm)
+* [Development Environment / PyCharm](../dev-env/pycharm.md)
 
 ## Install MkDocs ##
 
 MkDocs is used to create user and developer documentation, each as separate static websites.
 See the following:
 
-* [Development Environment / MkDocs](../dev-env/mkdocs)
+* [Development Environment / MkDocs](../dev-env/mkdocs.md)
 
 ## Install Git ##
 
@@ -85,7 +85,7 @@ GeoProcessor contributors are expected to have reasonably good Git skills.
 
 See the following:
 
-* [Development Environment / Git](../dev-env/git)
+* [Development Environment / Git](../dev-env/git.md)
 
 ## Install Cygwin ##
 
@@ -93,7 +93,7 @@ Cygwin provides a Linux-like environment on Windows that can be used to run the 
 A Cygwin-compatible Python virtual environment is created.
 See the following:
 
-* [Development Environment / Cygwin](../dev-env/cygwin)
+* [Development Environment / Cygwin](../dev-env/cygwin.md)
 
 ## Clone Repository and Configure Project ##
 
@@ -202,7 +202,7 @@ To add an interpreter, use the ***File / Settings*** menu and then ***Project: o
 Indicate that a new environment should be used, which will create a virtual environment as shown in the following image.
 Select the base interpreter from the QGIS Python distribution to
 ensure consistency between the development environment and the GeoProcessor that will be deployed.
-The [script that is used to run Python for GeoProcessor development](../dev-env/pycharm#script-to-run-pycharm)
+The [script that is used to run Python for GeoProcessor development](../dev-env/pycharm.md#script-to-run-pycharm)
 configures the environment to ensure that necessary Python packages and QGIS software are found.
 
 ![Create project 5](images/create-project5.png)
@@ -213,15 +213,15 @@ Specifying the Python Interpreter (<a href="../images/create-project5.png">see f
 
 Pressing ***OK*** will copy needed files from the base interpreter to the virtual environment.
 The environment is then ready for development.
-Use the [PyCharm run script](../dev-env/pycharm#script-to-run-pycharm)
+Use the [PyCharm run script](../dev-env/pycharm.md#script-to-run-pycharm)
 each time that PyCharm needs to be started for development.
 
 ## Run the GeoProcessor ##
 
-See the [Development Environment / Running the GeoProcessor documentation](../dev-env/running)
+See the [Development Environment / Running the GeoProcessor documentation](../dev-env/running.md)
 for information on running the GeoProcessor in the development environment.
 
 ## Develop software as per Development Tasks ##
 
 Once the development environment is set up, various development tasks can be performed
-as per the [Development Tasks documentation](../dev-tasks/overview).
+as per the [Development Tasks documentation](../dev-tasks/overview.md).

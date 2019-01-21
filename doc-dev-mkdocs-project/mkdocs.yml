@@ -3,7 +3,7 @@
 # Reference: http://www.mkdocs.org/user-guide/configuration/
 #
 site_name: 'GeoProcessor (Developer)'
-pages:
+nav:
 - Home: 'index.md'
 - Introduction: 'introduction/introduction.md'
 - New Developer: 'dev-new/dev-new.md'
@@ -35,16 +35,34 @@ pages:
   - 'Notes on Migration from QGIS2 to QGIS3': 'resources/migrate-qgis2-qgis3.md'
   - 'Notes on Virtual Environment': 'resources/virtualenv-notes.md'
 # ------- configuration properties ---------------
-# Use Material theme
-# - installation notes:  https://github.com/squidfunk/mkdocs-material
-theme: material
-# Don't specify the repository because doing show shows irritating edit
-# icons on every page - instead, edit the documentation in the developer environment.
-#repo_url:  https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python
-site_description:  'Open Water Foundation Learn GeoProcessor (for Developers)'
-site_author:  'Open Water Foundation'
-site_favicon:  'images/OWF-Logo-Favicon-32x32.png'
+# Alphabetize
+# ------------------------------------------------
 copyright:  'Copyright Open Water Foundation'
+# ------------------------------------------------
 # Use extra CSS to customize styles, based on theme
 extra_css:
   - 'css/extra-material-theme.css'
+# ------------------------------------------------
+# Favicon is supposed to automatically be found:
+# - in docs/img/favicon.ico
+# - is a copy of docs/images/OWF-Logo-Favicon-32x32.ico
+# - instead, with Material them, have a different approach (see "theme" below)
+# ------------------------------------------------
+# Don't specify the repository because doing show shows irritating edit
+# icons on every page - instead, edit the documentation in the developer environment.
+#repo_url:  https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python
+# ------------------------------------------------
+site_author:  'Open Water Foundation'
+site_description:  'Open Water Foundation Learn GeoProcessor (for Developers)'
+# ------------------------------------------------
+# Use Material theme
+# - installation notes:  https://github.com/squidfunk/mkdocs-material
+theme:
+  name: 'material'
+  favicon:  'img/favicon.ico'
+# ------------------------------------------------
+# The following controls how URLs are created
+# - As of MkDocs 1.0 the default is true meaning URLs to a page ABC is ABC/ rather than something/ABC.html.
+# - see:  https://www.mkdocs.org/user-guide/configuration/#use_directory_urls
+# use_directory_urls: true
+# ------------------------------------------------

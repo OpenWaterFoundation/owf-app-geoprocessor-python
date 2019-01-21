@@ -67,7 +67,7 @@ with sections below to provide more details.
 		* instantiates editor UI components in a tabbed panel
 		* layout is controlled by `parameter_input_metatdata` in each command class
 3. UI utility classes:
-	1. The [ui_util](#ui_util)
+	1. The [`ui_util`](#ui_util)
 		* does not currently exist?  Where is reusable UI code?
 
 ## User Interface Terms

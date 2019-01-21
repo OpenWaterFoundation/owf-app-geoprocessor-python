@@ -25,7 +25,7 @@ The above scripts checks to see whether the runtime environment needs to be set 
 If so it runs the QGIS setup batch file (script) similar to what is run for PyCharm environment setup
 and then runs the GeoProcessor by passing command line arguments that were provided.
 This approach ensures that the most recent code is being used.
-It is common to run this version on [functional tests during development](../dev-tasks/testing#functional-tests).
+It is common to run this version on [functional tests during development](../dev-tasks/testing.md#functional-tests).
 
 ## Running in the Operational Environment ##
 
@@ -63,4 +63,4 @@ using a script that uses Python 3 in a Python virtual environment:
 	+ `scripts/gptest.bat` - **Not yet developed.**
 
 This approach can use the GeoProcessor as a functional test framework independent of QGIS.
-It is common to run the testing framework to run [functional tests for a software product](../dev-tasks/testing#functional-tests).
+It is common to run the testing framework to run [functional tests for a software product](../dev-tasks/testing.md#functional-tests).

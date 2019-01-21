@@ -37,7 +37,7 @@ Its features are also available in the full GeoProcessor/QGIS version.
 To run the testing framework:
 
 1. Run the `1` and `2` scripts as described in the
-[Creating Installer section](creating-installer),
+[Creating Installer section](creating-installer.md),
 which will create an appropriate virtual environment for the operating system and GeoProcessor version.
 2. Change to the appropriate folder such as `venv-tmp/gptest-1.1.0-cyg-venv/scripts` for CygWin.
 Separate virtual environments are created for full GeoProcessor (`gp`) and testing framework (`gptest`)

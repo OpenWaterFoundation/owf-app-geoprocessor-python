@@ -18,12 +18,14 @@ checkCygwinDevEnv()
 	# There may be more requirements but installing major component like python-pyqt5
 	# generally install needed dependencies.
 	cygwinRequiredPackages="gcc-core gcc-fortran python3-devel libffi-devel libpq-devel openssl-devel python3-pip python3-pyqt5 python3-sip"
-	echo "Checking that Cygwin setup program installed:  $cygwinRequiredPackages"
+	echo "Checking that the Cygwin setup program installed:  $cygwinRequiredPackages"
 	for requiredPackage in $cygwinRequiredPackages; do
 		installedCount1=`cygcheck -c ${requiredPackage} | grep OK | wc -l`
 		if [ "$installedCount1" -ne "1" ]; then
 			${echo2} "${failColor}$requiredPackage does not appear to be installed as a Cygwin package.${endColor}"
+			${echo2} "${failColor}Check by running the following (OK is needed):  cygcheck -c $requiredPackage${endColor}"
 			${echo2} "${failColor}Install $requiredPackage using the Cygwin setup installer.${endColor}"
+			${echo2} "${failColor}If the status is Incomplete, reinstall the software package in the Cygwin setup program.${endColor}"
 			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#cygwin${endColor}"
 			cygwinMissingPackageCount=`expr $cygwinMissingPackageCount + 1`
 		fi
@@ -407,14 +409,14 @@ createGptestVirtualenvCygwinAndLinux() {
 		# PyQt5
 		installedCount=`cygcheck -c python3-pyqt5 | grep OK | wc -l`
 		if [ $installedCount -ne "1" ]; then
-			echo "PyQt5 does not appear to be installed as a Cygwin package"
-			echo "Install python3-pyqt5 from the Cygwin installer"
+			${echo} "${warnColor}PyQt5 does not appear to be installed as a Cygwin package.${endColor}"
+			${echo} "${warnColor}Install python3-pyqt5 from the Cygwin installer.${endColor}"
 		else
 			# Appears to be installed, but check the folder
 			pyQt5Folder="/usr/lib/${pythonLibWithVersion}/site-packages/PyQt5"
 			if [ ! -d "${pyQt5Folder}" ]; then
-				echo "PyQt5 does not appear to be installed in the Cygwin system Python3:  ${pyQt5Folder}"
-				echo "Install python3-pyqt5 from the Cygwin installer"
+				${echo2} "${warnColor}PyQt5 does not appear to be installed in the Cygwin system Python3:  ${pyQt5Folder}${endColor}"
+				${echo2} "${warnColor}Install python3-pyqt5 from the Cygwin installer.${endColor}"
 			else
 				echo "Copying Cygwin-installed ${pyQt5Folder} to site-packagses"
 				cp -r ${pyQt5Folder} ${sitepackagesFolder}
@@ -423,14 +425,14 @@ createGptestVirtualenvCygwinAndLinux() {
 		# SIP software
 		installedCount=`cygcheck -c python3-sip | grep OK | wc -l`
 		if [ $installedCount -ne "1" ]; then
-			echo "SIP does not appear to be installed as a Cygwin package"
-			echo "Install python3-sip from the Cygwin installer"
+			${echo2} "${warnColor}SIP does not appear to be installed as a Cygwin package.${endColor}"
+			${echo2} "${warnColor}Install python3-sip from the Cygwin installer.${endColor}"
 		else
 			sipFile="/usr/lib/${pythonLibWithVersion}/site-packages/sipconfig.py"
 			sipFolder="/usr/lib/${pythonLibWithVersion}/site-packages/sip*"
 			if [ ! -f "${sipFile}" ]; then
-				echo "SIP does not appear to be installed in the Cygwin system Python3: ${sipFolder}"
-				echo "Install python3-sip from the Cygwin installer"
+				${echo2} "${warnColor}SIP does not appear to be installed in the Cygwin system Python3: ${sipFolder}${endColor}"
+				${echo2} "${warnColor}Install python3-sip from the Cygwin installer.${endColor}"
 			else
 				echo "Copying Cygwin-installed sip* to site-packagses"
 				cp ${sipFolder} ${sitepackagesFolder}
@@ -477,8 +479,8 @@ createGptestVirtualenvCygwinAndLinux() {
 		# pandas and dependencies
 		installedCount=`dpkg-query -l python3-pandas | grep -v 'no packages' | wc -l`
 		if [ $installedCount -eq "1" ]; then
-			echo "Pandas does not appear to be installed as an apt-get package"
-			echo "Install python3-pandas using:  sudo apt-get install python3-pandas"
+			${echo2} "${warnColor}Pandas does not appear to be installed as an apt-get package.${endColor}"
+			${echo2} "${warnColor}Install python3-pandas using:  sudo apt-get install python3-pandas.${endColor}"
 		else
 			echo "Copying apt-get-installed /usr/lib/python3/dist-packages/pandas (and related) to ${sitepackagesFolder}"
 			#cp -r /usr/lib/python3/dist-packages/blt ${sitepackagesFolder}
@@ -516,13 +518,13 @@ createGptestVirtualenvCygwinAndLinux() {
 		# TODO smalers 2018-11-25 make the following work on Linux for apt-get installs
 		installedCount=`dpkg-query -l python3-pyqt5 | grep -v 'no packages' | wc -l`
 		if [ $installedCount -eq "1" ]; then
-			echo "PyQt5 does not appear to be installed as an apt-get package"
-			echo "Install python3-pyqt5 using:  sudo apt-get install python3-pyqt5"
+			${echo2} "${warnColor}PyQt5 does not appear to be installed as an apt-get package.${endColor}"
+			${echo2} "${warnColor}Install python3-pyqt5 using:  sudo apt-get install python3-pyqt5.${endColor}"
 		else
 			pyQt5Folder="/usr/lib/python3/dist-packages/PyQt5"
 			if [ ! -d "${pyQt5Folder}" ]; then
-				echo "PyQt5 does not appear to be installed in the system Python3:  ${pyQt5Folder}"
-				echo "Install with:  sudo apt-get install python3-pyqt5"
+				${echo2} "${warnColor}PyQt5 does not appear to be installed in the system Python3:  ${pyQt5Folder}${endColor}"
+				${echo2} "${warnColor}Install with:  sudo apt-get install python3-pyqt5.${endColor}"
 			else
 				echo "Copying apt-get-installed /usr/lib/python3/dist-packages/PyQt5 to ${sitepackagesFolder}"
 				cp -r ${pyQt5Folder} ${sitepackagesFolder}
@@ -531,21 +533,21 @@ createGptestVirtualenvCygwinAndLinux() {
 		# sip
 		installedCount=`dpkg-query -l python3-sip | grep -v 'no packages' | wc -l`
 		if [ $installedCount -eq "1" ]; then
-			echo "SIP does not appear to be installed as a Linux package"
-			echo "Install python3-sip using:  sudo apt-get install python3-sip"
+			${echo2} "${warnColor}SIP does not appear to be installed as a Linux package.${endColor}"
+			${echo2} "${warnColor}Install python3-sip using:  sudo apt-get install python3-sip.${endColor}"
 		else
 			sipFile="/usr/lib/python3/dist-packages/sipconfig.py"
 			sipFolder="/usr/lib/python3/dist-packages/sip*"
 			if [ ! -f "${sipFile}" ]; then
-				echo "SIP does not appear to be installed in the system Python3 folder"
-				echo "Install python3-sip using:  sudo apt-get install python3-sip"
+				${echo2} "${warnColor}SIP does not appear to be installed in the system Python3 folder.${endColor}"
+				${echo2} "${warnColor}Install python3-sip using:  sudo apt-get install python3-sip.${endColor}"
 			else
 				echo "Copying apt-get-installed ${sipFolder} to ${sitepackagesFolder}"
 				cp ${sipFolder} ${sitepackagesFolder}
 			fi
 		fi
 	else
-		echo "[Error] operating system ${operatingSystem} is not supported for package copy."
+		${echo2} "${warnColor}[Error] operating system ${operatingSystem} is not supported for package copy.${endColor}"
 	fi
 
 	# Copy GeoProcessor scripts for gptest
@@ -665,6 +667,7 @@ setupEcho() {
 	boldColor='\e[0;01m' # warning - user needs to do something, 01=bold
 	warnColor='\e[0;40;33m' # warning - user needs to do something, 40=background black, 33=yellow
 	criticalColor='\e[0;40;31m' # critical issue - could be fatal, 40=background black, 31=red
+	failColor="$criticalColor" # because it is easy to forget these color names
 	okColor='\e[0;40;32m' # status is good, 40=background black, 32=green
 	endColor='\e[0m' # To switch back to default color
 }

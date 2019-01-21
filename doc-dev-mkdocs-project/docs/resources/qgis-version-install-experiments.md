@@ -3,6 +3,7 @@
 *Emma Giles, Steve Malers | March 2018 | Open Water Foundation*
 
 This documentation was created to record experiments with installing different versions of QGIS.
+This was done to evaluate transition from QGIS 2 to QGIS 3.
 Questions that need to be answered relevant to the GeoProcessor include:
 
 * Can multiple versions of QGIS be installed on a computer at the same time? Answer:  Yes, with some limitations.

@@ -17,8 +17,8 @@ with GeoProcessor conventions:
 		+ Other modules contain functions grouped by functionality.
 		For example `geoprocessor.util.string_util.py` contains utility functions that process strings.
 * Use Google-style docstrings for documentation.
-See how to the [Configure PyCharm documentation](../dev-env/pycharm#configure-pycharm).
+See how to the [Configure PyCharm documentation](../dev-env/pycharm.md#configure-pycharm).
 * Respond to PyCharm PEP warnings to fix style issues so that each file receives a check-off.
 * New files created in PyCharm or other Windows tools may need permissions changed to not be executable if
 using Cygwin as the primary environment for the Git repository local files.
-See the [Issues with File Permissions documentation](version-control#issues-with-file-permissions).
+See the [Issues with File Permissions documentation](version-control.md#issues-with-file-permissions).

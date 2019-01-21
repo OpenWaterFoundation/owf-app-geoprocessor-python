@@ -53,4 +53,4 @@ QGIS - the OWF GeoProcessor depends on the QGIS software for spatial processing 
 
 * [QGIS website](https://www.qgis.org)
 * [OWF / Learn QGIS](http://learn.openwaterfoundation.org/owf-learn-qgis/)
-* [OWF notes on QGIS installation](qgis-version-install-experiments) - experiments to understand how to install different QGIS versions
+* [OWF notes on QGIS installation](qgis-version-install-experiments.md) - experiments to understand how to install different QGIS versions

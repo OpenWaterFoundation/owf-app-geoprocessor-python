@@ -30,7 +30,7 @@ provide information about the QGIS downloads.
 	+ The QGIS ***Express Install*** is generally OK since long term release QGIS 2 is no longer
 	in GeoProcessor development.
 * For information on how QGIS is packaged, see:
-[QGIS Version Install Experiments](../resources/qgis-version-install-experiments) for detailed background.
+[QGIS Version Install Experiments](../resources/qgis-version-install-experiments.md) for detailed background.
 
 ## Install Additional Python Packages ##
 
@@ -46,8 +46,12 @@ To install the third party packages in the QGIS installation, run the installati
 
 To install third party packages on the Windows QGIS version of GeoProcessor:
 
-1. Open ***Start / OSGeo4W / OSGeo4W Shell*** 
-2. Enter `set PYTHONHOME=C:\OSGeo4W64\apps\Python37` (similar if Python 3.6 or other version of Python is being used)
+1. Open ***Start / OSGeo4W / OSGeo4W Shell*** to start an environment compatible with OSGeo4W Python.
+Note that by default (as of 2019-01-20) the initial configuration will use Python 27
+This seems like something that will be remedied in the future, in which case the following instructions
+may need to be modified.
+See the article [OSGeo4W shell with python3](https://gis.stackexchange.com/questions/273870/osgeo4w-shell-with-python3).
+Therefore, once the shell is open, run `C:\OSGeo4W64\bin\py3_env.bat`.
 3. Enter the command to install the software package.
 Note that `python3 -m pip` is used instead of `pip3` because `pip3` is not available in the QGIS bin folder.
 
@@ -55,8 +59,9 @@ Note that `python3 -m pip` is used instead of `pip3` because `pip3` is not avail
 |-|-|-|-|
 |pandas|[https://pandas.pydata.org/](https://pandas.pydata.org/)|Holds and manipulates Table data.|`python3 -m pip install pandas`|
 |OpenPyXL|[https://openpyxl.readthedocs.io/en/stable/](https://openpyxl.readthedocs.io/en/stable/)|Reads and writes Excel 2010 xlsx/xlsm files to and from Table objects.|`python3 -m pip install openpyxl`|
-|requests (extended package)|[http://docs.python-requests.org/en/master/](http://docs.python-requests.org/en/master/)<br><br> [https://pypi.org/project/requests/](https://pypi.org/project/requests/)|Downloads data files within the [`WebGet`](../command-ref/WebGet/WebGet) command. <br><br>The `requests[security]` extension package is preferred over the core `requests` package to avoid an error that would occur when downloading a file over `https` with the [`WebGet`](../command-ref/WebGet/WebGet) command. The error that occurred when using the core `requests` package printed:<br>`requests.exceptions.SSLError: [Errno 1] _ssl.c:503: error:140770FC:SSL routines:SSL23_GET_SERVER_HELLO:unknown protocol`. <br>This error does not occur when utilizing the `requests[security]` extension package. | `python3 -m pip install requests[security]`|
+|requests (extended package)|[http://docs.python-requests.org/en/master/](http://docs.python-requests.org/en/master/)<br><br> [https://pypi.org/project/requests/](https://pypi.org/project/requests/)|Downloads data files within the [`WebGet`](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/WebGet/WebGet/) command. <br><br>The `requests[security]` extension package is preferred over the core `requests` package to avoid an error that would occur when downloading a file over `https` with the [`WebGet`](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/WebGet/WebGet/) command. The error that occurred when using the core `requests` package printed:<br>`requests.exceptions.SSLError: [Errno 1] _ssl.c:503: error:140770FC:SSL routines:SSL23_GET_SERVER_HELLO:unknown protocol`. <br>This error does not occur when utilizing the `requests[security]` extension package. | `python3 -m pip install requests[security]`|
 |SQLAlchemy|[http://www.sqlalchemy.org/](http://www.sqlalchemy.org/)|Enables connections to databases.|`python3 -m pip install SQLAlchemy`|
+|virtualenv|[https://virtualenv.pypa.io/en/latest/](https://virtualenv.pypa.io/en/latest/)|Used to package the GeoProcessor runtime into an isolated Python environment when [creating an installer](../dev-tasks/creating-installer.md).  **This only needs to be installed if the software developer will be building the Windows GeoProcessor installer.**|`python3 -m pip install virtualenv`|
 
 ## QGIS Python Runtime Executable ##
 
@@ -86,10 +91,10 @@ The location of executable is needed to configure the PyCharm virtual environmen
 
 The GeoProcessor should use the QGIS configuration during development:
 
-* PyCharm must use QGIS libraries in `PYTHONPATH` ([discussed more here](pycharm)).
+* PyCharm must use QGIS libraries in `PYTHONPATH` ([discussed more here](pycharm.md)).
 * Running tests in the development environment via `scripts/gpdev` and `scripts/gpuidev` scripts,
 which uses the development GeoProcessor code
-([discussed more here](running)) can use the QGIS Python and libraries.
+([discussed more here](running.md)) can use the QGIS Python and libraries.
 
 The deployed environment uses a Python virtual environment to isolate each projects's development environment.
 The Python files in the development environment can be run using the `scripts/gp` and `scripts/gpui` programs for QGIS version,

@@ -81,10 +81,12 @@ if exist %USERPROFILE%\AppData\Local\Programs\Python\Python37\python.exe goto us
 if exist %USERPROFILE%\AppData\Local\Programs\Python\Python36\python.exe goto userPython36
 goto noPythonForVenv
 :userPython37
-virtualenv -p %USERPROFILE%\AppData\Local\Programs\Python\Python37\python.exe %gpVenvFolder%
+set pythonVersion=3.7
+py -%pythonVersion% -m virtualenv -p %USERPROFILE%\AppData\Local\Programs\Python\Python37\python.exe %gpVenvFolder%
 goto activateVenv
 :userPython36
-virtualenv -p %USERPROFILE%\AppData\Local\Programs\Python\Python36\python.exe %gpVenvFolder%
+set pythonVersion=3.6
+py -%pythonVersion% -m virtualenv -p %USERPROFILE%\AppData\Local\Programs\Python\Python36\python.exe %gpVenvFolder%
 goto activateVenv
 
 :activateVenv
@@ -94,6 +96,8 @@ cd "%gpVenvFolder%"
 echo Activating the virtual environment
 if not exist "Scripts\activate.bat" goto missingActivateScriptError
 call Scripts\activate.bat
+rem The following use generic Python name (not py) because
+rem the virtual environment uses the name generically.
 echo Installing necessary Python packages for deployed environment
 pip3 install pandas
 pip3 install openpyxl

@@ -113,7 +113,7 @@ This script can be used to run GeoProcessor command files in the test framework.
 For example, see the test runner that has been manually created:
 [`run-tests-steve.bat`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-tests-steve.bat).
 The automated test framework that uses `RunCommands` commands, similar to TSTool, is also available and is
-described in [Development Tasks / Testing](../dev-tasks/dev-tasks#testing).
+described in [Development Tasks / Testing](../dev-tasks/testing.md).
 
 ## GeoProcessor Class ##
 
@@ -240,7 +240,7 @@ Command class design considerations include:
 		- converts string parameter dictionary values into object types needed for run-time, raising `ValueError` if any issues
 		- performs run-time parameter checks to reflect that parameter values and data are dynamic
 		(see for example the check functions found in the `run_command` method in
-		[CopyGeoLayer](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/layers/CopyGeoLayer.py) command).
+		[`CopyGeoLayer`](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/geoprocessor/commands/layers/CopyGeoLayer.py) command).
 		- performs the processing
 		- saves results back to the GeoProcessor if appropriate
 		- raises `RuntimeError` if an error
@@ -257,7 +257,7 @@ This object maintains a list of
 which allows tracking issues with command initialization and running.
 Populating log messages at a command level is key to providing pinpoint diagnostics used in the UI and
 creating command file run reports with
-[WriteCommandSummaryToFile](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/WriteCommandSummaryToFile/WriteCommandSummaryToFile).
+[`WriteCommandSummaryToFile`](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/command-ref/WriteCommandSummaryToFile/WriteCommandSummaryToFile).
 
 The resulting messages can be output to a file to pinpoint command issues during troubleshooting and
 can also be displayed by the user interface.
@@ -408,7 +408,7 @@ The Python module is run using one of the following command-line scripts:
 
 The user interface (UI) for the GeoProcessor allows users to edit and run command workflows.
 The UI is run from the `run_ui` function in the `geoprocessor/app/gp` module.
-See the [UI Design](../ui-design/ui-design) section.
+See the [UI Design](../ui-design/ui-design.md) section.
 
 ## User Interface (Old) ##
 
@@ -416,7 +416,7 @@ See the [UI Design](../ui-design/ui-design) section.
 
 The user interface (UI) for the GeoProcessor allows users to edit and run command workflows.
 The UI is run from the `run_ui` function in the `geoprocessor/app/gp` module.
-See the [UI Design](../ui-design-old/ui-design-old) section.
+See the [UI Design](../ui-design-old/ui-design-old.md) section.
 
 ## Built-in Test Framework ##
 
@@ -436,13 +436,13 @@ The tests can then be run one at a time with a script, similar to:
 
 * [run-tests-steve.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test/blob/master/test/suites/run/run-tests-steve.bat)
 
-Tests can also be run run by creating a test suite, similar to TSTool (see [Development Tasks / Testing](../dev-tasks/dev-tasks#testing)).
+Tests can also be run run by creating a test suite, similar to TSTool (see [Development Tasks / Testing](../dev-tasks/testing.md)).
 
 Dynamic test files should not be committed to the repository.
 
 Tests should be created by following the standards documented in the test repository main
 [README](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test) file
-and [Development Tasks / Testing](../dev-tasks/dev-tasks#testing).
+and [Development Tasks / Testing](../dev-tasks/testing.md).
 
 ## Future Design Elements ##
 

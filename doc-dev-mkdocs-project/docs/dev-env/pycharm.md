@@ -62,7 +62,7 @@ Using the QGIS environment as much as possible helps ensure that there are no co
 which is important because much of the GeoProcessor processing is performed with QGIS tools.
 The GeoProcessor is normally distributed using a Python virtual environment so that users don't
 have to install any Python or other software.
-See the [Development Tasks / Creating Installer](../dev-tasks/creating-installer) documentation.
+See the [Development Tasks / Creating Installer](../dev-tasks/creating-installer.md) documentation.
 
 To run QGIS software, PyCharm and applications that use QGIS (including the GeoProcessor),
 it is best to use a batch file (Windows) or shell script (Linux).
@@ -108,7 +108,7 @@ PyCharm must also use QGIS Python interpreter and packages in order to allow for
 Therefore, a batch file or script can be used to configure the environment and run PyCharm.
 This script must recognize the install location of PyCharm software, which may be different for each developer.
 To start PyCharm, run one of the following scripts, with location shown relative to the project files once
-cloned from the repository (explained in the [New Developer](../dev-new/dev-new) section):
+cloned from the repository (explained in the [New Developer](../dev-new/dev-new.md) section):
 
 * Windows (via command prompt window):
 	+ [owf-app-geoprocessor-python/build-util/run-pycharm-ce-for-qgis.bat](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python/blob/master/build-util/run-pycharm-ce-for-qgis.bat) - run

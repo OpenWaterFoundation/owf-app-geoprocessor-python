@@ -55,9 +55,19 @@ class FreeGeoLayers(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command removes one or more GeoLayers from the GeoProcessor.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command removes one or more GeoLayers from the GeoProcessor."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayersIDs
+        self.parameter_input_metadata['GeoLayerIDs.Description'] = "a comma-separated list of the ID's of the " \
+            "GeoLayers to free "
+        self.parameter_input_metadata['GeoLayerIDs.Label'] = "GeoLayersIDs"
+        self.parameter_input_metadata['GeoLayerIDs.Required'] = True
+        self.parameter_input_metadata['GeoLayerIDs.Tooltip'] = "A comma-separated list of the IDs of the GeoLayers " \
+            "to free. \nCan also be * where all GeoLayers registered within the GeoProcessor are removed. "
 
         # Class data
         self.warning_count = 0

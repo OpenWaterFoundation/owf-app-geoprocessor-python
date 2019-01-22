@@ -81,9 +81,42 @@ class MergeGeoLayers(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command merges two or more GeoLayers into one GeoLayer.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command merges two or more GeoLayers into one GeoLayer."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayerIDs
+        self.parameter_input_metadata['GeoLayerIDs.Description'] = "a comma-separated list of the identifiers of the " \
+            "GeoLayers to merge"
+        self.parameter_input_metadata['GeoLayerIDs.Label'] = "GeoLayersIDs"
+        self.parameter_input_metadata['GeoLayerIDs.Required'] = True
+        self.parameter_input_metadata['GeoLayerIDs.Tooltip'] = "A comma-separated list of the identifiers of the " \
+                "GeoLayers to merge. \n\nGeoLayerID1, GeoLayerID2, ... \n\nCan also be * where all GeoLayers " \
+                "registered within the GeoProcessor are merged. ${Property} syntax is recognized."
+        # OutputGeoLayerID
+        self.parameter_input_metadata['OutputGeoLayerID.Description'] = "a GeoLayer identifier for the output GeoLayer"
+        self.parameter_input_metadata['OutputGeoLayerID.Label'] = "Output GeoLayerID"
+        self.parameter_input_metadata['OutputGeoLayerID.Required'] = True
+        self.parameter_input_metadata['OutputGeoLayerID.Tooltip'] = "A GeoLayer identifier for the output GeoLayer."
+        # AttributeMap
+        self.parameter_input_metadata['AttributeMap.Description'] = "specify new names for the output geolayer" \
+            "attributes."
+        self.parameter_input_metadata['AttributeMap.Label'] = "Attribute Map"
+        self.parameter_input_metadata['AttributeMap.Tooltip'] = "Specify new names for the output geolayer attributes."\
+            "\n\nOriginalAttributeName1:MergedAttributeName1, \nOriginalAttributeName2:MergedAttributeName2 \n\n" \
+            "See the Attribute Map section for more information."
+        # IfGeoLayerIDExists
+        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID Exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = "The action that occurs if the OutputGeoLayerID " \
+            "already exists within the GeoProcessor. \nReplace : The existing GeoLayer within the " \
+            "GeoProcessor is overwritten with the new GeoLayer. No warning is logged. \n" \
+            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new " \
+            "GeoLayer. A warning is logged. \nWarn : The new GeoLayer is not created. A warning is logged. \n" \
+            "Fail : The new GeoLayer is not created. A fail message is logged. "
+        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
 
         # Class data
         self.warning_count = 0

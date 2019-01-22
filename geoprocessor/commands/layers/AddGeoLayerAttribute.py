@@ -73,9 +73,38 @@ class AddGeoLayerAttribute(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
+        self.command_metadata = dict()
         self.command_metadata["Description"] = "This command adds a single attribute to a single GeoLayer."
-        self.command_metadata["EditorType"] = "Generic"
+        self.command_metadata["EditorType"] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Description'] = "the ID of the GeoLayer"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer to have an attribute added. ${" \
+            "Property} syntax is recognized. "
+        # AttributeName
+        self.parameter_input_metadata['AttributeName.Description'] = "the attribute name"
+        self.parameter_input_metadata['AttributeName.Label'] = "Attribute Name"
+        self.parameter_input_metadata['AttributeName.Required'] = True
+        self.parameter_input_metadata['AttributeName.Tooltip'] = "The attribute name. Highly recommended to be 10 or " \
+            "less characters. Case-specific."
+        # AttributeType
+        self.parameter_input_metadata['AttributeType.Description'] = "The attribute data type"
+        self.parameter_input_metadata['AttributeType.Label'] = "Attribute Type"
+        self.parameter_input_metadata['AttributeType.Required'] = True
+        self.parameter_input_metadata['AttributeType.Tooltip'] = "The attribute data type. Must be one of the " \
+            "following options: \nstring : The attribute values will be text. e.g. blue, Colorado, helicopter \n" \
+            "int: The attribute values will be integers. e.g. 100, 0, -54 \n" \
+            "double : The attribute values will be real numbers. e.g.100.01, 0.00089, -54.0 \n"\
+            "date : The attribute values will be date values. e.g. YYYY-MM-DD format is recommended. "
+        # InitialValue
+        self.parameter_input_metadata['InitialValue.Description'] = "attribute value"
+        self.parameter_input_metadata['InitialValue.Label'] = "Initial Value"
+        self.parameter_input_metadata['InitialValue.Tooltip'] = "Attribute value. ${Property} syntax is recognized. \n"\
+            "All features are populated with the same value. This parameter is designed to aid in command testing. "
 
         # Class data
         self.warning_count = 0

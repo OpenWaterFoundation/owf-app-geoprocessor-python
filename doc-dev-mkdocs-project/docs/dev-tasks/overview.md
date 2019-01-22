@@ -5,6 +5,7 @@ Details are provided on other pages.
 
 * [Version Control](version-control.md)
 * [Editing Code](editing.md)
+* [Adding a New Command](add-command.md)
 * [Documenting](documenting.md)
 * [Running](running.md)
 * [Testing](testing.md)

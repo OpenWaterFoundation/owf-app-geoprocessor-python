@@ -14,6 +14,7 @@ nav:
   - Overview: dev-tasks/overview.md
   - Version Control: dev-tasks/version-control.md
   - Editing Code: dev-tasks/editing.md
+  - Adding a New Command: dev-tasks/add-command.md
   - Documenting: dev-tasks/documenting.md
   - Running: dev-tasks/running.md
   - Testing: dev-tasks/testing.md

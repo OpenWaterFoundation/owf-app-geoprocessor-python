@@ -88,10 +88,81 @@ class ReadTableFromDataStore(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = ('This command reads a Table from a database DataStore using '
-                                                'Structured Query Language (SQL).')
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command reads a Table from a database DataStore using " \
+                                                "Structured Query Language (SQL)."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # DataStoreID
+        self.parameter_input_metadata['DataStoreID.Description'] = "the identifier of a database DataStore to read"
+        self.parameter_input_metadata['DataStoreID.Label'] = "DataStoreID"
+        self.parameter_input_metadata['DataStoreID.Required'] = True
+        self.parameter_input_metadata['DataStoreID.Tooltip'] = \
+            "The ID of a database DataStore to read. ${Property} syntax is recognized."
+        # DataStoreTable
+        self.parameter_input_metadata['DataStoreTable.Description'] = "name of the database table to read"
+        self.parameter_input_metadata['DataStoreTable.Label'] = "DataStore Table"
+        self.parameter_input_metadata['DataStoreTable.Tooltip'] = \
+            "The name of the database table to read when querying a single table. ${Property} syntax is recognized. " \
+            "\nIf specified, do not specify Sql or SqlFile."
+        # TODO @jurentie 01/22/19 do these need to be read file selector type?
+        self.parameter_input_metadata['DataStoreTable.FileSelector.Type'] = "Read"
+        self.parameter_input_metadata['DataStoreTable.FileSelector.Title'] = "select DataStore Table to read from"
+        # Sql
+        self.parameter_input_metadata['Sql.Description'] = "SQL string that will be used to query the database."
+        self.parameter_input_metadata['Sql.Label'] = "SQL"
+        self.parameter_input_metadata['Sql.Tooltip'] = \
+            "The SQL string that will be used to query the database. ${Property} syntax is recognized." \
+            "\nIf specified, do not specify DataStoreTable or SqlFile."
+        # SqlFile
+        self.parameter_input_metadata['SqlFile.Description'] = "name of the file containing an SQL string"
+        self.parameter_input_metadata['SqlFile.Label'] = "SQL File"
+        self.parameter_input_metadata['SqlFile.Tooltip'] = \
+            "The name of the file containing an SQL string to execute. ${Property} syntax is recognized." \
+            "\nIf specified, do not specify DataStoreTable or Sql."
+        self.parameter_input_metadata['SqlFile.FileSelector.Type'] = "Read"
+        self.parameter_input_metadata['SqlFile.FileSelector.Title'] = "select the SQL file to execute the SQL string"
+        # TableID
+        self.parameter_input_metadata['TableID.Description'] = "a table identifier"
+        self.parameter_input_metadata['TableID.Label'] = "TableID"
+        self.parameter_input_metadata['TableID.Required'] = True
+        self.parameter_input_metadata['TableID.Tooltip'] = \
+            "A Table identifier for the table to be created to contain results. ${Property} syntax is recognized."
+        # Top
+        self.parameter_input_metadata['Top.Description'] = "an integer"
+        self.parameter_input_metadata['Top.Label'] = "Top"
+        self.parameter_input_metadata['Top.Tooltip'] = \
+            "An integer to indicate the number of rows that should be returned. Must be a positive integer. "
+        self.parameter_input_metadata['Top.Value.Default'] = "All rows are returned."
+        # IncludeColumns
+        self.parameter_input_metadata['IncludeColumns.Description'] = "a list of patters to determine the columns " \
+                "to read."
+        self.parameter_input_metadata['IncludeColumns.Label'] = "Include Columns"
+        self.parameter_input_metadata['IncludeColumns.Tooltip'] = \
+            "A list of glob-style patterns to determine the DataStore table columns to read. "
+        self.parameter_input_metadata['IncludeColumns.Value.Default'] = "'*' All columns read"
+        # ExcludeColumns
+        self.parameter_input_metadata['ExcludeColumns.Description'] = "a list of patterns to determine the columns" \
+            "to NOT read"
+        self.parameter_input_metadata['ExcludeColumns.Label'] = "Exclude Columns"
+        self.parameter_input_metadata['ExcludeColumns.Tooltip'] = \
+            "A list of glob-style patterns to determine the DataStore table columns to NOT read. "
+        self.parameter_input_metadata['ExcludeColumns.Value.Default'] = "No columns are excluded"
+        # IfTableIDExists
+        self.parameter_input_metadata['IfTableIDExists.Description'] = "action that occurs if the TableID already exists"
+        self.parameter_input_metadata['IfTableIDExists.Label'] = "If Table Exists"
+        self.parameter_input_metadata['IfTableIDExists.Tooltip'] = \
+            "The action that occurs if the TableID already exists within the GeoProcessor. \n" \
+            "Replace : The existing Table within the GeoProcessor is overwritten with the new Table. No warning " \
+            "is logged." \
+            "ReplaceAndWarn: The existing Table within the GeoProcessor is overwritten with the new Table. " \
+            "A warning is logged." \
+            "Warn : The new Table is not created. A warning is logged." \
+            "Fail : The new Table is not created. A fail message is logged."
+        self.parameter_input_metadata['IfTableIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata['IfTableIDExists.Value.Default'] = "Replace"
 
         # Class data
         self.warning_count = 0

@@ -90,9 +90,60 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command writes a GeoLayer to a delimited file.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command writes a GeoLayer to a delimited file."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+        # OutputFile
+        self.parameter_input_metadata['OutputFile.Description'] = "the property file to write"
+        self.parameter_input_metadata['OutputFile.Label'] = "Output File"
+        self.parameter_input_metadata['OutputFile.Required'] = True
+        self.parameter_input_metadata['OutputFile.Tooltip'] = \
+            "The output delimited file (relative or absolute path). The file extension is not required. " \
+            "${Property} syntax is recognized."
+        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write output file to"
+        # OutputCRS
+        self.parameter_input_metadata['OutputCRS.Description'] = "the coordinate reference system of the output " \
+            "delimited file"
+        self.parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
+        self.parameter_input_metadata['OutputCRS.Tooltip'] = \
+            "The output delimited file (relative or absolute path). The file extension is not required. ${Property} " \
+            "syntax is recognized."
+        self.parameter_input_metadata['OutputCRS.Value.Default'] = "The GeoLayer's CRS"
+        # OutputGeometryFormat
+        self.parameter_input_metadata['OutputGeometryFormat.Description'] = "the geometry representation"
+        self.parameter_input_metadata['OutputGeometryFormat.Label'] = "Output Geometry Format"
+        self.parameter_input_metadata['OutputGeometryFormat.Tooltip'] = \
+            "The geometry representation. Must be one of the following options: " \
+            "\nWKT: The geometry is stored in one column in its Well Known Text (WKT) representation. " \
+            "This type of geometry can represent 2D and 3D POINTS, LINES or POLYGONS. " \
+            "\nXY: The geometry is stored in two columns as X and Y coordinates. " \
+            "This type of geometry can only represent 2D POINTS. The X column is before the Y column." \
+            "\nYX: The geometry is stored in two columns as X and Y coordinates. " \
+            "This type of geometry can only represent 2D POINTS. The Y column is before the X column." \
+            "\nXYZ: The geometry is stored in three columns as X, Y, and Z coordinates. " \
+            "This type of geometry can only represent 3D POINTS."
+        self.parameter_input_metadata['OutputGeometryFormat.Values'] = ["", "WKT", "XY", "YX", "XYZ"]
+        self.parameter_input_metadata['OutputGeometryFormat.Value.Default'] = "XY"
+        # OutputDelimiter
+        self.parameter_input_metadata['OutputDelimiter.Description'] = "the delimiter of the output delimited file"
+        self.parameter_input_metadata['OutputDelimter.Label'] = "Output Delimiter"
+        self.parameter_input_metadata['OutputDelimiter.Tooltip'] = \
+            "The delimiter of the output delimited file. Must be one of the following options: " \
+            "\nCOMMA: the comma (,) " \
+            "\nSEMICOLON: the semicolon (;) " \
+            "\nTAB: a tab character " \
+            "\nSPACE: a space character"
+        self.parameter_input_metadata['OutputDelimiter.Values'] = ["", "COMMA", "SEMICOLON", "TAB", "SPACE"]
+        self.parameter_input_metadata['OutputDelimiter.Value.Default'] = "COMMA"
 
         # Class data
         self.warning_count = 0

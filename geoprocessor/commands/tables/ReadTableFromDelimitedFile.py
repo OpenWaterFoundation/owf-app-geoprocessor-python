@@ -73,9 +73,57 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command reads a Table from a delimited file.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command reads a Table from a delimited file."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # InputFile
+        self.parameter_input_metadata['InputFile.Description'] = "the delimited file to read"
+        self.parameter_input_metadata['InputFile.Label'] = "Input File"
+        self.parameter_input_metadata['InputFile.Required'] = True
+        self.parameter_input_metadata['InputFile.Tooltip'] = \
+            "The delimited file (relative or absolute path) to read. ${Property} syntax is recognized."
+        self.parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
+        self.parameter_input_metadata['InputFile.FileSelector.Title'] = "select a delimited file to read"
+        # TableID
+        self.parameter_input_metadata['TableID.Description'] = "a table identifier"
+        self.parameter_input_metadata['TableID.Label'] = "TableID"
+        self.parameter_input_metadata['TableID.Tooltip'] = "A Table identifier"
+        # Delimiter
+        self.parameter_input_metadata['Delimiter.Description'] = "the delimiter character"
+        self.parameter_input_metadata['Delimiter.Label'] = "Delimiter"
+        self.parameter_input_metadata['Delimiter.Tooltip'] = "The delimiter character of the input delimited file."
+        # HeaderLines
+        self.parameter_input_metadata['HeaderLines.Description'] = "number of rows of non-data comments"
+        self.parameter_input_metadata['HeaderLines.Label'] = "Header Lines"
+        self.parameter_input_metadata['HeaderLines.Tooltip'] = \
+            "The number of rows representing non-data comments. These columns are not included in the output " \
+            "Table data values."
+        self.parameter_input_metadata['HeaderLines.Value.Default'] = "0"
+        # NullValues
+        self.parameter_input_metadata['NullValues.Description'] = "a list of values that should be convert to NULL"
+        self.parameter_input_metadata['NullValues.Label'] = "Null Values"
+        self.parameter_input_metadata['NullValues.Tooltip'] = \
+            "A list of values within the delimited file that should br converted to NULL values. The Python None " \
+            "will be used internally."
+        self.parameter_input_metadata['NullValues.Value.Default'] = \
+            "Empty table cell is assumed to be an empty string for string columns and None for other data types."
+        # IfTableIDExists
+        self.parameter_input_metadata[
+            'IfTableIDExists.Description'] = "action that occurs if the TableID already exists"
+        self.parameter_input_metadata['IfTableIDExists.Label'] = "If Table Exists"
+        self.parameter_input_metadata['IfTableIDExists.Tooltip'] = \
+            "The action that occurs if the TableID already exists within the GeoProcessor. \n" \
+            "Replace : The existing Table within the GeoProcessor is overwritten with the new Table. No warning " \
+            "is logged." \
+            "ReplaceAndWarn: The existing Table within the GeoProcessor is overwritten with the new Table. " \
+            "A warning is logged." \
+            "Warn : The new Table is not created. A warning is logged." \
+            "Fail : The new Table is not created. A fail message is logged."
+        self.parameter_input_metadata['IfTableIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata['IfTableIDExists.Value.Default'] = "Replace"
 
         # Class data
         self.warning_count = 0

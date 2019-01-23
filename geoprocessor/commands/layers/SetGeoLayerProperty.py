@@ -57,9 +57,33 @@ class SetGeoLayerProperty(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command sets the value of a property on the GeoLayer.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command sets the value of a property on the GeoLayer."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Description'] = "the GoeLayer identifier"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+        # PropertyName
+        self.parameter_input_metadata['PropertyName.Description'] = "the property name"
+        self.parameter_input_metadata['PropertyName.Label'] = "Property Name"
+        self.parameter_input_metadata['PropertyName.Required'] = True
+        self.parameter_input_metadata['PropertyName.Tooltip'] = "The property name."
+        # PropertyType
+        self.parameter_input_metadata['PropertyType.Description'] = "the property type"
+        self.parameter_input_metadata['PropertyType.Label'] = "Property Label"
+        self.parameter_input_metadata['PropertyType.Required'] = True
+        self.parameter_input_metadata['PropertyType.Tooltip'] = "	The property type as bool, float, int, or str."
+        # PropertyValue
+        self.parameter_input_metadata['PropertyValue.Description'] = "the property value"
+        self.parameter_input_metadata['PropertyValue.Label'] = "Property Value"
+        self.parameter_input_metadata['PropertyValue.Required'] = True
+        self.parameter_input_metadata['PropertyValue.Tooltip'] = "The property value, as a string that can convert" \
+            "to the given type."
 
     def check_command_parameters(self, command_parameters):
         """

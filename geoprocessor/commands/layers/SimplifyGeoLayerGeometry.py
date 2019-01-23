@@ -77,11 +77,50 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = ('This command decreases the number of vertices within the geometries '
-                                                'for each feature of a GeoLayer.\nThis command is useful when the file '
-                                                'size of a GeoLayer is too large.')
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = ("This command decreases the number of vertices within the geometries "
+                                                "for each feature of a GeoLayer.\nThis command is useful when the file "
+                                                "size of a GeoLayer is too large.")
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Description'] = "the GoeLayer identifier"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+        # Tolerance
+        self.parameter_input_metadata['Tolerance.Description'] = "the ε variable in the Douglas–Peucker algorithm"
+        self.parameter_input_metadata['Tolerance.Label'] = "Tolerance"
+        self.parameter_input_metadata['Tolerance.Required'] = True
+        self.parameter_input_metadata['Tolerance.Tooltip'] = \
+            "Units are the same as the distance units of the GeoLayer's coordinate reference system. For example," \
+            "WGS84 EPSG:4326 uses decimal degrees and NAD83 Zone13N EPSG:26913 uses meters."
+        # SimplifyMethod
+        self.parameter_input_metadata['SimplifyMethod.Description'] = "the simplification method used to simplify " \
+            "the GeoLayer"
+        self.parameter_input_metadata['SimplifyMethod.Label'] = "Simplify Method"
+        self.parameter_input_metadata['SimplifyMethod.Tooltip'] = \
+            "The simplification method used to simplify the GeoLayer." \
+            "\nDouglasPeucker : Use the Douglas-Peucker algorithm to simplify the GeoLayer."
+        self.parameter_input_metadata['SimplifyMethod.Value.Default'] = "DouglasPeucker"
+        # SimplifiedGeoLayerID
+        self.parameter_input_metadata['SimplifiedGeoLayerID.Description'] = "output simplified GeoLayer identifier"
+        self.parameter_input_metadata['SimplifiedGeoLayerID.Label'] = "Simplified GeoLayerID"
+        self.parameter_input_metadata['SimplifiedGeoLayerID.Tooltip'] = \
+            "A GeoLayer identifier for the output simplified GeoLayer."
+        self.parameter_input_metadata['SimplifiedGeoLayerID.Value.Default'] = "GeoLayerID_simple_Tolerance"
+        # IfGeoLayerIDExists
+        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID Exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = "The action that occurs if the OutputGeoLayerID " \
+            "already exists within the GeoProcessor. \nReplace : The existing GeoLayer within the " \
+            "GeoProcessor is overwritten with the new GeoLayer. No warning is logged. \n" \
+            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new " \
+            "GeoLayer. A warning is logged. \nWarn : The new GeoLayer is not created. A warning is logged. \n" \
+            "Fail : The new GeoLayer is not created. A fail message is logged. "
+        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
 
         # Class data
         self.warning_count = 0

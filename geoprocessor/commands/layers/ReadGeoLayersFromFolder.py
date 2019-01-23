@@ -121,8 +121,8 @@ class ReadGeoLayersFromFolder(AbstractCommand):
             "No warning is logged.\n"
             "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
             "GeoLayer. A warning is logged. \n"
-            "  Warn : The new GeoLayer is not created. A warning is logged. \n"
-            "  Fail : The new GeoLayer is not created. A fail message is logged.")
+            "Warn : The new GeoLayer is not created. A warning is logged. \n"
+            "Fail : The new GeoLayer is not created. A fail message is logged.")
         self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
         self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
 

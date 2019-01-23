@@ -85,14 +85,13 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
         self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The identifier of the GeoLayer to write."
         # OutputFile
         self.parameter_input_metadata['OutputFile.Description'] = "the property file to write"
         self.parameter_input_metadata['OutputFile.Label'] = "Output File"
         self.parameter_input_metadata['OutputFile.Required'] = True
         self.parameter_input_metadata['OutputFile.Tooltip'] = \
-            "The output Esri  Shapefile (relative or absolute path). ${Property} syntax is recognized. " \
-            "${Property} syntax is recognized."
+            "The output Esri  Shapefile (relative or absolute path). ${Property} syntax is recognized. "
         self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
         self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write output file to"
         # OutputCRS
@@ -106,13 +105,13 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             "to the new CRS."
         self.parameter_input_metadata['OutputCRS.Value.Default'] = "The GeoLayer's CRS"
         # zipOutput
-        self.parameter_input_metadata['zipOutput.Description'] = "Boolean"
-        self.parameter_input_metadata['zipOutput.Label'] = "Zip Output"
-        self.parameter_input_metadata['zipOutput.Tooltip'] = "If TRUE, the GeoLayer is written as a zipped " \
+        self.parameter_input_metadata['ZipOutput.Description'] = "Boolean"
+        self.parameter_input_metadata['ZipOutput.Label'] = "Zip Output"
+        self.parameter_input_metadata['ZipOutput.Tooltip'] = "If TRUE, the GeoLayer is written as a zipped " \
             "shapefile. " \
             "\nIf FALSE the GeoLayer is witten as an unzipped shapefile."
-        self.parameter_input_metadata['zipOutput.Value.Default'] = "FALSE"
-        self.parameter_input_metadata['zipOutput.Values'] = ["", "TRUE", "FALSE"]
+        self.parameter_input_metadata['ZipOutput.Value.Default'] = "FALSE"
+        self.parameter_input_metadata['ZipOutput.Values'] = ["", "TRUE", "FALSE"]
 
         # Class data
         self.warning_count = 0

@@ -100,13 +100,15 @@ class WriteTableToDataStore(AbstractCommand):
         self.parameter_input_metadata['TableID.Required'] = True
         self.parameter_input_metadata['TableID.Tooltip'] = "A Table identifier"
         # IncludeColumns
-        self.parameter_input_metadata['IncludeColumns.Description'] = "a comma separated list of which columns to write"
+        self.parameter_input_metadata['IncludeColumns.Description'] = "a comma separated list of which columns to " \
+                                                                      "include "
         self.parameter_input_metadata['IncludeColumns.Label'] = "Include Columns"
         self.parameter_input_metadata['IncludeColumns.Tooltip'] = \
             "A comma-separated list of the glob-style patterns filtering which columns to write. "
         self.parameter_input_metadata['IncludeColumns.Value.Default'] = "'*' all columns are processed"
         # ExcludeColumns
-        self.parameter_input_metadata['ExcludeColumns.Description'] = "a comma separated list of which columns to write"
+        self.parameter_input_metadata['ExcludeColumns.Description'] = "a comma separated list of which columns to " \
+                                                                      "exclude "
         self.parameter_input_metadata['ExcludeColumns.Label'] = "Exclude Columns"
         self.parameter_input_metadata['ExcludeColumns.Tooltip'] = \
             "A comma-separated list of the glob-style patterns filtering which columns to write. "
@@ -136,14 +138,14 @@ class WriteTableToDataStore(AbstractCommand):
             "Use the syntax: ColumnName:DatastoreTableName, ColumnName:DatastoreTableName,..."
         self.parameter_input_metadata['ColumnMap.Value.Default'] = \
             "DataStore table columns names are assumed to match the Table column names."
-        # DataStoreRelatedColumnMap
-        self.parameter_input_metadata['DataStoreRelatedColumnMap.Description'] = "datastore columns that need to match" \
+        # DataStoreRelatedColumnsMap
+        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Description'] = "datastore columns that need to match" \
             "values in a related table"
-        self.parameter_input_metadata['DataStoreRelatedColumnMap.Label'] = "DataStore Related Column Map"
-        self.parameter_input_metadata['DataStoreRelatedColumnMap.Tooltip'] = \
+        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Label'] = "DataStore Related Column Map"
+        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Tooltip'] = \
             "Indicate datastore columns that need to match values in a related table in the datastore. This " \
             "parameter is currently disabled."
-        self.parameter_input_metadata['DataStoreRelatedColumnMap.Value.Default'] = \
+        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Value.Default'] = \
             "DataStore table columns are assumed to match the column names in TableID, with no need to perform " \
             "reference table value matching."
         # WriteMode
@@ -154,14 +156,14 @@ class WriteTableToDataStore(AbstractCommand):
             "NewTableInsert: a new table is added to the database and all rows of TableID are added to " \
             "the database table \n" \
             "ExistingTableOverwrite: the existing database table is dropped and another database table is " \
-            "added (with the same name). All rows of TableID are added to the database table \n" \
+            "added (with the same name).\nAll rows of TableID are added to the database table\n" \
             "ExistingTableInsert: rows of the TableID that do NOT conflict with any of the rows in the existing \n" \
-            "database table are appended to the database table." \
+            "database table are appended to the database table.\n" \
             "ExistingTableUpdate: rows of the TableID that do conflict with any of the rows in the existing " \
-            "database table are used to update the existing database rows. The rows that do NOT conflict with any " \
-            "of the rows in the existing database table are NOT appended to the database table." \
+            "database table are used to update the existing database rows.\nThe rows that do NOT conflict with any " \
+            "of the rows in the existing database table are NOT appended to the database table.\n" \
             "ExistingTableInsertUpdate: rows of the TableID that do NOT conflict with any of the rows in the " \
-            "existing database table are appended to the database table. Rows of the TableID that do conflict " \
+            "existing database table are appended to the database table.\nRows of the TableID that do conflict " \
             "with any of the rows in the existing database table are used to update the existing database rows."
 
         # Class data

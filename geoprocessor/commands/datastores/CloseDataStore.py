@@ -60,6 +60,28 @@ class CloseDataStore(AbstractCommand):
         self.command_name = "CloseDataStore"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
+        # Command metadata for command editor display
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command closes a DataStore connection."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # DataStoreID
+        self.parameter_input_metadata['DataStoreID.Description'] = "the identifier of the DataStore to close"
+        self.parameter_input_metadata['DataStoreID.Label'] = "DataStoreID"
+        self.parameter_input_metadata['DataStoreID.Required'] = True
+        self.parameter_input_metadata['DataStoreID.Tooltip'] = \
+            "The ID of the DataStore to close. Can be specified using ${Property}."
+        # StatusMessage
+        self.parameter_input_metadata['StatusMessage.Description'] = "a status message to display"
+        self.parameter_input_metadata['StatusMessage.Label'] = "Status Message"
+        self.parameter_input_metadata['StatusMessage.Tooltip'] = \
+            "A status message to display when the datastore information is viewed.\nThe status may be reset if the " \
+            "connection is automatically restored, for example when a subsequent database interaction occurs.\n" \
+            "Can be specified using ${Property}."
+        self.parameter_input_metadata['StatusMessage.Value.Default'] = "DataStore [DataStoreID] has been closed"
+
         # Class data
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)

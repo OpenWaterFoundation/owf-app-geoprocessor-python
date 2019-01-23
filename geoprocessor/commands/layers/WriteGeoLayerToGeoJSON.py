@@ -94,10 +94,10 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write output file to"
         # OutputCRS
         self.parameter_input_metadata['OutputCRS.Description'] = "the coordinate reference system of the output " \
-                                                                 "delimited file"
+                                                                 "GeoJSON"
         self.parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
         self.parameter_input_metadata['OutputCRS.Tooltip'] = \
-            "The coordinate reference system of the output GeoJSON. EPSG or ESRI code format required " \
+            "The coordinate reference system of the output GeoJSON.\nEPSG or ESRI code format required " \
             "(e.g. EPSG:4326, EPSG:26913, ESRI:102003). " \
             "\nIf the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected " \
             "to the new CRS."
@@ -109,7 +109,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
             "The number of decimal points to include in the output GeoJSON file's coordinates. " \
             "Must be a positive integer at or between 0 and 15. " \
             "\nThe precision of coordinate values can greatly impact the size of the file and precision of drawing " \
-            "the features. For example, a higher OutputPrecision value increases the output GeoJSON file size and " \
+            "the features.\nFor example, a higher OutputPrecision value increases the output GeoJSON file size and " \
             "increases the geometry's precision."
         self.parameter_input_metadata['OutputPrecision.Value.Default'] = "5"
 

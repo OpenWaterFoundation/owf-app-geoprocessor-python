@@ -89,13 +89,13 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Description'] = "the GoeLayer identifier"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
         self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer to be simplified."
         # Tolerance
         self.parameter_input_metadata['Tolerance.Description'] = "the ε variable in the Douglas–Peucker algorithm"
         self.parameter_input_metadata['Tolerance.Label'] = "Tolerance"
         self.parameter_input_metadata['Tolerance.Required'] = True
         self.parameter_input_metadata['Tolerance.Tooltip'] = \
-            "Units are the same as the distance units of the GeoLayer's coordinate reference system. For example," \
+            "Units are the same as the distance units of the GeoLayer's coordinate reference system.\nFor example," \
             "WGS84 EPSG:4326 uses decimal degrees and NAD83 Zone13N EPSG:26913 uses meters."
         # SimplifyMethod
         self.parameter_input_metadata['SimplifyMethod.Description'] = "the simplification method used to simplify " \

@@ -79,7 +79,7 @@ class ReadTableFromExcel(AbstractCommand):
         self.parameter_input_metadata['InputFile.Label'] = "Input File"
         self.parameter_input_metadata['InputFile.Required'] = True
         self.parameter_input_metadata['InputFile.Tooltip'] = \
-            "The Excel workbook file (.xls or .xlsx) with the Excel worksheet to read (relative or absolute path). " \
+            "The Excel workbook file (.xls or .xlsx) with the Excel worksheet to read (relative or absolute path).\n" \
             "${Property} syntax is recognized."
         self.parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
         self.parameter_input_metadata['InputFile.FileSelector.Title'] = "select a delimited file to read"

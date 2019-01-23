@@ -77,12 +77,12 @@ class SetGeoLayerProperty(AbstractCommand):
         self.parameter_input_metadata['PropertyType.Description'] = "the property type"
         self.parameter_input_metadata['PropertyType.Label'] = "Property Label"
         self.parameter_input_metadata['PropertyType.Required'] = True
-        self.parameter_input_metadata['PropertyType.Tooltip'] = "	The property type as bool, float, int, or str."
+        self.parameter_input_metadata['PropertyType.Tooltip'] = "The property type as bool, float, int, or str."
         # PropertyValue
         self.parameter_input_metadata['PropertyValue.Description'] = "the property value"
         self.parameter_input_metadata['PropertyValue.Label'] = "Property Value"
         self.parameter_input_metadata['PropertyValue.Required'] = True
-        self.parameter_input_metadata['PropertyValue.Tooltip'] = "The property value, as a string that can convert" \
+        self.parameter_input_metadata['PropertyValue.Tooltip'] = "The property value, as a string that can convert " \
             "to the given type."
 
     def check_command_parameters(self, command_parameters):

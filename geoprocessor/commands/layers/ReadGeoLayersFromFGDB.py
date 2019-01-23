@@ -127,9 +127,9 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer.  "
             "No warning is logged.\n"
             "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
-            "GeoLayer. A warning is logged. \n"
-            "  Warn : The new GeoLayer is not created. A warning is logged. \n"
-            "  Fail : The new GeoLayer is not created. A fail message is logged.")
+            "GeoLayer. A warning is logged.\n"
+            "Warn : The new GeoLayer is not created. A warning is logged.\n"
+            "Fail : The new GeoLayer is not created. A fail message is logged.")
         self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
         self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
         # FeatureClass
@@ -141,6 +141,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         # GeoLayerID
         self.parameter_input_metadata['GeoLayerID.Description'] = "a GeoLayer identifier"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
         self.parameter_input_metadata['GeoLayerID.Tooltip'] = \
             "A GeoLayer identifier. Formatting characters and ${Property} syntax are recognized."
         # GeoLayerID_prefix
@@ -148,7 +149,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID_prefix.Label'] = "GeoLayerID Prefix"
         self.parameter_input_metadata['GeoLayerID_prefix.Tooltip'] = "GeoLayers read from a file geodatabase have an " \
             "identifier in the GeoLayerID_prefix_FeatureClass format."
-        self.parameter_input_metadata['GeoLayerID.Value.Default'] = "No prefix is used. The GeoLayerID is the name " \
+        self.parameter_input_metadata['GeoLayerID_prefix.Value.Default'] = "No prefix is used. The GeoLayerID is the name " \
             "of the feature class."
         # Subset_Pattern
         self.parameter_input_metadata['Subset_Pattern.Description'] = "globstyle pattern of feature classes to read"

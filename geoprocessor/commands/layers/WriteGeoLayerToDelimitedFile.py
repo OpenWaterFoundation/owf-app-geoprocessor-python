@@ -100,7 +100,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
         self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The identifier of the GeoLayer to write."
         # OutputFile
         self.parameter_input_metadata['OutputFile.Description'] = "the property file to write"
         self.parameter_input_metadata['OutputFile.Label'] = "Output File"
@@ -115,7 +115,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
             "delimited file"
         self.parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
         self.parameter_input_metadata['OutputCRS.Tooltip'] = \
-            "The output delimited file (relative or absolute path). The file extension is not required. ${Property} " \
+            "The output delimited file (relative or absolute path). The file extension is not required.\n${Property} " \
             "syntax is recognized."
         self.parameter_input_metadata['OutputCRS.Value.Default'] = "The GeoLayer's CRS"
         # OutputGeometryFormat

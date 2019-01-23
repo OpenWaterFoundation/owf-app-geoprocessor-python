@@ -74,6 +74,8 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
 
         # Command Parameter Metadata
         self.parameter_input_metadata = dict()
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
         # GeoLayerID
         self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
@@ -91,7 +93,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         self.parameter_input_metadata['IncludeProperties.Description'] = "the name of properties to write"
         self.parameter_input_metadata['IncludeProperties.Label'] = "Include Properties"
         self.parameter_input_metadata['IncludeProperties.Tooltip'] = \
-            "The names of properties to write, separated by commas. The * wildcard can be used to indicate multiple " \
+            "The names of properties to write, separated by commas. The '*' wildcard can be used to indicate multiple " \
             "properties."
         self.parameter_input_metadata['IncludeProperties.Value.Default'] = \
             "If not specified, all processor properties will be written."

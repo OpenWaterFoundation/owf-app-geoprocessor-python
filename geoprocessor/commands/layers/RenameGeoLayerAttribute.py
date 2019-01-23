@@ -74,7 +74,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
         self.parameter_input_metadata['GeoLayerID.Required'] = True
         self.parameter_input_metadata['GeoLayerID.Tooltip'] = \
-            "The ID of the GeoLayer with the attribute to be removed."
+            "The ID of the GeoLayer with the attribute to be renamed."
         # ExistingAttributeName
         self.parameter_input_metadata['ExistingAttributeName.Description'] = "name of the existing attribute"
         self.parameter_input_metadata['ExistingAttributeName.Label'] = "Existing Attribute Name"

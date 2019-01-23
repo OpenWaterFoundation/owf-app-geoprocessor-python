@@ -1064,6 +1064,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_DatastoreProcessing"))
         self.Menu_Commands_DatastoreProcessing.setTitle("Datastore Processing")
         self.Menu_Commands.addAction(self.Menu_Commands_DatastoreProcessing.menuAction())
+        # CloseDataStore
+        self.Menu_Commands_DatastoreProcessing_CloseDataStore = QtWidgets.QAction(main_window)
+        self.Menu_Commands_DatastoreProcessing_CloseDataStore.setObjectName(
+            qt_util.from_utf8("Menu_Commands_DatastoreProcessing_CloseDataStore"))
+        self.Menu_Commands_DatastoreProcessing_CloseDataStore.setText(
+            "CloseDataStore()... <close a DataStore connection>")
+        self.Menu_Commands_DatastoreProcessing_CloseDataStore.triggered.connect(
+            functools.partial(self.new_command_editor, "CloseDataStore"))
+        self.Menu_Commands_DatastoreProcessing.addAction(self.Menu_Commands_DatastoreProcessing_CloseDataStore)
         # OpenDataStore
         self.Menu_Commands_DatastoreProcessing_OpenDataStore = QtWidgets.QAction(main_window)
         self.Menu_Commands_DatastoreProcessing_OpenDataStore.setObjectName(

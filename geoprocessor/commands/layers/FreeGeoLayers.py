@@ -67,7 +67,7 @@ class FreeGeoLayers(AbstractCommand):
         self.parameter_input_metadata['GeoLayerIDs.Label'] = "GeoLayersIDs"
         self.parameter_input_metadata['GeoLayerIDs.Required'] = True
         self.parameter_input_metadata['GeoLayerIDs.Tooltip'] = "A comma-separated list of the IDs of the GeoLayers " \
-            "to free. \nCan also be * where all GeoLayers registered within the GeoProcessor are removed. "
+            "to free. \nCan also be '*' where all GeoLayers registered within the GeoProcessor are removed. "
 
         # Class data
         self.warning_count = 0

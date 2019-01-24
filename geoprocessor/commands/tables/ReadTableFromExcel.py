@@ -68,9 +68,47 @@ class ReadTableFromExcel(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command reads a Table from an Excel file.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command reads a Table from an Excel file."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # InputFile
+        self.parameter_input_metadata['InputFile.Description'] = "the delimited file to read"
+        self.parameter_input_metadata['InputFile.Label'] = "Input File"
+        self.parameter_input_metadata['InputFile.Required'] = True
+        self.parameter_input_metadata['InputFile.Tooltip'] = \
+            "The Excel workbook file (.xls or .xlsx) with the Excel worksheet to read (relative or absolute path).\n" \
+            "${Property} syntax is recognized."
+        self.parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
+        self.parameter_input_metadata['InputFile.FileSelector.Title'] = "select a delimited file to read"
+        # Worksheet
+        self.parameter_input_metadata['Worksheet.Description'] = "the name of an excel spreadsheet"
+        self.parameter_input_metadata['Worksheet.Label'] = "Worksheet"
+        self.parameter_input_metadata['Worksheet.Tooltip'] = \
+            "The name of the Excel worksheet within the Excel workbook to read."
+        self.parameter_input_metadata['Worksheet.Value.Default'] = "The first worksheet in the Excel workbook."
+        # TODO jurentie 01/22/2019 is this a read file?
+        # TableID
+        self.parameter_input_metadata['TableID.Description'] = "a table identifier"
+        self.parameter_input_metadata['TableID.Label'] = "TableID"
+        self.parameter_input_metadata['TableID.Tooltip'] = "A Table identifier"
+        self.parameter_input_metadata['TableID.Value.Default'] = "The Worksheet"
+        # IfTableIDExists
+        self.parameter_input_metadata[
+            'IfTableIDExists.Description'] = "action that occurs if the TableID already exists"
+        self.parameter_input_metadata['IfTableIDExists.Label'] = "If Table Exists"
+        self.parameter_input_metadata['IfTableIDExists.Tooltip'] = \
+            "The action that occurs if the TableID already exists within the GeoProcessor. \n" \
+            "Replace : The existing Table within the GeoProcessor is overwritten with the new Table. No warning " \
+            "is logged." \
+            "ReplaceAndWarn: The existing Table within the GeoProcessor is overwritten with the new Table. " \
+            "A warning is logged." \
+            "Warn : The new Table is not created. A warning is logged." \
+            "Fail : The new Table is not created. A fail message is logged."
+        self.parameter_input_metadata['IfTableIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata['IfTableIDExists.Value.Default'] = "Replace"
 
         # Class data
         self.warning_count = 0

@@ -87,10 +87,84 @@ class WriteTableToDataStore(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = ('This command processes each row in a Table and executes and '
-                                                'SQL statement to insert the row into a database DataStore.')
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command processes each row in a Table and executes and " \
+                                                "SQL statement to insert the row into a database DataStore."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # TableID
+        self.parameter_input_metadata['TableID.Description'] = "a table identifier"
+        self.parameter_input_metadata['TableID.Label'] = "TableID"
+        self.parameter_input_metadata['TableID.Required'] = True
+        self.parameter_input_metadata['TableID.Tooltip'] = "A Table identifier"
+        # IncludeColumns
+        self.parameter_input_metadata['IncludeColumns.Description'] = "a comma separated list of which columns to " \
+                                                                      "include "
+        self.parameter_input_metadata['IncludeColumns.Label'] = "Include Columns"
+        self.parameter_input_metadata['IncludeColumns.Tooltip'] = \
+            "A comma-separated list of the glob-style patterns filtering which columns to write. "
+        self.parameter_input_metadata['IncludeColumns.Value.Default'] = "'*' all columns are processed"
+        # ExcludeColumns
+        self.parameter_input_metadata['ExcludeColumns.Description'] = "a comma separated list of which columns to " \
+                                                                      "exclude "
+        self.parameter_input_metadata['ExcludeColumns.Label'] = "Exclude Columns"
+        self.parameter_input_metadata['ExcludeColumns.Tooltip'] = \
+            "A comma-separated list of the glob-style patterns filtering which columns to write. "
+        self.parameter_input_metadata['ExcludeColumns.Value.Default'] = \
+            "'' (empty string) all columns are processed"
+        # DataStoreID
+        self.parameter_input_metadata['DataStoreID.Description'] = "the identifier of a database DataStore to receive "\
+            "data"
+        self.parameter_input_metadata['DataStoreID.Label'] = "DataStoreID"
+        self.parameter_input_metadata['DataStoreID.Required'] = True
+        self.parameter_input_metadata['DataStoreID.Tooltip'] = \
+            "The ID of a database DataStore to recieve the data. ${Property} syntax is recognized."
+        # DataStoreTable
+        self.parameter_input_metadata['DataStoreTable.Description'] = "name of the database table to receive data"
+        self.parameter_input_metadata['DataStoreTable.Label'] = "DataStore Table"
+        self.parameter_input_metadata['DataStoreTable.Tooltip'] = \
+            "The name of the database table to receive data. ${Property} syntax is recognized. " \
+            "\nIf specified, do not specify Sql or SqlFile."
+        # TODO @jurentie 01/22/19 do these need to be read file selector type?
+        self.parameter_input_metadata['DataStoreTable.FileSelector.Type'] = "Read"
+        self.parameter_input_metadata['DataStoreTable.FileSelector.Title'] = "select DataStore Table to read from"
+        # ColumnMap
+        self.parameter_input_metadata['ColumnMap.Description'] = "which columns in the Table have different names"
+        self.parameter_input_metadata['ColumnMap.Label'] = "Column Map"
+        self.parameter_input_metadata['ColumnMap.Tooltip'] = \
+            "Specify which columns in the Table have different names in the DataStore table. \n" \
+            "Use the syntax: ColumnName:DatastoreTableName, ColumnName:DatastoreTableName,..."
+        self.parameter_input_metadata['ColumnMap.Value.Default'] = \
+            "DataStore table columns names are assumed to match the Table column names."
+        # DataStoreRelatedColumnsMap
+        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Description'] = "datastore columns that need to match" \
+            "values in a related table"
+        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Label'] = "DataStore Related Column Map"
+        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Tooltip'] = \
+            "Indicate datastore columns that need to match values in a related table in the datastore. This " \
+            "parameter is currently disabled."
+        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Value.Default'] = \
+            "DataStore table columns are assumed to match the column names in TableID, with no need to perform " \
+            "reference table value matching."
+        # WriteMode
+        self.parameter_input_metadata['WriteMode.Description'] = "the method used to write data"
+        self.parameter_input_metadata['WriteMode.Label'] = "Write Mode"
+        self.parameter_input_metadata['WriteMode.Tooltip'] = \
+            "The method used to write data. \n" \
+            "NewTableInsert: a new table is added to the database and all rows of TableID are added to " \
+            "the database table \n" \
+            "ExistingTableOverwrite: the existing database table is dropped and another database table is " \
+            "added (with the same name).\nAll rows of TableID are added to the database table\n" \
+            "ExistingTableInsert: rows of the TableID that do NOT conflict with any of the rows in the existing \n" \
+            "database table are appended to the database table.\n" \
+            "ExistingTableUpdate: rows of the TableID that do conflict with any of the rows in the existing " \
+            "database table are used to update the existing database rows.\nThe rows that do NOT conflict with any " \
+            "of the rows in the existing database table are NOT appended to the database table.\n" \
+            "ExistingTableInsertUpdate: rows of the TableID that do NOT conflict with any of the rows in the " \
+            "existing database table are appended to the database table.\nRows of the TableID that do conflict " \
+            "with any of the rows in the existing database table are used to update the existing database rows."
 
         # Class data
         self.warning_count = 0

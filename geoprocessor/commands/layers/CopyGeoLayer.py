@@ -74,10 +74,52 @@ class CopyGeoLayer(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = ('This command copies a GeoLayer to a new GeoLayer, optionally '
-                                                'constraining the copy to a subset of the original features.')
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command copies a GeoLayer to a new GeoLayer, optionally " \
+                                                "constraining the copy to a subset of the original features."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Description'] = "the id of the GeoLayer to be copied"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer to be copied. ${Property} " \
+            "syntax is recognized. "
+        # IncludeAttributes
+        self.parameter_input_metadata['IncludeAttributes.Label'] = "Include Attributes"
+        self.parameter_input_metadata['IncludeAttributes.Tooltip'] = "A comma-separated list of the glob-style " \
+            "patterns filtering which attributes to include in the copied GeoLayer. "
+        self.parameter_input_metadata['IncludeAttributes.Value.Default'] = "*"
+        # ExcludeAttributes
+        self.parameter_input_metadata['ExcludeAttributes.Label'] = "Exclude Attributes"
+        self.parameter_input_metadata['ExcludeAttributes.Tooltip'] = "A comma-separated list of the glob-style " \
+            "patterns filtering which attributes to include in the copied GeoLayer. "
+        self.parameter_input_metadata['ExcludeAttributes.Value.Default'] = "'' (empty string)"
+        # IncludeFeaturesIf
+        self.parameter_input_metadata['IncludeFeaturesIf.Description'] = "an attribute query specifying features"
+        self.parameter_input_metadata['IncludeFeaturesIf.Label'] = "Include Features If"
+        self.parameter_input_metadata['IncludeFeaturesIf.Tooltip'] = "An attribute query specifying features to " \
+            "include in the copied GeoLayer. Expression syntax and capabilities follows QGIS Expression " \
+            "standards. ${Property} syntax is recognized. "
+        self.parameter_input_metadata['IncludeFeaturesIf.Value.Default'] = "All features are copied."
+        # CopiedGeoLayerID
+        self.parameter_input_metadata['CopiedGeoLayerID.Description'] = "the ID of the copied GeoLayer"
+        self.parameter_input_metadata['CopiedGeoLayerID.Label'] = "Copied GeoLayerID"
+        self.parameter_input_metadata['CopiedGeoLayerID.Tooltip'] = "The ID of the copied GeoLayer. ${Property} " \
+            "syntax is recognized. "
+        self.parameter_input_metadata['CopiedGeoLayerID.Value.Default'] = "GeoLayerID_copy"
+        # IfGeoLayerIDExists
+        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID Exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = "The action that occurs if the CopiedGeoLayerID "\
+            "already exists within the GeoProcessor. \nReplace : The existing GeoLayer within the " \
+            "GeoProcessor is overwritten with the new GeoLayer. No warning is logged. \n" \
+            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new " \
+            "GeoLayer. A warning is logged. \nWarn : The new GeoLayer is not created. A warning is " \
+            "logged. \nFail : The new GeoLayer is not created. A fail message is logged. "
+        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
 
         # Class data
         self.warning_count = 0

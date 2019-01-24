@@ -48,12 +48,22 @@ class EndFor(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = ('This command ends a block of commands that start with a For command. '
-                                                'The For and EndFor commands must have the same value for the Name '
-                                                'parameter to allow the processor to determine the start and end '
-                                                'of the block.')
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = ("This command ends a block of commands that start with a For command.\n"
+                                                "The For and EndFor commands must have the same value for the Name "
+                                                "parameter to allow the processor to determine the start and end "
+                                                "of the block.")
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # Name
+        self.parameter_input_metadata['Name.Description'] = "the name that will be matched with name of a For command"
+        self.parameter_input_metadata['Name.Label'] = "Name"
+        self.parameter_input_metadata['Name.Required'] = True
+        self.parameter_input_metadata['Name.Tooltip'] = \
+            "The name that will be matched with the name of a For command to indicate the block of commands in the " \
+            "loop."
 
     def check_command_parameters(self, command_parameters):
         """

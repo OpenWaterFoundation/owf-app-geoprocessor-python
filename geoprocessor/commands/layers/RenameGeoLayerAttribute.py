@@ -63,9 +63,30 @@ class RenameGeoLayerAttribute(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command renames a single attribute in a GeoLayer.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command renames a single attribute in a GeoLayer."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Description'] = "the GeoLayer identifier"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = \
+            "The ID of the GeoLayer with the attribute to be renamed."
+        # ExistingAttributeName
+        self.parameter_input_metadata['ExistingAttributeName.Description'] = "name of the existing attribute"
+        self.parameter_input_metadata['ExistingAttributeName.Label'] = "Existing Attribute Name"
+        self.parameter_input_metadata['ExistingAttributeName.Required'] = True
+        self.parameter_input_metadata['ExistingAttributeName.Tooltip'] = "The name of the existing attribute to be " \
+            "renamed. Case-specific."
+        # NewAttributeName
+        self.parameter_input_metadata['NewAttributeName.Description'] = "new attribute name"
+        self.parameter_input_metadata['NewAttributeName.Label'] = "New Attribute Name"
+        self.parameter_input_metadata['NewAttributeName.Required'] = True
+        self.parameter_input_metadata['NewAttributeName.Tooltip'] = "The new attribute name. Highly recommended to " \
+            "be 10 or less characters. Case-specific."
 
         # Class data
         self.warning_count = 0

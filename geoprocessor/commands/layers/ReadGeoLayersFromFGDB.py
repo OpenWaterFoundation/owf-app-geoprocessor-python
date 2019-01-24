@@ -96,10 +96,68 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = ('This command reads one or more GeoLayers(s) from an Esri File '
-                                                'Geodatabase.')
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = ("This command reads one or more GeoLayers(s) from an Esri File "
+                                                "Geodatabase.")
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # SpatialDataFolder
+        self.parameter_input_metadata['SpatialDataFolder.Description'] = "the file geodatabase to read"
+        self.parameter_input_metadata['SpatialDataFolder.Label'] = "Spatial Data Folder"
+        self.parameter_input_metadata['SpatialDataFolder.Required'] = True
+        self.parameter_input_metadata['SpatialDataFolder.Tooltip'] = "The file geodatabse to read (must end in .gdb)."
+        self.parameter_input_metadata['SpatialDataFolder.FileSelector.Type'] = "Read"
+        self.parameter_input_metadata['SpatialDataFolder.FileSelector.Title'] = "Select the file geodatabase to read."
+        # ReadOnlyOneFeatureClass
+        self.parameter_input_metadata['ReadOnlyOneFeatureClass.Description'] = "boolean"
+        self.parameter_input_metadata['ReadOnlyOneFeatureClass.Label'] = "Read Only One Feature Class"
+        self.parameter_input_metadata['ReadOnlyOneFeatureClass.Required'] = True
+        self.parameter_input_metadata['ReadOnlyOneFeatureClass.Tooltip'] = "If TRUE, only one feature class will be " \
+            "read as a GeoLayer. Must specify a valid feature class name. \nIf FALSE, one or more " \
+            "feature classes will be read as GeoLayers. Can specify the Subset_Pattern to select which feature " \
+            "classes to read. "
+        self.parameter_input_metadata['ReadOnlyOneFeatureClass.Values'] = ["", "TRUE", "FALSE"]
+        # IfGeoLayerIDExists
+        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+            "The action that occurs if the GeoLayerID already exists within the GeoProcessor.\n"
+            "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer.  "
+            "No warning is logged.\n"
+            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
+            "GeoLayer. A warning is logged.\n"
+            "Warn : The new GeoLayer is not created. A warning is logged.\n"
+            "Fail : The new GeoLayer is not created. A fail message is logged.")
+        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+        # FeatureClass
+        self.parameter_input_metadata['FeatureClass.Description'] = "name of feature class to read"
+        self.parameter_input_metadata['FeatureClass.Label'] = "Feature Class"
+        self.parameter_input_metadata['FeatureClass.Required'] = True
+        self.parameter_input_metadata['FeatureClass.Tooltip'] = "The name of the feature class within the file " \
+            "geodatabase to read. ${Property} syntax is recognized."
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Description'] = "a GeoLayer identifier"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = \
+            "A GeoLayer identifier. Formatting characters and ${Property} syntax are recognized."
+        # GeoLayerID_prefix
+        self.parameter_input_metadata['GeoLayerID_prefix.Description'] = "a GeoLayer identifier prefix"
+        self.parameter_input_metadata['GeoLayerID_prefix.Label'] = "GeoLayerID Prefix"
+        self.parameter_input_metadata['GeoLayerID_prefix.Tooltip'] = "GeoLayers read from a file geodatabase have an " \
+            "identifier in the GeoLayerID_prefix_FeatureClass format."
+        self.parameter_input_metadata['GeoLayerID_prefix.Value.Default'] = "No prefix is used. The GeoLayerID is the name " \
+            "of the feature class."
+        # Subset_Pattern
+        self.parameter_input_metadata['Subset_Pattern.Description'] = "globstyle pattern of feature classes to read"
+        self.parameter_input_metadata['Subset_Pattern.Label'] = "Subset Pattern"
+        self.parameter_input_metadata['Subset_Pattern.Tooltip'] = "The glob-style pattern (e.g., CO_* or *_[MC]O) of " \
+            "feature classes to read from the file geodatabase."
+        self.parameter_input_metadata['Subset_Pattern.Value.Default'] = "No pattern is used. All feature classes " \
+            "within the file geodatabase are read."
 
         # Class data
         self.warning_count = 0

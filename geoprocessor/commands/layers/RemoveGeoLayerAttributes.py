@@ -60,9 +60,24 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'This command removes one or more attributes from a GeoLayer.'
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "This command removes one or more attributes from a GeoLayer."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # GeoLayerID
+        self.parameter_input_metadata['GeoLayerID.Description'] = "the GeoLayer identifier"
+        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+        self.parameter_input_metadata['GeoLayerID.Required'] = True
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = \
+            "The ID of the GeoLayer with the attribute to be removed."
+        # AttributeNames
+        self.parameter_input_metadata['AttributeNames.Description'] = "names of the attributes to be removed"
+        self.parameter_input_metadata['AttributeNames.Label'] = "Attribute Names"
+        self.parameter_input_metadata['AttributeNames.Required'] = True
+        self.parameter_input_metadata['AttributeNames.Tooltip'] = "The names of the attributes to be removed. " \
+            "Separated by commas. Case-specific."
 
         # Class data
         self.warning_count = 0

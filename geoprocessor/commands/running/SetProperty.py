@@ -56,10 +56,40 @@ class SetProperty(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
-        self.command_metadata['Description'] = 'The SetProperty command sets the value of a property used by the ' \
-                                               'processor. '
-        self.command_metadata['EditorType'] = 'Generic'
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "The SetProperty command sets the value of a property used by the " \
+                                               "processor. "
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # PropertyName
+        self.parameter_input_metadata['PropertyName.Description'] = "the property name"
+        self.parameter_input_metadata['PropertyName.Label'] = "Property Name"
+        self.parameter_input_metadata['PropertyName.Required'] = True
+        self.parameter_input_metadata['PropertyName.Tooltip'] = "The property name."
+        # PropertyType
+        self.parameter_input_metadata['PropertyType.Description'] = "the property type"
+        self.parameter_input_metadata['PropertyType.Label'] = "Property Type"
+        self.parameter_input_metadata['PropertyType.Required'] = True
+        self.parameter_input_metadata['PropertyType.Tooltip'] = \
+            "The property type as bool, float, int, or str."
+        # PropertyValue
+        self.parameter_input_metadata['PropertyValue.Description'] = "the property value as string"
+        self.parameter_input_metadata['PropertyValue.Label'] = "Property Value"
+        self.parameter_input_metadata['PropertyValue.Tooltip'] = \
+            "The property value, as a string that can convert to the given type."
+        self.parameter_input_metadata['PropertyValue.Value.Default'] = \
+            "Either 'PropertyValue' or 'PropertyValues' must be specified."
+        # PropertyValues
+        self.parameter_input_metadata['PropertyValues.Description'] = "the property value as a list of strings"
+        self.parameter_input_metadata['PropertyValues.Label'] = "Property Values"
+        self.parameter_input_metadata['PropertyValues.Tooltip'] = \
+            "The property values, as a list of string. Currently, comma-separated values are supported with optional" \
+            "\nsurrounding [ ]. In the future single-quoted strings will be supported to allow commas in the strings. " \
+            "\nStrings are stripped of surrounding whitespace."
+        self.parameter_input_metadata['PropertyValues.Value.Default'] = \
+            "Either 'PropertyValue' or 'PropertyValues' must be specified."
 
     def check_command_parameters(self, command_parameters):
         """

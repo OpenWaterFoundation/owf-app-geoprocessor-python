@@ -48,6 +48,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Command being edited
         self.command = command
 
+        # GeoProcessorUI
+        self.geoprocessor_ui = None
+
         # "input_edit_objects" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
         # KEY (str): the command parameter name
@@ -165,6 +168,53 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         # Return the specified Boolean.
         return specified
+
+    def check_command_file_saved(self):
+        """
+        Before user is able to select a file path from command editor. Make sure that the command file has
+        been saved, or at the very least notify the user that if they choose not to save
+        the relative paths will be relative to default working directory, not where the command file
+        is saved.
+
+        Returns:
+
+        """
+        geoprocessor_ui = self.command.geoprocessor_ui
+
+        if not geoprocessor_ui.command_file_saved:
+            print("working with initial dir. need to save")
+            button_selected = qt_util.new_message_box(
+                QtWidgets.QMessageBox.Question,
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                "This command file has not been saved. Would you like to save to "
+                "ensure relative paths are relative to command file location?",
+                "Save Commands File?")
+            #button_selected = qt_util.question_box("This command file has not been saved. Would you like to save to "
+                                 #"ensure relative paths are relative to command file location?")
+            if button_selected == QtWidgets.QMessageBox.Yes:
+                # User selected ok. Open a window to save the command file
+                # Get geoprocessor ui
+                geoprocessor_ui = self.command.geoprocessor_ui
+                geoprocessor_ui.ui_action_save_commands_as()
+                if geoprocessor_ui.saved_file == "":
+                    qt_util.new_message_box(
+                        QtWidgets.QMessageBox.Warning,
+                        QtWidgets.QMessageBox.Ok,
+                        "New command file has not been saved. \nThis may cause problems with relative paths.",
+                        "File Not Saved")
+                else:
+                    qt_util.new_message_box(
+                        QtWidgets.QMessageBox.Information,
+                        QtWidgets.QMessageBox.Ok,
+                        "New command file has been saved.",
+                        "File Saved")
+            else:
+                qt_util.new_message_box(
+                    QtWidgets.QMessageBox.Warning,
+                    QtWidgets.QMessageBox.Ok,
+                    "New command file has not been saved. \nThis may cause problems with relative paths.",
+                    "File Not Saved")
+                pass
 
     def check_command_parameters(self):
         """
@@ -704,6 +754,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         """
 
         logger = logging.getLogger(__name__)
+
+        self.check_command_file_saved()
 
         # Initialize folder to None and determine below with several checks.
         folder_start = None

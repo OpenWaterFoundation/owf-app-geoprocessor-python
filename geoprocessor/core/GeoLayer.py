@@ -287,11 +287,26 @@ class GeoLayer(object):
         """
         self.properties[property_name] = property_value
 
+    def split_by_attribute(self, attribute_name, output_qgsvectorlayers):
+        """
+        Splits a GeoLayer by a selected attribute.
+
+        Args:
+            attribute_name (str): the name of the attribute to split on.
+            output_qgsvectorlayers (str): the names of the output GeoLayers.
+
+        Returns:
+            multiple GeoLayers.  The number of layers is based on the number of unique values of the selected attribute.
+        """
+
+        # Run processing in the qgis utility function.
+        qgis_util.split_qgsvectorlayer_by_attribute(self.qgs_vector_layer, attribute_name, output_qgsvectorlayers)
+
     def write_to_disk(self, output_file_absolute):
         """
         Write the GeoLayer to a file on disk. The in-memory GeoLayer will be replaced by the on-disk GeoLayer. This
         utility method is useful when running a command that requires the input of a source path rather than a
-        QGSVectorLayer object. For example, teh "qgis:mergevectorlayers" requires source paths as inputs.
+        QGSVectorLayer object. For example, the "qgis:mergevectorlayers" requires source paths as inputs.
 
         Args:
             output_file_absolute: the full file path for the on-disk GeoLayer

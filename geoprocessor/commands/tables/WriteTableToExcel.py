@@ -71,54 +71,50 @@ class WriteTableToExcel(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = "This command writes a Table to an Excel file."
+        self.command_metadata['Description'] = "Write a table to an Excel file."
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
         self.parameter_input_metadata = dict()
         # TableID
-        self.parameter_input_metadata['TableID.Description'] = "a table identifier"
+        self.parameter_input_metadata['TableID.Description'] = "table identifier"
         self.parameter_input_metadata['TableID.Label'] = "TableID"
         self.parameter_input_metadata['TableID.Required'] = True
         self.parameter_input_metadata['TableID.Tooltip'] = "A Table identifier to write"
         # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "the output delimited file"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output File"
+        self.parameter_input_metadata['OutputFile.Description'] = "output Excel file"
+        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
         self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = \
-            "The name of the Excel workbook to write to (relative or absolute path). ${Property} syntax is " \
-            "recognized.\n" \
-            "Can be an existing or non-existing Excel file. If non-existing, the Excel workbook file (.xlsx) is " \
-            "created."
+        self.parameter_input_metadata['OutputFile.Tooltip'] = (
+            "The name of the Excel workbook to write to (relative or absolute path). ${Property} syntax is "
+            "recognized.\n"
+            "Can be an existing or non-existing Excel file. If non-existing, the Excel workbook file (.xlsx) is "
+            "created.")
         # OutputWorksheet
-        self.parameter_input_metadata['OutputWorksheet.Description'] = "the name of the worksheet that table will be " \
-            "written to"
-        self.parameter_input_metadata['OutputWorksheet.Label'] = "Output Worksheet"
+        self.parameter_input_metadata['OutputWorksheet.Description'] = "worksheet to write"
+        self.parameter_input_metadata['OutputWorksheet.Label'] = "Output worksheet"
         self.parameter_input_metadata['OutputWorksheet.Required'] = True
-        self.parameter_input_metadata['OutputWorksheet.Tooltip'] = \
-            "The name of the worksheet that the Table will be written to. Can be an existing or non-existing " \
-            "worksheet.\nIf existing, the worksheet will be overwritten with the Table data."
+        self.parameter_input_metadata['OutputWorksheet.Tooltip'] = (
+            "The name of the worksheet that the Table will be written to. Can be an existing or non-existing "
+            "worksheet.\nIf existing, the worksheet will be overwritten with the Table data.")
         # ColumnsToInclude
-        self.parameter_input_metadata['ColumnsToInclude.Description'] = "A comma-separated list of the glob-sytle " \
-            "patterns filtering which columns to include in the Excel workbook file. "
+        self.parameter_input_metadata['ColumnsToInclude.Description'] = "columns to include"
         self.parameter_input_metadata['ColumnsToInclude.Label'] = "Include Columns"
         self.parameter_input_metadata['ColumnsToInclude.Tooltip'] = \
-            "A comma-separated list of the glob-style patterns filtering which columns to write. "
-        self.parameter_input_metadata['ColumnsToInclude.Value.Default'] = "'*' all columns are processed"
+            "A comma-separated list of the glob-style patterns filtering which columns to write."
+        self.parameter_input_metadata['ColumnsToInclude.Value.Default'] = "* - all columns are processed"
         # ColumnsToExclude
-        self.parameter_input_metadata['ColumnsToExclude.Description'] = "A comma-separated list of the glob-style " \
-            "patterns filtering which columns to exclude in the Excel workbook file. "
-        self.parameter_input_metadata['ColumnsToExclude.Label'] = "Exclude Columns"
+        self.parameter_input_metadata['ColumnsToExclude.Description'] = "columns to exclude"
+        self.parameter_input_metadata['ColumnsToExclude.Label'] = "Exclude columns"
         self.parameter_input_metadata['ColumnsToExclude.Tooltip'] = \
             "A comma-separated list of the glob-style patterns filtering which columns to write. "
-        self.parameter_input_metadata['ColumnsToExclude.Value.Default'] = \
-            "'' (empty string) all columns are processed"
+        self.parameter_input_metadata['ColumnsToExclude.Value.Default'] = "all columns are processed"
         # WriteIndexColumn
-        self.parameter_input_metadata['WriteIndexColumn.Description'] = "boolean"
-        self.parameter_input_metadata['WriteIndexColumn.Label'] = "Write Index Column"
-        self.parameter_input_metadata['WriteIndexColumn.Tooltip'] = \
-            "If TRUE, the Table's index column is included in the output Excel file.\n" \
-            "If FALSE, the Table's index column is not included in the output Excel file"
+        self.parameter_input_metadata['WriteIndexColumn.Description'] = "whether to write index column"
+        self.parameter_input_metadata['WriteIndexColumn.Label'] = "Write index column?"
+        self.parameter_input_metadata['WriteIndexColumn.Tooltip'] = (
+            "If TRUE, the Table's index column is included in the output Excel file.\n"
+            "If FALSE, the Table's index column is not included in the output Excel file")
         self.parameter_input_metadata['WriteIndexColumn.Value.Default'] = "TRUE"
         self.parameter_input_metadata['WriteIndexColumn.Values'] = ["", "TRUE", "FALSE"]
 

@@ -30,7 +30,6 @@ import geoprocessor.util.validator_util as validators
 import geoprocessor.util.qgis_util as qgis_util
 
 import logging
-
 import os
 
 from processing.core.Processing import Processing
@@ -77,35 +76,40 @@ class ClipGeoLayer(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = "This command clips an input GeoLayer by a second GeoLayer, " \
-                                                "the clipping GeoLayer."
+        self.command_metadata['Description'] =\
+            "Clip an input GeoLayer by a second GeoLayer (the clipping GeoLayer)."
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
         self.parameter_input_metadata = dict()
         # InputGeoLayerID
-        self.parameter_input_metadata['InputGeoLayerID.Description'] = "The ID of the input GeoLayer"
+        self.parameter_input_metadata['InputGeoLayerID.Description'] = "input GeoLayerID"
         self.parameter_input_metadata['InputGeoLayerID.Label'] = "Input GeoLayerID"
         self.parameter_input_metadata['InputGeoLayerID.Required'] = True
         self.parameter_input_metadata['InputGeoLayerID.Tooltip'] = "The ID of the input GeoLayer."
         # ClippingGeoLayerID
-        self.parameter_input_metadata['ClippingGeoLayerID.Description'] = "the ID of the clipping GeoLayer"
+        self.parameter_input_metadata['ClippingGeoLayerID.Description'] = "clipping GeoLayerID"
         self.parameter_input_metadata['ClippingGeoLayerID.Label'] = "Clipping GeoLayerID"
         self.parameter_input_metadata['ClippingGeoLayerID.Required'] = True
-        self.parameter_input_metadata['ClippingGeoLayerID.Tooltip'] = "The ID of the clipping GeoLayer. The clipping " \
-            "GeoLayer must be contain polygon geometry. "
+        self.parameter_input_metadata['ClippingGeoLayerID.Tooltip'] =\
+            "The ID of the clipping GeoLayer. The clipping GeoLayer must be contain polygon geometry. "
         # OutputGeoLayerID
-        self.parameter_input_metadata['OutputGeoLayerID.Description'] = "a GeoLayer identifier for the output GeoLayer"
+        self.parameter_input_metadata['OutputGeoLayerID.Description'] = "output GeoLayerID"
         self.parameter_input_metadata['OutputGeoLayerID.Label'] = "Output GeoLayerID"
         self.parameter_input_metadata['OutputGeoLayerID.Tooltip'] = "A GeoLayer identifier for the output GeoLayer."
+        self.parameter_input_metadata['OutputGeoLayerID.Value.Default.Description'] =\
+            "InputGeoLayerID_clippedBy_OutputGeoLayerID"
         # IfGeoLayerIDExists
+        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
         self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID Exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = "The action that occurs if the OutputGeoLayerID " \
-            "already exists within the GeoProcessor. \nReplace : The existing GeoLayer within the " \
-            "GeoProcessor is overwritten with the new GeoLayer. No warning is logged. \n" \
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new " \
-            "GeoLayer. A warning is logged. \nWarn : The ClipGeoLayer command does not run. " \
-            "A warning is logged. \nFail : The ClipGeoLayer command does not run. A fail message is logged."
+        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+            "The action that occurs if the OutputGeoLayerID already exists within the GeoProcessor.\n"
+            "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer."
+            "No warning is logged.\n"
+            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer."
+            "A warning is logged. \n"
+            "Warn : The ClipGeoLayer command does not run.  A warning is logged. \n"
+            "Fail : The ClipGeoLayer command does not run. A fail message is logged.")
         self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
         self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
 

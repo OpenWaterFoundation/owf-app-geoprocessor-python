@@ -72,7 +72,7 @@ class WriteGeoLayerToKML(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = "This command writes a GeoLayer to a file in KML format."
+        self.command_metadata['Description'] = "Write a GeoLayer to a file in KML format."
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
@@ -83,35 +83,36 @@ class WriteGeoLayerToKML(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Required'] = True
         self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
         # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "the property file to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output File"
+        self.parameter_input_metadata['OutputFile.Description'] = "property file to write"
+        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
         self.parameter_input_metadata['OutputFile.Required'] = True
         self.parameter_input_metadata['OutputFile.Tooltip'] = \
-            "The output KML file (relative or absolute path). ${Property} syntax is recognized. "
+            "The output KML file (relative or absolute path). ${Property} syntax is recognized."
         self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write output file to"
+        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write output"
         # PlacemarkNameAttribute
-        self.parameter_input_metadata['PlacemarkNameAttribute.Description'] = "the geolayer attribute to populate " \
-            "the KML's placemark"
-        self.parameter_input_metadata['PlacemarkNameAttribute.Label'] = "Placemark Name Attribute"
-        self.parameter_input_metadata['PlacemarkNameAttribute.Tooltip'] = "The GeoLayer attribute to populate the " \
-            "output KML's placemark <name> elements. " \
-            "\nEach GeoLayer feature is coverted into a KML placemark. Each placemark can have a <name> element.\n" \
-            "The attribute values within the PlacemarkNameAttribute will populate each placemark's name. " \
-            "\nFor further explanation, look at the example KML document under the Structure section of the Keyhole " \
-            "Markup Language Wikipedia page."
-        self.parameter_input_metadata['PlacemarkNameAttribute.Value.Default'] = "The output KML placemarks will not " \
-            "have a <name> element."
+        self.parameter_input_metadata['PlacemarkNameAttribute.Description'] =\
+            "geolayer attribute for the KML's placemark name"
+        self.parameter_input_metadata['PlacemarkNameAttribute.Label'] = "Placemark name attribute"
+        self.parameter_input_metadata['PlacemarkNameAttribute.Tooltip'] = (
+            "The GeoLayer attribute to populate the output KML's placemark <name> elements.\n"
+            "Each GeoLayer feature is coverted into a KML placemark. Each placemark can have a <name> element.\n"
+            "The attribute values within the PlacemarkNameAttribute will populate each placemark's name.\n"
+            "For further explanation, look at the example KML document under the Structure section of the Keyhole "
+            "Markup Language Wikipedia page.")
+        self.parameter_input_metadata['PlacemarkNameAttribute.Value.Default.Description'] =\
+            "The output KML placemarks will not have a <name> element."
         # PlacemarkDescriptionAttribute
-        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Description'] = "the GeoLayer attribute to " \
-            "populate the output KML's placemark"
-        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Label'] = "Placemark Description Attribute"
-        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Tooltip'] = \
-            "The GeoLayer attribute to populate the output KML's placemark <description> elements." \
-            "\nEach GeoLayer feature is coverted into a KML placemark. Each placemark can have a <description> element."\
-            "\nThe attribute values within the PlacemarkDescriptionAttribute will populate each placemark's description."\
-            "\nFor further explanation, look at the example KML document under the Structure section of the " \
-            "Keyhole Markup Language Wikipedia page. "
+        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Description'] =\
+            "GeoLayer attribute for KML's placemark description"
+        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Label'] = "Placemark description attribute"
+        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Tooltip'] = (
+            "The GeoLayer attribute to populate the output KML's placemark <description> elements.\n"
+            "Each GeoLayer feature is coverted into a KML placemark. Each placemark can have a <description> element.\n"
+            "The attribute values within the PlacemarkDescriptionAttribute will populate each"
+            "placemark's description.\n"
+            "For further explanation, look at the example KML document under the Structure section of the "
+            "Keyhole Markup Language Wikipedia page.")
         self.parameter_input_metadata['PlacemarkDescriptionAttribute.Value.Default'] = \
             "The output KML placemarks will not have a <description> element."
 

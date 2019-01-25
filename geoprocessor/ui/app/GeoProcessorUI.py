@@ -996,6 +996,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "SimplifyGeoLayerGeometry"))
         self.Menu_Commands_Manipulate_GeoLayers.addAction(
             self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry)
+        # SplitGeoLayerByAttribute
+        self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Manipulate_SplitGeoLayerByAttribute"))
+        self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute.setText(
+            "SplitGeoLayerByAttribute()... <splits a GeoLayer into multiple GeoLayers by an attribute>")
+        self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute.triggered.connect(
+            functools.partial(self.new_command_editor, "SplitGeoLayerByAttribute"))
+        self.Menu_Commands_Manipulate_GeoLayers.addAction(
+            self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute)
 
         # Commands / Analyze GeoLayer menu (disabled)
         self.Menu_Commands_Analyze_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
@@ -1064,15 +1074,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_DatastoreProcessing"))
         self.Menu_Commands_DatastoreProcessing.setTitle("Datastore Processing")
         self.Menu_Commands.addAction(self.Menu_Commands_DatastoreProcessing.menuAction())
-        # CloseDataStore
-        self.Menu_Commands_DatastoreProcessing_CloseDataStore = QtWidgets.QAction(main_window)
-        self.Menu_Commands_DatastoreProcessing_CloseDataStore.setObjectName(
-            qt_util.from_utf8("Menu_Commands_DatastoreProcessing_CloseDataStore"))
-        self.Menu_Commands_DatastoreProcessing_CloseDataStore.setText(
-            "CloseDataStore()... <close a DataStore connection>")
-        self.Menu_Commands_DatastoreProcessing_CloseDataStore.triggered.connect(
-            functools.partial(self.new_command_editor, "CloseDataStore"))
-        self.Menu_Commands_DatastoreProcessing.addAction(self.Menu_Commands_DatastoreProcessing_CloseDataStore)
         # OpenDataStore
         self.Menu_Commands_DatastoreProcessing_OpenDataStore = QtWidgets.QAction(main_window)
         self.Menu_Commands_DatastoreProcessing_OpenDataStore.setObjectName(

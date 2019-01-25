@@ -1000,6 +1000,25 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribut
             qgsvectorlayer.commitChanges()
 
 
+def split_qgsvectorlayer_by_attribute(qgsvectorlayer, attribute_name, output_qgsvectorlayers):
+    """
+    Split the QgsVectorLayer object into multiple vector layers based on an attribute's unique values.
+
+    REF: QGIS User Manual <https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer>
+
+    Args:
+        qgsvectorlayer (QgsVectorLayer): the QGSVectorLayer object
+        attribute_name (str):  the name of the attribute that splits the qgsvectorlayer into multiple layers
+        output_qgsvectorlayers (QgsVectorLayer): the QgsVectorLayer objects that are created by the split
+
+    Returns:
+        multiple QgsVectorLayers.  The number of layers is based on the number of unique values of the selected attribute.
+    """
+
+    # Split the QgsVectorLayer by the chosen attribute.  Output QgsVectorLayer names should be automatically generated??
+    processing.run('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
+
+
 def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer, output_file, crs, geometry_type, separator="COMMA"):
     """
     Write the QgsVectorLayer object to a spatial data file in CSV format.
@@ -1140,3 +1159,4 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer, output_file, crs):
                                             "utf-8",
                                             QgsCoordinateReferenceSystem(crs),
                                             "ESRI Shapefile")
+

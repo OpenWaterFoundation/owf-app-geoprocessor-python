@@ -74,7 +74,7 @@ class AddGeoLayerAttribute(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata["Description"] = "This command adds a single attribute to a single GeoLayer."
+        self.command_metadata["Description"] = "Add a single attribute to a single GeoLayer."
         self.command_metadata["EditorType"] = "Simple"
 
         # Command Parameter Metadata
@@ -83,18 +83,19 @@ class AddGeoLayerAttribute(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Description'] = "the ID of the GeoLayer"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
         self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer to have an attribute added. ${" \
-            "Property} syntax is recognized. "
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] =\
+            "The ID of the GeoLayer to have an attribute added. ${Property} syntax is recognized. "
         # AttributeName
         self.parameter_input_metadata['AttributeName.Description'] = "the attribute name"
-        self.parameter_input_metadata['AttributeName.Label'] = "Attribute Name"
+        self.parameter_input_metadata['AttributeName.Label'] = "Attribute name"
         self.parameter_input_metadata['AttributeName.Required'] = True
-        self.parameter_input_metadata['AttributeName.Tooltip'] = "The attribute name. Highly recommended to be 10 or " \
-            "less characters. Case-specific."
+        self.parameter_input_metadata['AttributeName.Tooltip'] =\
+            "The attribute name. Highly recommended to be 10 or less characters. Case-specific."
         # AttributeType
-        self.parameter_input_metadata['AttributeType.Description'] = "The attribute data type"
-        self.parameter_input_metadata['AttributeType.Label'] = "Attribute Type"
+        self.parameter_input_metadata['AttributeType.Description'] = "the attribute data type"
+        self.parameter_input_metadata['AttributeType.Label'] = "Attribute type"
         self.parameter_input_metadata['AttributeType.Required'] = True
+        self.parameter_input_metadata['AttributeType.Values'] = ['date', 'double', 'int', 'string']
         self.parameter_input_metadata['AttributeType.Tooltip'] = "The attribute data type. Must be one of the " \
             "following options: \nstring : The attribute values will be text. e.g. blue, Colorado, helicopter \n" \
             "int: The attribute values will be integers. e.g. 100, 0, -54 \n" \
@@ -102,7 +103,7 @@ class AddGeoLayerAttribute(AbstractCommand):
             "date : The attribute values will be date values. e.g. YYYY-MM-DD format is recommended. "
         # InitialValue
         self.parameter_input_metadata['InitialValue.Description'] = "attribute value"
-        self.parameter_input_metadata['InitialValue.Label'] = "Initial Value"
+        self.parameter_input_metadata['InitialValue.Label'] = "Attribute value"
         self.parameter_input_metadata['InitialValue.Tooltip'] = "Attribute value. ${Property} syntax is recognized. \n"\
             "All features are populated with the same value. This parameter is designed to aid in command testing. "
 

@@ -69,7 +69,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = {}
-        self.command_metadata['Description'] = "This command writes GeoLayer properties to a file."
+        self.command_metadata['Description'] = "Write GeoLayer properties to a file."
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
@@ -82,31 +82,42 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Required'] = True
         self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
         # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "the property file to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output File"
+        self.parameter_input_metadata['OutputFile.Description'] = "property file to write"
+        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
         self.parameter_input_metadata['OutputFile.Required'] = True
         self.parameter_input_metadata['OutputFile.Tooltip'] = \
             "The property file to write, as an absolute path or relative to the command file, can use ${Property"
         self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write output file to"
+        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write"
         # IncludeProperties
-        self.parameter_input_metadata['IncludeProperties.Description'] = "the name of properties to write"
-        self.parameter_input_metadata['IncludeProperties.Label'] = "Include Properties"
-        self.parameter_input_metadata['IncludeProperties.Tooltip'] = \
-            "The names of properties to write, separated by commas. The '*' wildcard can be used to indicate multiple " \
-            "properties."
-        self.parameter_input_metadata['IncludeProperties.Value.Default'] = \
-            "If not specified, all processor properties will be written."
+        self.parameter_input_metadata['IncludeProperties.Description'] = "properties to write"
+        self.parameter_input_metadata['IncludeProperties.Label'] = "Include properties"
+        self.parameter_input_metadata['IncludeProperties.Tooltip'] = (
+            "The names of properties to write, separated by commas. "
+            "The '*' wildcard can be used to indicate multiple properties.")
+        self.parameter_input_metadata['IncludeProperties.Value.Default.Description'] = "write all properties"
         # WriteMode
-        self.parameter_input_metadata['WriteMode.Description'] = "how the file should be written"
-        self.parameter_input_metadata['WriteMode.Label'] = "Write Mode"
-        self.parameter_input_metadata['WriteMode.Tooltip'] = \
-            "Indicates how the file should be written:" \
-            "\nAppend – append the properties to the file without checking for matches (create the file if " \
-            "it does not exist). " \
-            "\nOverwrite – overwrite the properties file."
+        self.parameter_input_metadata['WriteMode.Description'] = "how to write"
+        self.parameter_input_metadata['WriteMode.Label'] = "Write mode"
+        self.parameter_input_metadata['WriteMode.Tooltip'] = (
+            "Indicates how the file should be written:\n"
+            "Append – append the properties to the file without checking for matches (create the file if "
+            "it does not exist).\n"
+            "Overwrite – overwrite the properties file.")
         self.parameter_input_metadata['WriteMode.Values'] = ["", "Append", "Overwrite"]
         self.parameter_input_metadata['WriteMode.Value.Default'] = "Overwrite"
+        # FileFormat
+        self.parameter_input_metadata['FileFormat.Description'] = "file format"
+        self.parameter_input_metadata['FileFormat.Label'] = "File format"
+        self.parameter_input_metadata['FileFormat.Tooltip'] = "The file format."
+        self.parameter_input_metadata['FileFormat.Values'] = ["", "NameTypeValue", "NameTypeValuePython", "NameValue"]
+        self.parameter_input_metadata['FileFormat.Value.Default'] = 'NameValueType'
+        # SortOrder
+        self.parameter_input_metadata['SortOrder.Description'] = "sort order"
+        self.parameter_input_metadata['SortOrder.Label'] = "Sort order"
+        self.parameter_input_metadata['SortOrder.Tooltip'] = "The sort order."
+        self.parameter_input_metadata['SortOrder.Values'] = ["", "Ascending", "Descending"]
+        self.parameter_input_metadata['SortOrder.Value.Default'] = 'Ascending'
 
     def check_command_parameters(self, command_parameters):
         """

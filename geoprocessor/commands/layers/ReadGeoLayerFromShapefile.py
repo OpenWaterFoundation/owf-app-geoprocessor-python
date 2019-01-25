@@ -103,7 +103,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
         self.parameter_input_metadata['SpatialDataFile.Required'] = True
         self.parameter_input_metadata['SpatialDataFile.FileSelector.Type'] = "Read"
         # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "a GeoLayer identifier"
+        self.parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
         self.parameter_input_metadata['GeoLayerID.Tooltip'] = (
             "A GeoLayer identifier. Formatting characters and ${Property} syntax is recognized.")
@@ -111,7 +111,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             "The GeoJSON filename without the leading path and without the file extension.")
         # IfGeoLayerIDExists
         self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID Exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
         self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
             "The action that occurs if the GeoLayerID already exists within the GeoProcessor.\n"
             "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new"

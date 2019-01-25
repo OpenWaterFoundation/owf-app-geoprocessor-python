@@ -97,7 +97,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         self.parameter_input_metadata['SpatialDataFile.FileSelector.Type'] = "Read"
         self.parameter_input_metadata['SpatialDataFile.FileSelector.Title'] = "Select a GeoJSON file to read"
         # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "a GeoLayer identifier"
+        self.parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
         self.parameter_input_metadata['GeoLayerID.Tooltip'] =\
             "A GeoLayer identifier. Formatting characters and ${Property} syntax are recognized."

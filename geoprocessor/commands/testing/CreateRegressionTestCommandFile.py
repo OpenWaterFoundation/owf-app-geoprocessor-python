@@ -61,7 +61,8 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         self.command_metadata = dict()
         self.command_metadata['Description'] = (
             "This command is used for software functional testing and validation of workflow processes.\n"
-            "It searches all folders in the selected folder to find tests to run.")
+            "It searches all folders in the selected folder to find tests to run and creates a "
+            "test suite command file.")
         self.command_metadata['EditorType'] = "Simple"
 
         # Parameter Metadata

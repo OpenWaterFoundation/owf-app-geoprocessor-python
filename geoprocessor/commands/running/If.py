@@ -55,8 +55,9 @@ class If(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = "The If command evaluates a conditional statement and if true will " \
-                                               "result in the commands between If and matching EndIf being executed. "
+        self.command_metadata['Description'] = (
+            "The If command evaluates a conditional statement and if true will "
+            "result in the commands between If and matching EndIf being executed. ")
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
@@ -66,9 +67,9 @@ class If(AbstractCommand):
             "the name of the If command to be matched with the EndIf command"
         self.parameter_input_metadata['Name.Label'] = "Name"
         self.parameter_input_metadata['Name.Required'] = True
-        self.parameter_input_metadata['Name.Tooltip'] = \
-            "The name of the If command, which will be matched with the name of an EndIf command to indicate\n" \
-            "the block of commands in the if condition."
+        self.parameter_input_metadata['Name.Tooltip'] = (
+            "The name of the If command, which will be matched with the name of an EndIf command to indicate\n"
+            "the block of commands in the if condition.")
         # Condition
         self.parameter_input_metadata['Condition.Description'] = "the conditional statement to evaluate"
         self.parameter_input_metadata['Condition.Label'] = "Condition"
@@ -77,9 +78,9 @@ class If(AbstractCommand):
         # CompareAsStrings
         self.parameter_input_metadata['CompareAsStrings.Description'] = "boolean"
         self.parameter_input_metadata['CompareAsStrings.Label'] = "Compare As Strings"
-        self.parameter_input_metadata['CompareAsStrings.Tooltip'] = \
-            "If True, the comparison will be done as strings even if the values could be treated as numbers or " \
-            "Booleans. "
+        self.parameter_input_metadata['CompareAsStrings.Tooltip'] = (
+            "If True, the comparison will be done as strings even if the values could be treated as numbers or "
+            "Booleans. ")
         self.parameter_input_metadata['CompareAsStrings.Value.Default'] = "FALSE"
 
         # Local private data

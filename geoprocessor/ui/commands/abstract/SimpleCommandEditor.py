@@ -59,7 +59,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # - should be False for production release
         # - this causes logger.info messages to be printed
         # - later can convert to logger.debug if still needed
-        self.debug = True
+        self.debug = False
 
         # Indicate if an error status is currently in effect, due to invalid parameters
         # - will be set in check_input() and is checked in ui_action_ok_clicked()
@@ -384,6 +384,16 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     # - for example, select first value in `Values` metadata
                     pass
 
+                # Value.Default.Description
+                request_key = parameter_name + "." + "Value.Default.Description"
+                parameter_ValueDefaultDescription = None
+                try:
+                    parameter_ValueDefaultDescription = input_metadata[request_key]
+                except KeyError:
+                    # Default value description but will be used if Value.Default is specified
+                    # - for example, long description of internal default assignment
+                    pass
+
                 # Values
                 request_key = parameter_name + "." + "Values"
                 parameter_Values = None
@@ -470,10 +480,11 @@ class SimpleCommandEditor(AbstractCommandEditor):
             # ----------------------------------------------------
             if parameter_FileSelectorType is None or parameter_FileSelectorType == "":
                 self.setup_ui_parameter_description(parameter_name,
-                                                    parameter_ValueDefault,
                                                     parameter_Description,
                                                     parameter_Required,
-                                                    parameter_Tooltip)
+                                                    parameter_Tooltip,
+                                                    parameter_ValueDefault,
+                                                    parameter_ValueDefaultDescription )
 
             # Set column width for text entry fields
             self.parameter_QGridLayout.setColumnMinimumWidth(1, 350)
@@ -515,110 +526,3 @@ class SimpleCommandEditor(AbstractCommandEditor):
             # No error so OK to exit
             # - call the standard accept() function to set the return value
             self.accept()
-
-    def ui_action_select_file(self, y_parameter, event_button):
-        """
-        Open a file selector dialog to select an input or output file (or folder) to be used as a command
-        parameter value.
-
-        Args:
-            y_parameter (int): the y-position in layout for the button, used to access components.
-            TODO smalers 2019-01-18 need to move to dictionary of components.
-            event_button (QPushButton): the instance of the button for which the event is generated.
-            Use to get the parameter name, so as to get other parameter/component data.
-
-        Returns:
-            None
-        """
-
-        logger = logging.getLogger(__name__)
-
-        # Initialize folder to None and determine below with several checks.
-        folder_start = None
-
-        # Get properties to configure the file selector.
-        # - use the object name to parse out the parameter name
-        object_name = event_button.objectName()
-        print("object_name=" + str(object_name))
-        parameter_name = object_name.split(".")[0]
-        # Do the following first because it influences defaults below
-        request_key = parameter_name + "." + "FileSelector.SelectFolder"
-        select_folder = False
-        try:
-            # The following should match ParameterName.FileSelectorTitle
-            select_folder = self.command.parameter_input_metadata[request_key]
-        except KeyError:
-            # Default was specified above...
-            pass
-        request_key = parameter_name + "." + "FileSelector.Title"
-        if select_folder:
-            select_file_title = "Select folder"
-        else:
-            select_file_title = "Select file"
-        try:
-            # The following should match ParameterName.FileSelectorTitle
-            select_file_title = self.command.parameter_input_metadata[request_key]
-        except KeyError:
-            # Default was specified above...
-            pass
-
-        # Get the existing value in the text field, which will correspond to the parameter name value.
-        # - if specified as absolute path, use it as is
-        # - if a relative path, append to the working directory or if that is not available the user's home folder
-        parameter_QLineEdit = None
-        working_dir = self.command.command_processor.get_property('WorkingDir')
-        user_folder = self.app_session.get_user_folder()
-        try:
-            parameter_QLineEdit = self.input_ui_components[parameter_name]
-            # Get the parameter value
-            parameter_value = parameter_QLineEdit.text()
-            # If the parameter is empty or null
-            if parameter_value is None or parameter_value == "":
-                # Try to set the folder to the working directory first
-                if working_dir is not None:
-                    folder_start = working_dir
-                else:
-                    # Finally, use the user's home folder
-                    folder_start = self.app_session.get_user_folder()
-            else:
-                # The parameter is specified.
-                if os.path.isabs(parameter_value):
-                    # The input is an absolute path so use as is
-                    folder_start = parameter_value
-                else:
-                    # The input is relative to the working directory so append to working directory with
-                    # filesystem separator.
-                    if working_dir is not None:
-                        folder_start = io_util.to_absolute_path(working_dir, parameter_value)
-                    else:
-                        folder_start = io_util.to_absolute_path(user_folder, parameter_value)
-        except KeyError:
-            # Can't determine the input component so will assume the working directory, if available
-            if working_dir is not None:
-                folder_start = working_dir
-            else:
-                # Finally, use the user's home folder
-                folder_start = user_folder
-
-        # A browser window will appear to allow the user to browse to the desired file.
-        # The absolute pathname of the command file is added to the cmd_filepath variable.
-        use_qt_dialog = True  # For now use Qt build-in dialog but may want to try native dialog
-        filepath_selected = None
-        if use_qt_dialog:
-            parameter_QFileDialog = QtWidgets.QFileDialog(self, select_file_title, folder_start)
-            if select_folder:
-                # A directory is being selected
-                parameter_QFileDialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
-            if parameter_QFileDialog.exec_() == QtWidgets.QFileDialog.Accepted:
-                filepath_selected = parameter_QFileDialog.selectedFiles()[0]
-
-        if not filepath_selected:
-            # The file selection was canceled
-            return
-
-        # Convert the selected file path to relative path, using the command file folder as the working directory.
-        if working_dir is not None:
-            filepath_selected = io_util.to_relative_path(working_dir, filepath_selected)
-
-        # Set the file in the text field.
-        parameter_QLineEdit.setText(filepath_selected)

@@ -20,11 +20,12 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import geoprocessor.util.app_util as app_util
+import geoprocessor.util.io_util as io_util
 import geoprocessor.util.os_util as os_util
 import geoprocessor.ui.util.qt_util as qt_util
 
-import functools
 import logging
+import os
 import webbrowser
 
 
@@ -173,194 +174,6 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         """
         param_dict = self.get_parameter_dict_from_ui()
         self.command.check_command_parameters(param_dict)
-
-    def configureComboBox(self, combobox, parameter_name, choice_list, tooltip=None):
-        """
-        Configure a QtGui.QComboBox object that meets the standards of the GeoProceossor's command dialog window.
-
-        Args:
-            combobox(obj): a QtGui.QComboBox object
-            parameter_name (str): the name of the command parameter that is using the combobox field
-            choice_list (list): a list of available values for the command parameter
-            tooltip (str): optional. The text that will display in a pop-up when the user mouses over the
-                QtGui.QComboBox object. This is a good place to expand description of the parameter/parameter values.
-
-        Return: None
-        """
-
-        # Get the dialog box row index that is used to display the command parameter objects
-        # This is a dynamic index that takes into consideration the order of the command's parameters.
-        row_index = self.parameters_list.index(parameter_name) + 2
-
-        # Set the combo box's object name (XXX_ComboBox where XXX is the name of the command parameter).
-        combobox.setObjectName(qt_util.from_utf8("{}_ComboBox".format(parameter_name)))
-
-        # Add "spaces" to the ComboBox for each of the available options including a blank option to display that an
-        # option has not been selected.
-        for i in range(len(choice_list) + 1):
-            combobox.addItem(qt_util.from_utf8(""))
-
-        # Add the combo box field to the Dialog box in the correct row. Command combo box fields will always start in
-        # the second column (1) and will occupy 1 column and 2 rows.
-        self.gridLayout.addWidget(combobox, row_index, 1, 1, 2)
-
-        # Set the combo box default option to the blank option - the first (0) in the list of choices.
-        combobox.setItemText(0, qt_util.from_utf8(""))
-
-        # Add the text associated with each parameter option to the appropriate ComboBox "space".
-        for i in range(len(choice_list)):
-            combobox.setItemText(i+1, qt_util.translate("Dialog", choice_list[i], None))
-
-        # If tool tip text has been specified, add the desired text as tool tip text.
-        if tooltip:
-            combobox.setToolTip(qt_util.translate("Dialog", tooltip, None))
-
-        # Add the QtGui.QComboBox object to the dictionary of input edit objects. Use the parameter name as the key
-        # and the QtGui.QComboBox object as the value.
-        self.input_edit_objects[parameter_name] = combobox
-
-        # Create a listener that reacts if the ComboBox field has been changed. If so, run the
-        # update_command_display function.
-        combobox.currentIndexChanged.connect(self.update_command_display)
-
-    def configureDescriptionLabel(self, label, parameter_name, text):
-        """
-        Configure a QtGui.QLabel object (parameter description label) that meets the standards of the GeoProcessor's
-        command dialog window.
-
-        Args:
-            label (obj): a QtGui.QLabel object
-            parameter_name (str): the name of the command parameter that is using the label
-            text (str): the parameter description to use as the label text
-
-        Return: None
-        """
-
-        # Get the dialog box row index that is used to display the command parameter objects
-        # This is a dynamic index that takes into consideration the order of the command's parameters.
-        row_index = self.parameters_list.index(parameter_name) + 2
-
-        # Set the label's object name (XXX_Description_Label where XXX is the name of the command parameter).
-        label.setObjectName(qt_util.from_utf8("{}_Description_Label".format(parameter_name)))
-
-        # Add the label to the Dialog box in the correct row. Command description labels will always be in the
-        # third-to-last column (5), and will occupy 1 column and 3 rows.
-        self.gridLayout.addWidget(label, row_index, 5, 1, 3)
-
-        # Set the text of the label to be the command parameter description.
-        label.setText(qt_util.translate("Dialog", text, None))
-
-    def configureLabel(self, label, parameter_name):
-        """
-        Configure a QtGui.QLabel object (parameter name label) that meets the standards of the GeoProceossor's
-        command dialog window.
-
-        Args:
-            label (obj): a QtGui.QLabel object
-            parameter_name (str): the name of the command parameter that is using the label
-
-        Return: None
-        """
-
-        # Set the label to align right so that it butts up next to the input field.
-        label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
-
-        # Set the label's object name (XXX_Label where XXX is the name of the command parameter).
-        label.setObjectName(qt_util.from_utf8("{}_Label".format(parameter_name)))
-
-        # Get the dialog box row index that is used to display the command parameter objects
-        # This is a dynamic index that takes into consideration the order of the command's parameters.
-        row_index = self.parameters_list.index(parameter_name) + 2
-
-        # Add the label to the Dialog box in the correct row. Command labels will always be in the first column (0),
-        # and will occupy 1 column and 1 row.
-        self.gridLayout.addWidget(label, row_index, 0, 1, 1)
-
-        # Set the text of the label to be the name of the command parameter.
-        label.setText(qt_util.translate("Dialog", "{}: ".format(parameter_name), None))
-
-    def configureLineEdit(self, line_edit, parameter_name, long=False, placeholder_text=None, tooltip=None):
-        """
-        Configure a QtGui.QLineEdit object that meets the standards of the GeoProceossor's command dialog window.
-
-        Args:
-            line_edit (obj): a QtGui.QLineEdit object
-            parameter_name (str): the name of the command parameter that is using the line edit field
-            long (bool): if TRUE, the QtGui.QLineEdit object spans the majority of the dialog window. This is good
-                for parameter values that will be an absolute file path. if FALSE, the QtGui.QLineEdit object spans a
-                subset of the dialog window. This is good gor parameter value that one require a one/few word value.
-            placeholder_text (str): optional. The text that will display within the QtGui.QLineEdit object before the
-                user enters a value. This is helpful to supply a parameter description when `long` is set to `True`.
-            tooltip (str): optional. The text that will display in a pop-up when the user mouses over the
-                QtGui.QLineEdit object. This is a good place to expand description of the parameter/parameter values.
-
-        Return: None
-        """
-
-        # Set the line edit's object name (XXX_LineEdit where XXX is the name of the command parameter).
-        line_edit.setObjectName(qt_util.from_utf8("{}_LineEdit".format(parameter_name)))
-
-        # Get the dialog box row index that is used to display the command parameter objects
-        # This is a dynamic index that takes into consideration the order of the command's parameters.
-        row_index = self.parameters_list.index(parameter_name) + 2
-
-        # Add the line edit field to the Dialog box in the correct row. Command line edit fields will always start in
-        # the second column (1) and will occupy 1 row.
-        # If the field is set to long, the line edit field will occupy 6 columns.
-        if long:
-            self.gridLayout.addWidget(line_edit, row_index, 1, 1, 6)
-
-        # If not set to long, the line edit field will occupy 3 columns.
-        else:
-            self.gridLayout.addWidget(line_edit, row_index, 1, 1, 3)
-
-        # If placeholder text has been specified, add the desired text as placeholder text.
-        if placeholder_text:
-            line_edit.setPlaceholderText(qt_util.translate("Dialog", placeholder_text, None))
-
-        # If tool tip text has been specified, add the desired text as tool tip text.
-        if tooltip:
-            line_edit.setToolTip(qt_util.translate("Dialog", tooltip, None))
-
-        # Create a listener that reacts if the line edit field has been changed. If so, run the
-        # update_command_display function.
-        line_edit.textChanged.connect(self.update_command_display)
-
-        # Add the QtGui.QLineEdit object to the dictionary of input edit objects. Use the parameter name as the key
-        # and the QtGui.QLineEdit object as the value.
-        self.input_edit_objects[parameter_name] = line_edit
-
-    def configureToolButton(self, tool_button, parameter_name, line_edit_obj_affected):
-        """
-        Configures a QtGui.QToolButton object that meets the standards of the GeoProceossor's command dialog window.
-
-        Args:
-            tool_button (obj): a QtGui.QToolButton object
-            parameter_name (str): the name of the command parameter that is using the tool button
-            line_edit_obj_affected (obj): a QtGui.QLineEdit object that will be populated with the filepath text of
-                the selected file selected with the tool button
-
-        Returns: the path to the selected file
-        """
-
-        # Set the tool buttons's object name (XXX_ToolButton where XXX is the name of the command parameter).
-        tool_button.setObjectName(qt_util.from_utf8("{}_ToolButton".format(parameter_name)))
-
-        # Set the tool button's text. (Default value is `...` but this can be pulled out into a function argument if
-        # needed.)
-        tool_button.setText(qt_util.translate("Dialog", "...", None))
-
-        # Get the dialog box row index that is used to display the command parameter objects
-        # This is a dynamic index that takes into consideration the order of the command's parameters.
-        row_index = self.parameters_list.index(parameter_name) + 2
-
-        # Add the tool button to the Dialog box in the correct row. Command tool buttons will always be in the
-        # last column (7), and will occupy 1 row and 1 column.
-        self.gridLayout.addWidget(tool_button, row_index, 7, 1, 1)
-
-        # Create a listener that reacts if the tool button is clicked. If so, run the select_file function to allow
-        # the user to browse to a local file.
-        tool_button.clicked.connect(functools.partial(self.select_file, line_edit_obj_affected))
 
     def get_current_value(self, obj):
         """
@@ -656,10 +469,11 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.input_ui_components[parameter_name] = parameter_QComboBox
 
     def setup_ui_parameter_description(self, parameter_name,
-                                       parameter_ValueDefault,
                                        parameter_Description,
                                        parameter_Required,
-                                       parameter_Tooltip):
+                                       parameter_Tooltip,
+                                       parameter_ValueDefault,
+                                       parameter_ValueDefaultDescription ):
         """
         Add description UI components for a command parameter.
         This is not done for file selector component.
@@ -697,23 +511,51 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             if parameter_desc != "":
                 parameter_desc += " - "
             parameter_desc += parameter_Description
-        if parameter_ValueDefault is not None and parameter_ValueDefault != "":
-            if len(parameter_ValueDefault) > 15:
-                # Default value is long so don't show in full description and put in the input component toolip
-                parameter_desc += " (default=see tooltip)"
-                parameter_Tooltip += "\n(default=" + parameter_ValueDefault + ")."
-                # Update the tooltip for the input component
-                try:
-                    parameter_ui_component = self.input_ui_components[parameter_name]
-                    parameter_ui_component.setToolTip(parameter_Tooltip)
-                except KeyError:
-                    # Should not happen
-                    pass
+        if not parameter_Required:
+            # Only show the default value if an optional argument
+            # - if required, check_command_parameters should will not allow blank input
+            if parameter_ValueDefaultDescription is not None and parameter_ValueDefaultDescription != "":
+                # A description is provided for the default value so use in the description rather than Value.Default
+                if len(parameter_ValueDefaultDescription) > 15:
+                    # Default value description is long so don't show in full description and put in the
+                    # input component tooltip
+                    parameter_desc += " (default=see tooltip)."
+                    parameter_Tooltip += "\n(default=" + parameter_ValueDefaultDescription + ")."
+                    # Update the tooltip for the input component
+                    try:
+                        parameter_ui_component = self.input_ui_components[parameter_name]
+                        parameter_ui_component.setToolTip(parameter_Tooltip)
+                    except KeyError:
+                        # Should not happen
+                        pass
+                else:
+                    # Default value is short so show in the full description
+                    parameter_desc += " (default=" + parameter_ValueDefaultDescription + ")."
+            elif parameter_ValueDefault is not None and parameter_ValueDefault != "":
+                # A default value is provided so include in the description
+                if len(parameter_ValueDefault) > 15:
+                    # Default value is long so don't show in full description and put in the input component tooltip
+                    parameter_desc += " (default=see tooltip)."
+                    parameter_Tooltip += "\n(default=" + parameter_ValueDefault + ")."
+                    # Update the tooltip for the input component
+                    try:
+                        parameter_ui_component = self.input_ui_components[parameter_name]
+                        parameter_ui_component.setToolTip(parameter_Tooltip)
+                    except KeyError:
+                        # Should not happen
+                        pass
+                else:
+                    # Default value is short so show in the full description
+                    parameter_desc += " (default=" + parameter_ValueDefault + ")."
             else:
-                # Default value is short so show in the full description
-                parameter_desc += " (default=" + parameter_ValueDefault + ")."
+                # There is no default value specified so default of None is likely
+                # - OK to show None to mean use None literally or it means the parameter won't be used
+                # - however, it is probably better to find an actual default value if possible and update the code
+                parameter_desc += " (default=None)."
         else:
-            parameter_desc += " (default=None)."
+            # Need a period at the end
+            parameter_desc += "."
+        # Set the text description as the label
         parameter_desc_Label.setText(parameter_desc)
         # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
         self.parameter_QGridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
@@ -780,8 +622,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             parameter_select_file_QPushButton.setToolTip(file_selector_button_tooltip)
         parameter_select_file_QPushButton.setMaximumWidth(50)
         parameter_select_file_QPushButton.clicked.connect(
-            lambda clicked, y_param=self.y_parameter: self.ui_action_select_file(y_param,
-                                                                                 parameter_select_file_QPushButton))
+            lambda clicked, y_param=self.y_parameter: self.ui_action_select_file(parameter_select_file_QPushButton))
         self.parameter_QGridLayout.addWidget(parameter_select_file_QPushButton, self.y_parameter, 6, 1, 1)
 
     def setup_ui_parameter_label(self, parameter_name, parameter_Label):
@@ -816,7 +657,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Allow expanding horizontally
         parameter_QLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)
         self.parameter_QGridLayout.addWidget(parameter_QLabel, self.y_parameter, 0, 1, 1)
-        self.parameter_QGridLayout.setColumnStretch(0,0)
+        self.parameter_QGridLayout.setColumnStretch(0, 0)
 
     def setup_ui_parameter_text_field(self, parameter_name, parameter_Tooltip):
         """
@@ -848,6 +689,111 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         parameter_QLineEdit.textChanged.connect(self.refresh_ui)
         # Add the component to the list maintained to get values out of UI components
         self.input_ui_components[parameter_name] = parameter_QLineEdit
+
+    def ui_action_select_file(self, event_button):
+        """
+        Open a file selector dialog to select an input or output file (or folder) to be used as a command
+        parameter value.
+
+        Args:
+            event_button (QPushButton): the instance of the button for which the event is generated.
+            Use to get the parameter name, so as to get other parameter/component data.
+
+        Returns:
+            None
+        """
+
+        logger = logging.getLogger(__name__)
+
+        # Initialize folder to None and determine below with several checks.
+        folder_start = None
+
+        # Get properties to configure the file selector.
+        # - use the object name to parse out the parameter name
+        object_name = event_button.objectName()
+        print("object_name=" + str(object_name))
+        parameter_name = object_name.split(".")[0]
+        # Do the following first because it influences defaults below
+        request_key = parameter_name + "." + "FileSelector.SelectFolder"
+        select_folder = False
+        try:
+            # The following should match ParameterName.FileSelectorTitle
+            select_folder = self.command.parameter_input_metadata[request_key]
+        except KeyError:
+            # Default was specified above...
+            pass
+        request_key = parameter_name + "." + "FileSelector.Title"
+        if select_folder:
+            select_file_title = "Select folder"
+        else:
+            select_file_title = "Select file"
+        try:
+            # The following should match ParameterName.FileSelectorTitle
+            select_file_title = self.command.parameter_input_metadata[request_key]
+        except KeyError:
+            # Default was specified above...
+            pass
+
+        # Get the existing value in the text field, which will correspond to the parameter name value.
+        # - if specified as absolute path, use it as is
+        # - if a relative path, append to the working directory or if that is not available the user's home folder
+        parameter_QLineEdit = None
+        working_dir = self.command.command_processor.get_property('WorkingDir')
+        user_folder = self.app_session.get_user_folder()
+        try:
+            parameter_QLineEdit = self.input_ui_components[parameter_name]
+            # Get the parameter value
+            parameter_value = parameter_QLineEdit.text()
+            # If the parameter is empty or null
+            if parameter_value is None or parameter_value == "":
+                # Try to set the folder to the working directory first
+                if working_dir is not None:
+                    folder_start = working_dir
+                else:
+                    # Finally, use the user's home folder
+                    folder_start = self.app_session.get_user_folder()
+            else:
+                # The parameter is specified.
+                if os.path.isabs(parameter_value):
+                    # The input is an absolute path so use as is
+                    folder_start = parameter_value
+                else:
+                    # The input is relative to the working directory so append to working directory with
+                    # filesystem separator.
+                    if working_dir is not None:
+                        folder_start = io_util.to_absolute_path(working_dir, parameter_value)
+                    else:
+                        folder_start = io_util.to_absolute_path(user_folder, parameter_value)
+        except KeyError:
+            # Can't determine the input component so will assume the working directory, if available
+            if working_dir is not None:
+                folder_start = working_dir
+            else:
+                # Finally, use the user's home folder
+                folder_start = user_folder
+
+        # A browser window will appear to allow the user to browse to the desired file.
+        # The absolute pathname of the command file is added to the cmd_filepath variable.
+        use_qt_dialog = True  # For now use Qt build-in dialog but may want to try native dialog
+        filepath_selected = None
+        if use_qt_dialog:
+            parameter_QFileDialog = QtWidgets.QFileDialog(self, select_file_title, folder_start)
+            if select_folder:
+                # A directory is being selected
+                parameter_QFileDialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
+            if parameter_QFileDialog.exec_() == QtWidgets.QFileDialog.Accepted:
+                filepath_selected = parameter_QFileDialog.selectedFiles()[0]
+
+        if not filepath_selected:
+            # The file selection was canceled
+            return
+
+        # Convert the selected file path to relative path, using the command file folder as the working directory.
+        if working_dir is not None:
+            filepath_selected = io_util.to_relative_path(working_dir, filepath_selected)
+
+        # Set the file in the text field.
+        parameter_QLineEdit.setText(filepath_selected)
 
     def update_command_display(self):
         """

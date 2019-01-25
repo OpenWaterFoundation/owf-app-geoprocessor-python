@@ -60,22 +60,21 @@ class StartRegressionTestResultsReport(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = {}
-        self.command_metadata['Description'] = "This command starts a report file (" \
-                                               "and optionally results table) to be written to as regression tests " \
-                                               "are run. "
+        self.command_metadata['Description'] =\
+            "Start a report file (and optionally results table) to be written to as regression tests are run."
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
         self.parameter_input_metadata = dict()
         # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "the regression results report file to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output File"
+        self.parameter_input_metadata['OutputFile.Description'] = "regression results report file"
+        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
         self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = \
-            "The regression results report file to write, as an absolute path or relative to the command file.\n" \
-            "Can use ${Property}."
+        self.parameter_input_metadata['OutputFile.Tooltip'] = (
+            "The regression results report file to write, as an absolute path or relative to the command file.\n"
+            "Can use ${Property}.")
         self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "select the report file to write to"
+        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the report file to create"
 
     @classmethod
     def append_to_regression_test_report(cls, is_enabled, run_time_ms, test_pass_fail, expected_status,

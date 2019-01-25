@@ -506,6 +506,7 @@ The properties can be specified for each parameter for a command.
 | `Required`                    | Indicate whether required:  `Required`, `Optional`, or maybe something more complex. | `False` - parameter is optional. |
 | `Tooltip`                     | The tooltip to be shown when moused over the input component. | No tooltip is shown. | Tooltip is not set for component. |
 | `Value.Default`               | The default data value as a string, as if the user entered into the component, to be shown in the description. | Must be specified for choice, defaults blank for text field. |
+| `Value.Default.Description`   | The description for default data value, to be shown if showing `Value.Default` does not make sensel. | Use `Value.Default` if specified. |
 | `Value.DefaultForDisplay`     | The default to dispaly as a string, used in input component.  For example, specify an empty string to enter into a combobox. | |
 | `Values`                      | Indicate a list of values to show in choices, as an array of strings, for example: `[ "", "Value1", "Value2" ]` | Values are only used for combobox. |
 | `Values.Editable`             | Whether the parameter is editable, as a bool `True` or `False`.   An editable combobox allows text to be entered. | `True` for text fields, `False` for combobox. |

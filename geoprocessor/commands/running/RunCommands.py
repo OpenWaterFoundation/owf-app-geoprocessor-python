@@ -62,36 +62,36 @@ class RunCommands(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = "The RunCommands command runs a command file using a separate command " \
-                                               "processor as a “child” of the main processor.\nThis command can be " \
-                                               "used to manage workflow where multiple commands files are run, " \
-                                               "and is also used extensively for testing,\nwhere a test suite consists"\
-                                               " of running separate test case command files. "
+        self.command_metadata['Description'] = (
+            "Run a command file using a separate command processor as a 'child' of the main processor.\n"
+            "This command can be used to manage workflow where multiple command files are run, "
+            "and is also used extensively for testing,\n"
+            "where a test suite consists of running separate test case command files.")
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
         self.parameter_input_metadata = dict()
         # CommandFile
         self.parameter_input_metadata['CommandFile.Description'] = "the command file to run"
-        self.parameter_input_metadata['CommandFile.Label'] = "Command File"
+        self.parameter_input_metadata['CommandFile.Label'] = "Command file"
         self.parameter_input_metadata['CommandFile.Required'] = True
         self.parameter_input_metadata['CommandFile.Tooltip'] = \
             "The command file to run. A path relative to the master command file can be specified. Can use ${Property}."
         self.parameter_input_metadata['CommandFile.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['CommandFile.FileSelector.Title'] = "select command file to run"
+        self.parameter_input_metadata['CommandFile.FileSelector.Title'] = "Select command file to run"
         # ExpectedStatus
         self.parameter_input_metadata['ExpectedStatus.Description'] = "used for testing"
-        self.parameter_input_metadata['ExpectedStatus.Label'] = "Expected Status"
-        self.parameter_input_metadata['ExpectedStatus.Tooltip'] = \
-            "Used for testing – indicates the expected status from the command, one of:\n\n" \
-            "Unknown\n" \
-            "Success\n" \
-            "Warning\n" \
-            "Failure\n\n" \
-            "If this parameter is NOT used, the command log messages from commands that are run will be\n" \
-            "appended to the RunCommands command log. However, using this parameter will not append those\n" \
-            "messages – this is used in automated testing to allow a successful test even when there are\n" \
-            "warning and failure messages."
+        self.parameter_input_metadata['ExpectedStatus.Label'] = "Expected status"
+        self.parameter_input_metadata['ExpectedStatus.Tooltip'] = (
+            "Used for testing – indicates the expected status from the command, one of:\n\n"
+            "Unknown\n"
+            "Success\n"
+            "Warning\n"
+            "Failure\n\n"
+            "If this parameter is NOT used, the command log messages from commands that are run will be\n"
+            "appended to the RunCommands command log. However, using this parameter will not append those\n"
+            "messages – this is used in automated testing to allow a successful test even when there are\n"
+            "warning and failure messages.")
         self.parameter_input_metadata['ExpectedStatus.Value.Default'] = "Success"
         self.parameter_input_metadata['ExpectedStatus.Values'] = ["", "Unknown", "Success", "Warning", "Failure"]
 

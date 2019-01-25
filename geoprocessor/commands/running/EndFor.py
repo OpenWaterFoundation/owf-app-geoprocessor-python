@@ -49,10 +49,10 @@ class EndFor(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = ("This command ends a block of commands that start with a For command.\n"
-                                                "The For and EndFor commands must have the same value for the Name "
-                                                "parameter to allow the processor to determine the start and end "
-                                                "of the block.")
+        self.command_metadata['Description'] = (
+            "This command ends a block of commands that start with a For command.\n"
+            "The For and EndFor commands must have the same value for the Name "
+            "parameter to allow the processor to determine the start and end of the block.")
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata

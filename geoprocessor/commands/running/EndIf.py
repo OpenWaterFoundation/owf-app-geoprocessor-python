@@ -49,10 +49,10 @@ class EndIf(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = ("This command ends a block of commands that start with an If "
-                                                "command.\nThe If and EndIf commands must have the same value "
-                                                "for the Name parameter to\nallow the command processor to determine "
-                                                "the start and end of the block.")
+        self.command_metadata['Description'] = (
+            "This command ends a block of commands that start with an If command.\n"
+            "The If and EndIf commands must have the same value for the Name parameter to "
+            "allow the command processor to determine the start and end of the block.")
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
@@ -61,9 +61,9 @@ class EndIf(AbstractCommand):
         self.parameter_input_metadata['Name.Description'] = "the name that will be matched with name of an If command"
         self.parameter_input_metadata['Name.Label'] = "Name"
         self.parameter_input_metadata['Name.Required'] = True
-        self.parameter_input_metadata['Name.Tooltip'] = \
-            "The name that will be matched with the name of an If command to indicate the block of commands in the " \
-            "if condition."
+        self.parameter_input_metadata['Name.Tooltip'] = (
+            "The name that will be matched with the name of an If command to indicate the block of commands in the "
+            "if condition.")
 
     def check_command_parameters(self, command_parameters):
         """

@@ -62,22 +62,22 @@ class CopyFile(AbstractCommand):
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = "The CopyFile command copies a source file to a destination."
+        self.command_metadata['Description'] = "Copy a source file to a destination."
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
         self.parameter_input_metadata = dict()
         # SourceFile
-        self.parameter_input_metadata['SourceFile.Description'] = "the name of the source file to delete"
-        self.parameter_input_metadata['SourceFile.Label'] = "Source File"
+        self.parameter_input_metadata['SourceFile.Description'] = "the name of the source file to copy"
+        self.parameter_input_metadata['SourceFile.Label'] = "Source file"
         self.parameter_input_metadata['SourceFile.Required'] = True
         self.parameter_input_metadata['SourceFile.Tooltip'] = \
-            "The name of the source file to delete. Can be specified using ${Property}."
+            "The name of the source file to copy. Can be specified using ${Property}."
         self.parameter_input_metadata['SourceFile.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['SourceFile.FileSelector.Title'] = "select the source file to delete"
+        self.parameter_input_metadata['SourceFile.FileSelector.Title'] = "Select the source file to copy"
         # DestinationFile
         self.parameter_input_metadata['DestinationFile.Description'] = "the name of the destination file"
-        self.parameter_input_metadata['DestinationFile.Label'] = "DestinationFile"
+        self.parameter_input_metadata['DestinationFile.Label'] = "Destination file"
         self.parameter_input_metadata['DestinationFile.Required'] = True
         self.parameter_input_metadata['DestinationFile.Tooltip'] = \
             "The name of the destination file. Can be specified using ${Property}."
@@ -86,9 +86,11 @@ class CopyFile(AbstractCommand):
         # IfSourceFileNotFound
         self.parameter_input_metadata['IfSourceFileNotFound.Description'] = "action if file not found"
         self.parameter_input_metadata['IfSourceFileNotFound.Label'] = "If not found?"
-        self.parameter_input_metadata['IfSourceFileNotFound.Tooltip'] = \
-            "Indicate an action if the source file is not found:\n\nIgnore (ignore the missing file and do not warn)\n" \
-            "Warn (generate a warning message)\nFail (generate a failure message). "
+        self.parameter_input_metadata['IfSourceFileNotFound.Tooltip'] = (
+            "Indicate an action if the source file is not found:\n\n"
+            "Ignore (ignore the missing file and do not warn)\n"
+            "Warn (generate a warning message)\n"
+            "Fail (generate a failure message). ")
         self.parameter_input_metadata['IfSourceFileNotFound.Values'] = ["", "Ignore", "Warn", "Fail"]
         self.parameter_input_metadata['IfSourceFileNotFound.Value.Default'] = "Warn"
 

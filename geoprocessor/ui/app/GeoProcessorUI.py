@@ -2613,7 +2613,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                            TAB + "Name (platform.uname[0] and [2]): " + operating_system + "\n" +
                            TAB + "Version (platform.uname[3]): " + version + "\n")
             if is_windows:
-                properties += (TAB + "System Architecture (os.environ['MSYSTEM_CARCH']: " + architecture + "\n")
+                properties += (TAB + "System Architecture (os.environ['MSYSTEM_CARCH']): " + architecture + "\n")
             else:
                 # Linux variant
                 # - TODO smalers 2018-12-31 need to standardize

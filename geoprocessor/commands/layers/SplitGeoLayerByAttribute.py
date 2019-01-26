@@ -33,6 +33,8 @@ import logging
 
 import os
 
+from qgis.core import QgsVectorLayer
+
 from processing.core.Processing import Processing
 
 
@@ -226,25 +228,61 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         """
 
         # Obtain the parameter values.
+
+        # @jurentie
+        # 1. Parameter values are passed into the SplitGeoLayerByAttribute command editor -> GenericCommandEditor
+        # 2. The SplitGEoLayerByAttribute command is updated when user changes input to parameter
+        #    and parsed by AbstractCommand into parameter values and saved as command_parameters.
+        # 3. Obtain parameter value by calling parent function get_parameter_value from AbstractCommand
+
+        # Get the 'Input GeoLayerID' parameter
         pv_InputGeoLayerID = self.get_parameter_value("InputGeoLayerID")
         pv_AttributeName = self.get_parameter_value("AttributeName")
-        pv_OutputGeoLayerIDs = self.get_parameter_value("OutputGeoLayerIDs", default_value="{}_splitBy_{}".format(
-            pv_InputGeoLayerID, pv_AttributeName))
 
+        # TODO jurentie 01/26/2019 Need to figure out how default should work in this case
+        # @jurentie
+        # I've commented out the below, this is specific to ClipGeoLayer, creating a default
+        # value that makes sense for 'Value_splityBy_value' but we are looking for Output GeoLayerID's for this
+        # specific command. Default might just need to be the name of the file's automatically output by
+        # runAlgorithm("qgis:splitvectorlayer", alg_parameters) which can be handled down below...
+
+        # pv_OutputGeoLayerIDs = self.get_parameter_value("OutputGeoLayerIDs", default_value="{}_splitBy_{}".format(
+        #     pv_InputGeoLayerID, pv_AttributeName))
+
+        # Get OutputGeoLayerID's and split on ',' to create an array of Output GeoLayerId's
+        # ex OutputGeoLayerIDs = 'ouput1, output1, output3'
+        # pv_OutputGeoLayerIDs = ['output1', 'output2', 'output3']
+        pv_OutputGeoLayerIDs = self.get_parameter_value("OutputGeoLayerIDs").split(',')
+
+        # Create logger
         logger = logging.getLogger(__name__)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
+
+        # @jurentie
+        # The following line is currently commented out but needs to be added back in once
+        # __should_split_geolayer is functioning properly...
+
         #if self.__should_split_geolayer(pv_InputGeoLayerID, pv_AttributeName, pv_OutputGeoLayerIDs):
+
+        # @jurentie
+        # Set bool to True so the following code is always run
+        # Will be removed once __should_split_geolayer is working
         run=True
         if run:
 
             try:
 
                 # Get the Input GeoLayer.
+
+                # Get the GeoLayer which will be QgsVectorLayer
+                # https://qgis.org/api/classQgsVectorLayer.html
+                # Passes a GeoLayerID to GeoProcessor to return the GeoLayer that matches the ID
                 input_geolayer = self.command_processor.get_geolayer(pv_InputGeoLayerID)
 
-                logger.info('Input GeoLayer has been read in')
+                logger.info('Input GeoLayer [GeoLayerID: ' + pv_InputGeoLayerID + '] has been read in successfully')
 
+                # TODO jurentie 01/26/2019 still need to figure out what the code below is for...
                 # If the input GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
                 if input_geolayer.source_path is None or input_geolayer.source_path.upper() in ["", "MEMORY"]:
 
@@ -261,24 +299,82 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # SOMETHING LIKE:  attribute_name = input_geolayer.select_attribute(pv_AttributeName)
                 # OR SHOULD THE FOLLOWING JUST WORK?
                 attribute_name = pv_AttributeName
+                working_dir = self.command_processor.properties['WorkingDir']
 
                 # Perform the QGIS split vector layer function. Refer to the reference below for parameter descriptions.
                 # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer
+
+                # @jurentie
+                # Assign parameter to pass into runAlgorithm for splitting the GeoLayer
+                # Input = input GeoLayer (QgsVectorLayer)
+                # Field = Attribute name to split by
+                # Output = path to write output GeoLayers to this creates a list of files following the naming
+                #          convention attributeName_attribute.extension
+                #          ex: GNIS_ID_00030007.shp
+                #          file types generated = .dbf, .prj, .qpj, .shp, .shx
                 alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
                                   "FIELD": attribute_name,
-                                  "OUTPUT": ""}
+                                  "OUTPUT": working_dir + "/temp-files"}
+
+                # @jurentie
+                # call runAlgorithm with the parameter "qgis:splitvectorlayer" (a list of possible parameters
+                # that can be passed here can be found here
+                # https://gist.github.com/jurentie/7b6c53d5a592991b6bb2491fcc5f01eb)
+                # pass in the parameters defined above
+                # This should result in separate GeoLayer shapefiles being written to the OUTPUT directory
                 split_output = self.command_processor.qgis_processor.runAlgorithm("qgis:splitvectorlayer", alg_parameters)
 
                 # Create new GeoLayers and add them to the GeoProcessor's geolayers list.
+
+                # @jurentie
+                # TODO jurentie 01/26/2019 There probably needs to be some error handling happening below
+                # Get the list of features from the GeoLayer. This returns all attributes for each feature listed.
+                features = input_geolayer.qgs_vector_layer.getFeatures()
+                # Set the extension for the filename's to get the geolayer from
+                filename_extension = ".shp"
+                # Parse through the list of features and also enumerate to get the index which
+                # is used for accessing which OutputGeoLayerIDs to name each GeoLayer.
+                # TODO jurentie 01/26/2019 need to decide what to do with a default OutputGeoLayerIDs
+                # 1. Get the attribute of interest from each feature
+                # TODO jurentie 01/26/2019 need to handle parsing out unique attributes only...
+                # 2. Create the path name using the output folder specified in alg_parameters and passed in to
+                #    split_output, and the naming convention defaults for qgis:splitvectorlayer
+                # 3. Construct a QgsVectorLayer()
+                #    Parameters:
+                #       path: The path or url of the parameter. Typically this encodes parameters used by the data
+                #       provider as url query items.
+                #       baseName: The name used to represent the layer in the legend
+                #       providerLib: The name of the data provider, e.g., "memory", "postgres"
+                #       options: layer load options
+                #    For more info see:
+                #       https://qgis.org/api/classQgsVectorLayer.html#a1e7827a9d7bd33549babdc3bd7a279fd
+                # 4. Construct a new GeoLayer from the QgsVectorLayer()
+                #    Parameters:
+                #       geolayer_id (str): String that is the GeoLayer's reference ID. This ID is used to access the
+                #       GeoLayer from the GeoProcessor for manipulation.
+                #       geolayer_qgs_vector_layer (QGSVectorLayer): Object created by the QGIS processor.
+                #       All GeoLayer spatial manipulations are performed on the GeoLayer's qgs_vector_layer.
+                #       geolayer_source_path (str): The full pathname to the original spatial data file on the
+                #       user's local computer. If the geolayer was made in memory from the GeoProcessor, this value
+                #       is set to `MEMORY`.
+                # 5. Add the new GeoLayer to the GeoProcessor
+                for i, feature in enumerate(features):
+                    attribute = feature[attribute_name]
+                    path = working_dir + "/temp-files/" + attribute_name + "_" + str(attribute) + filename_extension
+                    layer = QgsVectorLayer(path, "layer" + str(attribute), "ogr")
+                    new_geolayer = GeoLayer(pv_OutputGeoLayerIDs[i], layer, path)
+                    self.command_processor.add_geolayer(new_geolayer)
 
                 # In QGIS 2 the clipped_output["OUTPUT"] returned the full file pathname of the memory output layer
                 # (saved in a QGIS temporary folder)
                 # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
                 # new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+                # Get this list of ID's, name can be changed later to make more sense
+                # in a dynamic fashion
 
                 # In QGIS 3 the clipped_output["OUTPUT"] returns the QGS vector layer object
-                new_geolayer = GeoLayer(pv_OutputGeoLayerIDs, split_output["OUTPUT"], "MEMORY")
-                self.command_processor.add_geolayer(new_geolayer)
+                # new_geolayer = GeoLayer(pv_OutputGeoLayerIDs, split_output["OUTPUT"], "MEMORY")
+                # self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:

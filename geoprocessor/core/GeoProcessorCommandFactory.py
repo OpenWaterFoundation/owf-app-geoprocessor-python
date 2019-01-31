@@ -40,6 +40,7 @@ from geoprocessor.commands.layers.RenameGeoLayerAttribute import RenameGeoLayerA
 from geoprocessor.commands.layers.SetGeoLayerCRS import SetGeoLayerCRS
 from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
 from geoprocessor.commands.layers.SimplifyGeoLayerGeometry import SimplifyGeoLayerGeometry
+from geoprocessor.commands.layers.SplitGeoLayerByAttribute import SplitGeoLayerByAttribute
 from geoprocessor.commands.layers.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
 from geoprocessor.commands.layers.WriteGeoLayerToDelimitedFile import WriteGeoLayerToDelimitedFile
 from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
@@ -140,6 +141,7 @@ class GeoProcessorCommandFactory(object):
         "SETPROPERTY": SetProperty(),
         "SETPROPERTYFROMGEOLAYER": SetPropertyFromGeoLayer(),
         "SIMPLIFYGEOLAYERGEOMETRY": SimplifyGeoLayerGeometry(),
+        "SPLITGEOLAYERBYATTRIBUTE": SplitGeoLayerByAttribute(),
         "STARTLOG": StartLog(),
         "STARTREGRESSIONTESTRESULTSREPORT": StartRegressionTestResultsReport(),
         "UNZIPFILE": UnzipFile(),
@@ -317,6 +319,8 @@ class GeoProcessorCommandFactory(object):
                     return SetPropertyFromGeoLayer()
                 elif command_name_upper == "SIMPLIFYGEOLAYERGEOMETRY":
                     return SimplifyGeoLayerGeometry()
+                elif command_name_upper == "SPLITGEOLAYERBYATTRIBUTE":
+                    return SplitGeoLayerByAttribute()
                 elif command_name_upper == "STARTLOG":
                     return StartLog()
                 elif command_name_upper == "STARTREGRESSIONTESTRESULTSREPORT":

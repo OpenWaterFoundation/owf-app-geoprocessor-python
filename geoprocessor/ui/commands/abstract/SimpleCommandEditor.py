@@ -111,7 +111,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # - TODO smalers 2019-01-18 this will modify the contents of the command, needs to be a new instance from
         #        what is in an existing command or else could corrupt the original data if invalid or cancel is
         #        then pressed
-        self.command.initialize_command(command_string, self, True)
+        self.command.initialize_command(command_string, self.command.command_processor, True)
 
         self.error_wait = False
         try:

@@ -147,6 +147,18 @@ class AbstractCommand(object):
             # the following will call the AbstractCommand.parse_command by default
             self.parse_command(command_string)
 
+    def initialize_geoprocessor_ui(self, geoprocessor_ui):
+        """
+        Initialize the geoprocessor ui for commands that need to access data
+        or functions from GeoProcessorUI.py
+        Args:
+            geoprocessor_ui (obj): a geoprocessor instance
+
+        Returns:
+            None
+        """
+        self.geoprocessor_ui = geoprocessor_ui
+
     def parse_command(self, command_string):
         """
         Parse the command string and into self.command_parameters dictionary of

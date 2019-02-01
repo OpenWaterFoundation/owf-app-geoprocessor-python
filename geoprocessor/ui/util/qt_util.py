@@ -109,6 +109,26 @@ def new_message_box(message_type, standard_buttons_mask, message, title):
     # Return the clicked button Qt type
     return btn_value
 
+def question_box(message, app_name=None, title="Question"):
+    """
+    Display an information message dialog.
+
+    Args:
+        app_name (str): Application name to use in dialog title
+            (default if None is to get from app_util.get_property("ProgramName")
+        message (str): Message string.
+        title (str): Title for dialog.
+
+    Returns:
+        Which button was selected as QtWidgets.QMessageBox.Ok (only one button is available).
+    """
+    app_name = app_util.get_property("ProgramName")
+    if app_name is not None:
+        # Use the application name in the title
+        title = app_name + " - " + title
+    message_box = new_message_box(QtWidgets.QMessageBox.Question,
+                                  QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, message, title)
+    return message_box
 
 # TODO smalers 2019-01-19 need to figure out what this really does.
 def translate(context, text, disambig):
@@ -140,7 +160,6 @@ def translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
     except AttributeError:
         return QtWidgets.QApplication.translate(context, text, disambig)
-
 
 def warning_message_box(message, app_name=None, title="Warning"):
     """

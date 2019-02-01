@@ -107,6 +107,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # used to decide whether to save command or save command as on exit
         self.opened_command_file = False
 
+        # Has the command file been saved? False only if new command file has not yet been saved
+        self.command_file_saved = False
+
         # All event handlers and connections are configured in the setup_ui*() functions grouped by component.
 
         self.gp.add_command_processor_listener(self)
@@ -313,6 +316,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Check to see if working with block comments
         comment_block = False
         comment_block_text = ""  # Will contain newline-separated comment lines
+        command_object = None
         if num_selected_are_comments > 0:
             # Detected that a block of 1+ comment lines are edited.
             # - additional logic because this is different than a normal command editor that edits a single command.
@@ -348,6 +352,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             index = self.command_ListWidget.get_current_list_item_index()
             # Get the command object at that index from GeoProcessor
             command_object = self.gp.commands[index]
+
+        # Pass UI to command object
+        command_object.initialize_geoprocessor_ui(self)
 
         # The following code is used for all commands, including comments:
         # - create a command editor using the factory
@@ -457,6 +464,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # - full_initialization parses the command string, which won't do much here since new and no parameters
             full_initialization = True
             command_object.initialize_command(command_string, self.gp_model.gp, full_initialization)
+            command_object.initialize_geoprocessor_ui(self)
         except Exception as e:
             message = "Error creating new command, unable to edit for command string: " + command_string
             logger.error(message, e, exc_info=True)
@@ -2773,6 +2781,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
+        # Command file has not been saved
+        self.command_file_saved = False
         # Use functions for CloseEvent override to see if user has edited command file and if so
         # prompt user to save...
         self.closeEvent_save_command_file()
@@ -2937,6 +2947,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             True if the command file was opened and loaded into command list, False if error or canceled.
         """
 
+        # This command file has previously been saved
+        self.command_file_saved = True
+
         self.closeEvent_save_command_file()
 
         logger = logging.getLogger(__name__)
@@ -3088,9 +3101,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Create a QDialog window instance.
         d = QtWidgets.QDialog()
 
+        # Try to get the last opened folder
+        last_opened_folder = ""
+        command_file_list = self.app_session.read_history()
+        if command_file_list and len(command_file_list) > 0:
+            # The history has at least one file so the most recent file can be used to provide
+            # the starting folder.
+            last_opened_file = command_file_list[0]
+            index = last_opened_file.rfind('/')
+            last_opened_folder = last_opened_file[:index]
+        else:
+            # The history did not have any files so default to starting in the user's home folder.
+            last_opened_folder = self.app_session.get_user_folder()
+
         # Open a browser for the user to select a location and filename to save the command file. Set the most recent
         # file save location.
-        self.saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As')[0]
+        self.saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As', last_opened_folder)[0]
 
         if self.saved_file == "":
             return
@@ -3099,6 +3125,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         file = open(self.saved_file, 'w')
         file.write(all_commands_string)
         file.close()
+
+        # This command file has now been saved
+        self.command_file_saved = True
 
         # Save the command file name in the command file history
         self.app_session.push_history(self.saved_file)

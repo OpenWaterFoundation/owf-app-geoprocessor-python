@@ -117,6 +117,8 @@ A small number of committers are responsible for maintaining the integrity of th
 Unit testing of module functions has not been a major focus yet but will be implemented using pytest,
 consistent with normal Python conventions.
 
+Testing is under development currently. Read more about it [here](tests/README.md)
+
 The GeoProcessor contains an internal functional testing framework described in the following resources:
 
 * [Developer documentation for testing tasks](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-tasks/dev-tasks/#testing)
@@ -153,4 +155,3 @@ Additional contributions provided by:
 ## Release Notes ##
 
 See the [User Documentation Release Notes](http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user/appendix-release-notes/release-notes/).
-

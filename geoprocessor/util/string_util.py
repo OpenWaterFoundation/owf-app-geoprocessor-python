@@ -50,6 +50,7 @@ def delimited_string_to_list(delimited_string, delimiter=",", trim=True):
         A list of strings parsed from the delimited string, None if the original string is None, and
         guaranteed to be at least an empty list otherwise.
     """
+    #if delimited_string is None or delimited_string == "":
     if delimited_string is None:
         return None
     else:

@@ -14,6 +14,24 @@ repository and test the full software stack by running the GeoProcessor software
 
 --------------
 
+
+## Tests Structure ##
+
+The structure of the tests folder is directly correlated to the geoprocessor top
+level folder. Naming conventions for test files starts with `test_file_to_test.py`.
+Naming convention for functions in test files follows similarly
+`test_function_to_test()`.
+
+```
+├── tests/
+|   ├── geoprocessor/
+|   |   ├── util
+|   |   |   ├── test_io_util.py
+|   |   |   ├── test_os_util.py
+|   |   |   ├── test_string_util.py
+|   |   |   ├── test_zip_util.py
+```
+
 ## Installing Testing Software on Windows ##
 
 Unit tests are implemented using the `pytest` Python package.

@@ -50,6 +50,19 @@ Output should indicate that python3 is found as `C:\OSGeo4W64\bin\python3.exe`.
 The `tests\run-pytest.bat` batch file configures the environment and
 runs `pytest -ra`, which prints a summary that emphasizes only non-passing tests.
 
+### Parameters: ###
+
+The script `run-pytest.bat` is hard coded to use the flag `-ra`. The `-r` flag
+can be used to display a “short test summary info” at the end of the test
+session, making it easy in large test suites to get a clear picture of all
+failures, skips, xfails, etc. The `-r` options accepts a number of characters
+after it, with `a` used above meaning “all except passes”.
+
+Some other flags that have come in useful in development:  
+`-s` - Allows print statements to be printed to console when tests are run.
+`-vv` - Shows additional details for tests. Useful when dealing with failing
+tests.
+
 ## Temp Folders ##
 
 For testing purposes there may be scenarios where it is necessary to create,

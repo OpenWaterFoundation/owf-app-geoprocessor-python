@@ -50,6 +50,42 @@ Output should indicate that python3 is found as `C:\OSGeo4W64\bin\python3.exe`.
 The `tests\run-pytest.bat` batch file configures the environment and
 runs `pytest -ra`, which prints a summary that emphasizes only non-passing tests.
 
+## Temp Folders ##
+
+For testing purposes there may be scenarios where it is necessary to create,
+edit, and delete files. For these tests there is a PyTest standard of moving
+files into the users temporary directory.  
+`C:\Users\{User}\AppData\Local\Temp\pytest-of-{User}`
+
+Each time a test is run it creates a new folder in this path:  
+```
+├── pytest-of-{User}/
+|   ├── pytest-1/
+|   ├── pytest-2/
+|   ├── pytest-3/
+```
+
+As more tests are run PyTest keeps track of the last 3 tests in this folder.
+If PyTest is run 4 times then `pytest-1/` would be removed and `pytest-4/` would
+be added to the folder.
+
+Within each of these folders, PyTest will create a new subfolder for each
+separate function using the `tempdir` variable.  
+Example:  
+```
+├── pytest-of-{User}/
+|   ├── pytest-1/
+|   |   ├── test_expand_formatter_extensio0
+|   |   ├── test_expand_formatter_filename0
+|   |   ├── test_expand_formatter_ful_pat0
+```
+
+In the development process it is a question of whether to leave the files as they
+are so users can go look back at the files or to remove them once the tests
+have been completed. It is also a question of moving these folders out of the
+user's temporary directory and potentially into a local data folder in the same
+level as the tests themselves.
+
 ### Windows Command Prompt ###
 
 To run the tests in Windows command prompt shell:

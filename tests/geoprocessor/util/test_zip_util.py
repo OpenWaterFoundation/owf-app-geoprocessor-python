@@ -87,17 +87,19 @@ def test_is_zip_file_false(text_file):
 
 # Tests for function untar_all_files()
 def test_untar_all_files(tar_file, output_folder):
+    """ Test untarring all the files. If test_file.txt can be found in output folder this test passes. """
     zip_util.untar_all_files(tar_file, output_folder)
     assert os.path.isfile(output_folder + "/test_file.txt") is True
 
 
 # Tests for function unzip_all_files
 def test_unzip_all_files(zip_file, output_folder):
+    """ Test unzipping all files. If test_file.txt can be found in output folder this test passes. """
     zip_util.unzip_all_files(zip_file, output_folder)
     assert os.path.isfile(output_folder + "/test_file.txt") is True
 
 
-# TODO @jurentie 02/27/2019 need to fix this test function
+# TODO @jurentie 02/27/2019 - need to fix this test function
 # Tests for function unzip_one_file()
 # def test_unzip_one_file(zip_multiple_files, output_folder):
 #     zip_util.unzip_one_file(zip_multiple_files, 'test_file_2.txt', output_folder)
@@ -105,6 +107,7 @@ def test_unzip_all_files(zip_file, output_folder):
 
 # Tests for function zip_files()
 def test_zip_files_multiple_file(tmpdir, text_file, text_file_2):
+    """ Test zipping multiple files. Unzip these files, then check to see if multiple files were originally zipped. """
     list_of_files = [text_file, text_file_2]
     output_file = str(tmpdir) + '/test_file.zip'
     zip_util.zip_files(list_of_files, output_file)
@@ -118,6 +121,7 @@ def test_zip_files_multiple_file(tmpdir, text_file, text_file_2):
 
 
 def test_zip_files_single_file(tmpdir, text_file):
+    """ Test zipping a single file. Unzip this file. Check to see if the single file is inside the unzipped folder. """
     list_of_files = [text_file]
     output_file = str(tmpdir) + '/test_file.zip'
     zip_util.zip_files(list_of_files, output_file)
@@ -130,6 +134,8 @@ def test_zip_files_single_file(tmpdir, text_file):
 
 
 def test_zip_files_do_not_keep_originals(tmpdir, text_file):
+    """ Test zipping files and removing those files. We should not be able to find these files in the tempdir after
+    zipping. """
     list_of_files = [text_file]
     output_file = str(tmpdir) + '/test_file.zip'
     zip_util.zip_files(list_of_files, output_file, False)
@@ -137,3 +143,5 @@ def test_zip_files_do_not_keep_originals(tmpdir, text_file):
     assert os.path.isfile(text_file) is False
 
 # TODO @jurentie 02/27/2019 - create various tests for zipping shapefiles
+
+# TODO @jurentie 02/27/2019 - clean up temporary files...

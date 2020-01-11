@@ -1,7 +1,7 @@
 # OpenDataStore - command to open a datastore
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -302,7 +302,7 @@ class OpenDataStore(AbstractCommand):
                 self.warning_count += 1
                 message = "The DataStore ({}) is already open.".format(datastore_id)
                 recommendation = "Specify a DataStoreID of a closed DataStore."
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                       message, recommendation))
                 should_run_command.append(False)
@@ -384,7 +384,7 @@ class OpenDataStore(AbstractCommand):
                 self.warning_count += 1
                 message = "Unexpected error opening DataStore {}.".format(pv_DataStoreID)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 

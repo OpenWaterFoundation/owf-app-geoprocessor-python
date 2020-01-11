@@ -1,7 +1,7 @@
 # ReadGeoLayerFromShapefile - command to read a GeoLayer from a shapefile
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -208,7 +208,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             self.warning_count += 1
             message = "The SpatialDataFile ({}) is not a valid file.".format(spatial_data_file_abs)
             recommendation = "Specify a valid file."
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -255,7 +255,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
                 run_read = False
                 self.warning_count += 1
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE,
                                                                 message, recommendation))
@@ -313,7 +313,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                 message = "Unexpected error reading GeoLayer {} from Shapefile {}.".format(pv_GeoLayerID,
                                                                                            pv_SpatialDataFile)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 

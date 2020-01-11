@@ -1,7 +1,7 @@
 # validator_util - utility functions to validate command data
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -459,7 +459,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
 
         # If configured, log a FAILURE message about the failed check. Set the run_the_command boolean to False.
         if fail_response.upper() == "FAIL":
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                   message, recommendation))
             run_the_command = False

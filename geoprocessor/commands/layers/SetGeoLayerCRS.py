@@ -1,7 +1,7 @@
 # SetGeoLayerCRS - command to set GeoLayer coordinate reference system (CRS)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -164,7 +164,7 @@ class SetGeoLayerCRS(AbstractCommand):
             self.warning_count += 1
             message = 'The input GeoLayer ID ({}) does not exist.'.format(geolayer_id)
             recommendation = 'Specify a valid GeoLayerID.'
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -175,7 +175,7 @@ class SetGeoLayerCRS(AbstractCommand):
             self.warning_count += 1
             message = 'The input CRS ({}) is not a valid CRS code.'.format(geolayer_id)
             recommendation = 'Specify a valid CRS code (EPSG codes are an approved format).'
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -254,7 +254,7 @@ class SetGeoLayerCRS(AbstractCommand):
                 self.warning_count += 1
                 message = "Unexpected error setting CRS ({}) of GeoLayer ({})".format(pv_CRS, pv_GeoLayerID)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 

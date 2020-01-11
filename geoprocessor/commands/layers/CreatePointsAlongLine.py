@@ -1,7 +1,7 @@
 # CreatePointsAlongLine - command to create point layer along a line
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ class CreatePointsAlongLine(AbstractCommand):
             self.warning_count += 1
             message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(input_geolayer_id)
             recommendation = 'Specify a valid GeoLayerID.'
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message,
                                                             recommendation))
@@ -184,7 +184,7 @@ class CreatePointsAlongLine(AbstractCommand):
 
                 run_copy = False
                 self.warning_count += 1
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE,
                                                                 message, recommendation))

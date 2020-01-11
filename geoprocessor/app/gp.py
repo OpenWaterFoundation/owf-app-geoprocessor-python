@@ -1,7 +1,7 @@
 # gp - main entry point for GeoProcessor application
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -396,7 +396,7 @@ def run_ui(ui_app_session):
         # QGIS is not used so use Qt5 application
         logger.info("QGIS application is null, assuming Qt5 application")
         if qt_app is None:
-            logger.error("Unable to initialize QApplication.  Exiting.", exc_info=True)
+            logger.critical("Unable to initialize QApplication.  Exiting.", exc_info=True)
             sys.exit(1)
         else:
             sys.exit(qt_app.exec())
@@ -551,7 +551,7 @@ if __name__ == '__main__':
     except Exception as e_app:
         err_message = 'Error initializing QGIS application'
         print(err_message)
-        logger_main.exception(err_message, e_app, exc_info=True)
+        logger_main.error(err_message, exc_info=True)
 
     # Process configuration parameters
     runtime_properties_cl = {}
@@ -568,7 +568,7 @@ if __name__ == '__main__':
         except Exception as e_batch:
             err_message = 'Exception running batch'
             print(err_message)
-            logger_main.exception(err_message, e_batch, exc_info=True)
+            logger_main.error(err_message, exc_info=True)
     elif args.http:
         # Run the http server
         print("Running GeoProcessor http server")
@@ -577,7 +577,7 @@ if __name__ == '__main__':
         except Exception as e_http:
             err_message = 'Exception running http'
             print(err_message)
-            logger_main.exception(err_message, e_http, exc_info=True)
+            logger_main.error(err_message, exc_info=True)
     elif args.ui:
         # Run the user interface
         err_message = "Running GeoProcessor UI"
@@ -588,7 +588,7 @@ if __name__ == '__main__':
         except Exception as e_ui:
             err_message = 'Exception running UI (caught "Exception")'
             print(err_message)
-            logger_main.exception(err_message, e_ui, exc_info=True)
+            logger_main.error(err_message, exc_info=True)
     elif args.version:
         # Print the version
         print_version()
@@ -600,7 +600,7 @@ if __name__ == '__main__':
         except Exception as e_prompt:
             err_message = 'Exception running shell'
             print(err_message)
-            logger_main.exception(err_message, e_prompt, exc_info=True)
+            logger_main.error(err_message, exc_info=True)
 
     # Exit QGIS environment
     qgis_util.exit_qgis()

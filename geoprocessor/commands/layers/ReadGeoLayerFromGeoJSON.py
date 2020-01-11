@@ -1,7 +1,7 @@
 # ReadGeoLayerFromGeoJSON - command to read a GeoLayer from a GeoJSON file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -201,7 +201,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             self.warning_count += 1
             message = "The SpatialDataFile ({}) is not a valid file.".format(spatial_data_file_abs)
             recommendation = "Specify a valid file."
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -248,7 +248,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
                 run_read = False
                 self.warning_count += 1
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE,
                                                                 message, recommendation))
@@ -305,14 +305,14 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 message = "Unexpected error reading GeoLayer {} from GeoJSON file {}.".format(pv_GeoLayerID,
                                                                                               pv_SpatialDataFile)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings proceeding this command.".format(self.warning_count)
-            logger.error(message)
+            logger.warning(message)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

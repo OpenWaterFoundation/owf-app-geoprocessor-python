@@ -1,7 +1,7 @@
 # WriteTableToDelimitedFile - command to write a table to a delimited file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -320,7 +320,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 recommendation = 'Specify columns within the Table. \nValid columns: {}'.format(columns)
 
                 self.warning_count += 1
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                         message, recommendation))
                 should_run_command.append(False)
@@ -647,7 +647,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 message = "Unexpected error writing Table {} to delimited file {}.".format(pv_TableID,
                                                                                                 pv_OutputFile)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 

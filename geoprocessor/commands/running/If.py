@@ -1,7 +1,7 @@
 # If - command to start an If block
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -29,8 +29,6 @@ import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
 import logging
-import sys
-import traceback
 
 
 class If(AbstractCommand):
@@ -431,9 +429,8 @@ class If(AbstractCommand):
 
         except Exception as e:
             warning_count += 1
-            traceback.print_exc(file=sys.stdout)  # Formatting of error seems to have issue
             message = 'Unexpected error in If, Name="' + pv_Name + '"'
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
                 CommandLogRecord(CommandStatusType.FAILURE, message,

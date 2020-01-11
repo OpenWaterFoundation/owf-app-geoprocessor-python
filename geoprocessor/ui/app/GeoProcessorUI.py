@@ -1,7 +1,7 @@
 # GeoProcessorUI - class for main GeoProcessor UI
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -368,7 +368,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 command_editor.set_text(comment_block_text)
         except Exception as e:
             message = "Error creating editor for existing command."
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
@@ -419,7 +419,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         except Exception as e:
             message = "Error editing existing command."
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
@@ -467,7 +467,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             command_object.initialize_geoprocessor_ui(self)
         except Exception as e:
             message = "Error creating new command, unable to edit for command string: " + command_string
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
@@ -481,7 +481,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             command_editor = command_editor_factory.new_command_editor(command_object, self.app_session)
         except Exception as e:
             message = "Error creating editor for new command:  " + str(command_object.command_string)
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
@@ -557,7 +557,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         except Exception as e:
             # Unexpected error.
             message = "Error editing new command"
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
@@ -1939,7 +1939,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Ensure that the geoprocessor command list and the ui command list are synchronized properly
         if self.command_ListWidget.commands_List.count() != len(gp.commands):
             message = "Something has gone wrong between the geoprocessor and the ui commands list synchronization."
-            logger.error(message)
+            logger.warning(message)
         # Get the index of the command list selected and retrieve that command from the geoprocessor
         row_index = self.command_ListWidget.commands_List.currentRow()
         if row_index == -1:
@@ -2099,7 +2099,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                                 )
 
             except Exception as e:
-                logger.warning("Error formatting status", e, exc_info=True)
+                logger.warning("Error formatting status", exc_info=True)
 
         command_status_text_browser.setHtml(qt_util.translate("Dialog", html_string, None))
 
@@ -2222,7 +2222,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
                 item.setToolTip(qt_util.translate("Tooltip", html_string, None))
             except Exception as e:
-                logger.warning("Error formatting status", e, exc_info=True)
+                logger.warning("Error formatting status", exc_info=True)
 
     def show_results(self):
         """
@@ -2240,27 +2240,27 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.show_results_geolayers()
         except Exception as e:
             message = "Error showing GeoLayers in Results"
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
         try:
             self.show_results_maps()
         except Exception as e:
             message = "Error showing Maps in Results"
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
         try:
             self.show_results_output_files()
         except Exception as e:
             message = "Error showing Output Files in Results"
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
         try:
             self.show_results_properties()
         except Exception as e:
             message = "Error showing Properties in Results"
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
         try:
             self.show_results_tables()
         except Exception as e:
             message = "Error showing Tables in Results"
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
 
     def show_results_geolayers(self):
         """
@@ -2539,7 +2539,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 program_name + " " + version + " (" + version_date + ")\n" +
                 "Developed by the Open Water Foundation.\n" +
                 "The GeoProcessor automates geospatial data processing.\n\n" +
-                "Copyright 2017-2019 Open Water Foundation.\n" +
+                "Copyright 2017-2020 Open Water Foundation.\n" +
                 "\n" +
                 "License GPLv3+:  GNU GPL version 3 or later\n" +
                 "\n" +
@@ -2552,7 +2552,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Should not happen but does during initial development and UI code swallows exceptions so output to log
             logger = logging.getLogger(__name__)
             message = "Problem showing Help About"
-            logger.warning(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
 
     def ui_action_help_software_system_information(self):
         """
@@ -2730,7 +2730,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         except Exception as e:
             logger = logging.getLogger(__name__)
             message = 'Error getting software/system information (' + str(e) + ')'
-            logger.warning(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
     def ui_action_map_pan(self):
@@ -2993,7 +2993,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # - TODO smalers 2019-01-19 may automatically remove such files,
             #   or leave assuming the user will rename, move the file back again.
             message = 'Selected command file does not exist (maybe deleted or renamed?):\n"' + cmd_filepath + '"'
-            logger.warning(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             # Return so history is not changed to include a file that does not exist
             return False
@@ -3154,7 +3154,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             webbrowser.open_new_tab(user_doc_url)
         except Exception as e:
             message = 'Error viewing documentation for url "' + user_doc_url + '"'
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
     @classmethod
@@ -3188,7 +3188,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 except (AttributeError, FileNotFoundError, NotImplementedError) as e2:
                     # Log the message to help with development
                     message = 'Error viewing log file using xdg-open ' + logfile_name
-                    logger.error(message, e2, exc_info=True)
+                    logger.warning(message, exc_info=True)
                     # Try to use nano as a default visual editor
                     # - TODO smalers 2018-12-28 need to figure out what is installed rather than hard-code nano
                     try:
@@ -3199,7 +3199,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                         qt_util.warning_message_box(message)
         except (AttributeError, FileNotFoundError, NotImplementedError) as e:
             message = 'Error viewing log file - no application available for log file "' + logfile_name + '"'
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
     def ui_action_view_startup_log_file(self):
@@ -3231,7 +3231,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 except (AttributeError, FileNotFoundError, NotImplementedError) as e2:
                     # Log the message to help with development
                     message = 'Error viewing log file using xdg-open ' + logfile_name
-                    logger.error(message, e2, exc_info=True)
+                    logger.warning(message, exc_info=True)
                     # Try to use nano as a default visual editor
                     # - TODO smalers 2018-12-28 need to figure out what is installed rather than hard-code nano
                     try:
@@ -3242,7 +3242,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                         qt_util.warning_message_box(message)
         except (AttributeError, FileNotFoundError, NotImplementedError) as e:
             message = 'Error viewing log file - no application available for log file "' + logfile_name + '"'
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
     def ui_init_file_open_recent_files(self):

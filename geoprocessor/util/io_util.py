@@ -1,7 +1,7 @@
 # io_util - input/output functions
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -813,7 +813,7 @@ def write_property_file(output_file_absolute, all_properties,
     except Exception as e:
         message = 'Error writing properties to file "' + output_file_absolute + '" (' + str(e) + ').'
         problems.append(message)
-        logger.warning(message, e, exc_info=True)
+        logger.warning(message, exc_info=True)
     except:
         message = 'Error writing properties to file "' + output_file_absolute + '.'
         problems.append(message)

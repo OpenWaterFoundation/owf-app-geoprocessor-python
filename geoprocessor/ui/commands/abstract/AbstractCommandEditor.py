@@ -1,7 +1,7 @@
 # AbstractCommandEditor - parent class for all command editors
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -488,7 +488,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
         #               ". Could not build simple command editor. Defaulting to generic command editor. " \
         #               "See log file for more details."
-        #     logger.error(message, e, exc_info=True)
+        #     logger.warning(message, exc_info=True)
         #     qt_util.warning_message_box(message)
         # ComboBox, indicated by 'Values' property
         debug = True
@@ -544,7 +544,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
         #               ". Could not build simple command editor. Defaulting to generic command editor. " \
         #               "See log file for more details."
-        #     logger.error(message, e, exc_info=True)
+        #     logger.warning(message, exc_info=True)
         #     qt_util.warning_message_box(message)
         debug = True
         if self.debug:
@@ -692,7 +692,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         #     message = "Could not find necessary parameter metadata in command file for " + parameter_name + \
         #               ". Could not build simple command editor. Defaulting to generic command editor. " \
         #               "See log file for more details."
-        #     logger.error(message, e, exc_info=True)
+        #     logger.warning(message, exc_info=True)
         #     qt_util.warning_message_box(message)
         debug = True
         if self.debug:
@@ -951,5 +951,5 @@ class AbstractCommandEditor(QtWidgets.QDialog):
                 webbrowser.open(command_doc_url)
         except Exception as e:
             message = 'Error viewing command documentation using url "' + str(command_doc_url) + '"'
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)

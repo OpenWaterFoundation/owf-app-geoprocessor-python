@@ -1,7 +1,7 @@
 # WriteTableToExcel - command to write a table to an Excel worksheet
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -223,7 +223,7 @@ class WriteTableToExcel(AbstractCommand):
                                  "to a new XLS file.".format(output_file_abs)
 
                 self.warning_count += 1
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                         message, recommendation))
                 should_run_command.append(False)
@@ -301,7 +301,7 @@ class WriteTableToExcel(AbstractCommand):
                 message = "Unexpected error writing Table {} to Excel workbook file {}.".format(pv_TableID,
                                                                                                 pv_OutputFile)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 

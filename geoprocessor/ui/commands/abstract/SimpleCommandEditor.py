@@ -1,7 +1,7 @@
 # SimpleCommandEditor - class for simple command editors
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -179,8 +179,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 except KeyError as e:
                     # Should not happen because all parameters should have at least a text field.
                     message = "No input component for parameter '" + parameter_name + "' - code problem."
-                    logger.warning(message)
-                    logger.error(message, e, exc_info=True)
+                    logger.warning(message, exc_info=True)
                     continue
             # Set the following so won't do this initialization again
             self.first_refresh_ui = False
@@ -225,8 +224,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 except KeyError as e:
                     # Should not happen because all parameters should have at least a text field.
                     message = "No input component for parameter '" + parameter_name + "' - code problem."
-                    logger.warning(message)
-                    logger.error(message, e, exc_info=True)
+                    logger.warning(message, exc_info=True)
                     continue
             # Have a dictionary of parameters extracted from UI components
             # - format the command string using the command instance
@@ -235,8 +233,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
         except Exception as e:
             message = "Error refreshing command from parameters"
-            logger = logging.getLogger(__name__)
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
     def setup_ui(self):
@@ -410,7 +407,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 # - this should NEVER happen unless there is a code error because above logic is basic
                 message = 'Error getting command editor metadata - cannot edit command.'
                 logger.warning(message)
-                logger.warning(message, e, exc_info=True)
+                logger.warning(message, exc_info=True)
                 # Show the user a warning
                 qt_util.warning_message_box(message)
                 self.reject()

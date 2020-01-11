@@ -1,7 +1,7 @@
 # SplitGeoLayerByAttribute - command to split a GeoLayer into multiple GeoLayers based on an attribute's values
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -244,7 +244,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 message = 'The attribute name ({}) is not valid.'.format(attribute_name)
                 recommendation = 'Specify a valid attribute name. Valid attributes for this layer are as follows: ' \
                                  '{}'.format(list_of_attributes)
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             logger.info('Found attribute "' + attribute_name + '" in input layer attributes')
@@ -462,7 +462,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 message = "Unexpected error splitting GeoLayer {}.".format(
                     pv_InputGeoLayerID)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))

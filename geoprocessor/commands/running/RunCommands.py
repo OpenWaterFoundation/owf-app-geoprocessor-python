@@ -1,7 +1,7 @@
 # RunCommands - command to run a command file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@ import geoprocessor.util.io_util as io_util
 import geoprocessor.util.validator_util as validators
 
 import logging
-import sys
-import traceback
 
 
 class RunCommands(AbstractCommand):
@@ -340,8 +338,7 @@ class RunCommands(AbstractCommand):
         except Exception as e:
             warning_count += 1
             message = 'Unexpected error running command file "' + pv_CommandFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.error(message, e, exc_info=True)
+            logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
                 CommandLogRecord(CommandStatusType.FAILURE, message,
@@ -350,8 +347,7 @@ class RunCommands(AbstractCommand):
         except:
             warning_count += 1
             message = 'Unexpected error running command file "' + pv_CommandFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.error(message, exc_info=True)
+            logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
                 CommandLogRecord(CommandStatusType.FAILURE, message,

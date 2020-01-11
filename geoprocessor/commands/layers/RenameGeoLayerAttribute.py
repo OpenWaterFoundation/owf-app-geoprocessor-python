@@ -1,7 +1,7 @@
 # RenameGeoLayerAttribute - command to rename GeoLayer attributes
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -185,7 +185,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
             self.warning_count += 1
             message = 'The input GeoLayer ID ({}) does not exist.'.format(geolayer_id)
             recommendation = 'Specify a valid GeoLayerID.'
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -206,7 +206,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 message = 'The existing attribute name ({}) is not valid.'.format(existing_attribute_name)
                 recommendation = 'Specify a valid attribute name. Valid attributes for this layer are as follows: ' \
                                  '{}'.format(list_of_existing_attributes)
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -217,7 +217,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 self.warning_count += 1
                 message = 'The new attribute name ({}) is not unique.'.format(new_attribute_name)
                 recommendation = 'Specify a unique attribute name.'
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -270,7 +270,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 message = "Unexpected error renaming attribute ({}) of GeoLayer ({})" \
                           " to new name of '{}'.".format(pv_ExistingAttributeName, pv_GeoLayerID, pv_NewAttributeName)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 

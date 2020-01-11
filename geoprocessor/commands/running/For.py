@@ -1,7 +1,7 @@
 # For - command to start a For block
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -29,8 +29,6 @@ import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
 import logging
-import sys
-import traceback
 
 
 class For(AbstractCommand):

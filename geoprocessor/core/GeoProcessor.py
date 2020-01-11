@@ -1,7 +1,7 @@
 # GeoProcessor - class to process a workflow of commands
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ import platform
 import sys
 import tempfile
 from time import gmtime, strftime
-import traceback
 
 
 class GeoProcessor(object):
@@ -1369,7 +1368,7 @@ class GeoProcessor(object):
                         except:
                             message = "Error running command in GeoProcessor.py"
                             warning_count += 1
-                            logger.error(message, exc_info=True)
+                            logger.warning(message, exc_info=True)
                         # If the command generated an output file, add it to the list of output files.
                         # The list is used by the UI to display results.
                         # TODO smalers 2017-12-21 - add the file list generator like TSEngine
@@ -1410,8 +1409,8 @@ class GeoProcessor(object):
             except Exception as e:
                 # TODO smalers 2017-12-21 need to expand error handling by type but for now catch generically
                 # because Python exception handling uses fewer exception classes than Java dode to keep simple
-                traceback.print_exc(file=sys.stdout)  # Formatting of error seems to have issue
                 message = "Unexpected error processing command - unable to complete command"
+                message.warning(message, exc_info=True)
                 # Don't raise an exception because want all commands to run as best they can, each with
                 # message logging, so that user can troubleshoot all at once rather than first error at a time
                 command.command_status.add_to_log(
@@ -1419,12 +1418,12 @@ class GeoProcessor(object):
                     CommandLogRecord(CommandStatusType.FAILURE, message, "See the log file for details."))
                 # Put this after the above because it may also cause an issue
                 try:
-                    logger.error(message, e, exc_info=True)
+                    logger.warning(message, exc_info=True)
                 except Exception as e2:
                     # The logger itself might throw exceptions - make sure this does not cause the GeoProcessor
                     # from continuing to do its work
-                    # - After adding this exception block, it does not appear that the following call to logger.error()
-                    #   does result in a new exception, but keep the code for now.
+                    # - After adding this exception block, it does not appear that the following call to
+                    #   logger.warning() does result in a new exception, but keep the code for now.
                     logger.warning("Exception logging threw an exception.")
             except:
                 message = "Unexpected error processing command - unable to complete command"
@@ -1435,18 +1434,18 @@ class GeoProcessor(object):
                     CommandLogRecord(CommandStatusType.FAILURE, message, "See the log file for details."))
                 # Put this after the above because it may also cause an issue
                 try:
-                    logger.error(message, exc_info=True)
+                    logger.warning(message, exc_info=True)
                 except Exception as e2:
                     # The logger itself might throw exceptions - make sure this does not cause the GeoProcessor
                     # from continuing to do its work
-                    # - After adding this exception block, it does not appear that the following call to logger.error()
-                    #   does result in a new exception, but keep the code for now.
+                    # - After adding this exception block, it does not appear that the following call to
+                    #   logger.warning() does result in a new exception, but keep the code for now.
                     logger.warning("Exception logging threw an exception.")
 
         # The following checks to see if any warnings were caught in the above code.
         # If there were any warnings raise and exception.
         if warning_count > 0:
-            message = "Errors found in processing commands."
+            message = "Errors found processing commands."
             logger.error(message)
             # raise RuntimeError(message)
 

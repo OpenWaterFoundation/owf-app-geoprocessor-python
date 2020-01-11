@@ -1,7 +1,7 @@
 # MergeGeoLayers - command to merge GeoLayers
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -212,7 +212,7 @@ class MergeGeoLayers(AbstractCommand):
                 self.warning_count += 1
                 message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
                 recommendation = 'Specify a valid GeoLayerID.'
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -242,7 +242,7 @@ class MergeGeoLayers(AbstractCommand):
                 self.warning_count += 1
                 message = 'The input GeoLayers ({}) have different geometries ({}).'.format(geolayer_id_list, geom_list)
                 recommendation = 'Specify input GeoLayers that have the same geometry.'
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -290,7 +290,7 @@ class MergeGeoLayers(AbstractCommand):
 
                 run_merge = False
                 self.warning_count += 1
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -503,7 +503,7 @@ class MergeGeoLayers(AbstractCommand):
                 self.warning_count += 1
                 message = "Unexpected error merging the following GeoLayers {}.".format(pv_GeoLayerIDs)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))

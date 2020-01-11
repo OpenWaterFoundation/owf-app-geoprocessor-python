@@ -1,7 +1,7 @@
 # CompareFiles - command to compare files
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@ import geoprocessor.util.validator_util as validators
 
 import logging
 import os
-import sys
-import traceback
 
 
 class CompareFiles(AbstractCommand):
@@ -333,7 +331,7 @@ class CompareFiles(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_InputFile2, self)))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings about command parameters."
+            message = "There were " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
             raise ValueError(message)
 
@@ -409,8 +407,7 @@ class CompareFiles(AbstractCommand):
             warning_count += 1
             message = 'Unexpected error comparing file "' + pv_InputFile1_absolute + '" to "' + \
                       pv_InputFile2_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.exception(message, e)
+            logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
                 CommandLogRecord(CommandStatusType.FAILURE, message,

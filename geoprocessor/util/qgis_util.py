@@ -1,7 +1,7 @@
 # qgis_util - utility functions related to QGIS and requires imports from QGIS libraries
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -116,19 +116,19 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, attribute_type)
             qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Date)])
         else:
             valid_attribute_types = ["int", "double", "string", "date"]
-            message = "Error message: The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
+            message = "The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
                       "include: {}".format(attribute_type, valid_attribute_types)
             logger = logging.getLogger(__name__)
-            logger.error(message)
+            logger.warning(message)
             raise ValueError(message)
 
         qgsvectorlayer.updateFields()
 
     else:
-        # Print an error message if the input attribute name is already an existing attribute name.
+        # Print a warning message if the input attribute name is already an existing attribute name.
         logger = logging.getLogger(__name__)
-        message = "Error message: The attribute_name ({}) is an existing attribute name.".format(attribute_name)
-        logger.error(message)
+        message = "The attribute_name ({}) is an existing attribute name.".format(attribute_name)
+        logger.warning(message)
         raise ValueError(message)
 
 
@@ -692,7 +692,7 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs):
     if qgs_raster_layer_obj.isValid():
         return qgs_raster_layer_obj
 
-    # If the created QGSRasterLayer object is invalid, print an error message and return None.
+    # If the created QGSRasterLayer object is invalid, print a warning message and return None.
     else:
         message = 'The QGSRasterLayer for file "{}" is invalid.'.format(spatial_data_file_abs)
         logger = logging.getLogger(__name__)
@@ -847,7 +847,7 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs, feature_class):
     if qgs_vector_layer_obj.isValid():
         return qgs_vector_layer_obj
 
-    # If the created QGSVectorLayer object is invalid, print an error message and return None.
+    # If the created QGSVectorLayer object is invalid, print a warning message and return None.
     else:
         message = 'The QGSVectorLayer from file geodatabase "{}" feature class "{}" is invalid.'.format(
                    file_gdb_path_abs, feature_class)
@@ -889,7 +889,7 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs):
     if qgs_vector_layer_obj.isValid():
         return qgs_vector_layer_obj
 
-    # If the created QGSVectorLayer object is invalid, print an error message and return None.
+    # If the created QGSVectorLayer object is invalid, print a warning message and return None.
     else:
         message = 'The QGSVectorLayer for file "{}" is invalid.'.format(spatial_data_file_abs)
         logger = logging.getLogger(__name__)
@@ -968,7 +968,7 @@ def remove_qgsvectorlayer_features(qgsvectorlayer, list_of_feature_ids):
 
 def rename_qgsvectorlayer_attribute(qgsvectorlayer, attribute_name, new_attribute_name):
     # TODO egiles 2018-01-18 Create a warning if the new_attribute_name is longer than 10 characters but do not raise
-    # TODO  an error
+    # an exception
     """
     Renames an attribute of a QgsVectorLayer object.
 

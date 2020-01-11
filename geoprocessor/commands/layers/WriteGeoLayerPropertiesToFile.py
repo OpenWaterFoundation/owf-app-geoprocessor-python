@@ -1,7 +1,7 @@
 # WriteGeoLayerPropertiesToFile - command to write GeoLayer properties to a file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -30,9 +30,6 @@ import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
 
 import logging
-import os
-import sys
-import traceback
 
 
 class WriteGeoLayerPropertiesToFile(AbstractCommand):
@@ -253,7 +250,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         if warning_count > 0:
-            message = "There were " + warning_count + " warnings about command parameters."
+            message = "There were " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
             raise ValueError(message)
 
@@ -265,7 +262,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
             if geolayer is None:
                 message = 'Unable to find GeoLayer for GeoLayerID="' + pv_GeoLayerID + '"'
                 warning_count += 1
-                logger.error(message)
+                logger.warning(message)
                 self.command_status.add_to_log(
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message, "Check the log file for details."))
@@ -276,7 +273,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
                 # Record any problems that were found
                 for problem in problems:
                     warning_count += 1
-                    logger.error(problem)
+                    logger.warning(problem)
                     self.command_status.add_to_log(
                         CommandPhaseType.RUN,
                         CommandLogRecord(CommandStatusType.FAILURE, problem,
@@ -285,8 +282,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         except Exception as e:
             warning_count += 1
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.exception(message, e)
+            logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
                 CommandLogRecord(CommandStatusType.FAILURE, message,
@@ -295,8 +291,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         except:
             warning_count += 1
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.exception(message)
+            logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
                 CommandLogRecord(CommandStatusType.FAILURE, message,

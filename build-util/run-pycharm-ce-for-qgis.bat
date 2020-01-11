@@ -8,6 +8,11 @@ rem See:  http://spatialgalaxy.com/2014/10/09/a-quick-guide-to-getting-started-w
 rem The following provides useful background but seems incomplete.
 rem See:  http://planet.qgis.org/planet/tag/pycharm/
 
+rem Get the current folder, used to specify the path to the project
+rem - will have \ at the end
+SET GP_CURRENT_DIR=%~dp0%
+echo Script directory=%GP_CURRENT_DIR%
+
 rem Set an environment variable to indicate that the environment is setup.
 rem - this ensures that setup is done once
 rem - then PyCharm can be restarted in the same window without reconfiguring the environment
@@ -45,12 +50,18 @@ SET QGIS=%OSGEO4W_ROOT%\apps\%QGISNAME%
 rem Not sure what the following is used for but include in case PyCharm or QGIS uses 
 SET QGIS_PREFIX_PATH=%QGIS%
 rem Set the absolute path to PyCharm program 
-rem - sort with most recent last so that the newest version is run
+rem - sort with most recent last so that the newest version that is found is run
 rem - this assumes that the developer is using the newest version installed for development
+rem - include editions that have been specifically used by Open Water Foundation for development
+rem 2018 editions
 if exist "C:\Program Files\JetBrains\PyCharm Community Edition 2018.1.3\bin\pycharm64.exe" SET PYCHARM="C:\Program Files\JetBrains\PyCharm Community Edition 2018.1.3\bin\pycharm64.exe"
 if exist "C:\Program Files\JetBrains\PyCharm Community Edition 2018.2.4\bin\pycharm64.exe" SET PYCHARM="C:\Program Files\JetBrains\PyCharm Community Edition 2018.2.4\bin\pycharm64.exe"
 if exist "C:\Program Files\JetBrains\PyCharm Community Edition 2018.2.6\bin\pycharm64.exe" SET PYCHARM="C:\Program Files\JetBrains\PyCharm Community Edition 2018.2.6\bin\pycharm64.exe"
+rem 2019 editions
+if exist "C:\Program Files\JetBrains\PyCharm Community Edition 2019.3.1\bin\pycharm64.exe" SET PYCHARM="C:\Program Files\JetBrains\PyCharm Community Edition 2019.3.1\bin\pycharm64.exe"
 if not exist %PYCHARM% goto nopycharm
+
+echo Will use latest found Pycharm Community Edition: %PYCHARM%
 
 rem Add QGIS to the PATH environment variable so that all QGIS, GDAL, OGR, etc. programs are found
 SET PATH=%PATH%;%QGIS%\bin
@@ -69,7 +80,11 @@ if exist %OSGEO4W_ROOT%\apps\Python37 set PYTHONPATH=%OSGEO4W_ROOT%\apps\Python3
 rem Set the environment variable that lets this batch file know that the environment is set up
 set PYCHARM_GEOPROCESSOR_ENV_SETUP=YES
 
+rem This is the entry point of the script after set and if the script has been run before
+rem - set the window title to indicate that the environment is configured
+rem - TODO smalers 2020-01-10 need to set title if error occurred setting up the environment?
 :run
+title GeoProcessor development environment for PyCharm
 
 rem Echo environment variables for troubleshooting
 echo.
@@ -83,21 +98,31 @@ echo.
 rem Start the PyCharm IDE, /B indicates to use the same windows
 rem - command line parameters passed to this script will be passed to PyCharm 
 rem - PyCharm will use the Python interpreter configured for the project
-echo Starting PyCharm using %PYCHARM% - prompt will display and PyCharm may take a few seconds to start.
-start "PyCharm aware of QGIS" /B %PYCHARM% %*
-goto end
+rem - Specify the folder for the project so it does not default to some other project
+rem   that was opened last
+echo Starting PyCharm using:  start ... /B %PYCHARM% %GP_PROJECT_DIR% %*
+echo Prompt will display and PyCharm may take a few seconds to start.
+SET GP_PROJECT_DIR=%GP_CURRENT_DIR%..
+if exist %GP_PROJECT_DIR% start "PyCharm aware of QGIS" /B %PYCHARM% %GP_PROJECT_DIR% %*
+if not exist %GP_PROJECT_DIR% goto noproject
+goto endofbat
+
+:noproject
+rem No project directory (should not happen)
+echo Project folder does not exist:  %GP_PROJECT_DIR%
+echo Not starting PyCharm.
+exit /b 1
 
 :nopycharm
-
 rem Expected PyCharm was not found
-echo PyCharm was not found:  %PYCHARM%
-echo Try running a different run script.
+echo PyCharm was not found in expected location C:\Program Files\JetBrains\PyCharm Community Edition NNNN.N.N\bin\pycharm64.exe
+echo May need to update this script for newer versions of PyCharm.
 exit /b 1
 
 :noqgisbat
-
 rem qgis.bat was not found
 echo QGIS batch file not found:  %OSGEO4W_ROOT%/bin/qgis.bat
 exit /b 1
 
-:end
+rem For some reason using "end" causes an error - reserved word?
+:endofbat

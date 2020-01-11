@@ -1,7 +1,7 @@
 # CopyFile - command to copy a file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -31,8 +31,6 @@ import geoprocessor.util.validator_util as validators
 import logging
 import os
 from shutil import copyfile
-import sys
-import traceback
 
 
 class CopyFile(AbstractCommand):
@@ -222,8 +220,7 @@ class CopyFile(AbstractCommand):
             warning_count += 1
             message = 'Unexpected error copying file "' + pv_SourceFile_absolute + '" to "' + \
                       pv_DestinationFile_absolute + '"'
-            traceback.print_exc(file=sys.stdout)
-            logger.exception(message, e)
+            logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
                 CommandLogRecord(CommandStatusType.FAILURE, message,

@@ -1,7 +1,7 @@
 # ReadGeoLayersFromFolder - command to read GeoLayers from a folder
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -205,7 +205,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
             self.warning_count += 1
             message = "The SpatialDataFolder ({}) is not a valid folder.".format(spatial_data_folder_abs)
             recommendation = "Specify a valid folder."
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -263,7 +263,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
                 run_read = False
                 self.warning_count += 1
-                self.logger.error(message)
+                self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE,
                                                                 message, recommendation))
@@ -342,7 +342,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
                         message = "Unexpected error reading GeoLayer {} from" \
                                   " file {}.".format(geolayer_id, spatial_data_file_absolute)
                         recommendation = "Check the log file for details."
-                        self.logger.error(message, exc_info=True)
+                        self.logger.warning(message, exc_info=True)
                         self.command_status.add_to_log(CommandPhaseType.RUN,
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))

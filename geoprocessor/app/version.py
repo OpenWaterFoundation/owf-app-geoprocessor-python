@@ -1,7 +1,7 @@
 # version - version information for the GeoProcessor application
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
 app_name = "GeoProcessor"
 app_organization = "Open Water Foundation"
 app_organization_url = "http://openwaterfoundation.org"
-app_copyright = "Copyright 2017-2019, Open Water Foundation"
+app_copyright = "Copyright 2017-2020, Open Water Foundation"
 app_license = "GPL 3.0"
 app_version = "1.3.0dev"
-app_version_date = "2019-01-11"
+app_version_date = "2020-01-11"
 
 # Adjust the application name if testing framework to avoid confusion

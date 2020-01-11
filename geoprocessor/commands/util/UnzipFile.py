@@ -1,7 +1,7 @@
 # UnzipFile - command to unzip a zip file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -210,7 +210,7 @@ class UnzipFile(AbstractCommand):
             message = "A valid FileType cannot be determined from the file ({}).".format(file_abs)
             recommendation = "Use the FileType parameter to assign the appropriate file type."
             should_run_command.append(False)
-            self.logger.error(message)
+            self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                   message, recommendation))
 
@@ -307,7 +307,7 @@ class UnzipFile(AbstractCommand):
                 self.warning_count += 1
                 message = "Unexpected error extracting the {} file ({}).".format(pv_FileType, pv_File)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 

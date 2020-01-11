@@ -1,7 +1,7 @@
 # CreateGeoLayer - command to create a GeoLayer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -272,7 +272,7 @@ class CreateGeoLayer(AbstractCommand):
                 self.warning_count += 1
                 message = "Unexpected error creating GeoLayer ({}).".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."
-                self.logger.error(message, exc_info=True)
+                self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 

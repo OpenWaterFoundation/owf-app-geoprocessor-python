@@ -21,7 +21,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from geoprocessor.core import CommandParameterMetadata
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
-from geoprocessor.ui.util.command_parameter import CommandParameter
+from geoprocessor.ui.util.CommandParameter import CommandParameter
 
 import geoprocessor.ui.util.qt_util as qt_util
 

@@ -2,7 +2,7 @@
 rem gpuidev.bat
 rem _________________________________________________________________NoticeStart_
 rem GeoProcessor
-rem Copyright (C) 2017-2019 Open Water Foundation
+rem Copyright (C) 2017-2020 Open Water Foundation
 rem  
 rem GeoProcessor is free software:  you can redistribute it and/or modify
 rem     it under the terms of the GNU General Public License as published by

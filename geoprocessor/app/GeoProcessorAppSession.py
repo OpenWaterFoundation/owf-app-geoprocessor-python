@@ -25,32 +25,38 @@ import os
 class GeoProcessorAppSession(object):
     """
     Manage the session, such as saving the application state.
-    This is a port of the Java TSToolSession class.
+    The number below is the major software version.
 
-    The $HOME/.owf-gp/command-file-history.txt file contains a list of recently opened or saved command files,
+    The $HOME/.owf-gp/1/command-file-history.txt file contains a list of recently opened or saved command files,
     with format shown below (paths will be consistent with the operating system, in the case below for Cygwin):
 
-    # GeoProcessor command file history, most recent at top, shared between GeoProcessor instances
-    /cygdrive/c/Users/sam/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python-test/test/commands/RunProgram/test-RunProgram-echo-env.gp
-    /cygdrive/c/Users/sam/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python-test/test/commands/RunProgram/test-wlgetquery-datadisp.gp
+    The user session files are:
 
-    And on Windows 10:
-
-    # GeoProcessor command file history, most recent at top, shared between GeoProcessor instances
-    C:/Users/sam/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python-test/test/commands/0-Warning/test-warning-and-failure.gp
-    C:/Users/sam/owf-dev/GeoProcessor/git-repos/owf-app-geoprocessor-python-test/test/commands/MergeGeoLayers/test-MergeGeoLayers-Lines-AttributeMap.gp
+    C:/Users/user/.owf-gp/1/         # Windows
+    $HOME/.owf-gp/1/                 # Linux
+       command-file-history.txt
+       logs/
     """
-    def __init__(self):
-        pass
 
-    def create_log_folder(self):
+    # Private singleton instance (class data)
+    _instance = None
+
+    def __init__(self, app_major_version):
         """
-        Create the folder where the application log file lives.
+        Constructor.
+        """
+
+        # Major version for software, used to locate files in home folder
+        self.app_major_version = app_major_version
+
+    def create_user_logs_folder(self):
+        """
+        Create the user logs folder where the application log file lives.
 
         Returns:
             True if the creation is successful, False if not.
         """
-        log_folder = self.get_log_folder()
+        log_folder = self.get_user_logs_folder()
         # Do not allow log file to be created under Linux root but allow the application to run
         if log_folder == "/":
             return False
@@ -58,24 +64,13 @@ class GeoProcessorAppSession(object):
         if not os.path.exists(log_folder):
             try:
                 os.makedirs(log_folder)
-            except OSError as e:
+            except OSError:
                 return False
         else:
             # Make sure it is writeable
             if not os.access(log_folder, os.W_OK):
                 return False
         return True
-
-    def get_app_folder(self):
-        """
-        Get the name of the application folder for the user.
-
-        Returns:
-            The name of the folder for user geoprocessor application files.
-        """
-        app_folder = os.path.join(self.get_user_folder(), ".owf-gp")
-        logging.info('Application folder is "' + app_folder + '"')
-        return app_folder
 
     def get_history_file(self):
         """
@@ -84,31 +79,57 @@ class GeoProcessorAppSession(object):
         Returns:
             The name of the history file.
         """
-        history_file = os.path.join(self.get_app_folder(), "command-file-history.txt")
+        history_file = os.path.join(self.get_user_app_major_version_folder(), "command-file-history.txt")
         logging.info('Command file history is"' + history_file + '"')
         return history_file
 
-    def get_log_file(self):
+    @classmethod
+    def get_instance(cls, app_major_version=None):
         """
-        Get the name of the log file for the user.
+        Return a singleton instance.
 
         Returns:
-            The name of the log file.
+            Singleton instance of GeoProcessorAppSession
         """
-        log_file = os.path.join(self.get_log_folder(), "gp_" + getpass.getuser() + ".log")
-        logging.info('Log file is "' + log_file + '"')
-        return log_file
+        if cls._instance is None:
+            # None instance because called the first time, so create an instance
+            cls._instance = GeoProcessorAppSession(app_major_version=app_major_version)
+        else:
+            # Else an instance exists so return it
+            # - the following won't do anything if already initialized
+            cls._instance.initialize_user_files()
 
-    def get_log_folder(self):
+        return cls._instance
+
+    def get_app_major_version(self):
         """
-        Get the name of the log file folder for the user.
-        
+        Get the major version for the software, as an integer.
+
         Returns:
-            The name of the folder for user log files.
+            Major version for the software.
         """
-        log_folder = os.path.join(self.get_app_folder(), "log")
-        logging.info('Log folder is "' + log_folder + '"')
-        return log_folder
+        return self.app_major_version
+
+    def get_user_app_folder(self):
+        """
+        Get the name of the application folder for the user.
+
+        Returns:
+            The name of the folder for user geoprocessor application files.
+        """
+        app_folder = os.path.join(self.get_user_folder(), ".owf-gp")
+        logging.info('Application folder for user is "' + app_folder + '"')
+        return app_folder
+
+    def get_user_app_major_version_folder(self):
+        """
+        Get the major version folder for application user files.
+
+        Returns:
+            The major version folder for application user files.
+        """
+        major_user_app_folder = os.path.join(self.get_user_app_folder(), str(self.get_app_major_version()))
+        return major_user_app_folder
 
     def get_user_folder(self):
         """
@@ -122,6 +143,76 @@ class GeoProcessorAppSession(object):
         user_folder = os.path.expanduser("~")
         logging.info('User folder is "' + user_folder + '"')
         return user_folder
+
+    def get_user_log_file(self):
+        """
+        Get the name of the log file for the user.
+
+        Returns:
+            The name of the log file.
+        """
+        log_file = os.path.join(self.get_user_logs_folder(), "gp_" + getpass.getuser() + ".log")
+        logging.info('Log file for user is "' + log_file + '"')
+        return log_file
+
+    def get_user_logs_folder(self):
+        """
+        Get the name of the log file folder for the user.
+
+        Returns:
+            The name of the folder for user log files.
+        """
+        logs_folder = os.path.join(self.get_user_app_major_version_folder(), "logs")
+        logging.info('Logs folder for user is "' + logs_folder + '"')
+        return logs_folder
+
+    def initialize_user_files(self):
+        """
+        Initialize user files.  This method should be called at application startup by calling 'get_instance()'
+        to make sure that user files are created.
+        The following summarizes the file structure:
+            C:/Users/user/              # Windows user folder
+            /home/user/                 # Linux user folder
+                .owf-gp/
+                    1/
+                        logs/
+                            gp-user.log
+                    2/
+                        ... next major version's files ...
+
+        The use of a version folder is a design compromise.  Users will need to use migration tools to import previous
+        version configuration.  The version folder allows different major versions of software to remain
+        functional if major design changes occur.
+
+        Returns:
+            True if initialization was successful, False if initialization failed.
+        """
+        logger = logging.getLogger(__name__)
+        user_folder = self.get_user_app_folder()
+        if user_folder == "/":
+            # Don't allow files to be created under root on Linux
+            logger.warning("Unable to create user files in / (root) folder - need to run as normal user.")
+            return False
+
+        # Create the version folder if it does not exist
+
+        version_folder = self.get_user_app_major_version_folder()
+        if not os.path.exists(version_folder):
+            try:
+                os.mkdir(version_folder)
+            except Exception:
+                logger.warning("Could not create application user files version folder \"" + version_folder + "\"",
+                               exc_info=True)
+                return False
+        else:
+            # Make sure it is writeable
+            if os.access(version_folder, os.W_OK):
+                logger.warning("Application user files version folder \"" + version_folder + "\" is not writeable.")
+                return False
+
+        # Create main folders under the version folder
+        self.create_user_logs_folder()
+        return True
 
     def push_history(self, command_file):
         """
@@ -175,6 +266,7 @@ class GeoProcessorAppSession(object):
 
         # print(history_list)
 
+        f = None
         try:
             with open(self.get_history_file()) as f:
                 history = f.read().splitlines()
@@ -183,12 +275,16 @@ class GeoProcessorAppSession(object):
                         # Remove comments
                         history.remove(line)
                 return history
-        except Exception as e:
+        except Exception:
             # For now just swallow exception - may be because the history folder does not exist
             # message = 'Exception opening command file history'
             # print(message)
-            # logging.exception(message, e, exc_info=True)
+            # logging.warning(message, exc_info=True)
             return []
+        finally:
+            # Close the history file
+            if f is not None:
+                f.close()
 
     def write_history(self, history_list):
         """
@@ -216,10 +312,11 @@ class GeoProcessorAppSession(object):
                     return
             try:
                 f.write(string_builder)
+                f.close()
             except Exception as e:
                 # Absorb exception for now
                 pass
         except Exception as e:
             message = 'Exception writing command file history'
             print(message)
-            logging.exception(message, e, exc_info=True)
+            logging.warning(message, exc_info=True)

@@ -883,7 +883,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "ReadGeoLayerFromShapefile"))
         # ReadGeoLayersFromFGDB
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setObjectName(qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromFGDB"))
+        self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setObjectName(
+            qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromFGDB"))
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setText(
             "ReadGeoLayersFromFGDB()... <reads 1+ GeoLayer(s) from the feature classes of a file geodatabase>")
         self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFGDB)
@@ -1141,7 +1142,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands.addAction(self.Menu_Commands_General_Comments.menuAction())
         # Comments / General - Comments / Single menu
         self.Menu_Commands_General_Comments_Single = QtWidgets.QAction(main_window)
-        self.Menu_Commands_General_Comments_Single.setObjectName(qt_util.from_utf8("Menu_Commands_General_Comments_Single"))
+        self.Menu_Commands_General_Comments_Single.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_Comments_Single"))
         self.Menu_Commands_General_Comments_Single.setText("# comments <enter 1+ comments each starting with #>")
         self.Menu_Commands_General_Comments_Single.triggered.connect(
             functools.partial(self.new_command_editor, "#"))
@@ -1165,7 +1167,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments.addSeparator()
         # Comments / General - Comments / Enabled menu
         self.Menu_Commands_General_Comments_EnabledFalse = QtWidgets.QAction(main_window)
-        self.Menu_Commands_General_Comments_EnabledFalse.setObjectName(qt_util.from_utf8("Menu_Commands_General_Comments_Enabled"))
+        self.Menu_Commands_General_Comments_EnabledFalse.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_Comments_Enabled"))
         self.Menu_Commands_General_Comments_EnabledFalse.setText("#@enabled False <disables the test>")
         self.Menu_Commands_General_Comments_EnabledFalse.triggered.connect(
             functools.partial(self.new_command_editor, "#@enabled False"))
@@ -1639,7 +1642,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Maps_GroupBox = QtWidgets.QGroupBox(self.results_Maps_Tab)
         self.results_Maps_GroupBox.setObjectName(qt_util.from_utf8("results_Maps_GroupBox"))
         self.results_Maps_GroupBox_VerticalLayout = QtWidgets.QVBoxLayout(self.results_Maps_GroupBox)
-        self.results_Maps_GroupBox_VerticalLayout.setObjectName(qt_util.from_utf8("results_Maps_GroupBox_VerticalLayout"))
+        self.results_Maps_GroupBox_VerticalLayout.setObjectName(
+            qt_util.from_utf8("results_Maps_GroupBox_VerticalLayout"))
         self.results_Maps_Table = QtWidgets.QTableWidget(self.results_Maps_GroupBox)
         self.results_Maps_Table.setObjectName(qt_util.from_utf8("results_Maps_Table"))
         self.results_Maps_Table.setColumnCount(4)
@@ -1710,7 +1714,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_Tab = QtWidgets.QWidget()
         self.results_Properties_Tab.setObjectName(qt_util.from_utf8("results_Properties_Tab"))
         self.results_Properties_Tab_VerticalLayout = QtWidgets.QVBoxLayout(self.results_Properties_Tab)
-        self.results_Properties_Tab_VerticalLayout.setObjectName(qt_util.from_utf8("results_Properties_Tab_VerticalLayout"))
+        self.results_Properties_Tab_VerticalLayout.setObjectName(
+            qt_util.from_utf8("results_Properties_Tab_VerticalLayout"))
         self.results_Properties_GroupBox = QtWidgets.QGroupBox(self.results_Properties_Tab)
         self.results_Properties_GroupBox.setObjectName(qt_util.from_utf8("results_Properties_GroupBox"))
         self.results_Properties_GroupBox_VerticalLayout = QtWidgets.QVBoxLayout(self.results_Properties_GroupBox)
@@ -1754,7 +1759,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_GroupBox = QtWidgets.QGroupBox(self.results_Tables_Tab)
         self.results_Tables_GroupBox.setObjectName(qt_util.from_utf8("results_Tables_GroupBox"))
         self.results_Tables_GroupBox_VerticalLayout = QtWidgets.QVBoxLayout(self.results_Tables_GroupBox)
-        self.results_Tables_GroupBox_VerticalLayout.setObjectName(qt_util.from_utf8("results_Tables_GroupBox_VerticalLayout"))
+        self.results_Tables_GroupBox_VerticalLayout.setObjectName(
+            qt_util.from_utf8("results_Tables_GroupBox_VerticalLayout"))
         self.results_Tables_Table = QtWidgets.QTableWidget(self.results_Tables_GroupBox)
         self.results_Tables_Table.setObjectName(qt_util.from_utf8("results_Tables_Table"))
         self.results_Tables_Table.setColumnCount(4)
@@ -2421,8 +2427,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 
         Arg:
-            q_pos (int): The position of the right-click. Updated automatically within interface. Do not need to manually
-                pass a value to this variable. Used to determine where to display the popup menu.
+            q_pos (int): The position of the right-click. Updated automatically within interface.
+                Do not need to manually pass a value to this variable.
+                Used to determine where to display the popup menu.
 
         Returns:
             None

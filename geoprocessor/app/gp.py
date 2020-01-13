@@ -418,8 +418,8 @@ def set_global_data():
     # configuration and image
     logger = logging.getLogger(__name__)
     try:
-        # ps = os.sep
-        ps = "\n"  # Always use newline, regardless of operating system
+        #ps = os.sep  # \\ on Windows / on Linux
+        ps = '/'  # Use Linux/POSIX style always
         app_util.set_property('ProgramCopyright', version.app_copyright)
         program_home = os.path.dirname(os.path.realpath(__file__))
         # Program executable name, what is typed on command line

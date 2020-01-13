@@ -171,19 +171,19 @@ class GeoProcessorCmd(cmd.Cmd):
         # Read the command file
         try:
             runner.read_command_file(command_file_absolute)
-        except IOError as e:
+        except IOError:
             # Would be nice to use FileNotFoundError but that is Python 3.3+
             message = 'Error:  Command file "' + command_file_absolute + '" was not found.'
             print(message)
             logger.error(message, exc_info=True)
-        except Exception as e2:
+        except Exception:
             message = 'Error reading command file.'
             logger.error(message, exc_info=True)
             print(message)
         # Run the command file
         try:
             runner.run_commands()
-        except Exception as e:
+        except Exception:
             message = 'Error running command file.'
             print(message)
             logger.error(message, exc_info=True)
@@ -244,7 +244,7 @@ def print_version():
     print("gp version " + version.app_version)
     print("")
     print("GeoProcessor")
-    print("Copyright 2017-2019 Open Water Foundation.")
+    print("Copyright 2017-2020 Open Water Foundation.")
     print("")
     print("License GPLv3+:  GNU GPL version 3 or later")
     print("")
@@ -283,13 +283,13 @@ def run_batch(command_file, runtime_properties):
     # Read the command file
     try:
         runner.read_command_file(command_file_absolute)
-    except IOError as e:
+    except IOError:
         # Would be nice to use FileNotFoundError but that is Python 3.3+
         message = 'Error:  Command file "' + command_file_absolute + '" was not found.'
         print(message)
         logger.error(message, exc_info=True)
         return
-    except Exception as e2:
+    except Exception:
         message = 'Error reading command file "' + command_file_absolute + '".'
         logger.error(message, exc_info=True)
         print(message)
@@ -299,7 +299,7 @@ def run_batch(command_file, runtime_properties):
         # Pass the runtime properties to supplement default properties and those created in the command file
         runner.run_commands(env_properties=runtime_properties)
         logger.info("At end of gp.run_batch")
-    except Exception as e:
+    except Exception:
         message = 'Error running command file.'
         print(message)
         logger.error(message, exc_info=True)
@@ -357,7 +357,7 @@ def run_ui(ui_app_session):
         # - See similar code in qgis_util.initialize_qgis() for more information
         try:
             QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
-        except Exception as e:
+        except Exception:
             # This happens when the current development Python packages are different than runtime
             print("Error calling QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)")
             print("- possibly due to Python API version issue")
@@ -385,8 +385,8 @@ def run_ui(ui_app_session):
     ui_runtime_properties['AppVersion'] = version.app_version
     ui_runtime_properties['AppVersionDate'] = version.app_version_date
     ui = class_(command_processor, ui_runtime_properties, ui_app_session)
-    print("back from loading GeoProcessor class.")
-    logger.info("back from loading GeoProcessor class.")
+    print("...back from loading GeoProcessor class.")
+    logger.info("...back from loading GeoProcessor class.")
     print("Showing the UI...")
     logger.info("Showing the UI...")
     ui.show()
@@ -405,7 +405,7 @@ def run_ui(ui_app_session):
         qgis_util.qgs_app.exec_()
 
 
-# TODO smalers 2018-07-29 is there a global dictionary similar to Python system properites?
+# TODO smalers 2018-07-29 is there a global dictionary similar to Python system properties?
 def set_global_data():
     """
     Set global data that is useful in library code but is difficult to pass into deep code.
@@ -418,7 +418,8 @@ def set_global_data():
     # configuration and image
     logger = logging.getLogger(__name__)
     try:
-        ps = os.sep
+        # ps = os.sep
+        ps = "\n"  # Always use newline, regardless of operating system
         app_util.set_property('ProgramCopyright', version.app_copyright)
         program_home = os.path.dirname(os.path.realpath(__file__))
         # Program executable name, what is typed on command line
@@ -443,7 +444,7 @@ def set_global_data():
         # Program version, tracks with release notes
         app_util.set_property('ProgramVersion', version.app_version)
         app_util.set_property('ProgramVersionDate', version.app_version_date)
-    except Exception as e:
+    except Exception:
         message = "Error setting up program data."
         print(message)
         logger.error(message, exc_info=True)
@@ -461,33 +462,16 @@ def setup_logging(session):
     """
     # Customized logging config using log file in user's home folder
     # - For now use default log levels defined by the utility function
-    print("Setting up customized app logging config")
+    print("Setting up application logging configuration...")
     initial_file_log_level = logging.DEBUG
-    logger = log_util.initialize_logging(app_name="gp", logfile_name=session.get_log_file(),
+    logger = log_util.initialize_logging(app_name="gp", logfile_name=session.get_user_log_file(),
                                          logfile_log_level=initial_file_log_level)
 
     # Test some logging messages
-    message = 'Opened initial log file: "' + session.get_log_file() + '"'
+    message = 'Opened initial log file: "' + session.get_user_log_file() + '"'
     logger.info(message)
     # Also print to the console because normal the console should only have error messages
     print(message)
-
-
-def setup_session(session):
-    """
-    Setup the application session.  Make sure application folder, etc. are created.
-
-    Args:
-        session:  The GeoProcessorAppSession instance to manage the user's session.
-
-    Returns:
-        None.
-    """
-    if not session.create_log_folder():
-        logging.warning('Unable to create log folder "' + session.get_log_folder() + '"')
-    else:
-        # No message since log folder exists.
-        pass
 
 
 if __name__ == '__main__':
@@ -500,7 +484,7 @@ if __name__ == '__main__':
 
     # Open an application to initialize static UI data
     # - might not be needed in batch mode, but UI may be needed for image manipulation, etc.
-    print("Initializing QApplication")
+    # print("Initializing QApplication")
     # The following should work, and allow passing to run_ui(), but the UI does not open.
     # Instead, declare the application in run_ui(), which works.
     # qtapp = QtWidgets.QApplication(sys.argv)
@@ -508,9 +492,10 @@ if __name__ == '__main__':
     # Set global environment data that will be used by library code
     set_global_data()
     # Set up a session instance
-    app_session = GeoProcessorAppSession()
-    print("After initializing GeoProcessorAppSession")
-    setup_session(app_session)
+    # - requesting an instance will cause required user files to be created, if they do not exist
+    print("Initializing GeoProcessorAppSession...")
+    app_session = GeoProcessorAppSession.get_instance(version.app_version_major)
+    print("...after initializing GeoProcessorAppSession")
 
     # Set up logging for the application
     # - A logger is defined for all geoprocessing code.

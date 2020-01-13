@@ -1,7 +1,7 @@
 # qt_util - Qt utility functions
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2019 Open Water Foundation
+# Copyright (C) 2017-2020 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -109,6 +109,7 @@ def new_message_box(message_type, standard_buttons_mask, message, title):
     # Return the clicked button Qt type
     return btn_value
 
+
 def question_box(message, app_name=None, title="Question"):
     """
     Display an information message dialog.
@@ -129,6 +130,7 @@ def question_box(message, app_name=None, title="Question"):
     message_box = new_message_box(QtWidgets.QMessageBox.Question,
                                   QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, message, title)
     return message_box
+
 
 # TODO smalers 2019-01-19 need to figure out what this really does.
 def translate(context, text, disambig):
@@ -160,6 +162,7 @@ def translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
     except AttributeError:
         return QtWidgets.QApplication.translate(context, text, disambig)
+
 
 def warning_message_box(message, app_name=None, title="Warning"):
     """

@@ -2548,7 +2548,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 "This is free software: you are free to change and redistribute it\n" +
                 "under the conditions of the GPLv3 license in the LICENSE file.",
                 "About GeoProcessor")
-        except Exception as e:
+        except Exception:
             # Should not happen but does during initial development and UI code swallows exceptions so output to log
             logger = logging.getLogger(__name__)
             message = "Problem showing Help About"

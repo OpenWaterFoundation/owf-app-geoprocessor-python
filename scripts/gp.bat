@@ -4,7 +4,7 @@ rem - the default is to start the interpreter but can run gpui.bat to run UI
 rem
 rem _________________________________________________________________NoticeStart_
 rem GeoProcessor
-rem Copyright (C) 2017-2019 Open Water Foundation
+rem Copyright (C) 2017-2020 Open Water Foundation
 rem  
 rem GeoProcessor is free software:  you can redistribute it and/or modify
 rem     it under the terms of the GNU General Public License as published by
@@ -183,6 +183,7 @@ rem - Pass command line arguments that were passed to this bat file.
 rem "%PYTHONHOME%\python" %*
 rem Use -v to see verbose list of modules that are loaded.
 echo Running "%PYTHONHOME%\python" -m geoprocessor.app.gp %*
+echo Startup may be slow if virus scanner needs to check.
 "%PYTHONHOME%\python" -m geoprocessor.app.gp %*
 
 rem Run the following to use the environment but be able to do imports, etc. to find modules

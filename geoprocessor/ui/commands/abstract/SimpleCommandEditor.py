@@ -49,7 +49,8 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
         # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
         # - TODO smalers 2019-01-19 why is this needed isntead of using the self.command.command_name?
-        # - TODO jurentie 2019-01-21 I think this is just used as a short-cut for simplicity sake, can be removed if desired
+        # - TODO jurentie 2019-01-21 I think this is just used as a short-cut for simplicity sake,
+        #  can be removed if desired
         self.command_name = command.command_name
 
         # This is a session object to keep track of session variables such as command file history

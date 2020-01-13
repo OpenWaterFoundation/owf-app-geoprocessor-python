@@ -60,7 +60,7 @@ class CommandParameter(object):
     def create_full_description(brief_description, optional, default_value):
         """
         Converts pieces of the command parameter's description into a full and fully-formatted description that will
-        display on the command parameter UI dialog windo.
+        display on the command parameter UI dialog window.
 
         Args:
             brief_description (str): a brief description of the command parameter

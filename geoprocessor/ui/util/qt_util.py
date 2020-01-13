@@ -57,7 +57,9 @@ def info_message_box(message, app_name=None, title="Information"):
     Returns:
         Which button was selected as QtWidgets.QMessageBox.Ok (only one button is available).
     """
-    app_name = app_util.get_property("ProgramName")
+    if app_name is None:
+        # Use the application name from properties
+        app_name = app_util.get_property("ProgramName")
     if app_name is not None:
         # Use the application name in the title
         title = app_name + " - " + title
@@ -71,8 +73,8 @@ def new_message_box(message_type, standard_buttons_mask, message, title):
     REF: https://www.tutorialspoint.com/pyqt/pyqt_qmessagebox.htm
 
     Args:
-            message_type (str): the type of message box, for example QtWidgets.QMessageBox.Question
-            standard_buttons_mask (str): a bitmask indicating the buttons to include in the message box,
+            message_type (Icon): the type of message box, for example QtWidgets.QMessageBox.Question
+            standard_buttons_mask (StandardButton): a bitmask indicating the buttons to include in the message box,
                     for example QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
             message (str): a message to display in the message box
             title (str) a title for the message box. Appears in the top window bar.
@@ -98,7 +100,9 @@ def new_message_box(message_type, standard_buttons_mask, message, title):
 
     # Set the icon
     # - icon path should use Qt / notation
-    icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
+    icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+    # logger = logging.getLogger(__name__)
+    # logger.debug("icon path=\"" + str(icon_path) + "\"")
     # print("Icon path='" + icon_path + "'")
     # message_box.setWindowIcon(QtGui.Icon(icon_path))
     message_box.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
@@ -123,9 +127,11 @@ def question_box(message, app_name=None, title="Question"):
     Returns:
         Which button was selected as QtWidgets.QMessageBox.Ok (only one button is available).
     """
-    app_name = app_util.get_property("ProgramName")
+    if app_name is None:
+        # Use the default from application property
+        app_name = app_util.get_property("ProgramName")
     if app_name is not None:
-        # Use the application name in the title
+        # Use the application name in the title (otherwise use the title as passed in)
         title = app_name + " - " + title
     message_box = new_message_box(QtWidgets.QMessageBox.Question,
                                   QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, message, title)

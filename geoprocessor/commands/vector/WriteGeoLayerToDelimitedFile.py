@@ -79,7 +79,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         CommandParameterMetadata("OutputGeometryFormat", type("")),
         CommandParameterMetadata("OutputDelimiter", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -148,7 +148,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -180,7 +180,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
 
         # Check that optional parameter OutputGeometryFormat is either `WKT`, `XYZ`, `XY`, `YX` or None.
         pv_OutputGeometryFormat = self.get_parameter_value(parameter_name="OutputGeometryFormat",
-                                                     command_parameters=command_parameters)
+                                                           command_parameters=command_parameters)
         acceptable_values = ["WKT", "XYZ", "XY", "YZ"]
         if not validators.validate_string_in_list(pv_OutputGeometryFormat, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=False, ignore_case=True):
@@ -218,7 +218,8 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_write_geolayer(self, geolayer_id, output_file_abs, crs, output_geom_format):
+    def __should_write_geolayer(self, geolayer_id: str, output_file_abs: str, crs: str,
+                                output_geom_format: str) -> bool:
         """
         Checks the following:
         * the ID of the GeoLayer is an existing GeoLayer ID
@@ -272,7 +273,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Write the GeoLayer to a delimited file.
 
@@ -311,7 +312,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
                     pv_OutputCRS = geolayer.get_crs()
 
                 # Write the GeoLayer to a delimited spatial data file.
-                qgis_util.write_qgsvectorlayer_to_delimited_file(geolayer.qgs_vector_layer,
+                qgis_util.write_qgsvectorlayer_to_delimited_file(geolayer.qgs_layer,
                                                                  filename_wo_ext_path,
                                                                  pv_OutputCRS,
                                                                  pv_OutputGeometryFormat,

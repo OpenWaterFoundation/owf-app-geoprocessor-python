@@ -1,4 +1,4 @@
-# GeoLayer - class for GeoLayer (spatial data layer)
+# GeoLayer - class for GeoLayer (base calss for spatial data layer)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -17,15 +17,19 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-import geoprocessor.util.qgis_util as qgis_util
-import os
+# The following is needed to allow type hinging -> GeoLayer, and requires Python 3.7+
+# See:  https://stackoverflow.com/questions/33533148/
+#         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
+from __future__ import annotations
+
+from qgis.core import QgsMapLayer as QgsMapLayer
 
 
 class GeoLayer(object):
-
     """
     The GeoLayer class stores geometry and identifier data for a spatial data layer. The core layer data are stored in
-    a QGSVectorLayer object in order to leverage the QGIS data model and functionality. Additional data members are
+    a QgsVectorLayer or QgsRasterObject instances, indicated as QgsMapLayer base class,
+    in order to leverage the QGIS data model and functionality. Additional data members are
     used to store data that are not part of QgsVectorLayer objects and are required by the GeoProcessor, such as source
     filename and identifier used by the GeoProcessor.
 
@@ -36,7 +40,7 @@ class GeoLayer(object):
 
     There are a number of properties associated with each GeoLayer (id, coordinate reference system, feature count,
     etc.) The GeoLayer properties stored within each GeoLayer instance are the STATIC properties that will never change
-    (ids, QgsVectorLayer object, and source path). The DYNAMIC GeoLayer properties (coordinate reference
+    (ids, QgsMapLayer object, and source path). The DYNAMIC GeoLayer properties (coordinate reference
     system, feature count, etc.) are created when needed by accessing class functions.
 
     GeoLayers can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
@@ -45,7 +49,9 @@ class GeoLayer(object):
     is set to 'MEMORY'.
     """
 
-    def __init__(self, geolayer_id, geolayer_qgs_vector_layer, geolayer_source_path, properties=None):
+    def __init__(self, geolayer_id: str,
+                 geolayer_qgs_layer: QgsMapLayer = None,
+                 geolayer_source_path: str = None, properties: dict = None) -> None:
         """
         Initialize a new GeoLayer instance.
 
@@ -53,7 +59,7 @@ class GeoLayer(object):
             geolayer_id (str):
                 String that is the GeoLayer's reference ID. This ID is used to access the GeoLayer from the
                 GeoProcessor for manipulation.
-            geolayer_qgs_vector_layer (QGSVectorLayer):
+            geolayer_qgs_layer (QgsVectorLayer or QgsRasterLayer instance via those class __init__() function):
                 Object created by the QGIS processor. All GeoLayer spatial manipulations are
                 performed on the GeoLayer's qgs_vector_layer.
             geolayer_source_path (str):
@@ -68,16 +74,16 @@ class GeoLayer(object):
         # GeoProcessor for manipulation.
         self.id = geolayer_id
 
-        # "qgs_vector_layer" is a QGSVectorLayer object created by the QGIS processor. All spatial manipulations are
-        # performed on the GeoLayer's qgs_vector_layer
-        self.qgs_vector_layer = geolayer_qgs_vector_layer
+        # "qgs_layer" is a QgsVectorLayer or QgsRasterLayer object created by the QGIS processor.
+        # All spatial manipulations are performed on the GeoLayer's qgs_layer.
+        self.qgs_layer = geolayer_qgs_layer
 
         # "source_path" (str) is the full pathname to the original spatial data file on the user's local computer
         self.source_path = geolayer_source_path
 
-        # "qgs_id" (str) is the GeoLayer's id in the QGS environment (this is automatically assigned by the QGIS
+        # "qgs_id" (str) is the GeoLayer's id in the Qgs environment (this is automatically assigned by the QGIS
         # GeoProcessor when a GeoLayer is originally created)
-        self.qgs_id = geolayer_qgs_vector_layer.id()
+        self.qgs_id = geolayer_qgs_layer.id()
 
         # "properties" (dict) is a dictionary of user (non-built-in) properties that are assigned to the layer.
         # These properties facilitate processing and may or may not be output to to a persistent format,
@@ -90,23 +96,7 @@ class GeoLayer(object):
         else:
             self.properties = properties
 
-    def add_attribute(self, attribute_name, attribute_type):
-        """
-        Adds an attribute to the GeoLayer.
-
-        Args:
-            attribute_name (str): the name of the attribute to add.
-            attribute_type (str): the attribute field type.
-                Can be int (int), double (real number), string (text) or date.
-
-        Returns:
-            None.
-        """
-
-        # Run processing in the qgis utility function.
-        qgis_util.add_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, attribute_type)
-
-    def deepcopy(self, copied_geolayer_id):
+    def deepcopy(self, copied_geolayer_id: str) -> GeoLayer:
         """
         Create a copy of the GeoLayer.
 
@@ -116,46 +106,24 @@ class GeoLayer(object):
         Returns:
             The copied GeoLayer object.
         """
+        raise RuntimeError("deepcopy() function should be implemented in derived class.")
 
-        # Create a deep copy of the qgs vecotor layer.
-        duplicate_qgs_vector_layer = qgis_util.deepcopy_qqsvectorlayer(self.qgs_vector_layer)
-
-        # Update the layer's fields.
-        self.qgs_vector_layer.updateFields()
-
-        # Create and return a new GeoLayer object with the copied qgs vector layer. The source will be an empty string.
-        # The GeoLayer ID is provided by the argument parameter `copied_geolayer_id`.
-        return GeoLayer(copied_geolayer_id, duplicate_qgs_vector_layer, "")
-
-    def get_attribute_field_names(self):
-        """
-        Returns the a list of attribute field names (list of strings) within the GeoLayer.
-        """
-
-        # Get the attribute field names of the GeoLayer
-        # "attribute_field_names" (list of strings) is a list of the GeoLayer's attribute field names. Return the
-        # attribute_field_names variable.
-        attribute_field_names = [attr_field.name() for attr_field in self.qgs_vector_layer.fields()]
-        return attribute_field_names
-
-    def get_crs(self):
+    def get_crs(self) -> str:
         """
         Returns the coordinate reference system (str, EPSG code) of a GeoLayer.
         """
 
         # "crs" (str) is the GeoLayer's coordinate reference system in
         # <EPSG format 'http://spatialreference.org/ref/epsg/'>_. Return the crs variable.
-        return self.qgs_vector_layer.crs().authid()
+        return self.qgs_layer.crs().authid()
 
-    def get_feature_count(self):
+    def get_feature_count(self) -> int:
         """
         Returns the number of features (int) within a GeoLayer.
         """
+        raise RuntimeError("get_feature_count() function should be implemented in derived class.")
 
-        # "feature_count" (int) is the number of features within the GeoLayer. Return the feature_count variable.
-        return self.qgs_vector_layer.featureCount()
-
-    def get_geometry(self, geom_format="qgis"):
+    def get_geometry(self, geom_format: str = "qgis") -> str:
         """
         Returns the GeoLayer's geometry in desired format.
 
@@ -168,25 +136,10 @@ class GeoLayer(object):
         Raises:
             Value Error if the geom_foramt is not a valid format.
         """
+        raise RuntimeError("get_geometry() function should be implemented in derived class.")
 
-        # Check that the format is a valid format.
-        valid_geom_formats = ["QGIS", "WKB"]
-        if geom_format.upper() in valid_geom_formats:
-
-            # Return the geometry in QGIS format.
-            if geom_format.upper() == "QGIS":
-                return qgis_util.get_geometrytype_qgis(self.qgs_vector_layer)
-
-            # Otherwise return the geometry in WKB format
-            else:
-                return qgis_util.get_geometrytype_wkb(self.qgs_vector_layer)
-
-        # The geometry is not a valid format. Raise ValueError
-        else:
-            raise ValueError("Geom_format ({}) is not a valid geometry format. Valid geometry formats are:"
-                             " {}".format(geom_format, valid_geom_formats))
-
-    def get_property(self, property_name, if_not_found_val=None, if_not_found_except=False):
+    def get_property(self, property_name: str, if_not_found_val: object = None,
+                     if_not_found_except: bool = False) -> object:
         """
         Get a GeoLayer property, case-specific.
 
@@ -202,7 +155,7 @@ class GeoLayer(object):
             The object for the requested property name, or if not found the value of if_not_found_val.
 
         Raises:
-            KeyError if if_not_found_exept=True and the property name is not found.
+            KeyError if if_not_found_except=True and the property name is not found.
         """
         try:
             return self.properties[property_name]
@@ -214,70 +167,25 @@ class GeoLayer(object):
             else:
                 return if_not_found_val
 
-    def populate_attribute(self, attribute_name, attribute_value):
-        # TODO egiles 2018-01-29 Add sophistication to this function.
-
+    def is_raster(self) -> bool:
         """
-        Populates the attribute of all features with a common attribute value (string value).
-
-        Args:
-            attribute_name: the name of the attribute to populate.
-            attribute_value: the string to populate as the attributes' values
+        Indicate whether a raster layer.
 
         Returns:
-            None
+            True if a raster layer, False if a vector layer.
         """
+        raise RuntimeError("is_raster() function should be implemented in derived class.")
 
-        # Run processing in the qgis utility function.
-        qgis_util.populate_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, attribute_value)
-
-    def remove_attribute(self, attribute_name):
+    def is_vector(self) -> bool:
         """
-        Removes an attribute of the GeoLayer.
-
-        Args:
-            attribute_name: the name of the attribute to remove.
+        Indicate whether a vector layer.
 
         Returns:
-            None
+            True if a vector layer, False if a raster layer.
         """
+        raise RuntimeError("is_vector() function should be implemented in derived class.")
 
-        # Run processing in the qgis utility function.
-        qgis_util.remove_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name)
-
-    def remove_attributes(self, keep_pattern=None, remove_pattern=None):
-        """
-        Removes attributes of the GeoLayer depending on the glob-style input patterns
-
-        Args:
-            keep_pattern (list): a list of glob-style patterns of attributes to keep (will not be removed)
-                Default: None. All attributes will be kept (if remove_pattern is default).
-            remove_pattern (list): a list of glob-style patterns of attributes to remove
-                Default: None. All attributes will be kept.
-
-        Returns:
-            None
-        """
-
-        # Run processing in the qgis utility function.
-        qgis_util.remove_qgsvectorlayer_attributes(self.qgs_vector_layer, keep_pattern, remove_pattern)
-
-    def rename_attribute(self, attribute_name, new_attribute_name):
-        """
-        Renames an attribute.
-
-        Args:
-            attribute_name (str):  The original attribute name.
-            new_attribute_name (str): The new attribute name.
-
-        Returns:
-            None
-        """
-
-        # Run processing in the qgis utility function.
-        qgis_util.rename_qgsvectorlayer_attribute(self.qgs_vector_layer, attribute_name, new_attribute_name)
-
-    def set_property(self, property_name, property_value):
+    def set_property(self, property_name: str, property_value: object) -> None:
         """
         Set a GeoLayer property
 
@@ -286,59 +194,3 @@ class GeoLayer(object):
             property_value (object):  Value of property, can be any built-in Python type or class instance.
         """
         self.properties[property_name] = property_value
-
-    def split_by_attribute(self, attribute_name, output_qgsvectorlayers):
-        """
-        Splits a GeoLayer by a selected attribute.
-
-        Args:
-            attribute_name (str): the name of the attribute to split on.
-            output_qgsvectorlayers (str): the names of the output GeoLayers.
-
-        Returns:
-            multiple GeoLayers.  The number of layers is based on the number of unique values of the selected attribute.
-        """
-
-        # Run processing in the qgis utility function.
-        qgis_util.split_qgsvectorlayer_by_attribute(self.qgs_vector_layer, attribute_name, output_qgsvectorlayers)
-
-    def write_to_disk(self, output_file_absolute):
-        """
-        Write the GeoLayer to a file on disk. The in-memory GeoLayer will be replaced by the on-disk GeoLayer. This
-        utility method is useful when running a command that requires the input of a source path rather than a
-        QGSVectorLayer object. For example, the "qgis:mergevectorlayers" requires source paths as inputs.
-
-        Args:
-            output_file_absolute: the full file path for the on-disk GeoLayer
-
-        Returns:
-            geolayer_on_disk: GeoLayer object of on-disk file. The id of the returned GeoLayer in the same as the
-            current GeoLayer.
-        """
-
-        # Remove the shapefile (with its component files) from the temporary directory if it already exists. This
-        # block of code was developed to see if it would fix the issue of tests failing when running under suite mode
-        # and passing when running as a single test.
-        if os.path.exists(output_file_absolute + '.shp'):
-
-            # Iterate over the possible extensions of a shapefile.
-            for extension in ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg', '.sbn', '.sbx', '.shp.xml']:
-
-                # Get the full pathname of the shapefile component file.
-                output_file_full_path = os.path.join(output_file_absolute + extension)
-
-                # If the shapefile component file exists, add it' s absolute path to the files_to_archive list. Note that not
-                # all shapefile component files are required -- some may not exist.
-                if os.path.exists(output_file_full_path):
-                    os.remove(output_file_full_path)
-
-        # Write the GeoLayer (generally an in-memory GeoLayer) to a GeoJSON on disk (with the input absolute path).
-        qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_vector_layer, output_file_absolute, self.get_crs())
-
-        # Read a QGSVectorLayer object from the on disk spatial data file (GeoJSON)
-        qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(output_file_absolute + ".shp")
-
-        # Create a new GeoLayer object with the same ID as the current object. The data however is not written to disk.
-        # Return the new on-disk GeoLayer object.
-        geolayer_on_disk = GeoLayer(self.id, qgs_vector_layer, output_file_absolute + ".shp")
-        return geolayer_on_disk

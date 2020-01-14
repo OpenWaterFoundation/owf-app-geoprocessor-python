@@ -19,7 +19,7 @@
 
 from PyQt5 import QtWidgets
 
-from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
+from geoprocessor.commands.vector.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 from geoprocessor.ui.util.CommandParameter import CommandParameter
 from geoprocessor.core import CommandParameterMetadata

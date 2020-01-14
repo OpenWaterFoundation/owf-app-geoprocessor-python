@@ -32,7 +32,6 @@ import logging
 
 
 class FreeGeoLayers(AbstractCommand):
-
     """
     Removes one or more GeoLayers from the GeoProcessor.
 
@@ -44,7 +43,7 @@ class FreeGeoLayers(AbstractCommand):
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerIDs", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -74,7 +73,7 @@ class FreeGeoLayers(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -91,7 +90,7 @@ class FreeGeoLayers(AbstractCommand):
 
         # Check that parameter GeoLayerIDs is a non-empty, non-None string.
         pv_GeoLayerIDs = self.get_parameter_value(parameter_name='GeoLayerIDs',
-                                                 command_parameters=command_parameters)
+                                                  command_parameters=command_parameters)
 
         if not validators.validate_string(pv_GeoLayerIDs, False, False):
             message = "GeoLayerIDs parameter has no value."
@@ -113,7 +112,7 @@ class FreeGeoLayers(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geolayer_be_deleted(self, geolayer_id_list):
+    def __should_geolayer_be_deleted(self, geolayer_id_list: [str]) -> None:
         """
         Checks the following:
         * the IDs of the input GeoLayers are existing GeoLayer IDs
@@ -143,7 +142,7 @@ class FreeGeoLayers(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Remove the GeoLayer object from the GeoProcessor. Delete the GeoLayer instance.
 
@@ -186,7 +185,7 @@ class FreeGeoLayers(AbstractCommand):
                     del self.command_processor.geolayers[index]
 
                     # Delete the Qgs Vector Layer object.
-                    del geolayer.qgs_vector_layer
+                    del geolayer.qgs_layer
 
                     # Delete the GeoLayer.
                     del geolayer

@@ -1,4 +1,4 @@
-# WriteGeoLayerToShapefile - write a GeoLayer to a shapefile
+# WriteGeoLayerToKML - write a GeoLayer to a KML file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -27,56 +27,52 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validators
-import geoprocessor.util.zip_util as zip_util
 
-import os
 import logging
 
 
-class WriteGeoLayerToShapefile(AbstractCommand):
+class WriteGeoLayerToKML(AbstractCommand):
     """
-    Writes a GeoLayer to a spatial data file in Shapefile format.
+    Writes a GeoLayer to a spatial data file in KML format.
 
-    This command writes a GeoLayer registered within the geoprocessor to a spatial date file in Shapefile format (a
-    suite of multiple files). The Shapefile spatial data files can then be viewed within a GIS, moved within folders on
-    the local computer, packaged for delivery, etc.
+    This command writes a GeoLayer registered within the geoprocessor to a KML spatial data file. The KML
+    spatial data file can then be viewed within Google Earth, moved within folders on the local computer, packaged for
+    delivery, etc.
 
     Registered GeoLayers are stored as GeoLayer objects within the geoprocessor's GeoLayers list. Each GeoLayer has one
     feature type (point, line, polygon, etc.) and other data (an identifier, a coordinate reference system, etc). This
-    function only writes one single GeoLayer to a single spatial data file in Shapefile format.
+    function only writes one single GeoLayer to a single spatial data file in GeoJSON format.
 
     Command Parameters
-    * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in Shapefile
-        format
+    * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in GeoJSON format.
     * OutputFile (str, required): the relative pathname of the output spatial data file.
-    * OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
-        projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
-    * ZipOutput (boolean, optional): If TRUE, the shapefile files will be zipped. If FALSE, they will not be zipped.
-        Default: False.
+    * PlacemarkNameAttribute (str, optional): Allows you to specify the field to use for the KML <name> element.
+        Default: Name
+    * PlacemarkDescriptionAttribute (str, optional): Allows you to specify the field to use for the KML <description>
+        element. Default: Description
     """
 
-    # Define the command parameters/
+    # Define the command parameters.
     __command_parameter_metadata = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
-        CommandParameterMetadata("OutputCRS", type("")),
-        CommandParameterMetadata("ZipOutput", type(True))]
+        CommandParameterMetadata("PlacemarkNameAttribute", type("")),
+        CommandParameterMetadata("PlacemarkDescriptionAttribute", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "WriteGeoLayerToShapefile"
+        self.command_name = "WriteGeoLayerToKML"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
         self.command_metadata = dict()
-        self.command_metadata['Description'] = "Write a GeoLayer to a file in Esri Shapefile format."
+        self.command_metadata['Description'] = "Write a GeoLayer to a file in KML format."
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
@@ -85,38 +81,46 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
         self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The identifier of the GeoLayer to write."
+        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
         # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "the shapefile to write"
+        self.parameter_input_metadata['OutputFile.Description'] = "property file to write"
         self.parameter_input_metadata['OutputFile.Label'] = "Output file"
         self.parameter_input_metadata['OutputFile.Required'] = True
         self.parameter_input_metadata['OutputFile.Tooltip'] = \
-            "The output Esri Shapefile (relative or absolute path). ${Property} syntax is recognized."
+            "The output KML file (relative or absolute path). ${Property} syntax is recognized."
         self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select shapefile to write"
-        # OutputCRS
-        self.parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of the shapefile"
-        self.parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
-        self.parameter_input_metadata['OutputCRS.Tooltip'] = (
-            "The coordinate reference system of the output GeoJSON. EPSG or ESRI code format required "
-            "(e.g. EPSG:4326, EPSG:26913, ESRI:102003).\n"
-            "If the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected "
-            "to the new CRS.")
-        self.parameter_input_metadata['OutputCRS.Value.Default'] = "The GeoLayer's CRS"
-        # zipOutput
-        self.parameter_input_metadata['ZipOutput.Description'] = "whether to zip the shapefile"
-        self.parameter_input_metadata['ZipOutput.Label'] = "Zip output?"
-        self.parameter_input_metadata['ZipOutput.Tooltip'] = (
-            "If TRUE, the GeoLayer is written as a zipped shapefile.\n"
-            "If FALSE the GeoLayer is witten as an unzipped shapefile.")
-        self.parameter_input_metadata['ZipOutput.Value.Default'] = "FALSE"
-        self.parameter_input_metadata['ZipOutput.Values'] = ["", "TRUE", "FALSE"]
+        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write output"
+        # PlacemarkNameAttribute
+        self.parameter_input_metadata['PlacemarkNameAttribute.Description'] =\
+            "geolayer attribute for the KML's placemark name"
+        self.parameter_input_metadata['PlacemarkNameAttribute.Label'] = "Placemark name attribute"
+        self.parameter_input_metadata['PlacemarkNameAttribute.Tooltip'] = (
+            "The GeoLayer attribute to populate the output KML's placemark <name> elements.\n"
+            "Each GeoLayer feature is coverted into a KML placemark. Each placemark can have a <name> element.\n"
+            "The attribute values within the PlacemarkNameAttribute will populate each placemark's name.\n"
+            "For further explanation, look at the example KML document under the Structure section of the Keyhole "
+            "Markup Language Wikipedia page.")
+        self.parameter_input_metadata['PlacemarkNameAttribute.Value.Default.Description'] =\
+            "The output KML placemarks will not have a <name> element."
+        # PlacemarkDescriptionAttribute
+        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Description'] =\
+            "GeoLayer attribute for KML's placemark description"
+        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Label'] = "Placemark description attribute"
+        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Tooltip'] = (
+            "The GeoLayer attribute to populate the output KML's placemark <description> elements.\n"
+            "Each GeoLayer feature is coverted into a KML placemark. Each placemark can have a <description> element.\n"
+            "The attribute values within the PlacemarkDescriptionAttribute will populate each"
+            "placemark's description.\n"
+            "For further explanation, look at the example KML document under the Structure section of the "
+            "Keyhole Markup Language Wikipedia page.")
+        self.parameter_input_metadata['PlacemarkDescriptionAttribute.Value.Default'] = \
+            "The output KML placemarks will not have a <description> element."
 
         # Class data
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -157,16 +161,6 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that optional ZipOutput parameter value is a valid Boolean value or is None.
-        pv_ZipOutput = self.get_parameter_value(parameter_name="ZipOutput", command_parameters=command_parameters)
-        if not validators.validate_bool(pv_ZipOutput, none_allowed=True, empty_string_allowed=False):
-            message = "ZipOutput parameter value ({}) is not a recognized boolean value.".format(pv_ZipOutput)
-            recommendation = "Specify either 'True' or 'False for the ZipOutput parameter."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning = command_util.validate_command_parameter_names(self, warning)
@@ -179,7 +173,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_write_geolayer(self, geolayer_id, output_file_abs):
+    def __should_write_geolayer(self, geolayer_id: str, output_file_abs: str) -> bool:
         """
        Checks the following:
        * the ID of the GeoLayer is an existing GeoLayer ID
@@ -190,44 +184,30 @@ class WriteGeoLayerToShapefile(AbstractCommand):
            output_file_abs: the full pathname to the output file
 
        Returns:
-           run_write: Boolean. If TRUE, the writing process should be run. If FALSE, it should not be run.
+             Boolean. If TRUE, the GeoLayer should be written. If FALSE, at least one check failed and the GeoLayer
+                should not be written.
        """
 
-        # Boolean to determine if the writing process should be run. Set to true until an error occurs.
-        run_write = True
-
-        # Boolean to determine if the output format parameters have valid bool values. Set to true until proven false.
-        valid_output_bool = True
+        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
+        # test confirms that the command should be run.
+        should_run_command = []
 
         # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        if not self.command_processor.get_geolayer(geolayer_id):
-            run_write = False
-            self.warning_count += 1
-            message = 'The GeoLayerID ({}) is not a valid GeoLayer ID.'.format(geolayer_id)
-            recommendation = 'Specify a valid GeoLayerID.'
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id, "FAIL"))
 
-        # If the OutputFolder is not a valid folder, raise a FAILURE.
-        output_folder = os.path.dirname(output_file_abs)
-        if not os.path.isdir(output_folder):
-            run_write = False
-            self.warning_count += 1
-            message = 'The output folder ({}) of the OutputFile is not a valid folder.'.format(output_folder)
-            recommendation = 'Specify a valid relative pathname for the output file.'
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
-                                                                                    message, recommendation))
+        # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
+        should_run_command.append(validators.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
+                                                       output_file_abs, "FAIL"))
 
-        # Return the Boolean to determine if the write process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
-        return run_write
+        # Return the Boolean to determine if the process should be run.
+        if False in should_run_command:
+            return False
+        else:
+            return True
 
-
-    def run_command(self):
+    def run_command(self) -> None:
         """
-        Run the command. Write the GeoLayer to a spatial data file in Shapefile format to the folder OutputFolder.
+        Run the command. Write the GeoLayer to a spatial data file in KML format.
 
         Returns: None.
 
@@ -235,13 +215,11 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             RuntimeError if any warnings occurred during run_command method.
         """
 
-        # Obtain the parameter values except for the OutputCRS
+        # Obtain the parameter values.
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         pv_OutputFile = self.get_parameter_value("OutputFile")
-        pv_ZipOutput = self.get_parameter_value("ZipOutput", default_value='False')
-
-        # Convert the ZipOutput value to a Boolean value.
-        zip_output_bool = string_util.string_to_boolean(pv_ZipOutput)
+        pv_PlacemarkNameAttribute = self.get_parameter_value("PlacemarkNameAttribute")
+        pv_PlacemarkDescriptionAttribute = self.get_parameter_value("PlacemarkDescriptionAttribute")
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -252,30 +230,24 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute):
 
             try:
-
                 # Get the GeoLayer
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                # Get the current coordinate reference system (in EPSG code) of the current GeoLayer
-                geolayer_crs = geolayer.get_crs()
-
-                # Obtain the parameter value of the OutputCRS
-                pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
-
-                # Write the GeoLayer to a spatial data file in Shapefile format
-                qgis_util.write_qgsvectorlayer_to_shapefile(geolayer.qgs_vector_layer,
-                                                            output_file_absolute,
-                                                            pv_OutputCRS)
-
-                # Zip the shapefiles, if configured to do so.
-                if zip_output_bool:
-                    zip_util.zip_shapefile(output_file_absolute)
+                # Write the GeoLayer to a spatial data file in KML format
+                # "Note that KML by specification uses only a single projection, EPSG:4326. All OGR KML output will be
+                # presented in EPSG:4326. As such OGR will create layers in the correct coordinate system and transform
+                # any geometries." - www.gdal.org/drv_kml.html
+                qgis_util.write_qgsvectorlayer_to_kml(geolayer.qgs_layer,
+                                                      output_file_absolute,
+                                                      "EPSG:4326",
+                                                      pv_PlacemarkNameAttribute,
+                                                      pv_PlacemarkDescriptionAttribute,
+                                                      "clampToGround")
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception as e:
                 self.warning_count += 1
-                message = "Unexpected error writing GeoLayer {} to spatial data file in Shapefile format.".format(
-                    pv_GeoLayerID)
+                message = "Unexpected error writing GeoLayer {} to GeoJSON format.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,

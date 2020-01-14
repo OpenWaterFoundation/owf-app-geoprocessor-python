@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
@@ -487,7 +487,9 @@ class MergeGeoLayers(AbstractCommand):
                 # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
                 # in QGIS3, merged_output["OUTPUT"] returns the returns the QGS vector layer object
                 # see ClipGeoLayer.py for information about value in QGIS2 environment
-                self.command_processor.add_geolayer(GeoLayer(pv_OutputGeoLayerID, merged_output["OUTPUT"], "MEMORY"))
+                self.command_processor.add_geolayer(VectorGeoLayer(geolayer_id=pv_OutputGeoLayerID,
+                                                                   geolayer_qgs_vector_layer=merged_output["OUTPUT"],
+                                                                   geolayer_source_path="MEMORY"))
 
                 # Release the copied GeoLayers from the GeoProcessor.
                 for copied_geolayer_id in copied_geolayer_ids:
@@ -499,7 +501,7 @@ class MergeGeoLayers(AbstractCommand):
                     self.command_processor.free_geolayer(copied_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error merging the following GeoLayers {}.".format(pv_GeoLayerIDs)
                 recommendation = "Check the log file for details."

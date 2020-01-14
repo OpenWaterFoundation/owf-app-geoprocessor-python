@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
@@ -34,7 +34,6 @@ import logging
 
 
 class ReadGeoLayerFromDelimitedFile(AbstractCommand):
-
     """
     Reads a GeoLayer from a delimited spatial data file.
 
@@ -82,7 +81,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -179,7 +178,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -283,7 +282,8 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_geolayer(self, delimited_file, delimiter, geom_format, x_col, y_col, wkt_col, crs, geolayer_id):
+    def __should_read_geolayer(self, delimited_file: str, delimiter: str, geom_format: str, x_col: str, y_col: str,
+                               wkt_col: str, crs: str, geolayer_id: str) -> bool:
 
         """
         Checks the following:
@@ -353,7 +353,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Read the layer file from a delimited file, create a GeoLayer object, and add to the
         GeoProcessor's geolayer list.
@@ -404,8 +404,8 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
                                                                                              pv_Delimiter, pv_CRS,
                                                                                              pv_WKTColumn)
 
-                # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
-                geolayer_obj = GeoLayer(pv_GeoLayerID, qgs_vector_layer, delimited_file_abs)
+                # Create a VectorGeoLayer and add it to the geoprocessor's GeoLayers list.
+                geolayer_obj = VectorGeoLayer(pv_GeoLayerID, qgs_vector_layer, delimited_file_abs)
                 self.command_processor.add_geolayer(geolayer_obj)
 
             # Raise an exception if an unexpected error occurs during the process.

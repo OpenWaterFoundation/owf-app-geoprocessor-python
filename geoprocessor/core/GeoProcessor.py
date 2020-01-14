@@ -17,13 +17,21 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.DataStore import DataStore
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+from geoprocessor.commands.running.EndFor import EndFor
+from geoprocessor.commands.running.If import If
 
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.command_util as command_util
+
+# QGIS-specific code
+from plugins.processing.core import Processing
 
 # General modules
 import getpass
@@ -41,37 +49,40 @@ class GeoProcessor(object):
     by executing a sequence of commands.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Construct/initialize a geoprocessor.
         """
 
         # The array of command processor listeners to be called
         # when the commands are running, to indicate progress.
-        self.command_processor_listener_array = []
+        # - would be an interface in Java but in Python is just an object with methods:
+        #   command_started() and command_completed()
+        self.command_processor_listener_array: [] = []
 
-        self.command_list_model_listener_array = []
+        self.command_list_model_listener_array: [] = []
 
         # Command list that holds all command objects to run.
-        self.commands = []
+        self.commands: [AbstractCommand] = []
 
         # datastores list that holds all registered DataStore objects.
-        self.datastores = []
+        self.datastores: [DataStore] = []
 
         # Property dictionary that holds all geoprocessor properties.
-        self.properties = {}
+        self.properties: dict = {}
 
-        # geolayers list that holds all registered GeoLayer objects.
-        self.geolayers = []
+        # GeoLayer list that holds all registered GeoLayer objects.
+        # - can contain vector and raster layers
+        self.geolayers: [GeoLayer] = []
 
-        # tables list that holds all registered tables object.
-        self.tables = []
+        # Table list that holds all registered tables object.
+        self.tables: list = []
 
-        # list that holds the absolute paths to the output files
-        self.output_files = []
+        # List that holds the absolute paths to the output files.
+        self.output_files: [str] = []
 
-        # holds the initialized qgis processor
-        self.qgis_processor = qgis_util.initialize_qgis_processor()
+        # Holds the initialized qgis processor.
+        self.qgis_processor: Processing = qgis_util.initialize_qgis_processor()
 
         # qgis version
         self.properties["QGISVersion"] = qgis_util.get_qgis_version_str()
@@ -106,7 +117,7 @@ class GeoProcessor(object):
         # - Should always work for RunCommands but what if nested several layers?
         self.env_properties = {}
 
-    def add_command(self, command_string):
+    def add_command(self, command_string: str) -> None:
         """
         Add a command string to the end.
 
@@ -131,7 +142,7 @@ class GeoProcessor(object):
             logger.debug("First command debug:")
             self.commands[0].print_for_debug()
 
-    def add_command_at_index(self, command_string, index):
+    def add_command_at_index(self, command_string: str, index: int) -> None:
         """
         Add a command string above currently selected command in command file.
 
@@ -153,7 +164,7 @@ class GeoProcessor(object):
         # Add command above selected command
         self.commands.insert(index, command_object)
 
-    def add_command_processor_listener(self, listener):
+    def add_command_processor_listener(self, listener: object) -> None:
         """
         Add a command processor listener, to be notified when commands are started,
         progress made, and completed. This is useful to allow calling software to report progress.
@@ -172,7 +183,7 @@ class GeoProcessor(object):
                 return
         self.command_processor_listener_array.append(listener)
 
-    def add_datastore(self, datastore):
+    def add_datastore(self, datastore: DataStore) -> None:
         """
         Add a DataStore object to the datastores list. If the DataStore already exists with the same DataStore ID, the
         existing DataStore will be overwritten with the input DataStore.
@@ -195,10 +206,11 @@ class GeoProcessor(object):
         # Add the input DataStore to the datastores list.
         self.datastores.append(datastore)
 
-    def add_geolayer(self, geolayer):
+    def add_geolayer(self, geolayer: GeoLayer) -> None:
         """
         Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
         existing GeoLayer will be overwritten with the input GeoLayer.
+        The GeoLayer can be either a VectorGeoLayer or RasterGeoLayer.
 
         Args:
             geolayer: instance of a GeoLayer object
@@ -218,7 +230,7 @@ class GeoProcessor(object):
         # Add the input GeoLayer to the geolayers list.
         self.geolayers.append(geolayer)
 
-    def add_model_listener(self, listener):
+    def add_model_listener(self, listener) -> None:
         """
         Add the command list model listener, to be notified when changes have taken place
         in the logic of the processor. This model is meant to be an interface to allow
@@ -240,7 +252,7 @@ class GeoProcessor(object):
                 return
         self.command_list_model_listener_array.append(listener)
 
-    def add_output_file(self, output_file_abs_path):
+    def add_output_file(self, output_file_abs_path: str) -> None:
         """
         Add an Output File (absolute path string) to the output_path list.
 
@@ -255,7 +267,7 @@ class GeoProcessor(object):
         if output_file_abs_path not in self.output_files:
             self.output_files.append(output_file_abs_path)
 
-    def add_table(self, table):
+    def add_table(self, table) -> None:
         """
         Add a Table object to the tables list. If a Table already exists with the same Table ID, the existing Table
         will be overwritten with the input Table.
@@ -277,7 +289,7 @@ class GeoProcessor(object):
         # Add the input Table to the tables list.
         self.tables.append(table)
 
-    def convert_command_line_from_comment(self, selected_indices):
+    def convert_command_line_from_comment(self, selected_indices: [int]) -> None:
         """
         Convert a command line in the command file from a comment.
 
@@ -307,7 +319,7 @@ class GeoProcessor(object):
             else:
                 return
 
-    def convert_command_line_to_comment(self, selected_indices):
+    def convert_command_line_to_comment(self, selected_indices: [int]) -> None:
         """
         Convert a command line in the command file to a comment.
 
@@ -333,7 +345,7 @@ class GeoProcessor(object):
             # Add command above selected command
             self.commands[index] = command_object
 
-    def decrease_indent_command_string(self, index):
+    def decrease_indent_command_string(self, index: int) -> None:
         """
         Remove an indent from the front of the command string. If there are multiple
         indents this only removes space representing a single indent.
@@ -351,7 +363,7 @@ class GeoProcessor(object):
             self.commands[index].command_string = current_command
 
     @classmethod
-    def __evaluate_if_stack(cls, If_command_stack):
+    def __evaluate_if_stack(cls, If_command_stack: [If]) -> bool:
         """
         Evaluate whether If stack evaluates to True.
 
@@ -370,7 +382,7 @@ class GeoProcessor(object):
                 return False
         return True
 
-    def expand_parameter_value(self, parameter_value, command=None):
+    def expand_parameter_value(self, parameter_value: str, command: AbstractCommand = None) -> str:
         """
         Expand a command parameter value (string) into full string.
         This function is a port of the Java TSCommandProcessorUtil.expandParameterValue() method.
@@ -495,7 +507,7 @@ class GeoProcessor(object):
                       '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"')
         return parameter_value
 
-    def free_datastore(self, datastore):
+    def free_datastore(self, datastore: DataStore) -> None:
         """
         Removes a DataStore object from the datastores list.
 
@@ -507,7 +519,7 @@ class GeoProcessor(object):
         """
         self.datastores.remove(datastore)
 
-    def free_geolayer(self, geolayer):
+    def free_geolayer(self, geolayer: GeoLayer) -> None:
         """
         Removes a GeoLayer object from the geolayers list.
 
@@ -519,7 +531,7 @@ class GeoProcessor(object):
         """
         self.geolayers.remove(geolayer)
 
-    def free_table(self, table):
+    def free_table(self, table) -> None:
         """
         Removes a Table object from the tables list.
 
@@ -531,7 +543,7 @@ class GeoProcessor(object):
         """
         self.tables.remove(table)
 
-    def get_command_list(self):
+    def get_command_list(self) -> [AbstractCommand]:
         """
         Return the list of command objects from the processor
 
@@ -540,7 +552,7 @@ class GeoProcessor(object):
         """
         return self.commands
 
-    def get_datastore(self, datastore_id):
+    def get_datastore(self, datastore_id: str) -> DataStore:
         """
         Return the DataStore that has the requested ID.
 
@@ -558,7 +570,7 @@ class GeoProcessor(object):
         # Did not find the requested identifier so return None
         return None
 
-    def get_datastore_id_list(self):
+    def get_datastore_id_list(self) -> [DataStore]:
         """
         Reads the DataStore objects in the datastores list and returns a list of the available DataStore ids.
 
@@ -576,7 +588,7 @@ class GeoProcessor(object):
         # Return the list of the available DataStore IDs.
         return datastore_id_list
 
-    def get_geolayer(self, geolayer_id):
+    def get_geolayer(self, geolayer_id: str) -> GeoLayer:
         """
         Return the GeoLayer that has the requested ID.
 
@@ -594,7 +606,7 @@ class GeoProcessor(object):
         # Did not find the requested identifier so return None
         return None
 
-    def get_number_errors(self):
+    def get_number_errors(self) -> int:
         """
         Return the number of errors in commands.
 
@@ -608,7 +620,7 @@ class GeoProcessor(object):
                 num_errors += 1
         return num_errors
 
-    def get_number_warnings(self):
+    def get_number_warnings(self) -> int:
         """
         Return the number of errors in commands.
 
@@ -622,7 +634,7 @@ class GeoProcessor(object):
                 num_warnings += 1
         return num_warnings
 
-    def get_property(self, property_name, if_not_found_val=None):
+    def get_property(self, property_name: str, if_not_found_val: object = None) -> object:
         """
         Get a GeoProcessor property, case-specific.
 
@@ -646,7 +658,7 @@ class GeoProcessor(object):
                 # print('Property not found so throwing exception')
                 raise
 
-    def get_table(self, table_id):
+    def get_table(self, table_id: str):
         """
         Return the Table that has the requested ID.
 
@@ -664,7 +676,7 @@ class GeoProcessor(object):
         # Did not find the requested identifier so return None
         return None
 
-    def indent_command_string(self, index):
+    def indent_command_string(self, index: int) -> None:
         """
         Add an indent to the front of the command string using a predetermined
         amount of white space (TAB).
@@ -681,7 +693,7 @@ class GeoProcessor(object):
         self.commands[index].command_string = current_command
 
     @classmethod
-    def __lookup_endfor_command_index(cls, command_list, for_name):
+    def __lookup_endfor_command_index(cls, command_list: [AbstractCommand], for_name: str) -> [EndFor]:
         """
         Lookup the command index for the EndFor() command with requested name.
 
@@ -701,7 +713,7 @@ class GeoProcessor(object):
         return -1
 
     @classmethod
-    def __lookup_for_command_index(cls, command_list, for_name):
+    def __lookup_for_command_index(cls, command_list: [AbstractCommand], for_name: str) -> int:
         """
         Lookup the command index for the For() command with requested name.
 
@@ -721,7 +733,7 @@ class GeoProcessor(object):
         return -1
 
     @classmethod
-    def __lookup_if_command(cls, If_command_stack, if_name):
+    def __lookup_if_command(cls, If_command_stack: [If], if_name: str) -> If:
         """
         Lookup the command for the If() command with requested name.
 
@@ -737,7 +749,7 @@ class GeoProcessor(object):
                 return c
         return None
 
-    def notify_command_list_processor_listener_of_commands_read(self):
+    def notify_command_list_processor_listener_of_commands_read(self) -> None:
         """
         Notify the GeoProcessorListModel that the command file has been read
         into the command list.
@@ -749,7 +761,7 @@ class GeoProcessor(object):
             for listener_from_array in self.command_list_model_listener_array:
                 listener_from_array.command_file_read()
 
-    def notify_command_list_processor_listener_of_all_commands_completed(self):
+    def notify_command_list_processor_listener_of_all_commands_completed(self) -> None:
         """
         Notify the GeoProcessorListModel that the command list has been run.
 
@@ -760,7 +772,7 @@ class GeoProcessor(object):
             for listener_from_array in self.command_list_model_listener_array:
                 listener_from_array.command_list_ran()
 
-    def notify_command_list_processor_listener_update_commands(self):
+    def notify_command_list_processor_listener_update_commands(self) -> None:
         """
         Notify the GeoProcessorListModel that the commands list UI in CommandListWidget
         need to be updated to reflect changes made to commands list in GeoProcessor.
@@ -772,7 +784,8 @@ class GeoProcessor(object):
             for listener_from_array in self.command_list_model_listener_array:
                 listener_from_array.update_command_list_ui()
 
-    def notify_command_processor_listener_of_command_cancelled(self, icommand, ncommand, command):
+    def notify_command_processor_listener_of_command_cancelled(self, icommand: int, ncommand: int,
+                                                               command: AbstractCommand) -> None:
         """
         Notify registered command processor listeners about a command being cancelled.
 
@@ -789,7 +802,8 @@ class GeoProcessor(object):
             for listener_from_array in self.command_processor_listener_array:
                 listener_from_array.command_cancelled(icommand, ncommand, command, -1.0, "Command cancelled")
 
-    def notify_command_processor_listener_of_command_completed(self, icommand, ncommand, command):
+    def notify_command_processor_listener_of_command_completed(self, icommand: int, ncommand: int,
+                                                               command: AbstractCommand) -> None:
         """
         Notify registered command process listeners about a command completing.
 
@@ -806,7 +820,8 @@ class GeoProcessor(object):
             for listener_from_array in self.command_processor_listener_array:
                 listener_from_array.command_completed(icommand, ncommand, command, -1.0, "Command completed.")
 
-    def notify_command_processor_listeners_of_command_started(self, icommand, ncommand, command):
+    def notify_command_processor_listeners_of_command_started(self, icommand: int, ncommand: int,
+                                                              command: AbstractCommand ) -> None:
         """
         Notify registed command processor listeners about a command starting.
 
@@ -824,7 +839,7 @@ class GeoProcessor(object):
                 listener_from_array.command_started(icommand, ncommand, command, -1.0, "Command started.")
 
     # TODO smalers 2017-12-31 Need to switch to CommandFileRunner class
-    def process_command_file(self, command_file):
+    def process_command_file(self, command_file: str) -> None:
         """
         Reads the command file and runs the commands within the command file.
 
@@ -838,8 +853,8 @@ class GeoProcessor(object):
         self.read_command_file(command_file)
         self.run_commands()
 
-    def read_command_file(self, command_file, create_unknown_command_if_not_recognized=True,
-                          append_commands=False, run_discovery_on_load=True):
+    def read_command_file(self, command_file: str, create_unknown_command_if_not_recognized: bool = True,
+                          append_commands: bool = False, run_discovery_on_load: bool = True) -> None:
         """
         Read a command file and initialize the command list in the geoprocessor.
         The processor properties "InitialWorkingDir" and "WorkingDir" are set to the command file folder,
@@ -915,7 +930,7 @@ class GeoProcessor(object):
         # Let the command list processor know that the commands have been read from the command file
         self.notify_command_list_processor_listener_of_commands_read()
 
-    def read_commands_from_command_list(self, command_file_strings, runtime_properties):
+    def read_commands_from_command_list(self, command_file_strings: [str], runtime_properties: dict) -> None:
         """
         Read the command workflow from the user interface and initialize the command list in the geoprocessor.
 
@@ -970,7 +985,7 @@ class GeoProcessor(object):
                 logger.debug("First command debug:")
                 self.commands[0].print_for_debug()
 
-    def remove_all_commands(self):
+    def remove_all_commands(self) -> None:
         """
         Remove all the commands from the command list>
 
@@ -983,7 +998,7 @@ class GeoProcessor(object):
         # needs to be updated to reflect changes made to commands in GeoProcessor
         self.notify_command_list_processor_listener_update_commands()
 
-    def remove_command(self, index):
+    def remove_command(self, index: str) -> None:
         """
         Remove a command at the given index.
 
@@ -998,7 +1013,7 @@ class GeoProcessor(object):
         # the user interface.
         self.notify_command_list_processor_listener_update_commands()
 
-    def __reset_data_for_run_start(self, append_results=False):
+    def __reset_data_for_run_start(self, append_results: bool = False) -> None:
         """
         Reset the processor data prior to running the commands.
         This ensures that the command processor state from one run is isolated from the next run.
@@ -1030,7 +1045,7 @@ class GeoProcessor(object):
             # ...but currently a dictionary...
             self.geolayers.clear()
 
-    def __reset_workflow_properties(self):
+    def __reset_workflow_properties(self) -> None:
         """
         Reset the workflow global properties to defaults, necessary when a command processor is rerun.
         This function is called by the run_commands() function before processing any commands.
@@ -1081,7 +1096,8 @@ class GeoProcessor(object):
         self.properties["ProgramVersionString"] = None  # programVersion )
         self.properties["ProgramVersionNumber"] = None  # new Double(programVersionNumber) )
 
-    def run_commands(self, command_list=None, run_properties=None, env_properties=None):
+    def run_commands(self, command_list: [AbstractCommand] = None, run_properties: dict = None,
+                     env_properties: dict = None) -> None:
         """
         Run the commands that exist in the processor.
 
@@ -1455,7 +1471,8 @@ class GeoProcessor(object):
         # - may or may not need something similar in Python code if above error-handling is not enough
         logger.info("At end of run_commands")
 
-    def run_selected_commands(self, selected_indices, command_list=None, run_properties=None, env_properties=None):
+    def run_selected_commands(self, selected_indices: [int], command_list: [AbstractCommand] = None,
+                              run_properties: dict = None, env_properties: dict = None) -> None:
         """
         Run only the selected commands from the command list.
 
@@ -1480,7 +1497,7 @@ class GeoProcessor(object):
         # Pass the newly created command list to run_commands to run only the selected commands
         self.run_commands(command_list)
 
-    def set_command_strings(self, command_strings):
+    def set_command_strings(self, command_strings: [str]) -> None:
         """
         Set the command strings and initialize the command list in the geoprocessor.
         This is similar to reading the commands file a file, but instead use in-memory string list.
@@ -1520,7 +1537,7 @@ class GeoProcessor(object):
                 logger.debug("First command debug:")
                 self.commands[0].print_for_debug()
 
-    def set_properties(self, property_dict):
+    def set_properties(self, property_dict: dict) -> None:
         """
         Set geoprocessor properties from the specified dictionary.
         This is used, for example, when setting the environment properties before running.
@@ -1535,7 +1552,7 @@ class GeoProcessor(object):
             for key in property_dict:
                 self.properties[key] = property_dict[key]
 
-    def set_property(self, property_name, property_value):
+    def set_property(self, property_name: str, property_value: None) -> None:
         """
         Set a geoprocessor property.
 
@@ -1548,7 +1565,7 @@ class GeoProcessor(object):
         """
         self.properties[property_name] = property_value
 
-    def update_command(self, index, command_string):
+    def update_command(self, index: int, command_string: str) -> None:
         """
         If the command has been edited by a command editor it must be updated in the command list.
 

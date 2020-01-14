@@ -20,52 +20,42 @@
 import logging
 
 import geoprocessor.util.command_util as command_util
+
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+
 from geoprocessor.commands.datastores.CloseDataStore import CloseDataStore
 from geoprocessor.commands.datastores.OpenDataStore import OpenDataStore
 from geoprocessor.commands.datastores.RunSql import RunSql
-from geoprocessor.commands.layers.AddGeoLayerAttribute import AddGeoLayerAttribute
-from geoprocessor.commands.layers.ClipGeoLayer import ClipGeoLayer
-from geoprocessor.commands.layers.CopyGeoLayer import CopyGeoLayer
-from geoprocessor.commands.layers.CreateGeoLayerFromGeometry import CreateGeoLayerFromGeometry
-from geoprocessor.commands.layers.FreeGeoLayers import FreeGeoLayers
-from geoprocessor.commands.layers.IntersectGeoLayer import IntersectGeoLayer
-from geoprocessor.commands.layers.MergeGeoLayers import MergeGeoLayers
-from geoprocessor.commands.layers.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
-from geoprocessor.commands.layers.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
-from geoprocessor.commands.layers.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
-from geoprocessor.commands.layers.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
-from geoprocessor.commands.layers.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
-from geoprocessor.commands.layers.RemoveGeoLayerAttributes import RemoveGeoLayerAttributes
-from geoprocessor.commands.layers.RenameGeoLayerAttribute import RenameGeoLayerAttribute
-from geoprocessor.commands.layers.SetGeoLayerCRS import SetGeoLayerCRS
-from geoprocessor.commands.layers.SetGeoLayerProperty import SetGeoLayerProperty
-from geoprocessor.commands.layers.SimplifyGeoLayerGeometry import SimplifyGeoLayerGeometry
-from geoprocessor.commands.layers.SplitGeoLayerByAttribute import SplitGeoLayerByAttribute
-from geoprocessor.commands.layers.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
-from geoprocessor.commands.layers.WriteGeoLayerToDelimitedFile import WriteGeoLayerToDelimitedFile
-from geoprocessor.commands.layers.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
-from geoprocessor.commands.layers.WriteGeoLayerToKML import WriteGeoLayerToKML
-from geoprocessor.commands.layers.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
+
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
+
+from geoprocessor.commands.raster.CreateRasterGeoLayer import CreateRasterGeoLayer
+from geoprocessor.commands.raster.ReadRasterGeoLayerFromFile import ReadRasterGeoLayerFromFile
+
 from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.EndIf import EndIf
 from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
 from geoprocessor.commands.running.RunCommands import RunCommands
+from geoprocessor.commands.running.RunGdal import RunGdal
+from geoprocessor.commands.running.RunOgr import RunOgr
 from geoprocessor.commands.running.RunProgram import RunProgram
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
+
 from geoprocessor.commands.tables.ReadTableFromDataStore import ReadTableFromDataStore
 from geoprocessor.commands.tables.ReadTableFromDelimitedFile import ReadTableFromDelimitedFile
 from geoprocessor.commands.tables.ReadTableFromExcel import ReadTableFromExcel
 from geoprocessor.commands.tables.WriteTableToDelimitedFile import WriteTableToDelimitedFile
 from geoprocessor.commands.tables.WriteTableToDataStore import WriteTableToDataStore
 from geoprocessor.commands.tables.WriteTableToExcel import WriteTableToExcel
+
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile
 from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
+
 from geoprocessor.commands.util.Blank import Blank
 from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
@@ -80,6 +70,30 @@ from geoprocessor.commands.util.UnknownCommand import UnknownCommand
 from geoprocessor.commands.util.UnzipFile import UnzipFile
 from geoprocessor.commands.util.WebGet import WebGet
 from geoprocessor.commands.util.WriteCommandSummaryToFile import WriteCommandSummaryToFile
+
+from geoprocessor.commands.vector.AddGeoLayerAttribute import AddGeoLayerAttribute
+from geoprocessor.commands.vector.ClipGeoLayer import ClipGeoLayer
+from geoprocessor.commands.vector.CopyGeoLayer import CopyGeoLayer
+from geoprocessor.commands.vector.CreateGeoLayerFromGeometry import CreateGeoLayerFromGeometry
+from geoprocessor.commands.vector.FreeGeoLayers import FreeGeoLayers
+from geoprocessor.commands.vector.IntersectGeoLayer import IntersectGeoLayer
+from geoprocessor.commands.vector.MergeGeoLayers import MergeGeoLayers
+from geoprocessor.commands.vector.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
+from geoprocessor.commands.vector.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
+from geoprocessor.commands.vector.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
+from geoprocessor.commands.vector.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
+from geoprocessor.commands.vector.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
+from geoprocessor.commands.vector.RemoveGeoLayerAttributes import RemoveGeoLayerAttributes
+from geoprocessor.commands.vector.RenameGeoLayerAttribute import RenameGeoLayerAttribute
+from geoprocessor.commands.vector.SetGeoLayerCRS import SetGeoLayerCRS
+from geoprocessor.commands.vector.SetGeoLayerProperty import SetGeoLayerProperty
+from geoprocessor.commands.vector.SimplifyGeoLayerGeometry import SimplifyGeoLayerGeometry
+from geoprocessor.commands.vector.SplitGeoLayerByAttribute import SplitGeoLayerByAttribute
+from geoprocessor.commands.vector.WriteGeoLayerPropertiesToFile import WriteGeoLayerPropertiesToFile
+from geoprocessor.commands.vector.WriteGeoLayerToDelimitedFile import WriteGeoLayerToDelimitedFile
+from geoprocessor.commands.vector.WriteGeoLayerToGeoJSON import WriteGeoLayerToGeoJSON
+from geoprocessor.commands.vector.WriteGeoLayerToKML import WriteGeoLayerToKML
+from geoprocessor.commands.vector.WriteGeoLayerToShapefile import WriteGeoLayerToShapefile
 
 
 class GeoProcessorCommandFactory(object):
@@ -108,6 +122,7 @@ class GeoProcessorCommandFactory(object):
         "COPYFILE": CopyFile(),
         "COPYGEOLAYER": CopyGeoLayer(),
         "CREATEGEOLAYERFROMGEOMETRY": CreateGeoLayerFromGeometry(),
+        "CREATERASTERGEOLAYER": CreateRasterGeoLayer(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
         "ENABLEDFALSE": EnabledFalse(),
         "ENDFOR": EndFor(),
@@ -127,6 +142,7 @@ class GeoProcessorCommandFactory(object):
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
+        "READRASTERGEOLAYERFROMFILE": ReadRasterGeoLayerFromFile(),
         "READTABLEFROMDATASTORE": ReadTableFromDataStore(),
         "READTABLEFROMDELIMITEDFILE": ReadTableFromDelimitedFile(),
         "READTABLEFROMEXCEL": ReadTableFromExcel(),
@@ -134,6 +150,8 @@ class GeoProcessorCommandFactory(object):
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
         "RUNCOMMANDS": RunCommands(),
+        "RUNGDAL": RunGdal(),
+        "RUNOGR": RunOgr(),
         "RUNPROGRAM": RunProgram(),
         "RUNSQL": RunSql(),
         "SETGEOLAYERCRS": SetGeoLayerCRS(),
@@ -158,10 +176,10 @@ class GeoProcessorCommandFactory(object):
         "WRITEPROPERTIESTOFILE": WritePropertiesToFile()
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def __is_command_valid(self, command_name):
+    def __is_command_valid(self, command_name: str) -> bool:
         """
         Checks if the command is a valid registered command by examining the command name.
         A valid command can be further processed to create a command instance.
@@ -179,7 +197,8 @@ class GeoProcessorCommandFactory(object):
         else:
             return False
 
-    def new_command(self, command_string, create_unknown_command_if_not_recognized=True):
+    def new_command(self, command_string: str,
+                    create_unknown_command_if_not_recognized: bool = True) -> AbstractCommand:
         """
         Creates the object of a command class called from a command line of the command file.
 
@@ -259,6 +278,8 @@ class GeoProcessorCommandFactory(object):
                     return CopyGeoLayer()
                 elif command_name_upper == "CREATEGEOLAYERFROMGEOMETRY":
                     return CreateGeoLayerFromGeometry()
+                elif command_name_upper == "CREATERASTERGEOLAYER":
+                    return CreateRasterGeoLayer()
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
                     return CreateRegressionTestCommandFile()
                 elif command_name_upper == "ENDFOR":
@@ -291,6 +312,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayersFromFGDB()
                 elif command_name_upper == "READGEOLAYERSFROMFOLDER":
                     return ReadGeoLayersFromFolder()
+                elif command_name_upper == "READRASTERGEOLAYERFROMFILE":
+                    return ReadRasterGeoLayerFromFile()
                 elif command_name_upper == "READTABLEFROMDATASTORE":
                     return ReadTableFromDataStore()
                 elif command_name_upper == "READTABLEFROMDELIMITEDFILE":
@@ -305,6 +328,10 @@ class GeoProcessorCommandFactory(object):
                     return RenameGeoLayerAttribute()
                 elif command_name_upper == "RUNCOMMANDS":
                     return RunCommands()
+                elif command_name_upper == "RUNGDAL":
+                    return RunGdal()
+                elif command_name_upper == "RUNOgr":
+                    return RunOgr()
                 elif command_name_upper == "RUNPROGRAM":
                     return RunProgram()
                 elif command_name_upper == "RUNSQL":

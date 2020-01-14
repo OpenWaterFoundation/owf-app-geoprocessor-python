@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 from processing.core.Processing import Processing
 from qgis.core import QgsVectorLayer, QgsProject
 
@@ -37,19 +37,19 @@ import tempfile
 
 
 class SplitGeoLayerByAttribute(AbstractCommand):
-
     """
-    Splits a GeoLayer into multiple GeoLayers based on the GeoLayer's attribute values.
-    This command takes a GeoLayer and an attribute and generates a set of GeoLayers.
-    Each new GeoLayer contains all features from the input GeoLayer with the
-    same value for the specified attribute.  The number of GeoLayers generated is equal to the number of
+    Splits a VectorGeoLayer into multiple VectorGeoLayer based on the VectorGeoLayer's attribute values.
+    This command takes a VectorGeoLayer and an attribute and generates a set of VectorGeoLayers.
+    Each new VectorGeoLayer contains all features from the input VectorGeoLayer with the
+    same value for the specified attribute.  The number of VectorGeoLayer generated is equal to the number of
     unique values found for the specified attribute.
     Command Parameters
-    * InputGeoLayerID (str, required): the ID of the input GeoLayer, the layer to be split.
-    * AttributeName (str, required): the name of the attribute to split on. Must be a unique attribute name of the GeoLayer.
-    * OutputGeoLayerIDs (str, optional): the IDs of the GeoLayers created as the output split layers. By default the
-        GeoLayerID of the output layers will be {}_splitBy_{} where the first variable is the InputGeoLayerID and the
-        second variable is the AttributeName value.
+    * InputGeoLayerID (str, required): the ID of the input VectorGeoLayer, the layer to be split.
+    * AttributeName (str, required): the name of the attribute to split on. Must be a unique attribute
+         name of the VectorGeoLayer.
+    * OutputGeoLayerIDs (str, optional): the IDs of the VectorGeoLayer created as the output split layers.
+        By default the GeoLayerID of the output layers will be {}_splitBy_{} where the first
+        variable is the InputGeoLayerID and the second variable is the AttributeName value.
     * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the OutputGeoLayerIDs
         already exist within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
@@ -64,7 +64,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         CommandParameterMetadata("TemporaryFolder", type(""))]
         #CommandParameterMetadata("RemoveTemporaryFiles", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -138,7 +138,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
         Args:
@@ -165,7 +165,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
 
         # Check that parameter AttributeName is a non-empty, non-None string.
         pv_AttributeName = self.get_parameter_value(parameter_name='AttributeName',
-                                                         command_parameters=command_parameters)
+                                                    command_parameters=command_parameters)
 
         if not validators.validate_string(pv_AttributeName, False, False):
 
@@ -202,7 +202,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_command_input(self, input_geolayer_id, attribute_name, output_geolayer_ids):
+    def check_command_input(self, input_geolayer_id: str, attribute_name: str, output_geolayer_ids: [str]) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -263,7 +263,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
             return True
             logger.info('Process can be run')
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Split the input GeoLayer by the selected Attribute. Create new GeoLayers based on
         unique attribute values.
@@ -377,7 +377,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 #          convention attributeName_attribute.extension
                 #          ex: GNIS_ID_00030007.shp
                 #          file types generated = .dbf, .prj, .qpj, .shp, .shx
-                alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
+                alg_parameters = {"INPUT": input_geolayer.qgs_layer,
                                   "FIELD": attribute_name,
                                   "OUTPUT": temp_directory}
                 # @jurentie
@@ -393,7 +393,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # @jurentie
                 # TODO jurentie 01/26/2019 There probably needs to be some error handling happening below
                 # Get the list of features from the GeoLayer. This returns all attributes for each feature listed.
-                features = input_geolayer.qgs_vector_layer.getFeatures()
+                features = input_geolayer.qgs_layer.getFeatures()
                 # Set the extension for the filename's to get the geolayer from
                 filename_extension = ".shp"
                 # Parse through the list of features and also enumerate to get the index which
@@ -427,10 +427,14 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                     path = temp_directory + "/" + attribute_name + "_" + str(attribute) + filename_extension
                     layer = QgsVectorLayer(path, "layer" + str(attribute), "ogr")
                     try:
-                        new_geolayer = GeoLayer(pv_OutputGeoLayerIDs[i], layer, path)
+                        new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerIDs[i],
+                                                      geolayer_qgs_vector_layer=layer,
+                                                      geolayer_source_path=path)
                     except:
                         # Default Output GeoLayerID's will be default title of output files from .runAlgorithm above
-                        new_geolayer = GeoLayer(pv_InputGeoLayerID + "-" + str(attribute), layer, path)
+                        new_geolayer = VectorGeoLayer(geolayer_id=pv_InputGeoLayerID + "-" + str(attribute),
+                                                      geolayer_qps_vector_layer=layer,
+                                                      geolayer_source_path=path)
                     self.command_processor.add_geolayer(new_geolayer)
 
                 # @jurentie
@@ -448,12 +452,12 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # In QGIS 2 the clipped_output["OUTPUT"] returned the full file pathname of the memory output layer
                 # (saved in a QGIS temporary folder)
                 # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
-                # new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+                # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
                 # Get this list of ID's, name can be changed later to make more sense
                 # in a dynamic fashion
 
                 # In QGIS 3 the clipped_output["OUTPUT"] returns the QGS vector layer object
-                # new_geolayer = GeoLayer(pv_OutputGeoLayerIDs, split_output["OUTPUT"], "MEMORY")
+                # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerIDs, split_output["OUTPUT"], "MEMORY")
                 # self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process

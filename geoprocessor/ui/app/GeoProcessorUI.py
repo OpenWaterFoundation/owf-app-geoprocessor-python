@@ -17,10 +17,19 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+# The following is needed to allow type hinging -> GeoLayer, and requires Python 3.7+
+# See:  https://stackoverflow.com/questions/33533148/
+#         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
+from __future__ import annotations
+
+from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+from geoprocessor.core.GeoProcessor import GeoProcessor
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCommandEditorFactory
+# The following allows declaring QtWidgets.QMenu, QtWidgets.QAction, etc.
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 
 from sip import SIP_VERSION_STR  # Used for info, others extracted from above objects
@@ -53,8 +62,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     Main GeoProcessor UI class, which instantiates a main application window that the user interacts with.
     This class is a child of the core Qt window classes.
     """
-
-    def __init__(self, geoprocessor, runtime_properties, app_session):
+    def __init__(self, geoprocessor: GeoProcessor, runtime_properties: dict,
+                 app_session: GeoProcessorAppSession) -> None:
         """
         Initialize the GeoProcessorUI class instance.
 
@@ -63,21 +72,253 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             runtime_properties (dict): properties to use at runtime
             app_session (GeoProcessorAppSession): application session instance
         """
-        # Old way was to initialize generically
-        # super().__init__()
+
+        # ---------------------------------------------
+        # Start GeoProcessor and application data used in the UI
 
         # This is a session object to keep track of session variables such as command file history
-        self.app_session = app_session
+        self.app_session: GeoProcessorAppSession = app_session
 
         # The GeoProcessor object from calling code (main app) will be used for processing.
-        self.gp = geoprocessor
-
-        # Start properties that are used in the UI, may be referenced in setup_ui() function.
-        # Maximum number of command files in the File / Open / Command File menu
-        self.command_file_menu_max = 20
+        self.gp: GeoProcessor = geoprocessor
 
         # End properties that are used in the UI
+        # ---------------------------------------------
 
+        # Initialize UI components to None so that PyCharm does not complain about initializing outside of __init__
+        # and to emphasize UI components.
+        # Start properties that are used in the UI, referenced in the setup_ui() function.
+
+        # Toolbar
+        # self.toolbar: ?
+        self.increase_indent_button: QtWidgets.QAction = None
+        self.decrease_indent_button: QtWidgets.QAction = None
+
+        # Main canvas components and actions
+        self.actionZoomIn: QtWidgets.QAction = None
+        self.actionZoomOut: QtWidgets.QAction = None
+        self.actionPan: QtWidgets.QAction = None
+        self.map_window_widget: QtWidgets.QWidget = None
+        self.canvas: qgis.gui.QgsMapCanvas = None
+
+        # Results area
+        self.results_GroupBox: QtWidgets.QGroupBox = None
+        self.results_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_TabWidget: QtWidgets.QTabWidget = None
+
+        self.results_GeoLayers_Tab: QtWidgets.QWidget = None
+        self.results_GeoLayers_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_GeoLayers_GroupBox: QtWidgets.QGroupBox = None
+        self.results_GeoLayers_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_GeoLayers_Table: QtWidgets.QTableWidget = None
+
+        self.results_Maps_Tab: QtWidgets.QWidget = None
+        self.results_Maps_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_Maps_GroupBox: QtWidgets.QGroupBox = None
+        self.results_Maps_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_Maps_Table: QtWidgets.QTableWidget = None
+
+        self.results_OutputFiles_Tab: QtWidgets.QWidget = None
+        self.results_OutputFiles_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_OutputFiles_GroupBox: QtWidgets.QGroupBox = None
+        self.results_OutputFiles_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_OutputFiles_Table: QtWidgets.QTableWidget = None
+
+        self.results_Properties_Tab: QtWidgets.QWidget = None
+        self.results_Properties_Tab_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_Properties_GroupBox: QtWidgets.QGroupBox = None
+        self.results_Properties_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_Properties_Table: QtWidgets.QTableWidget = None
+
+        self.results_Tables_Tab: QtWidgets.QWidget = None
+        self.results_Tables_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_Tables_GroupBox: QtWidgets.QGroupBox = None
+        self.results_Tables_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout = None
+        self.results_Tables_Table: QtWidgets.QTableWidget = None
+
+        # Map window to display map
+        self.map_window: QtWidgets.QDialog = None
+        self.map_window_layout: QtWidgets.QVBoxLayout = None
+        self.map_toolbar: QtWidgets.QToolBar = None
+
+        # Map window tools
+        self.toolPan: qgis.gui.QgsMapToolPan = None
+        self.toolZoomIn: qgis.gui.QgsMapToolZoom = None
+        self.toolZoomOut: qgis.gui.QgsMapToolZoom = None
+
+        # Define all menus
+        # - This won't be needed for dynamically-loaded features.
+        # - Menus and submenus are of type QtWidgets.QMenu, and menu items are of type QtWidgets.QAction.
+
+        # File menu
+        self.Menu_File: QtWidgets.QMenu = None
+        self.Menu_File_New: QtWidgets.QMenu = None
+        self.Menu_File_New_CommandFile: QtWidgets.QAction = None
+        self.Menu_File_Open: QtWidgets.QMenu = None
+        self.Menu_File_Open_CommandFile: QtWidgets.QAction = None
+        self.Menu_File_Open_CommandFileHistory_List: list = None  # List of 20 most recent command files, dynamic menus
+        # Maximum number of command files in the File / Open / Command File menu
+        self.command_file_menu_max: int = 20
+        self.Menu_File_Save: QtWidgets.QMenu = None
+        self.Menu_File_Save_Commands: QtWidgets.QAction = None
+        self.Menu_File_Save_CommandsAs: QtWidgets.QAction = None
+        self.Menu_File_Print: QtWidgets.QAction = None
+        self.Menu_File_Exit: QtWidgets.QAction = None
+
+        # Edit menu
+        self.Menu_Edit: QtWidgets.QMenu = None
+        self.Menu_Edit_Format: QtWidgets.QAction = None
+
+        # Commands menu
+        self.Menu_Commands: QtWidgets.QMenu = None
+        # Commands / Select, Free GeoLayer menu
+        self.Menu_Commands_Select_Free_GeoLayers: QtWidgets.QMenu = None
+        self.Menu_Commands_Select_Free_FreeGeoLayers: QtWidgets.QAction = None
+
+        # Commands / Create GeoLayer menu
+        self.Menu_Commands_Create_GeoLayers: QtWidgets.QMenu = None
+        self.Menu_Commands_Create_CopyGeoLayer: QtWidgets.QAction = None
+        self.Menu_Commands_Create_CreateGeoLayerFromGeometry: QtWidgets.QAction = None
+
+        # Commands / Read GeoLayer
+        self.Menu_Commands_Read_GeoLayers: QtWidgets.QMenu = None
+        self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile: QtWidgets.QAction = None
+        self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON: QtWidgets.QAction = None
+        self.Menu_Commands_Read_ReadGeoLayerFromShapefile: QtWidgets.QAction = None
+        self.Menu_Commands_Read_ReadGeoLayersFromFGDB: QtWidgets.QAction = None
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder: QtWidgets.QAction = None
+
+        # Commands / Fill GeoLayer
+        self.Menu_Commands_FillGeoLayerMissingData: QtWidgets.QMenu = None
+
+        # Commands / Set GeoLayer
+        self.Menu_Commands_SetGeoLayer_Contents: QtWidgets.QMenu = None
+        self.Menu_Commands_SetContents_AddGeoLayerAttribute: QtWidgets.QAction = None
+        self.Menu_Commands_SetContents_RemoveGeoLayerAttributes: QtWidgets.QAction = None
+        self.Menu_Commands_SetContents_RenameGeoLayerAttribute: QtWidgets.QAction = None
+        self.Menu_Commands_SetContents_SetGeoLayerCRS: QtWidgets.QAction = None
+        self.Menu_Commands_SetContents_SetGeoLayerProperty: QtWidgets.QAction = None
+
+        # Commands / Manipulate GeoLayer
+        self.Menu_Commands_Manipulate_GeoLayers: QtWidgets.QMenu = None
+        self.Menu_Commands_Manipulate_ClipGeoLayer: QtWidgets.QAction = None
+        self.Menu_Commands_Manipulate_IntersectGeoLayer: QtWidgets.QAction = None
+        self.Menu_Commands_Manipulate_MergeGeoLayers: QtWidgets.QAction = None
+        self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry: QtWidgets.QAction = None
+        self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute: QtWidgets.QAction = None
+
+        # Commands / Analyze GeoLayer
+        self.Menu_Commands_Analyze_GeoLayers: QtWidgets.QMenu = None
+
+        # Commands / Check GeoLayer
+        self.Menu_Commands_Check_GeoLayers: QtWidgets.QMenu = None
+
+        # Commands / Write GeoLayer
+        self.Menu_Commands_Write_GeoLayers: QtWidgets.QMenu = None
+        self.Menu_Commands_Write_WriteGeoLayerToDelimitedFile: QtWidgets.QAction = None
+        self.Menu_Commands_Write_WriteGeoLayerToGeoJSON: QtWidgets.QAction = None
+        self.Menu_Commands_Write_WriteGeoLayerToKML: QtWidgets.QAction = None
+        self.Menu_Commands_Write_WriteGeoLayerToShapefile: QtWidgets.QAction = None
+
+        # Commands / Datastore Processing
+        self.Menu_Commands_DatastoreProcessing: QtWidgets.QMenu = None
+        self.Menu_Commands_DatastoreProcessing_OpenDataStore: QtWidgets.QAction = None
+        self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore: QtWidgets.QAction = None
+
+        # Commands/ Network Processing
+        self.Menu_Commands_NetworkProcessing: QtWidgets.QMenu = None
+
+        # Commands/ Spreadsheet Processing
+        self.Menu_Commands_SpreadsheetProcessing: QtWidgets.QMenu = None
+
+        # Commands/ Template Processing
+        self.Menu_Commands_TemplateProcessing: QtWidgets.QMenu = None
+
+        # Commands/ Visualization Processing
+        self.Menu_Commands_VisualizationProcessing: QtWidgets.QMenu = None
+
+        # Commands / General
+        # Commands / General - Comments
+        self.Menu_Commands_General_Comments: QtWidgets.QMenu = None
+        self.Menu_Commands_General_Comments_Single: QtWidgets.QAction = None
+        self.Menu_Commands_General_Comments_MultipleStart: QtWidgets.QAction = None
+        self.Menu_Commands_General_Comments_MultipleEnd: QtWidgets.QAction = None
+        self.Menu_Commands_General_Comments_EnabledFalse: QtWidgets.QAction = None
+        self.Menu_Commands_General_Comments_ExpectedStatusFail: QtWidgets.QAction = None
+        self.Menu_Commands_General_Comments_ExpectedStatusWarn: QtWidgets.QAction = None
+        self.Menu_Commands_General_Comments_Blank: QtWidgets.QAction = None
+
+        # Commands / General - File Handling
+        self.Menu_Commands_General_FileHandling: QtWidgets.QMenu = None
+        self.Menu_Commands_General_FileHandling_CopyFile: QtWidgets.QAction = None
+        self.Menu_Commands_General_FileHandling_ListFiles: QtWidgets.QAction = None
+        self.Menu_Commands_General_FileHandling_RemoveFile: QtWidgets.QAction = None
+        self.Menu_Commands_General_FileHandling_UnzipFile: QtWidgets.QAction = None
+        self.Menu_Commands_General_FileHandling_WebGet: QtWidgets.QAction = None
+
+        # Commands / General - Logging and Messaging
+        self.Menu_Commands_General_LoggingMessaging: QtWidgets.QMenu = None
+        self.Menu_Commands_General_LoggingMessaging_Message: QtWidgets.QAction = None
+        self.Menu_Commands_General_LoggingMessaging_StartLog: QtWidgets.QAction = None
+
+        # Commands / General - Running and Properties
+        self.Menu_Commands_General_RunningProperties: QtWidgets.QMenu = None
+        self.Menu_Commands_General_RunningProperties_If: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_EndIf: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_For: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_EndFor: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_RunCommands: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_RunGdal: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_RunOgr: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_RunProgram: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_SetProperty: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer: QtWidgets.QAction = None
+        self.Menu_Commands_General_RunningProperties_WritePropertiesToFile: QtWidgets.QAction = None
+
+        # Commands / General - Test Processing
+        self.Menu_Commands_General_TestProcessing: QtWidgets.QMenu = None
+        self.Menu_Commands_General_TestProcessing_CompareFiles: QtWidgets.QAction = None
+        self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile: QtWidgets.QAction = None
+        self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport: QtWidgets.QAction = None
+        self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile: QtWidgets.QAction = None
+        self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile: QtWidgets.QAction = None
+
+        # Commands(Raster) menu
+        self.Menu_Commands_Raster: QtWidgets.QMenu = None
+
+        # Commands(Raster) / Create GeoLayer
+        self.Menu_Commands_Raster_Create_RasterGeoLayers: QtWidgets.QMenu = None
+        self.Menu_Commands_Raster_Create_CreateRasterGeoLayer: QtWidgets.QAction = None
+
+        # Commands(Raster) / Read GeoLayer
+        self.Menu_Commands_Raster_Read_RasterGeoLayers: QtWidgets.QMenu = None
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile: QtWidgets.QAction = None
+
+        # Commands(Table) menu
+        self.Menu_Commands_Table: QtWidgets.QMenu = None
+        self.Menu_Commands_Tables_Read: QtWidgets.QMenu = None
+        self.Menu_Commands_Table_ReadTableFromDataStore: QtWidgets.QAction = None
+        self.Menu_Commands_Table_ReadTableFromDelimitedFile: QtWidgets.QAction = None
+        self.Menu_Commands_Table_ReadTableFromExcel: QtWidgets.QAction = None
+        self.Menu_Commands_Tables_Process: QtWidgets.QMenu = None
+        self.Menu_Commands_Tables_Write: QtWidgets.QMenu = None
+        self.Menu_Commands_Table_WriteTableToDataStore: QtWidgets.QAction = None
+        self.Menu_Commands_Table_WriteTableToDelimitedFile: QtWidgets.QAction = None
+        self.Menu_Commands_Table_WriteTableToExcel: QtWidgets.QAction = None
+
+        # Tools menu
+        self.Menu_Tools: QtWidgets.QMenu = None
+        self.Menu_Tools_ViewLog: QtWidgets.QAction = None
+        self.Menu_Tools_ViewStartupLog: QtWidgets.QAction = None
+
+        # Help menu
+        self.Menu_Help: QtWidgets.QMenu = None
+        self.Menu_Help_About: QtWidgets.QAction = None
+        self.Menu_Help_SoftwareSystemInformation: QtWidgets.QAction = None
+        self.Menu_Help_ViewDocumentation: QtWidgets.QAction = None
+
+        # Old way was to initialize generically
+        # super().__init__()
         # New way is to inherit from Qt main window
         QtWidgets.QMainWindow.__init__(self)
         print('Inside GeoProcessorUI constructor, calling setup_ui')
@@ -114,7 +355,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.gp.add_command_processor_listener(self)
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         """
         When exiting out of the main window do checks to see if the command file has been modified.
         If modified warn user and ask if command file should be saved.
@@ -129,7 +370,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.closeEvent_save_command_file()
         self.closeEvent_confirm_exit(event)
 
-    def closeEvent_confirm_exit(self, event):
+    def closeEvent_confirm_exit(self, event: QtGui.QCloseEvent) -> None:
         """
         Prompt user with a dialog window that asks if the user really wants to exit
         GeoProcessor.
@@ -151,7 +392,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         else:
             event.ignore()
 
-    def closeEvent_save_command_file(self):
+    def closeEvent_save_command_file(self) -> None:
         """
         Before exiting check to see if the command file has been edited. If so ask if the user
         would like to save the command file.
@@ -178,7 +419,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 else:
                     self.ui_action_save_commands()
 
-    def command_completed(self, icommand, ncommand, command, percent_completed, message):
+    def command_completed(self, icommand: int, ncommand: int, command: AbstractCommand,
+                          percent_completed: float, message: str) -> None:
         """
         Indicate that a command has completed. The success/failure of the command is not indicated.
 
@@ -214,7 +456,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         #    # Last command has completed so refresh the time series results.
         #    # command_string = command.
 
-    def command_started(self, icommand, ncommand, command, percent_completed, message):
+    def command_started(self, icommand: int, ncommand: int, command: AbstractCommand,
+                        percent_completed: float, message: str) -> None:
         """
         Indicate that a command has started running.
 
@@ -258,7 +501,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.status_CurrentCommand_StatusBar.setMaximum(100)
         self.status_CurrentCommand_StatusBar.setValue(0)
 
-    def delete_numbered_list_item(self, index):
+    def delete_numbered_list_item(self, index: int) -> None:
         """
         Delete the row in the numbered list and update the other numbers.
 
@@ -281,7 +524,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 num = num - 1
                 self.numbered_List.item(i).setText(str(num))
 
-    def edit_command_editor(self):
+    def edit_command_editor(self) -> None:
         """
         Opens a dialog box to edit an existing command.
 
@@ -366,7 +609,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             if comment_block:
                 # Comment block editor is for 1+ comment lines separated by newline as formed above
                 command_editor.set_text(comment_block_text)
-        except Exception as e:
+        except Exception:
             message = "Error creating editor for existing command."
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
@@ -417,13 +660,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Cancel was clicked so don't do anything
                 pass
 
-        except Exception as e:
+        except Exception:
             message = "Error editing existing command."
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
-    def new_command_editor(self, command_name):
+    def new_command_editor(self, command_name: str) -> None:
         """
         Opens the dialog window for the selected command, editing a new command.
         This function is called when the user selects a Command menu item.
@@ -465,7 +708,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             full_initialization = True
             command_object.initialize_command(command_string, self.gp_model.gp, full_initialization)
             command_object.initialize_geoprocessor_ui(self)
-        except Exception as e:
+        except Exception:
             message = "Error creating new command, unable to edit for command string: " + command_string
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
@@ -479,7 +722,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object, self.app_session)
-        except Exception as e:
+        except Exception:
             message = "Error creating editor for new command:  " + str(command_object.command_string)
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
@@ -554,14 +797,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Cancel was clicked so don't do anything.
                 pass
 
-        except Exception as e:
+        except Exception:
             # Unexpected error.
             message = "Error editing new command"
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             return
 
-    def setup_ui(self):
+    def setup_ui(self) -> None:
         """
         Set up the user interface.
         This code was included from GeoProcessor_Design.py, which was generated by QT Designer by converting
@@ -632,7 +875,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # QtCore.QMetaObject.connectSlotsByName(main_window)
         # print("Leaving setup_ui")
 
-    def setup_ui_catalog(self, y_centralwidget):
+    def setup_ui_catalog(self, y_centralwidget: int) -> None:
         """
         Set up the Catalog area of the UI.
 
@@ -661,7 +904,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.catalog_GroupBox.setTitle("Catalog")
         self.centralwidget_GridLayout.addWidget(self.catalog_GroupBox, y_centralwidget, 0, 1, 6)
 
-    def setup_ui_commands(self, y_centralwidget):
+    def setup_ui_commands(self, y_centralwidget: int) -> None:
         """
         Set up the Commands area of the UI.
 
@@ -688,7 +931,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Add the commands to the central widget
         self.centralwidget_GridLayout.addWidget(self.commands_GroupBox, y_centralwidget, 0, 1, 6)
 
-    def setup_ui_menus(self, main_window):
+    def setup_ui_menus(self, main_window: GeoProcessorUI) -> None:
         """
         Set up the Menus for the UI.
 
@@ -703,26 +946,33 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1038, 20))
         self.menubar.setObjectName(qt_util.from_utf8("menubar"))
 
+        # ============================================================================================================
         # File menu
+        # ============================================================================================================
+
         self.Menu_File = QtWidgets.QMenu(self.menubar)
         self.Menu_File.setObjectName(qt_util.from_utf8("Menu_File"))
         self.Menu_File.setTitle("File")
+
         # File / New menu
         self.Menu_File_New = QtWidgets.QMenu(self.Menu_File)
         self.Menu_File_New.setObjectName(qt_util.from_utf8("Menu_File_New"))
         self.Menu_File_New.setTitle("New")
         self.Menu_File.addAction(self.Menu_File_New.menuAction())
+
         # File / New / Command File menu
         self.Menu_File_New_CommandFile = QtWidgets.QAction(main_window)
         self.Menu_File_New_CommandFile.setObjectName(qt_util.from_utf8("Menu_File_New_CommandFile"))
         self.Menu_File_New_CommandFile.setText("Command File")
         self.Menu_File_New_CommandFile.triggered.connect(self.ui_action_new_command_file)
         self.Menu_File_New.addAction(self.Menu_File_New_CommandFile)
+
         # File / Open menu
         self.Menu_File_Open = QtWidgets.QMenu(self.Menu_File)
         self.Menu_File_Open.setObjectName(qt_util.from_utf8("Menu_File_Open"))
         self.Menu_File_Open.setTitle("Open")
         self.Menu_File.addAction(self.Menu_File_Open.menuAction())
+
         # File / Open / Command File menu
         self.Menu_File_Open_CommandFile = QtWidgets.QAction(main_window)
         self.Menu_File_Open_CommandFile.setObjectName(qt_util.from_utf8("Menu_File_Open_CommandFile"))
@@ -733,6 +983,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Open_CommandFile.triggered.connect(lambda:self.ui_action_open_command_file())
         self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFile)
         self.Menu_File_Open.addSeparator()
+
         # File / Open / Command File menu
         # - initialize enough menu objects for the maximum, but will only actually use 0 to the maximum
         self.Menu_File_Open_CommandFileHistory_List =\
@@ -741,7 +992,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_action = QtWidgets.QAction(main_window)
             # Initially assigned a callback function so that it can be cleared in the first step of reassigning
             # a new callback in ui_init_file_open_recent()
-            qt_action.triggered.connect(lambda:self.ui_action_open_command_file(""))
+            qt_action.triggered.connect(lambda: self.ui_action_open_command_file(""))
             self.Menu_File_Open_CommandFileHistory_List[i] = qt_action
         self.ui_init_file_open_recent_files()
 
@@ -750,18 +1001,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Save.setObjectName(qt_util.from_utf8("Menu_File_Save"))
         self.Menu_File_Save.setTitle("Save")
         self.Menu_File.addAction(self.Menu_File_Save.menuAction())
+
         # File / Save / Commands menu
         self.Menu_File_Save_Commands = QtWidgets.QAction(main_window)
         self.Menu_File_Save_Commands.setObjectName(qt_util.from_utf8("Menu_File_Save_Commands"))
         self.Menu_File_Save_Commands.setText("Commands ...")
         self.Menu_File_Save_Commands.triggered.connect(self.ui_action_save_commands)
         self.Menu_File_Save.addAction(self.Menu_File_Save_Commands)
+
         # File / Save / Commands As menu
         self.Menu_File_Save_CommandsAs = QtWidgets.QAction(main_window)
         self.Menu_File_Save_CommandsAs.setObjectName(qt_util.from_utf8("Menu_File_Save_CommandsAs"))
         self.Menu_File_Save_CommandsAs.setText("Commands as ...")
         self.Menu_File_Save_CommandsAs.triggered.connect(self.ui_action_save_commands_as)
         self.Menu_File_Save.addAction(self.Menu_File_Save_CommandsAs)
+
         # File / Print menu
         self.Menu_File_Print = QtWidgets.QAction(main_window)
         self.Menu_File_Print.setObjectName(qt_util.from_utf8("Menu_File_Print"))
@@ -769,31 +1023,33 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Print.triggered.connect(self.ui_action_print_commands)
         self.Menu_File.addSeparator()
         self.Menu_File.addAction(self.Menu_File_Print)
+
         # File / Properties menu - TODO smalers 2018-07-29 evaluate whether needed
         # self.Menu_File_Properties = QtWidgets.QAction(main_window)
         # self.Menu_File_Properties.setObjectName(qt_util.from_utf8("Menu_File_Properties"))
         # self.Menu_File_Properties.setText("Properties")
         # self.Menu_File.addSeparator()
         # self.Menu_File.addAction(self.Menu_File_Properties)
+
         # File / Exit menu
         self.Menu_File_Exit = QtWidgets.QAction(main_window)
         self.Menu_File_Exit.setObjectName(qt_util.from_utf8("Menu_File_Exit"))
         self.Menu_File_Exit.setText("Exit")
         self.Menu_File.addSeparator()
         self.Menu_File.addAction(self.Menu_File_Exit)
+
         # Set the menu bar
         main_window.setMenuBar(self.menubar)
         self.menubar.addAction(self.Menu_File.menuAction())
 
+        # ============================================================================================================
         # Edit menu
+        # ============================================================================================================
+
         self.Menu_Edit = QtWidgets.QMenu(self.menubar)
         self.Menu_Edit.setObjectName(qt_util.from_utf8("Menu_Edit"))
         self.Menu_Edit.setTitle("Edit")
 
-        # Edit menu
-        self.Menu_Edit = QtWidgets.QMenu(self.menubar)
-        self.Menu_Edit.setObjectName(qt_util.from_utf8("Menu_Edit"))
-        self.Menu_Edit.setTitle("Edit")
         # Edit / Format menu
         self.Menu_Edit_Format = QtWidgets.QAction(main_window)
         self.Menu_Edit_Format.setObjectName(qt_util.from_utf8("Menu_Tools_ViewStartupLog"))
@@ -801,10 +1057,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Edit.addAction(self.Menu_Edit_Format)
         # TODO add action to button
         # self.Menu_Tools_ViewStartupLog.triggered.connect(self.ui_action_view_startup_log_file)
+
         # Add Help menu to menubar
         self.menubar.addAction(self.Menu_Edit.menuAction())
 
+        # ============================================================================================================
         # Commands menu
+        # ============================================================================================================
+
         self.Menu_Commands = QtWidgets.QMenu(self.menubar)
         self.Menu_Commands.setObjectName(qt_util.from_utf8("Menu_Commands"))
         self.Menu_Commands.setTitle("Commands")
@@ -815,6 +1075,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Select_Free_GeoLayers"))
         self.Menu_Commands_Select_Free_GeoLayers.setTitle("Select, Free GeoLayer")
         self.Menu_Commands.addAction(self.Menu_Commands_Select_Free_GeoLayers.menuAction())
+
         # FreeGeoLayers
         self.Menu_Commands_Select_Free_FreeGeoLayers = QtWidgets.QAction(main_window)
         self.Menu_Commands_Select_Free_FreeGeoLayers.setObjectName(
@@ -830,6 +1091,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Create_GeoLayers.setObjectName(qt_util.from_utf8("Menu_Commands_Create_GeoLayers"))
         self.Menu_Commands_Create_GeoLayers.setTitle("Create GeoLayer")
         self.Menu_Commands.addAction(self.Menu_Commands_Create_GeoLayers.menuAction())
+
         # CopyGeoLayer
         self.Menu_Commands_Create_CopyGeoLayer = QtWidgets.QAction(main_window)
         self.Menu_Commands_Create_CopyGeoLayer.setObjectName(
@@ -839,6 +1101,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Create_GeoLayers.addAction(self.Menu_Commands_Create_CopyGeoLayer)
         self.Menu_Commands_Create_CopyGeoLayer.triggered.connect(
             functools.partial(self.new_command_editor, "CopyGeoLayer"))
+
         # CreateGeoLayerFromGeometry
         self.Menu_Commands_Create_CreateGeoLayerFromGeometry = QtWidgets.QAction(main_window)
         self.Menu_Commands_Create_CreateGeoLayerFromGeometry.setObjectName(
@@ -854,6 +1117,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_GeoLayers.setObjectName(qt_util.from_utf8("Menu_Commands_Read_GeoLayers"))
         self.Menu_Commands_Read_GeoLayers.setTitle("Read GeoLayer")
         self.Menu_Commands.addAction(self.Menu_Commands_Read_GeoLayers.menuAction())
+
         # ReadGeoLayerFromDelimitedFile
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile.setObjectName(
@@ -863,6 +1127,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayerFromDelimitedFile"))
         self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile)
+
         # ReadGeoLayerFromGeoJSON
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setObjectName(
@@ -872,6 +1137,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON)
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayerFromGeoJSON"))
+
         # ReadGeoLayersFromShapefile
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.setObjectName(
@@ -881,6 +1147,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromShapefile)
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayerFromShapefile"))
+
         # ReadGeoLayersFromFGDB
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setObjectName(
@@ -890,6 +1157,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFGDB)
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.triggered.connect(
             functools.partial(self.new_command_editor, "ReadGeoLayersFromFGDB"))
+
         # ReadGeoLayersFromFolder
         self.Menu_Commands_Read_ReadGeoLayersFromFolder = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayersFromFolder.setObjectName(
@@ -914,6 +1182,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_SetContents_GeoLayers"))
         self.Menu_Commands_SetGeoLayer_Contents.setTitle("Set GeoLayer Contents")
         self.Menu_Commands.addAction(self.Menu_Commands_SetGeoLayer_Contents.menuAction())
+
         # AddGeoLayerAttribute
         self.Menu_Commands_SetContents_AddGeoLayerAttribute = QtWidgets.QAction(main_window)
         self.Menu_Commands_SetContents_AddGeoLayerAttribute.setObjectName(
@@ -923,6 +1192,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_SetContents_AddGeoLayerAttribute.triggered.connect(
             functools.partial(self.new_command_editor, "AddGeoLayerAttribute"))
         self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_AddGeoLayerAttribute)
+
         # RemoveGeoLayerAttributes
         self.Menu_Commands_SetContents_RemoveGeoLayerAttributes = QtWidgets.QAction(main_window)
         self.Menu_Commands_SetContents_RemoveGeoLayerAttributes.setObjectName(
@@ -932,6 +1202,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_SetContents_RemoveGeoLayerAttributes.triggered.connect(
             functools.partial(self.new_command_editor, "RemoveGeoLayerAttributes"))
         self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_RemoveGeoLayerAttributes)
+
         # RenameGeoLayerAttribute
         self.Menu_Commands_SetContents_RenameGeoLayerAttribute = QtWidgets.QAction(main_window)
         self.Menu_Commands_SetContents_RenameGeoLayerAttribute.setObjectName(
@@ -941,6 +1212,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_SetContents_RenameGeoLayerAttribute.triggered.connect(
             functools.partial(self.new_command_editor, "RenameGeoLayerAttribute"))
         self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_RenameGeoLayerAttribute)
+
         # SetGeoLayerCRS
         self.Menu_Commands_SetContents_SetGeoLayerCRS = QtWidgets.QAction(main_window)
         self.Menu_Commands_SetContents_SetGeoLayerCRS.setObjectName(
@@ -950,6 +1222,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_SetContents_SetGeoLayerCRS.triggered.connect(
             functools.partial(self.new_command_editor, "SetGeoLayerCRS"))
         self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_SetGeoLayerCRS)
+
         # SetGeoLayerProperty
         self.Menu_Commands_SetContents_SetGeoLayerProperty = QtWidgets.QAction(main_window)
         self.Menu_Commands_SetContents_SetGeoLayerProperty.setObjectName(
@@ -966,6 +1239,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Manipulate_GeoLayers"))
         self.Menu_Commands_Manipulate_GeoLayers.setTitle("Manipulate GeoLayer")
         self.Menu_Commands.addAction(self.Menu_Commands_Manipulate_GeoLayers.menuAction())
+
         # ClipGeoLayer
         self.Menu_Commands_Manipulate_ClipGeoLayer = QtWidgets.QAction(main_window)
         self.Menu_Commands_Manipulate_ClipGeoLayer.setObjectName(
@@ -975,6 +1249,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_ClipGeoLayer.triggered.connect(
             functools.partial(self.new_command_editor, "ClipGeoLayer"))
         self.Menu_Commands_Manipulate_GeoLayers.addAction(self.Menu_Commands_Manipulate_ClipGeoLayer)
+
         # IntersectGeoLayer
         self.Menu_Commands_Manipulate_IntersectGeoLayer = QtWidgets.QAction(main_window)
         self.Menu_Commands_Manipulate_IntersectGeoLayer.setObjectName(
@@ -985,6 +1260,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "IntersectGeoLayer"))
         self.Menu_Commands_Manipulate_GeoLayers.addAction(
             self.Menu_Commands_Manipulate_IntersectGeoLayer)
+
         # MergeGeoLayers
         self.Menu_Commands_Manipulate_MergeGeoLayers = QtWidgets.QAction(main_window)
         self.Menu_Commands_Manipulate_MergeGeoLayers.setObjectName(
@@ -992,9 +1268,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_MergeGeoLayers.setText(
             "MergeGeoLayers()... <merge multiple GeoLayers into one GeoLayer>")
         self.Menu_Commands_Manipulate_MergeGeoLayers.triggered.connect(
-            functools.partial(self.new_command_editor, "MergeGeoLayers")
-        )
+            functools.partial(self.new_command_editor, "MergeGeoLayers"))
         self.Menu_Commands_Manipulate_GeoLayers.addAction(self.Menu_Commands_Manipulate_MergeGeoLayers)
+
         # SimplifyGeoLayerGeometry
         self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry = QtWidgets.QAction(main_window)
         self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry.setObjectName(
@@ -1005,6 +1281,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "SimplifyGeoLayerGeometry"))
         self.Menu_Commands_Manipulate_GeoLayers.addAction(
             self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry)
+
         # SplitGeoLayerByAttribute
         self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute = QtWidgets.QAction(main_window)
         self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute.setObjectName(
@@ -1038,7 +1315,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Write_GeoLayers"))
         self.Menu_Commands_Write_GeoLayers.setTitle("Write GeoLayer")
         self.Menu_Commands.addAction(self.Menu_Commands_Write_GeoLayers.menuAction())
-        # WriteGeoLayerToDelmitedFile
+
+        # WriteGeoLayerToDelimitedFile
         self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile.setObjectName(
             qt_util.from_utf8("Menu_Commands_Write_WriteGeoLayerToDelimitedFile"))
@@ -1047,6 +1325,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile.triggered.connect(
             functools.partial(self.new_command_editor, "WriteGeoLayerToDelimitedFile"))
         self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToDelmitedFile)
+
         # WriteGeoLayerToGeoJSON
         self.Menu_Commands_Write_WriteGeoLayerToGeoJSON = QtWidgets.QAction(main_window)
         self.Menu_Commands_Write_WriteGeoLayerToGeoJSON.setObjectName(
@@ -1056,6 +1335,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Write_WriteGeoLayerToGeoJSON.triggered.connect(
             functools.partial(self.new_command_editor, "WriteGeoLayerToGeoJSON"))
         self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToGeoJSON)
+
         # WriteGeoLayerToKML
         self.Menu_Commands_Write_WriteGeoLayerToKML = QtWidgets.QAction(main_window)
         self.Menu_Commands_Write_WriteGeoLayerToKML.setObjectName(
@@ -1065,6 +1345,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Write_WriteGeoLayerToKML.triggered.connect(
             functools.partial(self.new_command_editor, "WriteGeoLayerToKML"))
         self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToKML)
+
         # WriteGeoLayerToShapefile
         self.Menu_Commands_Write_WriteGeoLayerToShapefile = QtWidgets.QAction(main_window)
         self.Menu_Commands_Write_WriteGeoLayerToShapefile.setObjectName(
@@ -1083,6 +1364,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_DatastoreProcessing"))
         self.Menu_Commands_DatastoreProcessing.setTitle("Datastore Processing")
         self.Menu_Commands.addAction(self.Menu_Commands_DatastoreProcessing.menuAction())
+
         # OpenDataStore
         self.Menu_Commands_DatastoreProcessing_OpenDataStore = QtWidgets.QAction(main_window)
         self.Menu_Commands_DatastoreProcessing_OpenDataStore.setObjectName(
@@ -1092,6 +1374,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_DatastoreProcessing_OpenDataStore.triggered.connect(
             functools.partial(self.new_command_editor, "OpenDataStore"))
         self.Menu_Commands_DatastoreProcessing.addAction(self.Menu_Commands_DatastoreProcessing_OpenDataStore)
+
         # ReadTableFromDataStore
         self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore = QtWidgets.QAction(main_window)
         self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore.setObjectName(
@@ -1126,7 +1409,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_TemplateProcessing.setEnabled(False)
         self.Menu_Commands.addAction(self.Menu_Commands_TemplateProcessing.menuAction())
 
-        # Commands / Visualiztion Processing (disabled)
+        # Commands / Visualization Processing (disabled)
         self.Menu_Commands_VisualizationProcessing = QtWidgets.QMenu(self.Menu_Commands)
         self.Menu_Commands_VisualizationProcessing.setObjectName(
             qt_util.from_utf8("Menu_Commands_VisualizationProcessing"))
@@ -1140,6 +1423,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments.setTitle("General - Comments")
         self.Menu_Commands.addSeparator()
         self.Menu_Commands.addAction(self.Menu_Commands_General_Comments.menuAction())
+
         # Comments / General - Comments / Single menu
         self.Menu_Commands_General_Comments_Single = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_Single.setObjectName(
@@ -1148,6 +1432,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_Single.triggered.connect(
             functools.partial(self.new_command_editor, "#"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_Single)
+
         # Comments / General - Comments / Multi-line menus
         self.Menu_Commands_General_Comments_MultipleStart = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_MultipleStart.setObjectName(
@@ -1156,6 +1441,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_MultipleStart.triggered.connect(
             functools.partial(self.new_command_editor, "/*"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_MultipleStart)
+
         # MultipleEnd
         self.Menu_Commands_General_Comments_MultipleEnd = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_MultipleEnd.setObjectName(
@@ -1165,6 +1451,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "*/"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_MultipleEnd)
         self.Menu_Commands_General_Comments.addSeparator()
+
         # Comments / General - Comments / Enabled menu
         self.Menu_Commands_General_Comments_EnabledFalse = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_EnabledFalse.setObjectName(
@@ -1173,7 +1460,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_EnabledFalse.triggered.connect(
             functools.partial(self.new_command_editor, "#@enabled False"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_EnabledFalse)
+
         # Comments / General - Comments / Expected Status menus
+        # Comments / General - Comments / Expected Status Fail
         self.Menu_Commands_General_Comments_ExpectedStatusFail = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_ExpectedStatusFail.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_ExpectedStatusFail"))
@@ -1182,7 +1471,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_ExpectedStatusFail.triggered.connect(
             functools.partial(self.new_command_editor, "#@expectedStatus Failure"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_ExpectedStatusFail)
-        #
+
+        # Comments / General - Comments / Expected Status Warn
         self.Menu_Commands_General_Comments_ExpectedStatusWarn = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_ExpectedStatusWarn.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_ExpectedStatusWarn"))
@@ -1212,6 +1502,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_FileHandling"))
         self.Menu_Commands_General_FileHandling.setTitle("General - File Handling")
         self.Menu_Commands.addAction(self.Menu_Commands_General_FileHandling.menuAction())
+
         # CopyFile
         self.Menu_Commands_General_FileHandling_CopyFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_FileHandling_CopyFile.setObjectName(
@@ -1221,6 +1512,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_FileHandling_CopyFile.triggered.connect(
             functools.partial(self.new_command_editor, "CopyFile"))
         self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_CopyFile)
+
         # ListFiles
         self.Menu_Commands_General_FileHandling_ListFiles = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_FileHandling_ListFiles.setObjectName(
@@ -1230,6 +1522,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_FileHandling_ListFiles.triggered.connect(
             functools.partial(self.new_command_editor, "ListFiles"))
         self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_ListFiles)
+
         # RemoveFile
         self.Menu_Commands_General_FileHandling_RemoveFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_FileHandling_RemoveFile.setObjectName(
@@ -1239,6 +1532,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_FileHandling_RemoveFile.triggered.connect(
             functools.partial(self.new_command_editor, "RemoveFile"))
         self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_RemoveFile)
+
         # UnzipFile
         self.Menu_Commands_General_FileHandling_UnzipFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_FileHandling_UnzipFile.setObjectName(
@@ -1246,9 +1540,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_FileHandling_UnzipFile.setText(
             "UnzipFile()... <unzip a file>")
         self.Menu_Commands_General_FileHandling_UnzipFile.triggered.connect(
-            functools.partial(self.new_command_editor, "UnzipFile")
-        )
+            functools.partial(self.new_command_editor, "UnzipFile"))
         self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_UnzipFile)
+
         # WebGet
         self.Menu_Commands_General_FileHandling_WebGet = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_FileHandling_WebGet.setObjectName(
@@ -1256,8 +1550,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_FileHandling_WebGet.setText(
             "WebGet()... <download a file from URL>")
         self.Menu_Commands_General_FileHandling_WebGet.triggered.connect(
-            functools.partial(self.new_command_editor, "WebGet")
-        )
+            functools.partial(self.new_command_editor, "WebGet"))
         self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_WebGet)
 
         # Commands / General - Logging and Messaging menu
@@ -1266,6 +1559,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_LoggingMessaging"))
         self.Menu_Commands_General_LoggingMessaging.setTitle("General - Logging and Messaging")
         self.Menu_Commands.addAction(self.Menu_Commands_General_LoggingMessaging.menuAction())
+
         # Message
         self.Menu_Commands_General_LoggingMessaging_Message = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_LoggingMessaging_Message.setObjectName(
@@ -1275,6 +1569,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_LoggingMessaging_Message.triggered.connect(
             functools.partial(self.new_command_editor, "Message"))
         self.Menu_Commands_General_LoggingMessaging.addAction(self.Menu_Commands_General_LoggingMessaging_Message)
+
         # StartLog
         self.Menu_Commands_General_LoggingMessaging_StartLog = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_LoggingMessaging_StartLog.setObjectName(
@@ -1291,33 +1586,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties"))
         self.Menu_Commands_General_RunningProperties.setTitle("General - Running and Properties")
         self.Menu_Commands.addAction(self.Menu_Commands_General_RunningProperties.menuAction())
-        # EndIf
-        self.Menu_Commands_General_RunningProperties_EndIf = QtWidgets.QAction(main_window)
-        self.Menu_Commands_General_RunningProperties_EndIf.setObjectName(
-            qt_util.from_utf8("Menu_Commands_General_RunningProperties_EndIf"))
-        self.Menu_Commands_General_RunningProperties_EndIf.setText(
-            "EndIf()... <indicate the end of an 'if' block>")
-        self.Menu_Commands_General_RunningProperties_EndIf.triggered.connect(
-            functools.partial(self.new_command_editor, "EndIf"))
-        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_EndIf)
-        # EndFor
-        self.Menu_Commands_General_RunningProperties_EndFor = QtWidgets.QAction(main_window)
-        self.Menu_Commands_General_RunningProperties_EndFor.setObjectName(
-            qt_util.from_utf8("Menu_Commands_General_RunningProperties_EndFor"))
-        self.Menu_Commands_General_RunningProperties_EndFor.setText(
-            "EndFor()... <indicate the end of a 'for' block>")
-        self.Menu_Commands_General_RunningProperties_EndFor.triggered.connect(
-            functools.partial(self.new_command_editor, "EndFor"))
-        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_EndFor)
-        # For
-        self.Menu_Commands_General_RunningProperties_For = QtWidgets.QAction(main_window)
-        self.Menu_Commands_General_RunningProperties_For.setObjectName(
-            qt_util.from_utf8("Menu_Commands_General_RunningProperties_For"))
-        self.Menu_Commands_General_RunningProperties_For.setText(
-            "For()... <indicate the start of a 'for' block>")
-        self.Menu_Commands_General_RunningProperties_For.triggered.connect(
-            functools.partial(self.new_command_editor, "For"))
-        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_For)
+
         # If
         self.Menu_Commands_General_RunningProperties_If = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_RunningProperties_If.setObjectName(
@@ -1327,6 +1596,41 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_RunningProperties_If.triggered.connect(
             functools.partial(self.new_command_editor, "If"))
         self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_If)
+
+        # EndIf
+        self.Menu_Commands_General_RunningProperties_EndIf = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_EndIf.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_RunningProperties_EndIf"))
+        self.Menu_Commands_General_RunningProperties_EndIf.setText(
+            "EndIf()... <indicate the end of an 'if' block>")
+        self.Menu_Commands_General_RunningProperties_EndIf.triggered.connect(
+            functools.partial(self.new_command_editor, "EndIf"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_EndIf)
+
+        self.Menu_Commands_General_RunningProperties.addSeparator()
+
+        # For
+        self.Menu_Commands_General_RunningProperties_For = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_For.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_RunningProperties_For"))
+        self.Menu_Commands_General_RunningProperties_For.setText(
+            "For()... <indicate the start of a 'for' block>")
+        self.Menu_Commands_General_RunningProperties_For.triggered.connect(
+            functools.partial(self.new_command_editor, "For"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_For)
+
+        # EndFor
+        self.Menu_Commands_General_RunningProperties_EndFor = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_EndFor.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_RunningProperties_EndFor"))
+        self.Menu_Commands_General_RunningProperties_EndFor.setText(
+            "EndFor()... <indicate the end of a 'for' block>")
+        self.Menu_Commands_General_RunningProperties_EndFor.triggered.connect(
+            functools.partial(self.new_command_editor, "EndFor"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_EndFor)
+
+        self.Menu_Commands_General_RunningProperties.addSeparator()
+
         # RunCommands
         self.Menu_Commands_General_RunningProperties_RunCommands = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_RunningProperties_RunCommands.setObjectName(
@@ -1336,6 +1640,27 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_RunningProperties_RunCommands.triggered.connect(
             functools.partial(self.new_command_editor, "RunCommands"))
         self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_RunCommands)
+
+        # RunGdal
+        self.Menu_Commands_General_RunningProperties_RunGdal = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_RunGdal.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_RunningProperties_RunGdal"))
+        self.Menu_Commands_General_RunningProperties_RunGdal.setText(
+            "RunGdal()... <run gdal* raster layer processing program>")
+        self.Menu_Commands_General_RunningProperties_RunGdal.triggered.connect(
+            functools.partial(self.new_command_editor, "RunGdal"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_RunGdal)
+
+        # RunOgr
+        self.Menu_Commands_General_RunningProperties_RunOgr = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_RunOgr.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_RunningProperties_RunOgr"))
+        self.Menu_Commands_General_RunningProperties_RunOgr.setText(
+            "RunOgr()... <run ogr* vector layer processing program>")
+        self.Menu_Commands_General_RunningProperties_RunOgr.triggered.connect(
+            functools.partial(self.new_command_editor, "RunOgr"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_RunOgr)
+
         # RunProgram
         self.Menu_Commands_General_RunningProperties_RunProgram = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_RunningProperties_RunProgram.setObjectName(
@@ -1345,6 +1670,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_RunningProperties_RunProgram.triggered.connect(
             functools.partial(self.new_command_editor, "RunProgram"))
         self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_RunProgram)
+
         # SetProperty
         self.Menu_Commands_General_RunningProperties_SetProperty = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_RunningProperties_SetProperty.setObjectName(
@@ -1354,6 +1680,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_RunningProperties_SetProperty.triggered.connect(
             functools.partial(self.new_command_editor, "SetProperty"))
         self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_SetProperty)
+
         # SetPropertyFromGeoLayer
         self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer.setObjectName(
@@ -1364,6 +1691,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "SetPropertyFromGeoLayer"))
         self.Menu_Commands_General_RunningProperties.addAction(
             self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer)
+
         # WritePropertiesToFile
         self.Menu_Commands_General_RunningProperties_WritePropertiesToFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_RunningProperties_WritePropertiesToFile.setObjectName(
@@ -1381,6 +1709,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_TestProcessing"))
         self.Menu_Commands_General_TestProcessing.setTitle("General - Test Processing")
         self.Menu_Commands.addAction(self.Menu_Commands_General_TestProcessing.menuAction())
+
         # CompareFiles
         self.Menu_Commands_General_TestProcessing_CompareFiles = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_CompareFiles.setObjectName(
@@ -1391,6 +1720,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "CompareFiles"))
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_CompareFiles)
+
         # CreateRegressionTestCommandFile
         self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile.setObjectName(
@@ -1401,6 +1731,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "CreateRegressionTestCommandFile"))
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile)
+
         # StartRegressionTestResultsReport
         self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport.setObjectName(
@@ -1411,6 +1742,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "StartRegressionTestResultsReport"))
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport)
+
         # WriteCommandSummaryToFile
         self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile.setObjectName(
@@ -1421,6 +1753,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "WriteCommandSummaryToFile"))
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile)
+
         # WriteGeoLayerPropertiesToFile
         self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile.setObjectName(
@@ -1432,16 +1765,66 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_TestProcessing.addAction(
             self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile)
 
-        # Commands-Table menu
+        # ============================================================================================================
+        # Commands(Raster) menu
+        # ============================================================================================================
+
+        self.Menu_Commands_Raster = QtWidgets.QMenu(self.menubar)
+        self.Menu_Commands_Raster.setObjectName(qt_util.from_utf8("Menu_Commands_Raster"))
+        self.Menu_Commands_Raster.setTitle("Commands(Raster)")
+        # Add to menu bar
+        self.menubar.addAction(self.Menu_Commands_Raster.menuAction())
+
+        # Commands / Create - Raster GeoLayer menu
+        self.Menu_Commands_Raster_Create_RasterGeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Raster_Create_RasterGeoLayers.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Create_RasterGeoLayers"))
+        self.Menu_Commands_Raster_Create_RasterGeoLayers.setTitle("Create Raster GeoLayers")
+        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Create_RasterGeoLayers.menuAction())
+
+        # CreateRasterGeoLayer
+        self.Menu_Commands_Raster_Create_CreateRasterGeoLayer = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Create_CreateRasterGeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Create_CreateRasterGeoLayer"))
+        self.Menu_Commands_Raster_Create_CreateRasterGeoLayer.setText(
+            "CreateRasterGeoLayer()... <create a Raster GeoLayer>")
+        self.Menu_Commands_Raster_Create_CreateRasterGeoLayer.triggered.connect(
+            functools.partial(self.new_command_editor, "CreateRasterGeoLayer"))
+        self.Menu_Commands_Raster_Create_RasterGeoLayers.addAction(
+            self.Menu_Commands_Raster_Create_CreateRasterGeoLayer)
+
+        # Commands / Read - Raster GeoLayer menu
+        self.Menu_Commands_Raster_Read_RasterGeoLayers = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Raster_Read_RasterGeoLayers.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Read_Raster_GeoLayers"))
+        self.Menu_Commands_Raster_Read_RasterGeoLayers.setTitle("Read Raster GeoLayers")
+        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Read_RasterGeoLayers.menuAction())
+
+        # ReadRasterGeoLayerFromFile
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile"))
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile.setText(
+            "ReadRasterGeoLayerFromFile()... <read a Raster GeoLayer from a TIF file>")
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile.triggered.connect(
+            functools.partial(self.new_command_editor, "ReadRasterGeoLayerFromFile"))
+        self.Menu_Commands_Raster_Read_RasterGeoLayers.addAction(
+            self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile)
+
+        # ============================================================================================================
+        # Commands(Table) menu
+        # ============================================================================================================
+
         self.Menu_Commands_Table = QtWidgets.QMenu(self.menubar)
         self.Menu_Commands_Table.setObjectName(qt_util.from_utf8("Menu_Commands_Table"))
-        self.Menu_Commands_Table.setTitle("Commands-Table")
+        self.Menu_Commands_Table.setTitle("Commands(Table)")
 
         # Commands / Tables / Read menu
         self.Menu_Commands_Tables_Read = QtWidgets.QMenu(self.Menu_Commands_Table)
         self.Menu_Commands_Tables_Read.setObjectName(qt_util.from_utf8("Menu_Commands_Tables_Read"))
         self.Menu_Commands_Tables_Read.setTitle("Read Table")
         self.Menu_Commands_Table.addAction(self.Menu_Commands_Tables_Read.menuAction())
+
         # ReadTableFromDataStore
         self.Menu_Commands_Table_ReadTableFromDataStore = QtWidgets.QAction(main_window)
         self.Menu_Commands_Table_ReadTableFromDataStore.setObjectName(
@@ -1451,6 +1834,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Table_ReadTableFromDataStore.triggered.connect(
             functools.partial(self.new_command_editor, "ReadTableFromDataStore"))
         self.Menu_Commands_Tables_Read.addAction(self.Menu_Commands_Table_ReadTableFromDataStore)
+
         # ReadTableFromDelimitedFile
         self.Menu_Commands_Table_ReadTableFromDelimitedFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_Table_ReadTableFromDelimitedFile.setObjectName(
@@ -1460,6 +1844,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Table_ReadTableFromDelimitedFile.triggered.connect(
             functools.partial(self.new_command_editor, "ReadTableFromDelimitedFile"))
         self.Menu_Commands_Tables_Read.addAction(self.Menu_Commands_Table_ReadTableFromDelimitedFile)
+
         # ReadTableFromExcel
         self.Menu_Commands_Table_ReadTableFromExcel = QtWidgets.QAction(main_window)
         self.Menu_Commands_Table_ReadTableFromExcel.setObjectName(
@@ -1484,6 +1869,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Table.addAction(self.Menu_Commands_Tables_Write.menuAction())
         # Add to menu bar
         self.menubar.addAction(self.Menu_Commands_Table.menuAction())
+
         # WriteTableToDataStore
         self.Menu_Commands_Table_WriteTableToDataStore = QtWidgets.QAction(main_window)
         self.Menu_Commands_Table_WriteTableToDataStore.setObjectName(
@@ -1493,6 +1879,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Table_WriteTableToDataStore.triggered.connect(
             functools.partial(self.new_command_editor, "WriteTableToDataStore"))
         self.Menu_Commands_Tables_Write.addAction(self.Menu_Commands_Table_WriteTableToDataStore)
+
         # WriteTableToDelimitedFile
         self.Menu_Commands_Table_WriteTableToDelimitedFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_Table_WriteTableToDelimitedFile.setObjectName(
@@ -1502,6 +1889,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Table_WriteTableToDelimitedFile.triggered.connect(
             functools.partial(self.new_command_editor, "WriteTableToDelimitedFile"))
         self.Menu_Commands_Tables_Write.addAction(self.Menu_Commands_Table_WriteTableToDelimitedFile)
+
         # WriteTableToExcel
         self.Menu_Commands_Table_WriteTableToExcel = QtWidgets.QAction(main_window)
         self.Menu_Commands_Table_WriteTableToExcel.setObjectName(
@@ -1512,10 +1900,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "WriteTableToExcel"))
         self.Menu_Commands_Tables_Write.addAction(self.Menu_Commands_Table_WriteTableToExcel)
 
+        # ============================================================================================================
         # Tools menu
+        # ============================================================================================================
         self.Menu_Tools = QtWidgets.QMenu(self.menubar)
         self.Menu_Tools.setObjectName(qt_util.from_utf8("Menu_Tools"))
         self.Menu_Tools.setTitle("Tools")
+        # Add Tools menu to menubar
+        self.menubar.addAction(self.Menu_Tools.menuAction())
 
         # Tools / View Log File menu (for current log file from log_util)
         self.Menu_Tools_ViewLog = QtWidgets.QAction(main_window)
@@ -1523,31 +1915,36 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Tools_ViewLog.setText("View Log File")
         self.Menu_Tools.addAction(self.Menu_Tools_ViewLog)
         self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_view_log_file)
+
         # Tools / View Startup Log File menu (for startup log file from GeoProcessorAppSession)
         self.Menu_Tools_ViewStartupLog = QtWidgets.QAction(main_window)
         self.Menu_Tools_ViewStartupLog.setObjectName(qt_util.from_utf8("Menu_Tools_ViewStartupLog"))
         self.Menu_Tools_ViewStartupLog.setText("View Startup Log File")
         self.Menu_Tools.addAction(self.Menu_Tools_ViewStartupLog)
         self.Menu_Tools_ViewStartupLog.triggered.connect(self.ui_action_view_startup_log_file)
-        # Add Tools menu to menubar
-        self.menubar.addAction(self.Menu_Tools.menuAction())
 
+        # ============================================================================================================
         # Help menu
+        # ============================================================================================================
+
         self.Menu_Help = QtWidgets.QMenu(self.menubar)
         self.Menu_Help.setObjectName(qt_util.from_utf8("Menu_Help"))
         self.Menu_Help.setTitle("Help")
-        # Help / About menu
+
+        # Help / About GeoProcessor
         self.Menu_Help_About = QtWidgets.QAction(main_window)
         self.Menu_Help_About.setObjectName(qt_util.from_utf8("Menu_Help_About"))
         self.Menu_Help_About.setText("About GeoProcessor")
         self.Menu_Help.addAction(self.Menu_Help_About)
         self.Menu_Help_About.triggered.connect(self.ui_action_help_about)
+
         # Help / Software/System Information
         self.Menu_Help_SoftwareSystemInformation = QtWidgets.QAction(main_window)
         self.Menu_Help_SoftwareSystemInformation.setObjectName(qt_util.from_utf8("Menu_Help_SoftwareSystemInformation"))
         self.Menu_Help_SoftwareSystemInformation.setText("Software/System Information")
         self.Menu_Help.addAction(self.Menu_Help_SoftwareSystemInformation)
         self.Menu_Help_SoftwareSystemInformation.triggered.connect(self.ui_action_help_software_system_information)
+
         # Help / View Documentation menu
         self.Menu_Help_ViewDocumentation = QtWidgets.QAction(main_window)
         self.Menu_Help_ViewDocumentation.setObjectName(qt_util.from_utf8("Menu_Help_ViewDocumentation"))
@@ -1556,12 +1953,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = icon_path + "/images/baseline_school_black_18dp.png"
         self.Menu_Help_ViewDocumentation.setIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
         self.Menu_Help.addAction(self.Menu_Help_ViewDocumentation)
+
         # Connect the Help > View Documentation menu tab.
         self.Menu_Help_ViewDocumentation.triggered.connect(self.ui_action_view_documentation)
         # Add Help menu to menubar
         self.menubar.addAction(self.Menu_Help.menuAction())
 
-    def setup_ui_results(self, y_centralwidget):
+    def setup_ui_results(self, y_centralwidget: int):
         """
         Set up the Results area of the UI.
 
@@ -1811,19 +2209,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_OutputFiles_Table.itemSelectionChanged.connect(self.update_ui_status)
 
     # TODO smalers 2018-07-24 evaluate whether the following status components can be moved to status bar area
-    def setup_ui_status(self, MainWindow, y_centralwidget):
+    def setup_ui_status(self, main_window: GeoProcessorUI, y_centralwidget: int) -> None:
         """
         Set up the Status area of the UI.
 
         Args:
-            MainWindow: instance of main window
+            main_window: instance of main window
             y_centralwidget (int):  Row position in the central widget to add this component.
 
         Returns:
             None
         """
         # Set the status bar
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar = QtWidgets.QStatusBar(main_window)
         self.statusbar.setObjectName(qt_util.from_utf8("statusbar"))
         self.statusbar.setStyleSheet("::item { border: none; }")
 
@@ -1863,9 +2261,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.statusbar.addWidget(self.status_Label_Hint)
 
-        MainWindow.setStatusBar(self.statusbar)
+        main_window.setStatusBar(self.statusbar)
 
-    def setup_ui_toolbar(self, main_window):
+    def setup_ui_toolbar(self, main_window: GeoProcessorUI) -> None:
         """
         Setup UI Toolbar
 
@@ -1896,7 +2294,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.toolbar.setStyleSheet("QToolButton {padding-left: 0px}")
         self.toolbar.setMaximumHeight(27)
 
-    def show_command_status(self):
+    def show_command_status(self) -> None:
         """
         Opens a dialog box that shows the command status.
 
@@ -2059,29 +2457,29 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                             )
                 for log_record in command_status.discovery_log_list:
                     if log_record.severity is CommandStatusType.WARNING or \
-                        log_record.severity is CommandStatusType.FAILURE:
+                            log_record.severity is CommandStatusType.FAILURE:
 
-                            style = ""
+                        style = ""
 
-                            if log_record.severity is CommandStatusType.WARNING:
-                                style = "style='background-color:yellow'"
-                            elif log_record.severity is CommandStatusType.FAILURE:
-                                style = "style='background-color:#ffa8a8'"
+                        if log_record.severity is CommandStatusType.WARNING:
+                            style = "style='background-color:yellow'"
+                        elif log_record.severity is CommandStatusType.FAILURE:
+                            style = "style='background-color:#ffa8a8'"
 
-                            log_count = log_count + 1
-                            html_string += (
-                                "<tr>" +
-                                "<td>" + str(log_count) + "</td>" +
-                                "<td>" + str(CommandPhaseType.DISCOVERY) + "</td>" +
-                                "<td " + style + ">" + str(log_record.severity) + "</td>" +
-                                "<td>" + log_record.problem + "</td>" +
-                                "<td>" + log_record.recommendation + "</td>" +
-                                "</tr>"
-                            )
+                        log_count = log_count + 1
+                        html_string += (
+                            "<tr>" +
+                            "<td>" + str(log_count) + "</td>" +
+                            "<td>" + str(CommandPhaseType.DISCOVERY) + "</td>" +
+                            "<td " + style + ">" + str(log_record.severity) + "</td>" +
+                            "<td>" + log_record.problem + "</td>" +
+                            "<td>" + log_record.recommendation + "</td>" +
+                            "</tr>"
+                        )
                 print("Have " + str(len(command_status.run_log_list)) + " log records")
                 for log_record in command_status.run_log_list:
                     if log_record.severity is CommandStatusType.WARNING or \
-                        log_record.severity is CommandStatusType.FAILURE:
+                            log_record.severity is CommandStatusType.FAILURE:
 
                         style = ""
 
@@ -2104,7 +2502,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                                 "</table>"
                                 )
 
-            except Exception as e:
+            except Exception:
                 logger.warning("Error formatting status", exc_info=True)
 
         command_status_text_browser.setHtml(qt_util.translate("Dialog", html_string, None))
@@ -2117,7 +2515,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.command_status_dialog.setModal(False)
         self.command_status_dialog.show()
 
-    def show_command_status_tooltip(self, event):
+    def show_command_status_tooltip(self, event) -> None:
         """
         When hovering or clicking on a numbered list item if there is an error or warning
         display a tooltip with the command status. Called in CommandListWidget
@@ -2227,10 +2625,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 )
 
                 item.setToolTip(qt_util.translate("Tooltip", html_string, None))
-            except Exception as e:
+            except Exception:
                 logger.warning("Error formatting status", exc_info=True)
 
-    def show_results(self):
+    def show_results(self) -> None:
         """
         Populates the Results tables of the UI to reflect results of running the GeoProcessor, including
         the existing GeoLayers, Maps, Output Files, Properties, and Tables.
@@ -2244,31 +2642,31 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         logger = logging.getLogger(__name__)
         try:
             self.show_results_geolayers()
-        except Exception as e:
+        except Exception:
             message = "Error showing GeoLayers in Results"
             logger.warning(message, exc_info=True)
         try:
             self.show_results_maps()
-        except Exception as e:
+        except Exception:
             message = "Error showing Maps in Results"
             logger.warning(message, exc_info=True)
         try:
             self.show_results_output_files()
-        except Exception as e:
+        except Exception:
             message = "Error showing Output Files in Results"
             logger.warning(message, exc_info=True)
         try:
             self.show_results_properties()
-        except Exception as e:
+        except Exception:
             message = "Error showing Properties in Results"
             logger.warning(message, exc_info=True)
         try:
             self.show_results_tables()
-        except Exception as e:
+        except Exception:
             message = "Error showing Tables in Results"
             logger.warning(message, exc_info=True)
 
-    def show_results_geolayers(self):
+    def show_results_geolayers(self) -> None:
         """
         Populates the Results / GeoLayers display.
 
@@ -2288,18 +2686,32 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_GeoLayers_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(geolayer.id))
 
             # Retrieve the GeoLayer's geometry and set as the attribute for the Geometry column.
-            self.results_GeoLayers_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(geolayer.get_geometry()))
+            logger = logging.getLogger(__name__)
+            self.results_GeoLayers_Table.setItem(new_row_index, 1,
+                                                 QtWidgets.QTableWidgetItem(geolayer.get_geometry()))
 
             # Retrieve the number of features within the GeoLayer and set as the attribute for the Feature Count column.
-            self.results_GeoLayers_Table.setItem(new_row_index, 2,
-                                                 QtWidgets.QTableWidgetItem(str(geolayer.get_feature_count())))
+            if geolayer.is_vector():
+                # Display the feature count
+                self.results_GeoLayers_Table.setItem(new_row_index, 2,
+                                                     QtWidgets.QTableWidgetItem(str(geolayer.get_feature_count())))
+            elif geolayer.is_raster():
+                # Display the row, column, and cell count in a formatted string
+                self.results_GeoLayers_Table.setItem(new_row_index, 2,
+                                                     QtWidgets.QTableWidgetItem(str(geolayer.get_num_rows()) + " x " +
+                                                                                str(geolayer.get_num_columns()) +
+                                                                                " = " +
+                                                                                str(geolayer.get_num_rows() *
+                                                                                    geolayer.get_num_columns()) +
+                                                                                " cells"))
 
             # Retrieve the GeoLayer's CRS and set as the attribute for the Coordinate Reference System column.
-            self.results_GeoLayers_Table.setItem(new_row_index, 3, QtWidgets.QTableWidgetItem(geolayer.get_crs()))
+            self.results_GeoLayers_Table.setItem(new_row_index, 3,
+                                                 QtWidgets.QTableWidgetItem(geolayer.get_crs()))
 
         self.update_ui_status_results_geolayers()
 
-    def show_results_maps(self):
+    def show_results_maps(self) -> None:
         """
         Populates the Results / Maps display.
 
@@ -2315,7 +2727,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.update_ui_status_results_maps()
 
-    def show_results_output_files(self):
+    def show_results_output_files(self) -> None:
         """
         Populates the Results / Output Files display.
 
@@ -2355,7 +2767,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_OutputFiles_Table.resizeColumnsToContents()
         self.update_ui_status_results_output_files()
 
-    def show_results_properties(self):
+    def show_results_properties(self) -> None:
         """
         Populates the Results / Properties Files display.
 
@@ -2385,7 +2797,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_Table.resizeColumnsToContents()
         self.update_ui_status_results_properties()
 
-    def show_results_tables(self):
+    def show_results_tables(self) -> None:
         """
         Populates the Results / Tables Files display.
 
@@ -2420,7 +2832,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Update the results count and results' tables' labels to show that the results were populated.
         self.update_ui_status_results_tables()
 
-    def ui_action_command_list_right_click(self, q_pos):
+    def ui_action_command_list_right_click(self, q_pos: int) -> None:
         """
         Open the Command_List widget right-click menu.
         REF: https://stackoverflow.com/questions/31380457/add-right-click-functionality-to-listwidget-in-pyqt4?
@@ -2469,7 +2881,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.rightClickMenu_Commands.show()
 
-    def ui_action_command_list_right_click_convert_to_command(self):
+    def ui_action_command_list_right_click_convert_to_command(self) -> None:
         """
         Convert the selected command list item to a comment in geoprocessor.
 
@@ -2483,7 +2895,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.gp_model.update_command_list_ui()
 
-    def ui_action_command_list_right_click_convert_from_command(self):
+    def ui_action_command_list_right_click_convert_from_command(self) -> None:
         """
         Convert the selected command list item from a comment in geoprocessor.
 
@@ -2498,7 +2910,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.gp_model.update_command_list_ui()
         pass
 
-    def ui_action_geolayers_right_click(self, q_pos):
+    def ui_action_geolayers_right_click(self, q_pos: int) -> None:
         """
         On right click display a tooltip on GeoLayer selected list item with options to
         open a map window or get the GeoLayer attributes.
@@ -2531,7 +2943,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.rightClickMenu_GeoLayers.show()
 
     # TODO smalers 2018-07-24 need to make the dialog nicer, including live link to OWF website
-    def ui_action_help_about(self):
+    def ui_action_help_about(self) -> None:
         """
         Display the Help / About dialog.
 
@@ -2561,7 +2973,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             message = "Problem showing Help About"
             logger.warning(message, exc_info=True)
 
-    def ui_action_help_software_system_information(self):
+    def ui_action_help_software_system_information(self) -> None:
         """
         Display the Software/System information dialog.
         If taken from standard Python modules, also show the module and variable name so the information
@@ -2617,7 +3029,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             if is_windows:
                 try:
                     architecture = os.environ["MSYSTEM_CARCH"]
-                except KeyError as e:
+                except KeyError:
                     # TODO smalers 2018-11-21 Need to fix the above to be portable
                     architecture = "unknown"
             else:
@@ -2734,13 +3146,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Reassign default resizeEvent() to resizeTextBox()
             self.sys_info.resizeEvent = self.ui_action_resize_software_system_information_text_box
             self.sys_info.show()
-        except Exception as e:
+        except Exception:
             logger = logging.getLogger(__name__)
-            message = 'Error getting software/system information (' + str(e) + ')'
+            message = 'Error getting software/system information.'
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
-    def ui_action_map_pan(self):
+    def ui_action_map_pan(self) -> None:
         """
         Set GeoLayers map dialog window to allow user to pan with the mouse events.
 
@@ -2749,7 +3161,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         self.canvas.setMapTool(self.toolPan)
 
-    def ui_action_map_resize(self, event):
+    def ui_action_map_resize(self, event) -> None:
         """
         Resize the GeoLayers map canvas when the dialog box is resized.
 
@@ -2762,7 +3174,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())
 
-    def ui_action_map_zoomIn(self):
+    def ui_action_map_zoomIn(self) -> None:
         """
         Set the GeoLayers map window to respond to mouse events as zooming in.
 
@@ -2771,7 +3183,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         self.canvas.setMapTool(self.toolZoomIn)
 
-    def ui_action_map_zoomOut(self):
+    def ui_action_map_zoomOut(self) -> None:
         """
         Set the GeoLayers map window to respond to mouse events as zooming out.
 
@@ -2780,7 +3192,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         self.canvas.setMapTool(self.toolZoomOut)
 
-    def ui_action_new_command_file(self):
+    def ui_action_new_command_file(self) -> None:
         """
         Start a new command file by clearing the current commands list and unsetting the saved command file.
         Users are not required to save the command file until they take another action such as exit, or open.
@@ -2806,141 +3218,163 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set the title for the main window
         self.ui_set_main_window_title("commands not saved")
 
-    def ui_action_open_attributes(self):
+    def ui_action_open_attributes(self) -> None:
         """
         Create an attributes window to be opened when user clicks on GeoLayers.
 
         Returns:
             None
         """
-        # Create attributes window dialog box
-        self.attributes_window = QtWidgets.QDialog()
-        self.attributes_window.resize(800, 500)
-        self.attributes_window.setWindowTitle("Attributes")
-        self.attributes_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        # Add icon
-        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-        self.attributes_window.setWindowIcon(QtGui.QIcon(icon_path))
+        logger = logging.getLogger(__name__)
+        try:
+            # Create attributes window dialog box
+            self.attributes_window = QtWidgets.QDialog()
+            self.attributes_window.resize(800, 500)
+            self.attributes_window.setWindowTitle("Attributes")
+            self.attributes_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            # Add icon
+            icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+            self.attributes_window.setWindowIcon(QtGui.QIcon(icon_path))
 
-        # Create a vertical layout for the map window
-        self.attributes_window_layout = QtWidgets.QVBoxLayout(self.attributes_window)
-        self.attributes_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
-        self.attributes_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
+            # Create a vertical layout for the map window
+            self.attributes_window_layout = QtWidgets.QVBoxLayout(self.attributes_window)
+            self.attributes_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
+            self.attributes_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
 
-        # Get GeoLayer from Table
-        selected_row_index = self.results_GeoLayers_Table.currentRow()
-        selected_geolayer = self.gp.geolayers[selected_row_index]
-        selected_vector_layer = selected_geolayer.qgs_vector_layer
+            # Get GeoLayer from Table
+            selected_row_index = self.results_GeoLayers_Table.currentRow()
+            selected_geolayer = self.gp.geolayers[selected_row_index]
+            selected_vector_layer = selected_geolayer.qgs_layer
 
-        # Get features from vector layer
-        features = selected_vector_layer.getFeatures()
-        num_features = selected_vector_layer.featureCount()
-        # Get attribute field names
-        attribute_field_names = selected_geolayer.get_attribute_field_names()
+            # Get features from vector layer
+            features = selected_vector_layer.getFeatures()
+            num_features = selected_vector_layer.featureCount()
+            # Get attribute field names
+            attribute_field_names = selected_geolayer.get_attribute_field_names()
 
-        # Create a table for attributes
-        self.attributes_table = QtWidgets.QTableWidget()
-        self.attributes_window_layout.addWidget(self.attributes_table)
-        self.attributes_table.setColumnCount(len(attribute_field_names))
-        self.attributes_table.setRowCount(num_features)
+            # Create a table for attributes
+            self.attributes_table = QtWidgets.QTableWidget()
+            self.attributes_window_layout.addWidget(self.attributes_table)
+            self.attributes_table.setColumnCount(len(attribute_field_names))
+            self.attributes_table.setRowCount(num_features)
 
-        # Set Column Headers
-        for i, attribute_field in enumerate(attribute_field_names):
-            item = QtWidgets.QTableWidgetItem()
-            self.attributes_table.setHorizontalHeaderItem(i, item)
-            self.attributes_table.horizontalHeaderItem(i).setText(str(attribute_field))
+            # Set Column Headers
+            for i, attribute_field in enumerate(attribute_field_names):
+                item = QtWidgets.QTableWidgetItem()
+                self.attributes_table.setHorizontalHeaderItem(i, item)
+                self.attributes_table.horizontalHeaderItem(i).setText(str(attribute_field))
 
-        # Customize Header Row
-        self.attributes_table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
+            # Customize Header Row
+            self.attributes_table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
 
-        # Retrieve attributes per feature and add them to the table
-        for i, feature in enumerate(features):
-            for j, attribute_field in enumerate(attribute_field_names):
-                attribute = feature[attribute_field]
-                item = QtWidgets.QTableWidgetItem(str(attribute))
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.attributes_table.setItem(i, j, item)
+            # Retrieve attributes per feature and add them to the table
+            for i, feature in enumerate(features):
+                for j, attribute_field in enumerate(attribute_field_names):
+                    attribute = feature[attribute_field]
+                    item = QtWidgets.QTableWidgetItem(str(attribute))
+                    item.setTextAlignment(QtCore.Qt.AlignCenter)
+                    self.attributes_table.setItem(i, j, item)
 
-        self.attributes_window.show()
+            self.attributes_window.show()
+        except Exception:
+            message = "Error opening attributes window.  See the log file."
+            logger.warning(message, exc_info=True)
+            qt_util.warning_message_box(message)
 
-    def ui_action_open_map_window(self):
+    def ui_action_open_map_window(self) -> None:
         """
         Open a map window dialog box that displays the map layers from the selected GeoLayers.
 
         Returns:
             None
         """
+        logger = logging.getLogger(__name__)
 
-        # Create map window dialog box
-        self.map_window = QtWidgets.QDialog()
-        self.map_window.resize(800, 500)
-        self.map_window.setWindowTitle("Map")
-        self.map_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        # Add icon
-        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-        self.map_window.setWindowIcon(QtGui.QIcon(icon_path))
+        try:
+            # Create map window dialog box
+            self.map_window = QtWidgets.QDialog()
+            self.map_window.resize(800, 500)
+            self.map_window.setWindowTitle("Map")
+            self.map_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            # Add icon
+            icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+            self.map_window.setWindowIcon(QtGui.QIcon(icon_path))
 
-        # Create a vertical layout for the map window
-        self.map_window_layout = QtWidgets.QVBoxLayout(self.map_window)
-        self.map_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
-        self.map_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
+            # Create a vertical layout for the map window
+            self.map_window_layout = QtWidgets.QVBoxLayout(self.map_window)
+            self.map_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
+            self.map_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
 
-        # Add toolbar to map window
-        self.map_toolbar = QtWidgets.QToolBar()
-        self.map_window_layout.addWidget(self.map_toolbar)
+            # Add toolbar to map window
+            self.map_toolbar = QtWidgets.QToolBar()
+            self.map_window_layout.addWidget(self.map_toolbar)
 
-        # Create a widget for the canvas and add it to map_window in the map_window_layout
-        self.map_window_widget = QtWidgets.QWidget()
-        self.map_window_layout.addWidget(self.map_window_widget)
-        self.map_window_widget.setGeometry(QtCore.QRect(25, 20, 750, 450))
-        # Create canvas and add it to the previously widget
-        self.canvas = qgis.gui.QgsMapCanvas(self.map_window_widget)
-        self.canvas.setCanvasColor(QtCore.Qt.white)
-        self.canvas.resize(750, 400)
+            # Create a widget for the canvas and add it to map_window in the map_window_layout
+            self.map_window_widget = QtWidgets.QWidget()
+            self.map_window_layout.addWidget(self.map_window_widget)
+            self.map_window_widget.setGeometry(QtCore.QRect(25, 20, 750, 450))
+            # Create canvas and add it to the previously widget
+            self.canvas = qgis.gui.QgsMapCanvas(self.map_window_widget)
+            self.canvas.setCanvasColor(QtCore.Qt.white)
+            self.canvas.resize(750, 400)
 
-        # Retrive QgsVectorLayers from selected geolayers
-        selected_rows = self.results_GeoLayers_Table.selectedIndexes()
-        selected_geolayers = []
-        for row in selected_rows:
-            if not row.isValid():
-                raise IOError
-            selected_geolayers.append(self.gp.geolayers[row.row()].qgs_vector_layer)
-        # Get the extent for all the layers by calling qgis_util
-        extent = qgis_util.get_extent_from_geolayers(selected_geolayers)
-        self.canvas.setExtent(extent)
-        self.canvas.setLayers(selected_geolayers)
+            # Retrieve QgsVectorLayers from selected geolayers
+            # - this retrieves selected indices
+            # selected_rows = self.results_GeoLayers_Table.selectedIndexes()
+            selected_rows = qt_util.get_table_rows_from_indexes(self.results_GeoLayers_Table.selectedIndexes())
+            selected_geolayers = []
+            for row in selected_rows:
+                geolayer = self.gp.geolayers[row]
+                if geolayer.is_vector():
+                    logger.info("Appending vector layer \"" + geolayer.id + "\" [" + str(row) + "] for map ")
+                elif geolayer.is_raster():
+                    logger.info("Appending raster layer \"" + geolayer.id + "\" [" + str(row) + "] for map ")
+                selected_geolayers.append(geolayer.qgs_layer)
 
-        # Add tools for map canvas
-        self.actionZoomIn = QtWidgets.QAction("Zoom in", self)
-        self.actionZoomOut = QtWidgets.QAction("Zoom out", self)
-        self.actionPan = QtWidgets.QAction("Pan", self)
+            # Get the extent for all the layers by calling qgis_util
+            logger.info("Have " + str(len(selected_geolayers)) + " selected layers")
+            extent = qgis_util.get_extent_from_geolayers(selected_geolayers)
+            self.canvas.setExtent(extent)
+            self.canvas.setLayers(selected_geolayers)
 
-        self.actionZoomIn.setCheckable(True)
-        self.actionZoomOut.setCheckable(True)
-        self.actionPan.setCheckable(True)
+            # Add tools for map canvas
+            self.actionZoomIn = QtWidgets.QAction("Zoom in", self)
+            self.actionZoomIn.setToolTip("Zoom in by clicking on a location to center on.")
+            self.actionZoomOut = QtWidgets.QAction("Zoom out", self)
+            self.actionZoomOut.setToolTip("Zoom out by clicking on a location to center on.")
+            self.actionPan = QtWidgets.QAction("Pan", self)
+            self.actionPan.setToolTip("Use mouse to drag the viewing area.")
 
-        self.actionZoomIn.triggered.connect(self.ui_action_map_zoomIn)
-        self.actionZoomOut.triggered.connect(self.ui_action_map_zoomOut)
-        self.actionPan.triggered.connect(self.ui_action_map_pan)
+            self.actionZoomIn.setCheckable(True)
+            self.actionZoomOut.setCheckable(True)
+            self.actionPan.setCheckable(True)
 
-        self.map_toolbar.addAction(self.actionZoomIn)
-        self.map_toolbar.addAction(self.actionZoomOut)
-        self.map_toolbar.addAction(self.actionPan)
+            self.actionZoomIn.triggered.connect(self.ui_action_map_zoomIn)
+            self.actionZoomOut.triggered.connect(self.ui_action_map_zoomOut)
+            self.actionPan.triggered.connect(self.ui_action_map_pan)
 
-        # # Add tools to canvas
-        self.toolPan = qgis.gui.QgsMapToolPan(self.canvas)
-        self.toolPan.setAction(self.actionPan)
-        self.toolZoomIn = qgis.gui.QgsMapToolZoom(self.canvas, False)  # false = in
-        self.toolZoomIn.setAction(self.actionZoomIn)
-        self.toolZoomOut = qgis.gui.QgsMapToolZoom(self.canvas, True)  # true = out
-        self.toolZoomOut.setAction(self.actionZoomOut)
+            self.map_toolbar.addAction(self.actionZoomIn)
+            self.map_toolbar.addAction(self.actionZoomOut)
+            self.map_toolbar.addAction(self.actionPan)
 
-        QtCore.QMetaObject.connectSlotsByName(self.map_window)
-        # Assign a resize event to resize map canvas when dialog window is resized
-        self.map_window_widget.resizeEvent = self.ui_action_map_resize
-        self.map_window.show()
+            # # Add tools to canvas
+            self.toolPan = qgis.gui.QgsMapToolPan(self.canvas)
+            self.toolPan.setAction(self.actionPan)
+            self.toolZoomIn = qgis.gui.QgsMapToolZoom(self.canvas, False)  # false = in
+            self.toolZoomIn.setAction(self.actionZoomIn)
+            self.toolZoomOut = qgis.gui.QgsMapToolZoom(self.canvas, True)  # true = out
+            self.toolZoomOut.setAction(self.actionZoomOut)
 
-    def ui_action_open_command_file(self, filename=""):
+            QtCore.QMetaObject.connectSlotsByName(self.map_window)
+            # Assign a resize event to resize map canvas when dialog window is resized
+            self.map_window_widget.resizeEvent = self.ui_action_map_resize
+            self.map_window.show()
+        except Exception:
+            message = "Error opening map window.  See the log file."
+            logger.warning(message, exc_info=True)
+            qt_util.warning_message_box(message)
+
+    def ui_action_open_command_file(self, filename: str = "") -> None:
         """
         Open a command file. Each line of the command file is a separate item in the Command_List QList Widget.
         If the existing commands have not been saved, the user is prompted to ask if they should be saved.
@@ -2995,7 +3429,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # the GeoProessorListModel to update the User Interface
         try:
             self.gp.read_command_file(cmd_filepath)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             # The file should exist but may have been deleted outside of the UI
             # - TODO smalers 2019-01-19 may automatically remove such files,
             #   or leave assuming the user will rename, move the file back again.
@@ -3019,7 +3453,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Return True meaning a command file was opened
 
-    def ui_action_print_commands(self):
+    def ui_action_print_commands(self) -> None:
         """
         Print the command file.
         This is currently not enabled other than to print a dialog.
@@ -3030,7 +3464,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set the title for the main window
         qt_util.info_message_box("Printing features have not yet been implemented.")
 
-    def ui_action_resize_software_system_information_text_box(self, event):
+    def ui_action_resize_software_system_information_text_box(self, event) -> None:
         """
         Resize the text box for the Software/System Information dialog window.
 
@@ -3042,7 +3476,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         self.sys_info_text_browser.resize(self.sys_info.width()-50, self.sys_info.height()-50)
 
-    def ui_action_save_commands(self):
+    def ui_action_save_commands(self) -> None:
         """
         Saves the commands to a previously saved file location (overwrite).
 
@@ -3080,7 +3514,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Update command file history list in GUI
             self.ui_init_file_open_recent_files()
 
-    def ui_action_save_commands_as(self):
+    def ui_action_save_commands_as(self) -> None:
         """
         Saves the commands to a file.
 
@@ -3143,7 +3577,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.ui_init_file_open_recent_files()
 
     @classmethod
-    def ui_action_view_documentation(cls):
+    def ui_action_view_documentation(cls) -> None:
         """
         Opens the GeoProcessor user documentation in the user's default browser.
 
@@ -3159,13 +3593,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             message = "Displaying documentation using URL: " + user_doc_url
             logger.info(message)
             webbrowser.open_new_tab(user_doc_url)
-        except Exception as e:
+        except Exception:
             message = 'Error viewing documentation for url "' + user_doc_url + '"'
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
     @classmethod
-    def ui_action_view_log_file(self):
+    def ui_action_view_log_file(self) -> None:
         """
         Opens the current log file in the default text editor for operating system.
 
@@ -3192,7 +3626,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             elif os_util.is_linux_os():
                 try:
                     subprocess.call('xdg-open', logfile_name)
-                except (AttributeError, FileNotFoundError, NotImplementedError) as e2:
+                except (AttributeError, FileNotFoundError, NotImplementedError):
                     # Log the message to help with development
                     message = 'Error viewing log file using xdg-open ' + logfile_name
                     logger.warning(message, exc_info=True)
@@ -3200,16 +3634,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # - TODO smalers 2018-12-28 need to figure out what is installed rather than hard-code nano
                     try:
                         subprocess.call('nano', logfile_name)
-                    except (AttributeError, FileNotFoundError, NotImplementedError) as e2:
+                    except (AttributeError, FileNotFoundError, NotImplementedError):
                         message = 'Error viewing log file - no application available for log file and' + \
                                   'also tried nano editor for log file "' + logfile_name + '"'
                         qt_util.warning_message_box(message)
-        except (AttributeError, FileNotFoundError, NotImplementedError) as e:
+        except (AttributeError, FileNotFoundError, NotImplementedError):
             message = 'Error viewing log file - no application available for log file "' + logfile_name + '"'
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
-    def ui_action_view_startup_log_file(self):
+    def ui_action_view_startup_log_file(self) -> None:
         """
         Opens the startup log file in the default text editor for operating system.
 
@@ -3235,7 +3669,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             elif os_util.is_linux_os():
                 try:
                     subprocess.call('xdg-open', logfile_name)
-                except (AttributeError, FileNotFoundError, NotImplementedError) as e2:
+                except (AttributeError, FileNotFoundError, NotImplementedError):
                     # Log the message to help with development
                     message = 'Error viewing log file using xdg-open ' + logfile_name
                     logger.warning(message, exc_info=True)
@@ -3243,16 +3677,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # - TODO smalers 2018-12-28 need to figure out what is installed rather than hard-code nano
                     try:
                         subprocess.call('nano', logfile_name)
-                    except (AttributeError, FileNotFoundError, NotImplementedError) as e2:
+                    except (AttributeError, FileNotFoundError, NotImplementedError):
                         message = 'Error viewing log file - no application available for log file and' + \
                                   'also tried nano editor for log file "' + logfile_name + '"'
                         qt_util.warning_message_box(message)
-        except (AttributeError, FileNotFoundError, NotImplementedError) as e:
+        except (AttributeError, FileNotFoundError, NotImplementedError):
             message = 'Error viewing log file - no application available for log file "' + logfile_name + '"'
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
-    def ui_init_file_open_recent_files(self):
+    def ui_init_file_open_recent_files(self) -> None:
         """
         Update the File / Open / Command File... menu items to list the most recently opened command files.
         The menu will then be properly updated when opening a new command file.
@@ -3294,7 +3728,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 lambda checked, filename=command_file: self.ui_action_open_command_file(filename))
             self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFileHistory_List[i])
 
-    def ui_set_main_window_title(self, title):
+    def ui_set_main_window_title(self, title: str) -> None:
         """
         Set the main window title.
         This is called to indicate the status of the command file.
@@ -3307,7 +3741,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         self.setWindowTitle("GeoProcessor - " + title)  # Initial title
 
-    def update_ui_main_window_title(self):
+    def update_ui_main_window_title(self) -> None:
         """
         Update the main window title to reflect that the command file has been modified.
 
@@ -3329,7 +3763,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 length = len(window_title)
                 self.setWindowTitle(window_title[:length-10])
 
-    def update_ui_commands_list(self):
+    def update_ui_commands_list(self) -> None:
         """
         Once commands have been run. Loop through and check for any errors or warnings.
 
@@ -3347,7 +3781,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 self.numbered_list_warning_at_row(i)
                 self.gutter_warning_at_row(i)
 
-    def update_ui_status(self):
+    def update_ui_status(self) -> None:
         """
         Update the UI status by checking data and setting various status information.
 
@@ -3360,7 +3794,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.update_ui_status_results_properties()
         self.update_ui_status_results_tables()
 
-    def update_ui_status_results_geolayers(self):
+    def update_ui_status_results_geolayers(self) -> None:
         """
         Update the UI status for Results / GeoLayers area.
 
@@ -3369,11 +3803,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         # Count the total and selected number of rows within the GeoLayers table. Update the label to reflect counts.
         row_num = str(self.results_GeoLayers_Table.rowCount())
-        # slct_row_num = str(len(set(index.row() for index in self.results_GeoLayers_Table.selectedIndexes())))
-        slct_row_num = str(len(self.results_GeoLayers_Table.selectedIndexes()))
-        self.results_GeoLayers_GroupBox.setTitle("GeoLayers ({} GeoLayers, {} selected)".format(row_num, slct_row_num))
+        selected_rows = qt_util.get_table_rows_from_indexes(self.results_GeoLayers_Table.selectedIndexes())
+        self.results_GeoLayers_GroupBox.setTitle(
+            "GeoLayers ({} GeoLayers, {} selected)".format(row_num, len(selected_rows)))
 
-    def update_ui_status_results_maps(self):
+    def update_ui_status_results_maps(self) -> None:
         """
         Update the UI status for Results / Maps area.
 
@@ -3386,7 +3820,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         slct_row_num = str(len(self.results_Maps_Table.selectedIndexes()))
         self.results_Maps_GroupBox.setTitle("Maps ({} Maps, {} selected)".format(row_num, slct_row_num))
 
-    def update_ui_status_results_output_files(self):
+    def update_ui_status_results_output_files(self) -> None:
         """
         Update the UI status for Results / Output Files area.
 
@@ -3403,7 +3837,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Hide last column to ensure horizontal scroll
         self.results_OutputFiles_Table.setColumnWidth(1, 0)
 
-    def update_ui_status_results_properties(self):
+    def update_ui_status_results_properties(self) -> None:
         """
         Update the UI status for Results / GeoLayers area.
 
@@ -3420,7 +3854,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.results_Properties_Table.setColumnWidth(2, 0)
 
-    def update_ui_status_results_tables(self):
+    def update_ui_status_results_tables(self) -> None:
         """
         Update the UI status for Results / Tables area.
 

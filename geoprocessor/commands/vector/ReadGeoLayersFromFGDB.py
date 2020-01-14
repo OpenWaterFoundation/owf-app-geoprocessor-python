@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -38,7 +38,6 @@ import ogr
 
 
 class ReadGeoLayersFromFGDB(AbstractCommand):
-
     """
     Reads the GeoLayers (feature classes) within a file geodatabase (FGDB).
 
@@ -85,7 +84,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         CommandParameterMetadata("Subset_Pattern", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command
         """
@@ -162,7 +161,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -242,7 +241,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __return_a_list_of_fc(self, fgdb_full_path):
+    def __return_a_list_of_fc(self, fgdb_full_path: str) -> []:
 
         # The file geodatabase will be read and each feature class will be added to the feature_class_list.
         feature_class_list = []
@@ -259,7 +258,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         return feature_class_list
 
-    def __should_read_gdb(self, spatial_data_folder_abs):
+    def __should_read_gdb(self, spatial_data_folder_abs: str) -> bool:
 
         """
         Checks the following:
@@ -295,7 +294,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         else:
             return True
 
-    def __should_read_geolayer(self, geolayer_id, one_geolayer_bool, fc_name=None, spatial_data_folder_abs=None):
+    def __should_read_geolayer(self, geolayer_id: str, one_geolayer_bool: bool, fc_name: str = None,
+                               spatial_data_folder_abs: str = None) -> bool:
         """
         Checks the following:
         * if only one geolayer is being read, the FeatureClass is an existing feature class within the File GeoDatabase
@@ -334,7 +334,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Read the feature classes within a file geodatabase. For each desired feature class (can be
         specified by the Subset_Pattern parameter), create a GeoLayer object, and add to the GeoProcessor's geolayer
@@ -382,11 +382,13 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                                                             pv_FeatureClass)
 
                         # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                        geolayer_obj = GeoLayer(pv_GeoLayerID, qgs_vector_layer, spatial_data_file_absolute)
+                        geolayer_obj = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
+                                                      geolayer_qgs_vector_layer=qgs_vector_layer,
+                                                      geolayer_source_path=spatial_data_file_absolute)
                         self.command_processor.add_geolayer(geolayer_obj)
 
                     # Raise an exception if an unexpected error occurs during the process
-                    except Exception as e:
+                    except Exception:
 
                         self.warning_count += 1
                         message = "Unexpected error reading feature class ({}) from file geodatabase ({}).".format(
@@ -430,7 +432,9 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                                                                 feature_class)
 
                             # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                            geolayer_obj = GeoLayer(geolayer_id, qgs_vector_layer, spatial_data_file_absolute)
+                            geolayer_obj = VectorGeoLayer(geolayer_id=geolayer_id,
+                                                          geolayer_qgs_vector_layer=qgs_vector_layer,
+                                                          geolayer_source_path=spatial_data_file_absolute)
                             self.command_processor.add_geolayer(geolayer_obj)
 
                         # Raise an exception if an unexpected error occurs during the process

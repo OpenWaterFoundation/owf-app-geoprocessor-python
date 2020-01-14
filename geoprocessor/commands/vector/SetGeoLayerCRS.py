@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
@@ -35,7 +35,6 @@ from plugins.processing.tools import general
 
 
 class SetGeoLayerCRS(AbstractCommand):
-
     """
     Sets a GeoLayer's coordinate reference system (CRS)
 
@@ -51,7 +50,7 @@ class SetGeoLayerCRS(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("CRS", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -85,7 +84,7 @@ class SetGeoLayerCRS(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -135,7 +134,7 @@ class SetGeoLayerCRS(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_set_crs(self, geolayer_id, crs_code):
+    def __should_set_crs(self, geolayer_id: str, crs_code: str) -> bool:
         """
         Checks the following:
          * The ID of the input GeoLayer is an actual GeoLayer (if not, log an error message & do not continue.)
@@ -197,7 +196,7 @@ class SetGeoLayerCRS(AbstractCommand):
         # checks failed.
         return set_crs
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Set the GeoLayer coordinate reference system.
 
@@ -227,7 +226,7 @@ class SetGeoLayerCRS(AbstractCommand):
                 if input_geolayer.get_crs():
 
                     # Reproject the GeoLayer.
-                    alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
+                    alg_parameters = {"INPUT": input_geolayer.qgs_layer,
                                       "TARGET_CRS": pv_CRS,
                                       "OUTPUT": "memory:"}
                     reprojected = self.command_processor.qgis_processor.runAlgorithm("native:reprojectlayer",
@@ -238,10 +237,12 @@ class SetGeoLayerCRS(AbstractCommand):
                     # In QGIS 2 the reprojected["OUTPUT"] returned the full file pathname of the memory output layer
                     # (saved in a QGIS temporary folder)
                     # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(reprojected["OUTPUT"])
-                    # new_geolayer = GeoLayer(input_geolayer.id, qgs_vector_layer, "MEMORY")
+                    # new_geolayer = VectorGeoLayer(input_geolayer.id, qgs_vector_layer, "MEMORY")
 
                     # In QGIS 3 the reprojected["OUTPUT"] returns the QGS vector layer object
-                    new_geolayer = GeoLayer(input_geolayer.id, reprojected["OUTPUT"], "MEMORY")
+                    new_geolayer = VectorGeoLayer(geolayer_id=input_geolayer.id,
+                                                  geolayer_qgs_vector_layer=reprojected["OUTPUT"],
+                                                  geolayer_source_path="MEMORY")
                     self.command_processor.add_geolayer(new_geolayer)
 
                 else:
@@ -250,7 +251,7 @@ class SetGeoLayerCRS(AbstractCommand):
                     self.command_processor.qgis_processor.runAlgorithm("qgis:definecurrentprojection", alg_parameters)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error setting CRS ({}) of GeoLayer ({})".format(pv_CRS, pv_GeoLayerID)
                 recommendation = "Check the log file for details."

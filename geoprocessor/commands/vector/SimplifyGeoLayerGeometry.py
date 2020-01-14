@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validators
@@ -35,7 +35,6 @@ from plugins.processing.tools import general
 
 
 class SimplifyGeoLayerGeometry(AbstractCommand):
-
     """
     Simplifies the geometries in a line or polygon layer. The geometries are simplified by decreasing the number of
     vertices. A new GeoLayer is created with the simplified geometries.
@@ -66,7 +65,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         CommandParameterMetadata("SimplifiedGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -103,7 +102,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         self.parameter_input_metadata['SimplifyMethod.Tooltip'] = (
             "The simplification method used to simplify the GeoLayer."
             "\nDouglasPeucker : Use the Douglas-Peucker algorithm to simplify the GeoLayer.")
-        self.parameter_input_metadata['SimplifyMethod.Values'] = [ "", "DouglasPeucker" ]
+        self.parameter_input_metadata['SimplifyMethod.Values'] = ["", "DouglasPeucker"]
         self.parameter_input_metadata['SimplifyMethod.Value.Default'] = "DouglasPeucker"
         # SimplifiedGeoLayerID
         self.parameter_input_metadata['SimplifiedGeoLayerID.Description'] = "output GeoLayer identifier"
@@ -129,7 +128,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -206,7 +205,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_simplify_geolayer(self, geolayer_id, simplified_geolayer_id):
+    def __should_simplify_geolayer(self, geolayer_id: str, simplified_geolayer_id: str) -> bool:
         """
         Checks the following:
         * the ID of the GeoLayer is an existing GeoLayer ID
@@ -244,7 +243,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Simplify the GeoLayer by the tolerance.
 
@@ -287,7 +286,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                     # Perform the QGIS simplify geometries function. Refer to the REF below for parameter descriptions.
                     # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/
                     #       vector_geometry_tools/simplifygeometries.html
-                    alg_parameters = {"INPUT": geolayer.qgs_vector_layer,
+                    alg_parameters = {"INPUT": geolayer.qgs_layer,
                                       "METHOD": 0,
                                       "TOLERANCE": tolerance_float,
                                       "OUTPUT": "memory:"}
@@ -297,11 +296,13 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                     # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
                     # in QGIS3, simple_output["OUTPUT"] returns the returns the QGS vector layer object
                     # see ClipGeoLayer.py for information about value in QGIS2 environment
-                    new_geolayer = GeoLayer(pv_SimplifiedGeoLayerID, simple_output["OUTPUT"], "MEMORY")
+                    new_geolayer = VectorGeoLayer(geolayer_id=pv_SimplifiedGeoLayerID,
+                                                  geolayer_qgs_vector_layer=simple_output["OUTPUT"],
+                                                  geolayer_source_path="MEMORY")
                     self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process.
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error simplifying GeoLayer {}.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

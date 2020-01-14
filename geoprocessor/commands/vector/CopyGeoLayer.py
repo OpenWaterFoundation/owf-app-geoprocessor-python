@@ -269,7 +269,7 @@ class CopyGeoLayer(AbstractCommand):
 
                     # Get a list of Qgs Feature objects that do not match the IncludeFeaturesIf parameter criteria.
                     non_matching_features = qgis_util.get_features_not_matching_expression(
-                        copied_geolayer.qgs_vector_layer, exp)
+                        copied_geolayer.qgs_layer, exp)
 
                     # Get the ids of the matching features.
                     non_matching_feats_ids = []
@@ -277,7 +277,7 @@ class CopyGeoLayer(AbstractCommand):
                         non_matching_feats_ids.append(feat.id())
 
                     # Delete the non-matching features.
-                    qgis_util.remove_qgsvectorlayer_features(copied_geolayer.qgs_vector_layer, non_matching_feats_ids)
+                    qgis_util.remove_qgsvectorlayer_features(copied_geolayer.qgs_layer, non_matching_feats_ids)
 
                 # Remove the attributes of the copied GeoLayer if configured to be excluded.
                 copied_geolayer.remove_attributes(attrs_to_include, attrs_to_exclude)

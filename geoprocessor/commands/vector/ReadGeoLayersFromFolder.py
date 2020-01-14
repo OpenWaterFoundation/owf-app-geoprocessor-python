@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -36,7 +36,6 @@ import glob
 
 
 class ReadGeoLayersFromFolder(AbstractCommand):
-
     """
     Reads the GeoLayers within a folder.
 
@@ -72,7 +71,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         CommandParameterMetadata("Subset_Pattern", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -129,7 +128,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -182,7 +181,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_folder(self, spatial_data_folder_abs):
+    def __should_read_folder(self, spatial_data_folder_abs:str) -> bool:
 
         """
         Checks the following:
@@ -213,7 +212,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         # one or many checks failed.
         return run_read
 
-    def __should_read_geolayer(self, geolayer_id):
+    def __should_read_geolayer(self, geolayer_id:str) -> bool:
         """
         Checks the following:
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
@@ -272,7 +271,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         # one or many checks failed.
         return run_read
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Read all spatial data files within the folder. For each desired spatial data file (can be
         specified by the Subset_Pattern parameter), create a GeoLayer object, and add to the GeoProcessor's geolayer
@@ -333,7 +332,9 @@ class ReadGeoLayersFromFolder(AbstractCommand):
                         qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(spatial_data_file_absolute)
 
                         # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                        geolayer_obj = GeoLayer(geolayer_id, qgs_vector_layer, spatial_data_file_absolute)
+                        geolayer_obj = VectorGeoLayer(geolayer_id=geolayer_id,
+                                                      geolayer_qgs_vector_layer=qgs_vector_layer,
+                                                      geolayer_source_path=spatial_data_file_absolute)
                         self.command_processor.add_geolayer(geolayer_obj)
 
                     # Raise an exception if an unexpected error occurs during the process

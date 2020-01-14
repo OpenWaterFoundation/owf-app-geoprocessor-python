@@ -1,4 +1,4 @@
-# CreateGeoLayer - command to create a GeoLayer
+# CreateRasterGeoLayer - command to create a raster GeoLayer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -24,7 +24,7 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
@@ -34,28 +34,28 @@ import geoprocessor.util.validator_util as validators
 import logging
 
 
-class CreateGeoLayer(AbstractCommand):
+class CreateRasterGeoLayer(AbstractCommand):
 
     """
-    Creates a new GeoLayer. The feature geometry is provided by the parameters.
+    Creates a new raster GeoLayer.
 
     Command Parameters
-    * GeoLayerID (str, required): The ID of the new GeoLayer.
+    * NewGeoLayerID (str, required): The ID of the new GeoLayer.
     * GeometryFormat (str, required): The format of the input geometry. Can be `BoundingBox`, `WKT` or `WKB`. Refer
         to user documentation for descriptions of each geometry format.
-    * GeometryInput (str, required): The geometry data in the format specified by the GeometryFormat parameter.
-    * CRS (str, required): The coordinate reference system of the new GeoLayer. The units of the GeometryInput must
+    * GeometryData (str, required): The geometry data in the format specified by the GeometryFormat parameter.
+    * CRS (str, required): The coordinate reference system of the new GeoLayer. The units of the GeometryData must
         match the units of the CRS.
-    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the GeoLayerID
+    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the NewGeoLayerID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
 
     # Define the command parameters.
     __command_parameter_metadata = [
-        CommandParameterMetadata("GeoLayerID", type("")),
+        CommandParameterMetadata("NewGeoLayerID", type("")),
         CommandParameterMetadata("GeometryFormat", type(str)),
-        CommandParameterMetadata("GeometryInput", type(str)),
+        CommandParameterMetadata("GeometryData", type(str)),
         CommandParameterMetadata("CRS", type(str)),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
@@ -66,8 +66,68 @@ class CreateGeoLayer(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "CreateGeoLayer"
+        self.command_name = "CreateRasterGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
+
+        # Command metadata for command editor display
+        self.command_metadata = dict()
+        self.command_metadata['Description'] = "Create a new raster GeoLayer."
+        self.command_metadata['EditorType'] = "Simple"
+
+        # Command Parameter Metadata
+        self.parameter_input_metadata = dict()
+        # NewGeoLayerID
+        self.parameter_input_metadata['NewGeoLayerID.Description'] = "id of the new GeoLayer"
+        self.parameter_input_metadata['NewGeoLayerID.Label'] = "New GeoLayerID"
+        self.parameter_input_metadata['NewGeoLayerID.Required'] = True
+        self.parameter_input_metadata['NewGeoLayerID.Tooltip'] = "The ID of the new GeoLayer."
+        # GeometryFormat
+        self.parameter_input_metadata['GeometryFormat.Description'] = "format of the geometry data"
+        self.parameter_input_metadata['GeometryFormat.Label'] = "Geometry format"
+        self.parameter_input_metadata['GeometryFormat.Required'] = True
+        self.parameter_input_metadata['GeometryFormat.Tooltip'] = (
+            "The format of the GeometryData. Choose from one of the options below.\n"
+            "WKT: Well-Known Text is text representing vector geometry.\n"
+            "BoundingBox: Bounding Box Coordinates are a list of 4 coordinates representing the minimum and maximum "
+            "latitude and longitude of a POLYGON vector.\n"
+            "WKB: Well-Known Binary is hexadecimal text representing vector geometry.\n"
+            "Only available with QGIS version 3.0 or later.")
+        self.parameter_input_metadata['GeometryFormat.Values'] = ["", "WKT", "BoundingBox", "WKB"]
+        # GeometryData
+        self.parameter_input_metadata['GeometryData.Description'] = "geometry data for the new GeoLayer"
+        self.parameter_input_metadata['GeometryData.Label'] = "Geometry data"
+        self.parameter_input_metadata['GeometryData.Required'] = True
+        self.parameter_input_metadata['GeometryData.Tooltip'] = (
+            "The geometry data for the new GeoLayer.\n"
+            "The units are the same as the units of the coordinate reference system (CRS).\n"
+            "If GeometryFormat is WKT... use the syntax provided in the reference.\n"
+            "If GeometryFormat is BoundingBox... specify the coordinates as comma-separated values in the "
+            "following order.\n"
+            "    the left bound (minimum longitude)\n"
+            "    the bottom bound (minimum latitude)\n"
+            "    the right bound (maximum longitude)\n"
+            "    the top (maximum latitude) bound \n"
+            "If GeometryFormat is WKB... use the syntax provided in the reference.")
+        # CRS
+        self.parameter_input_metadata['CRS.Description'] = "coordinate references system of the new GeoLayer"
+        self.parameter_input_metadata['CRS.Label'] = "CRS"
+        self.parameter_input_metadata['CRS.Required'] = True
+        self.parameter_input_metadata['CRS.Tooltip'] = (
+            "The coordinate reference system of the new GeoLayer. EPSG or "
+            "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+        # IfGeoLayerIDExists
+        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+            "The action that occurs if the NewGeoLayerID already exists within the GeoProcessor.\n"
+            "Replace: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+            "No warning is logged.\n"
+            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+            "A warning is logged. \n"
+            "Warn: The new GeoLayer is not created. A warning is logged. \n"
+            "Fail: The new GeoLayer is not created. A fail message is logged.")
+        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
 
         # Class data
         self.warning_count = 0
@@ -90,7 +150,7 @@ class CreateGeoLayer(AbstractCommand):
 
         warning = ""
 
-        parameters = ["GeoLayerID", "GeometryInput", "CRS"]
+        parameters = ["NewGeoLayerID", "GeometryData", "CRS"]
 
         # Check that the parameters are non-empty, non-None strings.
         for parameter in parameters:
@@ -145,7 +205,7 @@ class CreateGeoLayer(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geolayer_be_created(self, geolayer_id, crs, geometry_format, geometry_input):
+    def __should_geolayer_be_created(self, geolayer_id, crs, geometry_format, geometry_data):
         """
         Checks the following:
         * the CRS is a valid CRS
@@ -156,7 +216,7 @@ class CreateGeoLayer(AbstractCommand):
             geolayer_id: the id of the GeoLayer to be created
             crs: the crs code of the GeoLayer to be created
             geometry_format: the format that the geometry data is delivered
-            geometry_input: the geometry data (as a string)
+            geometry_data: the geometry data (as a string)
 
         Returns:
              Boolean. If TRUE, the GeoLayer should be simplified If FALSE, at least one check failed and the GeoLayer
@@ -170,16 +230,16 @@ class CreateGeoLayer(AbstractCommand):
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
         should_run_command.append(validators.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
 
-        # If the SimplifiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+        # If the new GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
         # (depends on the value of the IfGeoLayerIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
+        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "NewGeoLayerID", geolayer_id, None))
 
         # If the GeometryFormat is BoundingBox, continue with the checks.
         if geometry_format.upper() == "BOUNDINGBOX":
 
-            # If the GeometryInput string does not contain 4 items when converted to a list, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsListLengthCorrect", "GeometryInput",
-                                                           geometry_input, "FAIL", other_values=[",", 4]))
+            # If the GeometryData string does not contain 4 items when converted to a list, raise a FAILURE.
+            should_run_command.append(validators.run_check(self, "IsListLengthCorrect", "GeometryData",
+                                                           geometry_data, "FAIL", other_values=[",", 4]))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -199,12 +259,12 @@ class CreateGeoLayer(AbstractCommand):
         """
 
         # Obtain the parameter values.
-        pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        pv_NewGeoLayerID = self.get_parameter_value("NewGeoLayerID")
         pv_GeometryFormat = self.get_parameter_value("GeometryFormat").upper()
-        pv_GeometryInput = self.get_parameter_value("GeometryInput")
+        pv_GeometryData = self.get_parameter_value("GeometryData")
         pv_CRS = self.get_parameter_value("CRS")
 
-        if self.__should_geolayer_be_created(pv_GeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryInput):
+        if self.__should_geolayer_be_created(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
 
             try:
 
@@ -217,12 +277,12 @@ class CreateGeoLayer(AbstractCommand):
                     #   2. Bottom (South) bound coordinate
                     #   3. Right (East) bound coordinate
                     #   4. Top (North) bound coordinate
-                    NSWE_extents = string_util.delimited_string_to_list(pv_GeometryInput)
-                    NW = "{} {}".format(NSWE_extents[0], NSWE_extents[3])
-                    NE = "{} {}".format(NSWE_extents[2], NSWE_extents[3])
-                    SE = "{} {}".format(NSWE_extents[2], NSWE_extents[1])
-                    SW = "{} {}".format(NSWE_extents[0], NSWE_extents[1])
-                    wkt_conversion = "POLYGON(({}, {}, {}, {}))".format(NW, NE, SE, SW)
+                    nswe_extents = string_util.delimited_string_to_list(pv_GeometryData)
+                    nw = "{} {}".format(nswe_extents[0], nswe_extents[3])
+                    ne = "{} {}".format(nswe_extents[2], nswe_extents[3])
+                    se = "{} {}".format(nswe_extents[2], nswe_extents[1])
+                    sw = "{} {}".format(nswe_extents[0], nswe_extents[1])
+                    wkt_conversion = "POLYGON(({}, {}, {}, {}))".format(nw, ne, se, sw)
 
                     # Create the QgsVectorLayer. BoundingBox will always create a POLYGON layer.
                     layer = qgis_util.create_qgsvectorlayer("Polygon", pv_CRS, "layer")
@@ -235,19 +295,19 @@ class CreateGeoLayer(AbstractCommand):
 
                     # Get the equivalent QGS geometry type to the input WKT geometry.
                     # Ex: MultiLineString is converted to LineString.
-                    qgsvectorlayer_geom_type = qgis_util.get_geometrytype_qgis_from_wkt(pv_GeometryInput)
+                    qgsvectorlayer_geom_type = qgis_util.get_geometrytype_qgis_from_wkt(pv_GeometryData)
 
                     # Create the QgsVectorLayer. The geometry type will be determined from the WKT specifications.
                     layer = qgis_util.create_qgsvectorlayer(qgsvectorlayer_geom_type, pv_CRS, "layer")
 
                     # Create the QgsGeometry object for the Well-Known Text geometry.
-                    qgs_geometry = qgis_util.create_qgsgeometry("WKT", pv_GeometryInput)
+                    qgs_geometry = qgis_util.create_qgsgeometry("WKT", pv_GeometryData)
 
                 # If the geometry format is Well-Known Binary, continue.
                 elif pv_GeometryFormat == "WKB":
 
                     # Create the QgsGeometry object for the Well-Known Binary geometry.
-                    qgs_geometry = qgis_util.create_qgsgeometry("WKB", pv_GeometryInput)
+                    qgs_geometry = qgis_util.create_qgsgeometry("WKB", pv_GeometryData)
 
                     # Get the equivalent Well-Known Text for the geometry.
                     qgs_geometry_as_wkt = qgs_geometry.exportToWkt()
@@ -263,14 +323,14 @@ class CreateGeoLayer(AbstractCommand):
                 qgis_util.add_feature_to_qgsvectorlayer(layer, qgs_geometry)
 
                 # Create a new GeoLayer with the QgsVectorLayer and add it to the GeoProcesor's geolayers list.
-                new_geolayer = GeoLayer(pv_GeoLayerID, layer, "MEMORY")
+                new_geolayer = RasterGeoLayer(pv_NewGeoLayerID, layer, "MEMORY")
                 self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process.
-            except Exception as e:
+            except Exception:
 
                 self.warning_count += 1
-                message = "Unexpected error creating GeoLayer ({}).".format(pv_GeoLayerID)
+                message = "Unexpected error creating GeoLayer ({}).".format(pv_NewGeoLayerID)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,

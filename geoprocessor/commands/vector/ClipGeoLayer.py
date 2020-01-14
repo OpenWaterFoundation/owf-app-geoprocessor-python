@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validators
@@ -36,9 +36,8 @@ from processing.core.Processing import Processing
 
 
 class ClipGeoLayer(AbstractCommand):
-
     """
-    Clips a GeoLayer by another GeoLayer.
+    Clips a VectorGeoLayer by another VectorGeoLayer.
 
     This command clips an input GeoLayer by the boundary of a clipping GeoLayer (polygon). The features of the input
     GeoLayer are retained in the output clipped layer if they intersect with the boundary of the clipping GeoLayer.
@@ -64,7 +63,7 @@ class ClipGeoLayer(AbstractCommand):
         CommandParameterMetadata("OutputGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -117,7 +116,7 @@ class ClipGeoLayer(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -184,7 +183,8 @@ class ClipGeoLayer(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_clip_geolayer(self, input_geolayer_id, clipping_geolayer_id, output_geolayer_id):
+    def __should_clip_geolayer(self, input_geolayer_id: str, clipping_geolayer_id: str,
+                               output_geolayer_id: str) -> None:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -239,7 +239,7 @@ class ClipGeoLayer(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Clip the input GeoLayer by the clipping GeoLayer. Create a new GeoLayer with the clipped
         output layer.
@@ -291,8 +291,8 @@ class ClipGeoLayer(AbstractCommand):
 
                 # Perform the QGIS clip function. Refer to the reference below for parameter descriptions.
                 # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_overlay_tools/clip.html
-                alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
-                                  "OVERLAY": clipping_geolayer.qgs_vector_layer,
+                alg_parameters = {"INPUT": input_geolayer.qgs_layer,
+                                  "OVERLAY": clipping_geolayer.qgs_layer,
                                   "OUTPUT": "memory:"}
                 clipped_output = self.command_processor.qgis_processor.runAlgorithm("native:clip", alg_parameters)
 
@@ -300,11 +300,13 @@ class ClipGeoLayer(AbstractCommand):
 
                 # In QGIS 2 the clipped_output["OUTPUT"] returned the full file pathname of the memory output layer
                 # (saved in a QGIS temporary folder)
-                # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
-                # new_geolayer = GeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+                # qgs_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
+                # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerID, qgs_layer, "MEMORY")
 
                 # In QGIS 3 the clipped_output["OUTPUT"] returns the QGS vector layer object
-                new_geolayer = GeoLayer(pv_OutputGeoLayerID, clipped_output["OUTPUT"], "MEMORY")
+                new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerID,
+                                              geolayer_qgs_vector_layer=clipped_output["OUTPUT"],
+                                              geolayer_source_path="MEMORY")
                 self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process

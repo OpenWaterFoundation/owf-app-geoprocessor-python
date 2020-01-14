@@ -61,7 +61,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         CommandParameterMetadata("OutputCRS", type("")),
         CommandParameterMetadata("OutputPrecision", type(2))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -117,7 +117,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -209,7 +209,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Write the GeoLayer to a spatial data file in GeoJSON format.
 
@@ -246,7 +246,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                 pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
 
                 # Write the GeoLayer to a spatial data file in GeoJSONformat
-                qgis_util.write_qgsvectorlayer_to_geojson(geolayer.qgs_vector_layer,
+                qgis_util.write_qgsvectorlayer_to_geojson(geolayer.qgs_layer,
                                                           output_file_absolute,
                                                           pv_OutputCRS,
                                                           pv_OutputPrecision)

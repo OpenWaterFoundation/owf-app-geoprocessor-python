@@ -23,7 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
@@ -70,7 +70,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
     # Choices for IfGeoLayerIDExists, used to validate parameter and display in editor
     __choices_IfGeoLayerIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -121,7 +121,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -175,7 +175,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_geolayer(self, spatial_data_file_abs, geolayer_id):
+    def __should_read_geolayer(self, spatial_data_file_abs: str, geolayer_id: str) -> bool:
 
         """
         Checks the following:
@@ -257,7 +257,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         # one or many checks failed.
         return run_read
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Read the layer file from a GeoJSON file, create a GeoLayer object, and add to the
         GeoProcessor's geolayer list.
@@ -294,9 +294,9 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(spatial_data_file_absolute)
 
                 # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
-                geolayer_obj = GeoLayer(geolayer_id=pv_GeoLayerID,
-                                        geolayer_qgs_vector_layer=qgs_vector_layer,
-                                        geolayer_source_path=spatial_data_file_absolute)
+                geolayer_obj = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
+                                              geolayer_qgs_vector_layer=qgs_vector_layer,
+                                              geolayer_source_path=spatial_data_file_absolute)
                 self.command_processor.add_geolayer(geolayer_obj)
 
             # Raise an exception if an unexpected error occurs during the process.

@@ -18,6 +18,7 @@
 # ________________________________________________________________NoticeEnd___
 
 from PyQt5 import QtCore
+from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 
@@ -29,7 +30,7 @@ import webbrowser
 
 class TabbedCommandEditor(AbstractCommandEditor):
 
-    def __init__(self, command):
+    def __init__(self, command) -> None:
         """
         Initialize the Abstract Dialog instance.
 
@@ -47,18 +48,18 @@ class TabbedCommandEditor(AbstractCommandEditor):
         super().__init__(command)
 
         # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
-        ##self.command_name = command_name
+        # #self.command_name = command_name
 
         # "command_description" is the description of the GeoProcessor command that the Dialog box is representing
-        ##self.command_description = command_description
+        # #self.command_description = command_description
 
         # "parameter_count" is the number of command parameters of the GeoProcessor command that the Dialog box is
         # representing
-        ##self.parameter_count = parameter_count
+        # #self.parameter_count = parameter_count
 
         # "parameters_list" is a list of strings representing the command parameter names (in order) of the
         # GeoProcessor command that the Dialog box is representing
-        ##self.parameters_list = command_parameters
+        # #self.parameters_list = command_parameters
 
         # "input_edit_objects" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
@@ -69,9 +70,10 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # "command_parameter_current_values" is a dictionary that holds the command parameters and their current values
         # KEY (str): the name of the command parameter
         # VALUE (str): the entered value of the command parameter
-        ##self.command_parameter_current_values = current_values
+        # #self.command_parameter_current_values = current_values
 
-    def are_required_parameters_specified(self, ui_command_parameter_list):
+    # TODO smalers 2020-01-14 evaluate whether this function is ever called - is it needed?
+    def are_required_parameters_specified(self, ui_command_parameter_list: []) -> None:
         """
         Checks if the required parameters of a command are specified by the user in the command dialog window.
 
@@ -99,7 +101,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # Return the specified Boolean.
         return specified
 
-    def get_current_value(self, obj):
+    def get_current_value(self, obj: QtWidgets.QWidget) -> str:
         """
         Get the value within a QtGui.Widget object.
 
@@ -116,13 +118,13 @@ class TabbedCommandEditor(AbstractCommandEditor):
             value = obj.text()
 
         # Reads ComboBox widgets.
-        except:
+        except Exception:
             value = obj.currentText()
 
         # Return the value within the input QtGui.Widget object.
         return value
 
-    def setupUi_Abstract(self, Dialog):
+    def setup_ui_abstract(self, Dialog: QtGui.QDialog) -> None:
         """
         Sets up a Dialog object with the features that are common across all GeoProcessor command dialog windows.
 
@@ -237,7 +239,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
-    def update_command_display(self):
+    def update_command_display(self) -> None:
         """
         Each command dialog box has a command display that shows the string representation of the command with the
         user-specified input parameters. It is updated dynamically as the user enters/selects values for the different
@@ -300,7 +302,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.CommandDisplay_View_TextBrowser.setText(display)
 
     @staticmethod
-    def select_file(qt_widget):
+    def select_file(qt_widget: QtWidgets.QWidget) -> None:
         """
         Opens a file browser to allow a user to select a file through a Qt predefined user interface. The path of the
         selected file is added to the qt_widget Qt Widget input field.

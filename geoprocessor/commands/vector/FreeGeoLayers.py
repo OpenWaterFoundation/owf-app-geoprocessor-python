@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -40,7 +40,7 @@ class FreeGeoLayers(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerIDs", type(""))]
 
     def __init__(self) -> None:
@@ -92,7 +92,7 @@ class FreeGeoLayers(AbstractCommand):
         pv_GeoLayerIDs = self.get_parameter_value(parameter_name='GeoLayerIDs',
                                                   command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerIDs, False, False):
+        if not validator_util.validate_string(pv_GeoLayerIDs, False, False):
             message = "GeoLayerIDs parameter has no value."
             recommendation = "Specify the GeoLayerIDs parameter to indicate the GeoLayer to copy."
             warning += "\n" + message
@@ -133,7 +133,7 @@ class FreeGeoLayers(AbstractCommand):
         for geolayer_id in geolayer_id_list:
 
             # If the geolayer_id is not a valid GeoLayer ID, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id,
+            should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id,
                                                            "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
@@ -191,7 +191,7 @@ class FreeGeoLayers(AbstractCommand):
                     del geolayer
 
             # Raise an exception if an unexpected error occurs during the process.
-            except Exception as e:
+            except Exception:
 
                 self.warning_count += 1
                 message = "Unexpected error removing GeoLayer ({}).".format(pv_GeoLayerIDs)

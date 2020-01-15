@@ -25,7 +25,7 @@ import os
 import platform
 
 
-def get_os_distro():
+def get_os_distro() -> str:
     """
     Determine the operating system distribution, useful for showing system information
     but not advised for checks (use the is_*_os() functions to control program logic).
@@ -45,7 +45,7 @@ def get_os_distro():
     return os_type_distro
 
 
-def get_os_type():
+def get_os_type() -> str:
     """
     Determine the major operating system type, useful for showing system information
     but not advised for checks (use the is_*_os() functions to control program logic).
@@ -61,7 +61,7 @@ def get_os_type():
     return os_type
 
 
-def is_cygwin_os():
+def is_cygwin_os() -> bool:
     """
     Indicate whether the operating system is Cygwin.
     Cygwin is a Linux OS but someones Cygwin-specific logic must be implemented.
@@ -74,7 +74,7 @@ def is_cygwin_os():
         return False
 
 
-def is_linux_os():
+def is_linux_os() -> bool:
     """
     Indicate whether the operating system is Linux.
 
@@ -86,7 +86,7 @@ def is_linux_os():
         return False
 
 
-def is_mingw_os():
+def is_mingw_os() -> bool:
     """
     Indicate whether the operating system is MinGW, such as used with Git Bash.
     MinGW is a Linux OS but someones MinGW-specific logic must be implemented.
@@ -99,7 +99,7 @@ def is_mingw_os():
         return False
 
 
-def is_windows_os():
+def is_windows_os() -> bool:
     """
     Indicate whether the operating system is Windows.
 

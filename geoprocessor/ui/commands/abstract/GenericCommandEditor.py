@@ -20,6 +20,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from geoprocessor.core import CommandParameterMetadata
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 from geoprocessor.ui.util.CommandParameter import CommandParameter
 
@@ -33,7 +34,7 @@ class GenericCommandEditor(AbstractCommandEditor):
     Command editor with general interface, which will provide text fields for each property.
     """
 
-    def __init__(self, command):
+    def __init__(self, command: AbstractCommand) -> None:
         """
         Create the generic command editor dialog box, used to edit commands that don't have a specific editor.
 
@@ -88,7 +89,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         # Initially call refresh in case updating a command
         self.refresh_ui()
 
-    def check_input(self):
+    def check_input(self) -> None:
         """
         Check the parameter values shown in the editor to make sure all values are valid.
         If any invalid parameters are detected, set self.error_wait = True so ui_action_ok_clicked() can
@@ -118,7 +119,7 @@ class GenericCommandEditor(AbstractCommandEditor):
             logger.info(message)
             qt_util.warning_message_box(message)
 
-    def refresh_ui(self):
+    def refresh_ui(self) -> None:
         """
         This function is called to ensure that the UI and command are consistent in the UI:
 
@@ -241,7 +242,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         #     logger.warning(message, exc_info=True)
         #     qt_util.warning_message_box(message)
 
-    def setup_ui(self):
+    def setup_ui(self) -> None:
         """
         Set up the dialog UI elements.  This generic editor provides text fields for each property.
 
@@ -314,7 +315,8 @@ class GenericCommandEditor(AbstractCommandEditor):
                 parameter_Description = ""
             self.setup_ui_parameter_description(parameter_name, parameter_description)
 
-    def setup_ui_parameter_description(self, parameter_name, parameter_desc):
+    # TODO smalers 2020-01-14 evaluate overloading being different than base class.
+    def setup_ui_parameter_description(self, parameter_name: str, parameter_desc: str) -> None:
         """
         Override function in AbstractCommand class to add a description if it is specified
         in the command_parameter_metadata. This description will not be as specific as is
@@ -326,7 +328,7 @@ class GenericCommandEditor(AbstractCommandEditor):
             parameter_desc (str) : description coming from the command_parameter_metadata
 
         Returns:
-
+            None
         """
         debug = True
         if self.debug:
@@ -338,7 +340,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
         self.parameter_QGridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
 
-    def ui_action_cancel_clicked(self):
+    def ui_action_cancel_clicked(self) -> None:
         """
         Handle clicking on cancel button:
 
@@ -351,7 +353,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         # - this allows the return value to be checked in the calling code
         self.reject()
 
-    def ui_action_ok_clicked(self):
+    def ui_action_ok_clicked(self) -> None:
         """
         Handle clicking on OK button:
 
@@ -371,4 +373,3 @@ class GenericCommandEditor(AbstractCommandEditor):
             # No error so OK to exit
             # - call the standard accept() function to set the return value
             self.accept()
-

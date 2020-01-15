@@ -44,7 +44,7 @@ def from_utf8(s):
     return s
 
 
-def get_table_rows_from_indexes(indexes: list) -> [int]:
+def get_table_rows_from_indexes(indexes: [int]) -> [int]:
     """
     Get the list of unique rows from a list of indexes, for exmaple, indexes selected in a table.
     Args:
@@ -69,7 +69,7 @@ def get_table_rows_from_indexes(indexes: list) -> [int]:
     return rows
 
 
-def info_message_box(message: str, app_name: str = None, title: str = "Information"):
+def info_message_box(message: str, app_name: str = None, title: str = "Information") -> int:
     """
     Display an information message dialog.
 
@@ -92,13 +92,13 @@ def info_message_box(message: str, app_name: str = None, title: str = "Informati
     return message_box
 
 
-def new_message_box(message_type: QtGui.Icon, standard_buttons_mask: QtGui.StandardButton, message: str, title: str):
+def new_message_box(message_type: QtGui.QIcon, standard_buttons_mask: int, message: str, title: str) -> int:
     """
     Create and execute a message box, returning an indicator for the button that was selected.
     REF: https://www.tutorialspoint.com/pyqt/pyqt_qmessagebox.htm
 
     Args:
-            message_type (Icon): the type of message box, for example QtWidgets.QMessageBox.Question
+            message_type (QIcon): the type of message box, for example QtWidgets.QMessageBox.Question
             standard_buttons_mask (StandardButton): a bitmask indicating the buttons to include in the message box,
                     for example QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
             message (str): a message to display in the message box
@@ -129,7 +129,7 @@ def new_message_box(message_type: QtGui.Icon, standard_buttons_mask: QtGui.Stand
     # logger = logging.getLogger(__name__)
     # logger.debug("icon path=\"" + str(icon_path) + "\"")
     # print("Icon path='" + icon_path + "'")
-    # message_box.setWindowIcon(QtGui.Icon(icon_path))
+    # message_box.setWindowIcon(QtGui.QIcon(icon_path))
     message_box.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
 
     # Execute the Message Box and retrieve the clicked button enumerator.
@@ -139,7 +139,7 @@ def new_message_box(message_type: QtGui.Icon, standard_buttons_mask: QtGui.Stand
     return btn_value
 
 
-def question_box(message: str, app_name: str = None, title: str = "Question"):
+def question_box(message: str, app_name: str = None, title: str = "Question") -> int:
     """
     Display an information message dialog.
 
@@ -195,7 +195,7 @@ def translate(context: str, text: str, disambig: str) -> str:
         return QtWidgets.QApplication.translate(context, text, disambig)
 
 
-def warning_message_box(message: str, app_name: str = None, title: str = "Warning"):
+def warning_message_box(message: str, app_name: str = None, title: str = "Warning") -> int:
     """
     Display a warning message dialog.
 

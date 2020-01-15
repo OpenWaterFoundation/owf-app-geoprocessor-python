@@ -27,7 +27,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 import geoprocessor.util.zip_util as zip_util
 
 import logging
@@ -51,13 +51,13 @@ class UnzipFile(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("File", type("")),
         CommandParameterMetadata("FileType", type("")),
         CommandParameterMetadata("OutputFolder", type("")),
         CommandParameterMetadata("DeleteFile", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command
         """
@@ -113,7 +113,7 @@ class UnzipFile(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -131,7 +131,7 @@ class UnzipFile(AbstractCommand):
         # Check that either the parameter File is a non-empty, non-None string.
         pv_File = self.get_parameter_value(parameter_name='File', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_File, False, False):
+        if not validator_util.validate_string(pv_File, False, False):
 
             message = "File parameter has no value."
             recommendation = "Specify the File parameter to indicate the compressed file to extract."
@@ -145,7 +145,7 @@ class UnzipFile(AbstractCommand):
 
         acceptable_values = ["Zip", "Tar"]
 
-        if not validators.validate_string_in_list(pv_FileType, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_FileType, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "FileType parameter value ({}) is not recognized.".format(pv_FileType)
             recommendation = "Specify one of the acceptable values ({}) for the" \
@@ -157,7 +157,7 @@ class UnzipFile(AbstractCommand):
         # Check that optional DeleteFile parameter value is a valid Boolean value or is None.
         pv_DeleteFile = self.get_parameter_value(parameter_name="DeleteFile", command_parameters=command_parameters)
 
-        if not validators.validate_bool(pv_DeleteFile, none_allowed=True, empty_string_allowed=False):
+        if not validator_util.validate_bool(pv_DeleteFile, none_allowed=True, empty_string_allowed=False):
             message = "DeleteFile parameter value ({}) is not a recognized boolean value.".format(pv_DeleteFile)
             recommendation = "Specify either 'True' or 'False for the DeleteFile parameter."
             warning += "\n" + message
@@ -177,7 +177,7 @@ class UnzipFile(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_extract_file(self, file_abs, output_folder_abs, file_type):
+    def __should_extract_file(self, file_abs: str, output_folder_abs: str, file_type: str) -> bool:
         """
         Checks the following:
         * the File is a valid file
@@ -199,10 +199,10 @@ class UnzipFile(AbstractCommand):
         should_run_command = []
 
         # If the File parameter value is not a valid file, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsFilePathValid", "File", file_abs, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "File", file_abs, "FAIL"))
 
         # If the OutputFolder parameter value is not a valid folder, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsFolderPathValid", "OutputFolder", output_folder_abs,
+        should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "OutputFolder", output_folder_abs,
                                                        "FAIL"))
 
         # If the File Type is not recognized, raise a FAILURE.
@@ -216,9 +216,9 @@ class UnzipFile(AbstractCommand):
 
         # If the File Type is not actually recognized by the input File, raise a FAILURE.
         if file_type.upper() == "ZIP":
-            should_run_command.append(validators.run_check(self, "IsZipFile", "File", file_abs, "FAIL"))
+            should_run_command.append(validator_util.run_check(self, "IsZipFile", "File", file_abs, "FAIL"))
         elif file_type.upper() == "TAR":
-            should_run_command.append(validators.run_check(self, "IsTarFile", "File", file_abs, "FAIL"))
+            should_run_command.append(validator_util.run_check(self, "IsTarFile", "File", file_abs, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -227,7 +227,7 @@ class UnzipFile(AbstractCommand):
             return True
 
     @staticmethod
-    def __get_default_file_type(file_path):
+    def __get_default_file_type(file_path: str) -> str:
         """
         Helper function to get the default FileType parameter value.
 
@@ -251,7 +251,7 @@ class UnzipFile(AbstractCommand):
         # If the file extension is not recognized, return None.
         return None
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Extract the compressed file.
 
@@ -303,7 +303,7 @@ class UnzipFile(AbstractCommand):
                     os.remove(file_abs)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error extracting the {} file ({}).".format(pv_FileType, pv_File)
                 recommendation = "Check the log file for details."

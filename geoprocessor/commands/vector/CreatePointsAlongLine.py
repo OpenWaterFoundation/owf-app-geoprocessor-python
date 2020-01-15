@@ -26,13 +26,12 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
 
 class CreatePointsAlongLine(AbstractCommand):
-
     """
     Creates a copy of a GeoLayer in the GeoProcessor's geolayers list. The copied GeoLayer is added to the
     GeoProcessor's geolayers list.
@@ -47,12 +46,12 @@ class CreatePointsAlongLine(AbstractCommand):
     """
 
     # Define command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("CopiedGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -66,7 +65,7 @@ class CreatePointsAlongLine(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -85,7 +84,7 @@ class CreatePointsAlongLine(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to copy."
             warning += "\n" + message
@@ -97,7 +96,7 @@ class CreatePointsAlongLine(AbstractCommand):
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
@@ -119,7 +118,7 @@ class CreatePointsAlongLine(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_create_points(self, input_geolayer_id, output_geolayer_id):
+    def __should_create_points(self, input_geolayer_id: str, output_geolayer_id: str) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -193,13 +192,7 @@ class CreatePointsAlongLine(AbstractCommand):
         # one or many checks failed.
         return run_copy
 
-
-
-
-
-
-
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Make a copy of the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
 
@@ -209,5 +202,3 @@ class CreatePointsAlongLine(AbstractCommand):
             RuntimeError if any warnings occurred during run_command method.
         """
         pass
-    
-

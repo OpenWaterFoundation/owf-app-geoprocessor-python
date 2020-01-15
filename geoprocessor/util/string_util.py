@@ -30,7 +30,7 @@ import re
 # - adjoining delimiters
 # - bounding [ ] as per Python list
 # - strings surrounded with single quotes, which could work within a parameter value surrounded by double quotes
-def delimited_string_to_list(delimited_string, delimiter=",", trim=True):
+def delimited_string_to_list(delimited_string: str, delimiter: str = ",", trim: bool = True) -> [str]:
     """
     Split a string in delimited format into a list of strings.
     This function can be used, for example, to split comma-separated parameters for a command,
@@ -61,7 +61,8 @@ def delimited_string_to_list(delimited_string, delimiter=",", trim=True):
     return parts
 
 
-def delimited_string_to_dictionary_one_value(delimited_string, entry_delimiter=";", key_value_delimiter="=", trim=True):
+def delimited_string_to_dictionary_one_value(delimited_string: str, entry_delimiter: str= ";",
+                                             key_value_delimiter: str = "=", trim: bool = True) -> dict:
     """
     Split a string in delimited format into a dictionary of strings.
     This function can be used, for example, to split comma-separated parameters for a command,
@@ -117,8 +118,9 @@ def delimited_string_to_dictionary_one_value(delimited_string, entry_delimiter="
         return dictionary
 
 
-def delimited_string_to_dictionary_list_value(delimited_string, entry_delimiter=";",
-                                              key_value_delimiter="=", list_delimiter=",", trim=True):
+def delimited_string_to_dictionary_list_value(delimited_string: str, entry_delimiter: str = ";",
+                                              key_value_delimiter: str = "=", list_delimiter: str =",",
+                                              trim: bool = True) -> dict:
     """
     Split a string in delimited format into a dictionary. The key is a string and the value is a list of strings.
     This function can be used, for example, to split comma-separated parameters for a command,
@@ -182,7 +184,8 @@ def delimited_string_to_dictionary_list_value(delimited_string, entry_delimiter=
         return dictionary
 
 
-def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_patterns=None, return_inclusions=True):
+def filter_list_of_strings(input_list: [str], include_glob_patterns: [str] = None,
+                           exclude_glob_patterns: [str] = None, return_inclusions: bool = True):
     """
     Filters a list of strings by glob patterns.
 
@@ -258,12 +261,12 @@ def filter_list_of_strings(input_list, include_glob_patterns=None, exclude_glob_
         return exclude_list_final
 
 
-def format_dict(dict, value_quote='"'):
+def format_dict(dict_to_format: dict, value_quote: str = '"') -> str:
     """
     Format a dictionary for output in a string, such as for print statement.
 
     Args:
-        dict: dictionary to format.
+        dict_to_format: dictionary to format.
         value_quote: character to quote all values
 
     Returns:  a string containing formatted dictionary, string=key="value",key="value"
@@ -273,7 +276,7 @@ def format_dict(dict, value_quote='"'):
     formatted_string = ""
     count = 0
     delim = ","
-    for key, value in dict.items():
+    for key, value in dict_to_format.items():
         count = count + 1
         if count > 1:
             formatted_string = formatted_string + delim + key + "=" + value_quote + value + value_quote
@@ -282,7 +285,7 @@ def format_dict(dict, value_quote='"'):
     return formatted_string
 
 
-def glob2re(pat):
+def glob2re(pat: str) -> str:
     """
     Translates a shell PATTERN to a regular expression.
 
@@ -332,7 +335,7 @@ def glob2re(pat):
     return res + '\Z(?ms)'
 
 
-def is_bool(s):
+def is_bool(s: str) -> bool:
     """
     Determine whether a string can evaluate to a bool, must be "true" or "false"
 
@@ -352,7 +355,7 @@ def is_bool(s):
         return False
 
 
-def is_float(s):
+def is_float(s: str) -> bool:
     """
     Determine whether a string can evaluate to a float.
 
@@ -370,7 +373,7 @@ def is_float(s):
         return False
 
 
-def is_int(s):
+def is_int(s: str) -> bool:
     """
     Determine whether a string can evaluate to an int.
 
@@ -388,7 +391,7 @@ def is_int(s):
         return False
 
 
-def key_value_pair_list_to_dictionary(key_value_list):
+def key_value_pair_list_to_dictionary(key_value_list: [str]) -> dict:
     """
     Convert a list of key=value strings to dictionary with corresponding keys and values.
 
@@ -412,7 +415,7 @@ def key_value_pair_list_to_dictionary(key_value_list):
     return dictionary
 
 
-def pattern_count(s, pattern, patterns=None):
+def pattern_count(s: str, pattern: str, patterns: [str] = None) -> int:
     """
     Count the number of unique (non-overlapping) instances of a pattern in a string.
 
@@ -442,16 +445,7 @@ def pattern_count(s, pattern, patterns=None):
     return count
 
 
-# TODO smalers 2018-02-18 need to phase this version out
-def string_to_boolean(string):
-    """
-    Convert a string into a Boolean value.
-    This version is deprecated - use str_to_bool().
-    """
-    return str_to_bool(string)
-
-
-def str_to_bool(string):
+def str_to_bool(string: str) -> bool:
     """
     Convert a string into a Boolean value.
 

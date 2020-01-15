@@ -27,7 +27,7 @@ from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -46,7 +46,7 @@ class SetGeoLayerCRS(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("CRS", type(""))]
 
@@ -102,7 +102,7 @@ class SetGeoLayerCRS(AbstractCommand):
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
@@ -113,7 +113,7 @@ class SetGeoLayerCRS(AbstractCommand):
         # Check that parameter CRS is a non-empty, non-None string.
         pv_CRS = self.get_parameter_value(parameter_name='CRS', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_CRS, False, False):
+        if not validator_util.validate_string(pv_CRS, False, False):
 
             message = "CRS parameter has no value."
             recommendation = "Specify the CRS parameter to indicate the new coordinate reference system."

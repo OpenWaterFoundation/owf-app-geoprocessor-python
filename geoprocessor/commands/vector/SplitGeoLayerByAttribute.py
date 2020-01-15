@@ -25,11 +25,11 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 from processing.core.Processing import Processing
-from qgis.core import QgsVectorLayer, QgsProject
+from qgis.core import QgsVectorLayer
 
 import glob
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 import geoprocessor.util.qgis_util as qgis_util
 import logging
 import os
@@ -56,7 +56,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("InputGeoLayerID", type("")),
         CommandParameterMetadata("AttributeName", type("")),
         CommandParameterMetadata("OutputGeoLayerIDs", type("")),
@@ -155,7 +155,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         pv_InputGeoLayerID = self.get_parameter_value(parameter_name='InputGeoLayerID',
                                                       command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_InputGeoLayerID, False, False):
+        if not validator_util.validate_string(pv_InputGeoLayerID, False, False):
             message = "InputGeoLayerID parameter has no value."
             recommendation = "Specify the InputGeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
@@ -167,7 +167,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         pv_AttributeName = self.get_parameter_value(parameter_name='AttributeName',
                                                     command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_AttributeName, False, False):
+        if not validator_util.validate_string(pv_AttributeName, False, False):
 
             message = "AttributeName parameter has no value."
             recommendation = "Specify the AttributeName parameter to indicate the attribute to split on."
@@ -180,7 +180,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
@@ -222,9 +222,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         # test confirms that the command should be run.
         should_run_command = []
 
-
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIDExisting", "InputGeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "InputGeoLayerID",
                                                        input_geolayer_id, "FAIL"))
 
         # If the input GeoLayer exists, continue with the checks.
@@ -251,7 +250,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
 
             # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
             # on the value of the IfGeoLayerIDExists parameter.)
-            should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
+            should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
                                                            output_geolayer_ids, None))
 
             # Return the Boolean to determine if the process should be run.
@@ -260,8 +259,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
             else:
                 return True
         else:
-            return True
             logger.info('Process can be run')
+            return True
 
     def run_command(self) -> None:
         """
@@ -300,7 +299,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         # pv_OutputGeoLayerIDs = ['output1', 'output2', 'output3']
         try:
             pv_OutputGeoLayerIDs = self.get_parameter_value("OutputGeoLayerIDs").split(',')
-        except:
+        except Exception:
             # Get the list of features from the GeoLayer. This returns all attributes for each feature listed.
             pv_OutputGeoLayerIDs = None
 
@@ -357,14 +356,14 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # Check to see if parameter temporary folder has been specified, otherwise use the
                 # default environment temp folder directory.
 
-                #boolean to see if working with custom temp folder
+                # boolean to see if working with custom temp folder
                 temp_directory_custom = False
                 try:
                     # Append specified temporary folder to working directory to create temp files in current
                     # command file location.
                     temp_directory = working_dir + "/" + self.get_parameter_value("TemporaryFolder")
                     temp_directory_custom = True
-                except:
+                except Exception:
                     # If using the default temp directory from environment variables create a temp folder to
                     # easily remove all files
                     temp_directory = tempfile.gettempdir()
@@ -386,7 +385,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # https://gist.github.com/jurentie/7b6c53d5a592991b6bb2491fcc5f01eb)
                 # pass in the parameters defined above
                 # This should result in separate GeoLayer shapefiles being written to the OUTPUT directory
-                split_output = self.command_processor.qgis_processor.runAlgorithm("qgis:splitvectorlayer", alg_parameters)
+                split_output = self.command_processor.qgis_processor.runAlgorithm("qgis:splitvectorlayer",
+                                                                                  alg_parameters)
 
                 # Create new GeoLayers and add them to the GeoProcessor's geolayers list.
 
@@ -430,10 +430,10 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                         new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerIDs[i],
                                                       geolayer_qgs_vector_layer=layer,
                                                       geolayer_source_path=path)
-                    except:
+                    except Exception:
                         # Default Output GeoLayerID's will be default title of output files from .runAlgorithm above
                         new_geolayer = VectorGeoLayer(geolayer_id=pv_InputGeoLayerID + "-" + str(attribute),
-                                                      geolayer_qps_vector_layer=layer,
+                                                      geolayer_qgs_vector_layer=layer,
                                                       geolayer_source_path=path)
                     self.command_processor.add_geolayer(new_geolayer)
 
@@ -461,7 +461,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error splitting GeoLayer {}.".format(
                     pv_InputGeoLayerID)

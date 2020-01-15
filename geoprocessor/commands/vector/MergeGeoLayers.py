@@ -28,7 +28,7 @@ from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
@@ -37,7 +37,6 @@ from plugins.processing.tools import general
 
 
 class MergeGeoLayers(AbstractCommand):
-
     """
     Merges GeoLayers with the same geometry into one output GeoLayer.
 
@@ -64,13 +63,13 @@ class MergeGeoLayers(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerIDs", type([])),
         CommandParameterMetadata("OutputGeoLayerID", type("")),
         CommandParameterMetadata("AttributeMap", type({})),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -128,7 +127,7 @@ class MergeGeoLayers(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -147,7 +146,7 @@ class MergeGeoLayers(AbstractCommand):
         # Check that parameter GeoLayerIDs is a non-empty, non-None string.
         pv_GeoLayerIDs = self.get_parameter_value(parameter_name='GeoLayerIDs', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerIDs, False, False):
+        if not validator_util.validate_string(pv_GeoLayerIDs, False, False):
             message = "GeoLayerIDs parameter has no value."
             recommendation = "Specify the GeoLayerIDs parameter to indicate the GeoLayers to merge."
             warning += "\n" + message
@@ -159,7 +158,7 @@ class MergeGeoLayers(AbstractCommand):
         pv_OutputGeoLayerID = self.get_parameter_value(parameter_name='OutputGeoLayerID',
                                                        command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputGeoLayerID, False, False):
+        if not validator_util.validate_string(pv_OutputGeoLayerID, False, False):
             message = "OutputGeoLayerID parameter has no value."
             recommendation = "Specify the OutputGeoLayerID parameter to indicate the ID of the merged GeoLayer."
             warning += "\n" + message
@@ -179,7 +178,7 @@ class MergeGeoLayers(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_merge(self, geolayer_id_list, output_geolayer_id):
+    def __should_merge(self, geolayer_id_list: [str], output_geolayer_id: str) -> bool:
         """
         Checks the following:
         * the input GeoLayer IDs are existing GeoLayer IDs
@@ -299,7 +298,7 @@ class MergeGeoLayers(AbstractCommand):
         return run_merge
 
     @ staticmethod
-    def __create_attribute_dictionary(geolayer, attribute_map):
+    def __create_attribute_dictionary(geolayer: VectorGeoLayer, attribute_map: dict) -> dict:
         """
         Create an attribute dictionary for the GeoLayer.
 
@@ -354,7 +353,7 @@ class MergeGeoLayers(AbstractCommand):
         # Return the attribute dictionary.
         return attribute_dictionary
 
-    def run_command(self):
+    def run_command(self) -> None:
 
         # Get the command parameter values.
         pv_GeoLayerIDs = self.get_parameter_value("GeoLayerIDs")

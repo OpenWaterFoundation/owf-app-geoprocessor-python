@@ -30,7 +30,7 @@ from geoprocessor.core.Table import TableField
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import csv
 import logging
@@ -54,7 +54,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("InputFile", type("")),
         CommandParameterMetadata("Delimiter", type("")),
         CommandParameterMetadata("TableID", type("")),
@@ -62,7 +62,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("NullValues", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -129,7 +129,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -148,7 +148,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # Check that parameter InputFile is a non-empty, non-None string.
         pv_InputFile = self.get_parameter_value(parameter_name='InputFile', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_InputFile, False, False):
+        if not validator_util.validate_string(pv_InputFile, False, False):
             message = "InputFile parameter has no value."
             recommendation = "Specify the InputFile parameter (relative or absolute pathname) to indicate the " \
                              "location and name of the output Excel file."
@@ -160,7 +160,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # Check that parameter TableID is a non-empty, non-None string.
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_TableID, False, False):
+        if not validator_util.validate_string(pv_TableID, False, False):
             message = "TableID parameter has no value."
             recommendation = "Specify the TableID parameter."
             warning += "\n" + message
@@ -172,7 +172,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
                                                       command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        if not validators.validate_string_in_list(pv_IfTableIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfTableIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
@@ -187,7 +187,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         if pv_HeaderLines:
 
             # Check that the HeaderLines parameter is an integer or None.
-            if not validators.validate_int(pv_HeaderLines, True, False):
+            if not validator_util.validate_int(pv_HeaderLines, True, False):
 
                 message = "HeaderLines parameter value ({}) is not a valid integer value.".format(pv_HeaderLines)
                 recommendation = "Specify a positive integer for the HeaderLines parameter to specify how" \
@@ -208,7 +208,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_table(self, input_file_abs, table_id):
+    def __should_read_table(self, input_file_abs: str, table_id: str) -> bool:
         """
        Checks the following:
         * the InputFile (absolute) is a valid file
@@ -227,11 +227,11 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         should_run_command = []
 
         # If the input file is not a valid file path, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsFilePathValid", "InputFile", input_file_abs, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "InputFile", input_file_abs, "FAIL"))
 
         # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
         # value of the IfTableIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
+        should_run_command.append(validator_util.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -240,7 +240,8 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             return True
 
     @staticmethod
-    def __read_table_from_delimited_file(path, table_id, delimiter, header_count, null_values):
+    def __read_table_from_delimited_file(path: str, table_id: str, delimiter: str, header_count: int,
+                                         null_values: [str]) -> Table:
         """
         Creates a GeoProcessor table object from a delimited file.
 
@@ -322,7 +323,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # Return the GeoProcessor Table object.
         return table
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Read the Table from the delimited file.
 
@@ -360,7 +361,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 self.command_processor.add_table(table)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error reading Table {} from delimited file ({}).".format(pv_TableID,
                                                                                                input_file_absolute)

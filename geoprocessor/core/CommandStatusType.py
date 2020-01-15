@@ -17,6 +17,11 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
+# See:  https://stackoverflow.com/questions/33533148/
+#         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
+from __future__ import annotations
+
 from enum import Enum
 
 
@@ -33,7 +38,7 @@ class CommandStatusType(Enum):
     __status_list = [INFO, SUCCESS, WARNING, FAILURE]
 
     @classmethod
-    def get_command_status_types(cls, sort=False):
+    def get_command_status_types(cls, sort: bool = False) -> [CommandStatusType]:
         """
         Return the list of valid command status.
 

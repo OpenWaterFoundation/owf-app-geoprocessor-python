@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
@@ -39,11 +39,11 @@ class WriteCommandSummaryToFile(AbstractCommand):
     """
 
     # TODO smalers 2018-01-28 in the future allow "Format", with "HTML" as default.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("OutputFile", type(""))
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -69,7 +69,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
         self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
         self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the output file"
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -88,7 +88,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
 
         # OutputFile is required
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "The OutputFile must be specified."
             recommendation = "Specify the output file."
             warning_message += "\n" + message
@@ -109,7 +109,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Create a file summarizing command log messages, status, etc.
 
@@ -152,16 +152,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
             # Close the file
             fp.close()
 
-        except Exception as e:
-            warning_count += 1
-            message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
-            logger.warning(message, exc_info=True)
-            self.command_status.add_to_log(
-                CommandPhaseType.RUN,
-                CommandLogRecord(CommandStatusType.FAILURE, message,
-                                 "See the log file for details."))
-
-        except:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
             logger.warning(message, exc_info=True)

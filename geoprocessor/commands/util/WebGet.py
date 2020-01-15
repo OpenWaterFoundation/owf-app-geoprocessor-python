@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 import geoprocessor.util.zip_util as zip_util
 
 import logging
@@ -37,7 +37,6 @@ from requests.auth import HTTPBasicAuth
 
 
 class WebGet(AbstractCommand):
-
     """
     Downloads a file from a web url.
 
@@ -52,13 +51,13 @@ class WebGet(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("URL", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("Username", type("")),
         CommandParameterMetadata("Password", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -107,7 +106,7 @@ class WebGet(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -126,7 +125,7 @@ class WebGet(AbstractCommand):
         # - existence of the url will also be checked in run_command().
         pv_URL = self.get_parameter_value(parameter_name='URL', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_URL, False, False):
+        if not validator_util.validate_string(pv_URL, False, False):
 
             message = "URL parameter has no value."
             recommendation = "Specify the URL parameter to indicate the URL of the file to download."
@@ -139,7 +138,7 @@ class WebGet(AbstractCommand):
         # - existence of the folder will also be checked in run_command().
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputFile, True, False):
+        if not validator_util.validate_string(pv_OutputFile, True, False):
 
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter to indicate the output file."
@@ -160,7 +159,7 @@ class WebGet(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_run_webget(self, output_file_abs):
+    def __should_run_webget(self, output_file_abs: str) -> None:
         """
        Checks the following:
        * the output folder is a valid folder
@@ -192,7 +191,7 @@ class WebGet(AbstractCommand):
         return run_webget
 
     @ staticmethod
-    def __rename_files_in_a_folder(list_of_files, folder_path, new_filename):
+    def __rename_files_in_a_folder(list_of_files: [str], folder_path: str, new_filename: str) -> None:
         """
 
         Renames files within a folder to a new name. The files retain their pathname (they stay in the same folder)
@@ -225,7 +224,7 @@ class WebGet(AbstractCommand):
             new_path = os.path.join(folder_path, "{}{}".format(new_filename, existing_extension))
             os.rename(existing_path, new_path)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Download the file from the web and save it on the local computer.
 

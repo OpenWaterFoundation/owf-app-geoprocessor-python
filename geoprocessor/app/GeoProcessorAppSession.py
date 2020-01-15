@@ -17,6 +17,11 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+# The following is needed to allow type hinting -> GeoProcessorAppSession, and requires Python 3.7+
+# See:  https://stackoverflow.com/questions/33533148/
+#         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
+from __future__ import annotations
+
 import getpass
 import logging
 import os
@@ -39,9 +44,9 @@ class GeoProcessorAppSession(object):
     """
 
     # Private singleton instance (class data)
-    _instance = None
+    _instance: GeoProcessorAppSession = None
 
-    def __init__(self, app_major_version):
+    def __init__(self, app_major_version: int) -> None:
         """
         Constructor.
         """
@@ -49,7 +54,7 @@ class GeoProcessorAppSession(object):
         # Major version for software, used to locate files in home folder
         self.app_major_version = app_major_version
 
-    def create_user_logs_folder(self):
+    def create_user_logs_folder(self) -> bool:
         """
         Create the user logs folder where the application log file lives.
 
@@ -72,7 +77,7 @@ class GeoProcessorAppSession(object):
                 return False
         return True
 
-    def get_history_file(self):
+    def get_history_file(self) -> str:
         """
         Get the name of the command history file for the user.
 
@@ -84,7 +89,7 @@ class GeoProcessorAppSession(object):
         return history_file
 
     @classmethod
-    def get_instance(cls, app_major_version=None):
+    def get_instance(cls, app_major_version: int = None) -> GeoProcessorAppSession:
         """
         Return a singleton instance.
 
@@ -101,7 +106,7 @@ class GeoProcessorAppSession(object):
 
         return cls._instance
 
-    def get_app_major_version(self):
+    def get_app_major_version(self) -> int:
         """
         Get the major version for the software, as an integer.
 
@@ -110,7 +115,7 @@ class GeoProcessorAppSession(object):
         """
         return self.app_major_version
 
-    def get_user_app_folder(self):
+    def get_user_app_folder(self) -> str:
         """
         Get the name of the application folder for the user.
 
@@ -121,7 +126,7 @@ class GeoProcessorAppSession(object):
         logging.info('Application folder for user is "' + app_folder + '"')
         return app_folder
 
-    def get_user_app_major_version_folder(self):
+    def get_user_app_major_version_folder(self) -> str:
         """
         Get the major version folder for application user files.
 
@@ -131,7 +136,7 @@ class GeoProcessorAppSession(object):
         major_user_app_folder = os.path.join(self.get_user_app_folder(), str(self.get_app_major_version()))
         return major_user_app_folder
 
-    def get_user_folder(self):
+    def get_user_folder(self) -> str:
         """
         Return the name of the user folder for the operating system, for example:
             Windows:  C:\\Users\\UserName\\.owfgp
@@ -144,7 +149,7 @@ class GeoProcessorAppSession(object):
         logging.info('User folder is "' + user_folder + '"')
         return user_folder
 
-    def get_user_log_file(self):
+    def get_user_log_file(self) -> str:
         """
         Get the name of the log file for the user.
 
@@ -155,7 +160,7 @@ class GeoProcessorAppSession(object):
         logging.info('Log file for user is "' + log_file + '"')
         return log_file
 
-    def get_user_logs_folder(self):
+    def get_user_logs_folder(self) -> str:
         """
         Get the name of the log file folder for the user.
 
@@ -166,7 +171,7 @@ class GeoProcessorAppSession(object):
         logging.info('Logs folder for user is "' + logs_folder + '"')
         return logs_folder
 
-    def initialize_user_files(self):
+    def initialize_user_files(self) -> bool:
         """
         Initialize user files.  This method should be called at application startup by calling 'get_instance()'
         to make sure that user files are created.
@@ -214,7 +219,7 @@ class GeoProcessorAppSession(object):
         self.create_user_logs_folder()
         return True
 
-    def push_history(self, command_file):
+    def push_history(self, command_file: str) -> None:
         """
         Push a new command file onto history. This reads the history, updates it, and writes it.
         The new file is added at the top, corresponding to the most recent file.
@@ -250,7 +255,7 @@ class GeoProcessorAppSession(object):
                     i -= 1
         self.write_history(history)
 
-    def read_history(self):
+    def read_history(self) -> [str]:
         """
         Read the history of command files that have been opened.
 
@@ -286,7 +291,7 @@ class GeoProcessorAppSession(object):
             if f is not None:
                 f.close()
 
-    def write_history(self, history_list):
+    def write_history(self, history_list: [str]) -> None:
         """
         Write the history of command files that have been opened
 
@@ -313,10 +318,10 @@ class GeoProcessorAppSession(object):
             try:
                 f.write(string_builder)
                 f.close()
-            except Exception as e:
+            except Exception:
                 # Absorb exception for now
                 pass
-        except Exception as e:
+        except Exception:
             message = 'Exception writing command file history'
             print(message)
             logging.warning(message, exc_info=True)

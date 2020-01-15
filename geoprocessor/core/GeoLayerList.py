@@ -17,6 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+
 class GeoLayerList(object):
 
     """
@@ -24,7 +25,7 @@ class GeoLayerList(object):
     This class is used to hold GeoLayerList properties for each registered GeoLayerList.
     """
 
-    def __init__(self, geolist_id, geolayer_id_list):
+    def __init__(self, geolist_id: str, geolayer_id_list: [str]) -> None:
 
         # "id" is a string that is the GeoLayerList's reference ID. This ID is used to call the GeoLayerList into the
         # GeoProcessor for manipulation.
@@ -34,7 +35,8 @@ class GeoLayerList(object):
         # GeoLayerList.
         self.geolayers = geolayer_id_list
 
-    def get_property(self, property_name, if_not_found_val=None, if_not_found_except=False):
+    def get_property(self, property_name: str, if_not_found_val: bool = None,
+                     if_not_found_except: bool = False) -> object:
         """
         Get a GeoLayerList property, case-specific.
 
@@ -50,7 +52,7 @@ class GeoLayerList(object):
             The object for the requested property name, or if not found the value of if_not_found_val.
 
         Raises:
-            KeyError if if_not_found_exept=True and the property name is not found.
+            KeyError if if_not_found_except=True and the property name is not found.
         """
         try:
             return self.properties[property_name]

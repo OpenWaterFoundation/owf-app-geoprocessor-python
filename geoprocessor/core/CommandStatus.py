@@ -17,6 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 
@@ -26,7 +27,7 @@ class CommandStatus(object):
     Class to hold the command status, including a log of messages generated
     when initializing, discovering, and running the command.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the instance.
         """
@@ -39,7 +40,7 @@ class CommandStatus(object):
         self.discovery_log_list = []
         self.run_log_list = []
 
-    def add_to_log(self, command_phase, log_record):
+    def add_to_log(self, command_phase: CommandPhaseType, log_record: CommandLogRecord) -> None:
         """
         Add a CommandLogRecord instance to the command status, for the specific command phase.
         The overall status for the command phase is also set to the maximum severity,
@@ -63,7 +64,7 @@ class CommandStatus(object):
             self.run_status = CommandStatusType.max_severity(self.run_status, log_record.severity)
             self.run_log_list.append(log_record)
 
-    def clear_log(self, command_phase=None):
+    def clear_log(self, command_phase: CommandPhaseType = None) -> None:
         """
         Clear the CommandLogRecord list for the command.
         The run status for all phases is set to CommandStatusType.UNKNOWN.
@@ -84,7 +85,7 @@ class CommandStatus(object):
             del self.run_log_list[:]
             self.run_status = CommandStatusType.UNKNOWN
 
-    def get_command_status_for_phase(self, command_phase):
+    def get_command_status_for_phase(self, command_phase: CommandPhaseType) -> CommandStatusType:
         """
         Return the command status for a phase of command processing.
 
@@ -103,7 +104,7 @@ class CommandStatus(object):
         else:  # This should never happen.
             return CommandStatusType.UNKNOWN
 
-    def get_log_count(self, phase=None, severity=None):
+    def get_log_count(self, phase: CommandPhaseType = None, severity: CommandStatusType = None) -> int:
         """
 
         Args:
@@ -127,7 +128,7 @@ class CommandStatus(object):
                     log_count = log_count + 1
         return log_count
 
-    def refresh_phase_severity(self, phase, severity_if_unknown):
+    def refresh_phase_severity(self, phase: CommandPhaseType, severity_if_unknown: CommandStatusType) -> None:
         """
         Refresh the command status for a phase.  This should normally only be called when
         initializing a status or setting to success.  Otherwise, add_to_log() should be

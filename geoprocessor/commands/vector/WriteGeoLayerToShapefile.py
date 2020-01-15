@@ -28,7 +28,7 @@ import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 import geoprocessor.util.zip_util as zip_util
 
 import os
@@ -58,7 +58,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
     """
 
     # Define the command parameters/
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("OutputCRS", type("")),
@@ -136,7 +136,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # - existence of the GeoLayer will also be checked in run_command().
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to write."
             warning += "\n" + message
@@ -148,7 +148,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # - existence of the folder will also be checked in run_command().
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter (relative or absolute pathname) to indicate the " \
                              "location and name of the output spatial data file in GeoJSON format."
@@ -159,7 +159,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
 
         # Check that optional ZipOutput parameter value is a valid Boolean value or is None.
         pv_ZipOutput = self.get_parameter_value(parameter_name="ZipOutput", command_parameters=command_parameters)
-        if not validators.validate_bool(pv_ZipOutput, none_allowed=True, empty_string_allowed=False):
+        if not validator_util.validate_bool(pv_ZipOutput, none_allowed=True, empty_string_allowed=False):
             message = "ZipOutput parameter value ({}) is not a recognized boolean value.".format(pv_ZipOutput)
             recommendation = "Specify either 'True' or 'False for the ZipOutput parameter."
             warning += "\n" + message
@@ -240,7 +240,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         pv_ZipOutput = self.get_parameter_value("ZipOutput", default_value='False')
 
         # Convert the ZipOutput value to a Boolean value.
-        zip_output_bool = string_util.string_to_boolean(pv_ZipOutput)
+        zip_output_bool = string_util.str_to_bool(pv_ZipOutput)
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -271,7 +271,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                     zip_util.zip_shapefile(output_file_absolute)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error writing GeoLayer {} to spatial data file in Shapefile format.".format(
                     pv_GeoLayerID)

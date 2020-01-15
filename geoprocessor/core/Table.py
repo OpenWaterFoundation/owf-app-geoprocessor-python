@@ -52,7 +52,7 @@ class Table(object):
     class functions.
     """
 
-    def __init__(self, table_id):
+    def __init__(self, table_id) -> None:
         """
         Initialize the Table object.
 
@@ -63,7 +63,7 @@ class Table(object):
 
         # "id" is a string that is the Table's reference ID. This ID is used to access the Table from the GeoProcessor
         # for manipulation.
-        self.id = table_id
+        self.id: str = table_id
 
         # "pandas_df" is a Pandas Data Frame object created by the pandas library. All manipulations are performed on
         # the Table's pandas data frame.
@@ -267,21 +267,21 @@ class TableField(object):
             elif data_type_to_check.upper() == "INT":
                 try:
                     int(item)
-                except:
+                except Exception:
                     is_correct_type = False
 
             # If checking for FLOAT values and the item is not a float value, set the is_correct_type to FALSE.
             elif data_type_to_check.upper() == "FLOAT":
                 try:
                     float(item)
-                except:
+                except Exception:
                     is_correct_type = False
 
             # If checking for STR values and the item is not a string value, set the is_correct_type to FALSE.
             elif data_type_to_check.upper() == "STR":
                 try:
                     str(item)
-                except:
+                except Exception:
                     is_correct_type = False
 
             if not is_correct_type:

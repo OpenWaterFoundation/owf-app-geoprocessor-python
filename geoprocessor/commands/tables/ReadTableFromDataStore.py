@@ -23,6 +23,7 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.DataStore import DataStore
 from geoprocessor.core.Table import Table
 from geoprocessor.core.Table import TableField
 from geoprocessor.core.Table import TableRecord
@@ -30,7 +31,7 @@ from geoprocessor.core.Table import TableRecord
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import sqlalchemy
@@ -63,7 +64,7 @@ class ReadTableFromDataStore(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("DataStoreID", type("")),
         CommandParameterMetadata("DataStoreTable", type("")),
         CommandParameterMetadata("Sql", type("")),
@@ -77,7 +78,7 @@ class ReadTableFromDataStore(AbstractCommand):
     # Choices for IfTableIDExists, used to validate parameter and display in editor
     __choices_IfTableIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -168,7 +169,7 @@ class ReadTableFromDataStore(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -187,7 +188,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # Check that parameter TableID is a non-empty, non-None string.
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_TableID, False, False):
+        if not validator_util.validate_string(pv_TableID, False, False):
             message = "TableID parameter has no value."
             recommendation = "Specify the TableID parameter to indicate the Table to write."
             warning += "\n" + message
@@ -198,7 +199,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # Check that parameter DataStoreID is a non-empty, non-None string.
         pv_DataStoreID = self.get_parameter_value(parameter_name='DataStoreID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_DataStoreID, False, False):
+        if not validator_util.validate_string(pv_DataStoreID, False, False):
             message = "DataStoreID parameter has no value."
             recommendation = "Specify the DataStoreID parameter (relative or absolute pathname) to indicate the " \
                              "location and name of the output delimited file."
@@ -214,7 +215,7 @@ class ReadTableFromDataStore(AbstractCommand):
         for parameter in selection_method_parameter_list:
 
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-            is_string_list.append(validators.validate_string(parameter_value, False, False))
+            is_string_list.append(validator_util.validate_string(parameter_value, False, False))
 
         if not is_string_list.count(True) == 1:
             message = "Must enable one (and ONLY one) of the following parameters: {}".format(
@@ -243,7 +244,7 @@ class ReadTableFromDataStore(AbstractCommand):
                     CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
             # If the DataStoreTable parameter is enabled, check that the Top parameter is an integer or None.
-            if pv_DataStoreTable and not validators.validate_int(pv_Top, True, False):
+            if pv_DataStoreTable and not validator_util.validate_int(pv_Top, True, False):
 
                 message = "Top parameter value ({}) is not a valid integer value.".format(pv_Top)
                 recommendation = "Specify a positive integer for the Top parameter to specify how many rows to return."
@@ -263,7 +264,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # Check that optional parameter IfTableIDExists is one of the acceptable values or is None.
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
                                                       command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IfTableIDExists, self.__choices_IfTableIDExists, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfTableIDExists, self.__choices_IfTableIDExists, none_allowed=True,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
@@ -284,7 +285,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_table(self, sql_file_abs, table_id, datastore_id):
+    def __should_read_table(self, sql_file_abs: str, table_id: str, datastore_id: str) -> bool:
         """
         Checks the following:
             * the SqlFile (absolute) is a valid file, if not None
@@ -308,14 +309,14 @@ class ReadTableFromDataStore(AbstractCommand):
         if sql_file_abs:
 
             # If the SqlFile is not a valid file path, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsFilePathValid", "SqlFile", sql_file_abs, "FAIL"))
+            should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "SqlFile", sql_file_abs, "FAIL"))
 
         # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
         # value of the IfTableIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
+        should_run_command.append(validator_util.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
+        should_run_command.append(validator_util.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
                                                        "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
@@ -325,7 +326,8 @@ class ReadTableFromDataStore(AbstractCommand):
             return True
 
     @staticmethod
-    def __read_table_from_datastore(ds, table_name, table_id, top, sql, cols_to_include, cols_to_exclude):
+    def __read_table_from_datastore(ds: DataStore, table_name: str, table_id: str, top: int, sql: str,
+                                    cols_to_include: [str], cols_to_exclude: [str]) -> Table:
         """
         Creates a GeoProcessor table object from a DataStore table.
 
@@ -377,7 +379,7 @@ class ReadTableFromDataStore(AbstractCommand):
 
                 # If an error is thrown, it is known that the column was not included in the result set of the
                 #  user-specified SQL statement. Do not add the column name to the included_cols list.
-                except:
+                except Exception:
                     pass
 
             # Iterate over the DataStore table columns that do have results from the user-specified SQL statement.
@@ -534,7 +536,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # Return the GeoProcessor Table object.
         return table
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Read the Table from the DataStore
 

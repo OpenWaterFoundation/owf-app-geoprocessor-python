@@ -25,7 +25,7 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -47,12 +47,12 @@ class RenameGeoLayerAttribute(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("ExistingAttributeName", type("")),
         CommandParameterMetadata("NewAttributeName", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -93,7 +93,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -111,7 +111,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
@@ -123,7 +123,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         pv_ExistingAttributeName = self.get_parameter_value(parameter_name='ExistingAttributeName',
                                                             command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_ExistingAttributeName, False, False):
+        if not validator_util.validate_string(pv_ExistingAttributeName, False, False):
 
             message = "ExistingAttributeName parameter has no value."
             recommendation = "Specify the ExistingAttributeName parameter to indicate the name of the attribute to" \
@@ -137,7 +137,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         pv_NewAttributeName = self.get_parameter_value(parameter_name='NewAttributeName',
                                                        command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_NewAttributeName, False, False):
+        if not validator_util.validate_string(pv_NewAttributeName, False, False):
             message = "NewAttributeName parameter has no value."
             recommendation = "Specify the NewAttributeName parameter to indicate the new name of the renamed attribute."
             warning += "\n" + message
@@ -157,7 +157,8 @@ class RenameGeoLayerAttribute(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_attribute_be_renamed(self, geolayer_id, existing_attribute_name, new_attribute_name):
+    def __should_attribute_be_renamed(self, geolayer_id: str, existing_attribute_name: str,
+                                      new_attribute_name: str) -> bool:
         """
         Checks the following:
          * The ID of the input GeoLayer is an actual GeoLayer (if not, log an error message & do not continue.)
@@ -237,7 +238,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         # one or many checks failed.
         return rename_attribute
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Add the attribute to the GeoLayer.
 
@@ -265,7 +266,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 input_geolayer.rename_attribute(pv_ExistingAttributeName, pv_NewAttributeName)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error renaming attribute ({}) of GeoLayer ({})" \
                           " to new name of '{}'.".format(pv_ExistingAttributeName, pv_GeoLayerID, pv_NewAttributeName)

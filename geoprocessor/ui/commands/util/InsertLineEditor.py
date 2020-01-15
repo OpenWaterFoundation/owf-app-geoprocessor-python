@@ -19,6 +19,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import geoprocessor.util.app_util as app_util
+from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 import geoprocessor.ui.util.qt_util as qt_util
 import functools
 import logging
@@ -29,14 +30,14 @@ import webbrowser
 # one stand alone editor
 
 
-class InsertLineEditor(QtWidgets.QDialog):
+class InsertLineEditor(AbstractCommandEditor):
     """
     Abstract command editor used as parent of command editor dialog implementations.
     This class maintains core layout information and provides functions to add components.
     """
 
     # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
-    def __init__(self, command):
+    def __init__(self, command: str) -> None:
         """
         Initialize the Abstract Dialog instance.
 
@@ -90,7 +91,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         if command.command_parameters:
             self.update = True
 
-    def add_ui_horizontal_separator(self):
+    def add_ui_horizontal_separator(self) -> None:
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
         # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
         # The frame object, Separator, separates the command description from the input form section of the Dialog box.
@@ -106,7 +107,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
 
-    def setup_ui_core(self):
+    def setup_ui_core(self) -> None:
         # Set up the editor core elements, which apply to any command.
         self.setup_ui_core_top()
         # Add separator
@@ -119,7 +120,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         # - don't do this because not using QtDesigner
         # QtCore.QMetaObject.connectSlotsByName(self)
 
-    def setup_ui_core_bottom(self):
+    def setup_ui_core_bottom(self) -> None:
         """
         Setup core UI components at the bottom of the dialog.
 
@@ -128,7 +129,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         self.setup_ui_core_command_area()
         self.setup_ui_core_command_buttons()
 
-    def setup_ui_core_top(self):
+    def setup_ui_core_top(self) -> None:
         """
         Setup core UI components at the top of the dialog.
 
@@ -138,7 +139,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         self.setObjectName("InsertLineCommand")
         self.setWindowTitle("Edit " + self.command.command_string + " command")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        icon_path = app_util.get_property("ProgramIconPath").replace('\\','/')
+        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
         self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # Because components are added to the UI the dialog will have a size.
@@ -151,13 +152,13 @@ class InsertLineEditor(QtWidgets.QDialog):
 
         self.setup_ui_core_command_description()
 
-    def setup_ui_core_command_area(self):
+    def setup_ui_core_command_area(self) -> None:
         # Create a label object to the Dialog window.
         # Set the alignment, the name, and the text of the label.
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
         self.grid_layout_row = self.grid_layout_row + 1
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
-        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(qt_util.from_utf8("CommandDisplay_Label"))
         self.CommandDisplay_Label.setText(qt_util.translate("Dialog", "Command: ", None))
         self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 2, 1)
@@ -186,13 +187,13 @@ class InsertLineEditor(QtWidgets.QDialog):
         # #self.CommandDisplay_View_TextBrowser.setHtml(qt_util.translate("Dialog", html, None))
         self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
 
-    def setup_ui_core_command_buttons(self):
+    def setup_ui_core_command_buttons(self) -> None:
         # Create a button box object. Add the button box object to the Dialog window.
         # Set the orientation, the standard buttons, the name and the connections of the button box object.
         # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
         self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(self)
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
-        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.OK_Cancel_Buttons.setObjectName(qt_util.from_utf8("OK_Cancel_Buttons"))
         self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Cancel).setToolTip(
             "Cancel command edit and ignore changes.")
@@ -202,7 +203,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(self.OK_Cancel_Buttons, self.grid_layout_row, 6, 1, 2)
 
-    def setup_ui_core_command_description(self):
+    def setup_ui_core_command_description(self) -> None:
         """
         Setup the description component at the top of the dialog.
         """
@@ -232,7 +233,7 @@ class InsertLineEditor(QtWidgets.QDialog):
                                                "See also the # command for commenting single lines.\n")
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
-    def update_command_display(self):
+    def update_command_display(self) -> None:
         """
         Each command dialog box has a command display that shows the string representation of the command with the
         user-specified input parameters. It is updated dynamically as the user enters/selects values for the different
@@ -295,7 +296,7 @@ class InsertLineEditor(QtWidgets.QDialog):
         # Update the Command Display Qt Widget to display the dynamic command display text.
         self.CommandDisplay_View_TextBrowser.setText(display)
 
-    def get_current_value(self, obj):
+    def get_current_value(self, obj: QtWidgets.QWidget) -> str:
         """
         Get the value within a QtGui.Widget object.
 
@@ -313,7 +314,7 @@ class InsertLineEditor(QtWidgets.QDialog):
             value = obj.text()
 
         # Reads ComboBox widgets.
-        except:
+        except Exception:
             value = obj.currentText()
 
         # Return the value within the input QtGui.Widget object.

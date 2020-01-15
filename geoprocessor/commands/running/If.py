@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -36,19 +36,19 @@ class If(AbstractCommand):
     The If command starts an If block.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("Condition", type("")),
         CommandParameterMetadata("CompareAsStrings", type(True))  # Not yet implemented
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command instance.
         """
         super().__init__()
         # AbstractCommand data
-        self.command_name = "If"
+        self.command_name: str = "If"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -84,7 +84,7 @@ class If(AbstractCommand):
         # Local private data
         self.__condition_eval = True  # The result of evaluating the condition
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -106,7 +106,7 @@ class If(AbstractCommand):
 
         # Name is required
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
-        if not validators.validate_string(pv_Name, False, False):
+        if not validator_util.validate_string(pv_Name, False, False):
             message = "A name for the If block must be specified"
             recommendation = "Specify the Name."
             warning += "\n" + message
@@ -116,7 +116,7 @@ class If(AbstractCommand):
 
         # Condition is required
         pv_Condition = self.get_parameter_value(parameter_name='Condition', command_parameters=command_parameters)
-        if not validators.validate_string(pv_Condition, False, False):
+        if not validator_util.validate_string(pv_Condition, False, False):
             message = "A condition for the If command must be specified"
             recommendation = "Specify the condition."
             warning += "\n" + message
@@ -137,7 +137,7 @@ class If(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def get_condition_eval(self):
+    def get_condition_eval(self) -> bool:
         """
         Return the result of evaluating the condition, which is set when run_command() is called.
 
@@ -147,7 +147,7 @@ class If(AbstractCommand):
         """
         return self.__condition_eval
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Return the name of the If (will match name of corresponding EndIf).
 
@@ -158,7 +158,7 @@ class If(AbstractCommand):
 
     # The logic of this command closely matches the TSTool If command
     # - could possibly improve but for now implement something basic that works
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Initializes the If.
 
@@ -427,7 +427,7 @@ class If(AbstractCommand):
                     CommandLogRecord(CommandStatusType.SUCCESS, message, recommendation))
                 self.__condition_eval = condition_eval
 
-        except Exception as e:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error in If, Name="' + pv_Name + '"'
             logger.warning(message, exc_info=True)

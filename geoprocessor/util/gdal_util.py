@@ -22,7 +22,7 @@ import geoprocessor.util.io_util as io_util
 import os
 
 
-def polygonize(raster_full_path, field_name, output_format, output_file, crs_code_int):
+def polygonize(raster_full_path: str, field_name: str, output_format: str, output_file: str, crs_code_int: int) -> None:
     # TODO egiles 2018-02-14 document
     # REF: https://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html#polygonize-a-raster-band
 
@@ -35,7 +35,6 @@ def polygonize(raster_full_path, field_name, output_format, output_file, crs_cod
     if srs.IsProjected:
         print(srs.GetAttrValue('projcs'))
     print(srs.GetAttrValue('geogcs'))
-
 
     # Get the raster's bands.
     src_band = src_ds.GetRasterBand(3)
@@ -74,7 +73,7 @@ def polygonize(raster_full_path, field_name, output_format, output_file, crs_cod
     # Get the layer projection.
     spatialRef = dst_layer.GetSpatialRef()
 
-def reproject_a_layer(input_path, input_driver, output_path, output_crs_int):
+def reproject_a_layer(input_path: str, input_driver: str, output_path: str, output_crs_int: int) -> None:
 
     driver = ogr.GetDriverByName(input_driver)
 

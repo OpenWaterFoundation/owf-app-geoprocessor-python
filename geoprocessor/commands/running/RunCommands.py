@@ -28,7 +28,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -38,18 +38,18 @@ class RunCommands(AbstractCommand):
     The RunCommands command runs a command file.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("CommandFile", type("")),
         CommandParameterMetadata("ExpectedStatus", type(""))
     ]
 
     # Choices for ExpectedStatus, used to validate parameter and display in editor
-    __choices_ExpectedStatus = ["Unknown", "Success", "Warning", "Failure"]
+    __choices_ExpectedStatus: [str] = ["Unknown", "Success", "Warning", "Failure"]
 
     __PASS = "PASS"
     __FAIL = "FAIL"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -93,7 +93,7 @@ class RunCommands(AbstractCommand):
         self.parameter_input_metadata['ExpectedStatus.Value.Default'] = "Success"
         self.parameter_input_metadata['ExpectedStatus.Values'] = ["", "Unknown", "Success", "Warning", "Failure"]
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -101,7 +101,7 @@ class RunCommands(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -112,7 +112,7 @@ class RunCommands(AbstractCommand):
 
         # CommandFile is required
         pv_CommandFile = self.get_parameter_value(parameter_name='CommandFile', command_parameters=command_parameters)
-        if not validators.validate_string(pv_CommandFile, False, False):
+        if not validator_util.validate_string(pv_CommandFile, False, False):
             message = "The CommandFile must be specified."
             recommendation = "Specify the command file."
             warning_message += "\n" + message
@@ -123,7 +123,7 @@ class RunCommands(AbstractCommand):
         # ExpectedStatus is optional, will default to Success at runtime
         pv_ExpectedStatus = self.get_parameter_value(parameter_name='ExpectedStatus',
                                                      command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_ExpectedStatus,
+        if not validator_util.validate_string_in_list(pv_ExpectedStatus,
                                                   self.__choices_ExpectedStatus, True, True):
             message = "ExpectedStatus parameter is invalid."
             recommendation = "Specify the ExpectedStatus parameter as blank or one of " + \
@@ -146,7 +146,7 @@ class RunCommands(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Run a separate command file and save results to the current processor.
 
@@ -194,7 +194,7 @@ class RunCommands(AbstractCommand):
             file_found = True
             try:
                 runner.read_command_file(command_file_absolute)
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 warning_count += 1
                 message = 'File does not exist:  "' + command_file_absolute + '"'
                 self.command_status.add_to_log(
@@ -335,16 +335,7 @@ class RunCommands(AbstractCommand):
                     test_pass_fail, expected_status, max_severity, command_file_absolute)
                 pass
 
-        except Exception as e:
-            warning_count += 1
-            message = 'Unexpected error running command file "' + pv_CommandFile_absolute + '"'
-            logger.warning(message, exc_info=True)
-            self.command_status.add_to_log(
-                CommandPhaseType.RUN,
-                CommandLogRecord(CommandStatusType.FAILURE, message,
-                                 "See the log file for details."))
-
-        except:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error running command file "' + pv_CommandFile_absolute + '"'
             logger.warning(message, exc_info=True)

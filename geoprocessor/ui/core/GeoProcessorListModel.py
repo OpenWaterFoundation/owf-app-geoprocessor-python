@@ -17,6 +17,12 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+# TODO smalers 2020-01-15 cannot use GeoProcessor in type hint because results in a circular dependency
+# from geoprocessor.core.GeoProcessor import GeoProcessor
+
+# TODO smalers 2020-01-15 cannot use CommandListWidget in type hint because results in a circular dependency
+# from geoprocessor.ui.app.CommandListWidget import CommandListWidget
+
 
 class GeoProcessorListModel(object):
     """
@@ -24,7 +30,9 @@ class GeoProcessorListModel(object):
     CommandListWidget.py and the logic being processed by GeoProcessor.py.
     """
 
-    def __init__(self, geoprocessor, command_list_view):
+    # TODO smalers 2020-01-15 cannot use GeoProcessor in type hint because results in a circular dependency
+    # def __init__(self, geoprocessor: GeoProcessor, command_list_view: CommandListWidget) -> None:
+    def __init__(self, geoprocessor, command_list_view) -> None:
         """
         Initialize the class elements
 
@@ -41,11 +49,12 @@ class GeoProcessorListModel(object):
         self.gp.add_model_listener(self)
 
         # Initialize the command list widget
+        # self.command_list_view: CommandListWidget = command_list_view
         self.command_list_view = command_list_view
         # Add the command list widget as a listener to be notified of changes made in this class
         self.command_list_view.add_model_listener(self)
 
-    def clear_all_commands(self):
+    def clear_all_commands(self) -> None:
         """
         Called when 'Clear Commands' button is pressed in
         CommandListWidget. Removes all commands from GeoProcessor.
@@ -58,7 +67,7 @@ class GeoProcessorListModel(object):
         # Update status of commands
         self.command_list_view.update_ui_status_commands()
 
-    def clear_selected_commands(self, selected_indices):
+    def clear_selected_commands(self, selected_indices: [int]) -> None:
         """
         Called when 'Clear Commands' button is pressed in
         CommandListWidget and when commands are individually selected from the
@@ -83,7 +92,7 @@ class GeoProcessorListModel(object):
         # Update status of commands
         self.command_list_view.update_ui_status_commands()
 
-    def command_file_read(self):
+    def command_file_read(self) -> None:
         """
         After commands are read in GeoProcessor the following functions
         can be ran in CommandListWidget to update elements of the UI.
@@ -109,9 +118,9 @@ class GeoProcessorListModel(object):
         # Notify the main ui that results should be refreshed
         self.command_list_view.notify_main_ui_listener_refresh_results()
 
-    def command_list_ran(self):
+    def command_list_ran(self) -> None:
         """
-        Called after the commands have been ran in GeoProcessor.
+        Called after the commands have been run in GeoProcessor.
 
         Returns:
             None
@@ -122,7 +131,7 @@ class GeoProcessorListModel(object):
         # Update status of commands
         self.command_list_view.update_ui_status_commands()
 
-    def decrease_indent_command_string(self, selected_indices):
+    def decrease_indent_command_string(self, selected_indices: [int]) -> None:
         """
         Update the GeoProcessor command list to remove white space in front of the
         given command string in order to decrease the indent.
@@ -143,7 +152,7 @@ class GeoProcessorListModel(object):
         # Update the CommandListWidget to reflect decreased indent commands
         self.update_command_list_ui()
 
-    def indent_command_string(self,selected_indices):
+    def indent_command_string(self, selected_indices: [int]) -> None:
         """
         Update the GeoProcessor command list to add white space in the front of the
         given command string in order to increase the indent.
@@ -164,7 +173,7 @@ class GeoProcessorListModel(object):
         # Update the CommandListWidget UI to reflect indented commands
         self.update_command_list_ui()
 
-    def new_command_list(self):
+    def new_command_list(self) -> None:
         """
         Reset the command list backup in the command list widget in order to
         be able to check if there have been any changes to the command file.
@@ -178,7 +187,7 @@ class GeoProcessorListModel(object):
         # Notify the main ui that results should be refreshed
         self.command_list_view.notify_main_ui_listener_refresh_results()
 
-    def run_all_commands(self):
+    def run_all_commands(self) -> None:
         """
         Run all commands in GeoProcessor
 
@@ -190,7 +199,7 @@ class GeoProcessorListModel(object):
         print("Running commands in processor...")
         self.gp.run_commands()
 
-    def run_selected_commands(self, selected_indices):
+    def run_selected_commands(self, selected_indices: [int]) -> None:
         """
         Run only the selected commands in GeoProcessor
 
@@ -204,7 +213,7 @@ class GeoProcessorListModel(object):
         print("Running selected commands in processor...")
         self.gp.run_selected_commands(selected_indices)
 
-    def update_command_list_backup(self):
+    def update_command_list_backup(self) -> None:
         """
         Will update the command list backup command list to reflect
         whatever the current state of the command list is in the CommandListWidget
@@ -216,7 +225,7 @@ class GeoProcessorListModel(object):
         """
         self.command_list_view.set_command_list_backup()
 
-    def update_command_list_ui(self):
+    def update_command_list_ui(self) -> None:
         """
         Update the commands list UI in CommandListWidget
 

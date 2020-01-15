@@ -17,6 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandStatus import CommandStatus
 
 import geoprocessor.util.command_util as command_util
@@ -28,34 +29,47 @@ class AbstractCommand(object):
     which can (and in some casts should) be overloaded in child classes.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         # Full command string (with indentation).
-        self.command_string = ""
+        self.command_string: str = ""
 
         # Command name as user would see. Will be set when command is parsed. Will NOT be set if an UnknownCommand.
-        self.command_name = ""
+        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        self.command_name: str = ""
 
         # Command description, used in editors.
-        self.command_description = ""
+        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        self.command_description: str = ""
 
         # Command processor, needed to interact with the geoprocessing environment.
+        # - TODO smalers 2020-01-14 don't type hint for GeoProcessor because would get into circular imports
         self.command_processor = None
+
+        # Command processor user interface, needed for ?
+        # - TODO smalers 2020-01-14 don't type hint for GeoProcessorUI because would get into circular imports
+        self.geoprocessor_ui = None
 
         # Command parameters, a dictionary of input parameter names and parameter values.
         # The parameter values are all strings, matching the parsed values from the command string.
         # This ensures that no internal conversion, decimal round-off, etc. is exhibited.
         # The parameters are converted to needed non-string values in the command's run_command() function.
-        self.command_parameters = {}
+        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        self.command_parameters: dict = {}
+
+        # Command metadata, used to display the description, etc.
+        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        self.command_metadata: dict = {}
 
         # Command parameter metadata, a list of CommandParameterMetadata to
         # describe parameter names and types used by the command.
-        self.command_parameter_metadata = []
+        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        self.command_parameter_metadata: [CommandParameterMetadata] = []
 
         # Command status to track issues.
-        self.command_status = CommandStatus()
+        self.command_status: CommandStatus = CommandStatus()
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
         This function should be defined in child classes in most cases.
@@ -64,7 +78,7 @@ class AbstractCommand(object):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -72,7 +86,7 @@ class AbstractCommand(object):
         """
         pass
 
-    def get_parameter_metadata(self, parameter_name):
+    def get_parameter_metadata(self, parameter_name: str) -> CommandParameterMetadata:
         """
         Return the metadata for the requested parameter name.
         This can also be used to figure out if a parameter name is valid
@@ -91,7 +105,8 @@ class AbstractCommand(object):
         # Matching parameter not found so return None
         return None
 
-    def get_parameter_value(self, parameter_name, command_parameters=None, default_value=None):
+    def get_parameter_value(self, parameter_name: str, command_parameters: dict = None,
+                            default_value: str = None) -> str:
         """
         Return the value for a parameter name.
 
@@ -122,7 +137,8 @@ class AbstractCommand(object):
             # Parameter was not found
             return default_value
 
-    def initialize_command(self, command_string, processor, full_initialization):
+    # TODO smalers 2020-01-14 Don't type hint processor to GeoProcessor because it will result in circular import
+    def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
         Initialize the command by setting the processor and parsing parameters.
 
@@ -147,7 +163,8 @@ class AbstractCommand(object):
             # the following will call the AbstractCommand.parse_command by default
             self.parse_command(command_string)
 
-    def initialize_geoprocessor_ui(self, geoprocessor_ui):
+    # TODO smalers 2020-01-14 don't type hint GeoProcessorUI because it will result in circular import issue
+    def initialize_geoprocessor_ui(self, geoprocessor_ui) -> None:
         """
         Initialize the geoprocessor ui for commands that need to access data
         or functions from GeoProcessorUI.py
@@ -159,7 +176,7 @@ class AbstractCommand(object):
         """
         self.geoprocessor_ui = geoprocessor_ui
 
-    def parse_command(self, command_string):
+    def parse_command(self, command_string: str) -> None:
         """
         Parse the command string and into self.command_parameters dictionary of
         command parameter names and values.
@@ -169,7 +186,7 @@ class AbstractCommand(object):
             command_string The full command string as in Command(Param1="Value1",Param2="Value2")
 
         Returns:
-            Nothing.
+            None
         """
 
         self.command_parameters = dict()
@@ -200,22 +217,22 @@ class AbstractCommand(object):
                 print('After parsing, command parameter name="' + parameter_name + '" value="' + parameter_value + '"')
                 pass
 
-    def print_for_debug(self):
+    def print_for_debug(self) -> None:
         print("Debug information for command")
         print("Command name=" + self.command_name)
         print("Command string=" + self.command_string)
         for parameter_name, parameter_value in self.command_parameters.items():
             print('Command parameter name ="' + parameter_name + '", value="' + parameter_value + '"')
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. This should always be overridden by the command class.
 
         Returns:
         """
-        print('In AbstractCommand.run_command')
+        raise RuntimeError("In AbstractCommand.run_command - need to define 'run_command' method in derived class.")
 
-    def to_string(self, command_parameters=None, format_all=False):
+    def to_string(self, command_parameters: dict = None, format_all: bool = False) -> str:
         """
         Format the internal command data into the command string that users see.
         This version of the function should only be used by commands that follow CommandName(Param1="Value1",...)

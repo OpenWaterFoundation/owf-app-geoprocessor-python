@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
@@ -38,7 +38,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
     The file is appended to each time a command file is run with a RunCommands command.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("OutputFile", type(""))
     ]
 
@@ -49,7 +49,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
     __regression_test_fail_count = 0
     __regression_test_pass_count = 0
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -77,8 +77,9 @@ class StartRegressionTestResultsReport(AbstractCommand):
         self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the report file to create"
 
     @classmethod
-    def append_to_regression_test_report(cls, is_enabled, run_time_ms, test_pass_fail, expected_status,
-                                         max_severity, test_command_file):
+    def append_to_regression_test_report(cls, is_enabled: bool, run_time_ms: int, test_pass_fail: str,
+                                         expected_status: str, max_severity: CommandStatusType,
+                                         test_command_file: str) -> None:
         """
         Add a record to the regression test results report and optionally results tables.
         The report is a simple text file that indicates whether a test passed.
@@ -157,7 +158,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
             pass
         """
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -165,7 +166,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -176,7 +177,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
 
         # OutputFile is required
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "The OutputFile must be specified."
             recommendation = "Specify the output file."
             warning_message += "\n" + message
@@ -198,7 +199,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
-    def close_regression_test_report_file(cls):
+    def close_regression_test_report_file(cls) -> None:
         """
         Close the regression test report file.
 
@@ -236,7 +237,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
 
     # TODO smalers 2018-01-28 Evaluate whether to make this a class method
     @staticmethod
-    def __open_new_regression_test_report_file(output_file, append=False):
+    def __open_new_regression_test_report_file(output_file: str, append: bool = False) -> None:
         """
         Open a new regression test report file.
         This file is used by the processor to record the tests that are run and test status.
@@ -290,7 +291,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
             "#----+-------+------+----------+-----------+------------------" +
             "---------------------------------------------------------------------------" + nl)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Open a file to receive regression test results.
 
@@ -326,7 +327,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
             self.__open_new_regression_test_report_file(pv_OutputFile_absolute, False)  # Do not append
             logger.info('Opened regression test results report file "' + pv_OutputFile_absolute + '"')
 
-        except Exception as e:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error opening file "' + pv_OutputFile_absolute + '"'
             logger.warning(message, exc_info=True)

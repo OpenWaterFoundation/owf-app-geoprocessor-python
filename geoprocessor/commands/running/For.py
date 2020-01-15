@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -36,7 +36,7 @@ class For(AbstractCommand):
     The For command starts a For block.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("IteratorProperty", type("")),
         # Use strings for sequence because could be integer, decimal, or string list.
@@ -51,13 +51,13 @@ class For(AbstractCommand):
         CommandParameterMetadata("TablePropertyMap", type("")),
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize an instance of the command.
         """
         super().__init__()
         # AbstractCommand data
-        self.command_name = "For"
+        self.command_name: str = "For"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -175,7 +175,7 @@ class For(AbstractCommand):
         self.table_column = None
         self.table_property_map = None
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -203,7 +203,7 @@ class For(AbstractCommand):
 
         # Name is required
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
-        if not validators.validate_string(pv_Name, False, False):
+        if not validator_util.validate_string(pv_Name, False, False):
             message = "A name for the For block must be specified"
             recommendation = "Specify the Name."
             warning += "\n" + message
@@ -219,7 +219,7 @@ class For(AbstractCommand):
         if pv_SequenceStart is not None and pv_SequenceStart != "":
             self.iterator_is_sequence = True  # Will be checked below to make sure only one option is used
             option_count += 1
-            if not validators.validate_number(pv_SequenceStart, False, False):
+            if not validator_util.validate_number(pv_SequenceStart, False, False):
                 message = "The SequenceStart value must be specified as a number"
                 recommendation = "Specify the SequenceStart as a number."
                 warning += "\n" + message
@@ -236,8 +236,9 @@ class For(AbstractCommand):
 
             # The other sequence parameters only make sense if the start is specified
             # SequenceEnd is currently required since no other iteration types are implemented
-            pv_SequenceEnd = self.get_parameter_value(parameter_name='SequenceEnd', command_parameters=command_parameters)
-            if not validators.validate_number(pv_SequenceEnd, False, False):
+            pv_SequenceEnd = self.get_parameter_value(parameter_name='SequenceEnd',
+                                                      command_parameters=command_parameters)
+            if not validator_util.validate_number(pv_SequenceEnd, False, False):
                 message = "The SequenceEnd value must be specified as a number"
                 recommendation = "Specify the SequenceEnd as a number."
                 warning += "\n" + message
@@ -255,7 +256,7 @@ class For(AbstractCommand):
             # SequenceIncrement is currently required since no other iteration types are implemented
             pv_SequenceIncrement = self.get_parameter_value(
                 parameter_name='SequenceIncrement', command_parameters=command_parameters)
-            if not validators.validate_number(pv_SequenceIncrement, False, False):
+            if not validator_util.validate_number(pv_SequenceIncrement, False, False):
                 message = "The SequenceIncrement value must be specified as a number"
                 recommendation = "Specify the SequenceIncrement as a number."
                 warning += "\n" + message
@@ -288,7 +289,7 @@ class For(AbstractCommand):
             # TableColumn is required
             pv_TableColumn = self.get_parameter_value(parameter_name='TableColumn',
                                                       command_parameters=command_parameters)
-            if not validators.validate_string(pv_TableColumn, False, False):
+            if not validator_util.validate_string(pv_TableColumn, False, False):
                 message = "The TableColumn parameter must be specified"
                 recommendation = "Specify the TableColumn."
                 warning += "\n" + message
@@ -315,13 +316,13 @@ class For(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            logger.warn(warning)
+            logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Return the name of the For (will match name of corresponding EndFor).
 
@@ -330,7 +331,7 @@ class For(AbstractCommand):
         """
         return self.get_parameter_value("Name")
 
-    def next(self):
+    def next(self) -> bool:
         """
         Increment the loop counter.
         If called the first time, initialize.
@@ -370,7 +371,7 @@ class For(AbstractCommand):
                     if debug:
                         logger.info("Initialized iterator object to first item in list: " + str(self.iterator_object))
                         return True
-                except:
+                except Exception:
                     # message = "Error initializing For() iterator to initial value in list (" + e + ").";
                     message = "Error initializing For() iterator initial value to first item in list"
                     logger.warning(message, exc_info=True)
@@ -394,7 +395,7 @@ class For(AbstractCommand):
                     if debug:
                         logger.info("Initialized iterator object to sequence start: " + str(self.iterator_object))
                         return True
-                except:
+                except Exception:
                     # message = "Error initializing For() iterator to initial value (" + e + ").";
                     message = "Error initializing For() iterator initial value to sequence start"
                     logger.warning(message, exc_info=True)
@@ -417,14 +418,14 @@ class For(AbstractCommand):
                     # Get the TablePropertyMap
                     pv_TablePropertyMap = self.get_parameter_value(parameter_name='TablePropertyMap')
                     # Assign as class variable after converting from string to dictionary
-                    self.table_property_map = string_util.delimited_string_to_dictionary_one_value(pv_TablePropertyMap,
-                                                                                                   entry_delimiter=",",
-                                                                                                   key_value_delimiter=":",
-                                                                                                   trim=False)
+                    self.table_property_map =\
+                        string_util.delimited_string_to_dictionary_one_value(pv_TablePropertyMap,
+                                                                             entry_delimiter=",",
+                                                                             key_value_delimiter=":",
+                                                                             trim=False)
                     # Get the values of the input column as a list
                     self.iterator_object_list_index = 0
                     self.iterator_list = self.table.get_column_values_as_list(pv_TableColumn)
-
 
                     if self.iterator_list is None:
                         message = 'For command iterator table column "' + pv_TableColumn + '" is not defined.'
@@ -442,7 +443,7 @@ class For(AbstractCommand):
                     if debug:
                         logger.info("Initialized iterator object to first item in list: " + str(self.iterator_object))
                         return True
-                except:
+                except Exception:
                     # message = "Error initializing For() iterator to initial value (" + e + ").";
                     message = "Error initializing For() iterator initial value to sequence start"
                     logger.warning(message, exc_info=True)
@@ -455,7 +456,8 @@ class For(AbstractCommand):
             # Increment the iterator property
             # - optionally set additional properties from other table columns (tables not yet supported)
             if self.iterator_is_list:
-                # If the iterator object is already at or will exceed the list length if incremented, then done iterating
+                # If the iterator object is already at or will exceed the list length if incremented,
+                # then done iterating
                 # - len() is 1-based, index is 0-based
                 if self.iterator_object_list_index >= (len(self.iterator_list) - 1):
                     logger.info("Iterator has reached list end.  Returning False from next().")
@@ -481,7 +483,8 @@ class For(AbstractCommand):
                     logger.info("Iterator value is now " + str(self.iterator_object) + ".  Returning True from next().")
                     return True
             elif self.iterator_is_table:
-                # If the iterator object is already at or will exceed the list length if incremented, then done iterating
+                # If the iterator object is already at or will exceed the list length if incremented,
+                # then done iterating
                 # - len() is 1-based, index is 0-based
                 if self.iterator_object_list_index >= (len(self.iterator_list) - 1):
                     logger.info("Iterator has reached list end.  Returning False from next().")
@@ -499,7 +502,7 @@ class For(AbstractCommand):
                 # Iteration type not recognized so jump out right away to avoid infinite loop
                 return True
 
-    def reset_command(self):
+    def reset_command(self) -> None:
         """
         Reset the command to uninitialized state.
         This is needed to ensure that re-executing commands will
@@ -509,7 +512,7 @@ class For(AbstractCommand):
         self.for_initialized = False
         logger.info('Reset For loop to uninitialized')
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  This initializes the iterator data for use when next() is called by the processor.
 
@@ -581,7 +584,7 @@ class For(AbstractCommand):
 
         self.command_processor.set_property(pv_IteratorProperty, self.iterator_object)
 
-    def __set_iterator_property_value(self, iterator_property_value):
+    def __set_iterator_property_value(self, iterator_property_value: object) -> None:
         """
         Set the value of the iterator property (index), used when iterating over a list.
 
@@ -593,7 +596,7 @@ class For(AbstractCommand):
         """
         self.iterator_object = iterator_property_value
 
-    def __next_set_properties_from_table(self):
+    def __next_set_properties_from_table(self) -> None:
 
         # Get the iterator object list index
         index = self.iterator_object_list_index
@@ -606,11 +609,10 @@ class For(AbstractCommand):
 
         # Iterate over the entries in the table_property_map dictionary.
         # key is the property name and value is the corresponding column name
-        for column, property in self.table_property_map.items():
+        for column, prop in self.table_property_map.items():
 
             # Get the value for the given column and the current row.
             property_val = row[column]
 
-            # Assign the geoprocessor property the corresponding value.
-            self.command_processor.set_property(property, property_val)
-
+            # Assign the GeoProcessor property the corresponding value.
+            self.command_processor.set_property(prop, property_val)

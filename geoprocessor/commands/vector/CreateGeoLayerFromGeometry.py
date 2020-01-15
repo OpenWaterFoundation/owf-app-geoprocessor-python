@@ -29,7 +29,7 @@ from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -52,14 +52,14 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("NewGeoLayerID", type("")),
         CommandParameterMetadata("GeometryFormat", type(str)),
         CommandParameterMetadata("GeometryData", type(str)),
         CommandParameterMetadata("CRS", type(str)),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -133,7 +133,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -157,7 +157,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
 
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
 
-            if not validators.validate_string(parameter_value, False, False):
+            if not validator_util.validate_string(parameter_value, False, False):
                 message = "{} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
                 warning += "\n" + message
@@ -169,7 +169,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         pv_GeometryFormat = self.get_parameter_value(parameter_name="GeometryFormat",
                                                      command_parameters=command_parameters)
         acceptable_values = ["BoundingBox", "WKT", "WKB"]
-        if not validators.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
+        if not validator_util.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
@@ -183,7 +183,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
@@ -205,7 +205,8 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geolayer_be_created(self, geolayer_id, crs, geometry_format, geometry_data):
+    def __should_geolayer_be_created(self, geolayer_id: str, crs: str, geometry_format: str,
+                                     geometry_data: str) -> bool:
         """
         Checks the following:
         * the CRS is a valid CRS
@@ -228,17 +229,17 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         should_run_command = []
 
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
 
         # If the new GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
         # (depends on the value of the IfGeoLayerIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "NewGeoLayerID", geolayer_id, None))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "NewGeoLayerID", geolayer_id, None))
 
         # If the GeometryFormat is BoundingBox, continue with the checks.
         if geometry_format.upper() == "BOUNDINGBOX":
 
             # If the GeometryData string does not contain 4 items when converted to a list, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsListLengthCorrect", "GeometryData",
+            should_run_command.append(validator_util.run_check(self, "IsListLengthCorrect", "GeometryData",
                                                            geometry_data, "FAIL", other_values=[",", 4]))
 
         # Return the Boolean to determine if the process should be run.
@@ -247,7 +248,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Create the GeoLayer with the input geometries. Add GeoLayer to the GeoProcessor's geolayers
          list.
@@ -329,7 +330,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
                 self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process.
-            except Exception as e:
+            except Exception:
 
                 self.warning_count += 1
                 message = "Unexpected error creating GeoLayer ({}).".format(pv_NewGeoLayerID)

@@ -26,10 +26,11 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
+import typing
 
 
 class CompareFiles(AbstractCommand):
@@ -38,7 +39,7 @@ class CompareFiles(AbstractCommand):
     differences.  The command is useful for automated testing.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("InputFile1", type("")),
         CommandParameterMetadata("InputFile2", type("")),
         CommandParameterMetadata("CommentLineChar", type("")),
@@ -55,7 +56,7 @@ class CompareFiles(AbstractCommand):
     __choices_IfDifferent = ["Ignore", "Warn", "Fail"]
     __choices_IfSame = ["Ignore", "Warn", "Fail"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -126,7 +127,7 @@ class CompareFiles(AbstractCommand):
         self.parameter_input_metadata['IfDifferent.Tooltip'] = (
             "Indicate the action if the source files are different: Ignore (ignore differences and do not "
             "warn), Warn (generate a warning message), Fail (generate a failure message)")
-        self.parameter_input_metadata['IfDifferent.Values'] = [ "", "Ignore", "Warn", "Fail" ]
+        self.parameter_input_metadata['IfDifferent.Values'] = ["", "Ignore", "Warn", "Fail"]
         self.parameter_input_metadata['IfDifferent.Value.Default'] = "Ignore"
         # IfSame
         self.parameter_input_metadata['IfSame.Description'] = "indicate action if source files are same"
@@ -134,10 +135,10 @@ class CompareFiles(AbstractCommand):
         self.parameter_input_metadata['IfSame.Tooltip'] = (
             "Indicate the action if the source files are the same: Ignore (ignore if same and do not warn), "
             "Warn (generate a warning message), Fail (generate a failure message)")
-        self.parameter_input_metadata['IfSame.Values'] = [ "", "Ignore", "Warn", "Fail" ]
+        self.parameter_input_metadata['IfSame.Values'] = ["", "Ignore", "Warn", "Fail"]
         self.parameter_input_metadata['IfSame.Value.Default'] = "Ignore"
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -145,7 +146,7 @@ class CompareFiles(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -156,7 +157,7 @@ class CompareFiles(AbstractCommand):
 
         # InputFile1 is required
         pv_InputFile1 = self.get_parameter_value(parameter_name='InputFile1', command_parameters=command_parameters)
-        if not validators.validate_string(pv_InputFile1, False, False):
+        if not validator_util.validate_string(pv_InputFile1, False, False):
             message = "The InputFile1 parameter must be specified."
             recommendation = "Specify the first input file."
             warning_message += "\n" + message
@@ -166,7 +167,7 @@ class CompareFiles(AbstractCommand):
 
         # InputFile2 is required
         pv_InputFile2 = self.get_parameter_value(parameter_name='InputFile2', command_parameters=command_parameters)
-        if not validators.validate_string(pv_InputFile2, False, False):
+        if not validator_util.validate_string(pv_InputFile2, False, False):
             message = "The InputFile2 parameter must be specified."
             recommendation = "Specify the second input file."
             warning_message += "\n" + message
@@ -179,7 +180,7 @@ class CompareFiles(AbstractCommand):
         # MatchCase is optional, defaults to True at runtime
         pv_MatchCase = self.get_parameter_value(parameter_name='MatchCase',
                                                 command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_MatchCase, self.__choices_MatchCase, True, True):
+        if not validator_util.validate_string_in_list(pv_MatchCase, self.__choices_MatchCase, True, True):
             message = "MatchCase parameter is invalid."
             recommendation = "Specify the MatchCase parameter as blank or one of " + str(self.__choices_MatchCase)
             warning_message += "\n" + message
@@ -190,7 +191,7 @@ class CompareFiles(AbstractCommand):
         # IgnoreWhitespace is optional, defaults to True at runtime
         pv_IgnoreWhitespace = self.get_parameter_value(parameter_name='IgnoreWhitespace',
                                                        command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IgnoreWhitespace, self.__choices_MatchCase, True, True):
+        if not validator_util.validate_string_in_list(pv_IgnoreWhitespace, self.__choices_MatchCase, True, True):
             message = "IgnoreWhitespace parameter is invalid."
             recommendation = "Specify the IgnoreWhitespace parameter as blank or one of " + \
                              str(self.__choices_IgnoreWhitespace)
@@ -202,7 +203,7 @@ class CompareFiles(AbstractCommand):
         # AllowedDiffCount is optional, defaults to 0 at runtime, but must be a number if specified
         pv_AllowedDiffCount = self.get_parameter_value(parameter_name='AllowedDiffCount',
                                                        command_parameters=command_parameters)
-        if not validators.validate_int(pv_AllowedDiffCount, True, True):
+        if not validator_util.validate_int(pv_AllowedDiffCount, True, True):
             message = "The AllowedDiffCount parameter is invalid."
             recommendation = "Specify the allowed difference count as an integer."
             warning_message += "\n" + message
@@ -213,7 +214,7 @@ class CompareFiles(AbstractCommand):
         # IfDifferent is optional, defaults to Ignore at runtime
         pv_IfDifferent = self.get_parameter_value(parameter_name='IfDifferent',
                                                   command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IfDifferent, self.__choices_IfDifferent, True, True):
+        if not validator_util.validate_string_in_list(pv_IfDifferent, self.__choices_IfDifferent, True, True):
             message = "IfDifferent parameter is invalid."
             recommendation = "Specify the IfDifferent parameter as blank or one of " + str(self.__choices_IfDifferent)
             warning_message += "\n" + message
@@ -224,7 +225,7 @@ class CompareFiles(AbstractCommand):
         # IfSame is optional, defaults to Ignore at runtime
         pv_IfSame = self.get_parameter_value(parameter_name='IfSame',
                                              command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IfSame, self.__choices_IfSame, True, True):
+        if not validator_util.validate_string_in_list(pv_IfSame, self.__choices_IfSame, True, True):
             message = "IfSame parameter is invalid."
             recommendation = "Specify the IfSame parameter as blank or one of " + str(self.__choices_IfSame)
             warning_message += "\n" + message
@@ -246,7 +247,7 @@ class CompareFiles(AbstractCommand):
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
-    def __read_line(cls, inf, comment_line_char, ignore_whitespace):
+    def __read_line(cls, inf: typing.TextIO, comment_line_char: str, ignore_whitespace: bool) -> str:
         """
         Read a single line from the indicated file.
 
@@ -262,11 +263,11 @@ class CompareFiles(AbstractCommand):
             # Read until a non-comment line is found
             try:
                 iline = inf.readline()
-            except Exception as e:
+            except Exception:
                 return None
             if iline is None:
                 return None
-            # TODO smalers 2018-01-08 need to figure out how to allow reading blank lines if not end of file
+                # TODO smalers 2018-01-08 need to figure out how to allow reading blank lines if not end of file
             elif len(iline) == 0:
                 return None
             elif len(iline) > 0 and comment_line_char.find(iline[0:1]) >= 0:
@@ -281,12 +282,12 @@ class CompareFiles(AbstractCommand):
             else:
                 return iline
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Compare the input files.
 
         Returns:
-            Nothing.
+            None
 
         Raises:
                 RuntimeError: if a runtime input error occurs.
@@ -403,7 +404,7 @@ class CompareFiles(AbstractCommand):
                             '{:4f}'.format(100.0*float(diff_count)/float(line_count_compared)) +
                             '% (compared ' + str(line_count_compared) + ' lines).')
 
-        except Exception as e:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error comparing file "' + pv_InputFile1_absolute + '" to "' + \
                       pv_InputFile2_absolute + '"'

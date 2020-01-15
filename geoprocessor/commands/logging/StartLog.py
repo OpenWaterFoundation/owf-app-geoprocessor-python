@@ -27,7 +27,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.log_util as log_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -38,11 +38,11 @@ class StartLog(AbstractCommand):
     This is useful to ensure that a local log file is created with the command file.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("LogFile", type(""))
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command instance.
         """
@@ -69,7 +69,7 @@ class StartLog(AbstractCommand):
         self.parameter_input_metadata["LogFile.FileSelector.Type"] = "Read"
         self.parameter_input_metadata["LogFile.FileSelector.Title"] = "Select Log File"
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -77,7 +77,7 @@ class StartLog(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -88,7 +88,7 @@ class StartLog(AbstractCommand):
 
         # LogFile is required
         pv_LogFile = self.get_parameter_value(parameter_name='LogFile', command_parameters=command_parameters)
-        if not validators.validate_string(pv_LogFile, False, False):
+        if not validator_util.validate_string(pv_LogFile, False, False):
             message = "The log file must be specified."
             recommendation = "Specify the log file."
             warning += "\n" + message
@@ -110,13 +110,13 @@ class StartLog(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Restart the lof file with the given name.
         Subsequent logging messages will go to the file until another StartLog() command is run.
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             RuntimeError if any exception occurs running the command.

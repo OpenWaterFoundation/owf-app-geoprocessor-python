@@ -25,7 +25,7 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -45,11 +45,11 @@ class CloseDataStore(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("DataStoreID", type("")),
         CommandParameterMetadata("StatusMessage", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -86,7 +86,7 @@ class CloseDataStore(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -106,7 +106,7 @@ class CloseDataStore(AbstractCommand):
         pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID",
                                                   command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_DataStoreID, False, False):
+        if not validator_util.validate_string(pv_DataStoreID, False, False):
             message = "DataStoreID parameter has no value."
             recommendation = "Specify a valid DataStore ID."
             warning += "\n" + message
@@ -125,7 +125,7 @@ class CloseDataStore(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_close_datastore(self, datastore_id):
+    def __should_close_datastore(self, datastore_id: str) -> bool:
         """
         Checks the following:
             * the DataStore ID is an existing DataStore ID
@@ -142,7 +142,7 @@ class CloseDataStore(AbstractCommand):
         should_run_command = []
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
+        should_run_command.append(validator_util.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
                                                        "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
@@ -151,7 +151,7 @@ class CloseDataStore(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Close an existing DataStore and remove it from the GeoProcessor.
 
@@ -184,7 +184,7 @@ class CloseDataStore(AbstractCommand):
                 datastore_obj.update_status_message(pv_StatusMessage)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error closing DataStore {}.".format(pv_DataStoreID)
                 recommendation = "Check the log file for details."

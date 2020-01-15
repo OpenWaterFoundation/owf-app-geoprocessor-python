@@ -26,11 +26,12 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
 import re
+from typing import Pattern
 
 
 # TODO smalers 2018-01-21 This command is not yet fully functional
@@ -41,13 +42,13 @@ class CreateRegressionTestCommandFile(AbstractCommand):
     This is used to automate creating the full test suite to test the software.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("SearchFolder", type("")),
         CommandParameterMetadata("FilenamePattern", type("")),
         CommandParameterMetadata("OutputFile", type(""))
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -90,7 +91,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
             "Pattern to find GeoProcessor command files, using * wildcards.")
         self.parameter_input_metadata['FilenamePattern.Value.Default'] = "test-*.gp"
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -98,7 +99,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -109,7 +110,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
 
         # SearchFolder is required
         pv_SearchFolder = self.get_parameter_value(parameter_name='SearchFolder', command_parameters=command_parameters)
-        if not validators.validate_string(pv_SearchFolder, False, False):
+        if not validator_util.validate_string(pv_SearchFolder, False, False):
             message = "SearchFolder parameter has no value."
             warning_message += "\n" + message
             self.command_status.add_to_log(
@@ -121,7 +122,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
 
         # OutputFile is required
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "OutputFile parameter has no value."
             warning_message += "\n" + message
             self.command_status.add_to_log(
@@ -143,7 +144,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
-    def __determine_expected_status_parameter(cls, filename):
+    def __determine_expected_status_parameter(cls, filename: str) -> str:
         """
         Determine the expected status parameter by searching the command file for an "@expectedStatus" string,
         generally in a comment at the top of the file.
@@ -179,8 +180,10 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         return expected_status_parameter
 
     # TODO smalers 2018-01-20 Evaluate whether to include additional functionality as per TSTool
+    # Pattern type hint corresponds to re.compile("...")
     @classmethod
-    def __get_matching_filenames_in_tree(cls, file_list, path, pattern_regex, pattern_string=None):
+    def __get_matching_filenames_in_tree(cls, file_list: [str], path: str, pattern_regex: Pattern[str],
+                                         pattern_string: str = None):
         """
         Check all files and directories under the given folder and if
         the file matches a valid pattern it is added to the test list.
@@ -230,12 +233,12 @@ class CreateRegressionTestCommandFile(AbstractCommand):
                     logger.debug("File not matched.")
                 pass
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.
 
         Returns:
-            Nothing.
+            None
 
         Raises:
                 ValueError: if a runtime input error occurs.
@@ -350,7 +353,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
             # Add the log file to output
             self.command_processor.add_output_file(output_file_absolute)
 
-        except Exception as e:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error creating regression test command file "' + output_file_absolute + '"'
             logger.warning(message, exc_info=True)

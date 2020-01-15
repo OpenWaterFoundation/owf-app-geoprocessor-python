@@ -28,7 +28,7 @@ import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.pandas_util as pandas_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
@@ -51,7 +51,7 @@ class WriteTableToExcel(AbstractCommand):
     """
 
     # Define the command parameters/
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("OutputWorksheet", type("")),
@@ -59,7 +59,7 @@ class WriteTableToExcel(AbstractCommand):
         CommandParameterMetadata("ColumnsToExclude", type("")),
         CommandParameterMetadata("WriteIndexColumn", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -122,7 +122,7 @@ class WriteTableToExcel(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -141,7 +141,7 @@ class WriteTableToExcel(AbstractCommand):
         # Check that parameter TableID is a non-empty, non-None string.
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_TableID, False, False):
+        if not validator_util.validate_string(pv_TableID, False, False):
             message = "TableID parameter has no value."
             recommendation = "Specify the TableID parameter to indicate the Table to write."
             warning += "\n" + message
@@ -152,7 +152,7 @@ class WriteTableToExcel(AbstractCommand):
         # Check that parameter OutputFile is a non-empty, non-None string.
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter (relative or absolute pathname) to indicate the " \
                              "location and name of the output Excel file."
@@ -165,7 +165,7 @@ class WriteTableToExcel(AbstractCommand):
         pv_WriteIndexColumn = self.get_parameter_value(parameter_name='WriteIndexColumn',
                                                        command_parameters=command_parameters)
 
-        if not validators.validate_bool(pv_WriteIndexColumn, True, False):
+        if not validator_util.validate_bool(pv_WriteIndexColumn, True, False):
             message = "WriteIndexColumn parameter is not a valid Boolean value."
             recommendation = "Specify a valid Boolean value for the WriteIndexColumn parameter."
             warning += "\n" + message
@@ -185,7 +185,7 @@ class WriteTableToExcel(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_write_table(self, table_id, output_file_abs):
+    def __should_write_table(self, table_id: str, output_file_abs: str) -> bool:
         """
        Checks the following:
        * the ID of the Table is an existing Table ID
@@ -204,13 +204,13 @@ class WriteTableToExcel(AbstractCommand):
         should_run_command = []
 
         # If the Table ID is not an existing Table ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
 
         # Get the full path to the output folder
         output_folder_abs = io_util.get_path(output_file_abs)
 
         # If the output folder is not an existing folder, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
+        should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
                                                        "FAIL"))
         # Continue if the output file is an existing file.
         if os.path.exists(output_folder_abs):
@@ -225,9 +225,8 @@ class WriteTableToExcel(AbstractCommand):
                 self.warning_count += 1
                 self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
-                                                                                        message, recommendation))
+                                                                                      message, recommendation))
                 should_run_command.append(False)
-
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -235,7 +234,7 @@ class WriteTableToExcel(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Write the Table to an excel file.
 
@@ -296,7 +295,7 @@ class WriteTableToExcel(AbstractCommand):
                 self.command_processor.add_output_file(output_file_absolute)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error writing Table {} to Excel workbook file {}.".format(pv_TableID,
                                                                                                 pv_OutputFile)

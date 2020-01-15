@@ -25,13 +25,12 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
 
 class AddGeoLayerAttribute(AbstractCommand):
-
     """
     Add an attribute to a GeoLayer.
 
@@ -56,13 +55,13 @@ class AddGeoLayerAttribute(AbstractCommand):
     """
 
     # Define command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("AttributeName", type("")),
         CommandParameterMetadata("AttributeType", type("")),
         CommandParameterMetadata("InitialValue", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -111,7 +110,7 @@ class AddGeoLayerAttribute(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -130,7 +129,7 @@ class AddGeoLayerAttribute(AbstractCommand):
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
@@ -142,7 +141,7 @@ class AddGeoLayerAttribute(AbstractCommand):
         pv_AttributeName = self.get_parameter_value(parameter_name='AttributeName',
                                                     command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_AttributeName, False, False):
+        if not validator_util.validate_string(pv_AttributeName, False, False):
 
             message = "AttributeName parameter has no value."
             recommendation = "Specify the AttributeName parameter to indicate the name of attribute to add."
@@ -156,7 +155,7 @@ class AddGeoLayerAttribute(AbstractCommand):
                                                     command_parameters=command_parameters)
 
         acceptable_values = ["string", "date", "int", "double"]
-        if not validators.validate_string_in_list(pv_AttributeType, acceptable_values, ignore_case=True):
+        if not validator_util.validate_string_in_list(pv_AttributeType, acceptable_values, ignore_case=True):
             message = "AttributeType parameter value ({}) is not recognized.".format(pv_AttributeType)
             recommendation = "Specify one of the acceptable values ({}) for the AttributeType parameter.".format(
                 acceptable_values)
@@ -177,7 +176,7 @@ class AddGeoLayerAttribute(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_attribute_be_added(self, geolayer_id, attribute_name):
+    def __should_attribute_be_added(self, geolayer_id: str, attribute_name: str) -> bool:
         """
         Checks the following:
          * The ID of the input GeoLayer is an actual GeoLayer (if not, log an error message and do not continue.)
@@ -243,7 +242,7 @@ class AddGeoLayerAttribute(AbstractCommand):
         # one or many checks failed.
         return add_attribute
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Add the attribute to the GeoLayer.
 
@@ -282,7 +281,7 @@ class AddGeoLayerAttribute(AbstractCommand):
                     input_geolayer.populate_attribute(pv_AttributeName, pv_InitialValue)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error adding attribute ({}) to GeoLayer {}.".format(pv_AttributeName,
                                                                                           pv_GeoLayerID)

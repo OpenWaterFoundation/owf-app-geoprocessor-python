@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -45,11 +45,11 @@ class RemoveGeoLayerAttributes(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("AttributeNames", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -82,7 +82,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -100,7 +100,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
@@ -110,9 +110,9 @@ class RemoveGeoLayerAttributes(AbstractCommand):
 
         # Check that parameter AttributeNames is a non-empty, non-None string.
         pv_AttributeNames = self.get_parameter_value(parameter_name='AttributeNames',
-                                                    command_parameters=command_parameters)
+                                                     command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_AttributeNames, False, False):
+        if not validator_util.validate_string(pv_AttributeNames, False, False):
 
             message = "AttributeNames parameter has no value."
             recommendation = "Specify the AttributeNames parameter to indicate the name of attribute to add."
@@ -133,7 +133,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_attribute_be_removed(self, geolayer_id, attribute_names):
+    def __should_attribute_be_removed(self, geolayer_id: str, attribute_names: [str]) -> bool:
         """
         Checks the following:
          * The ID of the input GeoLayer is an actual GeoLayer (if not, log an error message and do not continue.)
@@ -192,7 +192,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         # one or many checks failed.
         return remove_attribute
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Remove the attribute from the GeoLayer.
 

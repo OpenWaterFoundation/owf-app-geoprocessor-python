@@ -1,4 +1,4 @@
-# CommandParameter - class to hold information about a command
+# CommandParameter - class to hold information about a command's parameter, used with UI
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -25,7 +25,8 @@ class CommandParameter(object):
     information separate.
     """
 
-    def __init__(self, name, description, optional, tooltip, default_value_description=None):
+    def __init__(self, name: str, description: str, optional: bool, tooltip: str,
+                 default_value_description: str = None) -> None:
         """
         Initialize the CommandParameter instance.
 
@@ -57,7 +58,7 @@ class CommandParameter(object):
         self.default_value_desc = default_value_description
 
     @staticmethod
-    def create_full_description(brief_description, optional, default_value):
+    def create_full_description(brief_description: str, optional: bool, default_value: str) -> str:
         """
         Converts pieces of the command parameter's description into a full and fully-formatted description that will
         display on the command parameter UI dialog window.

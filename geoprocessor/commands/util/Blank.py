@@ -25,7 +25,7 @@ class Blank(AbstractCommand):
     A Blank command is used when the command contains only whitespace.
     The command does nothing when run.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -40,7 +40,7 @@ class Blank(AbstractCommand):
                                                'whitespace characters (spaces and tabs). '
         self.command_metadata['EditorType'] = 'InsertLineEditor'
 
-    def initialize_command(self, command_string, processor, full_initialization):
+    def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
         Initialize the command.  This overrides the AbstractCommand.initialize_command function
         because there are no command parameters to parse.
@@ -51,19 +51,19 @@ class Blank(AbstractCommand):
             full_initialization: Ignored.  A value of False is passed to AbstractCommand.initialize_command().
 
         Returns:
-            Nothing.
+            None
         """
 
         # Set data in the parent class, but do not attempt to parse the command since nothing to parse.
         full_initialization = False
         super(Blank, self).initialize_command(command_string, processor, full_initialization)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Does nothing.
 
         Returns:
-            Nothing.
+            None
         """
         # print("In Blank.run_command")
         pass

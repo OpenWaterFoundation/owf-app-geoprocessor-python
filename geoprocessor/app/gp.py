@@ -46,6 +46,7 @@ import geoprocessor.util.io_util as io_util
 import geoprocessor.util.log_util as log_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.ui.util.qt_util as qt_util
 import geoprocessor.app.version as version
 
 # General Python modules
@@ -206,6 +207,15 @@ class GeoProcessorCmd(cmd.Cmd):
         print()
 
 
+def get_qt_stylesheet_file():
+    """
+    Returns:
+        Path tot the Qt stylesheet file.
+    """
+    path_to_style_sheet = os.path.join(app_util.get_property('ProgramHome'), "resources/qt-stylesheets/gp.qss")
+    return path_to_style_sheet
+
+
 def parse_command_line_properties(property_list: [str]) -> dict:
     """
     Parse command line properties that were specified with the -p Property=Value syntax.
@@ -335,7 +345,7 @@ def run_prompt() -> None:
     GeoProcessorCmd().cmdloop()
 
 
-def run_ui(ui_app_session) -> None:
+def run_ui(ui_app_session: GeoProcessorAppSession) -> None:
     """
     Run the GeoProcessor user interface.
 
@@ -356,6 +366,7 @@ def run_ui(ui_app_session) -> None:
         # The following line is needed for initialization
         # - If not there is a warning about WebEngine initialization
         # - See similar code in qgis_util.initialize_qgis() for more information
+        print("QGIS is NOT being used (instead, GeoProcessor is being run as gptest).")
         try:
             QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
         except Exception:
@@ -364,6 +375,15 @@ def run_ui(ui_app_session) -> None:
             print("- possibly due to Python API version issue")
             print("- ignoring exception and starting the application")
         qt_app = QApplication(sys.argv)
+        # Set the Qt style sheet
+        path_to_style_sheet = get_qt_stylesheet_file()
+        if path_to_style_sheet is not None:
+            print("Setting Qt stylesheet file: " + path_to_style_sheet)
+            qt_app.setStyleSheet(path_to_style_sheet)
+        else:
+            print("No Qt stylesheet file is available.  Not setting for application.")
+    else:
+        print("GeoProcessor is using QGIS.")
     # print("...back from declaring QApplication.")
     # logger.info("...back from declaring QApplication.")
 
@@ -388,6 +408,9 @@ def run_ui(ui_app_session) -> None:
     ui = class_(command_processor, ui_runtime_properties, ui_app_session)
     print("...back from loading GeoProcessor class.")
     logger.info("...back from loading GeoProcessor class.")
+    # Print Qt styles
+    # - used to help know what styles are so that alternate stylesheet properties can be specified
+    qt_util.print_application_stylesheet()
     print("Showing the UI...")
     logger.info("Showing the UI...")
     ui.show()

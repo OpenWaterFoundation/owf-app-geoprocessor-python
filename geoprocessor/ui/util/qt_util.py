@@ -17,7 +17,10 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+import logging
+
 from PyQt5 import QtGui, QtWidgets
+
 import geoprocessor.util.app_util as app_util
 
 
@@ -137,6 +140,39 @@ def new_message_box(message_type: QtGui.QIcon, standard_buttons_mask: int, messa
 
     # Return the clicked button Qt type
     return btn_value
+
+
+def print_application_stylesheet():
+    """
+    Print the application's stylesheet for common components that are used.
+
+    Returns:
+        None
+    """
+    logger = logging.getLogger(__name__)
+    # TODO smalers 2020-01-15 is there a way to get styles without instantiating an instance of a component?
+    # - printing styles only seems to print when additional styles have been set beyond the defaults
+
+    # Create some objects
+    qpushbutton = QtWidgets.QPushButton()
+    qmenu = QtWidgets.QMenu()
+
+    # Print the stylesheet
+    logger.info('Properties for common Qt elements follows (from stylesheets)...')
+    logger.info(str(qpushbutton.styleSheet()))
+    logger.info('...done printing properties from common Qt components (from stylesheets)')
+
+    # Print the properties directly
+    logger.info('Properties for common Qt elements follows (from direct calls)...')
+    logger.info("QMenu font family: " + str(qmenu.fontInfo().family()))
+    logger.info("QMenu font size (points): " + str(qmenu.fontInfo().pointSize()))
+    logger.info("QMenu font size (points): " + str(qmenu.font().pointSize()))
+    logger.info("QPushButton font family: " + str(qpushbutton.fontInfo().family()))
+    logger.info("QPushButton font size (points): " + str(qpushbutton.font().pointSize()))
+    logger.info('...done printing properties for common Qt elements (from direct calls).')
+
+
+
 
 
 def question_box(message: str, app_name: str = None, title: str = "Question") -> int:

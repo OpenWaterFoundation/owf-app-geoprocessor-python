@@ -25,6 +25,7 @@ import os
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
 from qgis.core import QgsGeometry, QgsMapLayer, QgsRasterLayer, QgsRectangle, QgsVectorFileWriter, QgsVectorLayer
 from qgis.core import QgsExpressionContext, QgsExpressionContextScope
+from PyQt5 import QtWidgets
 
 from qgis.analysis import QgsNativeAlgorithms
 
@@ -32,6 +33,8 @@ import qgis.utils
 
 from plugins.processing.core import Processing
 
+import geoprocessor.util.app_util as app_util
+import geoprocessor.util.os_util as os_util
 import geoprocessor.util.string_util as string_util
 
 from PyQt5.QtCore import QVariant, QFileInfo
@@ -632,15 +635,18 @@ def get_qgsexpression_obj(expression_as_string: str) -> QgsExpression:
         return None
 
 
-def initialize_qgis() -> None:
+def initialize_qgis(qt_stylesheet_file: str = None) -> None:
     """
     Initialize the QGIS environment.  This typically needs to be done only once when the application starts.
     This is expected to be called once when an application starts, before any geoprocessing tasks.
 
+    qt_stylesheet_file:
+        Path to Qt stylesheet.
+
     Returns:
         None
     """
-
+    logger = logging.getLogger(__name__)
     # Open QGIS environment
     # REF: https://github.com/OSGeo/homebrew-osgeo4mac/issues/197
     global qgs_app
@@ -658,6 +664,39 @@ def initialize_qgis() -> None:
         print("- possibly due to Python API version issue")
         print("- ignoring exception and starting the application")
     qgs_app = QgsApplication([], False)
+
+    # First set the application appropriately
+    qt_style = qgs_app.style().metaObject().className()
+    logger.info('Available Qt styles are: ' + str(QtWidgets.QStyleFactory.keys()))
+    logger.info("Qt is using style " + str(qt_style))
+    if os_util.is_windows_os():
+        if qt_style.upper().index('VISTA') > 0:
+            # 'windowsvista' (QWindowsVistaStyle) style is kind of ugly
+            # - reset to QWindowsStyle, need to use 'Windows'
+            logger.info("Resetting style to 'Windows'")
+            qgs_app.setStyle("Windows")
+            qt_style = qgs_app.style().metaObject().className()
+            logger.info("After setting style to 'Windows', Qt is using style " + str(qt_style))
+
+    # Next set the Qt style sheet to modify default styles
+    # 'ProgramHome' is location of app, which is geoprocessor/app
+    # - therefore need to go up one level to find the resources
+    path_to_style_sheet = os.path.join(app_util.get_property('ProgramHome'),
+                                       "../resources/qt-stylesheets/gp.qss").replace("\\","/")
+    if path_to_style_sheet is None:
+        logger.info("Qt stylesheet file is None - not using.")
+    elif not os.path.exists(path_to_style_sheet):
+        logger.info("Qt stylesheet file does not exist: " + path_to_style_sheet)
+    else:
+        # Style sheet is loaded from a string, not filename, so first read the file into a string.
+        logger.info("Setting Qt stylesheet file: " + path_to_style_sheet)
+        f = open(path_to_style_sheet,"r")
+        qss_string = f.read()
+        # print("Qt stylesheet contents: " + qss_string)
+        f.close()
+        qgs_app.setStyleSheet(qss_string)
+
+    # Initialize the QGIS environment
     qgs_app.initQgis()
     return qgs_app
 

@@ -1,0 +1,18 @@
+/*
+Qt stylesheet for the GeoProcessor.
+- use this file to set styles on components so that code does not need to be changed.
+- syntax generally follows CSS
+- see:  https://doc.qt.io/qt-5/stylesheet.html
+*/
+
+/*
+QPushButton {
+    font-size: 9pt;
+}
+*/
+
+/* Test
+QPushButton {
+    background-color:red;
+}
+*/

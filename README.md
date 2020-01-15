@@ -73,6 +73,10 @@ owf-app-geoprocessor-python/       The GeoProcessor code and documentation repos
     app/                           Main GeoProcessor application module.
     commands/                      Modules containing GeoProcessor commands.
     core/                          Core GeoProcessor module, containing the processor.
+    resources/                     Resources that support the softare.
+      images/                      Images including icons that should be distributed at runtime.
+      notices/                     License notices to be inserted into code files.
+      qt-stylesheets/              Qt stylesheets that customize the UI, to be distributed.
     util/                          Utility modules.
   LICENSE.md                       GeoProcessor license (GPL v3).
   README.md                        This README file.

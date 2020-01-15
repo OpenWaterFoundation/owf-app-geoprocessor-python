@@ -28,7 +28,7 @@ from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -70,7 +70,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("DelimitedFile", type("")),        
         CommandParameterMetadata("GeometryFormat", type("")),
         CommandParameterMetadata("XColumn", type("")),
@@ -200,7 +200,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
 
             # Check that the parameter value is a non-empty, non-None string. If not, raise a FAILURE.
-            if not validators.validate_string(parameter_value, False, False):
+            if not validator_util.validate_string(parameter_value, False, False):
 
                 message = "{} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
@@ -212,7 +212,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         pv_GeometryFormat = self.get_parameter_value(parameter_name="GeometryFormat", command_parameters=command_parameters)
         acceptable_values = ["WKT", "XY"]
 
-        if not validators.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
+        if not validator_util.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
                                                   empty_string_allowed=False, ignore_case=True):
 
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
@@ -229,7 +229,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             if pv_GeometryFormat is not None and pv_GeometryFormat.upper() == "WKT":
 
                 # Check that the parameter value is a non-None string. If not, raise a FAILURE.
-                if not validators.validate_string("WKTColumn", False, True):
+                if not validator_util.validate_string("WKTColumn", False, True):
                     message = "WKTColumn parameter has no value."
                     recommendation = "Specify the WKTColumn parameter."
                     warning += "\n" + message
@@ -247,7 +247,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
                                                                command_parameters=command_parameters)
 
                     # Check that the parameter value is a non-None string. If not, raise a FAILURE.
-                    if not validators.validate_string(parameter_value, False, True):
+                    if not validator_util.validate_string(parameter_value, False, True):
                         message = "{} parameter has no value.".format(parameter)
                         recommendation = "Specify the {} parameter.".format(parameter)
                         warning += "\n" + message
@@ -259,7 +259,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
 
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
@@ -314,7 +314,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         should_run_command = []
 
         # If the input DelimitedFile is not a valid file path, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsFilePathValid", "DelimitedFile", delimited_file,
+        should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "DelimitedFile", delimited_file,
                                                        "FAIL"))
 
         # If the Delimited File exists, continue with the following checks.
@@ -324,28 +324,28 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             if geom_format.upper() == "XY":
 
                 # If the XColumn is not an existing column name in the delimited file, raise a FAILURE.
-                should_run_command.append(validators.run_check(self, "IsDelimitedFileColumnNameValid", "XColumn", x_col,
+                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid", "XColumn", x_col,
                                                                "FAIL", other_values=[delimited_file, delimiter]))
 
                 # If the YColumn is not an existing column name in the delimited file, raise a FAILURE.
-                should_run_command.append(validators.run_check(self, "IsDelimitedFileColumnNameValid", "YColumn", y_col,
+                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid", "YColumn", y_col,
                                                                "FAIL", other_values=[delimited_file, delimiter]))
 
             # If the geometry format is "WKT", continue.
             else:
 
                 # If the WKTColumn is not an existing column name in the delimited file, raise a FAILURE.
-                should_run_command.append(validators.run_check(self, "IsDelimitedFileColumnNameValid", "WKTColumn",
+                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid", "WKTColumn",
                                                                wkt_col, "FAIL",
                                                                other_values=[delimited_file, delimiter]))
 
         # If the input CRS code is not a valid coordinate reference code, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsCrsCodeValid", "CRS", crs, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsCrsCodeValid", "CRS", crs, "FAIL"))
 
         # If the GeoLayer ID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends on the
         # value of the IfGeoLayerIDExists parameter.) The required, the IfGeoLayerIDExists parameter value is retrieved
         # inside run_check function.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run. 
         if False in should_run_command:

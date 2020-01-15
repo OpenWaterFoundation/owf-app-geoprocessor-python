@@ -27,7 +27,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
@@ -39,7 +39,7 @@ class RemoveFile(AbstractCommand):
     The RemoveFile command removes a file (or a folder) from the computer.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("SourceFile", type("")),
         CommandParameterMetadata("IfSourceFileNotFound", type("")),
         CommandParameterMetadata("RemoveIfFolder", type(""))]
@@ -47,7 +47,7 @@ class RemoveFile(AbstractCommand):
     # Choices for IfNotFound, used to validate parameter and display in editor
     __choices_IfSourceFileNotFound = ["Ignore", "Warn", "Fail"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -86,7 +86,7 @@ class RemoveFile(AbstractCommand):
         self.parameter_input_metadata['RemoveIfFolder.Values'] = ["", "False", "True"]
         self.parameter_input_metadata['RemoveIfFolder.Value.Default'] = "False"
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -94,7 +94,7 @@ class RemoveFile(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -105,7 +105,7 @@ class RemoveFile(AbstractCommand):
 
         # SourceFile is required
         pv_SourceFile = self.get_parameter_value(parameter_name='SourceFile', command_parameters=command_parameters)
-        if not validators.validate_string(pv_SourceFile, False, False):
+        if not validator_util.validate_string(pv_SourceFile, False, False):
             message = "The SourceFile must be specified."
             recommendation = "Specify the source file."
             warning_message += "\n" + message
@@ -114,8 +114,9 @@ class RemoveFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # RemoveIfFolder must be a boolean value or None.
-        pv_RemoveIfFolder = self.get_parameter_value(parameter_name='RemoveIfFolder', command_parameters=command_parameters)
-        if not validators.validate_bool(pv_RemoveIfFolder, True, False):
+        pv_RemoveIfFolder = self.get_parameter_value(parameter_name='RemoveIfFolder',
+                                                     command_parameters=command_parameters)
+        if not validator_util.validate_bool(pv_RemoveIfFolder, True, False):
             message = "The RemoveIfFolder must be either True or False."
             recommendation = "Specify a valid Boolean value."
             warning_message += "\n" + message
@@ -126,7 +127,7 @@ class RemoveFile(AbstractCommand):
         # IfSourceFileNotFound is optional, will default to Warn at runtime
         pv_IfSourceFileNotFound = self.get_parameter_value(parameter_name='IfSourceFileNotFound',
                                                            command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IfSourceFileNotFound,
+        if not validator_util.validate_string_in_list(pv_IfSourceFileNotFound,
                                                   self.__choices_IfSourceFileNotFound, True, True):
             message = "IfSourceFileNotFound parameter is invalid."
             recommendation = "Specify the IfSourceFileNotFound parameter as blank or one of " + \
@@ -149,13 +150,13 @@ class RemoveFile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.
         Remove the specified file from the operating system.
 
         Returns:
-            Nothing.
+            None
 
         Raises:
                 RuntimeError: if a runtime input error occurs.
@@ -208,12 +209,11 @@ class RemoveFile(AbstractCommand):
                 try:
                     logger.info('Removing file "' + pv_SourceFile_absolute + '"')
                     os.remove(pv_SourceFile_absolute)
-                except:
+                except Exception:
                     if pv_RemoveIfFolder:
                         shutil.rmtree(pv_SourceFile_absolute)
 
-
-        except Exception as e:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error removing file "' + pv_SourceFile_absolute + '"'
             logger.warning(message, exc_info=True)

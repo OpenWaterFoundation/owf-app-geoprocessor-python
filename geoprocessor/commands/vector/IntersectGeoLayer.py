@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
 
@@ -37,7 +37,6 @@ from plugins.processing.tools import general
 
 
 class IntersectGeoLayer(AbstractCommand):
-
     """
     Intersects the input GeoLayer with an intersecting GeoLayer.
 
@@ -67,7 +66,7 @@ class IntersectGeoLayer(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("IntersectGeoLayerID", type("")),       
         CommandParameterMetadata("IncludeIntersectAttributes", type("")),
@@ -148,7 +147,7 @@ class IntersectGeoLayer(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -160,7 +159,7 @@ class IntersectGeoLayer(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
@@ -172,7 +171,7 @@ class IntersectGeoLayer(AbstractCommand):
         pv_IntersectGeoLayerID = self.get_parameter_value(parameter_name='IntersectGeoLayerID',
                                                           command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_IntersectGeoLayerID, False, False):
+        if not validator_util.validate_string(pv_IntersectGeoLayerID, False, False):
 
             message = "IntersectGeoLayerID parameter has no value."
             recommendation = "Specify the IntersectGeoLayerID parameter to indicate the clipping GeoLayer."
@@ -184,7 +183,7 @@ class IntersectGeoLayer(AbstractCommand):
         # Check that opt parameter OutputFormat is either `SingleSingle`, `SingleMultiple`, `MulipleSingle` or None.
         pv_OutputFormat = self.get_parameter_value(parameter_name="OutputFormat", command_parameters=command_parameters)
         acceptable_values = ["SingleSingle", "SingleMultiple", "MulipleSingle"]
-        if not validators.validate_string_in_list(pv_OutputFormat, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_OutputFormat, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "OutputFormat parameter value ({}) is not recognized.".format(pv_OutputFormat)
             recommendation = "Specify one of the acceptable values ({}) for the OutputFormat parameter.".format(
@@ -198,7 +197,7 @@ class IntersectGeoLayer(AbstractCommand):
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
@@ -246,18 +245,18 @@ class IntersectGeoLayer(AbstractCommand):
         should_run_command = []
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIDExisting", "GeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "GeoLayerID",
                                                        input_geolayer_id, "FAIL"))
 
         # If the intersect GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIDExisting", "IntersectGeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "IntersectGeoLayerID",
                                                        intersect_geolayer_id, "FAIL"))
 
         # If the input GeoLayer and the intersect GeoLayer both exist, continue with the checks.
         if False not in should_run_command:
 
             # If the input GeoLayer and the clipping GeoLayer do not have the same CRS, raise a WARNING.
-            should_run_command.append(validators.run_check(self, "DoGeoLayerIDsHaveMatchingCRS", "GeoLayerID",
+            should_run_command.append(validator_util.run_check(self, "DoGeoLayerIDsHaveMatchingCRS", "GeoLayerID",
                                                            input_geolayer_id, "WARN",
                                                            other_values=["IntersectGeoLayerID", intersect_geolayer_id]))
 
@@ -268,19 +267,19 @@ class IntersectGeoLayer(AbstractCommand):
             # If the InputGeoLayer is a polygon and the IntersectGeoLayer is a line or point, raise a FAILURE.
             if input_geolayer_geom_qgis == "Polygon":
 
-                should_run_command.append(validators.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
+                should_run_command.append(validator_util.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
                                                                "IntersectGeoLayerID", intersect_geolayer_id,
                                                                "FAIL", other_values=[["Polygon"]]))
 
             # If the InputGeoLayer is a line and the IntersectGeoLayer is a point, raise a FAILURE.
             if input_geolayer_geom_qgis == "LineString":
-                should_run_command.append(validators.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
+                should_run_command.append(validator_util.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
                                                                "IntersectGeoLayerID", intersect_geolayer_id,
                                                                "FAIL", other_values=[["LineString", "Polygon"]]))
 
         # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
                                                        output_geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run.

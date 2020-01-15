@@ -27,7 +27,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -37,7 +37,7 @@ class WritePropertiesToFile(AbstractCommand):
     The WritePropertiesToFile command writes processor properties to a file.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("IncludeProperties", type("")),
         CommandParameterMetadata("WriteMode", type("")),
@@ -54,7 +54,7 @@ class WritePropertiesToFile(AbstractCommand):
     # Choices for SortOrder, used to validate parameter and display in editor
     __choices_SortOrder = ["Ascending", "Descending"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -109,7 +109,7 @@ class WritePropertiesToFile(AbstractCommand):
         self.parameter_input_metadata['SortOrder.Values'] = ["", "Ascending", "Descending"]
         self.parameter_input_metadata['SortOrder.Value.Default'] = 'Ascending'
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -117,7 +117,7 @@ class WritePropertiesToFile(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -128,7 +128,7 @@ class WritePropertiesToFile(AbstractCommand):
 
         # OutputFile is required
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "The OutputFile must be specified."
             recommendation = "Specify the output file."
             warning_message += "\n" + message
@@ -140,7 +140,7 @@ class WritePropertiesToFile(AbstractCommand):
 
         # WriteMode is optional, will default to Overwrite at runtime
         pv_WriteMode = self.get_parameter_value(parameter_name='WriteMode', command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_WriteMode,
+        if not validator_util.validate_string_in_list(pv_WriteMode,
                                                   self.__choices_WriteMode, True, True):
             message = "WriteMode parameter is invalid."
             recommendation = "Specify the WriteMode parameter as blank or one of " + \
@@ -152,7 +152,7 @@ class WritePropertiesToFile(AbstractCommand):
 
         # FileFormat is optional, will default to NameTypeValue at runtime
         pv_FileFormat = self.get_parameter_value(parameter_name='FileFormat', command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_FileFormat,
+        if not validator_util.validate_string_in_list(pv_FileFormat,
                                                   self.__choices_FileFormat, True, True):
             message = "FileFormat parameter is invalid."
             recommendation = "Specify the FileFormat parameter as blank or one of " + \
@@ -164,7 +164,7 @@ class WritePropertiesToFile(AbstractCommand):
 
         # SortOrder is optional, will default to None (no sort) at runtime
         pv_SortOrder = self.get_parameter_value(parameter_name='SortOrder', command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_SortOrder,
+        if not validator_util.validate_string_in_list(pv_SortOrder,
                                                   self.__choices_SortOrder, True, True):
             message = "SortOrder parameter is invalid."
             recommendation = "Specify the SortOrder parameter as blank or one of " + \
@@ -187,12 +187,12 @@ class WritePropertiesToFile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Write the processor properties to a file.
 
         Returns:
-            Nothing.
+            None
 
         Raises:
                 RuntimeError: if a runtime input error occurs.
@@ -248,16 +248,7 @@ class WritePropertiesToFile(AbstractCommand):
                     CommandLogRecord(CommandStatusType.FAILURE, problem,
                                      "See the log file for details."))
 
-        except Exception as e:
-            warning_count += 1
-            message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
-            logger.warning(message, exc_info=True)
-            self.command_status.add_to_log(
-                CommandPhaseType.RUN,
-                CommandLogRecord(CommandStatusType.FAILURE, message,
-                                 "See the log file for details."))
-
-        except:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error writing file "' + pv_OutputFile_absolute + '"'
             logger.warning(message, exc_info=True)

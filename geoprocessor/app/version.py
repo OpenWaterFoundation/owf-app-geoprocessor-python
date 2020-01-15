@@ -31,4 +31,3 @@ app_version_mod = "dev"
 app_version = str(app_version_major) + "." + str(app_version_minor) + "." + str(app_version_micro) + "." + \
               app_version_mod
 app_version_date = "2020-01-11"
-

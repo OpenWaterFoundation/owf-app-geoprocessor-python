@@ -28,14 +28,13 @@ from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import os
 import logging
 
 
 class ReadGeoLayerFromGeoJSON(AbstractCommand):
-
     """
     Reads a GeoLayer from a GeoJSON spatial data file.
 
@@ -62,7 +61,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("SpatialDataFile", type("")),
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
@@ -141,7 +140,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         pv_SpatialDataFile = self.get_parameter_value(parameter_name='SpatialDataFile',
                                                       command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_SpatialDataFile, False, False):
+        if not validator_util.validate_string(pv_SpatialDataFile, False, False):
 
             message = "SpatialDataFile parameter has no value."
             recommendation = "Specify the SpatialDataFile parameter to indicate the spatial data layer file."
@@ -153,7 +152,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         # Check that optional parameter IfGeoLayerIDExists is one of the acceptable values or is None.
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, self.__choices_IfGeoLayerIDExists,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, self.__choices_IfGeoLayerIDExists,
                                                   none_allowed=True, empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(

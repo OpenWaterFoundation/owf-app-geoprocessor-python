@@ -43,7 +43,7 @@ class DataStore(object):
      interactively browse datastore resources.
     """
 
-    def __init__(self, datastore_id):
+    def __init__(self, datastore_id: str) -> None:
         """
         Initialize a new DataStore instance.
 
@@ -56,19 +56,19 @@ class DataStore(object):
 
         # "id"  is a string representing the DataStore's reference ID. This ID is used to access the DataStore from the
         # GeoProcessor for manipulation.
-        self.id = datastore_id
+        self.id: str = datastore_id
 
         # "dialect" is used to format the database connection URL for the matching database driver software.
-        self.dialect = None
+        self.dialect: str = None
 
         # "db_uri" is the string of characters designed for unambiguous identification of resources and extensibility
         # via the URI scheme to reference the connection of the DataStore's database.
-        self.db_uri = None
+        self.db_uri: str = None
 
         # "engine" is the starting point for any SQLAlchemy application. It’s “home base” for the actual database and
         # its DBAPI, delivered to the SQLAlchemy application through a connection pool and a Dialect, which describes
         # how to talk to a specific kind of database/DBAPI combination.
-        self.engine = None
+        self.engine: str = None
 
         # "connection" is an instance of SqlAlchemy Connection, which is a proxy object for an actual DBAPI connection.
         # The DBAPI connection is retrieved from the connection pool at the point at which Connection is created.
@@ -87,7 +87,7 @@ class DataStore(object):
         self.metadata = sqlalchemy.MetaData()
         self.session = None
 
-    def close_db_connection(self):
+    def close_db_connection(self) -> None:
         """
         Closes the DataStore's connection to the database.
 
@@ -103,7 +103,7 @@ class DataStore(object):
         # Update the is_connected Boolean value to reflect that the connection is closed.
         self.is_connected = False
 
-    def get_db_uri_postgres(self, host, dbname, user, password, port="5432"):
+    def get_db_uri_postgres(self, host: str, dbname: str, user: str, password: str, port: str = "5432") -> None:
         """
         Create the database URI for the PostgreSql dialect. Assign the URI to the DataStore's db_uri attribute.
 
@@ -131,7 +131,7 @@ class DataStore(object):
         # Assign the database dialect to the DataStore's dialect attribute.
         self.dialect = "POSTGRES"
 
-    def open_db_connection(self):
+    def open_db_connection(self) -> None:
         """
         Open a database connection.
 
@@ -159,7 +159,7 @@ class DataStore(object):
         # Create the SqlAlchemy inspect object and assign it to the DataStore's inspector attribute.
         self.inspector = sqlalchemy.inspect(self.engine)
 
-    def return_sql_alchemy_column_object(self, col_name, table_name):
+    def return_sql_alchemy_column_object(self, col_name: str, table_name: str):
 
         # Read the DataStore table into a DataStore Table object.
         ds_table_obj = self.return_sql_alchemy_table_object(table_name)
@@ -172,11 +172,11 @@ class DataStore(object):
             if col_dic["name"] == col_name:
                 return col_dic["expr"]
 
-    def return_sql_alchemy_table_object(self, table_name):
+    def return_sql_alchemy_table_object(self, table_name: str):
 
         return self.metadata.tables[table_name]
 
-    def return_table_names(self):
+    def return_table_names(self) -> [str]:
         """
         Get a list of the table names currently in the connected database.
 
@@ -186,7 +186,7 @@ class DataStore(object):
         # Return a list of the database's table names.
         return self.inspector.get_table_names()
 
-    def return_col_names(self, table):
+    def return_col_names(self, table) -> [str]:
         """
         Get a list of the column names in a given database table.
 
@@ -199,7 +199,7 @@ class DataStore(object):
         # Return a list of the column names in the table.
         return [col["name"] for col in self.inspector.get_columns(table)]
 
-    def return_col_types(self, table):
+    def return_col_types(self, table: str):
         """
         Get a list of the column types in a give database table.
 
@@ -212,7 +212,7 @@ class DataStore(object):
         # Return a list of the column data types in the table.
         return [col["type"] for col in self.inspector.get_columns(table)]
 
-    def return_int_col_names(self, table):
+    def return_int_col_names(self, table) -> [str]:
         """
         Get a list of the column names that hold integer data in a given database table.
 
@@ -223,7 +223,8 @@ class DataStore(object):
         """
 
         import sqlalchemy.sql.sqltypes
-        return [col["name"] for col in self.inspector.get_columns(table) if type(col["type"]) == sqlalchemy.sql.sqltypes.INTEGER]
+        return [col["name"] for col in self.inspector.get_columns(table) if type(col["type"]) ==
+                sqlalchemy.sql.sqltypes.INTEGER]
 
     def run_sql(self, sql):
         """
@@ -244,7 +245,7 @@ class DataStore(object):
         # Commit the changes made to the database.
         trans.commit()
 
-    def update_status_message(self, message):
+    def update_status_message(self, message: str) -> None:
         """
         Updates the status message. The existing status message will be overwritten.
 
@@ -256,5 +257,4 @@ class DataStore(object):
 
         # Update the status message to inform users of a specific message.
         self.status_message = message
-
 

@@ -28,7 +28,7 @@ import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.os_util as os_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
@@ -40,7 +40,7 @@ class RunOgr(AbstractCommand):
     The RunOgr command runs a ogr* program.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("OgrProgram", type("")),
         CommandParameterMetadata("CommandArguments", type("")),
         CommandParameterMetadata("UseCommandShell", type("")),
@@ -61,7 +61,7 @@ class RunOgr(AbstractCommand):
     # Choices for IncludeEnvVars, used to validate parameter and display in editor
     __choices_IncludeEnvVars = ["False", "True"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -118,7 +118,7 @@ class RunOgr(AbstractCommand):
         self.parameter_input_metadata['OutputFiles.Tooltip'] = (
             "Specify the output files, separated by commas.  Can specify with ${Property}.")
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -126,7 +126,7 @@ class RunOgr(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -137,7 +137,7 @@ class RunOgr(AbstractCommand):
 
         # CommandLine is required, pending other options
         pv_CommandLine = self.get_parameter_value(parameter_name='CommandLine', command_parameters=command_parameters)
-        if not validators.validate_string(pv_CommandLine, False, False):
+        if not validator_util.validate_string(pv_CommandLine, False, False):
             message = "The CommandLine must be specified."
             recommendation = "Specify the command line."
             warning_message += "\n" + message
@@ -148,7 +148,7 @@ class RunOgr(AbstractCommand):
         # IncludeParentEnvVars is optional, will default to True at runtime
         pv_IncludeParentEnvVars = self.get_parameter_value(parameter_name='IncludeParentEnvVars',
                                                            command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_IncludeParentEnvVars,
+        if not validator_util.validate_string_in_list(pv_IncludeParentEnvVars,
                                                   self.__choices_IncludeParentEnvVars, True, True):
             message = "IncludeParentEnvVars parameter is invalid."
             recommendation = "Specify the IncludeParentEnvVars parameter as blank or one of " + \
@@ -161,7 +161,7 @@ class RunOgr(AbstractCommand):
         # UseCommandShell is optional, will default to False at runtime
         pv_UseCommandShell = self.get_parameter_value(parameter_name='UseCommandShell',
                                                       command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_UseCommandShell,
+        if not validator_util.validate_string_in_list(pv_UseCommandShell,
                                                   self.__choices_UseCommandShell, True, True):
             message = "UseCommandShell parameter is invalid."
             recommendation = "Specify the UseCommandShell parameter as blank or one of " + \
@@ -187,7 +187,8 @@ class RunOgr(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def create_env_dict(self, include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list):
+    def create_env_dict(self, include_parent_env_vars: bool, include_env_vars_dict: dict,
+                        exclude_env_vars_list: [str]) -> dict:
         """
         Create the environment variable dictionary for the called program.
 
@@ -242,7 +243,7 @@ class RunOgr(AbstractCommand):
                     env_dict['SystemRoot'] = os.environ['SystemRoot']
                 return env_dict
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Run the program, which can generate output files.
 
@@ -367,16 +368,7 @@ class RunOgr(AbstractCommand):
                     CommandLogRecord(CommandStatusType.FAILURE, message,
                                      "See the log file for details."))
 
-        except Exception as e:
-            warning_count += 1
-            message = 'Unexpected error running program "' + command_line_expanded + '"'
-            logger.warning(message, exc_info=True)
-            self.command_status.add_to_log(
-                CommandPhaseType.RUN,
-                CommandLogRecord(CommandStatusType.FAILURE, message,
-                                 "See the log file for details."))
-
-        except:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error running program "' + command_line_expanded + '"'
             logger.warning(message, exc_info=True)

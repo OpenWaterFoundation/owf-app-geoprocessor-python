@@ -28,7 +28,7 @@ from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 import geoprocessor.util.qgis_util as qgis_util
 
 import os
@@ -75,7 +75,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("SpatialDataFolder", type("")),
         CommandParameterMetadata("ReadOnlyOneFeatureClass", type("")),
         CommandParameterMetadata("FeatureClass", type("")),
@@ -181,7 +181,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         pv_SpatialDataFolder = self.get_parameter_value(parameter_name='SpatialDataFolder',
                                                         command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_SpatialDataFolder, False, False):
+        if not validator_util.validate_string(pv_SpatialDataFolder, False, False):
             message = "SpatialDataFolder parameter has no value."
             recommendation = "Specify text for the SpatialDataFolder parameter to indicate the file geodatabase."
             warning += "\n" + message
@@ -193,7 +193,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
@@ -206,7 +206,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         # Check that the optional parameter ReadOnlyOneFeatureClass is a valid Boolean.
         pv_ReadOnlyOneFeatureClass = self.get_parameter_value(parameter_name="ReadOnlyOneFeatureClass",
                                                               command_parameters=command_parameters)
-        if not validators.validate_bool(pv_ReadOnlyOneFeatureClass, True, False):
+        if not validator_util.validate_bool(pv_ReadOnlyOneFeatureClass, True, False):
             message = "ReadOnlyOneFeatureClass is not a valid boolean value."
             recommendation = "Specify a valid boolean value for the ReadOnlyOneFeatureClass parameter."
             warning += "\n" + message
@@ -220,7 +220,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             # Check that parameter GeoLayerID is a non-empty, non-None string.
             pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
-            if not validators.validate_string(pv_GeoLayerID, False, False):
+            if not validator_util.validate_string(pv_GeoLayerID, False, False):
                 message = "GeoLayerID parameter has no value."
                 recommendation = "Specify the GeoLayerID parameter."
                 warning += "\n" + message
@@ -278,14 +278,14 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         should_run_command = []
 
         # If the input spatial data folder is not a valid file path, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsFolderPathValid", "SpatialDataFolder",
+        should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "SpatialDataFolder",
                                                        spatial_data_folder_abs, "FAIL"))
 
         # If the input spatial data folder is valid, continue with the checks.
         if False not in should_run_command:
 
             # If the input spatial data folder is not a file geodatabase, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsFolderAfGDB", "SpatialDataFolder",
+            should_run_command.append(validator_util.run_check(self, "IsFolderAfGDB", "SpatialDataFolder",
                                                            spatial_data_folder_abs, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
@@ -319,13 +319,13 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
 
         # If only one geolayer is being read from the file geodatabase, continue.
         if one_geolayer_bool:
 
             # If the provided feature class is not in the FGDB raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsFeatureClassInFGDB", "FeatureClass", fc_name,
+            should_run_command.append(validator_util.run_check(self, "IsFeatureClassInFGDB", "FeatureClass", fc_name,
                                                            "FAIL", other_values=[spatial_data_folder_abs]))
 
         # Return the Boolean to determine if the process should be run.

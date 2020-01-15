@@ -27,7 +27,7 @@ import sys
 program_properties = {}
 
 
-def get_property(property_name):
+def get_property(property_name: str) -> str:
     """
     Retrieve an application property by name.
     This provides encapsulation and more flexibility than hard-coded variable access,
@@ -43,11 +43,11 @@ def get_property(property_name):
         init_properties()
     try:
         return program_properties[property_name]
-    except KeyError as e:
+    except KeyError:
         return None
 
 
-def get_qgis_install_folder():
+def get_qgis_install_folder() -> str:
     """
     Return the top-level folder where QGIS is installed for the version being used at run-time.
     This should only be called if is_qgis_osgeo() and/or is_qgis_standalone() return true.
@@ -66,7 +66,7 @@ def get_qgis_install_folder():
         return None
 
 
-def init_properties():
+def init_properties() -> None:
     """
     Initialize the properties to empty strings.
 
@@ -97,7 +97,7 @@ def init_properties():
     program_properties['ProgramVersionDate'] = ""
 
 
-def is_gp():
+def is_gp() -> bool:
     """
     Indicate whether running the full GeoProcessor (gp).
     This checks the Python that is being used.
@@ -115,7 +115,7 @@ def is_gp():
         return False
 
 
-def is_gptest():
+def is_gptest() -> bool:
     """
     Indicate whether running the GeoProcessor testing framework (gptest).
 
@@ -128,7 +128,7 @@ def is_gptest():
         return True
 
 
-def is_qgis_install_osgeo():
+def is_qgis_install_osgeo() -> bool:
     """
     Indicate whether running the OSGeo4W QGIS installation.
     On Windows, If Python is located in folder 'C:/OSGeo4W64', it is an OSGeo install.
@@ -147,7 +147,7 @@ def is_qgis_install_osgeo():
     return False
 
 
-def is_qgis_install_standalone():
+def is_qgis_install_standalone() -> bool:
     """
     Indicate whether running standalone QGIS installation.
     On Windows, If Python is located in folder 'C:/Program Files/QGIS', it is a standalone install.
@@ -173,7 +173,7 @@ def is_qgis_install_standalone():
     return False
 
 
-def set_property(property_name, property_value):
+def set_property(property_name: str, property_value: str ) -> None:
     """
     Set a property for the application.
 

@@ -27,7 +27,7 @@ class ExpectedStatusWarning(AbstractCommand):
     """
     # comment.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -51,7 +51,7 @@ class ExpectedStatusWarning(AbstractCommand):
                                                 'which are useful for commenting out multiple commands.')
         self.command_metadata['EditorType'] = 'InsertLineRulerEditor'
 
-    def initialize_command(self, command_string, processor, full_initialization):
+    def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
         Initialize the command.  This overrides the AbstractCommand.initialize_command function
         because a comment is treated as simple text.
@@ -69,7 +69,7 @@ class ExpectedStatusWarning(AbstractCommand):
         full_initialization = False
         super(ExpectedStatusWarning, self).initialize_command(command_string, processor, full_initialization)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Does nothing since comments cause no action.
 

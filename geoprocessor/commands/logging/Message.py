@@ -25,7 +25,7 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -36,12 +36,12 @@ class Message(AbstractCommand):
     the command status to alert about an issue.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("Message", type("")),
         CommandParameterMetadata("CommandStatus", type(""))
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command instance.
         """
@@ -68,10 +68,10 @@ class Message(AbstractCommand):
         self.parameter_input_metadata['CommandStatus.Label'] = "Command status"
         self.parameter_input_metadata['CommandStatus.Tooltip'] = \
             "Indicate the status that should result from running the command: SUCCESS, WARNING, FAILURE."
-        self.parameter_input_metadata['CommandStatus.Values'] = [ "", "SUCCESS", "WARNING", "FAILURE" ]
+        self.parameter_input_metadata['CommandStatus.Values'] = ["", "SUCCESS", "WARNING", "FAILURE"]
         self.parameter_input_metadata['CommandStatus.Value.Default'] = "SUCCESS"
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -79,7 +79,7 @@ class Message(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -90,7 +90,7 @@ class Message(AbstractCommand):
 
         # Message is required
         pv_Message = self.get_parameter_value(parameter_name='Message', command_parameters=command_parameters)
-        if not validators.validate_string(pv_Message, False, False):
+        if not validator_util.validate_string(pv_Message, False, False):
             message = "Message parameter has no value."
             recommendation = "Specify text for the Message parameter."
             warning += "\n" + message
@@ -99,7 +99,7 @@ class Message(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
         pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus',
                                                     command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_CommandStatus,
+        if not validator_util.validate_string_in_list(pv_CommandStatus,
                                                   CommandStatusType.get_command_status_types_as_str(), True, True):
             message = 'The requested command status "' + pv_CommandStatus + '"" is invalid.'
             recommendation = "Specify a valid command status."
@@ -121,12 +121,12 @@ class Message(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Print the message to the log file.
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             RuntimeError if any exception occurs.
@@ -139,7 +139,7 @@ class Message(AbstractCommand):
         pv_CommandStatus = self.get_parameter_value('CommandStatus')
         if pv_CommandStatus is None or pv_CommandStatus == "":
             # Default status as a string
-            pv_commandStatus = str(CommandStatusType.SUCCESS)
+            pv_CommandStatus = str(CommandStatusType.SUCCESS)
         # Convert the string to the enum
         command_status_type = CommandStatusType.value_of(pv_CommandStatus, ignore_case=True)
         message_expanded = self.command_processor.expand_parameter_value(pv_Message)

@@ -25,7 +25,7 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -35,16 +35,16 @@ class EndIf(AbstractCommand):
     The EndIf command indicates the end of an If block.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("Name", type(""))
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command instance.
         """
         super().__init__()
-        self.command_name = "EndIf"
+        self.command_name: str = "EndIf"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -65,7 +65,7 @@ class EndIf(AbstractCommand):
             "The name that will be matched with the name of an If command to indicate the block of commands in the "
             "if condition.")
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -73,7 +73,7 @@ class EndIf(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -84,7 +84,7 @@ class EndIf(AbstractCommand):
 
         # Name is required
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
-        if not validators.validate_string(pv_Name, False, False):
+        if not validator_util.validate_string(pv_Name, False, False):
             message = "A name for the EndIf block must be specified"
             recommendation = "Specify the Name."
             warning += "\n" + message
@@ -99,13 +99,13 @@ class EndIf(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            logger.warn(warning)
+            logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Return the name of the EndIf (will match name of corresponding If).
 
@@ -114,11 +114,11 @@ class EndIf(AbstractCommand):
         """
         return self.command_parameters.get("Name", None)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Does not do anything since the command is just a place-holder to match If().
 
         Returns:
-            Nothing.
+            None
         """
         pass

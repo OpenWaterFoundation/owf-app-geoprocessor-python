@@ -24,7 +24,7 @@ import tarfile
 import zipfile
 
 
-def is_tar_file(file_path):
+def is_tar_file(file_path: str) -> bool:
     """
     Determines if the input file is a tar file.
 
@@ -38,7 +38,7 @@ def is_tar_file(file_path):
     return tarfile.is_tarfile(file_path)
 
 
-def is_zip_file(file_path):
+def is_zip_file(file_path: str) -> bool:
     """
     Determines if the input file is a zip file.
 
@@ -52,7 +52,7 @@ def is_zip_file(file_path):
     return zipfile.is_zipfile(file_path)
 
 
-def is_zip_file_request(response_obj):
+def is_zip_file_request(response_obj) -> bool:
     """
     Checks if a request response object is of zip file format.
 
@@ -72,10 +72,10 @@ def is_zip_file_request(response_obj):
         zipfile.ZipFile(StringIO.StringIO(response_obj.content))
         return True
 
-    except:
+    except Exception:
         return False
 
-def untar_all_files(tar_file_path, output_folder):
+def untar_all_files(tar_file_path: str, output_folder: str) -> None:
     """
     Extracts all of the archived files from a .tar file and saves them to the output folder.
 
@@ -95,7 +95,7 @@ def untar_all_files(tar_file_path, output_folder):
     # Close the .tar file object.
     tar_file.close()
 
-def unzip_all_files(zip_file_path, output_folder):
+def unzip_all_files(zip_file_path: str, output_folder: str) -> None:
     """
     Extracts all of the archived files from a .zip file and saves them to the output folder.
 
@@ -116,7 +116,7 @@ def unzip_all_files(zip_file_path, output_folder):
     zip_file.close()
 
 
-def unzip_one_file(zip_file_path, input_filename, output_folder):
+def unzip_one_file(zip_file_path: str, input_filename: str, output_folder: str) -> None:
 
     # Create a .zip file object from the input zip file.
     zip_file = zipfile.ZipFile(zip_file_path, 'r')
@@ -128,7 +128,7 @@ def unzip_one_file(zip_file_path, input_filename, output_folder):
     zip_file.close()
 
 
-def zip_files(list_of_files_to_archive, output_filename, keep_originals=True):
+def zip_files(list_of_files_to_archive: [str], output_filename: str, keep_originals: bool = True):
     """
     Compress a list of files into a .zip file.
 
@@ -176,7 +176,7 @@ def zip_files(list_of_files_to_archive, output_filename, keep_originals=True):
                 shutil.rmtree(to_archive_file)
 
 
-def zip_shapefile(output_file_abs, keep_archive_files=False):
+def zip_shapefile(output_file_abs: str, keep_archive_files: bool = False) -> None:
     """
     Compresses a shapefile.
 

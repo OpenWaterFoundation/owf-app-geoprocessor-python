@@ -28,13 +28,12 @@ from geoprocessor.core.Table_pandas import Table
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.pandas_util as pandas_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
 
 class ReadTableFromExcel(AbstractCommand):
-
     """
     Reads a Table from an Excel file.
 
@@ -51,13 +50,13 @@ class ReadTableFromExcel(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("InputFile", type("")),
         CommandParameterMetadata("Worksheet", type("")),
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -133,7 +132,7 @@ class ReadTableFromExcel(AbstractCommand):
         # - existence of the file will also be checked in run_command().
         pv_InputFile = self.get_parameter_value(parameter_name='InputFile', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_InputFile, False, False):
+        if not validator_util.validate_string(pv_InputFile, False, False):
 
             message = "InputFile parameter has no value."
             recommendation = "Specify the InputFile parameter to indicate the input Excel data file."
@@ -146,7 +145,7 @@ class ReadTableFromExcel(AbstractCommand):
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
                                                       command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        if not validators.validate_string_in_list(pv_IfTableIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfTableIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
 
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
@@ -192,7 +191,7 @@ class ReadTableFromExcel(AbstractCommand):
         should_run_command = []
 
         # If the input file is not a valid file path, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsFilePathValid", "InputFile", file_abs, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "InputFile", file_abs, "FAIL"))
 
         # If the input file is valid, continue with the checks.
         if False not in should_run_command:
@@ -202,7 +201,7 @@ class ReadTableFromExcel(AbstractCommand):
                 sheet_name = pandas_util.create_excel_workbook_obj(file_abs).sheet_names[0]
 
             # If the input sheet name is not a valid sheet name in the excel workbook file, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsExcelSheetNameValid", "Worksheet", sheet_name,
+            should_run_command.append(validator_util.run_check(self, "IsExcelSheetNameValid", "Worksheet", sheet_name,
                                                            "FAIL", other_values=[file_abs]))
 
             # If the TableID parameter is None, assign the parameter with the sheet name.
@@ -211,7 +210,7 @@ class ReadTableFromExcel(AbstractCommand):
 
             # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
             # value of the IfTableIDExists parameter.)
-            should_run_command.append(validators.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
+            should_run_command.append(validator_util.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:

@@ -27,7 +27,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -55,7 +55,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("OutputCRS", type("")),
@@ -137,7 +137,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # - existence of the GeoLayer will also be checked in run_command().
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to write."
             warning += "\n" + message
@@ -149,7 +149,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # - existence of the folder will also be checked in run_command().
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter (relative or absolute pathname) to indicate the " \
                              "location and name of the output spatial data file in GeoJSON format."
@@ -193,14 +193,14 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         should_run_command = []
 
         # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id, "FAIL"))
 
         # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
+        should_run_command.append(validator_util.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
                                                        output_file_abs, "FAIL"))
 
         # If the output precision is not at or between 0 and 15, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsIntBetweenRange", "OutputPrecision", output_precision,
+        should_run_command.append(validator_util.run_check(self, "IsIntBetweenRange", "OutputPrecision", output_precision,
                                                        "FAIL", other_values=[0, 15]))
 
         # Return the Boolean to determine if the process should be run.
@@ -255,7 +255,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                 self.command_processor.add_output_file(output_file_absolute)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error writing GeoLayer {} to GeoJSON format.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

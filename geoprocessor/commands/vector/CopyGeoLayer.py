@@ -27,7 +27,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -55,7 +55,7 @@ class CopyGeoLayer(AbstractCommand):
     """
 
     # Define command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("IncludeAttributes", type("")),
         CommandParameterMetadata("ExcludeAttributes", type("")),
@@ -63,7 +63,7 @@ class CopyGeoLayer(AbstractCommand):
         CommandParameterMetadata("CopiedGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -128,7 +128,7 @@ class CopyGeoLayer(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -147,7 +147,7 @@ class CopyGeoLayer(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to copy."
             warning += "\n" + message
@@ -159,7 +159,7 @@ class CopyGeoLayer(AbstractCommand):
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
@@ -181,7 +181,8 @@ class CopyGeoLayer(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_copy_geolayer(self, input_geolayer_id, output_geolayer_id, include_feats_if_expression):
+    def __should_copy_geolayer(self, input_geolayer_id: str, output_geolayer_id: str,
+                               include_feats_if_expression: bool) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -203,19 +204,19 @@ class CopyGeoLayer(AbstractCommand):
         should_run_command = []
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", input_geolayer_id,
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", input_geolayer_id,
                                                        "FAIL"))
 
         # If the IncludeFeaturesIf parameter is defined, continue with the checks.
         if include_feats_if_expression is not None:
 
             # If the IncludeFeaturesIf parameter value is not a valid QgsExpression, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsQgsExpressionValid", "IncludeFeaturesIf",
+            should_run_command.append(validator_util.run_check(self, "IsQgsExpressionValid", "IncludeFeaturesIf",
                                                            include_feats_if_expression, "FAIL"))
 
         # If the CopiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "CopiedGeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "CopiedGeoLayerID",
                                                        output_geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run.
@@ -224,7 +225,7 @@ class CopyGeoLayer(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Make a copy of the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
 
@@ -286,7 +287,7 @@ class CopyGeoLayer(AbstractCommand):
                 self.command_processor.add_geolayer(copied_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

@@ -27,7 +27,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -72,7 +72,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("OutputCRS", type("")),
@@ -171,7 +171,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
 
             # Check that the parameter value is a non-empty, non-None string. If not, raise a FAILURE.
-            if not validators.validate_string(parameter_value, False, False):
+            if not validator_util.validate_string(parameter_value, False, False):
                 message = "{} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
                 warning += "\n" + message
@@ -182,7 +182,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         pv_OutputGeometryFormat = self.get_parameter_value(parameter_name="OutputGeometryFormat",
                                                            command_parameters=command_parameters)
         acceptable_values = ["WKT", "XYZ", "XY", "YZ"]
-        if not validators.validate_string_in_list(pv_OutputGeometryFormat, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_OutputGeometryFormat, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "OutputGeometryFormat parameter value ({}) is not recognized.".format(pv_OutputGeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the OutputGeometryFormat parameter.".format(
@@ -196,7 +196,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         pv_OutputDelimiter = self.get_parameter_value(parameter_name="OutputDelimiter",
                                                       command_parameters=command_parameters)
         acceptable_values = ["COMMA", "SEMICOLON", "TAB", "SPACE"]
-        if not validators.validate_string_in_list(pv_OutputDelimiter, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_OutputDelimiter, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "OutputDelimiter parameter value ({}) is not recognized.".format(pv_OutputDelimiter)
             recommendation = "Specify one of the acceptable values ({}) for the OutputDelimiter parameter.".format(
@@ -243,7 +243,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         should_run_command = []
 
         # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id, "FAIL"))
 
         # If the GeoLayerID exists, continue with the checks.
         if False not in should_run_command:
@@ -252,7 +252,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
             if not output_geom_format.upper() == "WKT":
 
                 # If the GeoLayer does not have POINT geometry, raise a FAILURE.
-                should_run_command.append(validators.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
+                should_run_command.append(validator_util.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
                                                                "GeoLayerID", geolayer_id,
                                                                "FAIL", other_values=[["Point"]]))
 
@@ -261,10 +261,10 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
                 crs = self.command_processor.get_geolayer(geolayer_id).get_crs()
 
             # If the CRS is not a valid CRS code, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsCRSCodeValid", "OutputCRS", crs, "FAIL"))
+            should_run_command.append(validator_util.run_check(self, "IsCRSCodeValid", "OutputCRS", crs, "FAIL"))
 
         # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
+        should_run_command.append(validator_util.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
                                                        output_file_abs, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
@@ -296,7 +296,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Get the filename of the OutputFile with the path but without the extension.
-        path, filename= os.path.split(output_file_absolute)
+        path, filename = os.path.split(output_file_absolute)
         path = os.path.split(output_file_absolute)[0]
         filename_wo_ext_path = os.path.join(path, os.path.splitext(filename)[0])
 
@@ -319,7 +319,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
                                                                  pv_OutputDelimiter)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error writing GeoLayer {} to delimited file format.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

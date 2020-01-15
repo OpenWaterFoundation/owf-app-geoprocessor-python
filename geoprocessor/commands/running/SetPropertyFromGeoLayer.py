@@ -25,7 +25,7 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -39,13 +39,13 @@ class SetPropertyFromGeoLayer(AbstractCommand):
     use the general ${Property} syntax.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("GeoLayerPropertyName", type("")),
         CommandParameterMetadata("PropertyName", type(""))
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a command instance.
         """
@@ -78,7 +78,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         self.parameter_input_metadata['PropertyName.Required'] = True
         self.parameter_input_metadata['PropertyName.Tooltip'] = "The GeoProcessor property name."
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -86,7 +86,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -100,7 +100,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         # - existence of the GeoLayer will also be checked in run_command().
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
-        if not validators.validate_string(pv_GeoLayerID, False, False):
+        if not validator_util.validate_string(pv_GeoLayerID, False, False):
             message = "GeoLayerID parameter has no value."
             recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to process."
             warning += "\n" + message
@@ -111,7 +111,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         # GeoLayerProperty is required
         pv_PropertyName = self.get_parameter_value(parameter_name='GeoLayerPropertyName',
                                                    command_parameters=command_parameters)
-        if not validators.validate_string(pv_PropertyName, False, False):
+        if not validator_util.validate_string(pv_PropertyName, False, False):
             message = "GeoLayerPropertyName parameter has no value."
             recommendation = "Specify a property name."
             warning += "\n" + message
@@ -121,7 +121,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
 
         # PropertyName is required
         pv_PropertyName = self.get_parameter_value(parameter_name='PropertyName', command_parameters=command_parameters)
-        if not validators.validate_string(pv_PropertyName, False, False):
+        if not validator_util.validate_string(pv_PropertyName, False, False):
             message = "PropertyName parameter has no value."
             recommendation = "Specify a property name."
             warning += "\n" + message
@@ -136,18 +136,18 @@ class SetPropertyFromGeoLayer(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            logger.warn(warning)
+            logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Set the GeoProcessor property to that of the specified GeoLayer property.
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             RuntimeError if an exception occurs, for example if the property name is not found.
@@ -173,7 +173,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
                 property_value = geolayer.get_property(pv_GeoLayerPropertyName)
                 if property_value is not None:
                     self.command_processor.set_property(pv_PropertyName, property_value)
-        except Exception as e:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error setting property "' + pv_PropertyName + '"'
             logger.warning(message, exc_info=True)

@@ -17,7 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# The following is needed to allow type hinging -> GeoLayer, and requires Python 3.7+
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
 # See:  https://stackoverflow.com/questions/33533148/
 #         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
 from __future__ import annotations

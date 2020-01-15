@@ -29,10 +29,10 @@ import os
 import platform
 import re
 import sys
+from typing import TextIO
 
 
-def expand_formatter(absolute_path, formatter):
-
+def expand_formatter(absolute_path: str, formatter: str) -> str:
     """
     Returns the appropriate value of a parsed absolute path given the user-defined formatter code. Many of times
     the user will want the filename without the extension or just the extension from an absolute path. This function
@@ -103,7 +103,7 @@ def expand_formatter(absolute_path, formatter):
         return None
 
 
-def format_standard_file_header(comment_line_prefix='', max_width=120, is_xml=False):
+def format_standard_file_header(comment_line_prefix: str = '', max_width: int = 120, is_xml: bool = False) -> str:
     """
     Format a standard header for a text file, which is useful to understand the file creation.
     The header looks like the following:
@@ -252,7 +252,7 @@ def format_standard_file_header(comment_line_prefix='', max_width=120, is_xml=Fa
     return comments
 
 
-def get_col_names_from_delimited_file(delimited_file_abs, delimiter):
+def get_col_names_from_delimited_file(delimited_file_abs: str, delimiter: str) -> [str]:
     """
     Reads a delimited file and returns the column names in list format.
 
@@ -277,11 +277,11 @@ def get_col_names_from_delimited_file(delimited_file_abs, delimiter):
                     return map(str.strip, line.split(delimiter))
 
     # If an error occurs within the process, return None.
-    except:
+    except Exception:
         return None
 
 
-def get_extension(full_path):
+def get_extension(full_path: str) -> str:
     """
     Returns the extension of a full path.
 
@@ -295,7 +295,7 @@ def get_extension(full_path):
     return extension
 
 
-def get_filename(full_path):
+def get_filename(full_path: str) -> str:
     """
     Returns the filename of a full path (without the extension).
 
@@ -309,7 +309,7 @@ def get_filename(full_path):
     return filename
 
 
-def get_path(full_path):
+def get_path(full_path: str) -> str:
     """
     Returns the directory path of a full path (without the filename or extension).
 
@@ -322,7 +322,8 @@ def get_path(full_path):
     return os.path.dirname(full_path)
 
 
-def print_standard_file_header(ofp, comment_line_prefix='#', max_width=120, properties=None):
+def print_standard_file_header(ofp: TextIO, comment_line_prefix: str = '#', max_width: int = 120,
+                               properties: dict = None) -> None:
     """
     Print a standard header to a file.  See __format_standard_file_header for an example of the header.
     This is a port of the Java cdss-lib-common-java package ioutil.print_creator_header() method.
@@ -365,7 +366,7 @@ def print_standard_file_header(ofp, comment_line_prefix='#', max_width=120, prop
     ofp.flush()
 
 
-def to_absolute_path(parent_dir, path):
+def to_absolute_path(parent_dir: str, path: str) -> str:
     """
     Convert an absolute "parent_dir" and path to an absolute path.
     If the path is already an absolute path it is returned as is.
@@ -449,7 +450,7 @@ def to_absolute_path(parent_dir, path):
     return os.path.join(parent_dir, path)
 
 
-def to_relative_path(root_path, rel_path):
+def to_relative_path(root_path: str, rel_path: str) -> str:
     """
     Convert a path "path" and an absolute directory "dir" to a relative path.
     If "dir" is at the start of "path" it is removed.  If it is not present, an
@@ -614,7 +615,7 @@ def to_relative_path(root_path, rel_path):
     return rel_path
 
 
-def verify_path_for_os(path, always_use_forward_slashes=False):
+def verify_path_for_os(path: str, always_use_forward_slashes: bool = False) -> str:
     """
     Verify that a path is appropriate for the operating system.
     This is a simple method that does the following:
@@ -650,7 +651,7 @@ def verify_path_for_os(path, always_use_forward_slashes=False):
         return verified_path
 
 
-def __write_property(fout, property_name, property_object, format_type):
+def __write_property(fout: TextIO, property_name: str, property_object: object, format_type: str) -> None:
     """
     Write a single property to the output file, called by the write_property_file() function.
 
@@ -710,8 +711,9 @@ def __write_property(fout, property_name, property_object, format_type):
             fout.write(property_name + "=" + quote + str(property_object) + quote + nl)
 
 
-def write_property_file(output_file_absolute, all_properties,
-                        include_properties, write_mode, format_type, sort_order, problems):
+def write_property_file(output_file_absolute: str, all_properties: dict,
+                        include_properties: [str], write_mode: str, format_type: str, sort_order: int,
+                        problems: [str]) -> None:
     """
     Write a dictionary of properties to a file, using the specified format.
     This function is useful for saving property lists for in configuration file formats,
@@ -802,10 +804,6 @@ def write_property_file(output_file_absolute, all_properties,
                     message = 'Error writing property "' + prop_name + '" (' + str(e2) + ').'
                     problems.append(message)
                     logger.warning(message, exc_info=True)
-                except:
-                    message = 'Error writing property "' + prop_name + '"'
-                    problems.append(message)
-                    logger.warning(message, exc_info=True)
 
         for i in range(0, len(include_properties_matched)):
             if not include_properties_matched[i]:
@@ -814,7 +812,7 @@ def write_property_file(output_file_absolute, all_properties,
         message = 'Error writing properties to file "' + output_file_absolute + '" (' + str(e) + ').'
         problems.append(message)
         logger.warning(message, exc_info=True)
-    except:
+    except Exception:
         message = 'Error writing properties to file "' + output_file_absolute + '.'
         problems.append(message)
         logger.warning(message, exc_info=True)

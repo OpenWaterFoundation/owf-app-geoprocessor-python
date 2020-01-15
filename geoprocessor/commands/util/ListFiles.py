@@ -27,7 +27,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
@@ -57,7 +57,7 @@ class ListFiles(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("Folder", type("")),
         CommandParameterMetadata("URL", type("")),
         CommandParameterMetadata("IncludePatterns", type("")),
@@ -67,7 +67,7 @@ class ListFiles(AbstractCommand):
         CommandParameterMetadata("ListProperty", type("")),
         CommandParameterMetadata("IfPropertyExists", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command
         """
@@ -102,7 +102,7 @@ class ListFiles(AbstractCommand):
         self.parameter_input_metadata['URL.Tooltip'] = "The URL of interest."
         self.parameter_input_metadata['URL.Value.Default'] = "Required if Folder parameter is not specified."
         # TODO @jurnetie 01/24/2019 FileSelector?
-        #ListProperty
+        # ListProperty
         self.parameter_input_metadata['ListProperty.Description'] = "a property name to hold the output list"
         self.parameter_input_metadata['ListProperty.Label'] = "List property"
         self.parameter_input_metadata['ListProperty.Required'] = True
@@ -154,7 +154,7 @@ class ListFiles(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -173,8 +173,8 @@ class ListFiles(AbstractCommand):
         pv_Folder = self.get_parameter_value(parameter_name='Folder', command_parameters=command_parameters)
         pv_URL = self.get_parameter_value(parameter_name='URL', command_parameters=command_parameters)
 
-        folder_is_string = validators.validate_string(pv_Folder, False, False)
-        url_is_string = validators.validate_string(pv_URL, False, False)
+        folder_is_string = validator_util.validate_string(pv_Folder, False, False)
+        url_is_string = validator_util.validate_string(pv_URL, False, False)
 
         if folder_is_string and url_is_string:
             message = "The Folder parameter and the URL parameter cannot both be enabled in the same command."
@@ -193,7 +193,7 @@ class ListFiles(AbstractCommand):
         # Check that optional ListFiles parameter value is a valid Boolean value or is None.
         pv_ListFiles = self.get_parameter_value(parameter_name="ListFiles", command_parameters=command_parameters)
 
-        if not validators.validate_bool(pv_ListFiles, none_allowed=True, empty_string_allowed=False):
+        if not validator_util.validate_bool(pv_ListFiles, none_allowed=True, empty_string_allowed=False):
             message = "ListFiles parameter value ({}) is not a recognized boolean value.".format(pv_ListFiles)
             recommendation = "Specify either 'True' or 'False for the ListFiles parameter."
             warning += "\n" + message
@@ -202,7 +202,7 @@ class ListFiles(AbstractCommand):
 
         # Check that optional ListFolders parameter value is a valid Boolean value or is None.
         pv_ListFolders = self.get_parameter_value(parameter_name="ListFolders", command_parameters=command_parameters)
-        if not validators.validate_bool(pv_ListFolders, none_allowed=True, empty_string_allowed=False):
+        if not validator_util.validate_bool(pv_ListFolders, none_allowed=True, empty_string_allowed=False):
             message = "ListFolders parameter value ({}) is not a recognized boolean value.".format(pv_ListFolders)
             recommendation = "Specify either 'True' or 'False for the ListFolders parameter."
             warning += "\n" + message
@@ -212,7 +212,7 @@ class ListFiles(AbstractCommand):
         # Check that parameter ListProperty is a non-empty, non-None string.
         pv_ListProperty = self.get_parameter_value(parameter_name='ListProperty', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_ListProperty, False, False):
+        if not validator_util.validate_string(pv_ListProperty, False, False):
             message = "ListProperty parameter has no value."
             recommendation = "Specify the ListProperty parameter."
             warning += "\n" + message
@@ -225,7 +225,7 @@ class ListFiles(AbstractCommand):
 
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
-        if not validators.validate_string_in_list(pv_IfPropertyExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfPropertyExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfPropertyExists parameter value ({}) is not recognized.".format(pv_IfPropertyExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfPropertyExists parameter.".format(
@@ -247,7 +247,8 @@ class ListFiles(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_list_files(self, folder_abs, url_abs, list_files_bool, list_dirs_bool, list_property):
+    def __should_list_files(self, folder_abs: str, url_abs: str, list_files_bool: bool, list_dirs_bool: bool,
+                            list_property: str) -> bool:
         """
         Checks the following:
         * the URL/Folder is valid.
@@ -274,13 +275,13 @@ class ListFiles(AbstractCommand):
         if folder_abs:
 
             # If the Folder is not a valid folder, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsFolderPathValid", "Folder", folder_abs, "FAIL"))
+            should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "Folder", folder_abs, "FAIL"))
 
         # If the URL parameter is enabled, continue with the checks.
         if url_abs:
 
             # If the URL is not a valid url, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsUrlValid", "URL", url_abs, "FAIL"))
+            should_run_command.append(validator_util.run_check(self, "IsUrlValid", "URL", url_abs, "FAIL"))
 
         # If both the ListFiles and the ListFolders are set to FALSE, raise a WARNING.
         if not list_files_bool and not list_dirs_bool:
@@ -289,12 +290,12 @@ class ListFiles(AbstractCommand):
             recommendation = "Set at lease one of the parameters to TRUE."
             self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.WARNING,
-                                                                                    message, recommendation))
+                                                                                  message, recommendation))
             should_run_command.append(True)
 
         # If the ListProperty is the same as an already-existing Property, raise a WARNING or FAILURE (depends
         # on the value of the IfPropertyExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsPropertyUnique", "ListProperty", list_property, None))
+        should_run_command.append(validator_util.run_check(self, "IsPropertyUnique", "ListProperty", list_property, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -303,7 +304,8 @@ class ListFiles(AbstractCommand):
             return True
 
     @staticmethod
-    def scrape_html(url, read_files, read_dirs, include_list=None, exclude_list=None):
+    def scrape_html(url: str, read_files: bool, read_dirs: bool,
+                    include_list: [str] = None, exclude_list: [str] = None) -> [str]:
         """
         Reads a URL and outputs a list of links within the URL's source. The list of links can be filtered be the
         following options:
@@ -408,7 +410,7 @@ class ListFiles(AbstractCommand):
         # Return the list of filtered and available links within the input URL.
         return [url + link_name for link_name in link_list_filtered]
 
-    def run_command(self):
+    def run_command(self) -> None:
 
         # Obtain the parameter values.
         pv_Folder = self.get_parameter_value("Folder")
@@ -504,7 +506,7 @@ class ListFiles(AbstractCommand):
                     self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error running ListFiles command."
                 recommendation = "Check the log file for details."

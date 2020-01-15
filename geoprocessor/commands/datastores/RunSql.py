@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -47,13 +47,13 @@ class RunSql(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("DataStoreID", type("")),
         CommandParameterMetadata("Sql", type("")),
         CommandParameterMetadata("SqlFile", type("")),
         CommandParameterMetadata("DataStoreProcedure", type(""))]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -67,7 +67,7 @@ class RunSql(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -86,7 +86,7 @@ class RunSql(AbstractCommand):
         # Check that the DataStoreID is a non-empty, non-None string.
         pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID", command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_DataStoreID, False, False):
+        if not validator_util.validate_string(pv_DataStoreID, False, False):
             message = "DataStoreID parameter has no value."
             recommendation = "Specify a valid DataStore ID."
             warning += "\n" + message
@@ -99,7 +99,7 @@ class RunSql(AbstractCommand):
 
         for parameter in sql_method_parameter_list:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-            is_string_list.append(validators.validate_string(parameter_value, False, False))
+            is_string_list.append(validator_util.validate_string(parameter_value, False, False))
 
         if not is_string_list.count(True) == 1:
             message = "Must enable one (and ONLY one) of the following parameters: {}".format(sql_method_parameter_list)
@@ -116,7 +116,7 @@ class RunSql(AbstractCommand):
             pv_DataStoreProcedure = self.get_parameter_value(parameter_name="DataStoreProcedure",
                                                              command_parameters=command_parameters)
 
-            if validators.validate_string(pv_DataStoreProcedure, none_allowed=False, empty_string_allowed=False):
+            if validator_util.validate_string(pv_DataStoreProcedure, none_allowed=False, empty_string_allowed=False):
                 message = "DataStoreProcedure is not currently enabled."
                 recommendation = "Specify the Sql method or the SqlFile method. "
                 warning += "\n" + message
@@ -136,7 +136,7 @@ class RunSql(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_run_sql(self, datastore_id):
+    def __should_run_sql(self, datastore_id: str) -> bool:
         """
         Checks the following:
             * the DataStore ID is an existing DataStore ID
@@ -153,7 +153,7 @@ class RunSql(AbstractCommand):
         should_run_command = []
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
+        should_run_command.append(validator_util.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
                                                        "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
@@ -162,7 +162,7 @@ class RunSql(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Execute the Sql statement on the DataStore.
 
@@ -213,7 +213,7 @@ class RunSql(AbstractCommand):
                 datastore_obj.run_sql(sql_statement)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error executing the Sql statement on the {} DataStore.".format(pv_DataStoreID)
                 recommendation = "Check the log file for details."

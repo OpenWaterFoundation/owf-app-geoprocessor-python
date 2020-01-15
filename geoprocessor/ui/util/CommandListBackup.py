@@ -18,21 +18,23 @@
 # ________________________________________________________________NoticeEnd___
 
 import copy
+
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+
 from PyQt5 import QtWidgets
 
 class CommandListBackup(object):
-
     """
     This class is used to keep track of the command list to determine if the command file has been
     modified in any way since the previous save, or if it has been returned to the original saved state.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         # Create a new command list QListWidget object
         self.command_list = []
 
-    def command_list_modified(self, command_list):
+    def command_list_modified(self, command_list: [AbstractCommand]) -> None:
         """
         Check to see if the command list has been modified since the last save. The last saved
         command list should have been updated by update_command_list()
@@ -56,7 +58,7 @@ class CommandListBackup(object):
 
         return False
 
-    def update_command_list(self, command_list):
+    def update_command_list(self, command_list: [AbstractCommand]) -> None:
         """
         Update the command list with what is currently saved or opened in geoprocessor
         :param command_list: the command list being saved or opened by geoprocessor

@@ -17,6 +17,9 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+from typing import Callable
+
+
 class CommandParameterMetadata(object):
     """
     Metadata for the command parameters, a list of which is maintained as
@@ -26,8 +29,9 @@ class CommandParameterMetadata(object):
     Validation requires more effort when the allowed value is an enumeration, etc.
     """
 
-    def __init__(self, parameter_name, parameter_type, parameter_description=None, default_value=None,
-                 editor_tooltip=None, validator_function=None):
+    def __init__(self, parameter_name: str, parameter_type: str, parameter_description: str = None,
+                 default_value: str = None, editor_tooltip: str = None,
+                 validator_function: Callable[..., bool] = None):
         # Parameter name should be in format WordWord
         self.parameter_name = parameter_name
 
@@ -55,7 +59,7 @@ class CommandParameterMetadata(object):
 # for example to process the full list of CommandParameterMetadata objects.
 
 
-def get_parameter_names(parameter_metadata_list):
+def get_parameter_names(parameter_metadata_list: [CommandParameterMetadata]) -> [str]:
     """
     Return the list of parameter names in a list, extracted from the metadata list.
 

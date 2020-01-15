@@ -19,6 +19,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.os_util as os_util
@@ -35,7 +36,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
     This class maintains core layout information and provides functions to add components.
     """
 
-    def __init__(self, command):
+    def __init__(self, command: AbstractCommand) -> None:
         """
         Initialize the Abstract Dialog instance.
 
@@ -46,7 +47,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         super().__init__()
 
         # Command being edited
-        self.command = command
+        self.command: AbstractCommand = command
 
         # GeoProcessorUI
         self.geoprocessor_ui = None
@@ -125,7 +126,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
     #     # and the QtGui.QLineEdit object as the value.
     #     self.input_edit_objects[parameter_name] = line_edit
 
-    def add_ui_horizontal_separator(self):
+    def add_ui_horizontal_separator(self) -> None:
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
         # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
         # The frame object, Separator, separates the command description from the input form section of the Dialog box.
@@ -141,7 +142,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
 
-    def are_required_parameters_specified(self, ui_command_parameter_list):
+    # TODO smalers 2020-01-14 This method does not seem to be used - need to remove?
+    def are_required_parameters_specified(self, ui_command_parameter_list: []) -> bool:
         """
         Checks if the required parameters of a command are specified by the user in the command dialog window.
 
@@ -169,7 +171,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Return the specified Boolean.
         return specified
 
-    def check_command_file_saved(self):
+    def check_command_file_saved(self) -> None:
         """
         Before user is able to select a file path from command editor. Make sure that the command file has
         been saved, or at the very least notify the user that if they choose not to save
@@ -189,8 +191,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
                 "This command file has not been saved. Would you like to save to "
                 "ensure relative paths are relative to command file location?",
                 "Save Commands File?")
-            #button_selected = qt_util.question_box("This command file has not been saved. Would you like to save to "
-                                 #"ensure relative paths are relative to command file location?")
+            # button_selected = qt_util.question_box("This command file has not been saved. Would you like to save to "
+            # "ensure relative paths are relative to command file location?")
             if button_selected == QtWidgets.QMessageBox.Yes:
                 # User selected ok. Open a window to save the command file
                 # Get geoprocessor ui
@@ -216,7 +218,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
                     "File Not Saved")
                 pass
 
-    def check_command_parameters(self):
+    def check_command_parameters(self) -> None:
         """
         Check to confirm that the command parameters are valid.
 
@@ -225,12 +227,12 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         param_dict = self.get_parameter_dict_from_ui()
         self.command.check_command_parameters(param_dict)
 
-    def get_current_value(self, obj):
+    def get_current_value(self, obj: QtWidgets.QWidget) -> str:
         """
         Get the value within a QtGui.Widget object.
 
         Arg:
-            obj (obj): the a QtGui.Widget object to read the value from
+            obj (obj): the a QtGui.Widget object, as a string.
 
         Return: the value within the QtGui.Widget object
         """
@@ -242,14 +244,14 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             value = obj.text()
 
         # Reads ComboBox widgets.
-        except:
+        except Exception:
             value = obj.currentText()
 
         # Return the value within the input QtGui.Widget object.
         return value
 
     @staticmethod
-    def select_file(qt_widget):
+    def select_file(qt_widget: QtWidgets.QWidget) -> None:
         """
         Opens a file browser to allow a user to select a file through a Qt predefined user interface. The path of the
         selected file is added to the qt_widget Qt Widget input field.
@@ -266,7 +268,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Add the full path of the selected file string to the specified input Qt Widget.
         qt_widget.setText(file_name_text)
 
-    def setup_ui(self):
+    def setup_ui(self) -> None:
         """
         Set up the user interface.
         It should be implemented in a child class, although helper functions are defined in this abstract class.
@@ -274,9 +276,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         Returns: None
         """
         # This should not normally happen but will be the case if a child editor has not implemented the function
-        print("In AbstractCommandEditor.setup_ui")
+        raise Exception("In AbstractCommandEditor.setup_ui - need to define setup_ui() in derived editor class.")
 
-    def setup_ui_core(self):
+    def setup_ui_core(self) -> None:
         # Set up the editor core elements, which apply to any command.
         self.setup_ui_core_top()
         # Set up the editor specific to the command.
@@ -290,7 +292,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # - don't do this because not using QtDesigner
         # QtCore.QMetaObject.connectSlotsByName(self)
 
-    def setup_ui_core_bottom(self):
+    def setup_ui_core_bottom(self) -> None:
         """
         Setup core UI components at the bottom of the dialog.
 
@@ -299,7 +301,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.setup_ui_core_command_area()
         self.setup_ui_core_command_buttons()
 
-    def setup_ui_core_command_area(self):
+    def setup_ui_core_command_area(self) -> None:
         # Create a label object to the Dialog window.
         # Set the alignment, the name, and the text of the label.
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
@@ -351,7 +353,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             # Cygwin and Windows
             commandArea_GridLayout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
 
-    def setup_ui_core_command_buttons(self):
+    def setup_ui_core_command_buttons(self) -> None:
 
         buttons_Frame = QtWidgets.QFrame(self)
         buttons_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
@@ -399,7 +401,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Button box is added regardless of how buttons are defined
         buttons_GridLayout.addWidget(self.dialog_ButtonBox, self.grid_layout_row, 6, 1, 2)
 
-    def setup_ui_core_command_description(self):
+    def setup_ui_core_command_description(self) -> None:
         """
         Setup the description component at the top of the dialog.
         """
@@ -440,7 +442,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.Command_Description_Label.setText(self.command.command_metadata['Description'])
         self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
-    def setup_ui_core_top(self):
+    def setup_ui_core_top(self) -> None:
         """
         Setup core UI components at the top of the dialog.
 
@@ -464,11 +466,11 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.setup_ui_core_command_description()
         self.add_ui_horizontal_separator()
 
-    def setup_ui_parameter_combobox(self, parameter_name,
-                                    parameter_ValueDefaultForDisplay,
-                                    parameter_Tooltip,
-                                    parameter_Values,
-                                    parameter_ValuesEditable):
+    def setup_ui_parameter_combobox(self, parameter_name: str,
+                                    parameter_ValueDefaultForDisplay: str,
+                                    parameter_Tooltip: str,
+                                    parameter_Values: str,
+                                    parameter_ValuesEditable: bool) -> None:
         """
         Add combobox UI components for a command parameter.
 
@@ -518,12 +520,12 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Add the component to the list maintained to get values out of UI components
         self.input_ui_components[parameter_name] = parameter_QComboBox
 
-    def setup_ui_parameter_description(self, parameter_name,
-                                       parameter_Description,
-                                       parameter_Required,
-                                       parameter_Tooltip,
-                                       parameter_ValueDefault,
-                                       parameter_ValueDefaultDescription ):
+    def setup_ui_parameter_description(self, parameter_name: str,
+                                       parameter_Description: str,
+                                       parameter_Required: bool,
+                                       parameter_Tooltip: str,
+                                       parameter_ValueDefault: str,
+                                       parameter_ValueDefaultDescription: str):
         """
         Add description UI components for a command parameter.
         This is not done for file selector component.
@@ -610,7 +612,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
         self.parameter_QGridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
 
-    def setup_ui_parameter_file_selector(self, input_metadata, parameter_name, parameter_Tooltip):
+    def setup_ui_parameter_file_selector(self, input_metadata: dict, parameter_name: str,
+                                         parameter_Tooltip: str) -> None:
         """
         Add file selector UI components for a command parameter.
 
@@ -675,7 +678,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             lambda clicked, y_param=self.y_parameter: self.ui_action_select_file(parameter_select_file_QPushButton))
         self.parameter_QGridLayout.addWidget(parameter_select_file_QPushButton, self.y_parameter, 6, 1, 1)
 
-    def setup_ui_parameter_label(self, parameter_name, parameter_Label):
+    def setup_ui_parameter_label(self, parameter_name: str, parameter_Label: str) -> None:
         """
         Add label UI components for a command parameter.
 
@@ -705,11 +708,11 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         parameter_QLabel.setText(parameter_Label + ":")
         parameter_QLabel.setAlignment(QtCore.Qt.AlignRight)  # |QtCore.Qt.AlignCenter)
         # Allow expanding horizontally
-        parameter_QLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding,QtWidgets.QSizePolicy.Fixed)
+        parameter_QLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.parameter_QGridLayout.addWidget(parameter_QLabel, self.y_parameter, 0, 1, 1)
         self.parameter_QGridLayout.setColumnStretch(0, 0)
 
-    def setup_ui_parameter_text_field(self, parameter_name, parameter_Tooltip):
+    def setup_ui_parameter_text_field(self, parameter_name: str, parameter_Tooltip: str) -> None:
         """
         Add text field (Qt LineEdit) UI components for a command parameter.
 
@@ -740,7 +743,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Add the component to the list maintained to get values out of UI components
         self.input_ui_components[parameter_name] = parameter_QLineEdit
 
-    def ui_action_select_file(self, event_button):
+    def ui_action_select_file(self, event_button: QtWidgets.QPushButton) -> None:
         """
         Open a file selector dialog to select an input or output file (or folder) to be used as a command
         parameter value.
@@ -770,7 +773,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         select_folder = False
         try:
             # The following should match ParameterName.FileSelectorTitle
-            select_folder = self.command.parameter_input_metadata[request_key]
+            select_folder = self.command.command_parameter_metadata[request_key]
         except KeyError:
             # Default was specified above...
             pass
@@ -781,7 +784,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             select_file_title = "Select file"
         try:
             # The following should match ParameterName.FileSelectorTitle
-            select_file_title = self.command.parameter_input_metadata[request_key]
+            select_file_title = self.command.command_parameter_metadata[request_key]
         except KeyError:
             # Default was specified above...
             pass
@@ -909,7 +912,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Update the Command Display Qt Widget to display the dynamic command display text.
         self.CommandDisplay_View_TextBrowser.setText(display)
 
-    def view_documentation(self, ref_command_name=None):
+    def view_documentation(self, ref_command_name: str = None) -> None:
         """
         View the command's user documentation in the default browser.
 
@@ -949,7 +952,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             except Exception:
                 # Try the other variant, may work on different operating system
                 webbrowser.open(command_doc_url)
-        except Exception as e:
+        except Exception:
             message = 'Error viewing command documentation using url "' + str(command_doc_url) + '"'
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)

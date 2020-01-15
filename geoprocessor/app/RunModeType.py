@@ -17,6 +17,11 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+# The following is needed to allow type hinting -> GeoProcessorAppSession, and requires Python 3.7+
+# See:  https://stackoverflow.com/questions/33533148/
+#         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
+from __future__ import annotations
+
 from enum import Enum
 
 
@@ -39,7 +44,7 @@ class RunModeType(Enum):
     UI = 4
 
     @classmethod
-    def get_run_modes(cls):
+    def get_run_modes(cls) -> [RunModeType]:
         """
         Return the list of valid run modes.
 
@@ -49,7 +54,7 @@ class RunModeType(Enum):
         # Return in order of processing order.
         return [RunModeType.BATCH, RunModeType.HTTP, RunModeType.SHELL, RunModeType.UI]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Format the enumeration value as a string - just return the name.
 

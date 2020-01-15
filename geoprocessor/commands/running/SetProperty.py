@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -36,17 +36,17 @@ class SetProperty(AbstractCommand):
     The SetProperty command sets a processor property.
     """
 
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("PropertyName", type("")),
         CommandParameterMetadata("PropertyType", type("")),
         CommandParameterMetadata("PropertyValue", type("")),
         CommandParameterMetadata("PropertyValues", type(""))
     ]
 
-    # Choices for PropertType valid values
-    __choices_PropertyType = ["bool", "float", "int", "long", "str"]
+    # Choices for PropertyType valid values
+    __choices_PropertyType: [str] = ["bool", "float", "int", "long", "str"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a command instance.
         """
@@ -90,7 +90,7 @@ class SetProperty(AbstractCommand):
         self.parameter_input_metadata['PropertyValues.Value.Default.Description'] = \
             "'PropertyValue' or 'PropertyValues' must be specified."
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -98,7 +98,7 @@ class SetProperty(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -109,7 +109,7 @@ class SetProperty(AbstractCommand):
 
         # PropertyName is required
         pv_PropertyName = self.get_parameter_value(parameter_name='PropertyName', command_parameters=command_parameters)
-        if not validators.validate_string(pv_PropertyName, False, False):
+        if not validator_util.validate_string(pv_PropertyName, False, False):
             message = "PropertyName parameter has no value."
             recommendation = "Specify a property name."
             warning += "\n" + message
@@ -119,9 +119,9 @@ class SetProperty(AbstractCommand):
 
         # PropertyType is required
         pv_PropertyType = self.get_parameter_value(parameter_name='PropertyType', command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_PropertyType, self.__choices_PropertyType, False, False):
+        if not validator_util.validate_string_in_list(pv_PropertyType, self.__choices_PropertyType, False, False):
             message = 'The requested property type "' + pv_PropertyType + '"" is invalid.'
-            recommendation = "Specify a valid property type:  " + str(property_types)
+            recommendation = "Specify a valid property type:  " + str(SetProperty.__choices_PropertyType)
             warning += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -135,7 +135,7 @@ class SetProperty(AbstractCommand):
             parameter_name='PropertyValue', command_parameters=command_parameters)
         if pv_PropertyValue is not None and pv_PropertyValue != "":
             property_value_parameter_count += 1
-            if not validators.validate_string(pv_PropertyValue, True, True):
+            if not validator_util.validate_string(pv_PropertyValue, True, True):
                 message = "PropertyValue parameter is not specified."
                 recommendation = "Specify a property value."
                 warning += "\n" + message
@@ -147,7 +147,7 @@ class SetProperty(AbstractCommand):
             parameter_name='PropertyValues', command_parameters=command_parameters)
         if pv_PropertyValues is not None and pv_PropertyValues != "":
             property_value_parameter_count += 1
-            if not validators.validate_list(pv_PropertyValues, True, True, brackets_required=False):
+            if not validator_util.validate_list(pv_PropertyValues, True, True, brackets_required=False):
                 message = "PropertyValues parameter is not valid."
                 recommendation = "Specify a list of values separated by commas and optional spaces."
                 warning += "\n" + message
@@ -178,12 +178,12 @@ class SetProperty(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Set a property on the GeoProcessor.
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             RuntimeError if there is any exception running the command.
@@ -252,7 +252,7 @@ class SetProperty(AbstractCommand):
                 if parameter_value2 is not None:
                     self.command_processor.set_property(pv_PropertyName, parameter_value2)
                     # logger.info('Setting parameter "' + str(pv_PropertyName) + '"="' + str(parameter_value2) + '"')
-        except Exception as e:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error setting property "' + str(pv_PropertyName) + '"'
             logger.warning(message, exc_info=True)

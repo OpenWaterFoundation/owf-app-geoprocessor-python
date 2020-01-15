@@ -40,7 +40,8 @@ import geoprocessor.util.zip_util as zip_util
 from urllib.request import urlopen
 
 
-def run_check(self, condition, parameter_name, parameter_value, fail_response, other_values=None):
+def run_check(self, condition: str, parameter_name: str, parameter_value: str, fail_response: str,
+              other_values: [object] = None) -> bool:
     """
     The run_check utility function is used to store all of the checks done within the command classes. There are
     many types of checks that are performed on the command parameter values before a command can be run. Initially,
@@ -434,7 +435,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
 
         try:
             urlopen(parameter_value)
-        except:
+        except Exception:
             check_failed = True
 
     # Check if the file is a valid zip file.
@@ -448,7 +449,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
 
     else:
 
-        message = "Check {} is not a valid check in the validators library.".format(condition)
+        message = "Check {} is not a valid check in the validators.".format(condition)
         recommendation = "Contact the maintainers of the GeoProcessor software."
         check_failed = True
         fail_response = "FAIL"
@@ -490,7 +491,7 @@ def run_check(self, condition, parameter_name, parameter_value, fail_response, o
     return run_the_command
 
 
-def validate_bool(bool_value, none_allowed, empty_string_allowed):
+def validate_bool(bool_value: bool, none_allowed: bool, empty_string_allowed: bool) -> bool:
     """
     Validate that a boolean value is True or False.
 
@@ -527,7 +528,7 @@ def validate_bool(bool_value, none_allowed, empty_string_allowed):
     return True
 
 
-def validate_float(float_value, none_allowed, empty_string_allowed):
+def validate_float(float_value: float, none_allowed: bool, empty_string_allowed: bool) -> bool:
     """
     Validate that a floating point value is valid.
 
@@ -562,7 +563,7 @@ def validate_float(float_value, none_allowed, empty_string_allowed):
     return True
 
 
-def validate_int(int_value, none_allowed, empty_string_allowed):
+def validate_int(int_value: int, none_allowed: bool, empty_string_allowed: bool) -> bool:
     """
     Validate that an integer value is valid.
 
@@ -597,7 +598,8 @@ def validate_int(int_value, none_allowed, empty_string_allowed):
     return True
 
 
-def validate_int_in_range(int_value, int_min, int_max, none_allowed, empty_string_allowed):
+def validate_int_in_range(int_value: int, int_min: int, int_max: int, none_allowed: bool,
+                          empty_string_allowed: bool) -> bool:
     """
     Validate that an integer value is in a range.
 
@@ -636,7 +638,7 @@ def validate_int_in_range(int_value, int_min, int_max, none_allowed, empty_strin
         return False
 
 
-def validate_number(number_value, none_allowed, empty_string_allowed):
+def validate_number(number_value: object, none_allowed: bool, empty_string_allowed: bool) -> bool:
     """
     Validate that a number value is valid.
 
@@ -671,7 +673,7 @@ def validate_number(number_value, none_allowed, empty_string_allowed):
     return True
 
 
-def validate_string(string_value, none_allowed, empty_string_allowed):
+def validate_string(string_value: str, none_allowed: bool, empty_string_allowed: bool) -> bool:
     """
     Validate that a string value is specified.
     This is a basic test just to make sure that a value has been provided.
@@ -699,8 +701,8 @@ def validate_string(string_value, none_allowed, empty_string_allowed):
     return True
 
 
-def validate_string_in_list(string_value, string_list, none_allowed=False,
-                            empty_string_allowed=False, ignore_case=False):
+def validate_string_in_list(string_value: str, string_list: [str], none_allowed: bool = False,
+                            empty_string_allowed: bool = False, ignore_case: bool = False) -> bool:
     """
     Validate that a string value is in a list of allowed string values.
 
@@ -744,7 +746,8 @@ def validate_string_in_list(string_value, string_list, none_allowed=False,
 # TODO smaler 2018-02-18 The following needs work
 # - it allows brackets anywhere in the string
 # - it does not actually check for comma-separated values
-def validate_list(list_value, none_allowed, empty_string_allowed, brackets_required=True):
+def validate_list(list_value: [], none_allowed: bool, empty_string_allowed: bool,
+                  brackets_required: bool = True) -> bool:
     """
     Validate that a list value is a list.
 

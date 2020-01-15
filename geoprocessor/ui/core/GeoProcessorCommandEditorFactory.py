@@ -19,6 +19,11 @@
 
 import logging
 
+from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
+
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+
+from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 from geoprocessor.ui.commands.abstract.SimpleCommandEditor import SimpleCommandEditor
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
 from geoprocessor.ui.commands.util.InsertLineEditor import InsertLineEditor
@@ -30,20 +35,20 @@ class GeoProcessorCommandEditorFactory(object):
     Factory to create command editor instance for a command object.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command editor factory.
         """
 
         # TODO smalers 2019-01-18 the following data members are misplaced - need to move
         # Use the following for diagnostics and performance analysis - total count of commands processed
-        self.command_created_count = 0
+        self.command_created_count: int = 0
 
         # Use the following for error-handling - total number of unknown commands
-        self.command_unknown_count = 0
+        self.command_unknown_count: int = 0
 
     @classmethod
-    def new_command_editor(cls, command, app_session):
+    def new_command_editor(cls, command: AbstractCommand, app_session: GeoProcessorAppSession) -> AbstractCommandEditor:
         """
         Creates the editor for a command object.
         A valid command object of some type will be provided, but may be UnknownCommand.

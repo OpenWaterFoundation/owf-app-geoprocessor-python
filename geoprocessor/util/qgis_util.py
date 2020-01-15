@@ -167,7 +167,7 @@ def create_qgsgeometry(geometry_format: str, geometry_input_as_string: str) -> N
         return None
 
 
-def create_qgsrasterlayer(geometry, crs_code, layer_name) -> QgsVectorLayer:
+def create_qgsrasterlayer(geometry: str, crs_code: str, layer_name: str) -> QgsVectorLayer:
     """
     Creates a new QgsRasterLayer from scratch (in memory QgsRasterLayer object).
 
@@ -442,7 +442,7 @@ def get_geometrytype_qgis(qgsvectorlayer: QgsVectorLayer) -> str:
     return enumerator_dic[qgsvectorlayer.geometryType()]
 
 
-def get_geometrytype_qgis_from_wkt(wkt_string: str):
+def get_geometrytype_qgis_from_wkt(wkt_string: str) -> str:
     """
     Returns the QGIS geometry equivalent of the WKT geometry provided by a Well Known Text string.
 
@@ -1054,7 +1054,8 @@ def split_qgsvectorlayer_by_attribute(qgsvectorlayer: QgsVectorLayer, attribute_
     """
     Split the QgsVectorLayer object into multiple vector layers based on an attribute's unique values.
 
-    REF: QGIS User Manual <https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer>
+    REF: QGIS User Manual
+    <https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer>
 
     Args:
         qgsvectorlayer (QgsVectorLayer): the QGSVectorLayer object
@@ -1062,7 +1063,7 @@ def split_qgsvectorlayer_by_attribute(qgsvectorlayer: QgsVectorLayer, attribute_
         output_qgsvectorlayers (QgsVectorLayer): the QgsVectorLayer objects that are created by the split
 
     Returns:
-        multiple QgsVectorLayers.  The number of layers is based on the number of unique values of the selected attribute.
+        [QgsVectorLayers]  The number of layers is based on the number of unique values of the selected attribute.
     """
 
     # Split the QgsVectorLayer by the chosen attribute.  Output QgsVectorLayer names should be automatically generated??
@@ -1211,4 +1212,3 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer: QgsVectorLayer, output_fil
                                             "utf-8",
                                             QgsCoordinateReferenceSystem(crs),
                                             "ESRI Shapefile")
-

@@ -23,10 +23,12 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.DataStore import DataStore
+from geoprocessor.core.Table import Table
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -62,7 +64,7 @@ class WriteTableToDataStore(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("IncludeColumns", type("")),
         CommandParameterMetadata("ExcludeColumns", type("")),
@@ -76,7 +78,7 @@ class WriteTableToDataStore(AbstractCommand):
     __choices_WriteMode = ["NewTableInsert", "ExistingTableOverwrite", "ExistingTableInsert", "ExistingTableUpdate",
                            "ExistingTableInsertUpdate"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -167,7 +169,7 @@ class WriteTableToDataStore(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -189,7 +191,7 @@ class WriteTableToDataStore(AbstractCommand):
         for parameter in required_parameters:
 
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-            if not validators.validate_string(parameter_value, False, False):
+            if not validator_util.validate_string(parameter_value, False, False):
                 message = "{} parameter has no value.".format(parameter)
                 recommendation = "Specify a valid value for the {} parameter.".format(parameter)
                 warning += "\n" + message
@@ -199,7 +201,7 @@ class WriteTableToDataStore(AbstractCommand):
         # Check that optional parameter WriteMode is one of the acceptable values or is None.
         pv_WriteMode = self.get_parameter_value(parameter_name="WriteMode",
                                                 command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_WriteMode, self.__choices_WriteMode, none_allowed=False,
+        if not validator_util.validate_string_in_list(pv_WriteMode, self.__choices_WriteMode, none_allowed=False,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "WriteMode parameter value ({}) is not recognized.".format(pv_WriteMode)
             recommendation = "Specify one of the acceptable values ({}) for the WriteMode parameter.".format(
@@ -221,7 +223,7 @@ class WriteTableToDataStore(AbstractCommand):
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @staticmethod
-    def __get_table_cols_to_write(include_col_patterns, exclude_col_patterns, table):
+    def __get_table_cols_to_write(include_col_patterns: str, exclude_col_patterns: str, table: Table) -> [str]:
         """
         The command allows for users to select a subset of the Table columns to write to the DataStore database. This
         function returns a list of Table columns configured to write data by the user inputs.
@@ -253,7 +255,7 @@ class WriteTableToDataStore(AbstractCommand):
         return table_cols_to_include
 
     @staticmethod
-    def __get_table_cols_to_exclude(include_col_patterns, exclude_col_patterns, table):
+    def __get_table_cols_to_exclude(include_col_patterns: str, exclude_col_patterns: str, table: Table) -> [str]:
         """
         The command allows for users to select a subset of the Table columns to write to the DataStore database. This
         function returns a list of Table columns NOT configured to write data by the user inputs.
@@ -285,7 +287,7 @@ class WriteTableToDataStore(AbstractCommand):
         return table_cols_to_exclude
 
     @staticmethod
-    def __get_mapped_datastore_col_from_table_col(table_col_name, col_map_dic):
+    def __get_mapped_datastore_col_from_table_col(table_col_name: str, col_map_dic: dict) -> str:
         """
         Get the corresponding DataStore table column name given the Table column name. This is achieved by looking up
         the corresponding values in the user-configured ColumnMap.
@@ -307,7 +309,7 @@ class WriteTableToDataStore(AbstractCommand):
         else:
             return table_col_name
 
-    def __get_datastore_cols_to_receive(self, table_cols_to_write, col_map_dic):
+    def __get_datastore_cols_to_receive(self, table_cols_to_write: [str], col_map_dic: dict) -> [str]:
         """
         Get a list of the columns in the DataStore that are configured to receive data.
 
@@ -335,7 +337,7 @@ class WriteTableToDataStore(AbstractCommand):
         # Return the list of the columns in the DataStore that are configured to receive data.
         return datastore_table_cols_to_receive
 
-    def __should_write_table(self, table_id, datastore_id, datastore_table_name, writemode):
+    def __should_write_table(self, table_id: str, datastore_id: str, datastore_table_name: str, writemode: str) -> bool:
         """
         Checks the following:
             * the Table ID exists
@@ -352,14 +354,14 @@ class WriteTableToDataStore(AbstractCommand):
 
         Returns:
              Boolean. If TRUE, the process should be run. If FALSE, it should not be run.
-       """
+        """
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
         should_run_command = []
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
+        should_run_command.append(validator_util.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
                                                        "FAIL"))
 
         # Only run the following check if the previous check passed.
@@ -368,19 +370,19 @@ class WriteTableToDataStore(AbstractCommand):
             if writemode.upper().startswith("EXISTING") and not writemode.upper().endswith("OVERWRITE"):
 
                 # If the DataStoreTable is not a table within the DataStore, raise a FAILURE.
-                should_run_command.append(validators.run_check(self, "IsTableInDataStore", "DataStoreTable",
+                should_run_command.append(validator_util.run_check(self, "IsTableInDataStore", "DataStoreTable",
                                                                datastore_table_name, "FAIL",
                                                                other_values=[datastore_id]))
 
             if writemode.upper().startswith("NEW"):
 
                 # If the DataStoreTable is a table within the DataStore, raise a FAILURE.
-                should_run_command.append(validators.run_check(self, "IsDataStoreTableUnique", "DataStoreTable",
+                should_run_command.append(validator_util.run_check(self, "IsDataStoreTableUnique", "DataStoreTable",
                                                                datastore_table_name, "FAIL",
                                                                other_values=[datastore_id]))
 
         # If the Table ID is not an existing Table ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -388,7 +390,8 @@ class WriteTableToDataStore(AbstractCommand):
         else:
             return True
 
-    def __should_write_table2(self, datastore, datastore_table_name, datastore_table_cols_to_receive, writemode):
+    def __should_write_table2(self, datastore: DataStore, datastore_table_name: str,
+                              datastore_table_cols_to_receive: [str], writemode: str) -> bool:
         """
             Checks the following:
                 * the datastore columns configured to receive data are existing columns within the DataStore table
@@ -428,7 +431,7 @@ class WriteTableToDataStore(AbstractCommand):
         # If there are any invalid configured DataStore columns, raise a FAILURE.
         if invalid_columns:
             message = "One or more of the DataStore columns configured to be edited do(es) not exist in the DataStore" \
-                      " table ({}). The invalid columns are: \n({}).".format(datastore_table_name, invalid_columns)
+                " table ({}). The invalid columns are: \n({}).".format(datastore_table_name, invalid_columns)
             recommendation = "Specify valid DataStore columns to edit."
 
             self.logger.warning(message)
@@ -443,7 +446,7 @@ class WriteTableToDataStore(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Read the Table from the DataStore
 
@@ -534,7 +537,7 @@ class WriteTableToDataStore(AbstractCommand):
                         print("The ExistingTableInsertUpdate WriteMode is currently disabled.")
 
                 # Raise an exception if an unexpected error occurs during the process
-                except Exception as e:
+                except Exception:
                     self.warning_count += 1
                     message = "Unexpected error writing Table {} to DataStore ({}).".format(pv_TableID,
                                                                                             pv_DataStoreID)

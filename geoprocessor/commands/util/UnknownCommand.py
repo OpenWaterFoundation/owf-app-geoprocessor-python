@@ -26,7 +26,7 @@ class UnknownCommand(AbstractCommand):
     This allows the command to exist gracefully in a command file and command list.
     Running the command has no effect.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -36,7 +36,7 @@ class UnknownCommand(AbstractCommand):
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()
 
-    def initialize_command(self, command_string, processor, full_initialization):
+    def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
         Initialize the command.  This overrides the AbstractCommand.initialize_command function
         because an UnknownCommand may be ill-formed and no attempt is made to parse it.
@@ -47,19 +47,19 @@ class UnknownCommand(AbstractCommand):
             full_initialization: Ignored.  A value of False is passed to AbstractCommand.initialize_command().
 
         Returns:
-            Nothing.
+            None
         """
 
         # Set data in the parent class, but do not attempt to parse the command since unknown syntax
         full_initialization = False
         super(UnknownCommand, self).initialize_command(command_string, processor, full_initialization)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Does nothing since an unknown command.
 
         Returns:
-            Nothing.
+            None
         """
         # print("In UnknownCommand.run_command")
         pass

@@ -23,11 +23,12 @@ from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.Table import Table
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.string_util as string_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import csv
 import logging
@@ -63,7 +64,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("Delimiter", type("")),
@@ -80,7 +81,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
     __choices_ArrayFormat = ["SquareBrackets", "CurlyBrackets"]
     __choices_NullValueFormat = ["Null", "None"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -185,7 +186,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -204,7 +205,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # Check that parameter TableID is a non-empty, non-None string.
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_TableID, False, False):
+        if not validator_util.validate_string(pv_TableID, False, False):
             message = "TableID parameter has no value."
             recommendation = "Specify the TableID parameter to indicate the Table to write."
             warning += "\n" + message
@@ -215,7 +216,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # Check that parameter OutputFile is a non-empty, non-None string.
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_OutputFile, False, False):
+        if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "OutputFile parameter has no value."
             recommendation = "Specify the OutputFile parameter (relative or absolute pathname) to indicate the " \
                              "location and name of the output delimited file."
@@ -230,7 +231,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         for parameter in parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
 
-            if not validators.validate_bool(parameter_value, True, False):
+            if not validator_util.validate_bool(parameter_value, True, False):
                 message = "{} parameter ({}) is not a valid Boolean value.".format(parameter, parameter_value)
                 recommendation = "Specify a valid Boolean value for the {} parameter.".format(parameter)
                 warning += "\n" + message
@@ -240,7 +241,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
         # Check that optional parameter ArrayFormat is one of the acceptable values or is None.
         pv_ArrayFormat = self.get_parameter_value(parameter_name="ArrayFormat", command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_ArrayFormat, self.__choices_ArrayFormat,
+        if not validator_util.validate_string_in_list(pv_ArrayFormat, self.__choices_ArrayFormat,
                                                   none_allowed=True,
                                                   empty_string_allowed=False, ignore_case=True):
             message = "ArrayFormat parameter value ({}) is not recognized.".format(pv_ArrayFormat)
@@ -253,7 +254,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # Check that optional parameter NullValueFormat is one of the acceptable values or is None.
         pv_NullValueFormat = self.get_parameter_value(parameter_name="NullValueFormat",
                                                       command_parameters=command_parameters)
-        if not validators.validate_string_in_list(pv_NullValueFormat, self.__choices_NullValueFormat,
+        if not validator_util.validate_string_in_list(pv_NullValueFormat, self.__choices_NullValueFormat,
                                                   none_allowed=True, empty_string_allowed=False, ignore_case=True):
             message = "NullValueFormat parameter value ({}) is not recognized.".format(pv_NullValueFormat)
             recommendation = "Specify one of the acceptable values ({}) for the NullValueFormat parameter.".format(
@@ -274,7 +275,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_write_table(self, table_id, output_file_abs, delimiter, sort_columns):
+    def __should_write_table(self, table_id: str, output_file_abs: str, delimiter: str, sort_columns: [str]) -> bool:
         """
        Checks the following:
        * the ID of the Table is an existing Table ID
@@ -297,7 +298,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         should_run_command = []
 
         # If the Table ID is not an existing Table ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
 
         # If the Table ID does exist and the sort_columns is not None, continue with checks.
         if True in should_run_command and sort_columns is not None:
@@ -322,18 +323,18 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 self.warning_count += 1
                 self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
-                                                                                        message, recommendation))
+                                                                                      message, recommendation))
                 should_run_command.append(False)
 
         # Get the full path to the output folder
         output_folder_abs = io_util.get_path(output_file_abs)
 
         # If the output folder is not an existing folder, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
+        should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
                                                        "FAIL"))
 
         # If the delimiter is not 1 character, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsStringLengthCorrect", "Delimiter", delimiter,
+        should_run_command.append(validator_util.run_check(self, "IsStringLengthCorrect", "Delimiter", delimiter,
                                                        "FAIL", other_values=[1]))
 
         # Return the Boolean to determine if the process should be run.
@@ -343,9 +344,10 @@ class WriteTableToDelimitedFile(AbstractCommand):
             return True
 
     @ staticmethod
-    def __write_table_to_delimited_file(path, table_obj, delimiter, cols_to_include_list, cols_to_exclude_list,
-                                        include_header, include_index, sort_columns, sorting_dic, use_sq_brackets,
-                                        use_null_values):
+    def __write_table_to_delimited_file(path: str, table_obj: Table, delimiter: str, cols_to_include_list: [str],
+                                        cols_to_exclude_list: [str], include_header: bool, include_index: bool,
+                                        sort_columns: [str], sorting_dic: dict, use_sq_brackets: bool,
+                                        use_null_values: bool):
         """
         Writes a GeoProcessor table to a delimited file. There are many parameters to customize how the table is
         written to the delimited file.
@@ -416,7 +418,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 all_records = sorted(all_records, key=itemgetter(0))
 
         # Try to sort but do not throw an error if the sort fails. Instead keep the records in the original order.
-        except:
+        except Exception:
             all_records = all_records
 
         # If an index column is specified to be written, add the index column to each record.
@@ -575,7 +577,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 with open(path, "w") as f:
                     f.write(file_text)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Write the Table to a delimited file.
 
@@ -642,10 +644,10 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                                      sort_cols_list, sort_dictionary, use_sq_brackets, use_null_value)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error writing Table {} to delimited file {}.".format(pv_TableID,
-                                                                                                pv_OutputFile)
+                                                                                           pv_OutputFile)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,

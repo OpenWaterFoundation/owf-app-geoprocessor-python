@@ -26,7 +26,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 import geoprocessor.util.qgis_util as qgis_util
 
 import logging
@@ -57,7 +57,7 @@ class ClipGeoLayer(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("InputGeoLayerID", type("")),
         CommandParameterMetadata("ClippingGeoLayerID", type("")),
         CommandParameterMetadata("OutputGeoLayerID", type("")),
@@ -124,7 +124,7 @@ class ClipGeoLayer(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            Nothing.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -136,7 +136,7 @@ class ClipGeoLayer(AbstractCommand):
         pv_InputGeoLayerID = self.get_parameter_value(parameter_name='InputGeoLayerID',
                                                       command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_InputGeoLayerID, False, False):
+        if not validator_util.validate_string(pv_InputGeoLayerID, False, False):
             message = "InputGeoLayerID parameter has no value."
             recommendation = "Specify the InputGeoLayerID parameter to indicate the input GeoLayer."
             warning += "\n" + message
@@ -148,7 +148,7 @@ class ClipGeoLayer(AbstractCommand):
         pv_ClippingGeoLayerID = self.get_parameter_value(parameter_name='ClippingGeoLayerID',
                                                          command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_ClippingGeoLayerID, False, False):
+        if not validator_util.validate_string(pv_ClippingGeoLayerID, False, False):
 
             message = "ClippingGeoLayerID parameter has no value."
             recommendation = "Specify the ClippingGeoLayerID parameter to indicate the clipping GeoLayer."
@@ -161,7 +161,7 @@ class ClipGeoLayer(AbstractCommand):
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
-        if not validators.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
                                                   empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
@@ -184,7 +184,7 @@ class ClipGeoLayer(AbstractCommand):
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_clip_geolayer(self, input_geolayer_id: str, clipping_geolayer_id: str,
-                               output_geolayer_id: str) -> None:
+                               output_geolayer_id: str) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -208,29 +208,29 @@ class ClipGeoLayer(AbstractCommand):
         should_run_command = []
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIDExisting", "InputGeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "InputGeoLayerID",
                                                        input_geolayer_id, "FAIL"))
 
         # If the clipping GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIDExisting", "ClippingGeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "ClippingGeoLayerID",
                                                        clipping_geolayer_id, "FAIL"))
 
         # If the input GeoLayer and the clipping GeoLayer both exist, continue with the checks.
         if False not in should_run_command:
 
             # If the clipping GeoLayerID does not contain features of polygon type, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "DoesGeoLayerIDHaveCorrectGeometry",
+            should_run_command.append(validator_util.run_check(self, "DoesGeoLayerIDHaveCorrectGeometry",
                                                            "ClippingGeoLayerID", clipping_geolayer_id,
                                                            "FAIL", other_values=[["Polygon"]]))
 
             # If the input GeoLayer and the clipping GeoLayer do not have the same CRS, raise a WARNING.
-            should_run_command.append(validators.run_check(self, "DoGeoLayerIDsHaveMatchingCRS", "InputGeoLayerID",
+            should_run_command.append(validator_util.run_check(self, "DoGeoLayerIDsHaveMatchingCRS", "InputGeoLayerID",
                                                            input_geolayer_id, "WARN",
                                                            other_values=["ClippingGeoLayerID", clipping_geolayer_id]))
 
         # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
                                                        output_geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run.
@@ -270,7 +270,8 @@ class ClipGeoLayer(AbstractCommand):
                 if input_geolayer.source_path is None or input_geolayer.source_path.upper() in ["", "MEMORY"]:
 
                     # Get the absolute path of the GeoLayer to write to disk.
-                    geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'), input_geolayer.id)
+                    geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
+                                                          input_geolayer.id)
 
                     # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
                     # on-disk GeoLayer.
@@ -310,7 +311,7 @@ class ClipGeoLayer(AbstractCommand):
                 self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error clipping GeoLayer {} from GeoLayer {}.".format(
                     pv_InputGeoLayerID,

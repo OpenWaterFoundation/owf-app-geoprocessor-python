@@ -27,7 +27,7 @@ from geoprocessor.core.DataStore import DataStore
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.validator_util as validators
+import geoprocessor.util.validator_util as validator_util
 
 import logging
 
@@ -53,7 +53,7 @@ class OpenDataStore(AbstractCommand):
     """
 
     # Define the command parameters.
-    __command_parameter_metadata = [
+    __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("OpenMode", type("")),
         CommandParameterMetadata("DatabaseDialect", type("")),
         CommandParameterMetadata("DatabaseServer", type("")),
@@ -66,12 +66,12 @@ class OpenDataStore(AbstractCommand):
         CommandParameterMetadata("IfDataStoreIDExists", type(""))]
 
     # Choices for DatabaseDialect, used to validate parameter and display in editor
-    __choices_DatabaseDialect = ["PostGreSQL"]
+    __choices_DatabaseDialect: [str] = ["PostGreSQL"]
 
     # Choices for IfDataStoreIDExists, used to validate parameter and display in editor
-    __choices_IfDataStoreIDExists = ["Replace", "Open", "Warn", "Fail", "ReplaceAndWarn"]
+    __choices_IfDataStoreIDExists: [str] = ["Replace", "Open", "Warn", "Fail", "ReplaceAndWarn"]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the command.
         """
@@ -162,7 +162,7 @@ class OpenDataStore(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters):
+    def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.
 
@@ -181,7 +181,7 @@ class OpenDataStore(AbstractCommand):
         # Check that the DataStoreID is a non-empty, non-None string.
         pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID", command_parameters=command_parameters)
 
-        if not validators.validate_string(pv_DataStoreID, False, False):
+        if not validator_util.validate_string(pv_DataStoreID, False, False):
             message = "DataStoreID parameter has no value."
             recommendation = "Specify a valid DataStore ID."
             warning += "\n" + message
@@ -192,7 +192,7 @@ class OpenDataStore(AbstractCommand):
         pv_IfDataStoreIDExists = self.get_parameter_value(parameter_name="IfDataStoreIDExists",
                                                           command_parameters=command_parameters)
 
-        if not validators.validate_string_in_list(pv_IfDataStoreIDExists, self.__choices_IfDataStoreIDExists,
+        if not validator_util.validate_string_in_list(pv_IfDataStoreIDExists, self.__choices_IfDataStoreIDExists,
                                                   none_allowed=True, empty_string_allowed=False, ignore_case=True):
             message = "IfDataStoreIDExists parameter value ({}) is not recognized.".format(pv_IfDataStoreIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfDataStoreIDExists parameter.". \
@@ -206,12 +206,12 @@ class OpenDataStore(AbstractCommand):
         pv_ConfigFile = self.get_parameter_value(parameter_name="ConfigFile", command_parameters=command_parameters)
 
         # If there is a value for ConfigFile, assume "Configuration file configures datastore" method.
-        if validators.validate_string(pv_ConfigFile, False, False):
+        if validator_util.validate_string(pv_ConfigFile, False, False):
 
             pass
 
         # If the IfDataStoreIDExists parameter is set to "Open", ignore all checks.
-        elif validators.validate_string_in_list(pv_IfDataStoreIDExists, ["OPEN"], False, False, True):
+        elif validator_util.validate_string_in_list(pv_IfDataStoreIDExists, ["OPEN"], False, False, True):
 
             pass
 
@@ -225,7 +225,7 @@ class OpenDataStore(AbstractCommand):
                 parameter_value = self.get_parameter_value(parameter_name=parameter,
                                                            command_parameters=command_parameters)
 
-                if not validators.validate_string(parameter_value, False, False):
+                if not validator_util.validate_string(parameter_value, False, False):
                     message = "{} parameter has no value.".format(parameter)
                     recommendation = "Specify a valid {} parameter.".format(parameter)
                     warning += "\n" + message
@@ -237,7 +237,7 @@ class OpenDataStore(AbstractCommand):
             pv_DatabaseDialect = self.get_parameter_value(parameter_name="DatabaseDialect",
                                                           command_parameters=command_parameters)
 
-            if not validators.validate_string_in_list(pv_DatabaseDialect, self.__choices_DatabaseDialect, False, False,
+            if not validator_util.validate_string_in_list(pv_DatabaseDialect, self.__choices_DatabaseDialect, False, False,
                                                       True):
                 message = "DatabaseDialect parameter value ({}) is not recognized.".format(pv_DatabaseDialect)
                 recommendation = "Specify one of the acceptable values ({}) for the DatabaseDialect parameter.".format(
@@ -258,7 +258,7 @@ class OpenDataStore(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_open_datastore(self, datastore_id, file_path_abs, if_datastore_id_exists):
+    def __should_open_datastore(self, datastore_id: str, file_path_abs: str, if_datastore_id_exists: str) -> bool:
         """
             Checks the following:
                 * the DataStore ID is unique
@@ -281,14 +281,14 @@ class OpenDataStore(AbstractCommand):
 
         # If the DataStoreID is the same as an already-existing DataStoreID, raise a WARNING, FAILURE or IGNORE
         # (depends on the value of the IfDataStoreIDExists parameter.)
-        should_run_command.append(validators.run_check(self, "IsDataStoreIdUnique", "DataStoreID", datastore_id,
+        should_run_command.append(validator_util.run_check(self, "IsDataStoreIdUnique", "DataStoreID", datastore_id,
                                                        None))
 
         # If the "Configuration file configures datastore" method is to be used, continue with check.
         if file_path_abs is not None:
 
             # If the configuration file does not exists, raise a FAILURE.
-            should_run_command.append(validators.run_check(self, "IsFilePathValid", "File", file_path_abs, "FAIL"))
+            should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "File", file_path_abs, "FAIL"))
 
         # If the DataStoreID already exists and the IfDataStoreIDExists parameter is set to "Open", continue.
         if self.command_processor.get_datastore(datastore_id) and if_datastore_id_exists.upper() == "OPEN":
@@ -313,7 +313,7 @@ class OpenDataStore(AbstractCommand):
         else:
             return True
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command. Open the connection to a database and store as a DataStore.
 

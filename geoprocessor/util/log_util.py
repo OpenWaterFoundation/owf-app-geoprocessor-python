@@ -42,7 +42,7 @@ import platform
 __logfile_name = None
 
 
-def get_logfile_name():
+def get_logfile_name() -> str:
     """
     Get the name of the logfile that is currently being used.
 
@@ -53,8 +53,8 @@ def get_logfile_name():
     return __logfile_name
 
 
-def initialize_logging(app_name=None, logfile_name=None, logfile_log_level=logging.INFO,
-                       console_log_level=logging.ERROR):
+def initialize_logging(app_name: str = None, logfile_name: str = None, logfile_log_level: int = logging.INFO,
+                       console_log_level: int = logging.ERROR):
     """
     Initialize logging for the geoprocessor, using the Python logging module.
     This function can be called by applications to set up the initial logfile.
@@ -131,7 +131,7 @@ def initialize_logging(app_name=None, logfile_name=None, logfile_log_level=loggi
     return logger
 
 
-def reset_log_file_handler(logfile_name):
+def reset_log_file_handler(logfile_name: str) -> None:
     """
     Close the current log file handler and re-open using the specified log file name
     for the logger named 'geoprocessor', which is associated with the geoprocessor package.
@@ -141,7 +141,7 @@ def reset_log_file_handler(logfile_name):
         logfile_name: Name of the log file to use for logging, needs to be absolute path to be robust.
 
     Returns:
-        Nothing
+        None
 
     Raises:
         Run

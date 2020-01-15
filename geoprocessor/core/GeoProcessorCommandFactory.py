@@ -21,7 +21,8 @@ import logging
 
 import geoprocessor.util.command_util as command_util
 
-from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+# Cannot import AbstractCommand for type hint because it results in a circular dependency
+# from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.commands.datastores.CloseDataStore import CloseDataStore
 from geoprocessor.commands.datastores.OpenDataStore import OpenDataStore
@@ -198,7 +199,7 @@ class GeoProcessorCommandFactory(object):
             return False
 
     def new_command(self, command_string: str,
-                    create_unknown_command_if_not_recognized: bool = True) -> AbstractCommand:
+                    create_unknown_command_if_not_recognized: bool = True):
         """
         Creates the object of a command class called from a command line of the command file.
 

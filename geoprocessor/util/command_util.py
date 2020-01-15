@@ -20,14 +20,17 @@
 # Don't import class only because there are additional functions in CommandParameterMetaData
 import geoprocessor.core.CommandParameterMetadata as CommandParameterMetaData
 
+# TODO smalers 2020-01-14 can't import for type hint because it results in circular reference
+# from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+#from geoprocessor.core.GeoProcessor import GeoProcessor
 
 import logging
 
 
-def append_command_status_log_records(command_status, commands):
+def append_command_status_log_records(command_status: CommandStatusType, commands: []) -> None:
     """
     Append log records from a list of commands to a status.  For example, this is used
     when running a list of commands with a "runner" command like RunCommands to get a full list of logs.
@@ -69,7 +72,8 @@ def append_command_status_log_records(command_status, commands):
             command_status.add_to_log(CommandPhaseType.RUN, log_record)
 
 
-def get_command_status_max_severity(processor):
+# TODO smalers 2020-01-15 cannot type hint GeoProcessor becauese it results in circular dependence with import
+def get_command_status_max_severity(processor) -> CommandStatusType:
     """
     Get the maximum command status severity for the processor.  This is used, for example, when
     determining an overall status for a RunCommands() command.
@@ -88,7 +92,7 @@ def get_command_status_max_severity(processor):
     return most_severe_command_status
 
 
-def get_highest_command_status_severity(command_status):
+def get_highest_command_status_severity(command_status: CommandStatusType) -> CommandStatusType:
     """
     Returns the highest status severity of all phases, to indicate the most severe problem with a command.
 
@@ -128,7 +132,7 @@ def get_highest_command_status_severity(command_status):
     return status_severity
 
 
-def parse_command_name_from_command_string(command_string):
+def parse_command_name_from_command_string(command_string: str) -> str:
     """
     Parses the command name out of the command string.
 
@@ -150,7 +154,7 @@ def parse_command_name_from_command_string(command_string):
     return command_name
 
 
-def parse_key_value_pairs_into_dictionary(parameter_items):
+def parse_key_value_pairs_into_dictionary(parameter_items: [str]) -> dict:
     """
     Converts a list of Parameter=Value strings into
     a dictionary where the key is the parameter name and the value is the parameter value, as a string.
@@ -200,7 +204,7 @@ def parse_key_value_pairs_into_dictionary(parameter_items):
     return parameter_dictionary
 
 
-def parse_parameter_string_from_command_string(command_string):
+def parse_parameter_string_from_command_string(command_string: str) -> str:
     """
     Parses a command string to extract the parameter string between parentheses.
     For example, a command CommandName(Property1="Value1",Property2="Value2") would
@@ -241,7 +245,7 @@ def parse_parameter_string_from_command_string(command_string):
     return parameter_string
 
 
-def parse_parameter_string_into_key_value_pairs(parameter_string):
+def parse_parameter_string_into_key_value_pairs(parameter_string: str) -> [str]:
     """
     Parse the parameter string part of a command into a list of Property=Value pairs.
 
@@ -318,7 +322,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string):
     return parameter_items
 
 
-def read_file_into_string_list(filename):
+def read_file_into_string_list(filename: str) -> [str]:
     """
     Convert a file into a list of strings (one string for each line of the file).
 
@@ -343,8 +347,8 @@ def read_file_into_string_list(filename):
     return string_list
 
 
-def validate_command_parameter_names(command, warning, deprecated_parameter_names=None,
-                                     deprecated_parameter_notes=None, remove_invalid=True):
+def validate_command_parameter_names(command, warning:str, deprecated_parameter_names: [str] = None,
+                                     deprecated_parameter_notes: [str] = None, remove_invalid: bool = True):
     """
     Validate that the parameter names parsed out of a command and saved in AbstractCommand.command_parmeters
     are recognized by the command.

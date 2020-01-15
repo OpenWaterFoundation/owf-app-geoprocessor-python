@@ -22,16 +22,17 @@ import pandas as pd
 from openpyxl import load_workbook
 import xlwt
 
+from geoprocessor.core.DataStore import DataStore
 import geoprocessor.util.io_util as io_util
 
 
-def create_data_frame_from_datastore_with_sql(sql_query, datastore_obj):
+def create_data_frame_from_datastore_with_sql(sql_query: str, datastore_obj: DataStore):
     """
     Creates a pandas data frame object by running a SQL query on a DataFrame object.
 
     Args:
-        datastore_obj (obj): the DataStore object
         sql_query (str):  a SQL query to get the correct table out of the DataStore object
+        datastore_obj (obj): the DataStore object
 
     Returns:
         A pandas data frame object. This is the object that support the GeoProcessor's Table object.
@@ -41,7 +42,7 @@ def create_data_frame_from_datastore_with_sql(sql_query, datastore_obj):
     return df
 
 
-def create_data_frame_from_delimited_file(file_path, delimiter):
+def create_data_frame_from_delimited_file(file_path: str, delimiter: str):
     """
     Creates a pandas data frame object from a delimited file.
 
@@ -58,7 +59,7 @@ def create_data_frame_from_delimited_file(file_path, delimiter):
     return df
 
 
-def create_data_frame_from_excel(excel_workbook_path, excel_worksheet_name=None):
+def create_data_frame_from_excel(excel_workbook_path: str, excel_worksheet_name: str = None):
     """
     Creates a pandas data frame object from an excel file.
 
@@ -81,7 +82,7 @@ def create_data_frame_from_excel(excel_workbook_path, excel_worksheet_name=None)
         return df
 
 
-def create_excel_workbook_obj(excel_workbook_path):
+def create_excel_workbook_obj(excel_workbook_path: str):
     """
     Creates a pandas excel workbook object from an excel file.
 
@@ -98,7 +99,8 @@ def create_excel_workbook_obj(excel_workbook_path):
     return xl
 
 
-def write_df_to_delimited_file(df, output_file_full_path, include_col_list, include_index, delimiter=","):
+def write_df_to_delimited_file(df, output_file_full_path: str, include_col_list: [str], include_index: bool,
+                               delimiter: str = ",") -> None:
     """
     Writes a pandas data frame object to a delimited file.
 
@@ -117,7 +119,8 @@ def write_df_to_delimited_file(df, output_file_full_path, include_col_list, incl
     df.to_csv(output_file_full_path, columns=include_col_list, index=include_index, sep=delimiter)
 
 
-def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_col_list, include_index):
+def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, include_col_list: [str],
+                      include_index: bool) -> None:
     """
     Writes a pandas data frame object to an excel file.
 
@@ -136,21 +139,21 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_col
         import pandas.io.formats.excel
         pandas.io.formats.excel.header_style = None
 
-    except:
+    except Exception:
         pass
 
     try:
         import pandas.formats.format
         pandas.formats.format.header_style = None
 
-    except:
+    except Exception:
         pass
 
     try:
         import pandas.core.format
         pandas.core.format.header_style = None
 
-    except:
+    except Exception:
         pass
 
     # If the output excel file already exists, take into consideration the current file format and the current
@@ -200,4 +203,3 @@ def write_df_to_excel(df, excel_workbook_path, excel_worksheet_name, include_col
         # Write the df to the excel workbook with the given worksheet name.
         df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
         writer.save()
-

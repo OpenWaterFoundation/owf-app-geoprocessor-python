@@ -30,7 +30,7 @@ class CommandFileRunner(object):
     This is a port of the Java TSCommandFileRunner class.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Constructor for CommandFileRunner instance.
         This class is typically used for single-pass runs such as running a command file in batch mode.
@@ -44,10 +44,14 @@ class CommandFileRunner(object):
         """
         self.command_processor = GeoProcessor()
 
-    def get_processor(self):
+    def get_processor(self) -> GeoProcessor:
+        """
+        Returns:
+            GeoProcessor for the runner.
+        """
         return self.command_processor
 
-    def is_command_file_enabled(self):
+    def is_command_file_enabled(self) -> bool:
         """
         Determine whether the command file is enabled.
         This is used in the RunCommands() command to determine if a command file is enabled.
@@ -72,7 +76,7 @@ class CommandFileRunner(object):
         # No #@enabled False found so command file is enabled
         return True
 
-    def read_command_file(self, command_file_path, run_discovery_on_load=True):
+    def read_command_file(self, command_file_path: str, run_discovery_on_load: bool = True) -> None:
         """
         Read the commands from a file.
 
@@ -95,7 +99,7 @@ class CommandFileRunner(object):
             False,  # Do not append the commands to the commands already in the processor.
             run_discovery_on_load)
 
-    def run_commands(self, run_properties=None, env_properties=None):
+    def run_commands(self, run_properties: dict = None, env_properties: dict = None) -> None:
         """
         Run the commands that have been previously read from the command file.
 

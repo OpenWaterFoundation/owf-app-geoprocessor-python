@@ -20,6 +20,8 @@
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
+from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 
 import geoprocessor.ui.util.qt_util as qt_util
@@ -34,7 +36,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
     Class for command editor using single-panel layout configured with command parameter_input_metadata.
     """
 
-    def __init__(self, command, app_session):
+    def __init__(self, command: AbstractCommand, app_session: GeoProcessorAppSession) -> None:
         """
         Initialize the Abstract Dialog instance.
 
@@ -95,7 +97,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # - will transfer command parameter values into the UI components
         self.refresh_ui()
 
-    def check_input(self):
+    def check_input(self) -> None:
         """
         Check the parameter values shown in the editor to make sure all values are valid.
         If any invalid parameters are detected, set self.error_wait = True so ui_action_ok_clicked() can
@@ -125,7 +127,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             logger.info(message)
             qt_util.warning_message_box(message)
 
-    def refresh_ui(self):
+    def refresh_ui(self) -> None:
         """
         This function is called to ensure that the UI and command are consistent in the UI:
 
@@ -237,7 +239,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
-    def setup_ui(self):
+    def setup_ui(self) -> None:
         """
         Set up the dialog UI elements.  This simple editor provides standard input components such as
         text field (QLineEdit) and choices (QComboBox).
@@ -482,7 +484,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                                                     parameter_Required,
                                                     parameter_Tooltip,
                                                     parameter_ValueDefault,
-                                                    parameter_ValueDefaultDescription )
+                                                    parameter_ValueDefaultDescription)
 
             # Set column width for text entry fields
             self.parameter_QGridLayout.setColumnMinimumWidth(1, 350)
@@ -490,7 +492,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         if self.debug:
             logger.info("Successfully created UI components.  Entering edit/refresh mode.")
 
-    def ui_action_cancel_clicked(self):
+    def ui_action_cancel_clicked(self) -> None:
         """
         Handle clicking on cancel button:
 
@@ -503,7 +505,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # - this allows the return value to be checked in the calling code
         self.reject()
 
-    def ui_action_ok_clicked(self):
+    def ui_action_ok_clicked(self) -> None:
         """
         Handle clicking on OK button:
 

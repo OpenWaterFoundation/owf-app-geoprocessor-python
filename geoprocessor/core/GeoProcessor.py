@@ -1163,7 +1163,7 @@ class GeoProcessor(object):
                 recursive = True
                 # Default for recursive runs is to NOT append results...
                 append_results = False
-        except:
+        except Exception:
             # Recursive property was not defined so not running in recursive mode
             recursive = False
         try:
@@ -1171,7 +1171,7 @@ class GeoProcessor(object):
             append_prop = run_properties["AppendResults"]
             if append_prop == "True":
                 append_results = True
-        except:
+        except Exception:
             # Use default value from above
             pass
 
@@ -1297,7 +1297,7 @@ class GeoProcessor(object):
                             # However, need to handle the case where the for loop may be nested and need to run again...
                             if not ok_to_run_for:
                                 For_command.reset_command()
-                        except:
+                        except Exception:
                             # This is serious and can lead to an infinite loop so generate an exception and
                             # jump to the end of the loop
                             ok_to_run_for = False
@@ -1363,7 +1363,7 @@ class GeoProcessor(object):
                         EndFor_command = command
                         try:
                             For_command_stack.remove(For_command)
-                        except:
+                        except Exception:
                             # TODO smalers 2017-12-21 might need to log as mismatched nested loops
                             # print('Error removing For loop from stack for EndFor(Name="' +
                             #      EndFor_command.get_name() + '"...)')
@@ -1381,7 +1381,7 @@ class GeoProcessor(object):
                         # be a check if warning_count is greater than 0 and if so raise an exception.
                         try:
                             command.run_command()
-                        except:
+                        except Exception:
                             message = "Error running command in GeoProcessor.py"
                             warning_count += 1
                             logger.warning(message, exc_info=True)
@@ -1441,7 +1441,7 @@ class GeoProcessor(object):
                     # - After adding this exception block, it does not appear that the following call to
                     #   logger.warning() does result in a new exception, but keep the code for now.
                     logger.warning("Exception logging threw an exception.")
-            except:
+            except Exception:
                 message = "Unexpected error processing command - unable to complete command"
                 # Don't raise an exception because want all commands to run as best they can, each with
                 # message logging, so that user can troubleshoot all at once rather than first error at a time

@@ -71,7 +71,7 @@ class GeoProcessorCmd(cmd.Cmd):
 
     Because the docstrings are usd for user help, documentation for functions is provided in in-lined comments.
     """
-    def __init__(self, qtapp=None):
+    def __init__(self, qtapp=None) -> None:
         # Initialize parent
         super().__init__()
         if qtapp is None:  # Put this here to get rid of PyCharm warning about qtapp not being used
@@ -84,7 +84,7 @@ class GeoProcessorCmd(cmd.Cmd):
         print('  - Type help at ' + self.prompt + ' to see options')
 
     @classmethod
-    def do_exit(cls, line):
+    def do_exit(cls, line: str) -> None:
         """
         Exit the geoprocessor command shell, same as "quit".
         """
@@ -93,7 +93,7 @@ class GeoProcessorCmd(cmd.Cmd):
         exit(0)
 
     @classmethod
-    def do_printenv(cls, line):
+    def do_printenv(cls, line: str) -> None:
         """
         Print information about the runtime environment.
         Run in the shell with:  printenv
@@ -131,13 +131,13 @@ class GeoProcessorCmd(cmd.Cmd):
             print(property_name + " = " + str(property_value))
 
     @classmethod
-    def do_EOF(cls, line):
+    def do_EOF(cls, line: str) -> bool:
         if line is None:  # Put this here to get rid of PyCharm warning about line not being used
             pass
         return True
 
     @classmethod
-    def do_quit(cls, line):
+    def do_quit(cls, line: str) -> None:
         """
         Quit the geoprocessor command shell, same as "exit".
         """
@@ -146,7 +146,7 @@ class GeoProcessorCmd(cmd.Cmd):
         exit(0)
 
     @classmethod
-    def do_run(cls, line):
+    def do_run(cls, line: str) -> None:
         """
         Run the command file from the command line using syntax:  run command-file
         """
@@ -194,7 +194,7 @@ class GeoProcessorCmd(cmd.Cmd):
         print("See log file for more information.")
 
     @classmethod
-    def do_ui(cls, line):
+    def do_ui(cls, line: str) -> None:
         """
         Run the command file from the command line using syntax:  run command-file
         """
@@ -202,11 +202,11 @@ class GeoProcessorCmd(cmd.Cmd):
             pass
         run_ui(app_session)
 
-    def postloop(self):
+    def postloop(self) -> None:
         print()
 
 
-def parse_command_line_properties(property_list):
+def parse_command_line_properties(property_list: [str]) -> dict:
     """
     Parse command line properties that were specified with the -p Property=Value syntax.
     The logic may need to be made more complex depending on how quoted strings, etc. are handled.
@@ -226,7 +226,7 @@ def parse_command_line_properties(property_list):
     return property_dict
 
 
-def print_env():
+def print_env() -> None:
     """
     Print information about the environment, useful for troubleshooting.
     Returns:  None
@@ -236,7 +236,7 @@ def print_env():
         print(item)
 
 
-def print_version():
+def print_version() -> None:
     """
     Print the program version.
     """
@@ -257,7 +257,7 @@ def print_version():
 
 # This is the same as the GeoProcessorCmd.do_run() function.
 # - could reuse code but inline it for now
-def run_batch(command_file, runtime_properties):
+def run_batch(command_file, runtime_properties: dict) -> None:
     """
     Run in batch mode by processing the specific command file.
 
@@ -313,7 +313,7 @@ def run_batch(command_file, runtime_properties):
     print("See log file for more information.")
 
 
-def run_http_server():
+def run_http_server() -> None:
     """
     Run an http server so that the geoprocessor can respond to web requests.
     TODO smalers 2017-12-30 need to evaluate whether to use Python built-in capabilities or something like Flask.
@@ -324,17 +324,18 @@ def run_http_server():
     print("The GeoProcessor web server is not implemented.  Exiting...")
 
 
-def run_prompt():
+def run_prompt() -> None:
     """
     Run the command line prompt interface.
 
     Returns:
         None.
     """
+    # Use a subclass of the Python Cmd class
     GeoProcessorCmd().cmdloop()
 
 
-def run_ui(ui_app_session):
+def run_ui(ui_app_session) -> None:
     """
     Run the GeoProcessor user interface.
 
@@ -406,7 +407,7 @@ def run_ui(ui_app_session):
 
 
 # TODO smalers 2018-07-29 is there a global dictionary similar to Python system properties?
-def set_global_data():
+def set_global_data() -> None:
     """
     Set global data that is useful in library code but is difficult to pass into deep code.
     This may evolve as greater understanding is gained about how to use standard Python modules
@@ -450,7 +451,7 @@ def set_global_data():
         logger.error(message, exc_info=True)
 
 
-def setup_logging(session):
+def setup_logging(session) -> None:
     """
     Setup logging for the application.
 

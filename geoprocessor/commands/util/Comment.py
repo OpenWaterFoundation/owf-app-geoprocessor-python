@@ -27,7 +27,7 @@ class Comment(AbstractCommand):
     """
     # comment.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
@@ -48,7 +48,7 @@ class Comment(AbstractCommand):
                                                 'commands - comments must exist on their own command line.')
         self.command_metadata['EditorType'] = 'InsertLineRulerEditor'
 
-    def initialize_command(self, command_string, processor, full_initialization):
+    def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
         Initialize the command.  This overrides the AbstractCommand.initialize_command function
         because a comment is treated as simple text.
@@ -66,7 +66,7 @@ class Comment(AbstractCommand):
         full_initialization = False
         super(Comment, self).initialize_command(command_string, processor, full_initialization)
 
-    def run_command(self):
+    def run_command(self) -> None:
         """
         Run the command.  Does nothing since comments cause no action.
 

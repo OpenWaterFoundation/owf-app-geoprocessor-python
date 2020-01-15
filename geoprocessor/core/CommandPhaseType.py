@@ -17,6 +17,11 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
+# See:  https://stackoverflow.com/questions/33533148/
+#         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
+from __future__ import annotations
+
 from enum import Enum
 
 
@@ -37,7 +42,7 @@ class CommandPhaseType(Enum):
     RUN = 3
 
     @classmethod
-    def get_command_phase_types(cls, sort=False):
+    def get_command_phase_types(cls, sort: bool = False) -> [CommandPhaseType]:
         """
         Return the list of valid command phases.
 
@@ -55,7 +60,7 @@ class CommandPhaseType(Enum):
             # Return in order of processing order.
             return [CommandPhaseType.INITIALIZATION, CommandPhaseType.DISCOVERY, CommandPhaseType.RUN]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Format the enumeration value as a string - just return the name.
 

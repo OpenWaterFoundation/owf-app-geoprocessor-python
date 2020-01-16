@@ -109,6 +109,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # SearchFolder is required
+        # noinspection PyPep8Naming
         pv_SearchFolder = self.get_parameter_value(parameter_name='SearchFolder', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_SearchFolder, False, False):
             message = "SearchFolder parameter has no value."
@@ -121,6 +122,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         # FilenamePattern is optional, will default to "test-*" at runtime
 
         # OutputFile is required
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "OutputFile parameter has no value."
@@ -247,11 +249,16 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get data for the command
+        # noinspection PyPep8Naming
         pv_SearchFolder = self.get_parameter_value('SearchFolder')
+        # noinspection PyPep8Naming
         pv_FilenamePattern = self.get_parameter_value('FilenamePattern')
         if pv_FilenamePattern is None or pv_FilenamePattern == "":
             # The pattern that is desired is test_*.gp, using globbing syntax
+            # noinspection PyPep8Naming
             pv_FilenamePattern = "[Tt][Ee][Ss][Tt]-*.gp"
+            # noinspection PyPep8Naming
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
 
         # Runtime checks on input
@@ -285,6 +292,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
 
         # Do the processing
 
+        # noinspection PyBroadException
         try:
             # Output folder is used when constructing filenames for command files to run
             output_folder_absolute = os.path.dirname(output_file_absolute_internal)

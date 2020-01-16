@@ -170,7 +170,9 @@ class ListFiles(AbstractCommand):
         warning = ""
 
         # Check that either the parameter Folder or the parameter URL is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_Folder = self.get_parameter_value(parameter_name='Folder', command_parameters=command_parameters)
+        # noinspection PyPep8Naming
         pv_URL = self.get_parameter_value(parameter_name='URL', command_parameters=command_parameters)
 
         folder_is_string = validator_util.validate_string(pv_Folder, False, False)
@@ -191,6 +193,7 @@ class ListFiles(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional ListFiles parameter value is a valid Boolean value or is None.
+        # noinspection PyPep8Naming
         pv_ListFiles = self.get_parameter_value(parameter_name="ListFiles", command_parameters=command_parameters)
 
         if not validator_util.validate_bool(pv_ListFiles, none_allowed=True, empty_string_allowed=False):
@@ -201,6 +204,7 @@ class ListFiles(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional ListFolders parameter value is a valid Boolean value or is None.
+        # noinspection PyPep8Naming
         pv_ListFolders = self.get_parameter_value(parameter_name="ListFolders", command_parameters=command_parameters)
         if not validator_util.validate_bool(pv_ListFolders, none_allowed=True, empty_string_allowed=False):
             message = "ListFolders parameter value ({}) is not a recognized boolean value.".format(pv_ListFolders)
@@ -210,6 +214,7 @@ class ListFiles(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter ListProperty is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_ListProperty = self.get_parameter_value(parameter_name='ListProperty', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_ListProperty, False, False):
@@ -220,13 +225,14 @@ class ListFiles(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfPropertyExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
+        # noinspection PyPep8Naming
         pv_IfPropertyExists = self.get_parameter_value(parameter_name="IfPropertyExists",
                                                        command_parameters=command_parameters)
 
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
         if not validator_util.validate_string_in_list(pv_IfPropertyExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfPropertyExists parameter value ({}) is not recognized.".format(pv_IfPropertyExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfPropertyExists parameter.".format(
                 acceptable_values)
@@ -295,7 +301,8 @@ class ListFiles(AbstractCommand):
 
         # If the ListProperty is the same as an already-existing Property, raise a WARNING or FAILURE (depends
         # on the value of the IfPropertyExists parameter.)
-        should_run_command.append(validator_util.run_check(self, "IsPropertyUnique", "ListProperty", list_property, None))
+        should_run_command.append(validator_util.run_check(self, "IsPropertyUnique", "ListProperty", list_property,
+                                                           None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -386,6 +393,7 @@ class ListFiles(AbstractCommand):
                     file_list.append(link_name.split('/')[-1])
 
         # If the files and directories are of interest, create a list with both the files and the directories.
+        link_list = None
         if read_files and read_dirs:
             link_list = dir_list + file_list
 
@@ -413,12 +421,19 @@ class ListFiles(AbstractCommand):
     def run_command(self) -> None:
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_Folder = self.get_parameter_value("Folder")
+        # noinspection PyPep8Naming
         pv_URL = self.get_parameter_value("URL")
+        # noinspection PyPep8Naming
         pv_ListFiles = self.get_parameter_value("ListFiles", default_value="True")
+        # noinspection PyPep8Naming
         pv_ListFolders = self.get_parameter_value("ListFolders", default_value="True")
+        # noinspection PyPep8Naming
         pv_ListProperty = self.get_parameter_value("ListProperty")
+        # noinspection PyPep8Naming
         pv_IncludePatterns = self.get_parameter_value("IncludePatterns", default_value="*")
+        # noinspection PyPep8Naming
         pv_ExcludePatterns = self.get_parameter_value("ExcludePatterns", default_value="''")
 
         # Convert the IncludeAttributes and ExcludeAttributes to lists.
@@ -450,6 +465,7 @@ class ListFiles(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_list_files(folder_abs, url_abs, list_files_bool, list_dirs_bool, pv_ListProperty):
 
+            # noinspection PyBroadException
             try:
                 # If the input is a local folder.
                 if pv_Folder:
@@ -505,8 +521,8 @@ class ListFiles(AbstractCommand):
                     # Add the filtered list to the desired ListProperty.
                     self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error running ListFiles command."
                 recommendation = "Check the log file for details."

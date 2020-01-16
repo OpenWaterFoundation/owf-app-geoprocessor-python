@@ -29,7 +29,7 @@ class CommandParameterMetadata(object):
     Validation requires more effort when the allowed value is an enumeration, etc.
     """
 
-    def __init__(self, parameter_name: str, parameter_type: str, parameter_description: str = None,
+    def __init__(self, parameter_name: str, parameter_type: type, parameter_description: str = None,
                  default_value: str = None, editor_tooltip: str = None,
                  validator_function: Callable[..., bool] = None):
         # Parameter name should be in format WordWord

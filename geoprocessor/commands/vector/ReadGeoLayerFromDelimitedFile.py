@@ -159,7 +159,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         self.parameter_input_metadata['GeoLayerID.Tooltip'] =\
             "A GeoLayer identifier. Formatting characters are recognized."
         self.parameter_input_metadata['GeoLayerID.Value.Default'] = (
-            "The delimited filename without the leading path and without the file extension " \
+            "The delimited filename without the leading path and without the file extension "
             "(equivalent to formatting character %f).")
         # IfGeoLayerIDExists
         self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if GeoLayerID exists"
@@ -209,11 +209,13 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that the GeometryFormat is either `XY` or `WKT`.
-        pv_GeometryFormat = self.get_parameter_value(parameter_name="GeometryFormat", command_parameters=command_parameters)
+        # noinspection PyPep8Naming
+        pv_GeometryFormat = self.get_parameter_value(parameter_name="GeometryFormat",
+                                                     command_parameters=command_parameters)
         acceptable_values = ["WKT", "XY"]
 
         if not validator_util.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
-                                                  empty_string_allowed=False, ignore_case=True):
+                                                      empty_string_allowed=False, ignore_case=True):
 
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
@@ -256,11 +258,12 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
                                                                         recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
 
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
@@ -311,11 +314,11 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the 
         # test confirms that the command should be run. 
-        should_run_command = []
+        should_run_command = list()
 
         # If the input DelimitedFile is not a valid file path, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "DelimitedFile", delimited_file,
-                                                       "FAIL"))
+                                                           "FAIL"))
 
         # If the Delimited File exists, continue with the following checks.
         if should_run_command[0] is True:
@@ -324,20 +327,22 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             if geom_format.upper() == "XY":
 
                 # If the XColumn is not an existing column name in the delimited file, raise a FAILURE.
-                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid", "XColumn", x_col,
-                                                               "FAIL", other_values=[delimited_file, delimiter]))
+                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid",
+                                                                   "XColumn", x_col,
+                                                                   "FAIL", other_values=[delimited_file, delimiter]))
 
                 # If the YColumn is not an existing column name in the delimited file, raise a FAILURE.
-                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid", "YColumn", y_col,
-                                                               "FAIL", other_values=[delimited_file, delimiter]))
+                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid",
+                                                                   "YColumn", y_col,
+                                                                   "FAIL", other_values=[delimited_file, delimiter]))
 
             # If the geometry format is "WKT", continue.
             else:
 
                 # If the WKTColumn is not an existing column name in the delimited file, raise a FAILURE.
-                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid", "WKTColumn",
-                                                               wkt_col, "FAIL",
-                                                               other_values=[delimited_file, delimiter]))
+                should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid",
+                                                                   "WKTColumn", wkt_col,
+                                                                   "FAIL", other_values=[delimited_file, delimiter]))
 
         # If the input CRS code is not a valid coordinate reference code, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsCrsCodeValid", "CRS", crs, "FAIL"))
@@ -365,13 +370,21 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_DelimitedFile = self.get_parameter_value("DelimitedFile")
+        # noinspection PyPep8Naming
         pv_Delimiter = self.get_parameter_value("Delimiter", default_value=',')
+        # noinspection PyPep8Naming
         pv_GeometryFormat = self.get_parameter_value("GeometryFormat")
+        # noinspection PyPep8Naming
         pv_XColumn = self.get_parameter_value("XColumn", default_value=None)
+        # noinspection PyPep8Naming
         pv_YColumn = self.get_parameter_value("YColumn", default_value=None)
+        # noinspection PyPep8Naming
         pv_WKTColumn = self.get_parameter_value("WKTColumn", default_value=None)
+        # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
 
         # Convert the DelimitedFile parameter value relative path to an absolute path and expand for ${Property}
@@ -382,12 +395,14 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
         if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
+            # noinspection PyPep8Naming
             pv_GeoLayerID = io_util.expand_formatter(delimited_file_abs, pv_GeoLayerID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_read_geolayer(delimited_file_abs, pv_Delimiter, pv_GeometryFormat, pv_XColumn,
                                        pv_YColumn, pv_WKTColumn, pv_CRS, pv_GeoLayerID):
 
+            # noinspection PyBroadException
             try:
 
                 if pv_GeometryFormat.upper() == "XY":
@@ -408,8 +423,8 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
                 geolayer_obj = VectorGeoLayer(pv_GeoLayerID, qgs_vector_layer, delimited_file_abs)
                 self.command_processor.add_geolayer(geolayer_obj)
 
-            # Raise an exception if an unexpected error occurs during the process.
-            except Exception as e:
+            except Exception:
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error reading GeoLayer {} from delimited file {}.".format(pv_GeoLayerID,
                                                                                                 pv_DelimitedFile)

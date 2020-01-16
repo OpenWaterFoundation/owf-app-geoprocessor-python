@@ -41,7 +41,7 @@ class CommentBlockEnd(AbstractCommand):
         self.command_name = "*/"
 
         # Command metadata for command editor display
-        self.command_metadata = {}
+        self.command_metadata = dict()
         self.command_metadata['Description'] = ('Multiple-line comments end with */. Spaces and tabs at the start '
                                                 'of the comment line are OK. Additional text before the comment '
                                                 'indicator is allowed.')

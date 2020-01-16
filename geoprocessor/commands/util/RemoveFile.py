@@ -104,6 +104,7 @@ class RemoveFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # SourceFile is required
+        # noinspection PyPep8Naming
         pv_SourceFile = self.get_parameter_value(parameter_name='SourceFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_SourceFile, False, False):
             message = "The SourceFile must be specified."
@@ -114,6 +115,7 @@ class RemoveFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # RemoveIfFolder must be a boolean value or None.
+        # noinspection PyPep8Naming
         pv_RemoveIfFolder = self.get_parameter_value(parameter_name='RemoveIfFolder',
                                                      command_parameters=command_parameters)
         if not validator_util.validate_bool(pv_RemoveIfFolder, True, False):
@@ -125,10 +127,11 @@ class RemoveFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IfSourceFileNotFound is optional, will default to Warn at runtime
+        # noinspection PyPep8Naming
         pv_IfSourceFileNotFound = self.get_parameter_value(parameter_name='IfSourceFileNotFound',
                                                            command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IfSourceFileNotFound,
-                                                  self.__choices_IfSourceFileNotFound, True, True):
+                                                      self.__choices_IfSourceFileNotFound, True, True):
             message = "IfSourceFileNotFound parameter is invalid."
             recommendation = "Specify the IfSourceFileNotFound parameter as blank or one of " + \
                              str(self.__choices_IfSourceFileNotFound)
@@ -165,15 +168,21 @@ class RemoveFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get data for the command
+        # noinspection PyPep8Naming
         pv_SourceFile = self.get_parameter_value('SourceFile')
+        # noinspection PyPep8Naming
         pv_IfSourceFileNotFound = self.get_parameter_value('IfSourceFileNotFound')
         if pv_IfSourceFileNotFound is None or pv_IfSourceFileNotFound == "":
+            # noinspection PyPep8Naming
             pv_IfSourceFileNotFound = 'Warn'  # Default
+        # noinspection PyPep8Naming
         pv_RemoveIfFolder = self.get_parameter_value('RemoveIfFolder', default_value="False")
+        # noinspection PyPep8Naming
         pv_RemoveIfFolder = string_util.str_to_bool(pv_RemoveIfFolder)
 
         # Runtime checks on input
 
+        # noinspection PyPep8Naming
         pv_SourceFile_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_SourceFile, self)))
@@ -185,6 +194,7 @@ class RemoveFile(AbstractCommand):
 
         # Remove the file
 
+        # noinspection PyBroadException
         try:
             input_count = 1
             if not os.path.exists(pv_SourceFile_absolute):
@@ -206,6 +216,7 @@ class RemoveFile(AbstractCommand):
                 input_count -= 1
 
             if input_count == 1:
+                # noinspection PyBroadException
                 try:
                     logger.info('Removing file "' + pv_SourceFile_absolute + '"')
                     os.remove(pv_SourceFile_absolute)
@@ -213,6 +224,7 @@ class RemoveFile(AbstractCommand):
                     if pv_RemoveIfFolder:
                         shutil.rmtree(pv_SourceFile_absolute)
 
+        # noinspection PyBroadException
         except Exception:
             warning_count += 1
             message = 'Unexpected error removing file "' + pv_SourceFile_absolute + '"'

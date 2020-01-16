@@ -29,23 +29,20 @@ import logging
 
 class InsertLineRulerEditor(AbstractCommandEditor):
     """
-    Command editor dialog for one or more # comments.
-    This class is a standalone class used to edit a multi-line command, in particular # comments.
+    Command editor dialog for one or more # comments, which shows a rule for column spaces.
     """
 
     def __init__(self, command) -> None:
         """
-        Initialize the editor instance.
+        Initialize the InsertLineRulerEditor dialog instance.
 
         Args:
-            command (derived from AbstractCommnd): the command to edit
+            command: the command to edit
         """
         # Call the parent class
-        super().__init__()
+        super().__init__(command)
 
-        # Command being edited
-        self.command = command
-
+        # Defined in AbstractCommandEditor
         # "input_edit_objects" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
         # KEY (str): the command parameter name
@@ -57,33 +54,52 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # VALUE (str): the entered value of the command parameter
         # self.command_parameter_current_values = current_values
 
+        # Defined in AbstractCommandEditor
         # Initialize components that will be used
-        self.CommandDisplay_View_TextBrowser = None
-        self.CommandDisplay_View_Ruler: QtWidgets.QTextEdit = None
-        self.CommandDisplay_Label: QtWidgets.QLabel = None
-        self.Command_Description_Label: QtWidgets.QLabel = None
-        self.CommandDisplay_View_Font: QtGui.QFont = None
-        self.OK_Cancel_Buttons: QtWidgets.QDialogButtonBox = None
-        self.gridLayout_2: QtWidgets.QGridLayout = None
-        self.Separator: QtWidgets.QFrame = None
+        # self.CommandDisplay_View_TextBrowser = None
 
+        # NOT defined in AbstractCommandEditor - local to this class
+        self.CommandDisplay_View_Ruler: QtWidgets.QTextEdit or None = None
+
+        # Defined in AbstractCommandEditor
+        # self.CommandDisplay_Label: QtWidgets.QLabel or None = None
+        # Defined in AbstractCommandEditor
+        # self.Command_Description_Label: QtWidgets.QLabel or None = None
+
+        # NOT defined in AbstractCommandEditor - local to this class
+        self.CommandDisplay_View_Font: QtGui.QFont or None = None
+
+        # TODO smalers 2020-01-16 evaluate putting in base class
+        # NOT defined in AbstractCommandEditor - local to this class
+        self.OK_Cancel_Buttons: QtWidgets.QDialogButtonBox or None = None
+        # NOT defined in AbstractCommandEditor - local to this class
+        # TODO smalers 2020-01-16 evaluate using base class data
+        self.gridLayout_2: QtWidgets.QGridLayout or None = None
+
+        # Defined in AbstractCommandEditor
+        # self.Separator: QtWidgets.QFrame or None = None
+
+        # Defined in AbstractCommandEditor
         # Layout used for the main editor
         # - other layouts may be added as needed to organize components
         self.grid_layout = None
 
+        # Defined in AbstractCommandEditor
         # Position in the layout for components as they are added, 0=row at top, 1 is next down, etc.
         # - each addition should increment before adding a component
         self.grid_layout_row = -1
 
-        # Set up the UI for the command editor window
-        self.setup_ui_core()
-
-        # Create variable to know whether updating an existing command or inserting a new command into the command list.
-        self.update = False
-
+        # NOT defined in AbstractCommandEditor - local to this class
         # If command parameters have already been defined for the command, know that are updating an existing command.
         if command.command_parameters:
             self.update = True
+
+        # NOT defined in AbstractCommandEditor - local to this class
+        # Create variable to know whether updating an existing command or inserting a new command into the command list.
+        self.update = False
+
+        # Set up the UI for the command editor window
+        self.setup_ui_core()
 
     def add_ui_horizontal_separator(self) -> None:
         """
@@ -95,11 +111,11 @@ class InsertLineRulerEditor(AbstractCommandEditor):
             None
         """
         self.Separator = QtWidgets.QFrame(self)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
-        self.Separator.setSizePolicy(sizePolicy)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
+        self.Separator.setSizePolicy(size_policy)
         self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.Separator.setObjectName(qt_util.from_utf8("Separator"))
@@ -161,6 +177,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
         # value when one works.
         # Reads LineEdit widgets.
+        # noinspection PyBroadException
         try:
             value = obj.text()
 
@@ -328,6 +345,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # Create a frame object. Add the frame object to the Dialog window.
         # Set the shape, the shadow, and the name of the frame object.
         # The frame object, Command_Description, holds the command description and the view documentation button.
+        # noinspection PyPep8Naming
         description_Frame = QtWidgets.QFrame(self)
         description_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         description_Frame.setFrameShadow(QtWidgets.QFrame.Raised)

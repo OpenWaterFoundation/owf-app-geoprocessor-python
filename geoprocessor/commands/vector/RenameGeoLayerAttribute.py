@@ -109,6 +109,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
         warning = ""
 
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -120,6 +121,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter ExistingAttributeName is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_ExistingAttributeName = self.get_parameter_value(parameter_name='ExistingAttributeName',
                                                             command_parameters=command_parameters)
 
@@ -134,6 +136,7 @@ class RenameGeoLayerAttribute(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter NewAttributeName is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_NewAttributeName = self.get_parameter_value(parameter_name='NewAttributeName',
                                                        command_parameters=command_parameters)
 
@@ -249,14 +252,18 @@ class RenameGeoLayerAttribute(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_ExistingAttributeName = self.get_parameter_value("ExistingAttributeName")
+        # noinspection PyPep8Naming
         pv_NewAttributeName = self.get_parameter_value("NewAttributeName")
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_attribute_be_renamed(pv_GeoLayerID, pv_ExistingAttributeName, pv_NewAttributeName):
 
             # Run the process.
+            # noinspection PyBroadException
             try:
 
                 # Get the input GeoLayer.

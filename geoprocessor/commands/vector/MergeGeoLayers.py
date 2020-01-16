@@ -144,6 +144,7 @@ class MergeGeoLayers(AbstractCommand):
         warning = ""
 
         # Check that parameter GeoLayerIDs is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerIDs = self.get_parameter_value(parameter_name='GeoLayerIDs', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerIDs, False, False):
@@ -155,6 +156,7 @@ class MergeGeoLayers(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter OutputGeoLayerID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_OutputGeoLayerID = self.get_parameter_value(parameter_name='OutputGeoLayerID',
                                                        command_parameters=command_parameters)
 
@@ -261,6 +263,7 @@ class MergeGeoLayers(AbstractCommand):
         elif self.command_processor.get_geolayer(output_geolayer_id):
 
             # Get the IfGeoLayerIDExists parameter value.
+            # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
             # Warnings/recommendations if the geolayer_id is the same as a registered GeoLayerID
@@ -347,6 +350,7 @@ class MergeGeoLayers(AbstractCommand):
             if not should_be_renamed:
                 output_attribute_name = existing_attribute_name
 
+            # TODO smalers 2020-01-16 seems like the following should be indented
             # Add the key, value pair to the attribute dictionary.
             attribute_dictionary[existing_attribute_name] = output_attribute_name
 
@@ -356,11 +360,15 @@ class MergeGeoLayers(AbstractCommand):
     def run_command(self) -> None:
 
         # Get the command parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerIDs = self.get_parameter_value("GeoLayerIDs")
+        # noinspection PyPep8Naming
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID")
+        # noinspection PyPep8Naming
         pv_AttributeMap = self.get_parameter_value("AttributeMap", default_value="")
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_GeoLayerIDs = self.command_processor.expand_parameter_value(pv_GeoLayerIDs, self)
 
         # Convert the AttributeMap parameter from string to a list of mapping entries.
@@ -423,6 +431,7 @@ class MergeGeoLayers(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_merge(list_of_geolayer_ids, pv_OutputGeoLayerID):
 
+            # noinspection PyBroadException
             try:
 
                 # A list to hold the GeoLayer IDs of the copied GeoLayers. Copied GeoLayers are only required for this
@@ -499,8 +508,8 @@ class MergeGeoLayers(AbstractCommand):
                     # Remove the copied GeoLayer from the GeoProcessor
                     self.command_processor.free_geolayer(copied_geolayer)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error merging the following GeoLayers {}.".format(pv_GeoLayerIDs)
                 recommendation = "Check the log file for details."

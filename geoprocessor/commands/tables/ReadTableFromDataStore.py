@@ -105,8 +105,8 @@ class ReadTableFromDataStore(AbstractCommand):
         self.parameter_input_metadata['DataStoreTable.Description'] = "database table or view to read"
         self.parameter_input_metadata['DataStoreTable.Label'] = "DataStore table"
         self.parameter_input_metadata['DataStoreTable.Tooltip'] = (
-            "The name of the database table to read when querying a single table. " \
-            "${Property} syntax is recognized. \n" \
+            "The name of the database table to read when querying a single table. "
+            "${Property} syntax is recognized. \n"
             "If specified, do not specify Sql or SqlFile.")
         # TODO @jurentie 01/22/19 do these need to be read file selector type?
         self.parameter_input_metadata['DataStoreTable.FileSelector.Type'] = "Read"
@@ -186,6 +186,7 @@ class ReadTableFromDataStore(AbstractCommand):
         warning = ""
 
         # Check that parameter TableID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_TableID, False, False):
@@ -197,6 +198,7 @@ class ReadTableFromDataStore(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter DataStoreID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value(parameter_name='DataStoreID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_DataStoreID, False, False):
@@ -228,7 +230,9 @@ class ReadTableFromDataStore(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Run the checks for the Top parameter.
+        # noinspection PyPep8Naming
         pv_Top = self.get_parameter_value(parameter_name='Top', command_parameters=command_parameters)
+        # noinspection PyPep8Naming
         pv_DataStoreTable = self.get_parameter_value(parameter_name="DataStoreTable",
                                                      command_parameters=command_parameters)
         if pv_Top:
@@ -262,10 +266,11 @@ class ReadTableFromDataStore(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfTableIDExists is one of the acceptable values or is None.
+        # noinspection PyPep8Naming
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
                                                       command_parameters=command_parameters)
-        if not validator_util.validate_string_in_list(pv_IfTableIDExists, self.__choices_IfTableIDExists, none_allowed=True,
-                                                  empty_string_allowed=False, ignore_case=True):
+        if not validator_util.validate_string_in_list(pv_IfTableIDExists, self.__choices_IfTableIDExists,
+                                                      none_allowed=True, empty_string_allowed=False, ignore_case=True):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
                 self.__choices_IfTableIDExists)
@@ -309,7 +314,8 @@ class ReadTableFromDataStore(AbstractCommand):
         if sql_file_abs:
 
             # If the SqlFile is not a valid file path, raise a FAILURE.
-            should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "SqlFile", sql_file_abs, "FAIL"))
+            should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "SqlFile",
+                                                               sql_file_abs, "FAIL"))
 
         # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
         # value of the IfTableIDExists parameter.)
@@ -317,7 +323,7 @@ class ReadTableFromDataStore(AbstractCommand):
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
-                                                       "FAIL"))
+                                                           "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -355,13 +361,13 @@ class ReadTableFromDataStore(AbstractCommand):
         if sql:
 
             # Run the SQL statement
-            result_from_sql = ds.connection.execute(sql)
+            # result_from_sql = ds.connection.execute(sql)
 
             # Get the columns from the sql statement.
             table_cols = ds.connection.execute(sql).keys()
 
             # Get the first row from the result set.
-            row = result_from_sql.fetchone()
+            # row = result_from_sql.fetchone()
 
             # An empty list to hold the columns that were included in the result set in response to the user-specified
             # sql.
@@ -373,8 +379,9 @@ class ReadTableFromDataStore(AbstractCommand):
                 # Try to read the value of the DataStore table column. If it does not throw an error, it is known that
                 # the column was included in the result set of the user-specified SQL statement. Add the column name to
                 # the included_cols list.
+                # noinspection PyBroadException
                 try:
-                    value = row[table_col]
+                    # value = row[table_col]
                     included_cols.append(table_col)
 
                 # If an error is thrown, it is known that the column was not included in the result set of the
@@ -547,19 +554,34 @@ class ReadTableFromDataStore(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value("DataStoreID")
+        # noinspection PyPep8Naming
         pv_DataStoreTable = self.get_parameter_value("DataStoreTable")
+        # noinspection PyPep8Naming
         pv_Sql = self.get_parameter_value("Sql")
+        # noinspection PyPep8Naming
         pv_SqlFile = self.get_parameter_value("SqlFile")
+        # noinspection PyPep8Naming
         pv_Top = self.get_parameter_value("Top")
+        pv_top = 0
+        if pv_Top is not None and pv_Top != "":
+            pv_top = int(pv_Top)
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value("TableID")
+        # noinspection PyPep8Naming
         pv_IncludeColumns = self.get_parameter_value("IncludeColumns", default_value="*")
+        # noinspection PyPep8Naming
         pv_ExcludeColumns = self.get_parameter_value("ExcludeColumns", default_value="")
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
+        # noinspection PyPep8Naming
         pv_DataStoreTable = self.command_processor.expand_parameter_value(pv_DataStoreTable, self)
+        # noinspection PyPep8Naming
         pv_Sql = self.command_processor.expand_parameter_value(pv_Sql, self)
+        # noinspection PyPep8Naming
         pv_TableID = self.command_processor.expand_parameter_value(pv_TableID, self)
 
         # Convert the IncludeColumns and ExcludeColumns parameter values to lists.
@@ -569,6 +591,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # If available, convert the SqlFile parameter value relative path to an absolute path and expand for
         # ${Property} syntax.
         if pv_SqlFile:
+            # noinspection PyPep8Naming
             pv_SqlFile = io_util.verify_path_for_os(io_util.to_absolute_path(
                 self.command_processor.get_property('WorkingDir'),
                 self.command_processor.expand_parameter_value(pv_SqlFile, self)))
@@ -576,6 +599,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_read_table(pv_SqlFile, pv_TableID, pv_DataStoreID):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the DataStore object
@@ -601,14 +625,14 @@ class ReadTableFromDataStore(AbstractCommand):
                         sql_statement = sql_statement.replace('%', '%%')
 
                 # Create the Table from the DataStore.
-                table = self.__read_table_from_datastore(datastore, pv_DataStoreTable, pv_TableID, pv_Top,
+                table = self.__read_table_from_datastore(datastore, pv_DataStoreTable, pv_TableID, pv_top,
                                                          sql_statement, cols_to_include, cols_to_exclude)
 
                 # Add the table to the GeoProcessor's Tables list.
                 self.command_processor.add_table(table)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error reading Table {} from DataStore ({}).".format(pv_TableID,
                                                                                           pv_DataStoreID)

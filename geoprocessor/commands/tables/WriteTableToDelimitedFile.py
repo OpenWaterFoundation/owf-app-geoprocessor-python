@@ -203,6 +203,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         warning = ""
 
         # Check that parameter TableID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_TableID, False, False):
@@ -214,6 +215,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter OutputFile is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_OutputFile, False, False):
@@ -240,10 +242,11 @@ class WriteTableToDelimitedFile(AbstractCommand):
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter ArrayFormat is one of the acceptable values or is None.
+        # noinspection PyPep8Naming
         pv_ArrayFormat = self.get_parameter_value(parameter_name="ArrayFormat", command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_ArrayFormat, self.__choices_ArrayFormat,
-                                                  none_allowed=True,
-                                                  empty_string_allowed=False, ignore_case=True):
+                                                      none_allowed=True,
+                                                      empty_string_allowed=False, ignore_case=True):
             message = "ArrayFormat parameter value ({}) is not recognized.".format(pv_ArrayFormat)
             recommendation = "Specify one of the acceptable values ({}) for the ArrayFormat parameter.".format(
                 self.__choices_ArrayFormat)
@@ -252,10 +255,11 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter NullValueFormat is one of the acceptable values or is None.
+        # noinspection PyPep8Naming
         pv_NullValueFormat = self.get_parameter_value(parameter_name="NullValueFormat",
                                                       command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_NullValueFormat, self.__choices_NullValueFormat,
-                                                  none_allowed=True, empty_string_allowed=False, ignore_case=True):
+                                                      none_allowed=True, empty_string_allowed=False, ignore_case=True):
             message = "NullValueFormat parameter value ({}) is not recognized.".format(pv_NullValueFormat)
             recommendation = "Specify one of the acceptable values ({}) for the NullValueFormat parameter.".format(
                 self.__choices_NullValueFormat)
@@ -295,7 +299,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the Table ID is not an existing Table ID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
@@ -331,11 +335,11 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
         # If the output folder is not an existing folder, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
-                                                       "FAIL"))
+                                                           "FAIL"))
 
         # If the delimiter is not 1 character, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsStringLengthCorrect", "Delimiter", delimiter,
-                                                       "FAIL", other_values=[1]))
+                                                           "FAIL", other_values=[1]))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -383,6 +387,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         all_records = [table_record.items for table_record in table_obj.table_records]
 
         # Sort the records by the values of a field.
+        # noinspection PyBroadException
         try:
             if sort_columns:
 
@@ -400,6 +405,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                     else:
                         sort_order = "ASCENDING"
 
+                    s = None
                     if sort_order.upper() == "ASCENDING" and i == 0:
                         s = sorted(all_records, key=itemgetter(index))
                     elif sort_order.upper() == "DESCENDING" and i == 0:
@@ -542,7 +548,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
             # A dictionary to store all of the strings that are to be replaced with different strings.
             # Key: the string within the delimited file to be replaced
             # Value: the replacement string
-            replacement_dictionary = {}
+            replacement_dictionary = dict()
 
             # A dictionary to determine which characters are to be replaced (and their replacement characters).
             replacement_dictionary["["] = "{"
@@ -588,16 +594,27 @@ class WriteTableToDelimitedFile(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value("TableID")
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value("OutputFile")
+        # noinspection PyPep8Naming
         pv_Delimiter = self.get_parameter_value("Delimiter", default_value=",")
+        # noinspection PyPep8Naming
         pv_IncludeColumns = self.get_parameter_value("IncludeColumns", default_value="*")
+        # noinspection PyPep8Naming
         pv_ExcludeColumns = self.get_parameter_value("ExcludeColumns", default_value="")
+        # noinspection PyPep8Naming
         pv_WriteHeaderRow = self.get_parameter_value("WriteHeaderRow", default_value="True")
+        # noinspection PyPep8Naming
         pv_WriteIndexColumn = self.get_parameter_value("WriteIndexColumn", default_value="False")
+        # noinspection PyPep8Naming
         pv_SortColumns = self.get_parameter_value("SortColumns")
+        # noinspection PyPep8Naming
         pv_SortOrder = self.get_parameter_value("SortOrder", default_value="")
+        # noinspection PyPep8Naming
         pv_ArrayFormat = self.get_parameter_value("ArrayFormat", default_value="SquareBrackets")
+        # noinspection PyPep8Naming
         pv_NullValueFormat = self.get_parameter_value("NullValueFormat", default_value="Null")
 
         # Convert the IncludeColumns, ExcludeColumns, and SortColumns parameter values to lists.
@@ -616,12 +633,15 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Covert the Boolean parameters from string to Boolean values.
+        # noinspection PyPep8Naming
         pv_WriteHeaderRow = string_util.str_to_bool(pv_WriteHeaderRow)
+        # noinspection PyPep8Naming
         pv_WriteIndexColumn = string_util.str_to_bool(pv_WriteIndexColumn)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_write_table(pv_TableID, output_file_absolute, pv_Delimiter, sort_cols_list):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the Table object

@@ -138,6 +138,7 @@ class WriteGeoLayerToKML(AbstractCommand):
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
         # - existence of the GeoLayer will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -150,6 +151,7 @@ class WriteGeoLayerToKML(AbstractCommand):
 
         # Check that parameter OutputFile is a non-empty, non-None string.
         # - existence of the folder will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_OutputFile, False, False):
@@ -190,14 +192,15 @@ class WriteGeoLayerToKML(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id,
+                                                           "FAIL"))
 
         # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
-                                                       output_file_abs, "FAIL"))
+                                                           output_file_abs, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -216,9 +219,13 @@ class WriteGeoLayerToKML(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value("OutputFile")
+        # noinspection PyPep8Naming
         pv_PlacemarkNameAttribute = self.get_parameter_value("PlacemarkNameAttribute")
+        # noinspection PyPep8Naming
         pv_PlacemarkDescriptionAttribute = self.get_parameter_value("PlacemarkDescriptionAttribute")
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
@@ -229,6 +236,7 @@ class WriteGeoLayerToKML(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute):
 
+            # noinspection PyBroadException
             try:
                 # Get the GeoLayer
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
@@ -244,8 +252,8 @@ class WriteGeoLayerToKML(AbstractCommand):
                                                       pv_PlacemarkDescriptionAttribute,
                                                       "clampToGround")
 
-            # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error writing GeoLayer {} to GeoJSON format.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

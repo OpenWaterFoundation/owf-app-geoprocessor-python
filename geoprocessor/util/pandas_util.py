@@ -135,6 +135,7 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
     """
 
     # Removes the default styling of the table (provided in the pandas library). The package has been moved over time.
+    # noinspection PyBroadException
     try:
         import pandas.io.formats.excel
         pandas.io.formats.excel.header_style = None
@@ -142,6 +143,7 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
     except Exception:
         pass
 
+    # noinspection PyBroadException
     try:
         import pandas.formats.format
         pandas.formats.format.header_style = None
@@ -149,6 +151,7 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
     except Exception:
         pass
 
+    # noinspection PyBroadException
     try:
         import pandas.core.format
         pandas.core.format.header_style = None
@@ -165,7 +168,7 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
         if io_util.get_extension(excel_workbook_path).upper() == ".XLS":
 
             # Set the writer object.
-            writer = pd.ExcelWriter(excel_workbook_path, engine = 'xlwt')
+            writer = pd.ExcelWriter(excel_workbook_path, engine='xlwt')
 
             book = xlwt.Workbook(excel_workbook_path)
             writer.book = book
@@ -174,8 +177,8 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
             df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
             writer.save()
 
-        # Write the table to an existing excel file in XLSX format.
         else:
+            # Write the table to an existing excel file in XLSX format.
 
             # REf: https://stackoverflow.com/questions/20219254/
             # how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
@@ -194,8 +197,8 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
             df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
             writer.save()
 
-    # If the output excel file does not already exists, configure which excel file version to use.
     else:
+        # If the output excel file does not already exists, configure which excel file version to use.
 
         # Set the writer object.
         writer = pd.ExcelWriter(excel_workbook_path)

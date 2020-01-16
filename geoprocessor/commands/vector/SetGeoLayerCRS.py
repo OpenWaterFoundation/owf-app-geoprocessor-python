@@ -31,7 +31,7 @@ import geoprocessor.util.validator_util as validator_util
 
 import logging
 
-from plugins.processing.tools import general
+# from plugins.processing.tools import general
 
 
 class SetGeoLayerCRS(AbstractCommand):
@@ -66,7 +66,7 @@ class SetGeoLayerCRS(AbstractCommand):
         self.command_metadata['EditorType'] = "Simple"
 
         # Command Parameter Metadata
-        self.parameter_input_metadata =  dict()
+        self.parameter_input_metadata = dict()
         # GeoLayerID
         self.parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
@@ -100,6 +100,7 @@ class SetGeoLayerCRS(AbstractCommand):
         warning = ""
 
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -111,6 +112,7 @@ class SetGeoLayerCRS(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter CRS is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value(parameter_name='CRS', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_CRS, False, False):
@@ -207,16 +209,20 @@ class SetGeoLayerCRS(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
 
         # Convert the pv_GeoLayerID parameter to expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_set_crs(pv_GeoLayerID, pv_CRS):
 
             # Run the process.
+            # noinspection PyBroadException
             try:
 
                 # Get the input GeoLayer.
@@ -250,8 +256,8 @@ class SetGeoLayerCRS(AbstractCommand):
                                       "CRS": pv_CRS}
                     self.command_processor.qgis_processor.runAlgorithm("qgis:definecurrentprojection", alg_parameters)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error setting CRS ({}) of GeoLayer ({})".format(pv_CRS, pv_GeoLayerID)
                 recommendation = "Check the log file for details."

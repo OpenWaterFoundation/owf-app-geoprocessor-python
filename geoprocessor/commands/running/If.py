@@ -105,6 +105,7 @@ class If(AbstractCommand):
         # before calls to run_command
 
         # Name is required
+        # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_Name, False, False):
             message = "A name for the If block must be specified"
@@ -115,6 +116,7 @@ class If(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Condition is required
+        # noinspection PyPep8Naming
         pv_Condition = self.get_parameter_value(parameter_name='Condition', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_Condition, False, False):
             message = "A condition for the If command must be specified"
@@ -131,7 +133,7 @@ class If(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            logger.warn(warning)
+            logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity
@@ -169,11 +171,14 @@ class If(AbstractCommand):
         debug = True  # Use for troubleshooting
         warning_count = 0  # General count for issues
 
+        # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value("Name")
+        # noinspection PyPep8Naming
         pv_Condition = self.get_parameter_value("Condition")
         condition_upper = None
         if pv_Condition is not None:
             condition_upper = pv_Condition.upper()
+        # noinspection PyPep8Naming
         pv_CompareAsStrings = self.get_parameter_value("CompareAsStrings")
         compare_as_strings = False
         if pv_CompareAsStrings is not None and pv_CompareAsStrings.upper == "TRUE":
@@ -181,6 +186,7 @@ class If(AbstractCommand):
         # TODO smalers 2018-02-18 need to add other special conditions such as empty properties, GeoLayer exists, etc.
         # - see TSTool code
 
+        # noinspection PyBroadException
         try:
             condition_eval = False
             self.__condition_eval = condition_eval
@@ -192,8 +198,8 @@ class If(AbstractCommand):
                 logger.info('Evaluating Condition="' + pv_Condition + '"')
                 pos1 = -1
                 pos2 = -1
-                value1 = ""
-                value2 = ""
+                # value1 = ""
+                # value2 = ""
                 op = "??"
                 if pv_Condition.find("<=") > 0:
                     pos = pv_Condition.find("<=")

@@ -89,6 +89,7 @@ class Message(AbstractCommand):
         logger = logging.getLogger("gp")
 
         # Message is required
+        # noinspection PyPep8Naming
         pv_Message = self.get_parameter_value(parameter_name='Message', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_Message, False, False):
             message = "Message parameter has no value."
@@ -97,10 +98,11 @@ class Message(AbstractCommand):
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # noinspection PyPep8Naming
         pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus',
                                                     command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_CommandStatus,
-                                                  CommandStatusType.get_command_status_types_as_str(), True, True):
+                                                      CommandStatusType.get_command_status_types_as_str(), True, True):
             message = 'The requested command status "' + pv_CommandStatus + '"" is invalid.'
             recommendation = "Specify a valid command status."
             warning += "\n" + message
@@ -135,10 +137,13 @@ class Message(AbstractCommand):
         warning_count = 0
 
         # Message parameter won't be null.
+        # noinspection PyPep8Naming
         pv_Message = self.get_parameter_value('Message')
+        # noinspection PyPep8Naming
         pv_CommandStatus = self.get_parameter_value('CommandStatus')
         if pv_CommandStatus is None or pv_CommandStatus == "":
             # Default status as a string
+            # noinspection PyPep8Naming
             pv_CommandStatus = str(CommandStatusType.SUCCESS)
         # Convert the string to the enum
         command_status_type = CommandStatusType.value_of(pv_CommandStatus, ignore_case=True)

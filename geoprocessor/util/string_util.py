@@ -50,7 +50,7 @@ def delimited_string_to_list(delimited_string: str, delimiter: str = ",", trim: 
         A list of strings parsed from the delimited string, None if the original string is None, and
         guaranteed to be at least an empty list otherwise.
     """
-    #if delimited_string is None or delimited_string == "":
+    # if delimited_string is None or delimited_string == "":
     if delimited_string is None:
         return None
     else:
@@ -61,8 +61,8 @@ def delimited_string_to_list(delimited_string: str, delimiter: str = ",", trim: 
     return parts
 
 
-def delimited_string_to_dictionary_one_value(delimited_string: str, entry_delimiter: str= ";",
-                                             key_value_delimiter: str = "=", trim: bool = True) -> dict:
+def delimited_string_to_dictionary_one_value(delimited_string: str, entry_delimiter: str = ";",
+                                             key_value_delimiter: str = "=", trim: bool = True) -> dict or None:
     """
     Split a string in delimited format into a dictionary of strings.
     This function can be used, for example, to split comma-separated parameters for a command,
@@ -119,8 +119,8 @@ def delimited_string_to_dictionary_one_value(delimited_string: str, entry_delimi
 
 
 def delimited_string_to_dictionary_list_value(delimited_string: str, entry_delimiter: str = ";",
-                                              key_value_delimiter: str = "=", list_delimiter: str =",",
-                                              trim: bool = True) -> dict:
+                                              key_value_delimiter: str = "=", list_delimiter: str = ",",
+                                              trim: bool = True) -> dict or None:
     """
     Split a string in delimited format into a dictionary. The key is a string and the value is a list of strings.
     This function can be used, for example, to split comma-separated parameters for a command,
@@ -405,6 +405,8 @@ def key_value_pair_list_to_dictionary(key_value_list: [str]) -> dict:
     for key_value in key_value_list:
         # Split by equal sign
         pos = key_value.find("=")
+        key = ""
+        value = None
         if pos > 1:
             # Get the key and value
             key = key_value[0:pos].strip()
@@ -415,7 +417,7 @@ def key_value_pair_list_to_dictionary(key_value_list: [str]) -> dict:
     return dictionary
 
 
-def pattern_count(s: str, pattern: str, patterns: [str] = None) -> int:
+def pattern_count(s: str or None, pattern: str or None, patterns: [str] or None = None) -> int:
     """
     Count the number of unique (non-overlapping) instances of a pattern in a string.
 
@@ -445,7 +447,7 @@ def pattern_count(s: str, pattern: str, patterns: [str] = None) -> int:
     return count
 
 
-def str_to_bool(string: str) -> bool:
+def str_to_bool(string: str) -> bool or None:
     """
     Convert a string into a Boolean value.
 

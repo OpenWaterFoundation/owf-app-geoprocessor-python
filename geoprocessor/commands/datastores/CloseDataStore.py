@@ -103,6 +103,7 @@ class CloseDataStore(AbstractCommand):
         warning = ""
 
         # Check that the DataStoreID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID",
                                                   command_parameters=command_parameters)
 
@@ -139,11 +140,11 @@ class CloseDataStore(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
-                                                       "FAIL"))
+        should_run_command.append(validator_util.run_check(
+            self, "IsDataStoreIdExisting", "DataStoreID", datastore_id, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -162,16 +163,21 @@ class CloseDataStore(AbstractCommand):
         """
 
         # Obtain the DataStoreID parameter value and expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value("DataStoreID")
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
 
         # Obtain the StatusMessage parameter value and expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_StatusMessage = self.get_parameter_value("StatusMessage")
+        # noinspection PyPep8Naming
         pv_StatusMessage = self.command_processor.expand_parameter_value(pv_StatusMessage, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_close_datastore(pv_DataStoreID):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the DataStore object

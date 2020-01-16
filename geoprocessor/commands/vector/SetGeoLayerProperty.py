@@ -104,6 +104,7 @@ class SetGeoLayerProperty(AbstractCommand):
         # GeoLayerID is required
         # - non-empty, non-None string.
         # - existence of the GeoLayer will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -115,6 +116,7 @@ class SetGeoLayerProperty(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # PropertyName is required
+        # noinspection PyPep8Naming
         pv_PropertyName = self.get_parameter_value(parameter_name='PropertyName', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_PropertyName, False, False):
             message = "PropertyName parameter has no value."
@@ -125,6 +127,7 @@ class SetGeoLayerProperty(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # PropertyType is required
+        # noinspection PyPep8Naming
         pv_PropertyType = self.get_parameter_value(parameter_name='PropertyType', command_parameters=command_parameters)
         property_types = ["bool", "float", "int", "long", "str"]
         if not validator_util.validate_string_in_list(pv_PropertyType, property_types, False, False):
@@ -136,6 +139,7 @@ class SetGeoLayerProperty(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # PropertyValue is required
+        # noinspection PyPep8Naming
         pv_PropertyValue = self.get_parameter_value(
             parameter_name='PropertyValue', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_PropertyValue, False, False):
@@ -173,23 +177,34 @@ class SetGeoLayerProperty(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_PropertyName = self.get_parameter_value('PropertyName')
+        # noinspection PyPep8Naming
         pv_PropertyType = self.get_parameter_value('PropertyType')
+        # noinspection PyPep8Naming
         pv_PropertyValue = self.get_parameter_value('PropertyValue')
         # Expand the property value string before converting to the requested type
+        # noinspection PyPep8Naming
         pv_PropertyValue_expanded = self.command_processor.expand_parameter_value(pv_PropertyValue)
 
+        # noinspection PyBroadException
         try:
             # Convert the property value string to the requested type
+            # noinspection PyPep8Naming
             pv_PropertyValue2 = None
             if pv_PropertyType == 'bool':
+                # noinspection PyPep8Naming
                 pv_PropertyValue2 = bool(pv_PropertyValue_expanded)
             elif pv_PropertyType == 'float':
+                # noinspection PyPep8Naming
                 pv_PropertyValue2 = float(pv_PropertyValue_expanded)
             elif pv_PropertyType == 'int':
+                # noinspection PyPep8Naming
                 pv_PropertyValue2 = int(pv_PropertyValue_expanded)
             elif pv_PropertyType == 'str':
+                # noinspection PyPep8Naming
                 pv_PropertyValue2 = str(pv_PropertyValue_expanded)
             # Now set the object as a property, will be the requested type
             if pv_PropertyValue2 is not None:

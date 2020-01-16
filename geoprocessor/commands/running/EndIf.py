@@ -83,6 +83,7 @@ class EndIf(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Name is required
+        # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_Name, False, False):
             message = "A name for the EndIf block must be specified"

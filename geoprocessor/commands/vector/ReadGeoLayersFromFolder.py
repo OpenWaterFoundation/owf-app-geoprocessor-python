@@ -144,6 +144,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         warning = ""
 
         # Check that parameter SpatialDataFolder is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_SpatialDataFolder = self.get_parameter_value(parameter_name='SpatialDataFolder',
                                                         command_parameters=command_parameters)
 
@@ -156,11 +157,12 @@ class ReadGeoLayersFromFolder(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -181,7 +183,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_folder(self, spatial_data_folder_abs:str) -> bool:
+    def __should_read_folder(self, spatial_data_folder_abs: str) -> bool:
 
         """
         Checks the following:
@@ -212,7 +214,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         # one or many checks failed.
         return run_read
 
-    def __should_read_geolayer(self, geolayer_id:str) -> bool:
+    def __should_read_geolayer(self, geolayer_id: str) -> bool:
         """
         Checks the following:
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
@@ -233,6 +235,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         if self.command_processor.get_geolayer(geolayer_id):
 
             # Get the IfGeoLayerIDExists parameter value.
+            # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
             # Warnings/recommendations if the GeolayerID is the same as a registered GeoLayerID.
@@ -284,8 +287,11 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_SpatialDataFolder = self.get_parameter_value("SpatialDataFolder")
+        # noinspection PyPep8Naming
         pv_Subset_Pattern = self.get_parameter_value("Subset_Pattern")
+        # noinspection PyPep8Naming
         pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
 
         # Convert the SpatialDataFolder parameter value relative path to an absolute path
@@ -327,6 +333,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
                 # Run the secondary checks on the parameter values. Only continue if the checks passed.
                 if self.__should_read_geolayer(geolayer_id):
 
+                    # noinspection PyBroadException
                     try:
                         # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
                         qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(spatial_data_file_absolute)
@@ -338,7 +345,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
                         self.command_processor.add_geolayer(geolayer_obj)
 
                     # Raise an exception if an unexpected error occurs during the process
-                    except Exception as e:
+                    except Exception:
                         self.warning_count += 1
                         message = "Unexpected error reading GeoLayer {} from" \
                                   " file {}.".format(geolayer_id, spatial_data_file_absolute)

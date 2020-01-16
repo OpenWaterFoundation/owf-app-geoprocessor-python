@@ -203,6 +203,8 @@ class GeoProcessorAppSession(object):
 
         version_folder = self.get_user_app_major_version_folder()
         if not os.path.exists(version_folder):
+            # The following gets rid of IDE warning about catching Exception, which is considered "too broad".
+            # noinspection PyBroadException
             try:
                 os.mkdir(version_folder)
             except Exception:
@@ -272,6 +274,8 @@ class GeoProcessorAppSession(object):
         # print(history_list)
 
         f = None
+        # The following gets rid of IDE warning about catching Exception, which is considered "too broad".
+        # noinspection PyBroadException
         try:
             with open(self.get_history_file()) as f:
                 history = f.read().splitlines()
@@ -305,6 +309,8 @@ class GeoProcessorAppSession(object):
         string_builder =\
             "# GeoProcessor command file history, most recent at top, shared between GeoProcessor instances\n"
 
+        # The following gets rid of IDE warning about catching Exception, which is considered "too broad".
+        # noinspection PyBroadException
         try:
             for s in history_list:
                 string_builder += s + "\n"
@@ -315,6 +321,8 @@ class GeoProcessorAppSession(object):
                 if not os.makedirs(folder):
                     # Unable to make folder
                     return
+            # The following gets rid of IDE warning about catching Exception, which is considered "too broad".
+            # noinspection PyBroadException
             try:
                 f.write(string_builder)
                 f.close()

@@ -87,6 +87,7 @@ class StartLog(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # LogFile is required
+        # noinspection PyPep8Naming
         pv_LogFile = self.get_parameter_value(parameter_name='LogFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_LogFile, False, False):
             message = "The log file must be specified."
@@ -124,19 +125,21 @@ class StartLog(AbstractCommand):
         logger = logging.getLogger(__name__)
         warning_count = 0
 
+        # noinspection PyPep8Naming
         pv_LogFile = self.get_parameter_value('LogFile')
         log_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(
                 self.command_processor.get_property('WorkingDir'),
                 self.command_processor.expand_parameter_value(pv_LogFile)))
 
+        # noinspection PyBroadException
         try:
             # Change the GeoProcessor logger to use the specified file
             # - The initial application log file will be closed.
             log_util.reset_log_file_handler(log_file_absolute)
             # Add the log file to output
             self.command_processor.add_output_file(log_file_absolute)
-        except Exception as e:
+        except Exception:
             warning_count += 1
             message = 'Unexpected error (re)starting log file "' + log_file_absolute + '"'
             logger.warning(message, exc_info=True)

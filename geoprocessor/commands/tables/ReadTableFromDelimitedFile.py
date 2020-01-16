@@ -146,6 +146,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         warning = ""
 
         # Check that parameter InputFile is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_InputFile = self.get_parameter_value(parameter_name='InputFile', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_InputFile, False, False):
@@ -158,6 +159,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             
         # Check that parameter TableID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_TableID, False, False):
@@ -169,11 +171,12 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfTableIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
+        # noinspection PyPep8Naming
         pv_IfTableIDExists = self.get_parameter_value(parameter_name="IfTableIDExists",
                                                       command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
         if not validator_util.validate_string_in_list(pv_IfTableIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
                 acceptable_values)
@@ -183,6 +186,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the HeaderLines is used, continue with the checks.
+        # noinspection PyPep8Naming
         pv_HeaderLines = self.get_parameter_value("HeaderLines", command_parameters=command_parameters)
         if pv_HeaderLines:
 
@@ -224,10 +228,11 @@ class ReadTableFromDelimitedFile(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the input file is not a valid file path, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "InputFile", input_file_abs, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "InputFile",
+                                                           input_file_abs, "FAIL"))
 
         # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
         # value of the IfTableIDExists parameter.)
@@ -334,10 +339,15 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_InputFile = self.get_parameter_value("InputFile")
+        # noinspection PyPep8Naming
         pv_Delimiter = self.get_parameter_value("Delimiter", default_value=",")
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value("TableID")
+        # noinspection PyPep8Naming
         pv_HeaderLines = int(self.get_parameter_value("HeaderLines", default_value="0"))
+        # noinspection PyPep8Naming
         pv_NullValues = self.get_parameter_value("NullValues", default_value="''")
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax
@@ -346,11 +356,13 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_InputFile, self)))
 
         # Convert the NullValues parameter values to a list.
+        # noinspection PyPep8Naming
         pv_NullValues = string_util.delimited_string_to_list(pv_NullValues)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_read_table(input_file_absolute, pv_TableID):
 
+            # noinspection PyBroadException
             try:
 
                 # Create the table from the delimited file.

@@ -27,7 +27,7 @@ import sys
 program_properties = {}
 
 
-def get_property(property_name: str) -> str:
+def get_property(property_name: str) -> str or None:
     """
     Retrieve an application property by name.
     This provides encapsulation and more flexibility than hard-coded variable access,
@@ -47,7 +47,7 @@ def get_property(property_name: str) -> str:
         return None
 
 
-def get_qgis_install_folder() -> str:
+def get_qgis_install_folder() -> str or None:
     """
     Return the top-level folder where QGIS is installed for the version being used at run-time.
     This should only be called if is_qgis_osgeo() and/or is_qgis_standalone() return true.
@@ -173,7 +173,7 @@ def is_qgis_install_standalone() -> bool:
     return False
 
 
-def set_property(property_name: str, property_value: str ) -> None:
+def set_property(property_name: str, property_value: str) -> None:
     """
     Set a property for the application.
 

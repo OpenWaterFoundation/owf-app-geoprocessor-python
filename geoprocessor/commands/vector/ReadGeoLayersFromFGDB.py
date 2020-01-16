@@ -33,7 +33,7 @@ import geoprocessor.util.qgis_util as qgis_util
 
 import os
 import logging
-import re
+# import re
 import ogr
 
 
@@ -178,6 +178,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         # Check that parameter SpatialDataFolder is a non-empty, non-None string.
         # - existence of the folder will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_SpatialDataFolder = self.get_parameter_value(parameter_name='SpatialDataFolder',
                                                         command_parameters=command_parameters)
 
@@ -190,11 +191,12 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -204,6 +206,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that the optional parameter ReadOnlyOneFeatureClass is a valid Boolean.
+        # noinspection PyPep8Naming
         pv_ReadOnlyOneFeatureClass = self.get_parameter_value(parameter_name="ReadOnlyOneFeatureClass",
                                                               command_parameters=command_parameters)
         if not validator_util.validate_bool(pv_ReadOnlyOneFeatureClass, True, False):
@@ -218,6 +221,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         elif string_util.str_to_bool(pv_ReadOnlyOneFeatureClass):
 
             # Check that parameter GeoLayerID is a non-empty, non-None string.
+            # noinspection PyPep8Naming
             pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
             if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -241,7 +245,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __return_a_list_of_fc(self, fgdb_full_path: str) -> []:
+    @classmethod
+    def __return_a_list_of_fc(cls, fgdb_full_path: str) -> []:
 
         # The file geodatabase will be read and each feature class will be added to the feature_class_list.
         feature_class_list = []
@@ -275,18 +280,18 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the input spatial data folder is not a valid file path, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "SpatialDataFolder",
-                                                       spatial_data_folder_abs, "FAIL"))
+                                                           spatial_data_folder_abs, "FAIL"))
 
         # If the input spatial data folder is valid, continue with the checks.
         if False not in should_run_command:
 
             # If the input spatial data folder is not a file geodatabase, raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "IsFolderAfGDB", "SpatialDataFolder",
-                                                           spatial_data_folder_abs, "FAIL"))
+                                                               spatial_data_folder_abs, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -315,7 +320,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
@@ -326,7 +331,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
             # If the provided feature class is not in the FGDB raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "IsFeatureClassInFGDB", "FeatureClass", fc_name,
-                                                           "FAIL", other_values=[spatial_data_folder_abs]))
+                                                               "FAIL", other_values=[spatial_data_folder_abs]))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -347,14 +352,21 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         """
 
         # Obtain the required and optional parameter values
+        # noinspection PyPep8Naming
         pv_SpatialDataFolder = self.get_parameter_value("SpatialDataFolder")
+        # noinspection PyPep8Naming
         pv_ReadOnlyOneFeatureClass = self.get_parameter_value("ReadOnlyOneFeatureClass")
+        # noinspection PyPep8Naming
         pv_Subset_Pattern = self.get_parameter_value("Subset_Pattern")
+        # noinspection PyPep8Naming
         pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_FeatureClass = self.get_parameter_value("FeatureClass")
 
         # Convert the ReadOnlyOneFeatureClass from a string value to a Boolean value.
+        # noinspection PyPep8Naming
         pv_ReadOnlyOneFeatureClass = string_util.str_to_bool(pv_ReadOnlyOneFeatureClass)
 
         # Convert the SpatialDataFolder parameter value relative path to an absolute path
@@ -371,6 +383,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 # Run the check to see if the GeoLayer should be read.
                 if self.__should_read_geolayer(pv_GeoLayerID, True, pv_FeatureClass, sd_folder_abs):
 
+                    # noinspection PyBroadException
                     try:
 
                         # Get the full pathname to the feature class
@@ -387,8 +400,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                       geolayer_source_path=spatial_data_file_absolute)
                         self.command_processor.add_geolayer(geolayer_obj)
 
-                    # Raise an exception if an unexpected error occurs during the process
                     except Exception:
+                        # Raise an exception if an unexpected error occurs during the process
 
                         self.warning_count += 1
                         message = "Unexpected error reading feature class ({}) from file geodatabase ({}).".format(
@@ -399,11 +412,11 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
 
-            # If configured to read multiple Feature Classes into multiple GeoLayers.
             else:
+                # If configured to read multiple Feature Classes into multiple GeoLayers.
 
                 # Get a list of all of the feature classes in the file geodatabase.
-                fc_list = self.__return_a_list_of_fc(sd_folder_abs)
+                fc_list = ReadGeoLayersFromFGDB.__return_a_list_of_fc(sd_folder_abs)
 
                 # Filter the fc_list to only include feature classes that meet the Subset Pattern configuration. If
                 # the Subset Pattern configuration is None, all feature classes will remain in the fc_list.
@@ -421,6 +434,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                     # Run the secondary checks on the parameter values. Only continue if the checks passed.
                     if self.__should_read_geolayer(geolayer_id, False):
 
+                        # noinspection PyBroadException
                         try:
 
                             # Get the full pathname to the feature class
@@ -437,8 +451,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                           geolayer_source_path=spatial_data_file_absolute)
                             self.command_processor.add_geolayer(geolayer_obj)
 
-                        # Raise an exception if an unexpected error occurs during the process
-                        except Exception as e:
+                        except Exception:
+                            # Raise an exception if an unexpected error occurs during the process
 
                             self.warning_count += 1
                             message = "Unexpected error reading feature class ({}) from file geodatabase ({}).".format(

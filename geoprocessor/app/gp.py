@@ -99,7 +99,7 @@ class GeoProcessorCmd(cmd.Cmd):
         Print information about the runtime environment.
         Run in the shell with:  printenv
         """
-        logger = logging.getLogger(__name__)
+        # logger = logging.getLogger(__name__)
         if line is None:  # Put this here to get rid of PyCharm warning about line not being used
             pass
         print("Python version (sys.version) = " + sys.version)
@@ -124,6 +124,7 @@ class GeoProcessorCmd(cmd.Cmd):
               platform.release(), platform.version())))
         print("user = " + getpass.getuser())
         # GeoProcessor information, such as properties
+        # noinspection PyPep8Naming
         GeoProcessor = importlib.import_module('geoprocessor.core.GeoProcessor')
         class_ = getattr(GeoProcessor, 'GeoProcessor')
         processor = class_()
@@ -131,6 +132,7 @@ class GeoProcessorCmd(cmd.Cmd):
         for property_name, property_value in processor.properties.items():
             print(property_name + " = " + str(property_value))
 
+    # noinspection PyPep8Naming
     @classmethod
     def do_EOF(cls, line: str) -> bool:
         if line is None:  # Put this here to get rid of PyCharm warning about line not being used
@@ -166,10 +168,12 @@ class GeoProcessorCmd(cmd.Cmd):
             print("File does not exist, cannot run:  " + command_file_absolute)
             return
         # from geoprocessor.core.CommandFileRunner import CommandFileRunner
+        # noinspection PyPep8Naming
         CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
         class_ = getattr(CommandFileRunner, 'CommandFileRunner')
         runner = class_()
         # Read the command file
+        # noinspection PyBroadException
         try:
             runner.read_command_file(command_file_absolute)
         except IOError:
@@ -182,6 +186,7 @@ class GeoProcessorCmd(cmd.Cmd):
             logger.error(message, exc_info=True)
             print(message)
         # Run the command file
+        # noinspection PyBroadException
         try:
             runner.run_commands()
         except Exception:
@@ -287,10 +292,12 @@ def run_batch(command_file, runtime_properties: dict) -> None:
     command_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(working_dir, command_file))
     logger.info("Command file (absolute)=" + command_file_absolute)
     # from geoprocessor.core.CommandFileRunner import CommandFileRunner
+    # noinspection PyPep8Naming
     CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
     class_ = getattr(CommandFileRunner, 'CommandFileRunner')
     runner = class_()
     # Read the command file
+    # noinspection PyBroadException
     try:
         runner.read_command_file(command_file_absolute)
     except IOError:
@@ -305,6 +312,7 @@ def run_batch(command_file, runtime_properties: dict) -> None:
         print(message)
         return
     # Run the command file
+    # noinspection PyBroadException
     try:
         # Pass the runtime properties to supplement default properties and those created in the command file
         runner.run_commands(env_properties=runtime_properties)
@@ -367,6 +375,7 @@ def run_ui(ui_app_session: GeoProcessorAppSession) -> None:
         # - If not there is a warning about WebEngine initialization
         # - See similar code in qgis_util.initialize_qgis() for more information
         print("QGIS is NOT being used (instead, GeoProcessor is being run as gptest).")
+        # noinspection PyBroadException
         try:
             QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
         except Exception:
@@ -396,10 +405,12 @@ def run_ui(ui_app_session: GeoProcessorAppSession) -> None:
     # command_processor = GeoProcessor()
     logger.info("Loading GeoProcessor class...")
     print("Loading GeoProcessor class...")
+    # noinspection PyPep8Naming
     GeoProcessor_module = importlib.import_module('geoprocessor.core.GeoProcessor')
     class_ = getattr(GeoProcessor_module, 'GeoProcessor')
     command_processor = class_()
     # GeoProcessorUI derives from window = QtWidgets.QMainWindow()
+    # noinspection PyPep8Naming
     GeoProcessorUI_module = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI_module, 'GeoProcessorUI')
     ui_runtime_properties = dict()  # PyCharm complains if = {} is used
@@ -441,8 +452,9 @@ def set_global_data() -> None:
     # Determine the absolute path to the application, useful later when trying to find resources such as
     # configuration and image
     logger = logging.getLogger(__name__)
+    # noinspection PyBroadException
     try:
-        #ps = os.sep  # \\ on Windows / on Linux
+        # ps = os.sep  # \\ on Windows / on Linux
         ps = '/'  # Use Linux/POSIX style always
         app_util.set_property('ProgramCopyright', version.app_copyright)
         program_home = os.path.dirname(os.path.realpath(__file__))
@@ -555,9 +567,10 @@ if __name__ == '__main__':
     # # If handling QGIS environment here, rather than in GeoProcessor
     # # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once
     # # - previously used the following line of code  --->  qgis_util.initialize_qgis(r"C:\OSGeo4W64\apps\qgis")
+    # noinspection PyBroadException
     try:
         qgs_app = qgis_util.initialize_qgis()
-    except Exception as e_app:
+    except Exception:
         err_message = 'Error initializing QGIS application'
         print(err_message)
         logger_main.error(err_message, exc_info=True)
@@ -572,18 +585,20 @@ if __name__ == '__main__':
     if args.commands:
         # A command file has been specified so run the batch processor.
         print("Running GeoProcessor batch")
+        # noinspection PyBroadException
         try:
             run_batch(args.commands, runtime_properties_cl)
-        except Exception as e_batch:
+        except Exception:
             err_message = 'Exception running batch'
             print(err_message)
             logger_main.error(err_message, exc_info=True)
     elif args.http:
         # Run the http server
         print("Running GeoProcessor http server")
+        # noinspection PyBroadException
         try:
             run_http_server()
-        except Exception as e_http:
+        except Exception:
             err_message = 'Exception running http'
             print(err_message)
             logger_main.error(err_message, exc_info=True)
@@ -592,9 +607,10 @@ if __name__ == '__main__':
         err_message = "Running GeoProcessor UI"
         print(err_message)
         logger_main.info(err_message)
+        # noinspection PyBroadException
         try:
             run_ui(app_session)
-        except Exception as e_ui:
+        except Exception:
             err_message = 'Exception running UI (caught "Exception")'
             print(err_message)
             logger_main.error(err_message, exc_info=True)
@@ -604,9 +620,10 @@ if __name__ == '__main__':
     else:
         # No arguments given to indicate whether batch, UI, etc. so start up the shell.
         print("Running GeoProcessor shell")
+        # noinspection PyBroadException
         try:
             run_prompt()
-        except Exception as e_prompt:
+        except Exception:
             err_message = 'Exception running shell'
             print(err_message)
             logger_main.error(err_message, exc_info=True)

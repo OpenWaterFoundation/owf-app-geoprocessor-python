@@ -98,6 +98,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         warning = ""
 
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -109,6 +110,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter AttributeNames is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_AttributeNames = self.get_parameter_value(parameter_name='AttributeNames',
                                                      command_parameters=command_parameters)
 
@@ -203,7 +205,9 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_AttributeNames = self.get_parameter_value("AttributeNames")
 
         # Convert the AttributeNames parameter from a string to a list.
@@ -213,6 +217,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         if self.__should_attribute_be_removed(pv_GeoLayerID, attribute_names_list):
 
             # Run the process.
+            # noinspection PyBroadException
             try:
 
                 # Get the input GeoLayer.
@@ -225,7 +230,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
                     input_geolayer.remove_attribute(attribute_name)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
 
                 self.warning_count += 1
                 message = "Unexpected error removing attribute(s) ({}) from GeoLayer {}.".format(pv_AttributeNames,

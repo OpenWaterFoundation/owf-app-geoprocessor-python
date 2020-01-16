@@ -38,7 +38,7 @@ import getpass
 import logging
 import os
 import platform
-import sys
+# import sys
 import tempfile
 from time import gmtime, strftime
 
@@ -362,6 +362,7 @@ class GeoProcessor(object):
             current_command = current_command[4:]
             self.commands[index].command_string = current_command
 
+    # noinspection PyPep8Naming
     @classmethod
     def __evaluate_if_stack(cls, If_command_stack: [If]) -> bool:
         """
@@ -382,7 +383,7 @@ class GeoProcessor(object):
                 return False
         return True
 
-    def expand_parameter_value(self, parameter_value: str, command: AbstractCommand = None) -> str:
+    def expand_parameter_value(self, parameter_value: str, command: AbstractCommand = None) -> str or None:
         """
         Expand a command parameter value (string) into full string.
         This function is a port of the Java TSCommandProcessorUtil.expandParameterValue() method.
@@ -397,6 +398,10 @@ class GeoProcessor(object):
         Returns:
             Expanded parameter value string.
         """
+        if command is not None:
+            logger = logging.getLogger(__name__)
+            logger.warning("GeoProcessor.expand_parameter_value 'command' is not implemented.")
+
         debug = False  # For developers
         logger = logging.getLogger(__name__)
         if debug:
@@ -504,7 +509,7 @@ class GeoProcessor(object):
                 #    Message.printDebug( 1, routine, "Expanded parameter value is \"" + parameter_value +
                 #    "\" searchpos is now " + searchPos + " in string \"" + parameter_value + "\"" )
                 logger.debug('Expanded parameter value is "' + parameter_value +
-                      '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"')
+                             '" searchpos is now ' + str(search_pos) + ' in string "' + parameter_value + '"')
         return parameter_value
 
     def free_datastore(self, datastore: DataStore) -> None:
@@ -552,7 +557,7 @@ class GeoProcessor(object):
         """
         return self.commands
 
-    def get_datastore(self, datastore_id: str) -> DataStore:
+    def get_datastore(self, datastore_id: str) -> DataStore or None:
         """
         Return the DataStore that has the requested ID.
 
@@ -588,7 +593,7 @@ class GeoProcessor(object):
         # Return the list of the available DataStore IDs.
         return datastore_id_list
 
-    def get_geolayer(self, geolayer_id: str) -> GeoLayer:
+    def get_geolayer(self, geolayer_id: str) -> GeoLayer or None:
         """
         Return the GeoLayer that has the requested ID.
 
@@ -687,9 +692,9 @@ class GeoProcessor(object):
         Returns:
             None
         """
-        TAB = "    "  # 4 characters
+        tab = "    "  # 4 characters
         current_command = self.commands[index].command_string
-        current_command = TAB + current_command
+        current_command = tab + current_command
         self.commands[index].command_string = current_command
 
     @classmethod
@@ -732,8 +737,9 @@ class GeoProcessor(object):
                     return i_command
         return -1
 
+    # noinspection PyPep8Naming
     @classmethod
-    def __lookup_if_command(cls, If_command_stack: [If], if_name: str) -> If:
+    def __lookup_if_command(cls, If_command_stack: [If], if_name: str) -> If or None:
         """
         Lookup the command for the If() command with requested name.
 
@@ -821,7 +827,7 @@ class GeoProcessor(object):
                 listener_from_array.command_completed(icommand, ncommand, command, -1.0, "Command completed.")
 
     def notify_command_processor_listeners_of_command_started(self, icommand: int, ncommand: int,
-                                                              command: AbstractCommand ) -> None:
+                                                              command: AbstractCommand) -> None:
         """
         Notify registed command processor listeners about a command starting.
 
@@ -875,6 +881,12 @@ class GeoProcessor(object):
             None
         """
         logger = logging.getLogger(__name__)
+
+        if append_commands:
+            logger.warning("Processor 'append_commands' is not enabled.")
+        if run_discovery_on_load:
+            logger.warning("Processor 'run_discovery_on_load' is not enabled.")
+
         # Remove all items within the geoprocessor from the previous run.
         self.commands = []
         self.properties = {}
@@ -1157,6 +1169,7 @@ class GeoProcessor(object):
         # Indicate whether a recursive run of the processor is being made (e.g., because RunCommands() is used).
         recursive = False
         append_results = False
+        # noinspection PyBroadException
         try:
             recursive_prop = run_properties["Recursive"]
             if recursive_prop == "True":
@@ -1166,8 +1179,8 @@ class GeoProcessor(object):
         except Exception:
             # Recursive property was not defined so not running in recursive mode
             recursive = False
+        # noinspection PyBroadException
         try:
-
             append_prop = run_properties["AppendResults"]
             if append_prop == "True":
                 append_results = True
@@ -1194,12 +1207,15 @@ class GeoProcessor(object):
         in_comment = False
 
         # Initialize the If() command stack that is in effect, needed to nest If() commands
+        # noinspection PyPep8Naming
         If_command_stack = []
 
         # Initialize the For() command stack that is in effect, needed to nest For() commands
+        # noinspection PyPep8Naming
         For_command_stack = []
 
         # Whether the If stack evaluates to True so enclosed commands can run
+        # noinspection PyPep8Naming
         If_stack_ok_to_run = True
 
         # Loop through the commands and reset any For() commands to make sure they don't think they are complete.
@@ -1221,7 +1237,9 @@ class GeoProcessor(object):
         # Python does not allow modifying the for loop iterator variable so use a while loop
         # for i_command in range(n_commands):
         i_command = -1
+        command = None
         while i_command < n_commands:
+            # noinspection PyBroadException
             try:
                 # Catch exceptions in any command, to make sure all commands can run through
                 # - hopefully nothing is amiss with main controlling commands - otherwise need to bulletproof code
@@ -1288,8 +1306,10 @@ class GeoProcessor(object):
                         # Initialize or increment the For loop
                         logger.info('Detected For command')
                         # Use a local variable For_command for clarity
+                        # noinspection PyPep8Naming
                         For_command = command
                         ok_to_run_for = False
+                        # noinspection PyBroadException
                         try:
                             ok_to_run_for = For_command.next()
                             # print('ok_to_run_for=' + str(ok_to_run_for))
@@ -1360,7 +1380,9 @@ class GeoProcessor(object):
                     # elif isinstance(command,EndFor):
                     elif command_class == 'EndFor':
                         # Jump to the matching For()
+                        # noinspection PyPep8Naming
                         EndFor_command = command
+                        # noinspection PyBroadException
                         try:
                             For_command_stack.remove(For_command)
                         except Exception:
@@ -1379,6 +1401,7 @@ class GeoProcessor(object):
                         # arises it is caught with try, except which logs a message and increases
                         # the warning_count. At the end of GeoProcessor.run_commands() there needs to
                         # be a check if warning_count is greater than 0 and if so raise an exception.
+                        # noinspection PyBroadException
                         try:
                             command.run_command()
                         except Exception:
@@ -1393,12 +1416,15 @@ class GeoProcessor(object):
                     # Add to the If command stack
                     If_command_stack.append(command)
                     # Re-evaluate If stack
+                    # noinspection PyPep8Naming
                     If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
                 # elif isinstance(command, EndIf):
                 elif command_class == 'EndIf':
                     # Remove from the If command stack (generate a warning if the matching If()
                     # is not found in the stack)
+                    # noinspection PyPep8Naming
                     EndIf_command = command
+                    # noinspection PyPep8Naming
                     If_command = GeoProcessor.__lookup_if_command(If_command_stack, EndIf_command.get_name())
                     if If_command is None:
                         # TODO smalers 2017-12-21 need to log error
@@ -1413,6 +1439,7 @@ class GeoProcessor(object):
                         EndIf_command.run_command()
                         If_command_stack.remove(If_command)
                     # Reevaluate If stack
+                    # noinspection PyPep8Naming
                     If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
                     logger.debug('...back from running command')
                 # The following message brackets any command class run_command messages that may be generated
@@ -1422,41 +1449,16 @@ class GeoProcessor(object):
                 # logger.info("Notify Command Processor Listener of Command Completed")
                 # Notify listener that commands are finished running
                 self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
-            except Exception as e:
-                # TODO smalers 2017-12-21 need to expand error handling by type but for now catch generically
-                # because Python exception handling uses fewer exception classes than Java dode to keep simple
-                message = "Unexpected error processing command - unable to complete command"
-                message.warning(message, exc_info=True)
-                # Don't raise an exception because want all commands to run as best they can, each with
-                # message logging, so that user can troubleshoot all at once rather than first error at a time
-                command.command_status.add_to_log(
-                    CommandPhaseType.RUN,
-                    CommandLogRecord(CommandStatusType.FAILURE, message, "See the log file for details."))
-                # Put this after the above because it may also cause an issue
-                try:
-                    logger.warning(message, exc_info=True)
-                except Exception as e2:
-                    # The logger itself might throw exceptions - make sure this does not cause the GeoProcessor
-                    # from continuing to do its work
-                    # - After adding this exception block, it does not appear that the following call to
-                    #   logger.warning() does result in a new exception, but keep the code for now.
-                    logger.warning("Exception logging threw an exception.")
             except Exception:
+                # TODO smalers 2017-12-21 need to expand error handling by type but for now catch generically
+                # because Python exception handling uses fewer exception classes than Java code to keep simple
                 message = "Unexpected error processing command - unable to complete command"
+                logger.warning(message, exc_info=True)
                 # Don't raise an exception because want all commands to run as best they can, each with
                 # message logging, so that user can troubleshoot all at once rather than first error at a time
                 command.command_status.add_to_log(
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message, "See the log file for details."))
-                # Put this after the above because it may also cause an issue
-                try:
-                    logger.warning(message, exc_info=True)
-                except Exception as e2:
-                    # The logger itself might throw exceptions - make sure this does not cause the GeoProcessor
-                    # from continuing to do its work
-                    # - After adding this exception block, it does not appear that the following call to
-                    #   logger.warning() does result in a new exception, but keep the code for now.
-                    logger.warning("Exception logging threw an exception.")
 
         # The following checks to see if any warnings were caught in the above code.
         # If there were any warnings raise and exception.
@@ -1485,6 +1487,14 @@ class GeoProcessor(object):
         Returns:
             None
         """
+        logger = logging.getLogger(__name__)
+        if command_list is not None:
+            logger.warning("Processor 'command_list' is not implemented.")
+        if run_properties is not None:
+            logger.warning("Processor 'run_properties' is not implemented.")
+        if env_properties is not None:
+            logger.warning("Processor 'env_properties' is not implemented.")
+
         # Create a blank array of commands
         command_list = []
 

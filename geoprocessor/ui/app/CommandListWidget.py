@@ -40,12 +40,12 @@ except AttributeError:
 
 
 class CommandListWidget(object):
-
     """
     This class is designed to be a modular view that can be placed in the overall
     GeoProcessor UI design.
     """
 
+    # noinspection PyPep8Naming
     def __init__(self, commands_GroupBox: QtWidgets.QGroupBox) -> None:
         """
         Initialize the CommandListWidget object with necessary global variables.
@@ -125,7 +125,7 @@ class CommandListWidget(object):
             It must have functions named:  ?
 
         Returns:
-            Return if no listener
+            None
         """
         if not listener:
             return
@@ -189,6 +189,11 @@ class CommandListWidget(object):
         Returns:
             None
         """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
         # First clear previous selections from numbered list and gutter
         self.numbered_List.clearSelection()
         self.gutter.clearSelection()
@@ -211,6 +216,11 @@ class CommandListWidget(object):
         Returns:
             None
         """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
         self.notify_model_listener_main_ui_listener_run_all_commands_clicked()
 
     def event_handler_button_run_selected_commands_clicked(self, event: QtCore.QEvent) -> None:
@@ -224,6 +234,11 @@ class CommandListWidget(object):
         Returns:
             None
         """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
         selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
         selected_indices = [item.row() for item in selected_q_indices]
         self.notify_model_listener_main_ui_listener_run_selected_commands_clicked(selected_indices)
@@ -240,6 +255,11 @@ class CommandListWidget(object):
         Returns:
             None
         """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
         selected_q_indices = self.commands_List.selectionModel().selectedIndexes()
         if selected_q_indices:
             # Open a message box to confirm with the user that they want to delete all of the commands.
@@ -312,6 +332,11 @@ class CommandListWidget(object):
         Returns:
             None
         """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
         index = self.gutter.currentRow()
         self.numbered_List.setCurrentRow(index)
         self.commands_List.setCurrentRow(index)
@@ -328,6 +353,11 @@ class CommandListWidget(object):
         Returns:
             None
         """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
         index = self.numbered_List.currentRow()
         self.commands_List.setCurrentRow(index)
         self.gutter.setCurrentRow(index)
@@ -395,6 +425,10 @@ class CommandListWidget(object):
         Returns:
             None
         """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
 
         # Get the current height of the gutter
         current_height = self.gutter.height()

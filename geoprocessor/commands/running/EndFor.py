@@ -83,6 +83,7 @@ class EndFor(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Name is required
+        # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_Name, False, False):
             message = "A name for the EndFor block must be specified"
@@ -99,7 +100,7 @@ class EndFor(AbstractCommand):
 
         # If any warnings were generated, throw an exception
         if len(warning) > 0:
-            logger.warn(warning)
+            logger.warning(warning)
             raise ValueError(warning)
 
         # Refresh the phase severity

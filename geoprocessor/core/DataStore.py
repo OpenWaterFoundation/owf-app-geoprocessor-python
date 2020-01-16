@@ -59,16 +59,16 @@ class DataStore(object):
         self.id: str = datastore_id
 
         # "dialect" is used to format the database connection URL for the matching database driver software.
-        self.dialect: str = None
+        self.dialect: str or None = None
 
         # "db_uri" is the string of characters designed for unambiguous identification of resources and extensibility
         # via the URI scheme to reference the connection of the DataStore's database.
-        self.db_uri: str = None
+        self.db_uri: str or None = None
 
         # "engine" is the starting point for any SQLAlchemy application. It’s “home base” for the actual database and
         # its DBAPI, delivered to the SQLAlchemy application through a connection pool and a Dialect, which describes
         # how to talk to a specific kind of database/DBAPI combination.
-        self.engine: str = None
+        self.engine: str or None = None
 
         # "connection" is an instance of SqlAlchemy Connection, which is a proxy object for an actual DBAPI connection.
         # The DBAPI connection is retrieved from the connection pool at the point at which Connection is created.
@@ -147,8 +147,7 @@ class DataStore(object):
         self.metadata.reflect(bind=self.engine)
 
         from sqlalchemy.orm import sessionmaker
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
+        self.session = sessionmaker(bind=self.engine)
 
         # Update the status message to inform users that the connection has been opened.
         self.update_status_message("Connected.")
@@ -257,4 +256,3 @@ class DataStore(object):
 
         # Update the status message to inform users of a specific message.
         self.status_message = message
-

@@ -35,6 +35,9 @@ class GeoLayerList(object):
         # GeoLayerList.
         self.geolayers = geolayer_id_list
 
+        # Properties for the list
+        self.properties = dict()
+
     def get_property(self, property_name: str, if_not_found_val: bool = None,
                      if_not_found_except: bool = False) -> object:
         """

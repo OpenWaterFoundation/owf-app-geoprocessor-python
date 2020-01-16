@@ -265,6 +265,7 @@ class TableField(object):
 
             # If checking of INT values and the item is not an int value, set the is_correct_type to FALSE.
             elif data_type_to_check.upper() == "INT":
+                # noinspection PyBroadException
                 try:
                     int(item)
                 except Exception:
@@ -272,6 +273,7 @@ class TableField(object):
 
             # If checking for FLOAT values and the item is not a float value, set the is_correct_type to FALSE.
             elif data_type_to_check.upper() == "FLOAT":
+                # noinspection PyBroadException
                 try:
                     float(item)
                 except Exception:
@@ -279,6 +281,7 @@ class TableField(object):
 
             # If checking for STR values and the item is not a string value, set the is_correct_type to FALSE.
             elif data_type_to_check.upper() == "STR":
+                # noinspection PyBroadException
                 try:
                     str(item)
                 except Exception:
@@ -371,16 +374,20 @@ class TableField(object):
     def assign_nulls(self):
         """
         Convert the value in a list that represent null values to a None value. This function requires that the
-         data list items that match the specified null values are of the same data type.
+        data list items that match the specified null values are of the same data type.
+
         For example:
+
         1.0 (float) != 1 (int) != True (Boolean) != "1" (str)
 
             Args:
-                data_list (list): a list of items to check for null values
-                null_values (list): a list of values that represent null values. This list can be mixed type.
 
             Return: an updated data list with the substituted null values as None value.
             """
+
+        # TODO smalers 2020-01-16 need to evaluate what this was...
+        #        data_list (list): a list of items to check for null values
+        #        null_values (list): a list of values that represent null values. This list can be mixed type.
 
         # Iterate over the null values.
         for null_value in self.null_values:

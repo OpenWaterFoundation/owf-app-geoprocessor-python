@@ -129,6 +129,7 @@ class UnzipFile(AbstractCommand):
         warning = ""
 
         # Check that either the parameter File is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_File = self.get_parameter_value(parameter_name='File', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_File, False, False):
@@ -141,12 +142,13 @@ class UnzipFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter FileType is an acceptable value or is None.
+        # noinspection PyPep8Naming
         pv_FileType = self.get_parameter_value(parameter_name="FileType", command_parameters=command_parameters)
 
         acceptable_values = ["Zip", "Tar"]
 
         if not validator_util.validate_string_in_list(pv_FileType, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=False, ignore_case=True):
+                                                      empty_string_allowed=False, ignore_case=True):
             message = "FileType parameter value ({}) is not recognized.".format(pv_FileType)
             recommendation = "Specify one of the acceptable values ({}) for the" \
                              " FileType parameter.".format(acceptable_values)
@@ -155,6 +157,7 @@ class UnzipFile(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional DeleteFile parameter value is a valid Boolean value or is None.
+        # noinspection PyPep8Naming
         pv_DeleteFile = self.get_parameter_value(parameter_name="DeleteFile", command_parameters=command_parameters)
 
         if not validator_util.validate_bool(pv_DeleteFile, none_allowed=True, empty_string_allowed=False):
@@ -196,14 +199,14 @@ class UnzipFile(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the File parameter value is not a valid file, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "File", file_abs, "FAIL"))
 
         # If the OutputFolder parameter value is not a valid folder, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "OutputFolder", output_folder_abs,
-                                                       "FAIL"))
+                                                           "FAIL"))
 
         # If the File Type is not recognized, raise a FAILURE.
         if file_type is None:
@@ -227,7 +230,7 @@ class UnzipFile(AbstractCommand):
             return True
 
     @staticmethod
-    def __get_default_file_type(file_path: str) -> str:
+    def __get_default_file_type(file_path: str) -> str or None:
         """
         Helper function to get the default FileType parameter value.
 
@@ -262,7 +265,9 @@ class UnzipFile(AbstractCommand):
         """
 
         # Obtain the File and the DeleteFile parameter values.
+        # noinspection PyPep8Naming
         pv_File = self.get_parameter_value("File")
+        # noinspection PyPep8Naming
         pv_DeleteFile = self.get_parameter_value("DeleteFile", default_value="False")
 
         # Convert the File parameter value relative path to an absolute path. Expand for ${Property} syntax.
@@ -272,10 +277,12 @@ class UnzipFile(AbstractCommand):
 
         # Get the FileType parameter value.
         default_file_ext = self.__get_default_file_type(file_abs)
+        # noinspection PyPep8Naming
         pv_FileType = self.get_parameter_value("FileType", default_value=default_file_ext)
 
         # Get the OutputFolder parameter value.
         parent_folder = io_util.get_path(file_abs)
+        # noinspection PyPep8Naming
         pv_OutputFolder = self.get_parameter_value("OutputFolder", default_value=parent_folder)
 
         # Convert the OutputFolder parameter value relative path to an absolute path. Expand for ${Property} syntax.
@@ -286,6 +293,7 @@ class UnzipFile(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_extract_file(file_abs, output_folder_abs, pv_FileType):
 
+            # noinspection PyBroadException
             try:
 
                 # If the file is a .zip file, extract the zip file.

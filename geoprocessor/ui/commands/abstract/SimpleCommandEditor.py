@@ -25,15 +25,17 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 
 import geoprocessor.ui.util.qt_util as qt_util
-import geoprocessor.util.io_util as io_util
+# import geoprocessor.util.io_util as io_util
 
 import logging
-import os
+# import os
 
 
 class SimpleCommandEditor(AbstractCommandEditor):
     """
-    Class for command editor using single-panel layout configured with command parameter_input_metadata.
+    Class for command editor using simple single-panel layout configured with command parameter_input_metadata.
+
+    This editor is used by most commands.
     """
 
     def __init__(self, command: AbstractCommand, app_session: GeoProcessorAppSession) -> None:
@@ -45,44 +47,45 @@ class SimpleCommandEditor(AbstractCommandEditor):
             app_session (GeoProcessorAppSession): the application session, used to determine the user's home directory.
         """
 
+        # The following will initialize shared components
         super().__init__(command)
 
-        self.command = command
-
-        # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
-        # - TODO smalers 2019-01-19 why is this needed isntead of using the self.command.command_name?
-        # - TODO jurentie 2019-01-21 I think this is just used as a short-cut for simplicity sake,
-        #  can be removed if desired
-        self.command_name = command.command_name
-
+        # TODO smalers 2020-01-16 why is this needed here?  Does not seem to be used.
         # This is a session object to keep track of session variables such as command file history
         self.app_session = app_session
 
+        # NOT defined in AbstractCommandEditor - local to this class
         # Turn localized debug on/off, useful for development
         # - should be False for production release
         # - this causes logger.info messages to be printed
         # - later can convert to logger.debug if still needed
         self.debug = False
 
+        # NOT defined in AbstractCommandEditor - local to this class
         # Indicate if an error status is currently in effect, due to invalid parameters
         # - will be set in check_input() and is checked in ui_action_ok_clicked()
         self.error_wait = False
 
+        # NOT defined in AbstractCommandEditor - local to this class
         # Indicate whether first time refresh_ui is called
         # - the first time the UI components may be initialized from data
         self.first_refresh_ui = True
 
+        # Defined in AbstractCommandEditor
         # The QtWidgets.QFrame that is the UI element used to hold the parameter UI components
         # - instantiated in setup_ui()
-        self.parameter_QFrame = None
+        # self.parameter_QFrame = None
 
+        # Defined in AbstractCommandEditor
         # The QtWidgets.QGridLayout manages the layout of self.parameter_QFrame
         # - instantiated in setup_ui()
-        self.parameter_QGridLayout = None
+        # self.parameter_QGridLayout = None
 
+        # Defined in AbstractCommandEditor
         # The row position in the self.parameter_QGridLayout, used in setup_ui() and its helper functions.
         self.y_parameter = -1
 
+        # Defined in AbstractCommandEditor
         # "input_ui_components" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
         # KEY (str): the command parameter name
@@ -93,6 +96,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # - the AbstractCommandEditor populates some UI components such as the buttons at the bottom
         self.setup_ui_core()
 
+        # Defined here and NOT in AbstractCommandEditor
         # Initially call refresh to the UI in case updating a command
         # - will transfer command parameter values into the UI components
         self.refresh_ui()
@@ -179,7 +183,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                         logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
                                        parameter_name + "' - code problem.")
                         continue
-                except KeyError as e:
+                except KeyError:
                     # Should not happen because all parameters should have at least a text field.
                     message = "No input component for parameter '" + parameter_name + "' - code problem."
                     logger.warning(message, exc_info=True)
@@ -193,14 +197,15 @@ class SimpleCommandEditor(AbstractCommandEditor):
         #   and use to update the command string
 
         # Loop through the command parameter metadata and retrieve the values from editor components
+        # noinspection PyBroadException
         try:
             # Add all parameters to a temporary dictionary
             parameters_from_ui = dict()
             for command_parameter_metadata in self.command.command_parameter_metadata:
                 # Parameters listed in logical order such as input / analysis / output
                 parameter_name = command_parameter_metadata.parameter_name
-                parameter_value = None
                 try:
+                    parameter_value = None
                     # Get the UI input component for the parameter
                     parameter_ui = self.input_ui_components[parameter_name]
                     # Based on the UI component type, retrieve the parameter value
@@ -224,7 +229,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     #        such as checking the parameter's default value
                     if parameter_value is not None and parameter_value != "":
                         parameters_from_ui[parameter_name] = parameter_value
-                except KeyError as e:
+                except KeyError:
                     # Should not happen because all parameters should have at least a text field.
                     message = "No input component for parameter '" + parameter_name + "' - code problem."
                     logger.warning(message, exc_info=True)
@@ -234,7 +239,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             # - this does not change the command string in the command instance
             command_string = self.command.to_string(parameters_from_ui)
             self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
-        except Exception as e:
+        except Exception:
             message = "Error refreshing command from parameters"
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
@@ -279,6 +284,8 @@ class SimpleCommandEditor(AbstractCommandEditor):
             # - each dictionary key starts with `ParameterName.', for example 'LogFile.Label'
             parameter_name = command_parameter_metadata.parameter_name
 
+            # noinspection PyBroadException
+            input_metadata = None  # needed to avoid warning
             try:
                 try:
                     input_metadata = self.command.parameter_input_metadata
@@ -302,37 +309,45 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
                 # Description
                 request_key = parameter_name + "." + "Description"
+                # noinspection PyPep8Naming
                 parameter_Description = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_Description = input_metadata[request_key]
                 except KeyError:
                     # Default to a simple statement with parameter name.
                     logger.warning(parameter_name + " does not have parameter_input_metadata value " + request_key +
                                    ".  Defaulting to parameter name.")
+                    # noinspection PyPep8Naming
                     parameter_Description = parameter_name
 
                 # FileSelector.Type
                 # - new is FileSelector.Type
                 # - old is FileSelectorType
                 request_key1 = parameter_name + "." + "FileSelector.Type"
+                # noinspection PyPep8Naming
                 parameter_FileSelectorType = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_FileSelectorType = input_metadata[request_key1]
                 except KeyError:
                     # Old...
                     request_key2 = parameter_name + "." + "FileSelectorType"
                     try:
+                        # noinspection PyPep8Naming
                         parameter_FileSelectorType = input_metadata[request_key2]
                         logger.warning('Need to convert FileSelectorType to FileSelector.Type for command ' +
-                                       self.command_name)
+                                       self.command.command_name)
                     except KeyError:
                         # Default is None because file selector is only used for files
                         pass  # None was assigned above
 
                 # Group
                 request_key = parameter_name + "." + "Group"
+                # noinspection PyPep8Naming
                 parameter_Group = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_Group = input_metadata[request_key]
                 except KeyError:
                     # Group is only used for Tabbed editor type so it is optional in most cases
@@ -343,8 +358,10 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
                 # Label
                 request_key = parameter_name + "." + "Label"
+                # noinspection PyPep8Naming
                 parameter_Label = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_Label = input_metadata[request_key]
                 except KeyError:
                     # Default to the parameter name, but warn so developers can set the label intelligently.
@@ -352,31 +369,40 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     #   in metadata
                     logger.warning(parameter_name + " does not have parameter_input_metadata value " + request_key +
                                    ".  Defaulting to parameter name.")
+                    # noinspection PyPep8Naming
                     parameter_Label = parameter_name
 
                 # Required
                 request_key = parameter_name + "." + "Required"
+                # noinspection PyPep8Naming
                 parameter_Required = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_Required = input_metadata[request_key]
                 except KeyError:
                     # Default value is optional given that True is imposed as a special case
+                    # noinspection PyPep8Naming
                     parameter_Required = False
 
                 # Tooltip
                 request_key = parameter_name + "." + "Tooltip"
+                # noinspection PyPep8Naming
                 parameter_Tooltip = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_Tooltip = input_metadata[request_key]
                 except KeyError:
                     # Default is an empty string
                     # - components should check for None or empty string and not set tooltip in this case
+                    # noinspection PyPep8Naming
                     parameter_Tooltip = ""
 
                 # Value.Default
                 request_key = parameter_name + "." + "Value.Default"
+                # noinspection PyPep8Naming
                 parameter_ValueDefault = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_ValueDefault = input_metadata[request_key]
                 except KeyError:
                     # Default value is not required and and will be component-specific
@@ -386,8 +412,10 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
                 # Value.Default.Description
                 request_key = parameter_name + "." + "Value.Default.Description"
+                # noinspection PyPep8Naming
                 parameter_ValueDefaultDescription = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_ValueDefaultDescription = input_metadata[request_key]
                 except KeyError:
                     # Default value description but will be used if Value.Default is specified
@@ -396,8 +424,10 @@ class SimpleCommandEditor(AbstractCommandEditor):
 
                 # Values
                 request_key = parameter_name + "." + "Values"
+                # noinspection PyPep8Naming
                 parameter_Values = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_Values = input_metadata[request_key]
                 except KeyError:
                     # Default is that Values is not used.
@@ -405,7 +435,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     # - None was set above
                     pass
 
-            except Exception as e:
+            except Exception:
                 # Don't continue with edit because there could be major confusion
                 # - this should NEVER happen unless there is a code error because above logic is basic
                 message = 'Error getting command editor metadata - cannot edit command.'
@@ -446,11 +476,14 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     # - handle in the combobox
                     pass
                 request_key = parameter_name + "." + "Values.Editable"
+                # noinspection PyPep8Naming
                 parameter_ValuesEditable = None
                 try:
+                    # noinspection PyPep8Naming
                     parameter_ValuesEditable = input_metadata[request_key]
                 except KeyError:
                     # Default value is combo boxes are not editable
+                    # noinspection PyPep8Naming
                     parameter_ValuesEditable = False
                 self.setup_ui_parameter_combobox(parameter_name,
                                                  parameter_ValueDefaultForDisplay,

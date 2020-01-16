@@ -134,6 +134,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
         # - existence of the GeoLayer will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -146,6 +147,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
 
         # Check that parameter OutputFile is a non-empty, non-None string.
         # - existence of the folder will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_OutputFile, False, False):
@@ -158,6 +160,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional ZipOutput parameter value is a valid Boolean value or is None.
+        # noinspection PyPep8Naming
         pv_ZipOutput = self.get_parameter_value(parameter_name="ZipOutput", command_parameters=command_parameters)
         if not validator_util.validate_bool(pv_ZipOutput, none_allowed=True, empty_string_allowed=False):
             message = "ZipOutput parameter value ({}) is not a recognized boolean value.".format(pv_ZipOutput)
@@ -197,7 +200,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         run_write = True
 
         # Boolean to determine if the output format parameters have valid bool values. Set to true until proven false.
-        valid_output_bool = True
+        # valid_output_bool = True
 
         # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
         if not self.command_processor.get_geolayer(geolayer_id):
@@ -218,7 +221,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             recommendation = 'Specify a valid relative pathname for the output file.'
             self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
-                                                                                    message, recommendation))
+                                                                                  message, recommendation))
 
         # Return the Boolean to determine if the write process should be run. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.
@@ -235,8 +238,11 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         """
 
         # Obtain the parameter values except for the OutputCRS
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value("OutputFile")
+        # noinspection PyPep8Naming
         pv_ZipOutput = self.get_parameter_value("ZipOutput", default_value='False')
 
         # Convert the ZipOutput value to a Boolean value.
@@ -250,6 +256,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the GeoLayer
@@ -259,6 +266,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 geolayer_crs = geolayer.get_crs()
 
                 # Obtain the parameter value of the OutputCRS
+                # noinspection PyPep8Naming
                 pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
 
                 # Write the GeoLayer to a spatial data file in Shapefile format
@@ -270,8 +278,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 if zip_output_bool:
                     zip_util.zip_shapefile(output_file_absolute)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error writing GeoLayer {} to spatial data file in Shapefile format.".format(
                     pv_GeoLayerID)

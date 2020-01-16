@@ -65,7 +65,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
+        self.command_metadata = dict()
         self.command_metadata['Description'] = "Write GeoLayer properties to a file."
         self.command_metadata['EditorType'] = "Simple"
 
@@ -136,6 +136,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         # GeoLayerID is required
         # - non-empty, non-None string.
         # - existence of the GeoLayer will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -147,6 +148,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # OutputFile is required
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "The OutputFile must be specified."
@@ -159,9 +161,10 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         # IncludeProperties is optional, default to * at runtime
 
         # WriteMode is optional, will default to Overwrite at runtime
+        # noinspection PyPep8Naming
         pv_WriteMode = self.get_parameter_value(parameter_name='WriteMode', command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_WriteMode,
-                                                  self.__choices_WriteMode, True, True):
+                                                      self.__choices_WriteMode, True, True):
             message = "WriteMode parameter is invalid."
             recommendation = "Specify the WriteMode parameter as blank or one of " + \
                              str(self.__choices_WriteMode)
@@ -171,9 +174,10 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # FileFormat is optional, will default to NameTypeValue at runtime
+        # noinspection PyPep8Naming
         pv_FileFormat = self.get_parameter_value(parameter_name='FileFormat', command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_FileFormat,
-                                                  self.__choices_FileFormat, True, True):
+                                                      self.__choices_FileFormat, True, True):
             message = "FileFormat parameter is invalid."
             recommendation = "Specify the FileFormat parameter as blank or one of " + \
                              str(self.__choices_FileFormat)
@@ -183,9 +187,10 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # SortOrder is optional, will default to None (no sort) at runtime
+        # noinspection PyPep8Naming
         pv_SortOrder = self.get_parameter_value(parameter_name='SortOrder', command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_SortOrder,
-                                                  self.__choices_SortOrder, True, True):
+                                                      self.__choices_SortOrder, True, True):
             message = "SortOrder parameter is invalid."
             recommendation = "Specify the SortOrder parameter as blank or one of " + \
                              str(self.__choices_SortOrder)
@@ -221,20 +226,27 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get data for the command
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
+        # noinspection PyPep8Naming
         pv_IncludeProperties = self.get_parameter_value('IncludeProperties')
+        # noinspection PyPep8Naming
         include_properties = []  # Default
         if pv_IncludeProperties is not None and len(pv_IncludeProperties) > 0:
             include_properties = string_util.delimited_string_to_list(pv_IncludeProperties)
+        # noinspection PyPep8Naming
         pv_WriteMode = self.get_parameter_value('WriteMode')
         write_mode = pv_WriteMode
         if pv_WriteMode is None or pv_WriteMode == "":
             write_mode = 'Overwrite'  # Default
+        # noinspection PyPep8Naming
         pv_FileFormat = self.get_parameter_value('FileFormat')
         file_format = pv_FileFormat
         if pv_FileFormat is None or pv_FileFormat == "":
             file_format = 'NameValueType'  # Default
+        # noinspection PyPep8Naming
         pv_SortOrder = self.get_parameter_value('SortOrder')
         sort_order = 0  # no sort
         if pv_SortOrder is not None:
@@ -245,6 +257,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
 
         # Runtime checks on input
 
+        # noinspection PyPep8Naming
         pv_OutputFile_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -256,6 +269,7 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
 
         # Write the output file
 
+        # noinspection PyBroadException
         try:
             # Get the GeoLayer object
             geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)

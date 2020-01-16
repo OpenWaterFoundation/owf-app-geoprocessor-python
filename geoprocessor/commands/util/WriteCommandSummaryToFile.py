@@ -87,6 +87,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # OutputFile is required
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "The OutputFile must be specified."
@@ -123,10 +124,12 @@ class WriteCommandSummaryToFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get data for the command
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
 
         # Runtime checks on input
 
+        # noinspection PyPep8Naming
         pv_OutputFile_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -138,7 +141,9 @@ class WriteCommandSummaryToFile(AbstractCommand):
 
         # Create the command summary file
 
+        # noinspection PyBroadException
         try:
+            # noinspection PyPep8Naming
             pv_OutputFile_absolute = io_util.verify_path_for_os(
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                          self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -146,9 +151,9 @@ class WriteCommandSummaryToFile(AbstractCommand):
             # Open the file and write command summary
             logger.info('Writing summary to "' + pv_OutputFile_absolute + '"')
             fp = open(pv_OutputFile_absolute, "w")
-            self.write_file_header(fp)
+            WriteCommandSummaryToFile.write_file_header(fp)
             self.write_command_summary(fp)
-            self.write_file_footer(fp)
+            WriteCommandSummaryToFile.write_file_footer(fp)
             # Close the file
             fp.close()
 
@@ -289,7 +294,8 @@ class WriteCommandSummaryToFile(AbstractCommand):
             fp.write('<hr>' + nl)
             fp.write('</p>' + nl)
 
-    def write_file_footer(self, fp):
+    @classmethod
+    def write_file_footer(cls, fp):
         """
         Write the file header.
 
@@ -303,7 +309,8 @@ class WriteCommandSummaryToFile(AbstractCommand):
         fp.write('</body>' + nl)
         fp.write('</html>' + nl)
 
-    def write_file_header(self, fp):
+    @classmethod
+    def write_file_header(cls, fp):
         """
         Write the file header.
 

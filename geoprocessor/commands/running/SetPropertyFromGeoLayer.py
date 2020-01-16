@@ -98,6 +98,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         # GeoLayerID is required
         # - non-empty, non-None string.
         # - existence of the GeoLayer will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -109,6 +110,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # GeoLayerProperty is required
+        # noinspection PyPep8Naming
         pv_PropertyName = self.get_parameter_value(parameter_name='GeoLayerPropertyName',
                                                    command_parameters=command_parameters)
         if not validator_util.validate_string(pv_PropertyName, False, False):
@@ -120,6 +122,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # PropertyName is required
+        # noinspection PyPep8Naming
         pv_PropertyName = self.get_parameter_value(parameter_name='PropertyName', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_PropertyName, False, False):
             message = "PropertyName parameter has no value."
@@ -155,10 +158,14 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_GeoLayerPropertyName = self.get_parameter_value('GeoLayerPropertyName')
+        # noinspection PyPep8Naming
         pv_PropertyName = self.get_parameter_value('PropertyName')
 
+        # noinspection PyBroadException
         try:
             # Get the GeoLayer object
             geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)

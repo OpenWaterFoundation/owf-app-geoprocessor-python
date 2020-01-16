@@ -33,7 +33,7 @@ import geoprocessor.util.string_util as string_util
 import logging
 import os
 
-from plugins.processing.tools import general
+# from plugins.processing.tools import general
 
 
 class IntersectGeoLayer(AbstractCommand):
@@ -156,6 +156,7 @@ class IntersectGeoLayer(AbstractCommand):
         warning = ""
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
 
@@ -168,6 +169,7 @@ class IntersectGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter IntersectGeoLayerID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_IntersectGeoLayerID = self.get_parameter_value(parameter_name='IntersectGeoLayerID',
                                                           command_parameters=command_parameters)
 
@@ -181,10 +183,11 @@ class IntersectGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that opt parameter OutputFormat is either `SingleSingle`, `SingleMultiple`, `MulipleSingle` or None.
+        # noinspection PyPep8Naming
         pv_OutputFormat = self.get_parameter_value(parameter_name="OutputFormat", command_parameters=command_parameters)
         acceptable_values = ["SingleSingle", "SingleMultiple", "MulipleSingle"]
         if not validator_util.validate_string_in_list(pv_OutputFormat, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "OutputFormat parameter value ({}) is not recognized.".format(pv_OutputFormat)
             recommendation = "Specify one of the acceptable values ({}) for the OutputFormat parameter.".format(
                 acceptable_values)
@@ -194,11 +197,12 @@ class IntersectGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `Warn`, `Fail` or None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -242,23 +246,24 @@ class IntersectGeoLayer(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "GeoLayerID",
-                                                       input_geolayer_id, "FAIL"))
+                                                           input_geolayer_id, "FAIL"))
 
         # If the intersect GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "IntersectGeoLayerID",
-                                                       intersect_geolayer_id, "FAIL"))
+                                                           intersect_geolayer_id, "FAIL"))
 
         # If the input GeoLayer and the intersect GeoLayer both exist, continue with the checks.
         if False not in should_run_command:
 
             # If the input GeoLayer and the clipping GeoLayer do not have the same CRS, raise a WARNING.
             should_run_command.append(validator_util.run_check(self, "DoGeoLayerIDsHaveMatchingCRS", "GeoLayerID",
-                                                           input_geolayer_id, "WARN",
-                                                           other_values=["IntersectGeoLayerID", intersect_geolayer_id]))
+                                                               input_geolayer_id, "WARN",
+                                                               other_values=["IntersectGeoLayerID",
+                                                                             intersect_geolayer_id]))
 
             # Get the geometry of the Input GeoLayer.
             input_geolayer = self.command_processor.get_geolayer(input_geolayer_id)
@@ -268,19 +273,19 @@ class IntersectGeoLayer(AbstractCommand):
             if input_geolayer_geom_qgis == "Polygon":
 
                 should_run_command.append(validator_util.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
-                                                               "IntersectGeoLayerID", intersect_geolayer_id,
-                                                               "FAIL", other_values=[["Polygon"]]))
+                                                                   "IntersectGeoLayerID", intersect_geolayer_id,
+                                                                   "FAIL", other_values=[["Polygon"]]))
 
             # If the InputGeoLayer is a line and the IntersectGeoLayer is a point, raise a FAILURE.
             if input_geolayer_geom_qgis == "LineString":
                 should_run_command.append(validator_util.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry",
-                                                               "IntersectGeoLayerID", intersect_geolayer_id,
-                                                               "FAIL", other_values=[["LineString", "Polygon"]]))
+                                                                   "IntersectGeoLayerID", intersect_geolayer_id,
+                                                                   "FAIL", other_values=[["LineString", "Polygon"]]))
 
         # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
-                                                       output_geolayer_id, None))
+                                                           output_geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -288,18 +293,23 @@ class IntersectGeoLayer(AbstractCommand):
         else:
             return True
 
-    def __single_feature_and_attribute_method(self, input_geolayer, pv_OutputGeoLayerID, intersect_geolayer_copy):
-        """This is an under-construction intersection method designed by Open Water Foundation Emma Giles. It is not
-         in use within the command yet because its implementation is under discussion. This intersect method will not
-         clip input features that overlap multiple intersect features. Note that in the QGIS_method, the input features
-         that overlap the intersect features are clipped. With the "single feature single attribute method" the
-         attribute values of the output features that were overlapping multiple intersect features are a combination
+    # noinspection PyPep8Naming
+    def __single_feature_and_attribute_method(self, input_geolayer: VectorGeoLayer,
+                                              pv_OutputGeoLayerID: str,
+                                              intersect_geolayer_copy: VectorGeoLayer) -> None:
+        """
+        This is an under-construction intersection method designed by Open Water Foundation Emma Giles. It is not
+        in use within the command yet because its implementation is under discussion. This intersect method will not
+        clip input features that overlap multiple intersect features. Note that in the qgis_method, the input features
+        that overlap the intersect features are clipped. With the "single feature single attribute method" the
+        attribute values of the output features that were overlapping multiple intersect features are a combination
         of the overlapping intersect features.
 
         For example, an input line feature overlaps two polygon features. The intersect polygon layer has a string
         attribute called "Name". The first overlapping intersect polygon has the "Name" attribute value of "Hill" and
         the other has the name attribute value of "Moon". The "Name" attribute field in the output intersected line
-        layer would be "Hill, Moon". For integer values, a summary statistic of mean, min, max or sum can be applied."""
+        layer would be "Hill, Moon". For integer values, a summary statistic of mean, min, max or sum can be applied.
+        """
 
         # Command variables
         within_target_feats = {}
@@ -377,6 +387,7 @@ class IntersectGeoLayer(AbstractCommand):
             # Add the intersect layer's attribute to add to the target layer (if it does not already exist).
             if field.name() not in existing_target_layer_attrs:
                 # Add the new attributes to the target layer.
+                # noinspection PyPep8Naming
                 typeName_attrType_dic = {"Integer": "int", "String": "string"}
                 qgis_util.add_qgsvectorlayer_attribute(target_layer, field.name(),
                                                        typeName_attrType_dic[field.typeName()])
@@ -399,6 +410,8 @@ class IntersectGeoLayer(AbstractCommand):
             for target_feat, intersect_feats in intersecting_target_feats.items():
 
                 list_of_intersect_attr_values = []
+
+                intersect_feat_value_updated = None
 
                 # Iterate over the intersection features and add the attribute values to the
                 # list_of_intersect_attr_values.
@@ -446,25 +459,30 @@ class IntersectGeoLayer(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_IntersectGeoLayerID = self.get_parameter_value("IntersectGeoLayerID")
+        # noinspection PyPep8Naming
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID", default_value="{}_intersectedBy_{}".format(
             pv_GeoLayerID, pv_IntersectGeoLayerID))
+        # noinspection PyPep8Naming
         pv_IncludeIntersectAttributes = self.get_parameter_value("IncludeIntersectAttributes", default_value="*")
+        # noinspection PyPep8Naming
         pv_ExcludeIntersectAttributes = self.get_parameter_value("ExcludeIntersectAttributes", default_value="''")
 
         # Set the method used for the command. The IntersectGeoLayer methodology can be completed in many different
         # ways. Currently there are two designs:
-        #   1. QGIS_method: use "qgis: intersect" algorithm where input features that overlap multiple
+        #   1. qgis_method: use "qgis: intersect" algorithm where input features that overlap multiple
         #   intersecting features, are clipped.
-        #   2. OWF_method: owf-design in progress where input features that overlap multiple
+        #   2. owf_method: owf-design in progress where input features that overlap multiple
         #   intersecting features retain their geometry but the output attribute is a combination of the attributes of
         #   the overlapping intersect features
         # Because the second method is not complete and is still in debate at OWF, the code is memorialized under the
         # __single_feature_and_attribute_method function. The function is never called and the QGIS_method is always
         # used (until further notice).
-        QGIS_method = True
-        OWF_method = False
+        qgis_method = True
+        owf_method = False
 
         # Convert the IncludeIntersectAttributes and ExcludeIntersectAttributes to lists.
         attrs_to_include = string_util.delimited_string_to_list(pv_IncludeIntersectAttributes)
@@ -473,6 +491,7 @@ class IntersectGeoLayer(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_intersect_geolayer(pv_GeoLayerID, pv_IntersectGeoLayerID, pv_OutputGeoLayerID):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the Input GeoLayer and the Intersect GeoLayer.
@@ -512,7 +531,7 @@ class IntersectGeoLayer(AbstractCommand):
                     self.command_processor.add_geolayer(intersect_geolayer_copy)
 
                 # If using QGIS version of intersect. Set to TRUE always until later notice.
-                if QGIS_method:
+                if qgis_method:
 
                     # Perform the QGIS intersection function. Refer to the reference below for parameter descriptions.
                     # REF: https://docs.qgis.org/2.18/en/docs/user_manual/processing_algs/qgis/
@@ -531,9 +550,10 @@ class IntersectGeoLayer(AbstractCommand):
                                                   geolayer_source_path="MEMORY")
                     self.command_processor.add_geolayer(new_geolayer)
 
-                # If using OWF version of intersect. Set to FALSE always until later notice.
-                elif OWF_method:
+                elif owf_method:
+                    # If using OWF version of intersect. Set to FALSE always until later notice.
 
+                    # TODO smalers 2020-01-16 argument types below are not consistent with method
                     self.__single_feature_and_attribute_method(pv_GeoLayerID, pv_IntersectGeoLayerID,
                                                                pv_OutputGeoLayerID)
 
@@ -542,8 +562,8 @@ class IntersectGeoLayer(AbstractCommand):
                 del self.command_processor.geolayers[index]
                 del intersect_geolayer_copy
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error intersecting GeoLayer {} with GeoLayer {}.".format(
                     pv_GeoLayerID, pv_IntersectGeoLayerID)

@@ -84,6 +84,7 @@ class RunSql(AbstractCommand):
         warning = ""
 
         # Check that the DataStoreID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID", command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_DataStoreID, False, False):
@@ -113,6 +114,7 @@ class RunSql(AbstractCommand):
         # TEMPORARY CHECK: Check that the DataStoreProcedure method is not being used. Currently disabled until future
         # development. Once developed, this check can be removed.
         else:
+            # noinspection PyPep8Naming
             pv_DataStoreProcedure = self.get_parameter_value(parameter_name="DataStoreProcedure",
                                                              command_parameters=command_parameters)
 
@@ -150,11 +152,11 @@ class RunSql(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
-                                                       "FAIL"))
+                                                           "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -173,22 +175,30 @@ class RunSql(AbstractCommand):
         """
 
         # Obtain the parameter values. The DatabasePort parameter value will be obtained later in the code.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value("DataStoreID")
+        # noinspection PyPep8Naming
         pv_Sql = self.get_parameter_value("Sql")
+        # noinspection PyPep8Naming
         pv_SqlFile = self.get_parameter_value("SqlFile")
-        pv_DataStoreProcedure = self.get_parameter_value("DataStoreProcedure")
+        # TODO smalers 2020-01-15 need to enable procedures similar to Java
+        # noinspection PyPep8Naming
+        # pv_DataStoreProcedure = self.get_parameter_value("DataStoreProcedure")
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
+        # noinspection PyPep8Naming
         pv_Sql = self.command_processor.expand_parameter_value(pv_Sql, self)
         if pv_SqlFile:
+            # noinspection PyPep8Naming
             pv_SqlFile = io_util.verify_path_for_os(io_util.to_absolute_path(
-            self.command_processor.get_property('WorkingDir'),
-            self.command_processor.expand_parameter_value(pv_SqlFile, self)))
+                                                    self.command_processor.get_property('WorkingDir'),
+                                                    self.command_processor.expand_parameter_value(pv_SqlFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_run_sql(pv_DataStoreID):
-
+            # noinspection PyBroadException
             try:
 
                 # Get the DataStore object

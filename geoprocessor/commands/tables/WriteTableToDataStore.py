@@ -199,10 +199,11 @@ class WriteTableToDataStore(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter WriteMode is one of the acceptable values or is None.
+        # noinspection PyPep8Naming
         pv_WriteMode = self.get_parameter_value(parameter_name="WriteMode",
                                                 command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_WriteMode, self.__choices_WriteMode, none_allowed=False,
-                                                  empty_string_allowed=False, ignore_case=True):
+                                                      empty_string_allowed=False, ignore_case=True):
             message = "WriteMode parameter value ({}) is not recognized.".format(pv_WriteMode)
             recommendation = "Specify one of the acceptable values ({}) for the WriteMode parameter.".format(
                 self.__choices_WriteMode)
@@ -358,11 +359,11 @@ class WriteTableToDataStore(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsDataStoreIdExisting", "DataStoreID", datastore_id,
-                                                       "FAIL"))
+                                                           "FAIL"))
 
         # Only run the following check if the previous check passed.
         if False not in should_run_command:
@@ -371,15 +372,15 @@ class WriteTableToDataStore(AbstractCommand):
 
                 # If the DataStoreTable is not a table within the DataStore, raise a FAILURE.
                 should_run_command.append(validator_util.run_check(self, "IsTableInDataStore", "DataStoreTable",
-                                                               datastore_table_name, "FAIL",
-                                                               other_values=[datastore_id]))
+                                                                   datastore_table_name, "FAIL",
+                                                                   other_values=[datastore_id]))
 
             if writemode.upper().startswith("NEW"):
 
                 # If the DataStoreTable is a table within the DataStore, raise a FAILURE.
                 should_run_command.append(validator_util.run_check(self, "IsDataStoreTableUnique", "DataStoreTable",
-                                                               datastore_table_name, "FAIL",
-                                                               other_values=[datastore_id]))
+                                                                   datastore_table_name, "FAIL",
+                                                                   other_values=[datastore_id]))
 
         # If the Table ID is not an existing Table ID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
@@ -435,8 +436,8 @@ class WriteTableToDataStore(AbstractCommand):
             recommendation = "Specify valid DataStore columns to edit."
 
             self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
-                                                                                    message, recommendation))
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             should_run_command.append(False)
 
         # Return the Boolean to determine if the process should be run.
@@ -457,18 +458,29 @@ class WriteTableToDataStore(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value("TableID")
+        # noinspection PyPep8Naming
         pv_IncludeColumns = self.get_parameter_value("IncludeColumns", default_value="*")
+        # noinspection PyPep8Naming
         pv_ExcludeColumns = self.get_parameter_value("ExcludeColumns", default_value="''")
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value("DataStoreID")
+        # noinspection PyPep8Naming
         pv_DataStoreTable = self.get_parameter_value("DataStoreTable")
+        # noinspection PyPep8Naming
         pv_ColumnMap = self.get_parameter_value("ColumnMap", default_value="")
-        pv_DataStoreRelatedColumnsMap = self.get_parameter_value("DataStoreRelatedColumnsMap")
+        # noinspection PyPep8Naming
+        # pv_DataStoreRelatedColumnsMap = self.get_parameter_value("DataStoreRelatedColumnsMap")
+        # noinspection PyPep8Naming
         pv_WriteMode = self.get_parameter_value("WriteMode").upper()
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_TableID = self.command_processor.expand_parameter_value(pv_TableID, self)
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.command_processor.expand_parameter_value(pv_DataStoreID, self)
+        # noinspection PyPep8Naming
         pv_DataStoreTable = self.command_processor.expand_parameter_value(pv_DataStoreTable, self)
 
         # Run the checks on the parameter values. Only continue if the checks pass.
@@ -493,6 +505,7 @@ class WriteTableToDataStore(AbstractCommand):
             if self.__should_write_table2(datastore_obj, pv_DataStoreTable, datastore_table_cols_to_receive,
                                           pv_WriteMode):
 
+                # noinspection PyBroadException
                 try:
 
                     # Get the list of the columns in the Table that are NOT configured to write.

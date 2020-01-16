@@ -17,41 +17,47 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-from PyQt5 import QtCore
-from PyQt5 import QtGui
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 
 import geoprocessor.ui.util.qt_util as qt_util
 
-import functools
-import webbrowser
-
 
 class TabbedCommandEditor(AbstractCommandEditor):
+    """
+    Tabbed command editor interface, used for commands with many parameters or when parameters need to be grouped.
+
+    **This editor is not currently functional and is not used by any commands.**
+    """
 
     def __init__(self, command) -> None:
         """
-        Initialize the Abstract Dialog instance.
+        Initialize the TabbedCommandEditor dialog instance.
 
         Args:
-            command_name (str): the name of the GeoProcessor command that the Dialog box is representing
-            command_description (str): the description of the GeoProcessor command that the Dialog box is representing
-            parameter_count (int): the number of command parameters of the GeoProcessor command that the Dialog box is
-                representing
-            command_parameters (list): a list of string representing the command parameter names (in order) of the
-                GeoProcessor command that the Dialog box is representing
-            current_values (dic):  a dictionary that holds the command parameters and their current values
-                Key: the name of the command parameter
-                Value: the entered value of the command parameter
         """
+        # TODO smalers 2020-01-16 need to figure out what this is
+        # command_name (str): the name of the GeoProcessor command that the Dialog box is representing
+        # command_description (str): the description of the GeoProcessor command that the Dialog box is representing
+        # parameter_count (int): the number of command parameters of the GeoProcessor command that the Dialog box is
+        #     representing
+        # command_parameters (list): a list of string representing the command parameter names (in order) of the
+        #     GeoProcessor command that the Dialog box is representing
+        # current_values (dic):  a dictionary that holds the command parameters and their current values
+        #     Key: the name of the command parameter
+        #     Value: the entered value of the command parameter
         super().__init__(command)
 
         # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
         # #self.command_name = command_name
 
+        # TODO smales 2020-01-16 evaluate standardizing the buttons
+        # NOT defined in AbstractCommandEditor - local to this class
+        # UI components at the top of the dialog
         # "command_description" is the description of the GeoProcessor command that the Dialog box is representing
         # #self.command_description = command_description
+        self.Command_Description: QtWidgets.QFrame or None = None
+        self.gridLayout: QtWidgets.QGridLayout or None = None
 
         # "parameter_count" is the number of command parameters of the GeoProcessor command that the Dialog box is
         # representing
@@ -61,6 +67,12 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # GeoProcessor command that the Dialog box is representing
         # #self.parameters_list = command_parameters
 
+        # TODO smales 2020-01-16 evaluate standardizing the buttons
+        # NOT defined in AbstractCommandEditor - local to this class
+        # Buttons at the bottom of the dialog
+        self.OK_Cancel_Buttons: QtWidgets.QDialogButtonBox or None = None
+
+        # Defined in AbstractCommandEditor
         # "input_edit_objects" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
         # KEY (str): the command parameter name
@@ -73,7 +85,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # #self.command_parameter_current_values = current_values
 
     # TODO smalers 2020-01-14 evaluate whether this function is ever called - is it needed?
-    def are_required_parameters_specified(self, ui_command_parameter_list: []) -> None:
+    def are_required_parameters_specified(self, ui_command_parameter_list: []) -> bool:
         """
         Checks if the required parameters of a command are specified by the user in the command dialog window.
 
@@ -114,6 +126,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
         # value when one works.
         # Reads LineEdit widgets.
+        # noinspection PyBroadException
         try:
             value = obj.text()
 
@@ -124,7 +137,8 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # Return the value within the input QtGui.Widget object.
         return value
 
-    def setup_ui_abstract(self, Dialog: QtGui.QDialog) -> None:
+    # noinspection PyPep8Naming
+    def setup_ui_abstract(self, Dialog: QtWidgets.QDialog) -> None:
         """
         Sets up a Dialog object with the features that are common across all GeoProcessor command dialog windows.
 
@@ -156,12 +170,12 @@ class TabbedCommandEditor(AbstractCommandEditor):
 
         # Create a grid layout object. Apply to the Command_Description frame object.
         # Set the name of the grid layout object.
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.Command_Description)
-        self.gridLayout_2.setObjectName(qt_util.from_utf8("gridLayout_2"))
+        grid_layout_2 = QtWidgets.QGridLayout(self.Command_Description)
+        grid_layout_2.setObjectName(qt_util.from_utf8("grid_layout_2"))
 
         # Create a spacer. Add the spacer to the Command_Description frame object.
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout_2.addItem(spacerItem, 2, 0, 1, 1)
+        spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        grid_layout_2.addItem(spacer_item, 2, 0, 1, 1)
 
         # Create a push button. Add the button to the Command_Description frame object.
         # Set the name, the button text and the connection of the push button.
@@ -170,7 +184,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.View_Documentation_Button.setObjectName(qt_util.from_utf8("View_Documentation_Button"))
         self.View_Documentation_Button.setText(qt_util.translate("Dialog", "  View Documentation  ", None))
         self.View_Documentation_Button.clicked.connect(self.view_documentation)
-        self.gridLayout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
+        grid_layout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
 
         # Create a label. Add the label to the Command_Description frame object.
         # Set the name and the text of the label.
@@ -178,17 +192,17 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.Command_Description_Label = QtWidgets.QLabel(self.Command_Description)
         self.Command_Description_Label.setObjectName(qt_util.from_utf8("Command_Description_Label"))
         self.Command_Description_Label.setText(qt_util.translate("Dialog", self.command_description, None))
-        self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
+        grid_layout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
         # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
         # The frame object, Separator, separates the command description from the input form section of the Dialog box.
         self.Separator = QtWidgets.QFrame(Dialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
-        self.Separator.setSizePolicy(sizePolicy)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
+        self.Separator.setSizePolicy(size_policy)
         self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.Separator.setObjectName(qt_util.from_utf8("Separator"))
@@ -199,7 +213,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
         self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(Dialog)
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
-        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.OK_Cancel_Buttons.setObjectName(qt_util.from_utf8("OK_Cancel_Buttons"))
         self.OK_Cancel_Buttons.accepted.connect(Dialog.accept)
         self.OK_Cancel_Buttons.rejected.connect(Dialog.reject)
@@ -225,15 +239,15 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # Set the alignment, the name, and the text of the label.
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
         self.CommandDisplay_Label = QtWidgets.QLabel(Dialog)
-        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(qt_util.from_utf8("CommandDisplay_Label"))
         self.CommandDisplay_Label.setText(qt_util.translate("Dialog", "Command: ", None))
         self.gridLayout.addWidget(self.CommandDisplay_Label, self.parameter_count + 3, 0, 1, 1)
 
         # Create a spacer. Add the spacer to the Dialog window.
         # The spacer separates the input parameter value fields from the Command Display text browser.
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem2, self.parameter_count + 2, 3, 1, -1)
+        spacer_item2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacer_item2, self.parameter_count + 2, 3, 1, -1)
 
         # This will wire up the signals and slots depending on names.
         # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html

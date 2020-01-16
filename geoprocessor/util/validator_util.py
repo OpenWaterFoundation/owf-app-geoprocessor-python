@@ -40,7 +40,7 @@ import geoprocessor.util.zip_util as zip_util
 from urllib.request import urlopen
 
 
-def run_check(self, condition: str, parameter_name: str, parameter_value: str, fail_response: str,
+def run_check(self, condition: str, parameter_name: str, parameter_value: str or int, fail_response: str or None,
               other_values: [object] = None) -> bool:
     """
     The run_check utility function is used to store all of the checks done within the command classes. There are
@@ -176,6 +176,7 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str, f
         if self.command_processor.get_geolayer(parameter_value):
             check_failed = True
 
+            # noinspection PyPep8Naming
             pv_IfDataStoreIDExists = self.get_parameter_value("IfDataStoreIDExists", default_value="Replace")
 
             if pv_IfDataStoreIDExists.upper() == "REPLACEANDWARN":
@@ -299,6 +300,7 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str, f
 
         if self.command_processor.get_geolayer(parameter_value):
             check_failed = True
+            # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
             if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
@@ -342,6 +344,7 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str, f
 
         if self.command_processor.get_property(parameter_value):
             check_failed = True
+            # noinspection PyPep8Naming
             pv_IfPropertyExists = self.get_parameter_value("IfPropertyExists", default_value="Replace")
 
             if pv_IfPropertyExists.upper() == "REPLACEANDWARN":
@@ -394,6 +397,7 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str, f
         if self.command_processor.get_table(parameter_value):
 
             check_failed = True
+            # noinspection PyPep8Naming
             pv_IfTableIDExists = self.get_parameter_value("IfTableIDExists", default_value="Replace")
 
             if pv_IfTableIDExists.upper() == "REPLACEANDWARN":
@@ -433,6 +437,7 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str, f
         message = "{} ({}) is not a valid URL.".format(parameter_name, parameter_value)
         recommendation = "Specify a valid URL for {}.".format(parameter_name)
 
+        # noinspection PyBroadException
         try:
             urlopen(parameter_value)
         except Exception:
@@ -455,6 +460,7 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str, f
         fail_response = "FAIL"
 
     # If the check failed, increase the warning count of the command instance by one.
+    run_the_command = None
     if check_failed:
         self.warning_count += 1
 
@@ -491,7 +497,7 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str, f
     return run_the_command
 
 
-def validate_bool(bool_value: bool, none_allowed: bool, empty_string_allowed: bool) -> bool:
+def validate_bool(bool_value: bool or str, none_allowed: bool, empty_string_allowed: bool) -> bool:
     """
     Validate that a boolean value is True or False.
 
@@ -528,7 +534,7 @@ def validate_bool(bool_value: bool, none_allowed: bool, empty_string_allowed: bo
     return True
 
 
-def validate_float(float_value: float, none_allowed: bool, empty_string_allowed: bool) -> bool:
+def validate_float(float_value: float or str, none_allowed: bool, empty_string_allowed: bool) -> bool:
     """
     Validate that a floating point value is valid.
 
@@ -563,7 +569,7 @@ def validate_float(float_value: float, none_allowed: bool, empty_string_allowed:
     return True
 
 
-def validate_int(int_value: int, none_allowed: bool, empty_string_allowed: bool) -> bool:
+def validate_int(int_value: str or int, none_allowed: bool, empty_string_allowed: bool) -> bool:
     """
     Validate that an integer value is valid.
 

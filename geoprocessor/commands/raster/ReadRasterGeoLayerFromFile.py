@@ -139,6 +139,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
         # Check that parameter SpatialDataFile is a non-empty, non-None string.
         # - existence of the file will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_SpatialDataFile = self.get_parameter_value(parameter_name='SpatialDataFile',
                                                       command_parameters=command_parameters)
 
@@ -152,10 +153,11 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is one of the acceptable values or is None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, self.__choices_IfGeoLayerIDExists,
-                                                  none_allowed=True, empty_string_allowed=True, ignore_case=True):
+                                                      none_allowed=True, empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 self.__choices_IfGeoLayerIDExists)
@@ -211,6 +213,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         elif self.command_processor.get_geolayer(geolayer_id):
 
             # Get the IfGeoLayerIDExists parameter value.
+            # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
             # Warnings/recommendations if the GeolayerID is the same as a registered GeoLayerID.
@@ -261,10 +264,13 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_SpatialDataFile = self.get_parameter_value("SpatialDataFile")
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
 
         # Convert the SpatialDataFile parameter value relative path to an absolute path and expand for ${Property}
@@ -275,11 +281,12 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
         if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
+            # noinspection PyPep8Naming
             pv_GeoLayerID = io_util.expand_formatter(spatial_data_file_absolute, pv_GeoLayerID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_read_geolayer(spatial_data_file_absolute, pv_GeoLayerID):
-
+            # noinspection PyBroadException
             try:
 
                 # Create a QGSRasterLayer object with the SpatialDataFile in raster format
@@ -295,8 +302,8 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
             except Exception:
 
                 self.warning_count += 1
-                message = "Unexpected error reading RasterGeoLayer {} from raster file {}.".format(pv_GeoLayerID,
-                                                                                            pv_SpatialDataFile)
+                message = "Unexpected error reading RasterGeoLayer {} from raster file {}.".format(
+                    pv_GeoLayerID, pv_SpatialDataFile)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,

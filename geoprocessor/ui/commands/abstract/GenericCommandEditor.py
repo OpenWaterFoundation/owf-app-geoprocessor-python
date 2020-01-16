@@ -17,12 +17,12 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 
-from geoprocessor.core import CommandParameterMetadata
+# from geoprocessor.core import CommandParameterMetadata
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
-from geoprocessor.ui.util.CommandParameter import CommandParameter
+# from geoprocessor.ui.util.CommandParameter import CommandParameter
 
 import geoprocessor.ui.util.qt_util as qt_util
 
@@ -32,6 +32,7 @@ import logging
 class GenericCommandEditor(AbstractCommandEditor):
     """
     Command editor with general interface, which will provide text fields for each property.
+    This editor is used when no other editor has been specified for the command, and when the command is not recognized.
     """
 
     def __init__(self, command: AbstractCommand) -> None:
@@ -45,33 +46,45 @@ class GenericCommandEditor(AbstractCommandEditor):
         # - this will do basic setup of the dialog
         super().__init__(command)
 
-        # Keep track of command object
-        self.command = command
-
+        # NOT defined in AbstractCommandEditor - local to this class
         # Turn localized debug on/off, useful for development
         # - should be False for production release
         # - this causes logger.info messages to be printed
         # - later can convert to logger.debug if still needed
         self.debug = True
 
+        # NOT defined in AbstractCommandEditor - local to this class
         # Indicate if an error status is currently in effect, due to invalid parameters
         # - will be set in check_input() and is checked in ui_action_ok_clicked()
         self.error_wait = False
 
+        # NOT defined in AbstractCommandEditor - local to this class
         # Indicate whether first time refresh_ui is called
         # - the first time the UI components may be initialized from data
         self.first_refresh_ui = True
 
+        # Defined in AbstractCommandEditor
         # "input_ui_components" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
         # KEY (str): the command parameter name
         # VALUE (obj): the associated Qt Widget input component
         self.input_ui_components = {}
 
+        # NOT defined in AbstractCommandEditor - local to this class
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
         # self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
         self.parameter_LineEdit = dict()
 
+        # Defined in AbstractCommandEditor
+        # The row position in the self.parameter_QGridLayout, used in setup_ui() and its helper functions.
+        self.y_parameter = -1
+
+        # UI components
+        # Defined in AbstractCommandEditor
+        # self.parameter_QFrame: QtWidgets.QFrame or None = None
+        # self.parameter_QGridLayout: QtWidgets.QGridLayout or None = None
+
+        # NOT defined in AbstractCommandEditor - local to this class
         # Create variable to know if we are updating an existing command
         # or inserting a new command into the command list
         self.update = False
@@ -79,9 +92,6 @@ class GenericCommandEditor(AbstractCommandEditor):
         # we know that we are updating an existing command
         if command.command_parameters:
             self.update = True
-
-        # The row position in the self.parameter_QGridLayout, used in setup_ui() and its helper functions.
-        self.y_parameter = -1
 
         # Setup the UI in the abstract class, which will call back to set_ui() in this class.
         self.setup_ui_core()
@@ -161,7 +171,7 @@ class GenericCommandEditor(AbstractCommandEditor):
                         logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
                                        parameter_name + "' - code problem.")
                         continue
-                except KeyError as e:
+                except KeyError:
                     # Should not happen because all parameters should have at least a text field.
                     message = "No input component for parameter '" + parameter_name + "' - code problem."
                     logger.warning(message, exc_info=True)
@@ -175,13 +185,14 @@ class GenericCommandEditor(AbstractCommandEditor):
         #   and use to update the command string
 
         # Loop through the command parameter metadata and retrieve the values from editor components
+        # noinspection PyBroadException
         try:
             # Add all parameters to a temporary dictionary
             parameters_from_ui = dict()
             for command_parameter_metadata in self.command.command_parameter_metadata:
                 # Parameters listed in logical order such as input / analysis / output
                 parameter_name = command_parameter_metadata.parameter_name
-                parameter_value = None
+                # parameter_value = None
                 try:
                     # Get the UI input component for the parameter
                     parameter_ui = self.input_ui_components[parameter_name]
@@ -195,14 +206,14 @@ class GenericCommandEditor(AbstractCommandEditor):
                     else:
                         # Should not happen
                         logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
-                                        parameter_name + "' - code problem.")
+                                       parameter_name + "' - code problem.")
                         continue
                     # If here a parameter value was determined
                     # - TODO smalers 2019-01-19 need to be a bit careful with empty string values
                     #        such as checking the parameter's default value
                     if parameter_value is not None and parameter_value != "":
                         parameters_from_ui[parameter_name] = parameter_value
-                except KeyError as e:
+                except KeyError:
                     # Should not happen because all parameters should have at least a text field.
                     message = "No input component for parameter '" + parameter_name + "' - code problem."
                     logger.warning(message, exc_info=True)
@@ -212,7 +223,7 @@ class GenericCommandEditor(AbstractCommandEditor):
             # - this does not change the command string in the command instance
             command_string = self.command.to_string(parameters_from_ui)
             self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
-        except Exception as e:
+        except Exception:
             message = "Error refreshing command from parameters"
             logger = logging.getLogger(__name__)
             logger.warning(message, exc_info=True)
@@ -286,6 +297,7 @@ class GenericCommandEditor(AbstractCommandEditor):
             # ---------------
             # Label component, consistent for all input component types
             # ---------------
+            # noinspection PyPep8Naming
             parameter_Label = parameter_name
             self.setup_ui_parameter_label(parameter_name, parameter_Label)
 
@@ -296,12 +308,15 @@ class GenericCommandEditor(AbstractCommandEditor):
             # LineEdit (text field)
             # - default if properties don't indicate any other component
             # --------------------
+            # noinspection PyPep8Naming
             parameter_Tooltip = None
             try:
+                # noinspection PyPep8Naming
                 parameter_Tooltip = command_parameter_metadata.editor_tooltip
             except KeyError:
                 # Default is an empty string
                 # - components should check for None or empty string and not set tooltip in this case
+                # noinspection PyPep8Naming
                 parameter_Tooltip = ""
             self.setup_ui_parameter_text_field(parameter_name, parameter_Tooltip)
 
@@ -334,6 +349,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         if self.debug:
             logger = logging.getLogger(__name__)
             logger.info("For parameter '" + parameter_name + "', adding description")
+        # noinspection PyPep8Naming
         parameter_desc_Label = QtWidgets.QLabel(self.parameter_QFrame)
         parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
         parameter_desc_Label.setText(parameter_desc)

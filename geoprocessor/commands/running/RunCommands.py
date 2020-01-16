@@ -111,6 +111,7 @@ class RunCommands(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # CommandFile is required
+        # noinspection PyPep8Naming
         pv_CommandFile = self.get_parameter_value(parameter_name='CommandFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_CommandFile, False, False):
             message = "The CommandFile must be specified."
@@ -121,10 +122,11 @@ class RunCommands(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # ExpectedStatus is optional, will default to Success at runtime
+        # noinspection PyPep8Naming
         pv_ExpectedStatus = self.get_parameter_value(parameter_name='ExpectedStatus',
                                                      command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_ExpectedStatus,
-                                                  self.__choices_ExpectedStatus, True, True):
+                                                      self.__choices_ExpectedStatus, True, True):
             message = "ExpectedStatus parameter is invalid."
             recommendation = "Specify the ExpectedStatus parameter as blank or one of " + \
                              str(self.__choices_ExpectedStatus)
@@ -164,14 +166,18 @@ class RunCommands(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get data for the command
+        # noinspection PyPep8Naming
         pv_CommandFile = self.get_parameter_value('CommandFile')
+        # noinspection PyPep8Naming
         pv_ExpectedStatus = self.get_parameter_value('ExpectedStatus')
-        expected_status = pv_ExpectedStatus
+        # expected_status = pv_ExpectedStatus
         if pv_ExpectedStatus == "":
+            # noinspection PyPep8Naming
             pv_ExpectedStatus = None  # Default - was not specified in the command
 
         # Runtime checks on input
 
+        # noinspection PyPep8Naming
         pv_CommandFile_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_CommandFile, self)))
@@ -183,6 +189,7 @@ class RunCommands(AbstractCommand):
 
         # Write the output file
 
+        # noinspection PyBroadException
         try:
             command_file_absolute = io_util.verify_path_for_os(
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
@@ -220,7 +227,7 @@ class RunCommands(AbstractCommand):
                         CommandStatusType.FAILURE, "Command file does not exist.",
                         "Confirm that the command file exists."))
                 # Set the results to fail
-                test_pass_fail = self.__FAIL
+                # test_pass_fail = self.__FAIL
             elif is_enabled:
                 # TODO smalers, 2018-01-26 Java code set datastores here
                 # TODO SAM 2010-09-30 Need to evaluate how to share properties - issue is that built-in properties are
@@ -236,7 +243,7 @@ class RunCommands(AbstractCommand):
                 # commands file that was just run.
                 max_severity = command_util.get_command_status_max_severity(runner.command_processor)
                 logger.info("Max severity from commands = " + str(max_severity))
-                test_pass_fail = "????"  # Status for the test, which is not always the same as max_severity
+                # test_pass_fail = "????"  # Status for the test, which is not always the same as max_severity
                 if pv_ExpectedStatus is not None:
                     expected_status_type = CommandStatusType.value_of(expected_status)
                     if max_severity is expected_status_type:

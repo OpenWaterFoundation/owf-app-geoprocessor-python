@@ -17,8 +17,8 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-class Table(object):
 
+class Table(object):
     """
     The Table class holds tabular data objects (columns and rows). The core data is stored in a pandas data frame
     object in order to leverage the pandas library and functionality. Additional data members are used to store data
@@ -104,7 +104,6 @@ class Table(object):
         # Return a list of the column names.
         return list(self.df)
 
-
     def get_column_values_as_list(self, column_name):
         """
         Return all of the column values for a given column.
@@ -118,20 +117,20 @@ class Table(object):
         # Return a list of the column values for the given input column.
         return self.df[column_name].tolist()
 
-    def count(self, returnCol=True):
+    def count(self, return_col=True):
         """
         Return either the number of columns within the table or the number of rows within the table.
 
         Args:
-            returnCol: Boolean. If TRUE, returns column count. If FALSE, returns row count.
+            return_col: Boolean. If TRUE, returns column count. If FALSE, returns row count.
 
         Return: The column or row count (int). Returns None if returnCol argument is invalid Boolean.
         """
 
         row, col = self.df.shape
-        if returnCol:
+        if return_col:
             return col
-        elif returnCol is False:
+        elif return_col is False:
             return row
         else:
             return None

@@ -202,6 +202,7 @@ class For(AbstractCommand):
         option_count = 0  # How many iteration options are specified (should only be 1)
 
         # Name is required
+        # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value(parameter_name='Name', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_Name, False, False):
             message = "A name for the For block must be specified"
@@ -214,6 +215,7 @@ class For(AbstractCommand):
         # --------------------------------
         # Iterator option 1 - use a sequence
         # SequenceStart is currently required since no other iteration types are implemented
+        # noinspection PyPep8Naming
         pv_SequenceStart = self.get_parameter_value(
             parameter_name='SequenceStart', command_parameters=command_parameters)
         if pv_SequenceStart is not None and pv_SequenceStart != "":
@@ -236,6 +238,7 @@ class For(AbstractCommand):
 
             # The other sequence parameters only make sense if the start is specified
             # SequenceEnd is currently required since no other iteration types are implemented
+            # noinspection PyPep8Naming
             pv_SequenceEnd = self.get_parameter_value(parameter_name='SequenceEnd',
                                                       command_parameters=command_parameters)
             if not validator_util.validate_number(pv_SequenceEnd, False, False):
@@ -254,6 +257,7 @@ class For(AbstractCommand):
                     self.iterator_sequence_end = int(pv_SequenceEnd)
 
             # SequenceIncrement is currently required since no other iteration types are implemented
+            # noinspection PyPep8Naming
             pv_SequenceIncrement = self.get_parameter_value(
                 parameter_name='SequenceIncrement', command_parameters=command_parameters)
             if not validator_util.validate_number(pv_SequenceIncrement, False, False):
@@ -273,6 +277,7 @@ class For(AbstractCommand):
 
         # --------------------------------
         # Iterator option 2 - use a processor property that contains a list
+        # noinspection PyPep8Naming
         pv_ListProperty = self.get_parameter_value(parameter_name='ListProperty', command_parameters=command_parameters)
         if pv_ListProperty is not None and pv_ListProperty != "":
             self.iterator_is_list = True  # Will be checked below to make sure only one option is used
@@ -281,12 +286,14 @@ class For(AbstractCommand):
 
         # --------------------------------
         # Iterator option 3 - use a table
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
         if pv_TableID is not None and pv_TableID != "":
             self.iterator_is_table = True
             option_count += 1
 
             # TableColumn is required
+            # noinspection PyPep8Naming
             pv_TableColumn = self.get_parameter_value(parameter_name='TableColumn',
                                                       command_parameters=command_parameters)
             if not validator_util.validate_string(pv_TableColumn, False, False):
@@ -356,6 +363,7 @@ class For(AbstractCommand):
                 try:
                     # This would normally be done in run_command(), but that function is not called like other commands
                     self.iterator_object_list_index = 0
+                    # noinspection PyPep8Naming
                     pv_ListProperty = self.get_parameter_value('ListProperty')
                     self.iterator_list = self.command_processor.get_property(pv_ListProperty)
                     if self.iterator_list is None:
@@ -408,14 +416,19 @@ class For(AbstractCommand):
                 self.command_status.clear_log(CommandPhaseType.RUN)
                 try:
                     # Get TableID parameter value. If required, expand for ${Property} syntax.
+                    # noinspection PyPep8Naming
                     pv_TableID = self.get_parameter_value(parameter_name='TableID')
+                    # noinspection PyPep8Naming
                     pv_TableID = self.command_processor.expand_parameter_value(pv_TableID, self)
                     # Get TableColumn parameter value. If required, expand for ${Property} syntax.
+                    # noinspection PyPep8Naming
                     pv_TableColumn = self.get_parameter_value(parameter_name='TableColumn')
+                    # noinspection PyPep8Naming
                     pv_TableColumn = self.command_processor.expand_parameter_value(pv_TableColumn, self)
                     # Get the table pandas data frame object
                     self.table = self.command_processor.get_table(pv_TableID)
                     # Get the TablePropertyMap
+                    # noinspection PyPep8Naming
                     pv_TablePropertyMap = self.get_parameter_value(parameter_name='TablePropertyMap')
                     # Assign as class variable after converting from string to dictionary
                     self.table_property_map =\
@@ -521,15 +534,19 @@ class For(AbstractCommand):
         """
         logger = logging.getLogger(__name__)
         logger.info("In For.run_command")
+        # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value('Name')
+        # noinspection PyPep8Naming
         pv_IteratorProperty = self.get_parameter_value('IteratorProperty')
         if pv_IteratorProperty is None or pv_IteratorProperty == "":
             # Default to same as Name
+            # noinspection PyPep8Naming
             pv_IteratorProperty = pv_Name
         self.iterator_property = pv_IteratorProperty
         # -------------------------------------------------------------------------------
         # Properties used when iterating over a sequence of integers or decimal numbers
         # -------------------------------------------------------------------------------
+        # noinspection PyPep8Naming
         pv_SequenceStart = self.get_parameter_value('SequenceStart')
         if pv_SequenceStart is not None and pv_SequenceStart != "":
             if pv_SequenceStart.find(".") >= 0:
@@ -538,6 +555,7 @@ class For(AbstractCommand):
             else:
                 # Assume integer
                 self.iterator_sequence_start = int(pv_SequenceStart)
+            # noinspection PyPep8Naming
             pv_SequenceEnd = self.get_parameter_value('SequenceEnd')
             if pv_SequenceEnd.find(".") >= 0:
                 # Decimal
@@ -545,8 +563,10 @@ class For(AbstractCommand):
             else:
                 # Assume integer
                 self.iterator_sequence_end = int(pv_SequenceEnd)
+            # noinspection PyPep8Naming
             pv_SequenceIncrement = self.get_parameter_value('SequenceIncrement')
             if pv_SequenceIncrement is None or pv_SequenceIncrement == "":
+                # noinspection PyPep8Naming
                 pv_SequenceIncrement = "1"  # Default
             if pv_SequenceIncrement.find(".") >= 0:
                 # Decimal
@@ -561,6 +581,7 @@ class For(AbstractCommand):
         # Properties used when iterating over a list of values
         # - initially str is used in testing but may support list of numbers
         # -------------------------------------------------------------------------------
+        # noinspection PyPep8Naming
         pv_ListProperty = self.get_parameter_value('ListProperty')
         if pv_ListProperty is not None:
             # Iterating over a list, given by the property

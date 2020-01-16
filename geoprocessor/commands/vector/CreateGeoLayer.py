@@ -100,16 +100,16 @@ class CreateGeoLayer(AbstractCommand):
                 message = "{} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
                 warning += "\n" + message
-                self.command_status.add_to_log(
-                    CommandPhaseType.INITIALIZATION,
-                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that GeometryFormat parameter is either `BoundingBox`, `WKT` or `WKB`.
+        # noinspection PyPep8Naming
         pv_GeometryFormat = self.get_parameter_value(parameter_name="GeometryFormat",
                                                      command_parameters=command_parameters)
         acceptable_values = ["BoundingBox", "WKT", "WKB"]
         if not validator_util.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
-                                                  empty_string_allowed=False, ignore_case=True):
+                                                      empty_string_allowed=False, ignore_case=True):
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
                 acceptable_values)
@@ -119,11 +119,12 @@ class CreateGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional IfGeoLayerIDExists param is either `Replace`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -165,7 +166,7 @@ class CreateGeoLayer(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
@@ -179,7 +180,7 @@ class CreateGeoLayer(AbstractCommand):
 
             # If the GeometryInput string does not contain 4 items when converted to a list, raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "IsListLengthCorrect", "GeometryInput",
-                                                           geometry_input, "FAIL", other_values=[",", 4]))
+                                                               geometry_input, "FAIL", other_values=[",", 4]))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -199,16 +200,23 @@ class CreateGeoLayer(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_GeometryFormat = self.get_parameter_value("GeometryFormat").upper()
+        # noinspection PyPep8Naming
         pv_GeometryInput = self.get_parameter_value("GeometryInput")
+        # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
 
         if self.__should_geolayer_be_created(pv_GeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryInput):
 
+            # noinspection PyBroadException
             try:
-
+                layer = None
+                qgs_geometry = None
                 # If the geometry format is bounding box, continue.
+                # noinspection PyPep8Naming
                 if pv_GeometryFormat == "BOUNDINGBOX":
 
                     # Convert the geometry input from a string to a list of strings.
@@ -217,12 +225,12 @@ class CreateGeoLayer(AbstractCommand):
                     #   2. Bottom (South) bound coordinate
                     #   3. Right (East) bound coordinate
                     #   4. Top (North) bound coordinate
-                    NSWE_extents = string_util.delimited_string_to_list(pv_GeometryInput)
-                    NW = "{} {}".format(NSWE_extents[0], NSWE_extents[3])
-                    NE = "{} {}".format(NSWE_extents[2], NSWE_extents[3])
-                    SE = "{} {}".format(NSWE_extents[2], NSWE_extents[1])
-                    SW = "{} {}".format(NSWE_extents[0], NSWE_extents[1])
-                    wkt_conversion = "POLYGON(({}, {}, {}, {}))".format(NW, NE, SE, SW)
+                    nswe_extents = string_util.delimited_string_to_list(pv_GeometryInput)
+                    nw = "{} {}".format(nswe_extents[0], nswe_extents[3])
+                    ne = "{} {}".format(nswe_extents[2], nswe_extents[3])
+                    se = "{} {}".format(nswe_extents[2], nswe_extents[1])
+                    sw = "{} {}".format(nswe_extents[0], nswe_extents[1])
+                    wkt_conversion = "POLYGON(({}, {}, {}, {}))".format(nw, ne, se, sw)
 
                     # Create the QgsVectorLayer. BoundingBox will always create a POLYGON layer.
                     layer = qgis_util.create_qgsvectorlayer("Polygon", pv_CRS, "layer")
@@ -268,8 +276,8 @@ class CreateGeoLayer(AbstractCommand):
                                               geolayer_source_path="MEMORY")
                 self.command_processor.add_geolayer(new_geolayer)
 
-            # Raise an exception if an unexpected error occurs during the process.
-            except Exception as e:
+            except Exception:
+                # Raise an exception if an unexpected error occurs during the process.
 
                 self.warning_count += 1
                 message = "Unexpected error creating GeoLayer ({}).".format(pv_GeoLayerID)

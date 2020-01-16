@@ -123,6 +123,7 @@ class WebGet(AbstractCommand):
 
         # Check that parameter URL is a non-empty, non-None string.
         # - existence of the url will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_URL = self.get_parameter_value(parameter_name='URL', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_URL, False, False):
@@ -136,6 +137,7 @@ class WebGet(AbstractCommand):
 
         # Check that parameter OutputFile is a non-empty string (can be None).
         # - existence of the folder will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_OutputFile, True, False):
@@ -159,7 +161,7 @@ class WebGet(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_run_webget(self, output_file_abs: str) -> None:
+    def __should_run_webget(self, output_file_abs: str) -> bool:
         """
        Checks the following:
        * the output folder is a valid folder
@@ -235,9 +237,13 @@ class WebGet(AbstractCommand):
         """
 
         # Obtain the parameter values
+        # noinspection PyPep8Naming
         pv_URL = self.get_parameter_value("URL")
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value("OutputFile", default_value=None)
+        # noinspection PyPep8Naming
         pv_Username = self.get_parameter_value("Username", default_value=None)
+        # noinspection PyPep8Naming
         pv_Password = self.get_parameter_value("Password", default_value=None)
 
         # Convert the pv_URL parameter to expand for ${Property} syntax.
@@ -260,6 +266,7 @@ class WebGet(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_run_webget(output_file_absolute):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the output folder.
@@ -307,7 +314,7 @@ class WebGet(AbstractCommand):
                                                         new_filename=output_filename)
 
             # Raise an exception if an unexpected error occurs during the process
-            except Exception as e:
+            except Exception:
 
                 self.warning_count += 1
                 message = "Unexpected error downloading file from URL {}.".format(url_abs)

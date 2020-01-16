@@ -110,6 +110,7 @@ class CopyFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # SourceFile is required
+        # noinspection PyPep8Naming
         pv_SourceFile = self.get_parameter_value(parameter_name='SourceFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_SourceFile, False, False):
             message = "The SourceFile must be specified."
@@ -120,6 +121,7 @@ class CopyFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # DestinationFile is required
+        # noinspection PyPep8Naming
         pv_DestinationFile = self.get_parameter_value(
             parameter_name='DestinationFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_DestinationFile, False, False):
@@ -131,6 +133,7 @@ class CopyFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IfSourceFileNotFound is optional, defaults to Warn at runtime
+        # noinspection PyPep8Naming
         pv_IfNotFound = self.get_parameter_value(parameter_name='IfSourceFileNotFound',
                                                  command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IfNotFound, self.__choices_IfSourceFileNotFound, True, True):
@@ -170,14 +173,18 @@ class CopyFile(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get data for the command
+        # noinspection PyPep8Naming
         pv_SourceFile = self.get_parameter_value('SourceFile')
+        # noinspection PyPep8Naming
         pv_DestinationFile = self.get_parameter_value('DestinationFile')
 
         # Runtime checks on input
 
+        # noinspection PyPep8Naming
         pv_SourceFile_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_SourceFile, self)))
+        # noinspection PyPep8Naming
         pv_DestinationFile_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_DestinationFile, self)))
@@ -189,6 +196,7 @@ class CopyFile(AbstractCommand):
 
         # Do the processing
 
+        # noinspection PyBroadException
         try:
             input_count = 2
             if not os.path.exists(pv_SourceFile_absolute):

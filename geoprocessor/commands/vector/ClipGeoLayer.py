@@ -27,12 +27,12 @@ from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
-import geoprocessor.util.qgis_util as qgis_util
+# import geoprocessor.util.qgis_util as qgis_util
 
 import logging
 import os
 
-from processing.core.Processing import Processing
+# from processing.core.Processing import Processing
 
 
 class ClipGeoLayer(AbstractCommand):
@@ -133,6 +133,7 @@ class ClipGeoLayer(AbstractCommand):
         warning = ""
 
         # Check that parameter InputGeoLayerID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_InputGeoLayerID = self.get_parameter_value(parameter_name='InputGeoLayerID',
                                                       command_parameters=command_parameters)
 
@@ -145,6 +146,7 @@ class ClipGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter ClippingGeoLayerID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_ClippingGeoLayerID = self.get_parameter_value(parameter_name='ClippingGeoLayerID',
                                                          command_parameters=command_parameters)
 
@@ -158,11 +160,12 @@ class ClipGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `Warn`, `Fail` or None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -205,33 +208,34 @@ class ClipGeoLayer(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "InputGeoLayerID",
-                                                       input_geolayer_id, "FAIL"))
+                                                           input_geolayer_id, "FAIL"))
 
         # If the clipping GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "ClippingGeoLayerID",
-                                                       clipping_geolayer_id, "FAIL"))
+                                                           clipping_geolayer_id, "FAIL"))
 
         # If the input GeoLayer and the clipping GeoLayer both exist, continue with the checks.
         if False not in should_run_command:
 
             # If the clipping GeoLayerID does not contain features of polygon type, raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "DoesGeoLayerIDHaveCorrectGeometry",
-                                                           "ClippingGeoLayerID", clipping_geolayer_id,
-                                                           "FAIL", other_values=[["Polygon"]]))
+                                                               "ClippingGeoLayerID", clipping_geolayer_id,
+                                                               "FAIL", other_values=[["Polygon"]]))
 
             # If the input GeoLayer and the clipping GeoLayer do not have the same CRS, raise a WARNING.
             should_run_command.append(validator_util.run_check(self, "DoGeoLayerIDsHaveMatchingCRS", "InputGeoLayerID",
-                                                           input_geolayer_id, "WARN",
-                                                           other_values=["ClippingGeoLayerID", clipping_geolayer_id]))
+                                                               input_geolayer_id, "WARN",
+                                                               other_values=["ClippingGeoLayerID",
+                                                                             clipping_geolayer_id]))
 
         # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
-                                                       output_geolayer_id, None))
+                                                           output_geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -252,14 +256,18 @@ class ClipGeoLayer(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_InputGeoLayerID = self.get_parameter_value("InputGeoLayerID")
+        # noinspection PyPep8Naming
         pv_ClippingGeoLayerID = self.get_parameter_value("ClippingGeoLayerID")
+        # noinspection PyPep8Naming
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID", default_value="{}_clippedBy_{}".format(
             pv_InputGeoLayerID, pv_ClippingGeoLayerID))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_clip_geolayer(pv_InputGeoLayerID, pv_ClippingGeoLayerID, pv_OutputGeoLayerID):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the Input GeoLayer and the Clipping GeoLayer.
@@ -310,8 +318,8 @@ class ClipGeoLayer(AbstractCommand):
                                               geolayer_source_path="MEMORY")
                 self.command_processor.add_geolayer(new_geolayer)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error clipping GeoLayer {} from GeoLayer {}.".format(
                     pv_InputGeoLayerID,

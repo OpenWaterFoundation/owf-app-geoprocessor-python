@@ -25,7 +25,7 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.qgis_util as qgis_util
+# import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validator_util as validator_util
 
 import logging
@@ -81,6 +81,7 @@ class CreatePointsAlongLine(AbstractCommand):
         warning = ""
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
 
@@ -93,11 +94,12 @@ class CreatePointsAlongLine(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -153,6 +155,7 @@ class CreatePointsAlongLine(AbstractCommand):
         elif self.command_processor.get_geolayer(output_geolayer_id):
 
             # Get the IfGeoLayerIDExists parameter value.
+            # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
             # Warnings/recommendations if the OutputGeolayerID is the same as a registered GeoLayerID.

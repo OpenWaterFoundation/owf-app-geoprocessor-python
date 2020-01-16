@@ -139,6 +139,7 @@ class WriteTableToExcel(AbstractCommand):
         warning = ""
 
         # Check that parameter TableID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_TableID, False, False):
@@ -150,6 +151,7 @@ class WriteTableToExcel(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter OutputFile is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_OutputFile, False, False):
@@ -162,6 +164,7 @@ class WriteTableToExcel(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter WriteIndexColumn is a valid Boolean value or None.
+        # noinspection PyPep8Naming
         pv_WriteIndexColumn = self.get_parameter_value(parameter_name='WriteIndexColumn',
                                                        command_parameters=command_parameters)
 
@@ -201,7 +204,7 @@ class WriteTableToExcel(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the Table ID is not an existing Table ID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsTableIdExisting", "TableID", table_id, "FAIL"))
@@ -211,7 +214,7 @@ class WriteTableToExcel(AbstractCommand):
 
         # If the output folder is not an existing folder, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "OutputFile", output_folder_abs,
-                                                       "FAIL"))
+                                                           "FAIL"))
         # Continue if the output file is an existing file.
         if os.path.exists(output_folder_abs):
 
@@ -245,14 +248,21 @@ class WriteTableToExcel(AbstractCommand):
         """
 
         # Obtain the parameter values except for the OutputCRS
+        # noinspection PyPep8Naming
         pv_TableID = self.get_parameter_value("TableID")
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value("OutputFile")
+        # noinspection PyPep8Naming
         pv_OutputWorksheet = self.get_parameter_value("OutputWorksheet")
+        # noinspection PyPep8Naming
         pv_ColumnsToInclude = self.get_parameter_value("ColumnsToInclude", default_value="*")
+        # noinspection PyPep8Naming
         pv_ColumnsToExclude = self.get_parameter_value("ColumnsToExclude", default_value="")
+        # noinspection PyPep8Naming
         pv_WriteIndexColumn = self.get_parameter_value("WriteIndexColumn", default_value="True")
 
         # Convert the Boolean parameters from string to valid Boolean values.
+        # noinspection PyPep8Naming
         pv_WriteIndexColumn = string_util.str_to_bool(pv_WriteIndexColumn)
 
         # Convert the ColumnsToInclude and ColumnsToExclude parameter values to lists.
@@ -267,6 +277,7 @@ class WriteTableToExcel(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_write_table(pv_TableID, output_file_absolute):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the Table object
@@ -294,8 +305,8 @@ class WriteTableToExcel(AbstractCommand):
                 # Add the output file to the GeoProcessor's list of output files.
                 self.command_processor.add_output_file(output_file_absolute)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error writing Table {} to Excel workbook file {}.".format(pv_TableID,
                                                                                                 pv_OutputFile)

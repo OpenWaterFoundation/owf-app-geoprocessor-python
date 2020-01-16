@@ -44,7 +44,7 @@ class EnabledFalse(AbstractCommand):
         self.command_description = "Used to disable command for tests"
 
         # Command metadata for command editor display
-        self.command_metadata = {}
+        self.command_metadata = dict()
         self.command_metadata['Description'] = ('Enter one of more comments (leading # will be added automatically '
                                                 'if not shown). \n'
                                                 'See also the /* and */ commands for multi-line comments, '

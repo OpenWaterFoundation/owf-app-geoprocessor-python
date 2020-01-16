@@ -79,7 +79,6 @@ class GeoProcessorCommandEditorFactory(object):
 
         # Check to see if command has editor type specified.
         # If so return the specified editor type, and otherwise return a generic command editor.
-        editor_type = 'Unknown'  # Default
         try:
             editor_type = command.command_metadata['EditorType']
         except AttributeError:

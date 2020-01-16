@@ -42,12 +42,13 @@ def polygonize(raster_full_path: str, field_name: str, output_format: str, outpu
     # Get the appropriate driver and destination data source. Can either be Shapefile or GeoJSON.
     if output_format.upper() == "SHAPEFILE":
         drv = ogr.GetDriverByName("ESRI Shapefile")
-        dst_ds = drv.CreateDataSource(os.path.join(io_util.get_path(output_file),io_util.get_filename(output_file) + ".shp"))
+        dst_ds = drv.CreateDataSource(os.path.join(io_util.get_path(output_file),
+                                                   io_util.get_filename(output_file) + ".shp"))
     elif output_format.upper() == "GEOJSON":
         drv = ogr.GetDriverByName("GeoJSON")
         dst_ds = drv.CreateDataSource(output_file)
     else:
-        drv = None
+        # drv = None
         dst_ds = None
         print("{} is not a valid output_format. Choose either Shapefile or GeoJSON.")
 
@@ -59,8 +60,8 @@ def polygonize(raster_full_path: str, field_name: str, output_format: str, outpu
     if field_name:
 
         # create a field
-        idField = ogr.FieldDefn(field_name, ogr.OFTReal)
-        dst_layer.CreateField(idField)
+        id_field = ogr.FieldDefn(field_name, ogr.OFTReal)
+        dst_layer.CreateField(id_field)
 
         # Run the polygonize command.
         gdal.Polygonize(src_band, None, dst_layer, 0, [], callback=None)
@@ -71,7 +72,8 @@ def polygonize(raster_full_path: str, field_name: str, output_format: str, outpu
         gdal.Polygonize(src_band, None, dst_layer, -1, [], callback=None)
 
     # Get the layer projection.
-    spatialRef = dst_layer.GetSpatialRef()
+    # TODO smalers 2020-01-16 why is the following not used?
+    spatial_ref = dst_layer.GetSpatialRef()
 
 def reproject_a_layer(input_path: str, input_driver: str, output_path: str, output_crs_int: int) -> None:
 

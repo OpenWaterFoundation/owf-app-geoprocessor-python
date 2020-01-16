@@ -135,7 +135,7 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name:
         raise ValueError(message)
 
 
-def create_qgsgeometry(geometry_format: str, geometry_input_as_string: str) -> None:
+def create_qgsgeometry(geometry_format: str, geometry_input_as_string: str) -> QgsGeometry or None:
     """
     Create a QGSGeometry object from input data. Can create an object from data in well-known text (WKT) and
     well-known binary (WKB). REF: https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/geometry.html
@@ -461,7 +461,7 @@ def get_geometrytype_qgis_from_wkt(wkt_string: str) -> str:
     # A dictionary of QGIS geometry types and their corresponding WKT geometry types.
     # Key: the QGIS geometry types
     # Value: a list of corresponding WKT geometry types (all uppercase)
-    QGIS_WKT_geom_conversion_dic = {"Point": ["POINT", "MULTIPOINT"],
+    qgis_wkt_geom_conversion_dic = {"Point": ["POINT", "MULTIPOINT"],
                                     "Polygon": ["POLYGON", "MULTIPOLYGON"],
                                     "LineString": ["LINESTRING", "MULTILINESTRING"]}
 
@@ -469,7 +469,7 @@ def get_geometrytype_qgis_from_wkt(wkt_string: str) -> str:
     wkt_geometry_type = (wkt_string.split('(')[0]).strip().upper()
 
     # Iterate over the entries in the QGIS/WKT geometry type conversion dictionary (QGIS_WKT_geom_conversion_dic).
-    for qgis_geometry_type, wkt_geometry_types in QGIS_WKT_geom_conversion_dic.items():
+    for qgis_geometry_type, wkt_geometry_types in qgis_wkt_geom_conversion_dic.items():
 
         # If the WKT geometry of the input WKT string is recognized, return the equivalent QGIS geometry.
         if wkt_geometry_type in wkt_geometry_types:
@@ -536,7 +536,7 @@ def get_qgis_version_developer(int_version: bool = True) -> str:
 
     # If configured, return the integer version (5 digit integer).
     if int_version:
-        return int("{}{}{}".format(major, minor, bug_fix))
+        return "{}{}{}".format(major, minor, bug_fix)
     else:
         return "{}.{}.{}".format(major, minor, bug_fix)
 
@@ -589,7 +589,7 @@ def get_qgis_version_str() -> str:
     return qgis.utils.Qgis.QGIS_VERSION
 
 
-def get_qgscoordinatereferencesystem_obj(crs_code: str) -> QgsCoordinateReferenceSystem:
+def get_qgscoordinatereferencesystem_obj(crs_code: str) -> QgsCoordinateReferenceSystem or None:
     """
     Checks if the crs_code create a valid and usable QgsCoordinateReferenceSystem object. If so, return
     the QgsCoordinateReferenceSystem object. If not, return None.
@@ -611,7 +611,7 @@ def get_qgscoordinatereferencesystem_obj(crs_code: str) -> QgsCoordinateReferenc
         return None
 
 
-def get_qgsexpression_obj(expression_as_string: str) -> QgsExpression:
+def get_qgsexpression_obj(expression_as_string: str) -> QgsExpression or None:
     """
     Checks if the expression_as_string creates a valid and usable QgsExpression object. If so, return
     the QgsExpression object. If not, return None.
@@ -635,13 +635,14 @@ def get_qgsexpression_obj(expression_as_string: str) -> QgsExpression:
         return None
 
 
-def initialize_qgis(qt_stylesheet_file: str = None) -> None:
+def initialize_qgis(qt_stylesheet_file: str = None) -> QgsApplication:
     """
     Initialize the QGIS environment.  This typically needs to be done only once when the application starts.
     This is expected to be called once when an application starts, before any geoprocessing tasks.
 
     qt_stylesheet_file:
-        Path to Qt stylesheet.
+        Path to Qt stylesheet.  If not specified, it will be the software installation folder:
+        geoprocess/resources/qt-stylesheets/gp.qss
 
     Returns:
         None
@@ -656,9 +657,10 @@ def initialize_qgis(qt_stylesheet_file: str = None) -> None:
     # Qt WebEngine seems to be initialized from a plugin. Please set Qt::AA_ShareOpenGLContexts using
     #   QCoreApplication::setAttribute before constructing QGuiApplication
     # -------
+    # noinspection PyBroadException
     try:
         QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
-    except Exception as e:
+    except Exception:
         # This happens when the current development Python packages are different than runtime
         print("Error calling QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)")
         print("- possibly due to Python API version issue")
@@ -681,8 +683,11 @@ def initialize_qgis(qt_stylesheet_file: str = None) -> None:
     # Next set the Qt style sheet to modify default styles
     # 'ProgramHome' is location of app, which is geoprocessor/app
     # - therefore need to go up one level to find the resources
-    path_to_style_sheet = os.path.join(app_util.get_property('ProgramHome'),
-                                       "../resources/qt-stylesheets/gp.qss").replace("\\","/")
+    if qt_stylesheet_file is not None:
+        path_to_style_sheet = qt_stylesheet_file
+    else:
+        path_to_style_sheet = os.path.join(app_util.get_property('ProgramHome'),
+                                           "../resources/qt-stylesheets/gp.qss").replace("\\","/")
     if path_to_style_sheet is None:
         logger.info("Qt stylesheet file is None - not using.")
     elif not os.path.exists(path_to_style_sheet):
@@ -721,7 +726,7 @@ def initialize_qgis_processor() -> Processing:
 
 
 def populate_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name: str,
-                                      attribute_value: str) -> None:
+                                      attribute_value: str or None) -> None:
     """
     Populates an attribute of a QgsVectorLayer with a single attribute value. If the attribute already has a value,
     the value will be overwritten with the new input attribute value. All features will have the same attribute value.
@@ -765,12 +770,12 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
     """
 
     # Get the filename and basename of the input raster file.
-    fileInfo = QFileInfo(spatial_data_file_abs)
-    path = fileInfo.filePath()
-    baseName = fileInfo.baseName()
+    file_info = QFileInfo(spatial_data_file_abs)
+    path = file_info.filePath()
+    base_name = file_info.baseName()
 
     # Create the QgsRasterLayer object.
-    qgs_raster_layer_obj = QgsRasterLayer(path, baseName)
+    qgs_raster_layer_obj = QgsRasterLayer(path, base_name)
 
     # Return the QgsRasterLayer if it is valid.
     if qgs_raster_layer_obj.isValid():

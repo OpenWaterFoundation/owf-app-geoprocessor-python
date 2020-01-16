@@ -144,6 +144,7 @@ class CopyGeoLayer(AbstractCommand):
         warning = ""
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
                                                  command_parameters=command_parameters)
 
@@ -156,11 +157,12 @@ class CopyGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -182,7 +184,7 @@ class CopyGeoLayer(AbstractCommand):
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def __should_copy_geolayer(self, input_geolayer_id: str, output_geolayer_id: str,
-                               include_feats_if_expression: bool) -> bool:
+                               include_feats_if_expression: str) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -201,23 +203,23 @@ class CopyGeoLayer(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", input_geolayer_id,
-                                                       "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID",
+                                                           input_geolayer_id, "FAIL"))
 
         # If the IncludeFeaturesIf parameter is defined, continue with the checks.
         if include_feats_if_expression is not None:
 
             # If the IncludeFeaturesIf parameter value is not a valid QgsExpression, raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "IsQgsExpressionValid", "IncludeFeaturesIf",
-                                                           include_feats_if_expression, "FAIL"))
+                                                               include_feats_if_expression, "FAIL"))
 
         # If the CopiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "CopiedGeoLayerID",
-                                                       output_geolayer_id, None))
+                                                           output_geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -236,11 +238,16 @@ class CopyGeoLayer(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_CopiedGeoLayerID = self.get_parameter_value("CopiedGeoLayerID",
                                                        default_value="{}_copy".format(pv_GeoLayerID))
+        # noinspection PyPep8Naming
         pv_IncludeAttributes = self.get_parameter_value("IncludeAttributes", default_value="*")
+        # noinspection PyPep8Naming
         pv_ExcludeAttributes = self.get_parameter_value("ExcludeAttributes", default_value="''")
+        # noinspection PyPep8Naming
         pv_IncludeFeaturesIf = self.get_parameter_value("IncludeFeaturesIf")
 
         # Convert the IncludeAttributes and ExcludeAttributes to lists.
@@ -248,14 +255,18 @@ class CopyGeoLayer(AbstractCommand):
         attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeAttributes)
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+        # noinspection PyPep8Naming
         pv_CopiedGeoLayerID = self.command_processor.expand_parameter_value(pv_CopiedGeoLayerID, self)
+        # noinspection PyPep8Naming
         pv_IncludeFeaturesIf = self.command_processor.expand_parameter_value(pv_IncludeFeaturesIf, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID, pv_IncludeFeaturesIf):
 
             # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
+            # noinspection PyBroadException
             try:
 
                 # Get the input GeoLayer.
@@ -286,8 +297,8 @@ class CopyGeoLayer(AbstractCommand):
                 # Add the copied GeoLayer to the GeoProcessor's geolayers list.
                 self.command_processor.add_geolayer(copied_geolayer)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

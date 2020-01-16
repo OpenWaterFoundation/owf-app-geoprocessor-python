@@ -34,6 +34,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
     """
     Abstract command editor used as parent of command editor dialog implementations.
     This class maintains core layout information and provides functions to add components.
+    Derived classes should use the data and methods in this class as much as possible.
     """
 
     def __init__(self, command: AbstractCommand) -> None:
@@ -63,12 +64,22 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # VALUE (str): the entered value of the command parameter
         # self.command_parameter_current_values = current_values
 
+        # "input_ui_components" is a dictionary that relates each command parameter with its associated Qt Widget
+        # input field
+        # KEY (str): the command parameter name
+        # VALUE (obj): the associated Qt Widget input component
+        self.input_ui_components = {}
+
         # Initialize components that will be used
-        self.CommandDisplay_View_TextBrowser = None
+        # Command text area
+        self.CommandDisplay_View_TextBrowser: QtWidgets.QTextEdit or None = None
 
         # Layout used for the main editor
         # - other layouts may be added as needed to organize components
-        self.grid_layout = None
+        # TODO smalers 2020-01-16 could name to indicate top
+        self.grid_layout: QtWidgets.QGridLayout or None = None
+        # TODO smalers 2020-01-16 could name to indicate parameter area
+        self.gridLayout2: QtWidgets.QGridLayout or None = None
 
         # Position in the layout for components as they are added, 0=row at top, 1 is next down, etc.
         # - each addition should increment before adding a component
@@ -78,6 +89,32 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.resize(500, 300)
         # Set the maximum width of a command editor
         self.setMaximumWidth(800)
+
+        # Top of dialog
+        self.CommandDisplay_Label: QtWidgets.QLabel or None = None
+        self.Command_Description_Label: QtWidgets.QLabel or None = None
+        self.View_Documentation_Button: QtWidgets.QPushButton or None = None
+        self.View_Documentation_Button: QtWidgets.QPushButton or None = None
+
+        # Separator between description and parameters
+        self.Separator: QtWidgets.QFrame or None = None
+
+        # Parameter area
+        # The QtWidgets.QGridLayout manages the layout of self.parameter_QFrame
+        # - instantiated in setup_ui()
+        self.parameter_QGridLayout: QtWidgets.QGridLayout or None = None
+
+        self.y_parameter: int or None = None
+        # The QtWidgets.QFrame that is the UI element used to hold the parameter UI components
+        # - instantiated in setup_ui()
+        self.parameter_QFrame: QtWidgets.QFrame or None = None
+
+        # Buttons at the bottom of the dialog
+        self.dialog_ButtonBox: QtWidgets.QDialogButtonBox or None = None
+        self.ok_button: QtWidgets.QPushButton or None = None
+        self.cancel_button: QtWidgets.QPushButton or None = None
+
+        # Derived editor classes __init__() functions will then call methods that build the UI
 
     # def add_text_field(self, label, parameter_name, tooltip=None):
     #     """
@@ -131,11 +168,11 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
         # The frame object, Separator, separates the command description from the input form section of the Dialog box.
         self.Separator = QtWidgets.QFrame(self)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
-        self.Separator.setSizePolicy(sizePolicy)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
+        self.Separator.setSizePolicy(size_policy)
         self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.Separator.setObjectName(qt_util.from_utf8("Separator"))
@@ -240,6 +277,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
         # value when one works.
         # Reads LineEdit widgets.
+        # noinspection PyBroadException
         try:
             value = obj.text()
 
@@ -305,6 +343,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Create a label object to the Dialog window.
         # Set the alignment, the name, and the text of the label.
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
+        # noinspection PyPep8Naming
         commandArea_Frame = QtWidgets.QFrame(self)
         commandArea_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         commandArea_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -320,6 +359,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         # Create a grid layout object. Apply to the Command_Parameters frame object.
         # Set the name of the grid layout object.
+        # noinspection PyPep8Naming
         commandArea_GridLayout = QtWidgets.QGridLayout(commandArea_Frame)
         commandArea_GridLayout.setObjectName("Command_Parameters_Layout")
 
@@ -355,6 +395,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
     def setup_ui_core_command_buttons(self) -> None:
 
+        # noinspection PyPep8Naming
         buttons_Frame = QtWidgets.QFrame(self)
         buttons_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         buttons_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -364,6 +405,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         # Create a grid layout object. Apply to the Command_Parameters frame object.
         # Set the name of the grid layout object.
+        # noinspection PyPep8Naming
         buttons_GridLayout = QtWidgets.QGridLayout(buttons_Frame)
         buttons_GridLayout.setObjectName("Command_Parameters_Layout")
 
@@ -408,6 +450,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Create a frame object. Add the frame object to the Dialog window.
         # Set the shape, the shadow, and the name of the frame object.
         # The frame object, Command_Description, holds the command description and the view documentation button.
+        # noinspection PyPep8Naming
         description_Frame = QtWidgets.QFrame(self)
         description_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         description_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -417,12 +460,12 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         # Create a grid layout object. Apply to the Command_Description frame object.
         # Set the name of the grid layout object.
-        self.gridLayout_2 = QtWidgets.QGridLayout(description_Frame)
-        self.gridLayout_2.setObjectName(qt_util.from_utf8("gridLayout_2"))
+        self.gridLayout2 = QtWidgets.QGridLayout(description_Frame)
+        self.gridLayout2.setObjectName(qt_util.from_utf8("gridLayout2"))
 
         # Create a spacer. Add the spacer to the Command_Description frame object.
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout_2.addItem(spacerItem, 2, 0, 1, 1)
+        spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout2.addItem(spacer_item, 2, 0, 1, 1)
 
         # Create a push button. Add the button to the Command_Description frame object.
         # Set the name, the button text and the connection of the push button.
@@ -432,7 +475,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.View_Documentation_Button.setText(qt_util.translate("Dialog", "  View Documentation  ", None))
         self.View_Documentation_Button.setToolTip("View command documentation in web browser.")
         self.View_Documentation_Button.clicked.connect(self.view_documentation)
-        self.gridLayout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
+        self.gridLayout2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
 
         # Create a label. Add the label to the Command_Description frame object.
         # Set the name and the text of the label.
@@ -440,7 +483,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
         self.Command_Description_Label.setObjectName(qt_util.from_utf8("Command_Description_Label"))
         self.Command_Description_Label.setText(self.command.command_metadata['Description'])
-        self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
+        self.gridLayout2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
 
     def setup_ui_core_top(self) -> None:
         """
@@ -466,6 +509,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.setup_ui_core_command_description()
         self.add_ui_horizontal_separator()
 
+    # noinspection PyPep8Naming
     def setup_ui_parameter_combobox(self, parameter_name: str,
                                     parameter_ValueDefaultForDisplay: str,
                                     parameter_Tooltip: str,
@@ -497,6 +541,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         if self.debug:
             logger = logging.getLogger(__name__)
             logger.info("For parameter '" + parameter_name + "', adding combobox")
+        # noinspection PyPep8Naming
         parameter_QComboBox = QtWidgets.QComboBox(self.parameter_QFrame)
         parameter_QComboBox.setObjectName(qt_util.from_utf8("Drop_Down_Menu"))
         parameter_QComboBox.setEditable(True)
@@ -520,6 +565,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Add the component to the list maintained to get values out of UI components
         self.input_ui_components[parameter_name] = parameter_QComboBox
 
+    # noinspection PyPep8Naming
     def setup_ui_parameter_description(self, parameter_name: str,
                                        parameter_Description: str,
                                        parameter_Required: bool,
@@ -532,10 +578,11 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         Args:
             parameter_name (str):  Parameter name, used for troubleshooting
-            parameter_ValueDefault (str):  Parameter default value if not specified.
             parameter_Description (str):  Parameter description, before combining with other data here.
             parameter_Required (boolean):  Whether the parameter is required.
             parameter_Tooltip (str):  Tooltip text.
+            parameter_ValueDefault (str):  Parameter default value if not specified.
+            parameter_ValueDefaultDescription (str):  Description for default value.
 
         Returns:
             None
@@ -552,6 +599,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         if self.debug:
             logger = logging.getLogger(__name__)
             logger.info("For parameter '" + parameter_name + "', adding description")
+        # noinspection PyPep8Naming
         parameter_desc_Label = QtWidgets.QLabel(self.parameter_QFrame)
         parameter_desc_Label.setObjectName("Command_Parameter_Description_Label")
         parameter_desc = ""
@@ -612,6 +660,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
         self.parameter_QGridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
 
+    # noinspection PyPep8Naming
     def setup_ui_parameter_file_selector(self, input_metadata: dict, parameter_name: str,
                                          parameter_Tooltip: str) -> None:
         """
@@ -630,6 +679,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             logger = logging.getLogger(__name__)
             logger.info("For parameter '" + parameter_name + "', adding file selector")
         # Create the text field that will receive the file path
+        # noinspection PyPep8Naming
         parameter_QLineEdit = QtWidgets.QLineEdit(self.parameter_QFrame)
         parameter_QLineEdit.setObjectName(parameter_name)
         self.parameter_QGridLayout.addWidget(parameter_QLineEdit, self.y_parameter, 1, 1, 4)
@@ -666,6 +716,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
                 file_selector_button_tooltip = "Browse for folder"
             else:
                 file_selector_button_tooltip = "Browse for file"
+        # noinspection PyPep8Naming
         parameter_select_file_QPushButton = QtWidgets.QPushButton(self.parameter_QFrame)
         # Object name has parameter at front, which can be parsed out in event-handling code
         # - IMPORTANT - don't change the object name without changing elsewhere
@@ -678,6 +729,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             lambda clicked, y_param=self.y_parameter: self.ui_action_select_file(parameter_select_file_QPushButton))
         self.parameter_QGridLayout.addWidget(parameter_select_file_QPushButton, self.y_parameter, 6, 1, 1)
 
+    # noinspection PyPep8Naming
     def setup_ui_parameter_label(self, parameter_name: str, parameter_Label: str) -> None:
         """
         Add label UI components for a command parameter.
@@ -703,6 +755,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             logger.info("For parameter '" + parameter_name + "', adding label")
         # Increment the y-position in the GridLayout since starting a new row in the UI
         self.y_parameter = self.y_parameter + 1
+        # noinspection PyPep8Naming
         parameter_QLabel = QtWidgets.QLabel(self.parameter_QFrame)
         parameter_QLabel.setObjectName("Command_Parameter_Label")
         parameter_QLabel.setText(parameter_Label + ":")
@@ -712,6 +765,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.parameter_QGridLayout.addWidget(parameter_QLabel, self.y_parameter, 0, 1, 1)
         self.parameter_QGridLayout.setColumnStretch(0, 0)
 
+    # noinspection PyPep8Naming
     def setup_ui_parameter_text_field(self, parameter_name: str, parameter_Tooltip: str) -> None:
         """
         Add text field (Qt LineEdit) UI components for a command parameter.
@@ -727,6 +781,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         if self.debug:
             logger = logging.getLogger(__name__)
             logger.info("For parameter '" + parameter_name + "', adding label")
+        # noinspection PyPep8Naming
         parameter_QLineEdit = QtWidgets.QLineEdit(self.parameter_QFrame)
         parameter_QLineEdit.setObjectName(parameter_name)
         self.parameter_QGridLayout.addWidget(parameter_QLineEdit, self.y_parameter, 1, 1, 4)
@@ -792,10 +847,12 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Get the existing value in the text field, which will correspond to the parameter name value.
         # - if specified as absolute path, use it as is
         # - if a relative path, append to the working directory or if that is not available the user's home folder
+        # noinspection PyPep8Naming
         parameter_QLineEdit = None
         working_dir = self.command.command_processor.get_property('WorkingDir')
         user_folder = self.app_session.get_user_folder()
         try:
+            # noinspection PyPep8Naming
             parameter_QLineEdit = self.input_ui_components[parameter_name]
             # Get the parameter value
             parameter_value = parameter_QLineEdit.text()
@@ -832,6 +889,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         use_qt_dialog = True  # For now use Qt build-in dialog but may want to try native dialog
         filepath_selected = None
         if use_qt_dialog:
+            # noinspection PyPep8Naming
             parameter_QFileDialog = QtWidgets.QFileDialog(self, select_file_title, folder_start)
             if select_folder:
                 # A directory is being selected
@@ -934,6 +992,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             #             "' ref='"+str(ref_command_name)+"'")
             # command_name = ref_command_name
             pass
+        # noinspection PyBroadException
         try:
             user_doc_url = app_util.get_property('ProgramUserDocumentationUrl')
             if user_doc_url is None:
@@ -947,6 +1006,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             # logger.info(message)
             # Open the command's user documentation in the default browser.
             # - open in a new tab or if this fails open a new window
+            # noinspection PyBroadException
             try:
                 webbrowser.open_new_tab(command_doc_url)
             except Exception:

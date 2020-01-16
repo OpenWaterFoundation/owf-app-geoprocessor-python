@@ -89,6 +89,7 @@ class FreeGeoLayers(AbstractCommand):
         warning = ""
 
         # Check that parameter GeoLayerIDs is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerIDs = self.get_parameter_value(parameter_name='GeoLayerIDs',
                                                   command_parameters=command_parameters)
 
@@ -112,7 +113,7 @@ class FreeGeoLayers(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geolayer_be_deleted(self, geolayer_id_list: [str]) -> None:
+    def __should_geolayer_be_deleted(self, geolayer_id_list: [str]) -> bool:
         """
         Checks the following:
         * the IDs of the input GeoLayers are existing GeoLayer IDs
@@ -134,7 +135,7 @@ class FreeGeoLayers(AbstractCommand):
 
             # If the geolayer_id is not a valid GeoLayer ID, raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id,
-                                                           "FAIL"))
+                                                               "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -154,6 +155,7 @@ class FreeGeoLayers(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerIDs = self.get_parameter_value("GeoLayerIDs")
 
         # Convert the GeoLayerIDs parameter from string to list format.
@@ -172,6 +174,7 @@ class FreeGeoLayers(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_geolayer_be_deleted(list_of_geolayer_ids):
 
+            # noinspection PyBroadException
             try:
 
                 # Iterate over the GeoLayer IDS.
@@ -190,8 +193,8 @@ class FreeGeoLayers(AbstractCommand):
                     # Delete the GeoLayer.
                     del geolayer
 
-            # Raise an exception if an unexpected error occurs during the process.
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process.
 
                 self.warning_count += 1
                 message = "Unexpected error removing GeoLayer ({}).".format(pv_GeoLayerIDs)

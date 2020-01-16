@@ -127,6 +127,7 @@ class AddGeoLayerAttribute(AbstractCommand):
         warning = ""
 
         # Check that parameters GeoLayerID and is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -138,6 +139,7 @@ class AddGeoLayerAttribute(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter AttributeName is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_AttributeName = self.get_parameter_value(parameter_name='AttributeName',
                                                     command_parameters=command_parameters)
 
@@ -151,6 +153,7 @@ class AddGeoLayerAttribute(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter AttributeType is either 'string', 'date', 'int' and 'double'.
+        # noinspection PyPep8Naming
         pv_AttributeType = self.get_parameter_value(parameter_name="AttributeType",
                                                     command_parameters=command_parameters)
 
@@ -254,18 +257,24 @@ class AddGeoLayerAttribute(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_AttributeName = self.get_parameter_value("AttributeName")
+        # noinspection PyPep8Naming
         pv_AttributeType = self.get_parameter_value("AttributeType")
+        # noinspection PyPep8Naming
         pv_InitialValue = self.get_parameter_value("InitialValue", default_value=None)
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_attribute_be_added(pv_GeoLayerID, pv_AttributeName):
 
             # Run the process.
+            # noinspection PyBroadException
             try:
 
                 # Get the input GeoLayer.
@@ -276,6 +285,7 @@ class AddGeoLayerAttribute(AbstractCommand):
 
                 # If the InitialValue parameter has been set, populate the added attribute with the given value.
                 # Expand for ${Property} syntax.
+                # noinspection PyPep8Naming
                 pv_InitialValue = self.command_processor.expand_parameter_value(pv_InitialValue, self)
                 if pv_InitialValue:
                     input_geolayer.populate_attribute(pv_AttributeName, pv_InitialValue)

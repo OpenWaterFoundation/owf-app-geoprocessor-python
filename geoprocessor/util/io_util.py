@@ -32,7 +32,7 @@ import sys
 from typing import TextIO
 
 
-def expand_formatter(absolute_path: str, formatter: str) -> str:
+def expand_formatter(absolute_path: str, formatter: str) -> str or None:
     """
     Returns the appropriate value of a parsed absolute path given the user-defined formatter code. Many of times
     the user will want the filename without the extension or just the extension from an absolute path. This function
@@ -103,7 +103,7 @@ def expand_formatter(absolute_path: str, formatter: str) -> str:
         return None
 
 
-def format_standard_file_header(comment_line_prefix: str = '', max_width: int = 120, is_xml: bool = False) -> str:
+def format_standard_file_header(comment_line_prefix: str = '', max_width: int = 120, is_xml: bool = False) -> [str]:
     """
     Format a standard header for a text file, which is useful to understand the file creation.
     The header looks like the following:
@@ -158,7 +158,7 @@ def format_standard_file_header(comment_line_prefix: str = '', max_width: int = 
     progname = os.path.basename(sys.argv[0])
     try:
         progver = app_util.program_properties['ProgramVersion']
-    except KeyError as e:
+    except KeyError:
         progver = "unknown"
     user = getpass.getuser()
     now = datetime.datetime.now().isoformat()
@@ -265,6 +265,8 @@ def get_col_names_from_delimited_file(delimited_file_abs: str, delimiter: str) -
          returned.
     """
 
+    # The following gets rid of IDE warning about catching Exception.
+    # noinspection PyBroadException
     try:
 
         # Open the delimited file and iterate through the lines of the file.
@@ -384,6 +386,7 @@ def to_absolute_path(parent_dir: str, path: str) -> str:
         The absolute path given the provided input path parts.
     """
     debug = False
+    logger = None
     if debug:
         logger = logging.getLogger(__name__)
     if os.path.isabs(path):
@@ -401,7 +404,7 @@ def to_absolute_path(parent_dir: str, path: str) -> str:
         path = path[0:len(path) - 1]
 
     path_length = len(path)
-    sep = os.sep
+    # sep = os.sep
     i = 0
     # In the following loop the "path" is the main driver and the "parent_dir" is adjusted in parallel as needed.
     while i < path_length:
@@ -491,6 +494,7 @@ def to_relative_path(root_path: str, rel_path: str) -> str:
         if null or empty strings are passed in as directories.
     """
     debug = True
+    logger = None
     if debug:
         logger = logging.getLogger(__name__)
 
@@ -549,7 +553,7 @@ def to_relative_path(root_path: str, rel_path: str) -> str:
             if higher.startswith('/') or higher.startswith('\\'):
                 higher = higher[1:]
                 if debug:
-                    logger.info("Returning 'higher':" +  higher)
+                    logger.info("Returning 'higher':" + higher)
             return higher
 
     # If none of the above were triggered, then the second folder
@@ -563,7 +567,7 @@ def to_relative_path(root_path: str, rel_path: str) -> str:
     start2 = root_path.rfind('\\')
     if start2 > start:
         start = start2
-    x = 0
+    # x = 0
     # Comparisons depend on operating system
     # - do comparisons using forward slash strings
     # - Linux is case-sensitive, Windows is not
@@ -596,8 +600,8 @@ def to_relative_path(root_path: str, rel_path: str) -> str:
             uncommon = rel_path[x:len(rel_path)]
             steps = dir2seps - dir1seps
             if debug:
-                 logger.info('uncommon="' + uncommon + '"')
-                 logger.info('dir2seps=' + str(dir2seps) + ' dir1seps=' + str(dir1seps) + ' steps=' + str(steps))
+                logger.info('uncommon="' + uncommon + '"')
+                logger.info('dir2seps=' + str(dir2seps) + ' dir1seps=' + str(dir1seps) + ' steps=' + str(steps))
             # The returned separator is that for the operating system
             if steps == 1:
                 if uncommon.strip() == "":
@@ -615,7 +619,7 @@ def to_relative_path(root_path: str, rel_path: str) -> str:
     return rel_path
 
 
-def verify_path_for_os(path: str, always_use_forward_slashes: bool = False) -> str:
+def verify_path_for_os(path: str, always_use_forward_slashes: bool = False) -> str or None:
     """
     Verify that a path is appropriate for the operating system.
     This is a simple method that does the following:
@@ -735,6 +739,8 @@ def write_property_file(output_file_absolute: str, all_properties: dict,
     fout = None
     logger = logging.getLogger(__name__)
     debug = True
+    # The following gets rid of IDE warning about catching Exception, which is considered "too broad".
+    # noinspection PyBroadException
     try:
         # Open the file...
         if write_mode.upper() == 'APPEND':
@@ -808,10 +814,6 @@ def write_property_file(output_file_absolute: str, all_properties: dict,
         for i in range(0, len(include_properties_matched)):
             if not include_properties_matched[i]:
                 problems.append('Unable to match property "' + include_properties[i] + '" to write.')
-    except Exception as e:
-        message = 'Error writing properties to file "' + output_file_absolute + '" (' + str(e) + ').'
-        problems.append(message)
-        logger.warning(message, exc_info=True)
     except Exception:
         message = 'Error writing properties to file "' + output_file_absolute + '.'
         problems.append(message)

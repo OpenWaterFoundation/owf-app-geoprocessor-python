@@ -18,45 +18,30 @@
 # ________________________________________________________________NoticeEnd___
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-import geoprocessor.util.app_util as app_util
+
+from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
+
+import geoprocessor.util.app_util as app_util
 import geoprocessor.ui.util.qt_util as qt_util
-import functools
-import logging
-import webbrowser
-
-
-# Combining code from GenericCommandEditor and AbstractCommandEditor to create
-# one stand alone editor
 
 
 class InsertLineEditor(AbstractCommandEditor):
     """
-    Abstract command editor used as parent of command editor dialog implementations.
-    This class maintains core layout information and provides functions to add components.
+    Command editor for single line commands such as /* and */.
     """
 
     # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
-    def __init__(self, command: str) -> None:
+    def __init__(self, command: AbstractCommand) -> None:
         """
-        Initialize the Abstract Dialog instance.
+        Initialize the InsertLineEditor Dialog instance.
 
         Args:
-            command_name (str): the name of the GeoProcessor command that the Dialog box is representing
-            # command_description (str): the description of the GeoProcessor command that the Dialog box is representing
-            # parameter_count (int): the number of command parameters of the GeoProcessor command that the Dialog box is
-            #    representing
-            # command_parameters (list): a list of string representing the command parameter names (in order) of the
-            #    GeoProcessor command that the Dialog box is representing
-            # current_values (dic):  a dictionary that holds the command parameters and their current values
-            #    Key: the name of the command parameter
-            #    Value: the entered value of the command parameter
+            command: the command to edit
         """
-        # Call the parent class
-        super().__init__()
 
-        # Command being edited
-        self.command = command
+        # Call the parent class
+        super().__init__(command)
 
         # "input_edit_objects" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
@@ -69,38 +54,46 @@ class InsertLineEditor(AbstractCommandEditor):
         # VALUE (str): the entered value of the command parameter
         # self.command_parameter_current_values = current_values
 
+        # Defined in AbstractCommandEditor
         # Initialize components that will be used
-        self.CommandDisplay_View_TextBrowser = None
+        # self.CommandDisplay_View_TextBrowser = None
 
+        # Defined in AbstractCommandEditor
         # Layout used for the main editor
         # - other layouts may be added as needed to organize components
-        self.grid_layout = None
+        #self.grid_layout = None
 
+        # Defined in AbstractCommandEditor
         # Position in the layout for components as they are added, 0=row at top, 1 is next down, etc.
         # - each addition should increment before adding a component
         self.grid_layout_row = -1
 
-        # Set up the UI for the command editor window
-        self.setup_ui_core()
+        # Bottom of dialog
+        # TODO smalers 2020-01-16 maybe should reuse the base class buttons
+        # NOT defined in AbstractCommandEditor - local to this class
+        self.OK_Cancel_Buttons: QtWidgets.QDialogButtonBox or None = None
 
         # Create variable to know if we are updating an existing command
         # or inserting a new command into the command list
+        # NOT defined in AbstractCommandEditor - local to this class
         self.update = False
-        # if command parameters have already been defined for command
-        # we know that we are updating an existing command
-        if command.command_parameters:
+        # If command parameters have already been defined for command,  know that are updating an existing command.
+        if command.command_parameters is not None:
             self.update = True
+
+        # Set up the UI for the command editor window
+        self.setup_ui_core()
 
     def add_ui_horizontal_separator(self) -> None:
         # Create a line (frame object with special specifications). Add the line to the Dialog window.
         # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
         # The frame object, Separator, separates the command description from the input form section of the Dialog box.
         self.Separator = QtWidgets.QFrame(self)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
-        self.Separator.setSizePolicy(sizePolicy)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
+        self.Separator.setSizePolicy(size_policy)
         self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
         self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.Separator.setObjectName(qt_util.from_utf8("Separator"))
@@ -158,7 +151,7 @@ class InsertLineEditor(AbstractCommandEditor):
         # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
         self.grid_layout_row = self.grid_layout_row + 1
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
-        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(qt_util.from_utf8("CommandDisplay_Label"))
         self.CommandDisplay_Label.setText(qt_util.translate("Dialog", "Command: ", None))
         self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 2, 1)
@@ -210,6 +203,7 @@ class InsertLineEditor(AbstractCommandEditor):
         # Create a frame object. Add the frame object to the Dialog window.
         # Set the shape, the shadow, and the name of the frame object.
         # The frame object, Command_Description, holds the command description and the view documentation button.
+        # noinspection PyPep8Naming
         description_Frame = QtWidgets.QFrame(self)
         description_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         description_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -219,8 +213,8 @@ class InsertLineEditor(AbstractCommandEditor):
 
         # Create a grid layout object. Apply to the Command_Description frame object.
         # Set the name of the grid layout object.
-        self.gridLayout_2 = QtWidgets.QGridLayout(description_Frame)
-        self.gridLayout_2.setObjectName(qt_util.from_utf8("gridLayout_2"))
+        grid_layout_2 = QtWidgets.QGridLayout(description_Frame)
+        grid_layout_2.setObjectName(qt_util.from_utf8("grid_layout_2"))
 
         # Create a label. Add the label to the Command_Description frame object.
         # Set the name and the text of the label.
@@ -310,6 +304,7 @@ class InsertLineEditor(AbstractCommandEditor):
         # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
         # value when one works.
         # Reads LineEdit widgets.
+        # noinspection PyBroadException
         try:
             value = obj.text()
 

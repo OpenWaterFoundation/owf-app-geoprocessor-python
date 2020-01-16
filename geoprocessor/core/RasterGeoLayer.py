@@ -53,7 +53,7 @@ class RasterGeoLayer(GeoLayer):
 
     def __init__(self, geolayer_id: str,
                  geolayer_qgs_raster_layer: QgsRasterLayer = None,
-                 geolayer_source_path = None, properties: dict = None) -> None:
+                 geolayer_source_path: str = None, properties: dict = None) -> None:
         """
         Initialize a new RasterGeoLayer instance.
 

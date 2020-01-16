@@ -66,6 +66,11 @@ class AbstractCommand(object):
         # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
         self.command_parameter_metadata: [CommandParameterMetadata] = []
 
+        # Command parameter input metadata, a dictionary of properties that describe UI features
+        # - this is defined in command classes
+        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        self.parameter_input_metadata: dict = {}
+
         # Command status to track issues.
         self.command_status: CommandStatus = CommandStatus()
 
@@ -86,7 +91,7 @@ class AbstractCommand(object):
         """
         pass
 
-    def get_parameter_metadata(self, parameter_name: str) -> CommandParameterMetadata:
+    def get_parameter_metadata(self, parameter_name: str) -> CommandParameterMetadata or None:
         """
         Return the metadata for the requested parameter name.
         This can also be used to figure out if a parameter name is valid
@@ -106,7 +111,7 @@ class AbstractCommand(object):
         return None
 
     def get_parameter_value(self, parameter_name: str, command_parameters: dict = None,
-                            default_value: str = None) -> str:
+                            default_value: object = None) -> str or None:
         """
         Return the value for a parameter name.
 

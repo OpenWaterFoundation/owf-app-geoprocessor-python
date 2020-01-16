@@ -149,11 +149,12 @@ class CreateRasterGeoLayer(AbstractCommand):
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that GeometryFormat parameter is either `BoundingBox`, `WKT` or `WKB`.
+        # noinspection PyPep8Naming
         pv_GeometryFormat = self.get_parameter_value(parameter_name="GeometryFormat",
                                                      command_parameters=command_parameters)
         acceptable_values = ["BoundingBox", "WKT", "WKB"]
         if not validator_util.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
-                                                  empty_string_allowed=False, ignore_case=True):
+                                                      empty_string_allowed=False, ignore_case=True):
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
                 acceptable_values)
@@ -163,11 +164,12 @@ class CreateRasterGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional IfGeoLayerIDExists param is either `Replace`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -209,21 +211,22 @@ class CreateRasterGeoLayer(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
 
         # If the new GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
         # (depends on the value of the IfGeoLayerIDExists parameter.)
-        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "NewGeoLayerID", geolayer_id, None))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "NewGeoLayerID",
+                                                           geolayer_id, None))
 
         # If the GeometryFormat is BoundingBox, continue with the checks.
         if geometry_format.upper() == "BOUNDINGBOX":
 
             # If the GeometryData string does not contain 4 items when converted to a list, raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "IsListLengthCorrect", "GeometryData",
-                                                           geometry_data, "FAIL", other_values=[",", 4]))
+                                                               geometry_data, "FAIL", other_values=[",", 4]))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -243,15 +246,20 @@ class CreateRasterGeoLayer(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_NewGeoLayerID = self.get_parameter_value("NewGeoLayerID")
+        # noinspection PyPep8Naming
         pv_GeometryFormat = self.get_parameter_value("GeometryFormat").upper()
+        # noinspection PyPep8Naming
         pv_GeometryData = self.get_parameter_value("GeometryData")
+        # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
 
         if self.__should_geolayer_be_created(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
-
+            # noinspection PyBroadException
             try:
-
+                layer = None
+                qgs_geometry = None
                 # If the geometry format is bounding box, continue.
                 if pv_GeometryFormat == "BOUNDINGBOX":
 

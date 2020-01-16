@@ -69,11 +69,12 @@ def is_zip_file_request(response_obj) -> bool:
     # PyCharm raises error "Too broad exception clause"
     # noinspection PyBroadException
     try:
-        zipfile.ZipFile(StringIO.StringIO(response_obj.content))
+        zipfile.ZipFile(StringIO(response_obj.content))
         return True
 
     except Exception:
         return False
+
 
 def untar_all_files(tar_file_path: str, output_folder: str) -> None:
     """
@@ -94,6 +95,7 @@ def untar_all_files(tar_file_path: str, output_folder: str) -> None:
 
     # Close the .tar file object.
     tar_file.close()
+
 
 def unzip_all_files(zip_file_path: str, output_folder: str) -> None:
     """

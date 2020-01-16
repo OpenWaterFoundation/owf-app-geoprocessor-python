@@ -27,11 +27,11 @@ from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
-import geoprocessor.util.qgis_util as qgis_util
+# import geoprocessor.util.qgis_util as qgis_util
 
 import logging
 import os
-from plugins.processing.tools import general
+# from plugins.processing.tools import general
 
 
 class SimplifyGeoLayerGeometry(AbstractCommand):
@@ -144,6 +144,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         warning = ""
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -155,6 +156,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter Tolerance is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_Tolerance = self.get_parameter_value(parameter_name='Tolerance', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_Tolerance, False, False):
@@ -166,11 +168,12 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter SimplifyMethod is either `DouglasPeucker` or None.
+        # noinspection PyPep8Naming
         pv_SimplifyMethod = self.get_parameter_value(parameter_name="SimplifyMethod",
                                                      command_parameters=command_parameters)
         acceptable_values = ["DouglasPeucker"]
         if not validator_util.validate_string_in_list(pv_SimplifyMethod, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "SimplifyMethod parameter value ({}) is not recognized.".format(pv_SimplifyMethod)
             recommendation = "Specify one of the acceptable values ({}) for the SimplifyMethod parameter.".format(
                 acceptable_values)
@@ -180,11 +183,12 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `Warn`, `Fail` or None.
+        # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
                                                          command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
         if not validator_util.validate_string_in_list(pv_IfGeoLayerIDExists, acceptable_values, none_allowed=True,
-                                                  empty_string_allowed=True, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
@@ -222,20 +226,21 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "GeoLayerID", geolayer_id,
-                                                       "FAIL"))
+                                                           "FAIL"))
 
         # If the GeoLayer does not have POLYGON or LINE geometry, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "DoesGeoLayerIdHaveCorrectGeometry", "GeoLayerID",
-                                                       geolayer_id, "FAIL", other_values=[["Polygon", "LineString"]]))
+                                                           geolayer_id, "FAIL",
+                                                           other_values=[["Polygon", "LineString"]]))
 
         # If the SimplifiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "SimplifiedGeoLayerID",
-                                                       simplified_geolayer_id, None))
+                                                           simplified_geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -254,16 +259,21 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         """
 
         # Obtain the parameter values.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_Tolerance = self.get_parameter_value("Tolerance")
         tolerance_float = float(pv_Tolerance)
+        # noinspection PyPep8Naming
         pv_SimplifyMethod = self.get_parameter_value("SimplifyMethod", default_value="DouglasPeucker").upper()
         default_simple_id = "{}_simple_{}".format(pv_GeoLayerID, pv_Tolerance)
+        # noinspection PyPep8Naming
         pv_SimplifiedGeoLayerID = self.get_parameter_value("SimplifiedGeoLayerID", default_value=default_simple_id)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_simplify_geolayer(pv_GeoLayerID, pv_SimplifiedGeoLayerID):
 
+            # noinspection PyBroadException
             try:
 
                 # Get the GeoLayer.
@@ -301,8 +311,8 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                                                   geolayer_source_path="MEMORY")
                     self.command_processor.add_geolayer(new_geolayer)
 
-            # Raise an exception if an unexpected error occurs during the process.
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error simplifying GeoLayer {}.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

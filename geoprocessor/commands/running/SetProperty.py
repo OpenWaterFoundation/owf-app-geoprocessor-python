@@ -108,6 +108,7 @@ class SetProperty(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # PropertyName is required
+        # noinspection PyPep8Naming
         pv_PropertyName = self.get_parameter_value(parameter_name='PropertyName', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_PropertyName, False, False):
             message = "PropertyName parameter has no value."
@@ -118,6 +119,7 @@ class SetProperty(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # PropertyType is required
+        # noinspection PyPep8Naming
         pv_PropertyType = self.get_parameter_value(parameter_name='PropertyType', command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_PropertyType, self.__choices_PropertyType, False, False):
             message = 'The requested property type "' + pv_PropertyType + '"" is invalid.'
@@ -131,6 +133,7 @@ class SetProperty(AbstractCommand):
 
         property_value_parameter_count = 0  # increment for PropertyValue or PropertyValues, only one is allowed
         # PropertyValue or PropertyValues are required
+        # noinspection PyPep8Naming
         pv_PropertyValue = self.get_parameter_value(
             parameter_name='PropertyValue', command_parameters=command_parameters)
         if pv_PropertyValue is not None and pv_PropertyValue != "":
@@ -143,6 +146,7 @@ class SetProperty(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
+        # noinspection PyPep8Naming
         pv_PropertyValues = self.get_parameter_value(
             parameter_name='PropertyValues', command_parameters=command_parameters)
         if pv_PropertyValues is not None and pv_PropertyValues != "":
@@ -192,18 +196,25 @@ class SetProperty(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
+        # noinspection PyPep8Naming
         pv_PropertyName = self.get_parameter_value('PropertyName')
+        # noinspection PyPep8Naming
         pv_PropertyType = self.get_parameter_value('PropertyType')
+        # noinspection PyPep8Naming
         pv_PropertyValue = self.get_parameter_value('PropertyValue')
+        # noinspection PyPep8Naming
         pv_PropertyValues = self.get_parameter_value('PropertyValues')
         # Expand the property value string before converting to the requested type
+        # noinspection PyPep8Naming
         pv_PropertyValue_expanded = self.command_processor.expand_parameter_value(pv_PropertyValue)
+        # noinspection PyPep8Naming
         pv_PropertyValues_expanded = self.command_processor.expand_parameter_value(pv_PropertyValues)
         do_list = False  # Single property is the default
         if pv_PropertyValues is not None and pv_PropertyValues != "":
             # Doing a list
             do_list = True
 
+        # noinspection PyBroadException
         try:
             parameter_value_as_list = []
             parameter_value_to_parse = ""

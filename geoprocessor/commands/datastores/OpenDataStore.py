@@ -112,8 +112,8 @@ class OpenDataStore(AbstractCommand):
             "Warn : The new DataStore is not created. A warning is logged.\n" \
             "Fail : The new DataStore is not created. A fail message is logged."
         self.parameter_input_metadata['IfDataStoreIDExists.Value.Default'] = "Replace"
-        self.parameter_input_metadata['IfDataStoreIDExists.Values'] = ["", "Replace", "Open", "ReplaceAndWarn",
-            "Warn", "Fail"]
+        self.parameter_input_metadata['IfDataStoreIDExists.Values'] =\
+            ["", "Replace", "Open", "ReplaceAndWarn", "Warn", "Fail"]
         # DatabaseServer
         self.parameter_input_metadata['DatabaseServer.Description'] = "the database server name or IP address"
         self.parameter_input_metadata['DatabaseServer.Label'] = "Database Server"
@@ -179,6 +179,7 @@ class OpenDataStore(AbstractCommand):
         warning = ""
 
         # Check that the DataStoreID is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID", command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_DataStoreID, False, False):
@@ -189,11 +190,12 @@ class OpenDataStore(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional IfDataStoreIDExists param is `Replace`, `Open`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
+        # noinspection PyPep8Naming
         pv_IfDataStoreIDExists = self.get_parameter_value(parameter_name="IfDataStoreIDExists",
                                                           command_parameters=command_parameters)
 
         if not validator_util.validate_string_in_list(pv_IfDataStoreIDExists, self.__choices_IfDataStoreIDExists,
-                                                  none_allowed=True, empty_string_allowed=False, ignore_case=True):
+                                                      none_allowed=True, empty_string_allowed=False, ignore_case=True):
             message = "IfDataStoreIDExists parameter value ({}) is not recognized.".format(pv_IfDataStoreIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfDataStoreIDExists parameter.". \
                 format(self.__choices_IfDataStoreIDExists)
@@ -203,6 +205,7 @@ class OpenDataStore(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check if the ConfigFile parameter is a non-empty, non-None string.
+        # noinspection PyPep8Naming
         pv_ConfigFile = self.get_parameter_value(parameter_name="ConfigFile", command_parameters=command_parameters)
 
         # If there is a value for ConfigFile, assume "Configuration file configures datastore" method.
@@ -234,11 +237,12 @@ class OpenDataStore(AbstractCommand):
                         CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
             # Check that parameter DatabaseDialect is one of the acceptable values.
+            # noinspection PyPep8Naming
             pv_DatabaseDialect = self.get_parameter_value(parameter_name="DatabaseDialect",
                                                           command_parameters=command_parameters)
 
-            if not validator_util.validate_string_in_list(pv_DatabaseDialect, self.__choices_DatabaseDialect, False, False,
-                                                      True):
+            if not validator_util.validate_string_in_list(pv_DatabaseDialect, self.__choices_DatabaseDialect,
+                                                          False, False, True):
                 message = "DatabaseDialect parameter value ({}) is not recognized.".format(pv_DatabaseDialect)
                 recommendation = "Specify one of the acceptable values ({}) for the DatabaseDialect parameter.".format(
                     self.__choices_DatabaseDialect)
@@ -277,12 +281,12 @@ class OpenDataStore(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the DataStoreID is the same as an already-existing DataStoreID, raise a WARNING, FAILURE or IGNORE
         # (depends on the value of the IfDataStoreIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsDataStoreIdUnique", "DataStoreID", datastore_id,
-                                                       None))
+                                                           None))
 
         # If the "Configuration file configures datastore" method is to be used, continue with check.
         if file_path_abs is not None:
@@ -324,24 +328,38 @@ class OpenDataStore(AbstractCommand):
         """
 
         # Obtain the parameter values. The DatabasePort parameter value will be obtained later in the code.
+        # noinspection PyPep8Naming
         pv_DatabaseDialect = self.get_parameter_value("DatabaseDialect")
+        # noinspection PyPep8Naming
         pv_DatabaseServer = self.get_parameter_value("DatabaseServer")
+        # noinspection PyPep8Naming
         pv_DatabaseName = self.get_parameter_value("DatabaseName")
+        # noinspection PyPep8Naming
         pv_DatabaseUser = self.get_parameter_value("DatabaseUser")
+        # noinspection PyPep8Naming
         pv_DatabasePassword = self.get_parameter_value("DatabasePassword")
+        # noinspection PyPep8Naming
         pv_DatabasePort = self.get_parameter_value("DatabasePort")
+        # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value("DataStoreID")
+        # noinspection PyPep8Naming
         pv_ConfigFile = self.get_parameter_value("ConfigFile")
+        # noinspection PyPep8Naming
         pv_IfDataStoreIDExists = self.get_parameter_value("IfDataStoreIDExists", default_value="Replace")
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_DatabaseServer = self.command_processor.expand_parameter_value(pv_DatabaseServer, self)
+        # noinspection PyPep8Naming
         pv_DatabaseName = self.command_processor.expand_parameter_value(pv_DatabaseName, self)
+        # noinspection PyPep8Naming
         pv_DatabaseUser = self.command_processor.expand_parameter_value(pv_DatabaseUser, self)
+        # noinspection PyPep8Naming
         pv_DatabasePassword = self.command_processor.expand_parameter_value(pv_DatabasePassword, self)
 
         # Convert the File parameter value relative path to an absolute path and expand for ${Property} syntax.
         if pv_ConfigFile:
+            # noinspection PyPep8Naming
             pv_ConfigFile = io_util.verify_path_for_os(io_util.to_absolute_path(
                 self.command_processor.get_property('WorkingDir'), self.command_processor.expand_parameter_value(
                     pv_ConfigFile, self)))
@@ -349,6 +367,7 @@ class OpenDataStore(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_open_datastore(pv_DataStoreID, pv_ConfigFile, pv_IfDataStoreIDExists):
 
+            # noinspection PyBroadException
             try:
 
                 # If the DataStoreID already exists and the IfDataStoreIDExists parameter is set to "Open", continue.
@@ -380,7 +399,7 @@ class OpenDataStore(AbstractCommand):
                     self.command_processor.add_datastore(new_datastore)
 
             # Raise an exception if an unexpected error occurs during the process.
-            except Exception as e:
+            except Exception:
                 self.warning_count += 1
                 message = "Unexpected error opening DataStore {}.".format(pv_DataStoreID)
                 recommendation = "Check the log file for details."

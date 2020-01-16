@@ -135,6 +135,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
         # Check that parameter GeoLayerID is a non-empty, non-None string.
         # - existence of the GeoLayer will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_GeoLayerID, False, False):
@@ -147,6 +148,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
         # Check that parameter OutputFile is a non-empty, non-None string.
         # - existence of the folder will also be checked in run_command().
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_OutputFile, False, False):
@@ -190,18 +192,19 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
-        should_run_command = []
+        should_run_command = list()
 
         # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdExisting", "GeoLayerID", geolayer_id,
+                                                           "FAIL"))
 
         # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
-                                                       output_file_abs, "FAIL"))
+                                                           output_file_abs, "FAIL"))
 
         # If the output precision is not at or between 0 and 15, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "IsIntBetweenRange", "OutputPrecision", output_precision,
-                                                       "FAIL", other_values=[0, 15]))
+        should_run_command.append(validator_util.run_check(self, "IsIntBetweenRange", "OutputPrecision",
+                                                           output_precision, "FAIL", other_values=[0, 15]))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -220,11 +223,15 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         """
 
         # Obtain the parameter values except for the OutputCRS
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
+        # noinspection PyPep8Naming
         pv_OutputPrecision = int(self.get_parameter_value("OutputPrecision", default_value=5))
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value("OutputFile")
 
         # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
@@ -235,6 +242,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute, pv_OutputPrecision):
 
+            # noinspection PyBroadException
             try:
                 # Get the GeoLayer
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
@@ -243,6 +251,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                 geolayer_crs = geolayer.get_crs()
 
                 # Obtain the parameter value of the OutputCRS
+                # noinspection PyPep8Naming
                 pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
 
                 # Write the GeoLayer to a spatial data file in GeoJSONformat
@@ -254,8 +263,8 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                 # Save the output file in the processor
                 self.command_processor.add_output_file(output_file_absolute)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error writing GeoLayer {} to GeoJSON format.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."

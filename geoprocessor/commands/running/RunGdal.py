@@ -73,7 +73,7 @@ class RunGdal(AbstractCommand):
         # Command metadata for command editor display
         self.command_metadata = dict()
         self.command_metadata['Description'] = (
-            "Run a GDAL program to process a raster data file, given the program arguments." )
+            "Run a GDAL program to process a raster data file, given the program arguments.")
         self.command_metadata['EditorType'] = "Simple"
 
         # Parameter metadata
@@ -136,6 +136,7 @@ class RunGdal(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # CommandLine is required, pending other options
+        # noinspection PyPep8Naming
         pv_CommandLine = self.get_parameter_value(parameter_name='CommandLine', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_CommandLine, False, False):
             message = "The CommandLine must be specified."
@@ -146,10 +147,11 @@ class RunGdal(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IncludeParentEnvVars is optional, will default to True at runtime
+        # noinspection PyPep8Naming
         pv_IncludeParentEnvVars = self.get_parameter_value(parameter_name='IncludeParentEnvVars',
                                                            command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IncludeParentEnvVars,
-                                                  self.__choices_IncludeParentEnvVars, True, True):
+                                                      self.__choices_IncludeParentEnvVars, True, True):
             message = "IncludeParentEnvVars parameter is invalid."
             recommendation = "Specify the IncludeParentEnvVars parameter as blank or one of " + \
                              str(self.__choices_IncludeParentEnvVars)
@@ -159,10 +161,11 @@ class RunGdal(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # UseCommandShell is optional, will default to False at runtime
+        # noinspection PyPep8Naming
         pv_UseCommandShell = self.get_parameter_value(parameter_name='UseCommandShell',
                                                       command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_UseCommandShell,
-                                                  self.__choices_UseCommandShell, True, True):
+                                                      self.__choices_UseCommandShell, True, True):
             message = "UseCommandShell parameter is invalid."
             recommendation = "Specify the UseCommandShell parameter as blank or one of " + \
                              str(self.__choices_UseCommandShell)
@@ -187,8 +190,9 @@ class RunGdal(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def create_env_dict(self, include_parent_env_vars: bool, include_env_vars_dict: dict,
-                        exclude_env_vars_list: [str]) -> dict:
+    @classmethod
+    def create_env_dict(cls, include_parent_env_vars: bool, include_env_vars_dict: dict,
+                        exclude_env_vars_list: [str]) -> dict or None:
         """
         Create the environment variable dictionary for the called program.
 
@@ -260,15 +264,19 @@ class RunGdal(AbstractCommand):
 
         # Get data for the command
         print("command parameters=" + string_util.format_dict(self.command_parameters))
+        # noinspection PyPep8Naming
         pv_CommandLine = self.get_parameter_value('CommandLine')
+        # noinspection PyPep8Naming
         pv_UseCommandShell = self.get_parameter_value('UseCommandShell')
         use_command_shell = False  # Default
         if pv_UseCommandShell is not None and pv_UseCommandShell == 'True':
             use_command_shell = True
+        # noinspection PyPep8Naming
         pv_IncludeParentEnvVars = self.get_parameter_value('IncludeParentEnvVars')
         include_parent_env_vars = True  # Default
         if pv_IncludeParentEnvVars is not None and pv_IncludeParentEnvVars == 'False':
             include_parent_env_vars = False
+        # noinspection PyPep8Naming
         pv_IncludeEnvVars = self.get_parameter_value('IncludeEnvVars')
         include_env_vars_dict = None
         if pv_IncludeEnvVars is not None and pv_IncludeEnvVars != "":
@@ -283,43 +291,55 @@ class RunGdal(AbstractCommand):
         # Add environment variables individually by name
         # - these are used when a list of parameters is difficult to parse
         # - this is kind of ugly but meets requirements in the short term
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarName1 = self.get_parameter_value('IncludeEnvVarName1')
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarValue1 = self.get_parameter_value('IncludeEnvVarValue1')
         if pv_IncludeEnvVarName1 is not None and pv_IncludeEnvVarName1 != "":
             if include_env_vars_dict is None:
                 include_env_vars_dict = {}
             include_env_vars_dict[pv_IncludeEnvVarName1] = pv_IncludeEnvVarValue1
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarName2 = self.get_parameter_value('IncludeEnvVarName2')
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarValue2 = self.get_parameter_value('IncludeEnvVarValue2')
         if pv_IncludeEnvVarName2 is not None and pv_IncludeEnvVarName2 != "":
             if include_env_vars_dict is None:
                 include_env_vars_dict = {}
             include_env_vars_dict[pv_IncludeEnvVarName2] = pv_IncludeEnvVarValue2
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarName3 = self.get_parameter_value('IncludeEnvVarName3')
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarValue3 = self.get_parameter_value('IncludeEnvVarValue3')
         if pv_IncludeEnvVarName3 is not None and pv_IncludeEnvVarName3 != "":
             if include_env_vars_dict is None:
                 include_env_vars_dict = {}
             include_env_vars_dict[pv_IncludeEnvVarName3] = pv_IncludeEnvVarValue3
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarName4 = self.get_parameter_value('IncludeEnvVarName4')
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarValue4 = self.get_parameter_value('IncludeEnvVarValue4')
         if pv_IncludeEnvVarName4 is not None and pv_IncludeEnvVarName4 != "":
             if include_env_vars_dict is None:
                 include_env_vars_dict = {}
             include_env_vars_dict[pv_IncludeEnvVarName4] = pv_IncludeEnvVarValue4
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarName5 = self.get_parameter_value('IncludeEnvVarName5')
+        # noinspection PyPep8Naming
         pv_IncludeEnvVarValue5 = self.get_parameter_value('IncludeEnvVarValue5')
         if pv_IncludeEnvVarName5 is not None and pv_IncludeEnvVarName5 != "":
             if include_env_vars_dict is None:
                 include_env_vars_dict = {}
             include_env_vars_dict[pv_IncludeEnvVarName5] = pv_IncludeEnvVarValue5
 
+        # noinspection PyPep8Naming
         pv_ExcludeEnvVars = self.get_parameter_value('ExcludeEnvVars')
         exclude_env_vars_list = None
         if pv_ExcludeEnvVars is not None and pv_ExcludeEnvVars != "":
             # Have specified environment variables to exclude
             exclude_env_vars_list = string_util.delimited_string_to_list(pv_ExcludeEnvVars, trim=True)
 
+        # noinspection PyPep8Naming
         pv_OutputFiles = self.get_parameter_value('OutputFiles')
         output_files_list = None
         if pv_OutputFiles is not None and pv_OutputFiles != "":
@@ -346,11 +366,11 @@ class RunGdal(AbstractCommand):
             raise ValueError(message)
 
         # Run the program as a subprocess
-
+        # noinspection PyBroadException
         try:
             logger.info('Running command line "' + command_line_expanded + '"')
             # Create the environment dictionary
-            env_dict = self.create_env_dict(include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list)
+            env_dict = RunGdal.create_env_dict(include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list)
             print("env_dict=" + string_util.format_dict(env_dict))
             # TODO smalers 2018-12-16 evaluate using shlex.quote() to handle command string
             # TODO smalers 2018-12-16 handle standard input and output

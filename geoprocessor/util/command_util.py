@@ -24,13 +24,14 @@ import geoprocessor.core.CommandParameterMetadata as CommandParameterMetaData
 # from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
+from geoprocessor.core.CommandStatus import CommandStatus
 from geoprocessor.core.CommandStatusType import CommandStatusType
-#from geoprocessor.core.GeoProcessor import GeoProcessor
+# from geoprocessor.core.GeoProcessor import GeoProcessor
 
 import logging
 
 
-def append_command_status_log_records(command_status: CommandStatusType, commands: []) -> None:
+def append_command_status_log_records(command_status: CommandStatus, commands: []) -> None:
     """
     Append log records from a list of commands to a status.  For example, this is used
     when running a list of commands with a "runner" command like RunCommands to get a full list of logs.
@@ -274,7 +275,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str) -> [str]:
         # Whether a comma is found after a parameter pair
         comma_found = False
         param_name_start_pos = -1
-        param_value_end_pos = -1
+        # param_value_end_pos = -1
 
         # Iterate over the characters in the parameter_string.
         for char_index in range(0, len(parameter_string)):
@@ -347,7 +348,7 @@ def read_file_into_string_list(filename: str) -> [str]:
     return string_list
 
 
-def validate_command_parameter_names(command, warning:str, deprecated_parameter_names: [str] = None,
+def validate_command_parameter_names(command, warning: str, deprecated_parameter_names: [str] = None,
                                      deprecated_parameter_notes: [str] = None, remove_invalid: bool = True):
     """
     Validate that the parameter names parsed out of a command and saved in AbstractCommand.command_parmeters

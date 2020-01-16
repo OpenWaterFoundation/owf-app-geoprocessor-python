@@ -287,8 +287,8 @@ class VectorGeoLayer(GeoLayer):
                 # Get the full pathname of the shapefile component file.
                 output_file_full_path = os.path.join(output_file_absolute + extension)
 
-                # If the shapefile component file exists, add it' s absolute path to the files_to_archive list. Note that not
-                # all shapefile component files are required -- some may not exist.
+                # If the shapefile component file exists, add it' s absolute path to the files_to_archive list.
+                # Note that not all shapefile component files are required -- some may not exist.
                 if os.path.exists(output_file_full_path):
                     os.remove(output_file_full_path)
 

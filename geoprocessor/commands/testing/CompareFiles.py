@@ -156,6 +156,7 @@ class CompareFiles(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # InputFile1 is required
+        # noinspection PyPep8Naming
         pv_InputFile1 = self.get_parameter_value(parameter_name='InputFile1', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_InputFile1, False, False):
             message = "The InputFile1 parameter must be specified."
@@ -166,6 +167,7 @@ class CompareFiles(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # InputFile2 is required
+        # noinspection PyPep8Naming
         pv_InputFile2 = self.get_parameter_value(parameter_name='InputFile2', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_InputFile2, False, False):
             message = "The InputFile2 parameter must be specified."
@@ -178,6 +180,7 @@ class CompareFiles(AbstractCommand):
         # CommentLineChar is optional, defaults to # at runtime, for now no checks
 
         # MatchCase is optional, defaults to True at runtime
+        # noinspection PyPep8Naming
         pv_MatchCase = self.get_parameter_value(parameter_name='MatchCase',
                                                 command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_MatchCase, self.__choices_MatchCase, True, True):
@@ -189,6 +192,7 @@ class CompareFiles(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IgnoreWhitespace is optional, defaults to True at runtime
+        # noinspection PyPep8Naming
         pv_IgnoreWhitespace = self.get_parameter_value(parameter_name='IgnoreWhitespace',
                                                        command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IgnoreWhitespace, self.__choices_MatchCase, True, True):
@@ -201,6 +205,7 @@ class CompareFiles(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # AllowedDiffCount is optional, defaults to 0 at runtime, but must be a number if specified
+        # noinspection PyPep8Naming
         pv_AllowedDiffCount = self.get_parameter_value(parameter_name='AllowedDiffCount',
                                                        command_parameters=command_parameters)
         if not validator_util.validate_int(pv_AllowedDiffCount, True, True):
@@ -212,6 +217,7 @@ class CompareFiles(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IfDifferent is optional, defaults to Ignore at runtime
+        # noinspection PyPep8Naming
         pv_IfDifferent = self.get_parameter_value(parameter_name='IfDifferent',
                                                   command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IfDifferent, self.__choices_IfDifferent, True, True):
@@ -223,6 +229,7 @@ class CompareFiles(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IfSame is optional, defaults to Ignore at runtime
+        # noinspection PyPep8Naming
         pv_IfSame = self.get_parameter_value(parameter_name='IfSame',
                                              command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IfSame, self.__choices_IfSame, True, True):
@@ -247,7 +254,7 @@ class CompareFiles(AbstractCommand):
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
-    def __read_line(cls, inf: typing.TextIO, comment_line_char: str, ignore_whitespace: bool) -> str:
+    def __read_line(cls, inf: typing.TextIO, comment_line_char: str, ignore_whitespace: bool) -> str or None:
         """
         Read a single line from the indicated file.
 
@@ -261,6 +268,7 @@ class CompareFiles(AbstractCommand):
         comment_count = 0
         while True:
             # Read until a non-comment line is found
+            # noinspection PyBroadException
             try:
                 iline = inf.readline()
             except Exception:
@@ -296,37 +304,54 @@ class CompareFiles(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get runtime data for the command
+        # noinspection PyPep8Naming
         pv_InputFile1 = self.get_parameter_value('InputFile1')
+        # noinspection PyPep8Naming
         pv_InputFile2 = self.get_parameter_value('InputFile2')
+        # noinspection PyPep8Naming
         pv_CommentLineChar = self.get_parameter_value('CommentLineChar')
         if pv_CommentLineChar is None or pv_CommentLineChar == "":
+            # noinspection PyPep8Naming
             pv_CommentLineChar = "#"  # Default value
+        # noinspection PyPep8Naming
         pv_MatchCase = self.get_parameter_value('MatchCase')
         if pv_MatchCase is None or pv_MatchCase == "":
+            # noinspection PyPep8Naming
             pv_MatchCase = True  # Default value
+        # noinspection PyPep8Naming
         pv_IgnoreWhitespace = self.get_parameter_value('IgnoreWhitespace')
         if pv_IgnoreWhitespace is None or pv_IgnoreWhitespace == "":
+            # noinspection PyPep8Naming
             pv_IgnoreWhitespace = True  # Default value
+        # noinspection PyPep8Naming
         pv_AllowedDiffCount = self.get_parameter_value('AllowedDiffCount')
         if pv_AllowedDiffCount is None or pv_AllowedDiffCount == "":
             allowed_diff_count = 0  # Default value
         else:
             allowed_diff_count = int(pv_AllowedDiffCount)
         # Convert IfDifferent and IfSame to internal types, Ignore will convert to None, which is OK
+        # noinspection PyPep8Naming
         pv_IfDifferent = self.get_parameter_value('IfDifferent')
         if pv_IfDifferent is None or pv_IfDifferent == "":
+            # noinspection PyPep8Naming
             pv_IfDifferent = "Ignore"  # Default value
+        # noinspection PyPep8Naming
         pv_IfDifferent_CommandStatusType = CommandStatusType.value_of(pv_IfDifferent, True)
+        # noinspection PyPep8Naming
         pv_IfSame = self.get_parameter_value('IfSame')
         if pv_IfSame is None or pv_IfSame == "":
+            # noinspection PyPep8Naming
             pv_IfSame = "Ignore"  # Default value
+        # noinspection PyPep8Naming
         pv_IfSame_CommandStatusType = CommandStatusType.value_of(pv_IfSame, True)
 
         # Runtime checks on input
 
+        # noinspection PyPep8Naming
         pv_InputFile1_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_InputFile1, self)))
+        # noinspection PyPep8Naming
         pv_InputFile2_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_InputFile2, self)))
@@ -340,6 +365,7 @@ class CompareFiles(AbstractCommand):
 
         diff_count = 0
         line_count_compared = 0
+        # noinspection PyBroadException
         try:
             input_count = 2
             if not os.path.exists(pv_InputFile1_absolute):

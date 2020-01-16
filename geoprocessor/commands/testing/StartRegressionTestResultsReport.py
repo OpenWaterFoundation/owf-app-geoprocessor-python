@@ -59,7 +59,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = {}
+        self.command_metadata = dict()
         self.command_metadata['Description'] =\
             "Start a report file (and optionally results table) to be written to as regression tests are run."
         self.command_metadata['EditorType'] = "Simple"
@@ -176,6 +176,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # OutputFile is required
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
         if not validator_util.validate_string(pv_OutputFile, False, False):
             message = "The OutputFile must be specified."
@@ -206,7 +207,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
         Returns:
             None
         """
-        logger = logging.getLogger(__name__)
+        # logger = logging.getLogger(__name__)
         if cls.__regression_test_fp is None:
             # Regression test file was never opened
             # - this is not important to most users, especially if not running tests
@@ -305,10 +306,12 @@ class StartRegressionTestResultsReport(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get data for the command
+        # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
 
         # Runtime checks on input
 
+        # noinspection PyPep8Naming
         pv_OutputFile_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -320,7 +323,9 @@ class StartRegressionTestResultsReport(AbstractCommand):
 
         # Open the regression test results file
 
+        # noinspection PyBroadException
         try:
+            # noinspection PyPep8Naming
             pv_OutputFile_absolute = io_util.verify_path_for_os(
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                          self.command_processor.expand_parameter_value(pv_OutputFile, self)))

@@ -17,11 +17,8 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-import copy
-
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
-from PyQt5 import QtWidgets
 
 class CommandListBackup(object):
     """
@@ -34,7 +31,7 @@ class CommandListBackup(object):
         # Create a new command list QListWidget object
         self.command_list = []
 
-    def command_list_modified(self, command_list: [AbstractCommand]) -> None:
+    def command_list_modified(self, command_list: [AbstractCommand]) -> bool:
         """
         Check to see if the command list has been modified since the last save. The last saved
         command list should have been updated by update_command_list()

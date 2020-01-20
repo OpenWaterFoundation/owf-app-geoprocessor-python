@@ -323,12 +323,15 @@ class GenericCommandEditor(AbstractCommandEditor):
             # # ----------------------------------------------------
             # # Description component, optionally with default value
             # # ----------------------------------------------------
+            # noinspection PyPep8Naming
             parameter_Description = None
             try:
-                parameter_description = command_parameter_metadata.parameter_description
+                # noinspection PyPep8Naming
+                parameter_Description = command_parameter_metadata.parameter_description
             except KeyError:
+                # noinspection PyPep8Naming
                 parameter_Description = ""
-            self.setup_ui_parameter_description(parameter_name, parameter_description)
+            self.setup_ui_parameter_description(parameter_name, parameter_Description)
 
     # TODO smalers 2020-01-14 evaluate overloading being different than base class.
     def setup_ui_parameter_description(self, parameter_name: str, parameter_desc: str) -> None:

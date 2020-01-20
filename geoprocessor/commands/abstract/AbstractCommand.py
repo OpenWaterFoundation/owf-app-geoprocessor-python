@@ -74,6 +74,13 @@ class AbstractCommand(object):
         # Command status to track issues.
         self.command_status: CommandStatus = CommandStatus()
 
+    def __str__(self):
+        """
+        Returns:
+            Return the string representation of the command.
+        """
+        return self.command_string
+
     def check_command_parameters(self, command_parameters: dict) -> None:
         """
         Check the command parameters for validity.

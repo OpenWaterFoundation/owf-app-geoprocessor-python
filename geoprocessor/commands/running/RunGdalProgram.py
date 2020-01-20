@@ -1,4 +1,4 @@
-# RunProgram - command to run a program
+# RunGdalProgram - command to run a program
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -26,31 +26,109 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
+import geoprocessor.util.log_util as log_util
 import geoprocessor.util.os_util as os_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
+import shlex
 import subprocess
 
 
-class RunOgr(AbstractCommand):
+class RunGdalProgram(AbstractCommand):
     """
-    The RunOgr command runs a ogr* program.
+    The RunGdalProgram command runs a gdal* program.
     """
 
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("OgrProgram", type("")),
-        CommandParameterMetadata("CommandArguments", type("")),
-        CommandParameterMetadata("UseCommandShell", type("")),
-        CommandParameterMetadata("IncludeParentEnvVars", type("")),
-        CommandParameterMetadata("IncludeEnvVars", type("")),
-        CommandParameterMetadata("OutputFiles", type(""))
+        CommandParameterMetadata("GdalProgram", str),
+        CommandParameterMetadata("CommandLine", str),
+        CommandParameterMetadata("UseCommandShell", str),
+        CommandParameterMetadata("IncludeParentEnvVars", str),
+        CommandParameterMetadata("IncludeEnvVars", str),
+        CommandParameterMetadata("Timeout", int),
+        CommandParameterMetadata("OutputFiles", str),
+        CommandParameterMetadata("StdoutFile", str),
+        CommandParameterMetadata("StderrFile", str)
     ]
 
-    # Choices for OgrProgram, used to validate parameter and display in editor
-    __choices_OgrProgram = ["ogr2ogr", "ogrinfo"]
+    # Choices for UseCommandShell, used to validate parameter and display in editor
+    # See: https://gdal.org/programs/index.html
+    __choices_GdalProgram = [
+        "gdaladdo",
+        "gdalbuildvrt",
+        "gdal_calc.py",
+        "gdalcompare",
+        "gdal-config",
+        "gdal_contour",
+        "gdaldem",
+        "gdal_edit",
+        "gdal_fillnodata",
+        "gdal_grid",
+        "gdalinfo",
+        "gdallocationinfo",
+        "gdalmanage",
+        "gdalmdiminfo",
+        "gdalmdimtranslate",
+        "gdal_merge",
+        "gdalmove",
+        "gdal_pansharpen.py",
+        "gdal_polygonize",
+        "gdal_proximity",
+        "gdal_rasterize",
+        "gdal_retile",
+        "gdal_sieve",
+        "gdalsrsinfo",
+        "gdaltindex",
+        "gdaltransform",
+        "gdal_translate",
+        "gdal_viewshed",
+        "gdalwarp",
+        "gdal2tiles",
+        "nearblack",
+        "pct2rgb",
+        "rgb2pct",
+    ]
+
+    # Description for each program
+    # See: https://gdal.org/programs/index.html
+    __gdal_program_description = {
+        "gdaladdo": "Builds or rebuilds overview images.",
+        "gdalbuildvrt": "Builds a VRT from a list of datasets.",
+        "gdal_calc.py": "Command line raster calculator with numpy syntax.",
+        "gdalcompare": "Compare two images.",
+        "gdal-config": "Determines various information about a GDAL installation.",
+        "gdal_contour": "Builds vector contour lines from a raster elevation model.",
+        "gdaldem": "Tools to analyze and visualize DEMs.",
+        "gdal_edit": "Edit in place various information of an existing GDAL dataset.",
+        "gdal_fillnodata": "Fill raster regions by interpolation from edges.",
+        "gdal_grid": "Creates regular grid from the scattered data.",
+        "gdalinfo": "Lists information about a raster dataset.",
+        "gdallocationinfo": "Raster query tool.",
+        "gdalmanage": "Identify, delete, rename and copy raster data files.",
+        "gdalmdiminfo": "Reports structure and content of a multidimensional dataset.",
+        "gdalmdimtranslate": "Converts multidimensional data between different formats, and perform subsetting.",
+        "gdal_merge": "Mosaics a set of images.",
+        "gdalmove": "Transform georeferencing of raster file in place.",
+        "gdal_pansharpen.py": "Perform a pansharpen operation.",
+        "gdal_polygonize": "Produces a polygon feature layer from a raster.",
+        "gdal_proximity": "Produces a raster proximity map.",
+        "gdal_rasterize": "Burns vector geometries into a raster.",
+        "gdal_retile": "Retiles a set of tiles and/or build tiled pyramid levels.",
+        "gdal_sieve": "Removes small raster polygons.",
+        "gdalsrsinfo": "Lists info about a given SRS in number of formats (WKT, PROJ.4, etc.)",
+        "gdaltindex": "Builds a shapefile as a raster tileindex.",
+        "gdaltransform": "Transforms coordinates.",
+        "gdal_translate": "Converts raster data between different formats.",
+        "gdal_viewshed": "Compute a visibility mask for a raster.",
+        "gdalwarp": "Image reprojection and warping utility.",
+        "gdal2tiles": "Generates directory with TMS tiles, KMLs and simple web viewers.",
+        "nearblack": "Convert nearly black/white borders to black.",
+        "pct2rgb": "Convert an 8bit paletted image to 24bit RGB.",
+        "rgb2pct": "Convert a 24bit RGB image to 8bit paletted.",
+    }
 
     # Choices for UseCommandShell, used to validate parameter and display in editor
     __choices_UseCommandShell = ["False", "True"]
@@ -67,33 +145,41 @@ class RunOgr(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
-        self.command_name = "RunGdal"
+        self.command_name = "RunGdalProgram"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
         self.command_metadata = dict()
         self.command_metadata['Description'] = (
-            "Run an ogr* program to process a vector spatial data file, given the program arguments.")
+            "Run a GDAL program to process a raster data file, given the program arguments.\n"
+            "For portable command files, specify the GDAL program to run using ${GdalBinDir} property or similar.\n"
+            "If ${ is not found at the start of the command line, ${GdalBinDir} is automatically inserted.")
         self.command_metadata['EditorType'] = "Simple"
 
         # Parameter metadata
         self.parameter_input_metadata = dict()
+
         # GDAL program
-        self.parameter_input_metadata['OgrProgram.Description'] = "OGR program to run."
-        self.parameter_input_metadata['OgrProgram.Label'] = "OGR program"
-        self.parameter_input_metadata['OgrProgram.Tooltip'] = "OGR program to run."
-        self.parameter_input_metadata['OgrProgram.Required'] = True
+        self.parameter_input_metadata['GdalProgram.Description'] = "GDAL program to run"
+        self.parameter_input_metadata['GdalProgram.Label'] = "GDAL program"
+        self.parameter_input_metadata['GdalProgram.Tooltip'] = "GDAL program to run."
+        self.parameter_input_metadata['GdalProgram.Values'] = RunGdalProgram.__choices_GdalProgram
+        self.parameter_input_metadata['GdalProgram.Values.Default'] = RunGdalProgram.__choices_GdalProgram[0]
+        self.parameter_input_metadata['GdalProgram.Required'] = True
+
         # CommandLine
-        self.parameter_input_metadata['CommandArguments.Description'] = "Command line arguments."
-        self.parameter_input_metadata['CommandArguments.Label'] = "Command arguments"
-        self.parameter_input_metadata['CommandArguments.Tooltip'] = "Command arguments, separated by spaces."
-        self.parameter_input_metadata['CommandArguments.Required'] = True
+        self.parameter_input_metadata['CommandLine.Description'] = "command line"
+        self.parameter_input_metadata['CommandLine.Label'] = "Command line"
+        self.parameter_input_metadata['CommandLine.Tooltip'] = "Full command line, separated by spaces."
+        self.parameter_input_metadata['CommandLine.Required'] = True
+
         # UseCommandShell
         self.parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
         self.parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
         self.parameter_input_metadata['UseCommandShell.Tooltip'] = ""
         self.parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
         self.parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
+
         # IncludeParentEnvVars
         self.parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
         self.parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
@@ -101,22 +187,51 @@ class RunOgr(AbstractCommand):
             "Indicate whether the parent environment variables should be passed to the program run environment.")
         self.parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
         self.parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
+
         # IncludeEnvVars
         self.parameter_input_metadata['IncludeEnvVars.Description'] = ""
         self.parameter_input_metadata['IncludeEnvVars.Label'] = "Include environment variables"
         self.parameter_input_metadata['IncludeEnvVars.Tooltip'] = (
             "Specify environment variables to be defined for the program run environment in format:"
             "VAR1=Value1,VAR2=Value2.")
+
         # ExcludeEnvVars
         self.parameter_input_metadata['ExcludeEnvVars.Description'] = ""
         self.parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude environment variables'
         self.parameter_input_metadata['ExcludeEnvVars.Tooltip'] = (
             "Specify environment variables to be removed from the program run environment, separated by commas.")
+
+        # Timeout
+        self.parameter_input_metadata['Timeout.Description'] = ""
+        self.parameter_input_metadata['Timeout.Label'] = 'Timeout (seconds)'
+        self.parameter_input_metadata['Timeout.Default'] = "0"
+        self.parameter_input_metadata['Timeout.Tooltip'] = (
+            "Timeout for process (seconds), after which the process will be killed.")
+
         # OutputFiles
         self.parameter_input_metadata['OutputFiles.Description'] = ""
         self.parameter_input_metadata['OutputFiles.Label'] = "Output files"
         self.parameter_input_metadata['OutputFiles.Tooltip'] = (
-            "Specify the output files, separated by commas.  Can specify with ${Property}.")
+            "Specify the output files to add to Results, separated by commas.  Can specify with ${Property}.")
+
+        # StdoutFile
+        self.parameter_input_metadata['StdoutFile.Description'] = "standard output file"
+        self.parameter_input_metadata['StdoutFile.Label'] = "Standard output file"
+        self.parameter_input_metadata['StdoutFile.Tooltip'] = (
+            "Name of file for program standard output, or 'logfile' to write to the log file.  "
+            "${Property} syntax is recognized.")
+        self.parameter_input_metadata['StdoutFile.FileSelector.Type'] = "Write"
+        self.parameter_input_metadata['StdoutFile.FileSelector.Title'] = "Select a file to write standard output"
+
+        # StderrFile
+        self.parameter_input_metadata['StderrFile.Description'] = "standard error file"
+        self.parameter_input_metadata['StderrFile.Label'] = "Standard error file"
+        self.parameter_input_metadata['StderrFile.Tooltip'] = (
+            "Name of file for program standard error, or 'logfile' to write to the log file.  "
+            "${Property} syntax is recognized.")
+        self.parameter_input_metadata['StderrFile.Required'] = False
+        self.parameter_input_metadata['StderrFile.FileSelector.Type'] = "Write"
+        self.parameter_input_metadata['StderrFile.FileSelector.Title'] = "Select a file to write standard error"
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """
@@ -126,7 +241,7 @@ class RunOgr(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            None
+            None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -260,10 +375,12 @@ class RunOgr(AbstractCommand):
         """
         warning_count = 0
         logger = logging.getLogger(__name__)
-        logger.info('In RunProgram.run_command')
+        logger.info('In RunGdalProgram.run_command')
 
         # Get data for the command
         print("command parameters=" + string_util.format_dict(self.command_parameters))
+        # noinspection PyPep8Naming
+        pv_GdalProgram = self.get_parameter_value('GdalProgram')
         # noinspection PyPep8Naming
         pv_CommandLine = self.get_parameter_value('CommandLine')
         # noinspection PyPep8Naming
@@ -288,56 +405,19 @@ class RunOgr(AbstractCommand):
             for key, value in include_env_vars_dict.items():
                 include_env_vars_dict[key] = self.command_processor.expand_parameter_value(value, self)
 
-        # Add environment variables individually by name
-        # - these are used when a list of parameters is difficult to parse
-        # - this is kind of ugly but meets requirements in the short term
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName1 = self.get_parameter_value('IncludeEnvVarName1')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue1 = self.get_parameter_value('IncludeEnvVarValue1')
-        if pv_IncludeEnvVarName1 is not None and pv_IncludeEnvVarName1 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName1] = pv_IncludeEnvVarValue1
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName2 = self.get_parameter_value('IncludeEnvVarName2')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue2 = self.get_parameter_value('IncludeEnvVarValue2')
-        if pv_IncludeEnvVarName2 is not None and pv_IncludeEnvVarName2 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName2] = pv_IncludeEnvVarValue2
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName3 = self.get_parameter_value('IncludeEnvVarName3')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue3 = self.get_parameter_value('IncludeEnvVarValue3')
-        if pv_IncludeEnvVarName3 is not None and pv_IncludeEnvVarName3 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName3] = pv_IncludeEnvVarValue3
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName4 = self.get_parameter_value('IncludeEnvVarName4')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue4 = self.get_parameter_value('IncludeEnvVarValue4')
-        if pv_IncludeEnvVarName4 is not None and pv_IncludeEnvVarName4 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName4] = pv_IncludeEnvVarValue4
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName5 = self.get_parameter_value('IncludeEnvVarName5')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue5 = self.get_parameter_value('IncludeEnvVarValue5')
-        if pv_IncludeEnvVarName5 is not None and pv_IncludeEnvVarName5 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName5] = pv_IncludeEnvVarValue5
-
         # noinspection PyPep8Naming
         pv_ExcludeEnvVars = self.get_parameter_value('ExcludeEnvVars')
         exclude_env_vars_list = None
         if pv_ExcludeEnvVars is not None and pv_ExcludeEnvVars != "":
             # Have specified environment variables to exclude
             exclude_env_vars_list = string_util.delimited_string_to_list(pv_ExcludeEnvVars, trim=True)
+
+        # noinspection PyPep8Naming
+        pv_Timeout = self.get_parameter_value('Timeout')
+        timeout = None  # handled by subprocess.run()
+        if pv_Timeout is not None and pv_Timeout != "":
+            # Have specified environment variables to exclude
+            timeout = int(pv_Timeout)
 
         # noinspection PyPep8Naming
         pv_OutputFiles = self.get_parameter_value('OutputFiles')
@@ -354,10 +434,48 @@ class RunOgr(AbstractCommand):
                         self.command_processor.get_property('WorkingDir'),
                         self.command_processor.expand_parameter_value(output_file, self)))
 
+        # noinspection PyPep8Naming
+        pv_StdoutFile = self.get_parameter_value('StdoutFile')
+        stdout_file_full = pv_StdoutFile
+        if pv_StdoutFile is not None and pv_StdoutFile != "":
+            # Have specified stdout file to use for stdout
+            stdout_file_full = io_util.verify_path_for_os(
+                io_util.to_absolute_path(
+                    self.command_processor.get_property('WorkingDir'),
+                    self.command_processor.expand_parameter_value(pv_StdoutFile, self)))
+        else:
+            # Make sure it is None if an empty string was specified
+            # noinspection PyPep8Naming
+            pv_StdoutFile = None
+
+        # noinspection PyPep8Naming
+        pv_StderrFile = self.get_parameter_value('StderrFile')
+        stderr_file_full = pv_StderrFile
+        if pv_StderrFile is not None and pv_StderrFile != "":
+            # Have specified stderr file to use for stdout
+            stderr_file_full = io_util.verify_path_for_os(
+                io_util.to_absolute_path(
+                    self.command_processor.get_property('WorkingDir'),
+                    self.command_processor.expand_parameter_value(pv_StderrFile, self)))
+        else:
+            # Make sure it is None if an empty string was specified
+            # noinspection PyPep8Naming
+            pv_StderrFile = None
+
         logger.info('Command line before expansion="' + pv_CommandLine + '"')
 
         # Runtime checks on input
 
+        # TODO smalers 2020-01-18 determine if 'GdalProgram' is found in the ${GdalBinDir} folder
+        # - for now put in some logic to avoid warning about non-use of the variable
+        if pv_GdalProgram is None:
+            pass
+
+        # Expand the command line
+        if not pv_CommandLine.startswith("${"):
+            # Make sure that the execable location has the full path
+            # noinspection PyPep8Naming
+            pv_CommandLine = "${GdalBinDir}/" + pv_CommandLine
         command_line_expanded = self.command_processor.expand_parameter_value(pv_CommandLine, self)
 
         if warning_count > 0:
@@ -366,23 +484,96 @@ class RunOgr(AbstractCommand):
             raise ValueError(message)
 
         # Run the program as a subprocess
-
         # noinspection PyBroadException
         try:
             logger.info('Running command line "' + command_line_expanded + '"')
             # Create the environment dictionary
-            env_dict = RunOgr.create_env_dict(include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list)
-            print("env_dict=" + string_util.format_dict(env_dict))
+            env_dict = RunGdalProgram.create_env_dict(include_parent_env_vars, include_env_vars_dict,
+                                                      exclude_env_vars_list)
+            # print("env_dict=" + string_util.format_dict(env_dict))
             # TODO smalers 2018-12-16 evaluate using shlex.quote() to handle command string
             # TODO smalers 2018-12-16 handle standard input and output
-            p = subprocess.Popen(command_line_expanded, shell=use_command_shell, env=env_dict)
-            # Wait for the process to terminate since need it to be done before other commands do their work
-            # with the command output.
-            p.wait()
-            return_status = p.poll()
-            if return_status != 0:
+            use_run = False
+            return_status = -1
+            if use_run:
+                # Use subprocess.run(), available as of Python 3.5
+                # - shlex is used to parse command line string into arguments.
+                # - For the following logic, 'capture_output' is not used because output is immediately redirected
+                #   to the appropriate location.  'capture_output' is used ot retrieve output from
+                #   subprocess.CompletedProcess.
+                args = shlex.split(command_line_expanded)
+                # By default the stdout and stderr are just output by the subprocess defaults.
+                # However, the output can be redirected to a file.
+                # If either stdout our stderr is to be captured, use the 'capture_output' parameter.
+                capture_output = None  # Do not capture output because stderr and stdout are being specified
+                stderr = None  # Default is don't capture stderr
+                stdout = None  # Default is don't capture stdout
+                stdout_file = None
+                stderr_file = None
+
+                # Handle stdout parameters
+                if pv_StdoutFile is not None:
+                    capture_output = True
+                    if pv_StdoutFile == 'logfile':
+                        # Get the file number of the current log file
+                        logfile_handler: logging.FileHandler = log_util.get_logfile_handler()
+                        if logfile_handler is not None:
+                            stdout = logfile_handler.stream.fileno()
+                    elif pv_StdoutFile == 'DEVNULL':
+                        # Special value that should be passed as is
+                        # - will write standard output to /dev/null on Linux
+                        stdout = 'DEVNULL'
+                    else:
+                        # Open the file to receive stdout output, perhaps the desired output of the program if it
+                        # does not create its own output file
+                        stdout_file = open(stdout_file_full)
+                        stderr = stdout_file.fileno()
+
+                # Handle stderr parameters
+                if pv_StderrFile is not None:
+                    if pv_StderrFile == 'logfile':
+                        # Get the file number of the current log file
+                        logfile_handler: logging.FileHandler = log_util.get_logfile_handler()
+                        if logfile_handler is not None:
+                            stderr = logfile_handler.stream.fileno()
+                    elif pv_StderrFile == 'DEVNULL' or pv_StderrFile == 'STDOUT':
+                        # Special value that should be passed as is
+                        # - will write standard output to /dev/null on Linux
+                        stderr = pv_StderrFile
+                    else:
+                        # Open the file to receive stderr output, for example to isolate errors to a file
+                        stderr_file = open(stderr_file_full)
+                        stderr = stderr_file.fileno()
+                # Now run the process
+                completed_process = subprocess.run(args, shell=use_command_shell, env=env_dict, timeout=timeout,
+                                                   capture_output=capture_output, stdout=stdout, stderr=stderr)
+
+                # Get the return information
+                # - note that capture_output=None above so stdout and stderr cannot be returned from CompletedProcess
+                return_status = completed_process.returncode
+
+                # Close any files that may have been opened
+                # - this does not close the log file, which should remain open for other logging messages
+                if stdout_file is not None:
+                    stdout_file.close()
+                if stderr_file is not None:
+                    stderr_file.close()
+            else:
+                # Older logic that will be phased out if the above 'run()' logic works
+                # Use subprocess.Popen
+                p = subprocess.Popen(command_line_expanded, shell=use_command_shell, env=env_dict)
+                # Wait for the process to terminate since need it to be done before other commands do their work
+                # with the command output.
+                p.wait()
+                return_status = p.poll()
+                # Wait for the process to terminate since need it to be done before other commands do their work
+
+            if return_status == 0:
+                logger.info("Return status of " + str(return_status) + " running program.")
+            else:
                 warning_count += 1
-                message = 'Nonzero return status running program "' + command_line_expanded + '"'
+                message = 'Nonzero return status (' + str(return_status) + ' running program "' + \
+                          command_line_expanded + '"'
                 logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(
                     CommandPhaseType.RUN,
@@ -391,7 +582,7 @@ class RunOgr(AbstractCommand):
 
         except Exception:
             warning_count += 1
-            message = 'Unexpected error running program "' + command_line_expanded + '"'
+            message = 'Unexpected error running GDAL program "' + command_line_expanded + '"'
             logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,

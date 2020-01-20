@@ -72,6 +72,7 @@ def init_properties() -> None:
 
     Returns:  None
     """
+    # Set program information
     # Program copyright text, e.g., "Copyright 2017-2020, Organization"
     program_properties['ProgramCopyright'] = ""
     # Program icon, full path

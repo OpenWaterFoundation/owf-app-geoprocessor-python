@@ -87,6 +87,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
         # Parameter Metadata
         self.parameter_input_metadata = dict()
+
         # SpatialDataFile
         self.parameter_input_metadata['SpatialDataFile.Description'] = "GeoJSON file to read"
         self.parameter_input_metadata['SpatialDataFile.Label'] = "GeoJSON file"
@@ -95,6 +96,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         self.parameter_input_metadata['SpatialDataFile.Required'] = True
         self.parameter_input_metadata['SpatialDataFile.FileSelector.Type'] = "Read"
         self.parameter_input_metadata['SpatialDataFile.FileSelector.Title'] = "Select a GeoJSON file to read"
+
         # GeoLayerID
         self.parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
         self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
@@ -102,6 +104,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             "A GeoLayer identifier. Formatting characters and ${Property} syntax are recognized."
         self.parameter_input_metadata['GeoLayerID.Value.Default'] = (
            "The GeoJSON filename without the leading path and without the file extension.")
+
         # IfGeoLayerIDExists
         self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
         self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"

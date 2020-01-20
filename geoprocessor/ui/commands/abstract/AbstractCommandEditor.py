@@ -417,7 +417,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.dialog_ButtonBox.setObjectName(qt_util.from_utf8("dialog_ButtonBox"))
         self.grid_layout_row = self.grid_layout_row + 1
         # Add buttons to enable event handling
-        # - use custom buttons rather than defaultsa because events need to be handled
+        # - use custom buttons rather than defaults because events need to be handled
         # OK button
         # ---------
         self.ok_button = QtWidgets.QPushButton("OK")
@@ -428,6 +428,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
         # Use action role because action is handled in the dialog
         self.dialog_ButtonBox.addButton(self.ok_button, QtWidgets.QDialogButtonBox.ActionRole)
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         self.ok_button.clicked.connect(self.ui_action_ok_clicked)
         # Cancel button
         # ---------
@@ -439,6 +441,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # lambda clicked, f.y_parameter: self.ui_action_open_file(self.load_file_button))
         # Use action role because action is handled in the dialog
         self.dialog_ButtonBox.addButton(self.cancel_button, QtWidgets.QDialogButtonBox.ActionRole)
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         self.cancel_button.clicked.connect(self.ui_action_cancel_clicked)
         # Button box is added regardless of how buttons are defined
         buttons_GridLayout.addWidget(self.dialog_ButtonBox, self.grid_layout_row, 6, 1, 2)
@@ -474,6 +478,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.View_Documentation_Button.setObjectName(qt_util.from_utf8("View_Documentation_Button"))
         self.View_Documentation_Button.setText(qt_util.translate("Dialog", "  View Documentation  ", None))
         self.View_Documentation_Button.setToolTip("View command documentation in web browser.")
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         self.View_Documentation_Button.clicked.connect(self.view_documentation)
         self.gridLayout2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
 
@@ -556,6 +562,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         for i, value in enumerate(parameter_Values):
             parameter_QComboBox.addItem(value)
         # Add an event to refresh the command if anything changes
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         parameter_QComboBox.currentIndexChanged.connect(self.refresh_ui)
         if parameter_Tooltip is not None and parameter_Tooltip != "":
             parameter_QComboBox.setToolTip(parameter_Tooltip)
@@ -692,6 +700,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         if self.update:
             parameter_value = self.command.get_parameter_value(parameter_name)
             parameter_QLineEdit.setText(parameter_value)
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         parameter_QLineEdit.textChanged.connect(self.refresh_ui)
         # Save the UI component
         self.input_ui_components[parameter_name] = parameter_QLineEdit
@@ -725,6 +735,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         if file_selector_button_tooltip != "":
             parameter_select_file_QPushButton.setToolTip(file_selector_button_tooltip)
         parameter_select_file_QPushButton.setMaximumWidth(50)
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         parameter_select_file_QPushButton.clicked.connect(
             lambda clicked, y_param=self.y_parameter: self.ui_action_select_file(parameter_select_file_QPushButton))
         self.parameter_QGridLayout.addWidget(parameter_select_file_QPushButton, self.y_parameter, 6, 1, 1)
@@ -794,6 +806,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         if self.update:
             parameter_value = self.command.get_parameter_value(parameter_name)
             parameter_QLineEdit.setText(parameter_value)
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         parameter_QLineEdit.textChanged.connect(self.refresh_ui)
         # Add the component to the list maintained to get values out of UI components
         self.input_ui_components[parameter_name] = parameter_QLineEdit

@@ -1,4 +1,4 @@
-# RunProgram - command to run a program
+# RunOgrProgram - command to run an OGR program
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -35,13 +35,13 @@ import os
 import subprocess
 
 
-class RunGdal(AbstractCommand):
+class RunOgrProgram(AbstractCommand):
     """
-    The RunGdal command runs a gdal* program.
+    The RunOgrProgram command runs a ogr* program.
     """
 
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("GdalProgram", type("")),
+        CommandParameterMetadata("OgrProgram", type("")),
         CommandParameterMetadata("CommandArguments", type("")),
         CommandParameterMetadata("UseCommandShell", type("")),
         CommandParameterMetadata("IncludeParentEnvVars", type("")),
@@ -49,8 +49,25 @@ class RunGdal(AbstractCommand):
         CommandParameterMetadata("OutputFiles", type(""))
     ]
 
-    # Choices for UseCommandShell, used to validate parameter and display in editor
-    __choices_GdalProgram = ["gdalcompare", "gdalinfo"]
+    # Choices for OgrProgram, used to validate parameter and display in editor
+    # See: https://gdal.org/programs/index.html
+    __choices_OgrProgram = [
+        "ogrinfo"
+        "ogrlineref",
+        "ogrmerge",
+        "ogrtindex",
+        "ogr2ogr"
+    ]
+
+    # Description for each program
+    # See: https://gdal.org/programs/index.html
+    __ogr_program_description = {
+        "ogrinfo": "Lists information about an OGR-supported data source.",
+        "ogrlineref": "Create linear reference and provide some calculations using it.",
+        "ogrmerge": "Merge several vector datasets into a single one.",
+        "ogrtindex": "Creates a tileindex.",
+        "ogr2ogr": "Converts simple features data between file formats."
+    }
 
     # Choices for UseCommandShell, used to validate parameter and display in editor
     __choices_UseCommandShell = ["False", "True"]
@@ -73,16 +90,16 @@ class RunGdal(AbstractCommand):
         # Command metadata for command editor display
         self.command_metadata = dict()
         self.command_metadata['Description'] = (
-            "Run a GDAL program to process a raster data file, given the program arguments.")
+            "Run an ogr* program to process a vector spatial data file, given the program arguments.")
         self.command_metadata['EditorType'] = "Simple"
 
         # Parameter metadata
         self.parameter_input_metadata = dict()
         # GDAL program
-        self.parameter_input_metadata['GdalProgram.Description'] = "GDAL program to run."
-        self.parameter_input_metadata['GdalProgram.Label'] = "GDAL program"
-        self.parameter_input_metadata['GdalProgram.Tooltip'] = "GDAL program to run."
-        self.parameter_input_metadata['GdalProgram.Required'] = True
+        self.parameter_input_metadata['OgrProgram.Description'] = "OGR program to run."
+        self.parameter_input_metadata['OgrProgram.Label'] = "OGR program"
+        self.parameter_input_metadata['OgrProgram.Tooltip'] = "OGR program to run."
+        self.parameter_input_metadata['OgrProgram.Required'] = True
         # CommandLine
         self.parameter_input_metadata['CommandArguments.Description'] = "Command line arguments."
         self.parameter_input_metadata['CommandArguments.Label'] = "Command arguments"
@@ -126,7 +143,7 @@ class RunGdal(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            None.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -260,10 +277,12 @@ class RunGdal(AbstractCommand):
         """
         warning_count = 0
         logger = logging.getLogger(__name__)
-        logger.info('In RunProgram.run_command')
+        logger.info('In RunOgrProgram.run_command')
 
         # Get data for the command
         print("command parameters=" + string_util.format_dict(self.command_parameters))
+        # noinspection PyPep8Naming
+        pv_GdalProgram = self.get_parameter_value('GdalProgram')
         # noinspection PyPep8Naming
         pv_CommandLine = self.get_parameter_value('CommandLine')
         # noinspection PyPep8Naming
@@ -287,50 +306,6 @@ class RunGdal(AbstractCommand):
                                                                                          trim=True)
             for key, value in include_env_vars_dict.items():
                 include_env_vars_dict[key] = self.command_processor.expand_parameter_value(value, self)
-
-        # Add environment variables individually by name
-        # - these are used when a list of parameters is difficult to parse
-        # - this is kind of ugly but meets requirements in the short term
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName1 = self.get_parameter_value('IncludeEnvVarName1')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue1 = self.get_parameter_value('IncludeEnvVarValue1')
-        if pv_IncludeEnvVarName1 is not None and pv_IncludeEnvVarName1 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName1] = pv_IncludeEnvVarValue1
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName2 = self.get_parameter_value('IncludeEnvVarName2')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue2 = self.get_parameter_value('IncludeEnvVarValue2')
-        if pv_IncludeEnvVarName2 is not None and pv_IncludeEnvVarName2 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName2] = pv_IncludeEnvVarValue2
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName3 = self.get_parameter_value('IncludeEnvVarName3')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue3 = self.get_parameter_value('IncludeEnvVarValue3')
-        if pv_IncludeEnvVarName3 is not None and pv_IncludeEnvVarName3 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName3] = pv_IncludeEnvVarValue3
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName4 = self.get_parameter_value('IncludeEnvVarName4')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue4 = self.get_parameter_value('IncludeEnvVarValue4')
-        if pv_IncludeEnvVarName4 is not None and pv_IncludeEnvVarName4 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName4] = pv_IncludeEnvVarValue4
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarName5 = self.get_parameter_value('IncludeEnvVarName5')
-        # noinspection PyPep8Naming
-        pv_IncludeEnvVarValue5 = self.get_parameter_value('IncludeEnvVarValue5')
-        if pv_IncludeEnvVarName5 is not None and pv_IncludeEnvVarName5 != "":
-            if include_env_vars_dict is None:
-                include_env_vars_dict = {}
-            include_env_vars_dict[pv_IncludeEnvVarName5] = pv_IncludeEnvVarValue5
 
         # noinspection PyPep8Naming
         pv_ExcludeEnvVars = self.get_parameter_value('ExcludeEnvVars')
@@ -366,11 +341,12 @@ class RunGdal(AbstractCommand):
             raise ValueError(message)
 
         # Run the program as a subprocess
+
         # noinspection PyBroadException
         try:
             logger.info('Running command line "' + command_line_expanded + '"')
             # Create the environment dictionary
-            env_dict = RunGdal.create_env_dict(include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list)
+            env_dict = RunOgrProgram.create_env_dict(include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list)
             print("env_dict=" + string_util.format_dict(env_dict))
             # TODO smalers 2018-12-16 evaluate using shlex.quote() to handle command string
             # TODO smalers 2018-12-16 handle standard input and output

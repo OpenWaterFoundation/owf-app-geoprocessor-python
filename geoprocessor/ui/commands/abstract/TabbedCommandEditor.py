@@ -183,6 +183,8 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.View_Documentation_Button = QtWidgets.QPushButton(self.Command_Description)
         self.View_Documentation_Button.setObjectName(qt_util.from_utf8("View_Documentation_Button"))
         self.View_Documentation_Button.setText(qt_util.translate("Dialog", "  View Documentation  ", None))
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         self.View_Documentation_Button.clicked.connect(self.view_documentation)
         grid_layout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
 
@@ -215,7 +217,11 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
         self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.OK_Cancel_Buttons.setObjectName(qt_util.from_utf8("OK_Cancel_Buttons"))
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         self.OK_Cancel_Buttons.accepted.connect(Dialog.accept)
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         self.OK_Cancel_Buttons.rejected.connect(Dialog.reject)
         self.gridLayout.addWidget(self.OK_Cancel_Buttons, self.parameter_count + 4, 6, 1, 2)
 

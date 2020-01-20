@@ -27,6 +27,7 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.If import If
 
+import geoprocessor.util.app_util as app_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.command_util as command_util
 
@@ -37,6 +38,7 @@ from plugins.processing.core import Processing
 import getpass
 import logging
 import os
+from pathlib import Path
 import platform
 # import sys
 import tempfile
@@ -116,6 +118,18 @@ class GeoProcessor(object):
         #   currently gets set when run_commands() is called.
         # - Should always work for RunCommands but what if nested several layers?
         self.env_properties = {}
+
+    def __len__(self) -> int:
+        """
+        Return the length of the command list.
+
+        Returns:
+            Length of the command list.
+        """
+        if self.commands is None:
+            return 0
+        else:
+            return len(self.commands)
 
     def add_command(self, command_string: str) -> None:
         """
@@ -860,7 +874,8 @@ class GeoProcessor(object):
         self.run_commands()
 
     def read_command_file(self, command_file: str, create_unknown_command_if_not_recognized: bool = True,
-                          append_commands: bool = False, run_discovery_on_load: bool = True) -> None:
+                          append_commands: bool = False, run_discovery_on_load: bool = True,
+                          create_commands = True) -> int:
         """
         Read a command file and initialize the command list in the geoprocessor.
         The processor properties "InitialWorkingDir" and "WorkingDir" are set to the command file folder,
@@ -876,11 +891,18 @@ class GeoProcessor(object):
             run_discovery_on_load (bool): If True (the default), run discovery when commands are loaded,
                 which allows other commands to benefit from information used in editing choices.
                 CURRENTLY NOT ENABLED.
+            create_commands (bool):  If True (the default), create the command instances,
+                if False, process the file to count commands but do not create instances.
 
         Returns:
-            None
+            The number of commands read.
         """
         logger = logging.getLogger(__name__)
+
+        if not create_commands:
+            # Just figure out how many commands would be created
+            command_file_strings = command_util.read_file_into_string_list(command_file)
+            return len(command_file_strings)
 
         if append_commands:
             logger.warning("Processor 'append_commands' is not enabled.")
@@ -941,6 +963,9 @@ class GeoProcessor(object):
 
         # Let the command list processor know that the commands have been read from the command file
         self.notify_command_list_processor_listener_of_commands_read()
+
+        logger.info("Read and initialized " + str(len(self.commands)) + " commands.")
+        return len(self.commands)
 
     def read_commands_from_command_list(self, command_file_strings: [str], runtime_properties: dict) -> None:
         """
@@ -1092,6 +1117,27 @@ class GeoProcessor(object):
         # Define standard properties that are always available from the processor
         self.properties["ComputerName"] = platform.node()  # Useful for messages
         self.properties["ComputerTimezone"] = strftime("%z", gmtime())
+        # Define the folder where GIS software programs are located, for use with RunGdalProgram, etc.
+        qgis_install_folder = ""
+        gis_bin_folder = ""
+        gis_software = ""
+        gdal_bin_software = ""
+        if app_util.is_qgis_install_standalone():
+            qgis_install_folder = app_util.get_qgis_install_folder()
+            gis_bin_folder = qgis_install_folder.replace("\\","/") + "/bin"
+            gis_software = "QGIS"
+            gdal_bin_folder = qgis_install_folder.replace("\\","/") + "/bin"
+        elif app_util.is_qgis_install_osgeo():
+            # OSGeo shared installation folder.
+            # Installation folder will be something like C:\OSGeo4W64\apps\qgis
+            # but want C:\OSGeo4W64\bin.
+            qgis_install_folder = app_util.get_qgis_install_folder()
+            qgis_install_folder_path = Path(qgis_install_folder)
+            gdal_bin_folder = qgis_install_folder_path.parent.parent.as_posix() + "/bin"
+            gis_software = "QGIS"
+        # TODO smalers 2020-01-16 Add support for ArcGIS Pro
+        self.properties["GisSoftware"] = gis_software
+        self.properties["GdalBinDir"] = gdal_bin_folder
         # TODO smalers 2017-12-30 need to figure out
         self.properties["InstallDir"] = None  # IOUtil.getApplicationHomeDir() )
         self.properties["InstallDirURL"] = None  # "file:///" + IOUtil.getApplicationHomeDir().replace("\\", "/") )

@@ -39,8 +39,8 @@ from geoprocessor.commands.running.EndIf import EndIf
 from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
 from geoprocessor.commands.running.RunCommands import RunCommands
-from geoprocessor.commands.running.RunGdal import RunGdal
-from geoprocessor.commands.running.RunOgr import RunOgr
+from geoprocessor.commands.running.RunGdalProgram import RunGdalProgram
+from geoprocessor.commands.running.RunOgrProgram import RunOgrProgram
 from geoprocessor.commands.running.RunProgram import RunProgram
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
@@ -151,8 +151,8 @@ class GeoProcessorCommandFactory(object):
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
         "RUNCOMMANDS": RunCommands(),
-        "RUNGDAL": RunGdal(),
-        "RUNOGR": RunOgr(),
+        "RUNGDALPROGRAM": RunGdalProgram(),
+        "RUNOGRPROGRAM": RunOgrProgram(),
         "RUNPROGRAM": RunProgram(),
         "RUNSQL": RunSql(),
         "SETGEOLAYERCRS": SetGeoLayerCRS(),
@@ -329,10 +329,10 @@ class GeoProcessorCommandFactory(object):
                     return RenameGeoLayerAttribute()
                 elif command_name_upper == "RUNCOMMANDS":
                     return RunCommands()
-                elif command_name_upper == "RUNGDAL":
-                    return RunGdal()
-                elif command_name_upper == "RUNOgr":
-                    return RunOgr()
+                elif command_name_upper == "RUNGDALPROGRAM":
+                    return RunGdalProgram()
+                elif command_name_upper == "RUNOGRPROGRAM":
+                    return RunOgrProgram()
                 elif command_name_upper == "RUNPROGRAM":
                     return RunProgram()
                 elif command_name_upper == "RUNSQL":

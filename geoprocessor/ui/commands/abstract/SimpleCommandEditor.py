@@ -284,8 +284,8 @@ class SimpleCommandEditor(AbstractCommandEditor):
             # - each dictionary key starts with `ParameterName.', for example 'LogFile.Label'
             parameter_name = command_parameter_metadata.parameter_name
 
-            # noinspection PyBroadException
             input_metadata = None  # needed to avoid warning
+            # noinspection PyBroadException
             try:
                 try:
                     input_metadata = self.command.parameter_input_metadata

@@ -38,8 +38,24 @@ import logging
 import os
 import platform
 
+# The name of the current application level log file handler,
+# used to get the log file number (integer) for subprocess.run(stderr=, and stdout=),
+# such as with GeoProcessor RunProgram, RunGdalProgram, etc. commands.
+__logfile_handler: logging.FileHandler or None = None
+
 # The name of the current log file, will be reset by functions below
-__logfile_name = None
+__logfile_name: str or None = None
+
+
+def get_logfile_handler() -> logging.FileHandler or None:
+    """
+    Get the handler for the logfile that is currently being used.
+
+    Returns:
+        The handler for the current logfile, or None if not used.
+    """
+    global __logfile_handler
+    return __logfile_handler
 
 
 def get_logfile_name() -> str:
@@ -81,6 +97,8 @@ def initialize_logging(app_name: str = None, logfile_name: str = None, logfile_l
     Returns:
         The logger that is created.
     """
+
+    global __logfile_handler, __logfile_name
     log_formatter = logging.Formatter('%(levelname)s|%(name)s|%(module)s line %(lineno)d|%(message)s')
 
     # Request a logger for the geoprocessor (gp), which will create a new logger since not previously found.
@@ -105,8 +123,9 @@ def initialize_logging(app_name: str = None, logfile_name: str = None, logfile_l
         log_file_handler.setLevel(logfile_log_level)
         log_file_handler.setFormatter(log_formatter)
         logger.addHandler(log_file_handler)
+
         # Save the logfile as a module variable
-        global __logfile_name
+        __logfile_handler = log_file_handler
         __logfile_name = logfile_name
 
     # Configure the console handler, which defaults to stderr
@@ -155,6 +174,7 @@ def reset_log_file_handler(logfile_name: str) -> None:
     # Loop through the handlers on the "geoprocessor" logger and replace the FileHandler logger.
     # - there should only be one such handler
 
+    global __logfile_handler, __logfile_name
     found_handler = None
     # Defaults are the same as in the initialize_logging() function
     old_log_file_handler_level = logging.INFO
@@ -179,10 +199,10 @@ def reset_log_file_handler(logfile_name: str) -> None:
     new_log_file_handler = logging.FileHandler(logfile_name, mode='w')
     new_log_file_handler.setLevel(old_log_file_handler_level)
     new_log_file_handler.setFormatter(old_log_file_handler_formatter)
+    __log_file_handler = new_log_file_handler
     logger.addHandler(new_log_file_handler)
 
     # Save the logfile name in the module data
-    global __logfile_name
     __logfile_name = logfile_name
 
     # The following message will show up in the new log file

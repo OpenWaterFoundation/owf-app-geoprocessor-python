@@ -22,6 +22,7 @@ This module provides utilities for manipulating strings.
 """
 
 import re
+from typing import Optional, List
 
 
 # TODO smalers 2018-01-20 need to evaluate how many complexities to handle, similar to TSTool Java code
@@ -287,7 +288,7 @@ def format_dict(dict_to_format: dict, value_quote: str = '"') -> str:
 
 def glob2re(pat: str) -> str:
     """
-    Translates a shell PATTERN to a regular expression.
+    Translates a glob-style shell pattern using '*' for wildcards to a regular expression.
 
     This function converts a glob-style pattern into a regular expression that can be used to iterate over a
     list of strings. This function was not written by Open Water Foundation but was instead copied from the
@@ -332,6 +333,7 @@ def glob2re(pat: str) -> str:
                 res = '%s[%s]' % (res, stuff)
         else:
             res = res + re.escape(c)
+    # noinspection
     return res + '\Z(?ms)'
 
 
@@ -417,7 +419,7 @@ def key_value_pair_list_to_dictionary(key_value_list: [str]) -> dict:
     return dictionary
 
 
-def pattern_count(s: str or None, pattern: str or None, patterns: [str] or None = None) -> int:
+def pattern_count(s: str or None, pattern: Optional[str], patterns: Optional[List[str]] = None) -> int:
     """
     Count the number of unique (non-overlapping) instances of a pattern in a string.
 

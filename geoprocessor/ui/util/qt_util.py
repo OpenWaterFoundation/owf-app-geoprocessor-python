@@ -92,8 +92,7 @@ def info_message_box(message: str, app_name: str = None, title: str = "Informati
     if app_name is not None:
         # Use the application name in the title
         title = app_name + " - " + title
-    # message_box = new_message_box(QtWidgets.QMessageBox.Information, QtWidgets.QMessageBox.Ok, message, title)
-    message_box = new_message_box(QtWidgets.QMessageBox.QInformation, QtWidgets.QMessageBox.Ok, message, title)
+    message_box = new_message_box(QtWidgets.QMessageBox.Information, QtWidgets.QMessageBox.Ok, message, title)
     return message_box
 
 

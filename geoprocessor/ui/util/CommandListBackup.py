@@ -16,6 +16,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
+import logging
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
@@ -39,18 +40,19 @@ class CommandListBackup(object):
         :return: True if file has been modified, otherwise False
         """
 
+        logger = logging.getLogger(__name__)
         if len(self.command_list) != len(command_list):
+            logger.info("Current commands length (" + str(len(command_list)) + ") and backup length (" +
+                                                          str(len(self.command_list)) + ").")
             return True
 
         size = len(command_list)
 
         for i in range(0, size):
-
             text = command_list[i].command_string
-
             original_text = self.command_list[i]
-
             if text != original_text:
+                logger.info("Detected difference in commands at command " + str(i))
                 return True
 
         return False
@@ -67,3 +69,6 @@ class CommandListBackup(object):
         for command in command_list:
             text = command.command_string
             self.command_list.append(text)
+
+        logger = logging.getLogger(__name__)
+        logger.info("Saved backup copy of " + str(len(self.command_list)) + " commands.")

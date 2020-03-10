@@ -60,9 +60,16 @@ class GeoProcessor(object):
         # when the commands are running, to indicate progress.
         # - would be an interface in Java but in Python is just an object with methods:
         #   command_started() and command_completed()
+        # Call sequence is:
+        #   add_command_processor_listener()                                <- called by GeoProcessorUI.__init__()
+        #     - adds the listener object to self.command_processor_listener_array
+        #   notify_command_processor_listeners_of_command_started()         <- called by run_commands()
+        #     - calls listener object command_started()
+        #   notify_command_processor_listener_of_command_completed()        <- called by run_commands()
+        #     - calls listener object command_completed()
+        #   notify_command_processor_listener_of_command_cancelled()        <- currently not called (need UI features)
+        #     - calls listener object command_completed()
         self.command_processor_listener_array: [] = []
-
-        self.command_list_model_listener_array: [] = []
 
         # Command list that holds all command objects to run.
         self.commands: [AbstractCommand] = []
@@ -244,28 +251,6 @@ class GeoProcessor(object):
         # Add the input GeoLayer to the geolayers list.
         self.geolayers.append(geolayer)
 
-    def add_model_listener(self, listener) -> None:
-        """
-        Add the command list model listener, to be notified when changes have taken place
-        in the logic of the processor. This model is meant to be an interface to allow
-        communication between the processor and the user interface. Changes made to the internal
-        workings and logic of the processor need to be reflected visually to communicate with the user.
-
-        Args:
-            listener: a command list model
-
-        Returns:
-            None
-
-        """
-
-        if not listener:
-            return
-        for listener_from_array in self.command_list_model_listener_array:
-            if listener_from_array == listener:
-                return
-        self.command_list_model_listener_array.append(listener)
-
     def add_output_file(self, output_file_abs_path: str) -> None:
         """
         Add an Output File (absolute path string) to the output_path list.
@@ -412,10 +397,6 @@ class GeoProcessor(object):
         Returns:
             Expanded parameter value string.
         """
-        if command is not None:
-            logger = logging.getLogger(__name__)
-            logger.warning("GeoProcessor.expand_parameter_value 'command' is not implemented.")
-
         debug = False  # For developers
         logger = logging.getLogger(__name__)
         if debug:
@@ -423,6 +404,9 @@ class GeoProcessor(object):
         if parameter_value is None or len(parameter_value) == 0:
             # Just return what was provided.
             return parameter_value
+
+        if command is not None and debug:
+            logger.warning("GeoProcessor.expand_parameter_value 'command' is not implemented.")
 
         # First replace escaped characters.
         # TODO smalers 2017-12-25 might need to change this for Python
@@ -769,41 +753,6 @@ class GeoProcessor(object):
                 return c
         return None
 
-    def notify_command_list_processor_listener_of_commands_read(self) -> None:
-        """
-        Notify the GeoProcessorListModel that the command file has been read
-        into the command list.
-
-        Returns:
-            None
-        """
-        if self.command_list_model_listener_array:
-            for listener_from_array in self.command_list_model_listener_array:
-                listener_from_array.command_file_read()
-
-    def notify_command_list_processor_listener_of_all_commands_completed(self) -> None:
-        """
-        Notify the GeoProcessorListModel that the command list has been run.
-
-        Returns:
-            None
-        """
-        if self.command_list_model_listener_array:
-            for listener_from_array in self.command_list_model_listener_array:
-                listener_from_array.command_list_ran()
-
-    def notify_command_list_processor_listener_update_commands(self) -> None:
-        """
-        Notify the GeoProcessorListModel that the commands list UI in CommandListWidget
-        need to be updated to reflect changes made to commands list in GeoProcessor.
-
-        Returns:
-            None
-        """
-        if self.command_list_model_listener_array:
-            for listener_from_array in self.command_list_model_listener_array:
-                listener_from_array.update_command_list_ui()
-
     def notify_command_processor_listener_of_command_cancelled(self, icommand: int, ncommand: int,
                                                                command: AbstractCommand) -> None:
         """
@@ -875,7 +824,7 @@ class GeoProcessor(object):
 
     def read_command_file(self, command_file: str, create_unknown_command_if_not_recognized: bool = True,
                           append_commands: bool = False, run_discovery_on_load: bool = True,
-                          create_commands = True) -> int:
+                          create_commands=True) -> int:
         """
         Read a command file and initialize the command list in the geoprocessor.
         The processor properties "InitialWorkingDir" and "WorkingDir" are set to the command file folder,
@@ -962,7 +911,8 @@ class GeoProcessor(object):
                 self.commands[0].print_for_debug()
 
         # Let the command list processor know that the commands have been read from the command file
-        self.notify_command_list_processor_listener_of_commands_read()
+        # TODO smalers 2020-03-09 Not sure why this is needed so comment out
+        # self.notify_command_list_processor_listener_of_commands_read()
 
         logger.info("Read and initialized " + str(len(self.commands)) + " commands.")
         return len(self.commands)
@@ -1033,7 +983,8 @@ class GeoProcessor(object):
         del self.commands[:]
         # Notify the command list model that the commands list UI in CommandListWidget
         # needs to be updated to reflect changes made to commands in GeoProcessor
-        self.notify_command_list_processor_listener_update_commands()
+        # TODO smalers 2020-03-10 Not sure this is needed in current design
+        #self.notify_command_list_processor_listener_update_commands()
 
     def remove_command(self, index: str) -> None:
         """
@@ -1048,7 +999,8 @@ class GeoProcessor(object):
         del self.commands[index]
         # Notify the command list processor that the command list now needs to be updated in
         # the user interface.
-        self.notify_command_list_processor_listener_update_commands()
+        # TODO smalers 2020-03-10 Not sure this is needed in current design
+        # self.notify_command_list_processor_listener_update_commands()
 
     def __reset_data_for_run_start(self, append_results: bool = False) -> None:
         """
@@ -1304,7 +1256,7 @@ class GeoProcessor(object):
                         command.command_string
                     # print(message)
                     logger.info(message)
-                    # notify listener that commands have started running
+                    # notify listener that command has started running
                     self.notify_command_processor_listeners_of_command_started(i_command, n_commands, command)
 
                 command_class = command.__class__.__name__
@@ -1513,7 +1465,8 @@ class GeoProcessor(object):
             logger.error(message)
             # raise RuntimeError(message)
 
-        self.notify_command_list_processor_listener_of_all_commands_completed()
+        # TODO smalers 2020-03-09 need to evaluate how to deal with this
+        # self.notify_command_list_processor_listener_of_all_commands_completed()
 
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
         # - may or may not need something similar in Python code if above error-handling is not enough

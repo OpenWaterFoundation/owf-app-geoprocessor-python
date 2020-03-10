@@ -469,17 +469,5 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             pass
         return len(self.gp.commands)
 
-    def setData(self, index: QModelIndex, value: typing.Any, role: int = ...) -> bool:
-        """
-        Method required by QtCore.QAbstractListModel.
-
-        Args:
-            index: I
-            value:
-            role:
-
-        Returns:
-
-        """
-        # TODO smalers 2020-01-19 need to figure out how to cause a repaint when indentation changes.
-        pass
+    # TODO smalers 2020-01-20 Not implemented because data editing occurs through the interactions with GeoProcessor
+    # def setData(self, index: QModelIndex, value: typing.Any, role: int = ...) -> bool:

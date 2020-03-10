@@ -31,6 +31,8 @@ from geoprocessor.commands.datastores.RunSql import RunSql
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
 
+from geoprocessor.commands.map.CreateGeoMap import CreateGeoMap
+
 from geoprocessor.commands.raster.CreateRasterGeoLayer import CreateRasterGeoLayer
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromFile import ReadRasterGeoLayerFromFile
 
@@ -279,6 +281,8 @@ class GeoProcessorCommandFactory(object):
                     return CopyGeoLayer()
                 elif command_name_upper == "CREATEGEOLAYERFROMGEOMETRY":
                     return CreateGeoLayerFromGeometry()
+                elif command_name_upper == "CREATEGEOMAP":
+                    return CreateGeoMap()
                 elif command_name_upper == "CREATERASTERGEOLAYER":
                     return CreateRasterGeoLayer()
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":

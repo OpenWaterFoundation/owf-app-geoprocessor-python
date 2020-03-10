@@ -23,12 +23,13 @@ import math
 from typing import Callable
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+# Need the following for Qt.ControlModifier, etc.
+from PyQt5.QtCore import Qt
 
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.ui.core.GeoProcessorListModel import GeoProcessorListModel
 from geoprocessor.ui.core.GeoProcessorListView import GeoProcessorListView
-from geoprocessor.ui.util.CommandListBackup import CommandListBackup  # previously command_list_backup
 import geoprocessor.ui.util.qt_util as qt_util
 import geoprocessor.util.app_util as app_util
 
@@ -136,10 +137,6 @@ class CommandListWidget(object):
         self.commands_RunSelectedCommands_PushButton: QtWidgets.QPushButton or None = None
         self.commands_ClearCommands_PushButton: QtWidgets.QPushButton or None = None
 
-        # Initialize a command list backup object. This will keep track of the command list and
-        # notify the program if it has been edited since the previous save.
-        self.command_list_backup: CommandListBackup = CommandListBackup()
-
         # Keep track of errors and warnings in command list
         self.num_errors = 0
         self.num_warnings = 0
@@ -204,13 +201,6 @@ class CommandListWidget(object):
         self.gutter_ListWidget.clearSelection()
         # Update the UI state
         self.update_ui_status_commands()
-
-    def command_list_modified(self) -> bool:
-        """
-        See if the command list has been modified.
-        :return: Return True if modified, otherwise return False
-        """
-        return self.command_list_backup.command_list_modified(self.gp_model.gp.commands)
 
     def command_list_select_all(self) -> None:
         """
@@ -284,6 +274,15 @@ class CommandListWidget(object):
         if debug:
             logger = logging.getLogger(__name__)
 
+        # Detect whether shift or control key was pressed for mouse event
+        control_pressed = False
+        shift_pressed = False
+        if event.modifiers() & Qt.ControlModifier:
+            control_pressed = True
+        if event.modifiers() & Qt.ShiftModifier:
+            shift_pressed = True
+        logger.info("Shift pressed=" + str(shift_pressed) + " control pressed=" + str(control_pressed))
+
         # Event is not actually used (list is examined)
         # - put in some code to use the event so PyCharm does not complain about not being used
         if event is None:
@@ -301,9 +300,9 @@ class CommandListWidget(object):
         #   selected_q_indices = self.command_ListView.selectionModel().selectedIndexes()
         #   selected_indices = [item.row() for item in selected_q_indices]
         selected_indices = self.command_ListView.selectedIndexes()
-        if debug:
-            logger.debug("number_ListWidget size=" + str(self.number_ListWidget.count()) +
-                         " gutterListWidget size=" + str(self.gutter_ListWidget.count()))
+        # if debug:
+        #    logger.debug("number_ListWidget size=" + str(self.number_ListWidget.count()) +
+        #                 " gutterListWidget size=" + str(self.gutter_ListWidget.count()))
         for index in selected_indices:
             # 'index' is a QModelIndex, so need to request the row
             row = index.row()
@@ -316,6 +315,22 @@ class CommandListWidget(object):
 
         # Update the UI status
         self.update_ui_status_commands()
+
+    def event_handler_commands_list_double_clicked(self, event: QtGui.QMouseEvent) -> None:
+        """
+        Handle a double click event on the command list.
+
+        Args:
+            event (QtGui.QMouseEvent):  Mouse event for the double-click.
+
+        Returns:
+            None
+        """
+        logger = logging.getLogger(__name__)
+        # Let the main UI know
+        row = self.command_ListView.indexAt(event.pos()).row();
+        logger.info("Double click detected on command list row [" + str(row) + "]")
+        self.command_main_ui_listener.ui_action_command_list_double_click(row)
 
     def event_handler_button_run_all_commands_clicked(self, event: QtCore.QEvent) -> None:
         """
@@ -580,7 +595,7 @@ class CommandListWidget(object):
             count = 1
 
         item_height = math.floor(current_height / count)
-        logger.info("Gutter size=" + str(self.gutter_ListWidget.count()))
+        # logger.info("Gutter size=" + str(self.gutter_ListWidget.count()))
         if current_items_height > current_height - 4:
             for i in range(0, command_count):
                 item = self.gutter_ListWidget.item(i)
@@ -955,17 +970,6 @@ class CommandListWidget(object):
         """
         self.command_list = command_list
 
-    def set_command_list_backup(self) -> None:
-        """
-        Initialize the command list backup to check against later changes of the
-        command list to see if modified.
-
-        Returns:
-            None
-        """
-        # Update the command list backup
-        self.command_list_backup.update_command_list(self.command_list)
-
     def set_gp_model(self, gp_model: GeoProcessorListModel) -> None:
         """
         Set the GeoProcessorListModel for the widget, so that the widget can interact with the command list.
@@ -1044,7 +1048,9 @@ class CommandListWidget(object):
         self.command_ListView.setLayoutMode(QtWidgets.QListView.SinglePass)
         self.command_ListView.setWordWrap(False)
         self.command_ListView.setSelectionRectVisible(False)
+        # Remap list events to event handling functions
         self.command_ListView.mouseReleaseEvent = self.event_handler_commands_list_clicked
+        self.command_ListView.mouseDoubleClickEvent = self.event_handler_commands_list_double_clicked
         self.command_ListView.setObjectName(_fromUtf8("command_ListView"))
         self.command_ListView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.commands_HBoxLayout_Commands.addWidget(self.command_ListView)

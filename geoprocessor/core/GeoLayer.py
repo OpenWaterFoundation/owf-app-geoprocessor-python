@@ -1,4 +1,4 @@
-# GeoLayer - class for GeoLayer (base calss for spatial data layer)
+# GeoLayer - class for GeoLayer (base class for spatial data layer)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation

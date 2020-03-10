@@ -160,8 +160,8 @@ class CreateGeoLayer(AbstractCommand):
             geometry_input: the geometry data (as a string)
 
         Returns:
-             Boolean. If TRUE, the GeoLayer should be simplified If FALSE, at least one check failed and the GeoLayer
-                should not be simplified.
+             Boolean. If TRUE, the GeoLayer should be created.
+             If FALSE, at least one check failed and the GeoLayer should not be created.
         """
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
@@ -171,7 +171,7 @@ class CreateGeoLayer(AbstractCommand):
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
 
-        # If the SimplifiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+        # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
         # (depends on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
 

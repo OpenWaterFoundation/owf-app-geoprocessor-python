@@ -438,7 +438,7 @@ class CommandListWidget(object):
         self.command_main_ui_listener.update_ui_main_window_title()
 
     # TODO smalers 2020-01-19 should not need this now
-    def event_handler_indent_button_clicked(self) -> None:
+    def event_handler_increase_indent_button_clicked(self) -> None:
         """
         Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked.
 
@@ -450,7 +450,7 @@ class CommandListWidget(object):
         return
         selected_q_indices = self.command_ListView.selectedIndexes()
         selected_indices = [item.row() for item in selected_q_indices]
-        self.notify_model_listener_indent_button_clicked(selected_indices)
+        self.notify_model_listener_increase_indent_button_clicked(selected_indices)
         # self.update_selected_commands(selected_indices)
 
         # Check to see if command list modified. If so notify the main ui
@@ -820,7 +820,7 @@ class CommandListWidget(object):
         # TODO smalers 2020-01-19 should not need to do this now
         # self.command_model_listener.decrease_indent_command_string(selected_indices)
 
-    def notify_model_listener_indent_button_clicked(self, selected_indices: [int]) -> None:
+    def notify_model_listener_increase_indent_button_clicked(self, selected_indices: [int]) -> None:
         """
         Notify the model listener that one of the indent button has been clicked.
 

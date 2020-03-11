@@ -303,19 +303,30 @@ class GeoProcessor(object):
         for index in selected_indices:
             command_string = self.commands[index].command_string
 
-            # Check to see if actually a comment...
-            if command_string.startswith("#"):
-                command_string = command_string[2:]
-
-                command_object = command_factory.new_command(command_string, True)
+            # Check to see if a # comment and if so replace with command.
+            remove_count = 0
+            if command_string.startswith("# "):
+                # Behavior when converting a command to comment is to insert "# " so check first.
+                remove_count = 2
+            elif command_string.startswith("#"):
+                # A command could have been manually edited and start with only "#" (not "# ") so check second.
+                remove_count = 1
+            if remove_count > 0:
+                # Strip the comment off the front of the string.
+                command_string = command_string[remove_count:]
+                # Create the command from the shorter string.
+                create_unknown_command_if_not_recognized = True
+                command_object = command_factory.new_command(command_string,
+                                                             create_unknown_command_if_not_recognized)
 
                 # Initialize the parameters of the command object.
                 # Work is done in the AbstractCommand class.
                 command_object.initialize_command(command_string, self, True)
 
-                # Add command above selected command
+                # Reset the previous command with the new command.
                 self.commands[index] = command_object
             else:
+                # Not a comment so ignore
                 return
 
     def convert_command_line_to_comment(self, selected_indices: [int]) -> None:
@@ -1298,6 +1309,8 @@ class GeoProcessor(object):
                     # Run the command
                     if command_class == 'Exit':
                         # Exit command causes hard exit from processing - following commands are ignored
+                        # Do notify of the completion
+                        self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
                         break
                     # elif isinstance(command, For):
                     elif command_class == 'For':

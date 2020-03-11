@@ -38,6 +38,7 @@ from geoprocessor.commands.raster.ReadRasterGeoLayerFromFile import ReadRasterGe
 
 from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.EndIf import EndIf
+from geoprocessor.commands.running.Exit import Exit
 from geoprocessor.commands.running.For import For
 from geoprocessor.commands.running.If import If
 from geoprocessor.commands.running.RunCommands import RunCommands
@@ -130,6 +131,7 @@ class GeoProcessorCommandFactory(object):
         "ENABLEDFALSE": EnabledFalse(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
+        "EXIT": Exit(),
         "EXPECTEDSTATUSFAILURE": ExpectedStatusFailure(),
         "EXPECTEDSTATUSWARNING": ExpectedStatusWarning(),
         "FOR": For(),
@@ -291,6 +293,8 @@ class GeoProcessorCommandFactory(object):
                     return EndFor()
                 elif command_name_upper == "ENDIF":
                     return EndIf()
+                elif command_name_upper == "EXIT":
+                    return Exit()
                 elif command_name_upper == "FOR":
                     return For()
                 elif command_name_upper == "FREEGEOLAYERS":

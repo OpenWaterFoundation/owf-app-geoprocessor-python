@@ -260,6 +260,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # 2. Setting up standard editor top.
         # 3. Calls this method to set up command editor specifics, mainly the parameters.
         # 4. Setting up the standard editor bottom.
+        # 5. Calls setup_ui_2() to activate the first component so user does not need to position.
 
         # Set up an area for a list of parameters
         self.parameter_QFrame = QtWidgets.QFrame(self)

@@ -346,6 +346,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_RunningProperties_SetProperty: QtWidgets.QAction or None = None
         self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_General_RunningProperties_WritePropertiesToFile: QtWidgets.QAction or None = None
+        self.Menu_Commands_General_RunningProperties_Exit: QtWidgets.QAction or None = None
 
         # Commands / General - Test Processing
         self.Menu_Commands_General_TestProcessing: QtWidgets.QMenu or None = None
@@ -528,6 +529,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Not really needed but prevents a warning
             return
 
+        # Get the class name
+        command_class = command.__class__.__name__
+
         # Update the progress to indicate progress (1 to number of commands... completed).
         self.status_CommandWorkflow_StatusBar.setValue(icommand + 1)
         self.status_CurrentCommand_StatusBar.setValue(100)
@@ -540,7 +544,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
 
         # Last command has complete or Exit() command.
-        if (icommand + 1) == ncommand:  # or isinstance(command, Exit):
+        if ((icommand + 1) == ncommand) or (command_class == "Exit"):
             # Last command has completed (or Exit() command) so refresh the command status.
             logger.info("Detected running the last command as listener.")
             # The following updates the command status and displays warning/fail icons
@@ -600,6 +604,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
         selected_indices = self.command_CommandListWidget.get_selected_indices()
+        size = 0
         if selected_indices is not None:
             size = len(selected_indices)
         if size == 0:
@@ -1135,7 +1140,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Model to map GeoProcessor commands to the CommandListWidget
         # self.gp_model = GeoProcessorListModel(self.gp, self.command_CommandListWidget)
         self.gp_model = GeoProcessorListModel(self.gp)
-        #self.command_CommandListWidget.command_ListWidget.set_gp_model(self.gp_model)
+        # self.command_CommandListWidget.command_ListWidget.set_gp_model(self.gp_model)
         self.command_CommandListWidget.set_gp_model(self.gp_model)
 
         # Add listener
@@ -1224,7 +1229,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # File / Save / Commands menu
         self.Menu_File_Save_Commands = QtWidgets.QAction(main_window)
         self.Menu_File_Save_Commands.setObjectName(qt_util.from_utf8("Menu_File_Save_Commands"))
-        self.Menu_File_Save_Commands.setText("Commands ...")
+        self.Menu_File_Save_Commands.setText("Commands")
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_File_Save_Commands.triggered.connect(self.ui_action_save_commands)
@@ -1280,8 +1285,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Edit_Format.setObjectName(qt_util.from_utf8("Menu_Edit_Format"))
         self.Menu_Edit_Format.setText("Format")
         self.Menu_Edit.addAction(self.Menu_Edit_Format)
-        # TODO add action to button
-        # self.Menu_Tools_ViewStartupLog.triggered.connect(self.ui_action_view_startup_log_file)
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Edit_Format.triggered.connect(self.ui_action_edit_format)
 
         self.menubar.addAction(self.Menu_Edit.menuAction())
 
@@ -1298,7 +1304,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_View_CommandFileDiff.setObjectName(qt_util.from_utf8("Menu_View_CommandFileDiff"))
         self.Menu_View_CommandFileDiff.setText("Command File Diff")
         self.Menu_View.addAction(self.Menu_View_CommandFileDiff)
-        # TODO add action to button
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
         self.Menu_View_CommandFileDiff.triggered.connect(self.ui_action_view_command_file_diff)
 
         self.menubar.addAction(self.Menu_View.menuAction())
@@ -2088,6 +2095,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "RunProgram"))
         self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_RunProgram)
 
+        self.Menu_Commands_General_RunningProperties.addSeparator()
+
         # SetProperty
         self.Menu_Commands_General_RunningProperties_SetProperty = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_RunningProperties_SetProperty.setObjectName(
@@ -2125,6 +2134,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.new_command_editor, "WritePropertiesToFile"))
         self.Menu_Commands_General_RunningProperties.addAction(
             self.Menu_Commands_General_RunningProperties_WritePropertiesToFile)
+
+        self.Menu_Commands_General_RunningProperties.addSeparator()
+
+        # Exit
+        self.Menu_Commands_General_RunningProperties_Exit = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_Exit.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_RunningProperties_Exit"))
+        self.Menu_Commands_General_RunningProperties_Exit.setText(
+            "Exit()... <end processing>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_General_RunningProperties_Exit.triggered.connect(
+            functools.partial(self.new_command_editor, "Exit"))
+        self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_Exit)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / General - Test Processing menu
@@ -2761,7 +2784,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.increase_indent_button.triggered.connect(
-            self.command_CommandListWidget.event_handler_indent_button_clicked)
+            self.command_CommandListWidget.event_handler_increase_indent_button_clicked)
 
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/baseline_format_indent_decrease_black_18dp.png"
@@ -3407,7 +3430,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
             # noinspection PyUnresolvedReferences
             self.menu_item_increase_indent_command.triggered.connect(
-                self.command_CommandListWidget.event_handler_indent_button_clicked)
+                self.command_CommandListWidget.event_handler_increase_indent_button_clicked)
 
             self.menu_item_decrease_indent_command = self.rightClickMenu_Commands.addAction("Decrease Indent")
             # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
@@ -3466,6 +3489,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.command_CommandListWidget.update_ui_status_commands()
 
         # self.gp_model.update_command_list_ui()
+
+    def ui_action_edit_format(self) -> None:
+        """
+        Format the commands to auto-indent based on If and For blocks.
+
+        Returns:
+            None
+        """
+        pass
+
+        logger = logging.getLogger(__name__)
+
+        message = "The format tool is not yet enabled.  When enabled, it will auto-indent the commands."
+        qt_util.warning_message_box(message)
+        return
 
     def ui_action_geolayers_right_click(self, q_pos: int) -> None:
         """
@@ -3772,14 +3810,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # prompt user to save...
         self.closeEvent_save_command_file()
 
-        # Set opened file to false since we are now opening a new command file
+        # Set opened file to false since opening a new command file
         self.opened_command_file = False
 
         # Clear commands from geoprocessor
+        # - this retains the command file name
         self.gp_model.clear_all_commands()
 
-        # Call function to initialize necessary values for new command file
-        self.gp_model.new_command_list()
+        # Save a new backup of commands (will be empty list)
+        self.command_list_backup.update_command_list(self.gp.commands)
 
         # Set the title for the main window
         self.ui_set_main_window_title("commands not saved")
@@ -4062,24 +4101,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
 
-        # Record the new saved command file in the command list backup class
-        self.command_list_backup.update_command_list(self.gp.commands)
-
-        # If there is not a previously saved file location, save the file with the save_command_as function.
         if self.saved_file is None:
+            # If there is not a previously saved file location, save the file with the ui_action_save_command_as
+            # function, which will prompt for the file name.
             self.ui_action_save_commands_as()
 
-        # If there is a previously saved file location, continue.
         else:
+            # There is a previously saved file location, continue.
 
             # A list to hold each command as a separate string.
             list_of_cmds = []
 
-            # Iterate over the items in the command_ListWidget widget.
-            for i in range(self.command_CommandListWidget.command_ListView.count()):
-
+            # Get the command list as strings
+            for i in range(len(self.gp.commands)):
                 # Add the command string text ot the list_of_cmds list.
-                list_of_cmds.append(self.command_CommandListWidget.command_ListView.item(i).text())
+                list_of_cmds.append(self.gp.commands[i].command_string)
 
             # Join all of the command strings together (separated by a line break).
             all_commands_string = '\n'.join(list_of_cmds)
@@ -4092,6 +4128,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Update command file history list in GUI
             self.ui_init_file_open_recent_files()
 
+        # Successfully saved so record the new saved command file in the command list backup.
+        self.command_list_backup.update_command_list(self.gp.commands)
+
+        # Update the title so that "modified" is not shown
+        self.update_ui_main_window_title()
+
     def ui_action_save_commands_as(self) -> None:
         """
         Saves the commands to a file.
@@ -4100,17 +4142,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None if no file name specified.
         """
 
-        # Record the new saved command file in the command list backup class
-        self.command_list_backup.update_command_list(self.gp.commands)
-
         # A list to hold each command as a separate string.
         list_of_cmds = []
 
-        # Iterate over the items in the command_ListWidget widget.
-        for i in range(self.command_CommandListWidget.command_ListView.count()):
-
+        # Get the command list as strings
+        for i in range(len(self.gp.commands)):
             # Add the command string text ot the list_of_cmds list.
-            list_of_cmds.append(self.command_CommandListWidget.command_ListView.item(i).text())
+            list_of_cmds.append(self.gp.commands[i].command_string)
 
         # Join all of the command strings together (separated by a line break).
         all_commands_string = '\n'.join(list_of_cmds)
@@ -4131,26 +4169,36 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # The history did not have any files so default to starting in the user's home folder.
             last_opened_folder = self.app_session.get_user_folder()
 
-        # Open a browser for the user to select a location and filename to save the command file. Set the most recent
-        # file save location.
-        self.saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As', last_opened_folder)[0]
+        # Open a browser for the user to select a location and filename to save the command file.
+        # Set the most recent file save location.
+        new_saved_file = QtWidgets.QFileDialog.getSaveFileName(d, 'Save Command File As', last_opened_folder)[0]
 
-        if self.saved_file == "":
+        if new_saved_file == "":
+            # Canceled out of save.  Don't do anything.
             return
 
         # Write the commands to the file.
-        file = open(self.saved_file, 'w')
+        file = open(new_saved_file, 'w')
         file.write(all_commands_string)
         file.close()
 
-        # This command file has now been saved
+        # Reset the command file name after successful write.
+        self.saved_file = new_saved_file
+
+        # The command file has now been saved.
         self.command_file_saved = True
 
-        # Save the command file name in the command file history
+        # Save the command file name in the command file history.
         self.app_session.push_history(self.saved_file)
 
-        # Update the recent files in the File... Open menu, for the next menu access
+        # Update the recent files in the File... Open menu, for the next menu access.
         self.ui_init_file_open_recent_files()
+
+        # Successfully saved so record the new saved command file in the command list backup.
+        self.command_list_backup.update_command_list(self.gp.commands)
+
+        # Update the title so that "modified" is not shown
+        self.update_ui_main_window_title()
 
     def ui_action_view_command_file_diff(self) -> None:
         """
@@ -4175,8 +4223,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             diff_program = Path("C:/Program Files/KDiff3/kdiff3.exe")
         else:
             message = "The visual diff program has not been configured in the TSTool configuration file.\n" \
-            "Define the \"DiffProgram\" property as the path to a visual diff program, for example kdiff3\n" \
-            "Cannot show the command file difference."
+                "Define the \"DiffProgram\" property as the path to a visual diff program, for example kdiff3\n" \
+                "Cannot show the command file difference."
             qt_util.warning_message_box(message)
             return
 
@@ -4185,7 +4233,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Diff program exists so save a temporary file with UI commands and then compare with file version.
             # Run the diff program on the input and output files
             # (they should have existed because the button will have been disabled if not)
-            file1_path = Path(self.saved_file)
+            file1_path = None
+            if self.saved_file is not None:
+                file1_path = Path(self.saved_file)
             if file1_path is None:
                 message = "No command file was previously read or saved.  The commands being edited are new."
                 qt_util.warning_message_box(message)
@@ -4196,7 +4246,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             file2_path = Path(temp_folder) / "gp-commands.gp"
             list_of_cmds = []
             try:
-                # Iterate over the items in the command_ListWidget widget.
+                # Get the command list as strings
                 for i in range(len(self.gp.commands)):
                     # Add the command string text ot the list_of_cmds list.
                     list_of_cmds.append(self.gp.commands[i].command_string)
@@ -4221,10 +4271,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 logger.info("diff_program=" + str(diff_program))
                 logger.info("file1_path=" + str(file1_path))
                 logger.info("file2_path=" + str(file2_path))
-                #args = [diff_program, file1_path, file2_path]
+                # args = [diff_program, file1_path, file2_path]
                 command_line = '"' + str(diff_program) + '" "' + str(file1_path) + '" "' + str(file2_path) + '"'
                 args = shlex.split(command_line)
-                #use_command_shell = True   # Use shell to handle spaces in paths
+                # use_command_shell = True   # Use shell to handle spaces in paths
                 use_command_shell = False  # Seems to work OK with command line parsed above
                 env_dict = None
                 capture_output = None
@@ -4236,7 +4286,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # The following runs the diff tool as a separate thread
                     subprocess.Popen(args, shell=use_command_shell)
                 else:
-                    #completed_process = subprocess.run(args, shell=use_command_shell, env=env_dict, timeout=timeout,
+                    # completed_process = subprocess.run(args, shell=use_command_shell, env=env_dict, timeout=timeout,
                     #                                   capture_output=capture_output, stdout=stdout, stderr=stderr)
                     # The following runs but not threaded so it hangs the UI until the diff tool exits
                     completed_process = subprocess.run(args, shell=use_command_shell)
@@ -4430,22 +4480,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-
-        # Get the current window title
-        window_title = self.windowTitle()
-        window_title_end = window_title[-10:]
-        # First check to see if the command file has been modified
-        if self.command_list_backup.command_list_modified(self.gp.commands):
-            if window_title_end != "(modified)" and window_title != "GeoProcessor - commands not saved":
-                window_title_modified = window_title + " (modified)"
-                self.setWindowTitle(window_title_modified)
-        # If not modified it must have been returned to the original state so remove the modified indication
+        if self.saved_file is None:
+            # New command file has not been saved so no file name to display.
+            window_title = "GeoProcessor - commands not saved"
         else:
-            if window_title_end == "(modified)":
-                length = len(window_title)
-                self.setWindowTitle(window_title[:length-10])
+            # Command file has a name and may or may not have been modified.
+            if self.command_list_backup.command_list_modified(self.gp.commands):
+                # The command file has been modified
+                window_title = "GeoProcessor - " + self.saved_file + " (modified)"
+            else:
+                # The command file has not been modified.
+                window_title = "GeoProcessor - " + self.saved_file
 
-    # TODO smalers 2020-03-09 This does not appear to be called
+        # Set the window title
+        self.setWindowTitle(window_title)
+
     def update_ui_commands_list(self) -> None:
         """
         Once commands have been run. Loop through and check for any errors or warnings.
@@ -4490,44 +4539,50 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         num_commands = len(self.gp)
         selected_indices = self.command_CommandListWidget.get_selected_indices()
         num_selected = len(selected_indices)
+
+        # The popup menu will not be populated until one right-click has occurred, so check for None once
         if num_selected > 0:
-            self.menu_item_show_command_status.setEnabled(True)
-            self.menu_item_edit_command.setEnabled(True)
-            self.menu_item_cut_commands.setEnabled(False)  # TODO smalers 2020-01-20 need to enable
-            self.menu_item_copy_commands.setEnabled(False)
-            self.menu_item_paste_commands.setEnabled(False)
-            self.menu_item_deselect_all_commands.setEnabled(True)
-            self.menu_item_increase_indent_command.setEnabled(True)
-            self.menu_item_decrease_indent_command.setEnabled(True)
-            self.menu_item_convert_from_command.setEnabled(True)
-            self.menu_item_convert_to_command.setEnabled(True)
+            if self.menu_item_show_command_status is not None:
+                self.menu_item_show_command_status.setEnabled(True)
+                self.menu_item_edit_command.setEnabled(True)
+                self.menu_item_cut_commands.setEnabled(False)  # TODO smalers 2020-01-20 need to enable
+                self.menu_item_copy_commands.setEnabled(False)
+                self.menu_item_paste_commands.setEnabled(False)
+                self.menu_item_deselect_all_commands.setEnabled(True)
+                self.menu_item_increase_indent_command.setEnabled(True)
+                self.menu_item_decrease_indent_command.setEnabled(True)
+                self.menu_item_convert_from_command.setEnabled(True)
+                self.menu_item_convert_to_command.setEnabled(True)
 
             self.increase_indent_button.setEnabled(True)
             self.decrease_indent_button.setEnabled(True)
         else:
-            self.menu_item_show_command_status.setEnabled(False)
-            self.menu_item_edit_command.setEnabled(False)
-            self.menu_item_cut_commands.setEnabled(False)  # TODO smalers 2020-01-20 need to enable
-            self.menu_item_copy_commands.setEnabled(False)
-            self.menu_item_paste_commands.setEnabled(False)
-            self.menu_item_deselect_all_commands.setEnabled(False)
-            self.menu_item_increase_indent_command.setEnabled(False)
-            self.menu_item_decrease_indent_command.setEnabled(False)
-            self.menu_item_convert_from_command.setEnabled(False)
-            self.menu_item_convert_to_command.setEnabled(False)
+            if self.menu_item_show_command_status is not None:
+                self.menu_item_show_command_status.setEnabled(False)
+                self.menu_item_edit_command.setEnabled(False)
+                self.menu_item_cut_commands.setEnabled(False)  # TODO smalers 2020-01-20 need to enable
+                self.menu_item_copy_commands.setEnabled(False)
+                self.menu_item_paste_commands.setEnabled(False)
+                self.menu_item_deselect_all_commands.setEnabled(False)
+                self.menu_item_increase_indent_command.setEnabled(False)
+                self.menu_item_decrease_indent_command.setEnabled(False)
+                self.menu_item_convert_from_command.setEnabled(False)
+                self.menu_item_convert_to_command.setEnabled(False)
 
             self.increase_indent_button.setEnabled(False)
             self.decrease_indent_button.setEnabled(False)
 
-        if num_commands == num_selected:
-            self.menu_item_select_all_commands.setEnabled(False)
-        else:
-            self.menu_item_select_all_commands.setEnabled(True)
+        if self.menu_item_select_all_commands is not None:
+            if num_commands == num_selected:
+                self.menu_item_select_all_commands.setEnabled(False)
+            else:
+                self.menu_item_select_all_commands.setEnabled(True)
 
-        if num_commands > 0:
-            self.menu_item_delete_commands.setEnabled(True)
-        else:
-            self.menu_item_delete_commands.setEnabled(False)
+        if self.menu_item_delete_commands is not None:
+            if num_commands > 0:
+                self.menu_item_delete_commands.setEnabled(True)
+            else:
+                self.menu_item_delete_commands.setEnabled(False)
 
     def update_ui_status_results_geolayers(self) -> None:
         """

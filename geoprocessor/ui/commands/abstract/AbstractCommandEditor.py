@@ -74,6 +74,10 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Command text area
         self.CommandDisplay_View_TextBrowser: QtWidgets.QTextEdit or None = None
 
+        # The first input component
+        # - will be activated after initial setup, in setup_ui_2()
+        self.first_input_component = None
+
         # Layout used for the main editor
         # - other layouts may be added as needed to organize components
         # TODO smalers 2020-01-16 could name to indicate top
@@ -316,6 +320,19 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # This should not normally happen but will be the case if a child editor has not implemented the function
         raise Exception("In AbstractCommandEditor.setup_ui - need to define setup_ui() in derived editor class.")
 
+    def setup_ui_2(self) -> None:
+        """
+        Set up the user interface after components have been added.
+        It should be implemented in a child class, although helper functions are defined in this abstract class.
+        Typically this sets as active the top component in the dialog.
+
+        Returns: None
+        """
+        # This should not normally happen but will be the case if a child editor has not implemented the function
+        if self.first_input_component is not None:
+            # Set the focus onto the first component
+            self.first_input_component.setFocus()
+
     def setup_ui_core(self) -> None:
         # Set up the editor core elements, which apply to any command.
         self.setup_ui_core_top()
@@ -324,6 +341,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.setup_ui()
         # Set up the core components at the bottom
         self.setup_ui_core_bottom()
+        # Set up the editor after components have been added
+        # - currently, focus on the first entry point for the mouse
+        self.setup_ui_2()
 
         # This will wire up the signals and slots depending on names.
         # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
@@ -573,6 +593,10 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Add the component to the list maintained to get values out of UI components
         self.input_ui_components[parameter_name] = parameter_QComboBox
 
+        # Set the component as the first in dialog, so that focus can be set to it
+        if self.first_input_component is None:
+            self.first_input_component = parameter_QComboBox
+
     # noinspection PyPep8Naming
     def setup_ui_parameter_description(self, parameter_name: str,
                                        parameter_Description: str,
@@ -740,6 +764,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         parameter_select_file_QPushButton.clicked.connect(
             lambda clicked, y_param=self.y_parameter: self.ui_action_select_file(parameter_select_file_QPushButton))
         self.parameter_QGridLayout.addWidget(parameter_select_file_QPushButton, self.y_parameter, 6, 1, 1)
+        # Set the component as the first in dialog, so that focus can be set to it
+        if self.first_input_component is None:
+            self.first_input_component = parameter_QLineEdit
 
     # noinspection PyPep8Naming
     def setup_ui_parameter_label(self, parameter_name: str, parameter_Label: str) -> None:
@@ -811,6 +838,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         parameter_QLineEdit.textChanged.connect(self.refresh_ui)
         # Add the component to the list maintained to get values out of UI components
         self.input_ui_components[parameter_name] = parameter_QLineEdit
+        # Set the component as the first in dialog, so that focus can be set to it
+        if self.first_input_component is None:
+            self.first_input_component = parameter_QLineEdit
 
     def ui_action_select_file(self, event_button: QtWidgets.QPushButton) -> None:
         """
@@ -921,6 +951,10 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         # Set the file in the text field.
         parameter_QLineEdit.setText(filepath_selected)
+
+        # Set the component as the first in dialog, so that focus can be set to it
+        if self.first_input_component is None:
+            self.first_input_component = parameter_QLineEdit
 
     def update_command_display(self):
         """

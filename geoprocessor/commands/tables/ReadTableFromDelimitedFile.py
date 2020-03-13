@@ -338,11 +338,14 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         """
         Run the command. Read the Table from the delimited file.
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+
+        self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming

@@ -280,6 +280,8 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         """
         logger = logging.getLogger(__name__)
 
+        self.warning_count = 0
+
         # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_SpatialDataFile = self.get_parameter_value("SpatialDataFile")

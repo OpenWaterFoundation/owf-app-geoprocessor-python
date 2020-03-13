@@ -369,11 +369,14 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         Run the command. Read the layer file from a delimited file, create a GeoLayer object, and add to the
         GeoProcessor's geolayer list.
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+
+        self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming

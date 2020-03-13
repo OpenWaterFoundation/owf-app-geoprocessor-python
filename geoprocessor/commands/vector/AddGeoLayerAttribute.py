@@ -265,6 +265,8 @@ class AddGeoLayerAttribute(AbstractCommand):
             RuntimeError if any warnings occurred during run_command method.
         """
 
+        self.warning_count = 0
+
         # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")

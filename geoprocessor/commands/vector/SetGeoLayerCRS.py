@@ -208,11 +208,14 @@ class SetGeoLayerCRS(AbstractCommand):
         """
         Run the command. Set the GeoLayer coordinate reference system.
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+
+        self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming

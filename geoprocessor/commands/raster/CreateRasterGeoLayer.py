@@ -242,14 +242,17 @@ class CreateRasterGeoLayer(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Create the GeoLayer with the input geometries. Add GeoLayer to the GeoProcessor's geolayers
-         list.
+        Run the command. Create the GeoLayer with the input geometries.
+        Add GeoLayer to the GeoProcessor's geolayers list.
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+
+        self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming

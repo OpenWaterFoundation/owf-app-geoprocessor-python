@@ -1,4 +1,4 @@
-# GeoProcessorListModel - class to serve as QListWidget model for list of Command
+# GeoProcessorListModel - data model for the GeoProcessor command list
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -41,7 +41,8 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         """
         super(GeoProcessorListModel, self).__init__(*args, **kwargs)
         self.gp = gp
-        # TODO smalers 2020-01-19 table model should not need any knowledge of the UI component,
+
+        # TODO smalers 2020-01-19 data model should not need any knowledge of the UI component,
         # use a listener to notify of changes
         # self.commands_CommandsListWidget = commands_CommandListWidget
 

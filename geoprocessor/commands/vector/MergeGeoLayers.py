@@ -365,6 +365,8 @@ class MergeGeoLayers(AbstractCommand):
 
     def run_command(self) -> None:
 
+        self.warning_count = 0
+
         # Get the command parameter values.
         # noinspection PyPep8Naming
         pv_GeoLayerIDs = self.get_parameter_value("GeoLayerIDs")

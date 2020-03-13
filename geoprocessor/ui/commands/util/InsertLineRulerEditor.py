@@ -94,6 +94,63 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         """
         pass
 
+    def get_command_string_list(self) -> [str]:
+        """
+        Return the command strings from the edited text, can be an empty list (but using the editor to
+        delete all existing comments is not usually done).
+        This function can be called by the main GeoProcessorUI after editing to retrieve the result of the edit.
+
+        Returns:
+            A list of strings corresponding to each comment line.
+        """
+        # logger = logging.getLogger(__name__)
+        # First split the text area using newline delimiter
+        command_text = self.CommandDisplay_View_TextBrowser.toPlainText()
+        command_string_list = []
+        if len(command_text) == 0:
+            # Return an empty list, which should be handled in calling code.
+            return command_string_list
+        else:
+            # Split the text by newlines according to Python universal newlines
+            command_string_list = command_text.splitlines()
+            # Add the # with determined indent
+            # Verify that each line edited by user starts with #
+            for i in range(len(command_string_list)):
+                command_string_stripped = command_string_list[i].strip()
+                # Check if the stripped line starts with # and if so, it is OK
+                # - otherwise, add # at the start, indented appropriately
+                if not command_string_stripped.startswith('#'):
+                    # Figure out how many spaces to indent by examining the comment lines
+                    # - assume that indent should be consistent with nearest previous indented, commented line
+                    # - if that is not found, search after the current line (TODO smalers 2019-01-18 need to do)
+                    indent = ""
+                    for j in range(i - 1, 0, -1):
+                        indent_pos = command_string_list[j].find('#')
+                        if indent_pos >= 0:
+                            # Found a previous comment line so use its indent
+                            # - the following one-liner sets the indent to the number of spaces
+                            indent += ' ' * indent_pos
+                            break
+                    command_string_list[i] = indent + "# " + command_string_list[i]
+            # Return a list with one item for each line that was edited
+            return command_string_list
+
+    def set_text(self, text: str) -> None:
+        """
+        Set the text in the text browser for the command editor.
+        Typically this is called when a multi-line comment is being edited.
+
+        Args:
+            text: String to insert as text in the command editor.
+
+        Returns:
+            None
+        """
+        # For now display the comment character in the editor if previously present.
+        # text = text.replace("# ", "")
+        # text = text.replace("#", "")
+        self.CommandDisplay_View_TextBrowser.setText(text)
+
     def setup_ui(self) -> None:
         """
         This function is called by AbstractCommandEditor.setup_ui_core(), which sets up the editor dialog.
@@ -282,46 +339,6 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         self.grid_layout_row = self.grid_layout_row + 1
         self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
 
-    def x_get_command_string_list(self) -> [str]:
-        """
-        Return the command strings corresponding to the commands, can be an empty list (but using the editor to
-        delete all existing comments is not usually done).
-        This function can be called by the main GeoProcessorUI after editing to retrieve the result of the edit.
-
-        Returns:
-            A list of strings corresponding to each comment line.
-        """
-        # logger = logging.getLogger(__name__)
-        # First split the text area using newline delimiter
-        command_text = self.CommandDisplay_View_TextBrowser.toPlainText()
-        command_string_list = []
-        if len(command_text) == 0:
-            # Return an empty list, which should be handled in calling code.
-            return command_string_list
-        else:
-            # Split the text by newlines according to Python universal newlines
-            command_string_list = command_text.splitlines()
-            # Add the # with determined indent
-            # Verify that each line edited by user starts with #
-            for i in range(len(command_string_list)):
-                command_string_stripped = command_string_list[i].strip()
-                # Check if the stripped line starts with # and if so, it is OK
-                # - otherwise, add # at the start, indented appropriately
-                if not command_string_stripped.startswith('#'):
-                    # Figure out how many spaces to indent by examining the comment lines
-                    # - assume that indent should be consistent with nearest previous indented, commented line
-                    # - if that is not found, search after the current line (TODO smalers 2019-01-18 need to do)
-                    indent = ""
-                    for j in range(i - 1, 0, -1):
-                        indent_pos = command_string_list[j].find('#')
-                        if indent_pos >= 0:
-                            # Found a previous comment line so use its indent
-                            # - the following one-liner sets the indent to the number of spaces
-                            indent += ' ' * indent_pos
-                            break
-                    command_string_list[i] = indent + "# " + command_string_list[i]
-            # Return a list with one item for each line that was edited
-            return command_string_list
 
     def x_get_current_value(self, obj: QtWidgets.QWidget) -> str:
         """
@@ -360,21 +377,6 @@ class InsertLineRulerEditor(AbstractCommandEditor):
             None
         """
         hs.setValue(value)
-
-    def x_set_text(self, text: str) -> None:
-        """
-        Set the text in the text browser for the command editor. If text is being
-        added dynamically it will be from a comment already inserted into the command file.
-
-        Args:
-            text: String to insert as text in the command editor.
-
-        Returns:
-            None
-        """
-        # text = text.replace("# ", "")
-        # text = text.replace("#", "")
-        self.CommandDisplay_View_TextBrowser.setText(text)
 
     def x_setup_ui_core(self) -> None:
         # Set up QDialog specifications

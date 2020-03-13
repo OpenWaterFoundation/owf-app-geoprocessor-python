@@ -168,6 +168,8 @@ class CloseDataStore(AbstractCommand):
             RuntimeError if any warnings occurred during run_command method.
         """
 
+        self.warning_count = 0
+
         # Obtain the DataStoreID parameter value and expand for ${Property} syntax.
         # noinspection PyPep8Naming
         pv_DataStoreID = self.get_parameter_value("DataStoreID")

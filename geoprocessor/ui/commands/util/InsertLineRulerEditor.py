@@ -112,6 +112,21 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # The following sets the window size and sets to resizable
         self.setup_ui_window()
 
+    def setup_ui_2(self) -> None:
+        """
+        Set up the user interface after components have been added.
+        Set the focus to the command text area.
+
+        Returns:
+            None
+        """
+        self.CommandDisplay_View_TextBrowser.setFocus()
+        # Set the position of the cursor the end of the text
+        cursor = self.CommandDisplay_View_TextBrowser.textCursor()
+        # TODO smalers 2020-03-13 need to set the position
+        # See:  https://stackoverflow.com/questions/19990026/change-text-selection-in-pyqt-qtextedit
+        # cursor.setPosition()...
+
     def setup_ui_window(self) -> None:
         """
         Setup specific elements in relation to the entire window.
@@ -150,6 +165,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # Create a text edit object. Add the text edit object to the Dialog window.
         # Set the size, the name and the html of the text edit object.
         # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
+        # Use a font that is the same as the ruler.
         self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(self)
         self.CommandDisplay_View_TextBrowser.setObjectName("CommandDisplay_View_TextBrowser")
         self.CommandDisplay_View_TextBrowser.setMaximumHeight(200)
@@ -162,11 +178,6 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # If command_string is default reset to empty
         command_string = self.command.command_string
         # - existing comments should be shown as is without stripping the leading #
-        if command_string == "#()":
-            # Special case for new comment
-            command_string = ""
-        if command_string.endswith("()"):
-            command_string = command_string[:-2]
         self.CommandDisplay_View_TextBrowser.setText(command_string)
         # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
         # self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))

@@ -916,7 +916,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     logger.debug("Command string after editing (may include line breaks):  " +
                                  str(command_object.command_string))
                 else:
-                    logger.debug("Command string after editing:  " + str(command_object.command_string))
+                    logger.debug("Command string after editing:  '" + str(command_object.command_string)) + "'"
 
                 comment_commands = []
                 if is_hash_comment_block:
@@ -924,28 +924,28 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # must add those lines individually to the GeoProcessor.
                     # The lines that are returned may or may not have # in front - if not, add.
                     # Also allow spaces in front of the comments - preserve the spaces when adding the comments.
-                    comment_lines = command_string.splitlines()
+                    comment_lines = command_object.command_string.splitlines()
+                    logger.debug("# comment block has " + str(len(comment_lines)) + " lines.")
                     for i in range(len(comment_lines)):
                         # Make sure that the lines start with the comment character
                         if not comment_lines[i].strip().startswith("#"):
                             # Need to add # in front of command, but need to check for leading spaces
-                            # TODO smalers 2020-03-12 need to make sure this is implemented for editing existing command
-                            # - indented string won't occur for new commands
                             if not comment_lines[i].startswith("") and not comment_lines[i].startswith("\t"):
                                 # String does not start with space or tab so add "# " at the start
                                 comment_lines[i] = "# " + comment_lines[i]
                             else:
                                 # More than one space or tab so get the leading string
+                                # - then insert the "# " in the middle of the string
                                 white = string_util.get_leading_whitespace(comment_lines[i])
-                                comment_lines[i] = white + "# " + comment_lines[i]
-                        logger.debug("New comment line after confirming #: '" + comment_lines[i] + "'")
+                                comment_lines[i] = white + "# " + comment_lines[i][len(white):]
+                        logger.debug("New comment line [" + str(i) + "] after confirming #: '" + comment_lines[i] + "'")
                         # Create a new comment line command using the factory.
                         command_object = command_factory.new_command(
                             comment_lines[i],
                             create_unknown_command_if_not_recognized)
                         # The above just creates an instance of the command but does not initialize it
                         full_initialization = True
-                        command_object.initialize_command(command_string, self.gp_model.gp, full_initialization)
+                        command_object.initialize_command(comment_lines[i], self.gp_model.gp, full_initialization)
                         logger.debug("New comment line after creating command: '" + command_object.command_string + "'")
                         # Add the comment command to the temporary list
                         comment_commands.append(command_object)

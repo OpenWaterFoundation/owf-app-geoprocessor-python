@@ -457,11 +457,14 @@ class WriteTableToDataStore(AbstractCommand):
         """
         Run the command. Read the Table from the DataStore
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+
+        self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming

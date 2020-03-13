@@ -231,11 +231,14 @@ class ReadTableFromExcel(AbstractCommand):
         Run the command. Read the tabular data from the Excel workbook/worksheet. Create a Table object, and add to the
         GeoProcessor's tables list.
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+
+        self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming

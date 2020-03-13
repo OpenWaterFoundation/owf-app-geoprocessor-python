@@ -175,11 +175,13 @@ class AbstractCommand(object):
             # the following will call the AbstractCommand.parse_command by default
             self.parse_command(command_string)
 
+    # TODO smalers 2020-03-13 is there a better way to do this so that commands don't need to know about UI?
     # TODO smalers 2020-01-14 don't type hint GeoProcessorUI because it will result in circular import issue
     def initialize_geoprocessor_ui(self, geoprocessor_ui) -> None:
         """
         Initialize the geoprocessor ui for commands that need to access data
         or functions from GeoProcessorUI.py
+
         Args:
             geoprocessor_ui (obj): a geoprocessor instance
 

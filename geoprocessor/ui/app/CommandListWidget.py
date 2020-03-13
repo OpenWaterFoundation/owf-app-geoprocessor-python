@@ -444,7 +444,7 @@ class CommandListWidget(object):
         # Check to see if command list modified. If so notify the main ui
         self.command_main_ui_listener.update_ui_main_window_title()
 
-    # TODO smalers 2020-01-19 should not need this now
+    # TODO smalers 2020-01-19 should not need this now - why?
     def event_handler_decrease_indent_button_clicked(self) -> None:
 
         """
@@ -464,7 +464,7 @@ class CommandListWidget(object):
         # Check to see if command list modified. If so notify the main ui
         self.command_main_ui_listener.update_ui_main_window_title()
 
-    # TODO smalers 2020-01-19 should not need this now
+    # TODO smalers 2020-01-19 should not need this now - why?
     def event_handler_increase_indent_button_clicked(self) -> None:
         """
         Notify the GeoProcessorListModel that one of the increase indent buttons have been clicked.
@@ -569,7 +569,7 @@ class CommandListWidget(object):
 
     def get_selected_indices(self) -> [int]:
         """
-        Return the selected indices from selected command list items.
+        Return the selected indices from selected command list.
 
         Returns:
             An array of integers representing the selected indices from command list.
@@ -1274,6 +1274,10 @@ class CommandListWidget(object):
             "Commands ({} commands, {} selected, {} with failures, {} with warnings)".format(
                 total_commands, selected_commands, self.num_errors, self.num_warnings))
 
+        # Update the UI via listener so it can update the indent button state
+        # - TODO smalers 2020-03-13 the listener is the main UI
+        self.command_main_ui_listener.update_ui_status()
+
     def x_update_command_list(self, command_string: str) -> None:
         """
         This method is no longer used.  Instead, add or remove commands in the model.
@@ -1385,7 +1389,7 @@ class CommandListWidget(object):
             None
         """
         # Start by clearing previous icons from numbered list and gutter
-        for i in range(0, len(self.command_list)):
+        for i in range(0, len(self.gp_model)):
             numbered_list_item = self.number_ListWidget.item(i)
             numbered_list_item.setIcon(QtGui.QIcon())
             gutter_item = self.gutter_ListWidget.item(i)
@@ -1396,8 +1400,8 @@ class CommandListWidget(object):
         self.num_warnings = 0
 
         # Now update the numbered list and gutter with current errors and warnings
-        for i in range(0, len(self.command_list)):
-            command_status = self.command_list[i].command_status.run_status
+        for i in range(0, len(self.gp_model)):
+            command_status = self.gp_model.gp.commands[i].command_status.run_status
             if command_status is CommandStatusType.FAILURE:
                 self.numbered_list_error_at_row(i)
                 self.gutter_error_at_row(i)

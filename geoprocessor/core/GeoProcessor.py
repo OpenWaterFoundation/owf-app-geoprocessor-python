@@ -163,6 +163,7 @@ class GeoProcessor(object):
             logger.debug("First command debug:")
             self.commands[0].print_for_debug()
 
+    # TODO smalers 2020-03-13 evaluate removing this or inserting a Command object instead
     def add_command_at_index(self, command_string: str, index: int) -> None:
         """
         Add a command string above currently selected command in command file.

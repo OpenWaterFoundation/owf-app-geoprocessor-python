@@ -286,11 +286,14 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         specified by the Subset_Pattern parameter), create a GeoLayer object, and add to the GeoProcessor's geolayer
         list.
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+
+        self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming

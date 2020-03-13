@@ -258,11 +258,14 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         """
         Run the command. Simplify the GeoLayer by the tolerance.
 
-        Returns:  None.
+        Returns:
+            None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
+
+        self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming

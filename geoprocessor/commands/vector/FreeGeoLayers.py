@@ -43,6 +43,22 @@ class FreeGeoLayers(AbstractCommand):
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerIDs", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Remove one or more GeoLayers from the GeoProcessor."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayersIDs
+    __parameter_input_metadata['GeoLayerIDs.Description'] = \
+        "comma-separated list of the ID's of the GeoLayers to free"
+    __parameter_input_metadata['GeoLayerIDs.Label'] = "GeoLayersIDs"
+    __parameter_input_metadata['GeoLayerIDs.Required'] = True
+    __parameter_input_metadata['GeoLayerIDs.Tooltip'] = (
+        "A comma-separated list of the IDs of the GeoLayers to free. \n"
+        "Can also be *, which will remove all GeoLayers. ")
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -54,20 +70,10 @@ class FreeGeoLayers(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Remove one or more GeoLayers from the GeoProcessor."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayersIDs
-        self.parameter_input_metadata['GeoLayerIDs.Description'] =\
-            "comma-separated list of the ID's of the GeoLayers to free"
-        self.parameter_input_metadata['GeoLayerIDs.Label'] = "GeoLayersIDs"
-        self.parameter_input_metadata['GeoLayerIDs.Required'] = True
-        self.parameter_input_metadata['GeoLayerIDs.Tooltip'] = (
-            "A comma-separated list of the IDs of the GeoLayers to free. \n"
-            "Can also be *, which will remove all GeoLayers. ")
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

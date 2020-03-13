@@ -46,6 +46,40 @@ class CopyFile(AbstractCommand):
         CommandParameterMetadata("IfSourceFileNotFound", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Copy a source file to a destination."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # SourceFile
+    __parameter_input_metadata['SourceFile.Description'] = "the name of the source file to copy"
+    __parameter_input_metadata['SourceFile.Label'] = "Source file"
+    __parameter_input_metadata['SourceFile.Required'] = True
+    __parameter_input_metadata['SourceFile.Tooltip'] = \
+        "The name of the source file to copy. Can be specified using ${Property}."
+    __parameter_input_metadata['SourceFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['SourceFile.FileSelector.Title'] = "Select the source file to copy"
+    # DestinationFile
+    __parameter_input_metadata['DestinationFile.Description'] = "the name of the destination file"
+    __parameter_input_metadata['DestinationFile.Label'] = "Destination file"
+    __parameter_input_metadata['DestinationFile.Required'] = True
+    __parameter_input_metadata['DestinationFile.Tooltip'] = \
+        "The name of the destination file. Can be specified using ${Property}."
+    __parameter_input_metadata['DestinationFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['DestinationFile.FileSelector.Title'] = "select the destination file"
+    # IfSourceFileNotFound
+    __parameter_input_metadata['IfSourceFileNotFound.Description'] = "action if file not found"
+    __parameter_input_metadata['IfSourceFileNotFound.Label'] = "If not found?"
+    __parameter_input_metadata['IfSourceFileNotFound.Tooltip'] = (
+        "Indicate an action if the source file is not found:\n\n"
+        "Ignore (ignore the missing file and do not warn)\n"
+        "Warn (generate a warning message)\n"
+        "Fail (generate a failure message). ")
+    __parameter_input_metadata['IfSourceFileNotFound.Values'] = ["", "Ignore", "Warn", "Fail"]
+    __parameter_input_metadata['IfSourceFileNotFound.Value.Default'] = "Warn"
+
     # Choices for IfSourceFileNotFound, used to validate parameter and display in editor
     __choices_IfSourceFileNotFound = ["Ignore", "Warn", "Fail"]
 
@@ -59,38 +93,10 @@ class CopyFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Copy a source file to a destination."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # SourceFile
-        self.parameter_input_metadata['SourceFile.Description'] = "the name of the source file to copy"
-        self.parameter_input_metadata['SourceFile.Label'] = "Source file"
-        self.parameter_input_metadata['SourceFile.Required'] = True
-        self.parameter_input_metadata['SourceFile.Tooltip'] = \
-            "The name of the source file to copy. Can be specified using ${Property}."
-        self.parameter_input_metadata['SourceFile.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['SourceFile.FileSelector.Title'] = "Select the source file to copy"
-        # DestinationFile
-        self.parameter_input_metadata['DestinationFile.Description'] = "the name of the destination file"
-        self.parameter_input_metadata['DestinationFile.Label'] = "Destination file"
-        self.parameter_input_metadata['DestinationFile.Required'] = True
-        self.parameter_input_metadata['DestinationFile.Tooltip'] = \
-            "The name of the destination file. Can be specified using ${Property}."
-        self.parameter_input_metadata['DestinationFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['DestinationFile.FileSelector.Title'] = "select the destination file"
-        # IfSourceFileNotFound
-        self.parameter_input_metadata['IfSourceFileNotFound.Description'] = "action if file not found"
-        self.parameter_input_metadata['IfSourceFileNotFound.Label'] = "If not found?"
-        self.parameter_input_metadata['IfSourceFileNotFound.Tooltip'] = (
-            "Indicate an action if the source file is not found:\n\n"
-            "Ignore (ignore the missing file and do not warn)\n"
-            "Warn (generate a warning message)\n"
-            "Fail (generate a failure message). ")
-        self.parameter_input_metadata['IfSourceFileNotFound.Values'] = ["", "Ignore", "Warn", "Fail"]
-        self.parameter_input_metadata['IfSourceFileNotFound.Value.Default'] = "Warn"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

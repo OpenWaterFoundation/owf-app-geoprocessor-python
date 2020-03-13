@@ -54,9 +54,18 @@ class RunGdalProgram(AbstractCommand):
         CommandParameterMetadata("StderrFile", str)
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "Run a GDAL program to process a raster data file, given the program arguments.\n"
+        "For portable command files, specify the GDAL program to run using ${GdalBinDir} property or similar.\n"
+        "If ${ is not found at the start of the command line, ${GdalBinDir} is automatically inserted.")
+    __command_metadata['EditorType'] = "Simple"
+
     # Choices for UseCommandShell, used to validate parameter and display in editor
     # See: https://gdal.org/programs/index.html
     __choices_GdalProgram = [
+        "",  # Required to pick one but allow a blank so that editor does not complain for new command
         "gdaladdo",
         "gdalbuildvrt",
         "gdal_calc.py",
@@ -95,6 +104,7 @@ class RunGdalProgram(AbstractCommand):
     # Description for each program
     # See: https://gdal.org/programs/index.html
     __gdal_program_description = {
+        "": "",
         "gdaladdo": "Builds or rebuilds overview images.",
         "gdalbuildvrt": "Builds a VRT from a list of datasets.",
         "gdal_calc.py": "Command line raster calculator with numpy syntax.",
@@ -130,6 +140,83 @@ class RunGdalProgram(AbstractCommand):
         "rgb2pct": "Convert a 24bit RGB image to 8bit paletted.",
     }
 
+    # Parameter metadata
+    __parameter_input_metadata = dict()
+
+    # GDAL program
+    __parameter_input_metadata['GdalProgram.Description'] = "GDAL program to run"
+    __parameter_input_metadata['GdalProgram.Label'] = "GDAL program"
+    __parameter_input_metadata['GdalProgram.Tooltip'] = "GDAL program to run."
+    __parameter_input_metadata['GdalProgram.Values'] = __choices_GdalProgram
+    __parameter_input_metadata['GdalProgram.Values.Default'] = __choices_GdalProgram[0]
+    __parameter_input_metadata['GdalProgram.Required'] = True
+
+    # CommandLine
+    __parameter_input_metadata['CommandLine.Description'] = "command line"
+    __parameter_input_metadata['CommandLine.Label'] = "Command line"
+    __parameter_input_metadata['CommandLine.Tooltip'] = "Full command line, separated by spaces."
+    __parameter_input_metadata['CommandLine.Required'] = True
+
+    # UseCommandShell
+    __parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
+    __parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
+    __parameter_input_metadata['UseCommandShell.Tooltip'] = ""
+    __parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
+
+    # IncludeParentEnvVars
+    __parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
+    __parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
+    __parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = (
+        "Indicate whether the parent environment variables should be passed to the program run environment.")
+    __parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
+    __parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
+
+    # IncludeEnvVars
+    __parameter_input_metadata['IncludeEnvVars.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVars.Label'] = "Include environment variables"
+    __parameter_input_metadata['IncludeEnvVars.Tooltip'] = (
+        "Specify environment variables to be defined for the program run environment in format:"
+        "VAR1=Value1,VAR2=Value2.")
+
+    # ExcludeEnvVars
+    __parameter_input_metadata['ExcludeEnvVars.Description'] = ""
+    __parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude environment variables'
+    __parameter_input_metadata['ExcludeEnvVars.Tooltip'] = (
+        "Specify environment variables to be removed from the program run environment, separated by commas.")
+
+    # Timeout
+    __parameter_input_metadata['Timeout.Description'] = ""
+    __parameter_input_metadata['Timeout.Label'] = 'Timeout (seconds)'
+    __parameter_input_metadata['Timeout.Default'] = "0"
+    __parameter_input_metadata['Timeout.Tooltip'] = (
+        "Timeout for process (seconds), after which the process will be killed.")
+
+    # OutputFiles
+    __parameter_input_metadata['OutputFiles.Description'] = ""
+    __parameter_input_metadata['OutputFiles.Label'] = "Output files"
+    __parameter_input_metadata['OutputFiles.Tooltip'] = (
+        "Specify the output files to add to Results, separated by commas.  Can specify with ${Property}.")
+
+    # StdoutFile
+    __parameter_input_metadata['StdoutFile.Description'] = "standard output file"
+    __parameter_input_metadata['StdoutFile.Label'] = "Standard output file"
+    __parameter_input_metadata['StdoutFile.Tooltip'] = (
+        "Name of file for program standard output, or 'logfile' to write to the log file.  "
+        "${Property} syntax is recognized.")
+    __parameter_input_metadata['StdoutFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['StdoutFile.FileSelector.Title'] = "Select a file to write standard output"
+
+    # StderrFile
+    __parameter_input_metadata['StderrFile.Description'] = "standard error file"
+    __parameter_input_metadata['StderrFile.Label'] = "Standard error file"
+    __parameter_input_metadata['StderrFile.Tooltip'] = (
+        "Name of file for program standard error, or 'logfile' to write to the log file.  "
+        "${Property} syntax is recognized.")
+    __parameter_input_metadata['StderrFile.Required'] = False
+    __parameter_input_metadata['StderrFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['StderrFile.FileSelector.Title'] = "Select a file to write standard error"
+
     # Choices for UseCommandShell, used to validate parameter and display in editor
     __choices_UseCommandShell = ["False", "True"]
 
@@ -149,89 +236,10 @@ class RunGdalProgram(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "Run a GDAL program to process a raster data file, given the program arguments.\n"
-            "For portable command files, specify the GDAL program to run using ${GdalBinDir} property or similar.\n"
-            "If ${ is not found at the start of the command line, ${GdalBinDir} is automatically inserted.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Parameter metadata
-        self.parameter_input_metadata = dict()
-
-        # GDAL program
-        self.parameter_input_metadata['GdalProgram.Description'] = "GDAL program to run"
-        self.parameter_input_metadata['GdalProgram.Label'] = "GDAL program"
-        self.parameter_input_metadata['GdalProgram.Tooltip'] = "GDAL program to run."
-        self.parameter_input_metadata['GdalProgram.Values'] = RunGdalProgram.__choices_GdalProgram
-        self.parameter_input_metadata['GdalProgram.Values.Default'] = RunGdalProgram.__choices_GdalProgram[0]
-        self.parameter_input_metadata['GdalProgram.Required'] = True
-
-        # CommandLine
-        self.parameter_input_metadata['CommandLine.Description'] = "command line"
-        self.parameter_input_metadata['CommandLine.Label'] = "Command line"
-        self.parameter_input_metadata['CommandLine.Tooltip'] = "Full command line, separated by spaces."
-        self.parameter_input_metadata['CommandLine.Required'] = True
-
-        # UseCommandShell
-        self.parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
-        self.parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
-        self.parameter_input_metadata['UseCommandShell.Tooltip'] = ""
-        self.parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
-        self.parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
-
-        # IncludeParentEnvVars
-        self.parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
-        self.parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
-        self.parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = (
-            "Indicate whether the parent environment variables should be passed to the program run environment.")
-        self.parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
-        self.parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
-
-        # IncludeEnvVars
-        self.parameter_input_metadata['IncludeEnvVars.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVars.Label'] = "Include environment variables"
-        self.parameter_input_metadata['IncludeEnvVars.Tooltip'] = (
-            "Specify environment variables to be defined for the program run environment in format:"
-            "VAR1=Value1,VAR2=Value2.")
-
-        # ExcludeEnvVars
-        self.parameter_input_metadata['ExcludeEnvVars.Description'] = ""
-        self.parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude environment variables'
-        self.parameter_input_metadata['ExcludeEnvVars.Tooltip'] = (
-            "Specify environment variables to be removed from the program run environment, separated by commas.")
-
-        # Timeout
-        self.parameter_input_metadata['Timeout.Description'] = ""
-        self.parameter_input_metadata['Timeout.Label'] = 'Timeout (seconds)'
-        self.parameter_input_metadata['Timeout.Default'] = "0"
-        self.parameter_input_metadata['Timeout.Tooltip'] = (
-            "Timeout for process (seconds), after which the process will be killed.")
-
-        # OutputFiles
-        self.parameter_input_metadata['OutputFiles.Description'] = ""
-        self.parameter_input_metadata['OutputFiles.Label'] = "Output files"
-        self.parameter_input_metadata['OutputFiles.Tooltip'] = (
-            "Specify the output files to add to Results, separated by commas.  Can specify with ${Property}.")
-
-        # StdoutFile
-        self.parameter_input_metadata['StdoutFile.Description'] = "standard output file"
-        self.parameter_input_metadata['StdoutFile.Label'] = "Standard output file"
-        self.parameter_input_metadata['StdoutFile.Tooltip'] = (
-            "Name of file for program standard output, or 'logfile' to write to the log file.  "
-            "${Property} syntax is recognized.")
-        self.parameter_input_metadata['StdoutFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['StdoutFile.FileSelector.Title'] = "Select a file to write standard output"
-
-        # StderrFile
-        self.parameter_input_metadata['StderrFile.Description'] = "standard error file"
-        self.parameter_input_metadata['StderrFile.Label'] = "Standard error file"
-        self.parameter_input_metadata['StderrFile.Tooltip'] = (
-            "Name of file for program standard error, or 'logfile' to write to the log file.  "
-            "${Property} syntax is recognized.")
-        self.parameter_input_metadata['StderrFile.Required'] = False
-        self.parameter_input_metadata['StderrFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['StderrFile.FileSelector.Title'] = "Select a file to write standard error"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

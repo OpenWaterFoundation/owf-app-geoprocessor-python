@@ -77,6 +77,97 @@ class WriteTableToDelimitedFile(AbstractCommand):
         CommandParameterMetadata("ArrayFormat", type("")),
         CommandParameterMetadata("NullValueFormat", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Write a table to a delimited file."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # TableID
+    __parameter_input_metadata['TableID.Description'] = "table identifier"
+    __parameter_input_metadata['TableID.Label'] = "TableID"
+    __parameter_input_metadata['TableID.Required'] = True
+    __parameter_input_metadata['TableID.Tooltip'] = "A Table identifier to write"
+    # OutputFile
+    __parameter_input_metadata['OutputFile.Description'] = "output delimited file"
+    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.Tooltip'] = (
+        "The output delimited file (relative or absolute path).\n"
+        "${Property} syntax is recognized.")
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = 'Write'
+    __parameter_input_metadata['OutputFile.FileSelector.Title'] = 'Select delimited file'
+    # Delimiter
+    __parameter_input_metadata['Delimiter.Description'] = "delimiter for file"
+    __parameter_input_metadata['Delimiter.Label'] = "Delimiter"
+    __parameter_input_metadata['Delimiter.Tooltip'] = \
+        "The delimiter of the output delimited file. Must be a single character."
+    __parameter_input_metadata['Delimiter.Value.Default'] = ","
+    # IncludeColumns
+    __parameter_input_metadata['IncludeColumns.Description'] = "columns to include"
+    __parameter_input_metadata['IncludeColumns.Label'] = "Include columns"
+    __parameter_input_metadata['IncludeColumns.Tooltip'] = \
+        "A comma-separated list of the glob-style patterns filtering which columns to write."
+    __parameter_input_metadata['IncludeColumns.Value.Default.Description'] = "* - all columns"
+    # ExcludeColumns
+    __parameter_input_metadata['ExcludeColumns.Description'] = "columns to exclude "
+    __parameter_input_metadata['ExcludeColumns.Label'] = "Exclude columns"
+    __parameter_input_metadata['ExcludeColumns.Tooltip'] = \
+        "A comma-separated list of the glob-style patterns filtering which columns to write. "
+    __parameter_input_metadata['ExcludeColumns.Value.Default.Description'] = "no columns are excluded"
+    # WriteHeaderRow
+    __parameter_input_metadata['WriteHeaderRow.Description'] = "how to write headers"
+    __parameter_input_metadata['WriteHeaderRow.Label'] = "Write header row"
+    __parameter_input_metadata['WriteHeaderRow.Tooltip'] = (
+        "If TRUE, the Table's header row is included in the output delimited file.\n"
+        "If FALSE, the Table's header row is not included in the output delimited file.")
+    __parameter_input_metadata['WriteHeaderRow.Value.Default'] = "TRUE"
+    __parameter_input_metadata['WriteHeaderRow.Values'] = ["", "TRUE", "FALSE"]
+    # WriteIndexColumn
+    __parameter_input_metadata['WriteIndexColumn.Description'] = "write index column"
+    __parameter_input_metadata['WriteIndexColumn.Label'] = "Write index column"
+    __parameter_input_metadata['WriteIndexColumn.Tooltip'] = (
+        "If TRUE, the Table's index column is included in the output delimited file. "
+        "The index column header is an empty string.\n"
+        "If FALSE, the Table's index column is not included in the output delimited file.")
+    __parameter_input_metadata['WriteIndexColumn.Value.Default'] = "FALSE"
+    __parameter_input_metadata['WriteIndexColumn.Values'] = ["", "TRUE", "FALSE"]
+    # SortColumns
+    __parameter_input_metadata['SortColumns.Description'] = "columns to sort data"
+    __parameter_input_metadata['SortColumns.Label'] = "Sort columns"
+    __parameter_input_metadata['SortColumns.Tooltip'] = (
+        "The names of the Table columns, separated by columns, used to sort the order that the table records "
+        "are written to the delimited file")
+    __parameter_input_metadata['SortColumns.Value.Default'] = "the first table column"
+    # SortOrder
+    __parameter_input_metadata['SortOrder.Description'] = "sort order for columns"
+    __parameter_input_metadata['SortOrder.Label'] = "Sort order"
+    __parameter_input_metadata['SortOrder.Tooltip'] = (
+        "The sort order for columns specified by SortColumns, using the syntax:\n\n"
+        "SortColumn1:Ascending,SortColumn2:Descending\n\n"
+        "As indicated in the above example, the sort order must be specified as one of "
+        "the following: Ascending or Descending.")
+    __parameter_input_metadata['SortOrder.Value.Default'] = "Ascending"
+    # ArrayFormat
+    __parameter_input_metadata['ArrayFormat.Description'] = "how column array values are written"
+    __parameter_input_metadata['ArrayFormat.Label'] = "Array format"
+    __parameter_input_metadata['ArrayFormat.Tooltip'] = (
+        "If SquareBrackets, table column array values are written as a string with square brackets ([]) "
+        "and comma delimiter.\n"
+        "If CurlyBrackets, table column array values are written as a string with curly brackets ({}) "
+        "and comma delimiter.")
+    __parameter_input_metadata['ArrayFormat.Value.Default'] = "SquareBrackets"
+    __parameter_input_metadata['ArrayFormat.Values'] = ["", "SqaureBrackets", "CurlyBrackets"]
+    # NullValueFormat
+    __parameter_input_metadata['NullValueFormat.Description'] = "specify how NONE values should be written"
+    __parameter_input_metadata['NullValueFormat.Label'] = "Null value format"
+    __parameter_input_metadata['NullValueFormat.Tooltip'] = (
+        "If NULL, None items in table column array values are written as NULL. ex: '[NULL, 4, NULL]'\n"
+        "If None, None items in table column array values are written as None. ex: '[None, 4, None]'")
+    __parameter_input_metadata['NullValueFormat.Value.Default'] = "NULL"
+    __parameter_input_metadata['NullValueFormat.Values'] = ["", "NULL", "None"]
+
     # Choices for parameters, used to validate parameter and display in editor
     __choices_ArrayFormat = ["SquareBrackets", "CurlyBrackets"]
     __choices_NullValueFormat = ["Null", "None"]
@@ -92,95 +183,10 @@ class WriteTableToDelimitedFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Write a table to a delimited file."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # TableID
-        self.parameter_input_metadata['TableID.Description'] = "table identifier"
-        self.parameter_input_metadata['TableID.Label'] = "TableID"
-        self.parameter_input_metadata['TableID.Required'] = True
-        self.parameter_input_metadata['TableID.Tooltip'] = "A Table identifier to write"
-        # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "output delimited file"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
-        self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = (
-            "The output delimited file (relative or absolute path).\n"
-            "${Property} syntax is recognized.")
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = 'Write'
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = 'Select delimited file'
-        # Delimiter
-        self.parameter_input_metadata['Delimiter.Description'] = "delimiter for file"
-        self.parameter_input_metadata['Delimiter.Label'] = "Delimiter"
-        self.parameter_input_metadata['Delimiter.Tooltip'] = \
-            "The delimiter of the output delimited file. Must be a single character."
-        self.parameter_input_metadata['Delimiter.Value.Default'] = ","
-        # IncludeColumns
-        self.parameter_input_metadata['IncludeColumns.Description'] = "columns to include"
-        self.parameter_input_metadata['IncludeColumns.Label'] = "Include columns"
-        self.parameter_input_metadata['IncludeColumns.Tooltip'] = \
-            "A comma-separated list of the glob-style patterns filtering which columns to write."
-        self.parameter_input_metadata['IncludeColumns.Value.Default.Description'] = "* - all columns"
-        # ExcludeColumns
-        self.parameter_input_metadata['ExcludeColumns.Description'] = "columns to exclude "
-        self.parameter_input_metadata['ExcludeColumns.Label'] = "Exclude columns"
-        self.parameter_input_metadata['ExcludeColumns.Tooltip'] = \
-            "A comma-separated list of the glob-style patterns filtering which columns to write. "
-        self.parameter_input_metadata['ExcludeColumns.Value.Default.Description'] = "no columns are excluded"
-        # WriteHeaderRow
-        self.parameter_input_metadata['WriteHeaderRow.Description'] = "how to write headers"
-        self.parameter_input_metadata['WriteHeaderRow.Label'] = "Write header row"
-        self.parameter_input_metadata['WriteHeaderRow.Tooltip'] = (
-            "If TRUE, the Table's header row is included in the output delimited file.\n"
-            "If FALSE, the Table's header row is not included in the output delimited file.")
-        self.parameter_input_metadata['WriteHeaderRow.Value.Default'] = "TRUE"
-        self.parameter_input_metadata['WriteHeaderRow.Values'] = ["", "TRUE", "FALSE"]
-        # WriteIndexColumn
-        self.parameter_input_metadata['WriteIndexColumn.Description'] = "write index column"
-        self.parameter_input_metadata['WriteIndexColumn.Label'] = "Write index column"
-        self.parameter_input_metadata['WriteIndexColumn.Tooltip'] = (
-            "If TRUE, the Table's index column is included in the output delimited file. "
-            "The index column header is an empty string.\n"
-            "If FALSE, the Table's index column is not included in the output delimited file.")
-        self.parameter_input_metadata['WriteIndexColumn.Value.Default'] = "FALSE"
-        self.parameter_input_metadata['WriteIndexColumn.Values'] = ["", "TRUE", "FALSE"]
-        # SortColumns
-        self.parameter_input_metadata['SortColumns.Description'] = "columns to sort data"
-        self.parameter_input_metadata['SortColumns.Label'] = "Sort columns"
-        self.parameter_input_metadata['SortColumns.Tooltip'] = (
-            "The names of the Table columns, separated by columns, used to sort the order that the table records "
-            "are written to the delimited file")
-        self.parameter_input_metadata['SortColumns.Value.Default'] = "the first table column"
-        # SortOrder
-        self.parameter_input_metadata['SortOrder.Description'] = "sort order for columns"
-        self.parameter_input_metadata['SortOrder.Label'] = "Sort order"
-        self.parameter_input_metadata['SortOrder.Tooltip'] = (
-            "The sort order for columns specified by SortColumns, using the syntax:\n\n"
-            "SortColumn1:Ascending,SortColumn2:Descending\n\n"
-            "As indicated in the above example, the sort order must be specified as one of "
-            "the following: Ascending or Descending.")
-        self.parameter_input_metadata['SortOrder.Value.Default'] = "Ascending"
-        # ArrayFormat
-        self.parameter_input_metadata['ArrayFormat.Description'] = "how column array values are written"
-        self.parameter_input_metadata['ArrayFormat.Label'] = "Array format"
-        self.parameter_input_metadata['ArrayFormat.Tooltip'] = (
-            "If SquareBrackets, table column array values are written as a string with square brackets ([]) "
-            "and comma delimiter.\n"
-            "If CurlyBrackets, table column array values are written as a string with curly brackets ({}) "
-            "and comma delimiter.")
-        self.parameter_input_metadata['ArrayFormat.Value.Default'] = "SquareBrackets"
-        self.parameter_input_metadata['ArrayFormat.Values'] = ["", "SqaureBrackets", "CurlyBrackets"]
-        # NullValueFormat
-        self.parameter_input_metadata['NullValueFormat.Description'] = "specify how NONE values should be written"
-        self.parameter_input_metadata['NullValueFormat.Label'] = "Null value format"
-        self.parameter_input_metadata['NullValueFormat.Tooltip'] = (
-            "If NULL, None items in table column array values are written as NULL. ex: '[NULL, 4, NULL]'\n"
-            "If None, None items in table column array values are written as None. ex: '[None, 4, None]'")
-        self.parameter_input_metadata['NullValueFormat.Value.Default'] = "NULL"
-        self.parameter_input_metadata['NullValueFormat.Values'] = ["", "NULL", "None"]
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

@@ -44,6 +44,36 @@ class RemoveFile(AbstractCommand):
         CommandParameterMetadata("IfSourceFileNotFound", type("")),
         CommandParameterMetadata("RemoveIfFolder", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        'Remove a file from the file system.  '
+        'The file to be removed does not need to exist when editing this command.')
+    __command_metadata['EditorType'] = 'Simple'
+
+    # Parameter input metadata
+    __parameter_input_metadata = dict()
+    # SourceFile
+    __parameter_input_metadata['SourceFile.Description'] = ""
+    __parameter_input_metadata['SourceFile.Label'] = 'File to remove'
+    __parameter_input_metadata['SourceFile.Tooltip'] = \
+        "Specify the file to remove, can use ${Property} notation."
+    __parameter_input_metadata['SourceFile.Required'] = True
+    __parameter_input_metadata['SourceFile.FileSelector.Type'] = "Read"
+    # IfSourceFileNotFound
+    __parameter_input_metadata['IfSourceFileNotFound.Description'] = "action if file not found"
+    __parameter_input_metadata['IfSourceFileNotFound.Label'] = "If not found?"
+    __parameter_input_metadata['IfSourceFileNotFound.Tooltip'] = \
+        "Specify the file to remove, can use ${Property} notation."
+    __parameter_input_metadata['IfSourceFileNotFound.Values'] = ["", "Ignore", "Warn", "Fail"]
+    __parameter_input_metadata['IfSourceFileNotFound.Value.Default'] = "Warn"
+    # RemoveIfFolder
+    __parameter_input_metadata['RemoveIfFolder.Description'] = ""
+    __parameter_input_metadata['RemoveIfFolder.Label'] = "Remove if folder"
+    __parameter_input_metadata['RemoveIfFolder.Tooltip'] = ""
+    __parameter_input_metadata['RemoveIfFolder.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['RemoveIfFolder.Value.Default'] = "False"
+
     # Choices for IfNotFound, used to validate parameter and display in editor
     __choices_IfSourceFileNotFound = ["Ignore", "Warn", "Fail"]
 
@@ -57,34 +87,10 @@ class RemoveFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            'Remove a file from the file system.  '
-            'The file to be removed does not need to exist when editing this command.')
-        self.command_metadata['EditorType'] = 'Simple'
+        self.command_metadata = self.__command_metadata
 
         # Parameter input metadata
-        self.parameter_input_metadata = dict()
-        # SourceFile
-        self.parameter_input_metadata['SourceFile.Description'] = ""
-        self.parameter_input_metadata['SourceFile.Label'] = 'File to remove'
-        self.parameter_input_metadata['SourceFile.Tooltip'] = \
-            "Specify the file to remove, can use ${Property} notation."
-        self.parameter_input_metadata['SourceFile.Required'] = True
-        self.parameter_input_metadata['SourceFile.FileSelector.Type'] = "Read"
-        # IfSourceFileNotFound
-        self.parameter_input_metadata['IfSourceFileNotFound.Description'] = "action if file not found"
-        self.parameter_input_metadata['IfSourceFileNotFound.Label'] = "If not found?"
-        self.parameter_input_metadata['IfSourceFileNotFound.Tooltip'] = \
-            "Specify the file to remove, can use ${Property} notation."
-        self.parameter_input_metadata['IfSourceFileNotFound.Values'] = ["", "Ignore", "Warn", "Fail"]
-        self.parameter_input_metadata['IfSourceFileNotFound.Value.Default'] = "Warn"
-        # RemoveIfFolder
-        self.parameter_input_metadata['RemoveIfFolder.Description'] = ""
-        self.parameter_input_metadata['RemoveIfFolder.Label'] = "Remove if folder"
-        self.parameter_input_metadata['RemoveIfFolder.Tooltip'] = ""
-        self.parameter_input_metadata['RemoveIfFolder.Values'] = ["", "False", "True"]
-        self.parameter_input_metadata['RemoveIfFolder.Value.Default'] = "False"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

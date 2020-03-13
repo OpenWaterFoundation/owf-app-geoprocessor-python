@@ -27,10 +27,21 @@ class CommentBlockEnd(AbstractCommand):
     """
     */ comment block end.
     """
+
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = ('This command ends a multi-line comment block, '
+                                         'which is useful for commenting out multiple commands.\n'
+                                         'Use the /* command to start the comment block.\n'
+                                         'See also the # command for commenting single lines.')
+    __command_metadata['EditorType'] = 'InsertLineEditor'
+    __command_metadata['EditorTitle'] = 'Edit */ comment block end'  # Does not follow normal CommandName(...)
+
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
+
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()
         # Set the command status to success so that testing reports look better
@@ -41,11 +52,7 @@ class CommentBlockEnd(AbstractCommand):
         self.command_name = "*/"
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = ('Multiple-line comments end with */. Spaces and tabs at the start '
-                                                'of the comment line are OK. Additional text before the comment '
-                                                'indicator is allowed.')
-        self.command_metadata['EditorType'] = 'InsertLineEditor'
+        self.command_metadata = self.__command_metadata
 
     def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
@@ -74,3 +81,12 @@ class CommentBlockEnd(AbstractCommand):
             None.
         """
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)
+
+    def to_string(self) -> str:
+        """
+        Return the string representation of the command, always the command name (*/).
+
+        Returns:
+            The string representation of the command, always the command name (*/).
+        """
+        return self.command_name

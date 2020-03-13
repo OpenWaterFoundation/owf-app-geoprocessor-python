@@ -43,6 +43,23 @@ class WriteCommandSummaryToFile(AbstractCommand):
         CommandParameterMetadata("OutputFile", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Write command logging messages to a summary file."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # OutputFile
+    __parameter_input_metadata['OutputFile.Description'] = "output file"
+    __parameter_input_metadata['OutputFile.Label'] = "Output File"
+    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.Tooltip'] = (
+        "The output file to write, as an absolute path or relative to the command file.\n"
+        "Can use ${Property}.")
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the output file"
+
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
@@ -53,21 +70,10 @@ class WriteCommandSummaryToFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Write command logging messages to a summary file."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "output file"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output File"
-        self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = (
-            "The output file to write, as an absolute path or relative to the command file.\n"
-            "Can use ${Property}.")
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the output file"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

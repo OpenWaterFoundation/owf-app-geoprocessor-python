@@ -62,6 +62,59 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("NullValues", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Read a table from a delimited file."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # InputFile
+    __parameter_input_metadata['InputFile.Description'] = "delimited file to read"
+    __parameter_input_metadata['InputFile.Label'] = "Input file"
+    __parameter_input_metadata['InputFile.Required'] = True
+    __parameter_input_metadata['InputFile.Tooltip'] = \
+        "The delimited file (relative or absolute path) to read. ${Property} syntax is recognized."
+    __parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['InputFile.FileSelector.Title'] = "Select a delimited file to read"
+    # TableID
+    __parameter_input_metadata['TableID.Description'] = "output table identifier"
+    __parameter_input_metadata['TableID.Label'] = "TableID"
+    __parameter_input_metadata['TableID.Required'] = True
+    __parameter_input_metadata['TableID.Tooltip'] = "A Table identifier"
+    # Delimiter
+    __parameter_input_metadata['Delimiter.Description'] = "delimiter character"
+    __parameter_input_metadata['Delimiter.Label'] = "Delimiter"
+    __parameter_input_metadata['Delimiter.Tooltip'] = "The delimiter character of the input delimited file."
+    # HeaderLines
+    __parameter_input_metadata['HeaderLines.Description'] = "number of rows of non-data comments"
+    __parameter_input_metadata['HeaderLines.Label'] = "Header lines"
+    __parameter_input_metadata['HeaderLines.Tooltip'] = (
+        "The number of rows representing non-data comments. "
+        "These columns are not included in the output Table data values.")
+    __parameter_input_metadata['HeaderLines.Value.Default'] = "0"
+    # NullValues
+    __parameter_input_metadata['NullValues.Description'] = "values that should convert to NULL"
+    __parameter_input_metadata['NullValues.Label'] = "Null values"
+    __parameter_input_metadata['NullValues.Tooltip'] = (
+        "A list of values within the delimited file that should br converted to NULL values. "
+        "The Python None will be used internally.")
+    __parameter_input_metadata['NullValues.Value.Default'] = "None"
+    # IfTableIDExists
+    __parameter_input_metadata[
+        'IfTableIDExists.Description'] = "action if TableID exists"
+    __parameter_input_metadata['IfTableIDExists.Label'] = "If table exists"
+    __parameter_input_metadata['IfTableIDExists.Tooltip'] = (
+        "The action that occurs if the TableID already exists within the GeoProcessor.\n"
+        "Replace : The existing Table within the GeoProcessor is overwritten with the new Table. "
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing Table within the GeoProcessor is overwritten with the new Table. "
+        "A warning is logged.\n"
+        "Warn : The new Table is not created. A warning is logged.\n"
+        "Fail : The new Table is not created. A fail message is logged.")
+    __parameter_input_metadata['IfTableIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfTableIDExists.Value.Default'] = "Replace"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -73,57 +126,10 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Read a table from a delimited file."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # InputFile
-        self.parameter_input_metadata['InputFile.Description'] = "delimited file to read"
-        self.parameter_input_metadata['InputFile.Label'] = "Input file"
-        self.parameter_input_metadata['InputFile.Required'] = True
-        self.parameter_input_metadata['InputFile.Tooltip'] = \
-            "The delimited file (relative or absolute path) to read. ${Property} syntax is recognized."
-        self.parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['InputFile.FileSelector.Title'] = "Select a delimited file to read"
-        # TableID
-        self.parameter_input_metadata['TableID.Description'] = "output table identifier"
-        self.parameter_input_metadata['TableID.Label'] = "TableID"
-        self.parameter_input_metadata['TableID.Required'] = True
-        self.parameter_input_metadata['TableID.Tooltip'] = "A Table identifier"
-        # Delimiter
-        self.parameter_input_metadata['Delimiter.Description'] = "delimiter character"
-        self.parameter_input_metadata['Delimiter.Label'] = "Delimiter"
-        self.parameter_input_metadata['Delimiter.Tooltip'] = "The delimiter character of the input delimited file."
-        # HeaderLines
-        self.parameter_input_metadata['HeaderLines.Description'] = "number of rows of non-data comments"
-        self.parameter_input_metadata['HeaderLines.Label'] = "Header lines"
-        self.parameter_input_metadata['HeaderLines.Tooltip'] = (
-            "The number of rows representing non-data comments. "
-            "These columns are not included in the output Table data values.")
-        self.parameter_input_metadata['HeaderLines.Value.Default'] = "0"
-        # NullValues
-        self.parameter_input_metadata['NullValues.Description'] = "values that should convert to NULL"
-        self.parameter_input_metadata['NullValues.Label'] = "Null values"
-        self.parameter_input_metadata['NullValues.Tooltip'] = (
-            "A list of values within the delimited file that should br converted to NULL values. "
-            "The Python None will be used internally.")
-        self.parameter_input_metadata['NullValues.Value.Default'] = "None"
-        # IfTableIDExists
-        self.parameter_input_metadata[
-            'IfTableIDExists.Description'] = "action if TableID exists"
-        self.parameter_input_metadata['IfTableIDExists.Label'] = "If table exists"
-        self.parameter_input_metadata['IfTableIDExists.Tooltip'] = (
-            "The action that occurs if the TableID already exists within the GeoProcessor.\n"
-            "Replace : The existing Table within the GeoProcessor is overwritten with the new Table. "
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing Table within the GeoProcessor is overwritten with the new Table. "
-            "A warning is logged.\n"
-            "Warn : The new Table is not created. A warning is logged.\n"
-            "Fail : The new Table is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfTableIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfTableIDExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

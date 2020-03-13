@@ -67,6 +67,79 @@ class ListFiles(AbstractCommand):
         CommandParameterMetadata("ListProperty", type("")),
         CommandParameterMetadata("IfPropertyExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "Lists the files and/or folders within a folder or a URL.\n"
+        "This is useful for iterating over files and folders.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # Folder
+    __parameter_input_metadata['Folder.Description'] = "path of the folder"
+    __parameter_input_metadata['Folder.Label'] = "Folder"
+    # TODO @jurentie 01/24/2019 do I add required or not?
+    __parameter_input_metadata['Folder.Tooltip'] = "The path of the folder of interest (relative or absolute)."
+    __parameter_input_metadata['Folder.Value.Default'] = \
+        "Required if 'URL' parameter is not specified."
+    __parameter_input_metadata['Folder.FileSelector.Title'] = "select a path to a folder"
+    __parameter_input_metadata['Folder.FileSelector.Type'] = "Read"
+    # URL
+    __parameter_input_metadata['URL.Description'] = "the URL of interest"
+    __parameter_input_metadata['URL.Label'] = "URL"
+    # TODO @jurentie 01/24/2019 do I add required or not?
+    __parameter_input_metadata['URL.Tooltip'] = "The URL of interest."
+    __parameter_input_metadata['URL.Value.Default'] = "Required if Folder parameter is not specified."
+    # TODO @jurnetie 01/24/2019 FileSelector?
+    # ListProperty
+    __parameter_input_metadata['ListProperty.Description'] = "a property name to hold the output list"
+    __parameter_input_metadata['ListProperty.Label'] = "List property"
+    __parameter_input_metadata['ListProperty.Required'] = True
+    __parameter_input_metadata['ListProperty.Tooltip'] = "A property name to hold the output list."
+    # IncludePatterns
+    __parameter_input_metadata['IncludePatterns.Description'] = "a list that filters which items to include"
+    __parameter_input_metadata['IncludePatterns.Label'] = "Include patterns"
+    __parameter_input_metadata['IncludePatterns.Tooltip'] = \
+        "A list of comma-separated glob-style patterns that filter which items to include in the output list."
+    __parameter_input_metadata['IncludePatterns.Value.Default.Description'] = \
+        "* - all files/folders are included."
+    # ExcludePatterns
+    __parameter_input_metadata['ExcludePatterns.Description'] = "a list that filters which items to exclude"
+    __parameter_input_metadata['ExcludePatterns.Label'] = "Exclude patterns"
+    __parameter_input_metadata['ExcludePatterns.Tooltip'] = \
+        "A list of comma-separated glob-style patterns that filter which items to exclude in the output list."
+    __parameter_input_metadata['ExcludePatterns.Value.Default.Description'] = "No files/folders are excluded."
+    # ListFiles
+    __parameter_input_metadata['ListFiles.Description'] = "whether to list files"
+    __parameter_input_metadata['ListFiles.Label'] = "List files"
+    __parameter_input_metadata['ListFiles.Tooltip'] = (
+        "Boolean\n\n"
+        "If True, files will be listed.\n"
+        "If False, files will not be listed.")
+    __parameter_input_metadata['ListFiles.Value.Default'] = "True"
+    __parameter_input_metadata['ListFiles.Values'] = ["", "True", "False"]
+    # ListFolders
+    __parameter_input_metadata['ListFolders.Description'] = "whether to list folders"
+    __parameter_input_metadata['ListFolders.Label'] = "List folders"
+    __parameter_input_metadata['ListFolders.Tooltip'] = (
+        "Boolean\n\n"
+        "If True, folders will be listed.\n"
+        "If False, folders will not be listed.")
+    __parameter_input_metadata['ListFolders.Value.Default'] = "True"
+    __parameter_input_metadata['ListFolders.Values'] = ["", "True", "False"]
+    # IfPropertyExists
+    __parameter_input_metadata['IfPropertyExists.Description'] = "action if ListProperty exists"
+    __parameter_input_metadata['IfPropertyExists.Label'] = "If property exists"
+    __parameter_input_metadata['IfPropertyExists.Tooltip'] = (
+        "The action that occurs if 'List Property' is already an existing property.\n\n"
+        "Replace: The existing property value is overwritten with the output list. No warning is logged\n"
+        "ReplaceAndWarn: The existing property value is overwritten with the output list. A warning is logged.\n"
+        "Warn: The existing property keeps its original value. A warning is logged.\n"
+        "Fail: The existing property keeps its original value. A fail message is logged.")
+    __parameter_input_metadata['IfPropertyExists.Value.Default'] = "Replace"
+    __parameter_input_metadata['IfPropertyExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+
     def __init__(self) -> None:
         """
         Initialize the command
@@ -78,77 +151,10 @@ class ListFiles(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "Lists the files and/or folders within a folder or a URL.\n"
-            "This is useful for iterating over files and folders.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # Folder
-        self.parameter_input_metadata['Folder.Description'] = "path of the folder"
-        self.parameter_input_metadata['Folder.Label'] = "Folder"
-        # TODO @jurentie 01/24/2019 do I add required or not?
-        self.parameter_input_metadata['Folder.Tooltip'] = "The path of the folder of interest (relative or absolute)."
-        self.parameter_input_metadata['Folder.Value.Default'] = \
-            "Required if 'URL' parameter is not specified."
-        self.parameter_input_metadata['Folder.FileSelector.Title'] = "select a path to a folder"
-        self.parameter_input_metadata['Folder.FileSelector.Type'] = "Read"
-        # URL
-        self.parameter_input_metadata['URL.Description'] = "the URL of interest"
-        self.parameter_input_metadata['URL.Label'] = "URL"
-        # TODO @jurentie 01/24/2019 do I add required or not?
-        self.parameter_input_metadata['URL.Tooltip'] = "The URL of interest."
-        self.parameter_input_metadata['URL.Value.Default'] = "Required if Folder parameter is not specified."
-        # TODO @jurnetie 01/24/2019 FileSelector?
-        # ListProperty
-        self.parameter_input_metadata['ListProperty.Description'] = "a property name to hold the output list"
-        self.parameter_input_metadata['ListProperty.Label'] = "List property"
-        self.parameter_input_metadata['ListProperty.Required'] = True
-        self.parameter_input_metadata['ListProperty.Tooltip'] = "A property name to hold the output list."
-        # IncludePatterns
-        self.parameter_input_metadata['IncludePatterns.Description'] = "a list that filters which items to include"
-        self.parameter_input_metadata['IncludePatterns.Label'] = "Include patterns"
-        self.parameter_input_metadata['IncludePatterns.Tooltip'] = \
-            "A list of comma-separated glob-style patterns that filter which items to include in the output list."
-        self.parameter_input_metadata['IncludePatterns.Value.Default.Description'] =\
-            "* - all files/folders are included."
-        # ExcludePatterns
-        self.parameter_input_metadata['ExcludePatterns.Description'] = "a list that filters which items to exclude"
-        self.parameter_input_metadata['ExcludePatterns.Label'] = "Exclude patterns"
-        self.parameter_input_metadata['ExcludePatterns.Tooltip'] = \
-            "A list of comma-separated glob-style patterns that filter which items to exclude in the output list."
-        self.parameter_input_metadata['ExcludePatterns.Value.Default.Description'] = "No files/folders are excluded."
-        # ListFiles
-        self.parameter_input_metadata['ListFiles.Description'] = "whether to list files"
-        self.parameter_input_metadata['ListFiles.Label'] = "List files"
-        self.parameter_input_metadata['ListFiles.Tooltip'] = (
-            "Boolean\n\n"
-            "If True, files will be listed.\n"
-            "If False, files will not be listed.")
-        self.parameter_input_metadata['ListFiles.Value.Default'] = "True"
-        self.parameter_input_metadata['ListFiles.Values'] = ["", "True", "False"]
-        # ListFolders
-        self.parameter_input_metadata['ListFolders.Description'] = "whether to list folders"
-        self.parameter_input_metadata['ListFolders.Label'] = "List folders"
-        self.parameter_input_metadata['ListFolders.Tooltip'] = (
-            "Boolean\n\n"
-            "If True, folders will be listed.\n"
-            "If False, folders will not be listed.")
-        self.parameter_input_metadata['ListFolders.Value.Default'] = "True"
-        self.parameter_input_metadata['ListFolders.Values'] = ["", "True", "False"]
-        # IfPropertyExists
-        self.parameter_input_metadata['IfPropertyExists.Description'] = "action if ListProperty exists"
-        self.parameter_input_metadata['IfPropertyExists.Label'] = "If property exists"
-        self.parameter_input_metadata['IfPropertyExists.Tooltip'] = (
-            "The action that occurs if 'List Property' is already an existing property.\n\n"
-            "Replace: The existing property value is overwritten with the output list. No warning is logged\n"
-            "ReplaceAndWarn: The existing property value is overwritten with the output list. A warning is logged.\n"
-            "Warn: The existing property keeps its original value. A warning is logged.\n"
-            "Fail: The existing property keeps its original value. A fail message is logged.")
-        self.parameter_input_metadata['IfPropertyExists.Value.Default'] = "Replace"
-        self.parameter_input_metadata['IfPropertyExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

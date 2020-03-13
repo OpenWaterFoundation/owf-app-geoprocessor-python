@@ -81,6 +81,89 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "This command reads a GeoLayer from a delimited file."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # DelimitedFile
+    __parameter_input_metadata['DelimitedFile.Description'] = "delimited file to read"
+    __parameter_input_metadata['DelimitedFile.Label'] = "Delimited file"
+    __parameter_input_metadata['DelimitedFile.Required'] = True
+    __parameter_input_metadata['DelimitedFile.Tooltip'] = \
+        "The delimited file to read (relative or absolute path). ${Property} syntax is recognized."
+    __parameter_input_metadata['DelimitedFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['DelimitedFile.FileSelector.Title'] = "Select a delimited file to read."
+    # CRS
+    __parameter_input_metadata['CRS.Description'] = "coordinate reference system"
+    __parameter_input_metadata['CRS.Label'] = "CRS"
+    __parameter_input_metadata['CRS.Required'] = True
+    __parameter_input_metadata['CRS.Tooltip'] = (
+        "The coordinate reference system of the geometry in the delimited file.\n"
+        "EPSG or ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+    # GeometryFormat
+    __parameter_input_metadata['GeometryFormat.Description'] = \
+        "the geometry representation in the delimited file"
+    __parameter_input_metadata['GeometryFormat.Label'] = "Geometry format"
+    __parameter_input_metadata['GeometryFormat.Required'] = True
+    __parameter_input_metadata['GeometryFormat.Tooltip'] = (
+        "The geometry representation in the delimited file. "
+        "Must be one of the following options: \n"
+        "XY: The geometry is stored in two columns of the delimited file. "
+        "One column holds the X coordinates and the other column holds the Y coordinates. \n"
+        "WKT: The geometry is stored in one column of the delimited file."
+        "The geometry is in Well Known Text representation.")
+    __parameter_input_metadata['GeometryFormat.Values'] = ["", "XY", "Y", "WKT"]
+    # XColumn
+    __parameter_input_metadata['XColumn.Description'] = "column name for X coordinate"
+    __parameter_input_metadata['XColumn.Label'] = "X column"
+    __parameter_input_metadata['XColumn.Tooltip'] = \
+        "The name of the column in the delimited file that holds the X coordinate data."
+    __parameter_input_metadata['XColumn.Value.Default.Description'] = \
+        "If GeometryFormat is XY, this parameter is required. Otherwise this parameter is ignored."
+    # YColumn
+    __parameter_input_metadata['YColumn.Description'] = "column name for Y coordinate"
+    __parameter_input_metadata['YColumn.Label'] = "Y column"
+    __parameter_input_metadata['YColumn.Tooltip'] = \
+        "The name of the column in the delimited file that holds the Y coordinate data."
+    __parameter_input_metadata['YColumn.Value.Default'] = \
+        "If GeometryFormat is XY, this parameter is required.  Otherwise, this parameter is ignored."
+    # WKTColumn
+    __parameter_input_metadata['WKTColumn.Description'] = "column name for WKT geometry data"
+    __parameter_input_metadata['WKTColumn.Label'] = "WKT column"
+    __parameter_input_metadata['WKTColumn.Tooltip'] = \
+        "The name of the column in the delimited file that holds the WKT geometry data."
+    __parameter_input_metadata['WKTColumn.Value.Default.Description'] = \
+        "If GeometryFormat is WKT, this parameter is required. Otherwise, this parameter is ignored."
+    # Delimiter
+    __parameter_input_metadata['Delimiter.Description'] = "delimiter character"
+    __parameter_input_metadata['Delimiter.Label'] = "Delimiter"
+    __parameter_input_metadata['Delimiter.Tooltip'] = \
+        "The delimiter used to separate the columns of the delimited file."
+    __parameter_input_metadata['Delimiter.Value.Default'] = ","
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = \
+        "A GeoLayer identifier. Formatting characters are recognized."
+    __parameter_input_metadata['GeoLayerID.Value.Default'] = (
+        "The delimited filename without the leading path and without the file extension "
+        "(equivalent to formatting character %f).")
+    # IfGeoLayerIDExists
+    __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+        "The action that occurs if the OutputGeoLayerID already exists within the GeoProcessor.\n"
+        "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer."
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+        "A warning is logged. \nWarn : The new GeoLayer is not created. A warning is logged. \n"
+        "Fail : The new GeoLayer is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -92,87 +175,10 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "This command reads a GeoLayer from a delimited file."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # DelimitedFile
-        self.parameter_input_metadata['DelimitedFile.Description'] = "delimited file to read"
-        self.parameter_input_metadata['DelimitedFile.Label'] = "Delimited file"
-        self.parameter_input_metadata['DelimitedFile.Required'] = True
-        self.parameter_input_metadata['DelimitedFile.Tooltip'] =\
-            "The delimited file to read (relative or absolute path). ${Property} syntax is recognized."
-        self.parameter_input_metadata['DelimitedFile.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['DelimitedFile.FileSelector.Title'] = "Select a delimited file to read."
-        # CRS
-        self.parameter_input_metadata['CRS.Description'] = "coordinate reference system"
-        self.parameter_input_metadata['CRS.Label'] = "CRS"
-        self.parameter_input_metadata['CRS.Required'] = True
-        self.parameter_input_metadata['CRS.Tooltip'] = (
-            "The coordinate reference system of the geometry in the delimited file.\n"
-            "EPSG or ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
-        # GeometryFormat
-        self.parameter_input_metadata['GeometryFormat.Description'] =\
-            "the geometry representation in the delimited file"
-        self.parameter_input_metadata['GeometryFormat.Label'] = "Geometry format"
-        self.parameter_input_metadata['GeometryFormat.Required'] = True
-        self.parameter_input_metadata['GeometryFormat.Tooltip'] = (
-            "The geometry representation in the delimited file. "
-            "Must be one of the following options: \n"
-            "XY: The geometry is stored in two columns of the delimited file. "
-            "One column holds the X coordinates and the other column holds the Y coordinates. \n"
-            "WKT: The geometry is stored in one column of the delimited file."
-            "The geometry is in Well Known Text representation.")
-        self.parameter_input_metadata['GeometryFormat.Values'] = ["", "XY", "Y", "WKT"]
-        # XColumn
-        self.parameter_input_metadata['XColumn.Description'] = "column name for X coordinate"
-        self.parameter_input_metadata['XColumn.Label'] = "X column"
-        self.parameter_input_metadata['XColumn.Tooltip'] =\
-            "The name of the column in the delimited file that holds the X coordinate data."
-        self.parameter_input_metadata['XColumn.Value.Default.Description'] =\
-            "If GeometryFormat is XY, this parameter is required. Otherwise this parameter is ignored."
-        # YColumn
-        self.parameter_input_metadata['YColumn.Description'] = "column name for Y coordinate"
-        self.parameter_input_metadata['YColumn.Label'] = "Y column"
-        self.parameter_input_metadata['YColumn.Tooltip'] =\
-            "The name of the column in the delimited file that holds the Y coordinate data."
-        self.parameter_input_metadata['YColumn.Value.Default'] =\
-            "If GeometryFormat is XY, this parameter is required.  Otherwise, this parameter is ignored."
-        # WKTColumn
-        self.parameter_input_metadata['WKTColumn.Description'] = "column name for WKT geometry data"
-        self.parameter_input_metadata['WKTColumn.Label'] = "WKT column"
-        self.parameter_input_metadata['WKTColumn.Tooltip'] =\
-            "The name of the column in the delimited file that holds the WKT geometry data."
-        self.parameter_input_metadata['WKTColumn.Value.Default.Description'] =\
-            "If GeometryFormat is WKT, this parameter is required. Otherwise, this parameter is ignored."
-        # Delimiter
-        self.parameter_input_metadata['Delimiter.Description'] = "delimiter character"
-        self.parameter_input_metadata['Delimiter.Label'] = "Delimiter"
-        self.parameter_input_metadata['Delimiter.Tooltip'] =\
-            "The delimiter used to separate the columns of the delimited file."
-        self.parameter_input_metadata['Delimiter.Value.Default'] = ","
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] =\
-            "A GeoLayer identifier. Formatting characters are recognized."
-        self.parameter_input_metadata['GeoLayerID.Value.Default'] = (
-            "The delimited filename without the leading path and without the file extension "
-            "(equivalent to formatting character %f).")
-        # IfGeoLayerIDExists
-        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-            "The action that occurs if the OutputGeoLayerID already exists within the GeoProcessor.\n"
-            "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer."
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-            "A warning is logged. \nWarn : The new GeoLayer is not created. A warning is logged. \n"
-            "Fail : The new GeoLayer is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

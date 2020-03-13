@@ -42,6 +42,25 @@ class StartLog(AbstractCommand):
         CommandParameterMetadata("LogFile", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = \
+        '(Re)start the log file.  This is useful when it is desirable to save a log file for a command file.'
+    __command_metadata['EditorType'] = 'Simple'
+
+    # Parameter metadata
+    __parameter_input_metadata = dict()
+    __parameter_input_metadata["LogFile.Group"] = ""
+    __parameter_input_metadata["LogFile.Description"] = ""
+    __parameter_input_metadata["LogFile.Label"] = "Log file"
+    __parameter_input_metadata["LogFile.Tooltip"] = \
+        "Specify the path to the log file to write, can use ${Property} notation."
+    __parameter_input_metadata["LogFile.Required"] = True
+    __parameter_input_metadata["LogFile.Values"] = ""
+    __parameter_input_metadata["LogFile.Value.Default"] = ""
+    __parameter_input_metadata["LogFile.FileSelector.Type"] = "Read"
+    __parameter_input_metadata["LogFile.FileSelector.Title"] = "Select Log File"
+
     def __init__(self) -> None:
         """
         Initialize the command instance.
@@ -51,23 +70,10 @@ class StartLog(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = \
-            '(Re)start the log file.  This is useful when it is desirable to save a log file for a command file.'
-        self.command_metadata['EditorType'] = 'Simple'
+        self.command_metadata = self.__command_metadata
 
         # Parameter metadata
-        self.parameter_input_metadata = dict()
-        self.parameter_input_metadata["LogFile.Group"] = ""
-        self.parameter_input_metadata["LogFile.Description"] = ""
-        self.parameter_input_metadata["LogFile.Label"] = "Log file"
-        self.parameter_input_metadata["LogFile.Tooltip"] =\
-            "Specify the path to the log file to write, can use ${Property} notation."
-        self.parameter_input_metadata["LogFile.Required"] = True
-        self.parameter_input_metadata["LogFile.Values"] = ""
-        self.parameter_input_metadata["LogFile.Value.Default"] = ""
-        self.parameter_input_metadata["LogFile.FileSelector.Type"] = "Read"
-        self.parameter_input_metadata["LogFile.FileSelector.Title"] = "Select Log File"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

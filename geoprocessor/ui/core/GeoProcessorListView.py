@@ -43,6 +43,9 @@ class GeoProcessorListView(QtWidgets.QListView):
         """
         super(GeoProcessorListView, self).__init__(parent)
 
+        # Set the selection model to ensure that selection of a cell selects the row
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         """
         Re-implement to suppress right click from selecting items.

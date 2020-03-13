@@ -57,6 +57,48 @@ class UnzipFile(AbstractCommand):
         CommandParameterMetadata("OutputFolder", type("")),
         CommandParameterMetadata("DeleteFile", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Unzip a compressed file."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # File
+    __parameter_input_metadata['File.Description'] = "file to be unzipped"
+    __parameter_input_metadata['File.Label'] = "File"
+    __parameter_input_metadata['File.Required'] = True
+    __parameter_input_metadata['File.Tooltip'] = \
+        "The file to be unzipped (relative or absolute path). ${Property} syntax is recognized."
+    __parameter_input_metadata['File.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['File.FileSelector.Title'] = "Select the file to be unzipped"
+    # FileType
+    __parameter_input_metadata['FileType.Description'] = "input file format"
+    __parameter_input_metadata['FileType.Label'] = "File type"
+    __parameter_input_metadata['FileType.Tooltip'] = (
+        "The file format of the input File. The following file formats are currently accepted.\n\n"
+        "TAR: a .tar file.\n"
+        "ZIP: A .zip file.")
+    __parameter_input_metadata['FileType.Value.Default.Description'] = "from the File extension."
+    # OutputFolder
+    __parameter_input_metadata['OutputFolder.Description'] = "name of the destination folder"
+    __parameter_input_metadata['OutputFolder.Label'] = "Output folder"
+    __parameter_input_metadata['OutputFolder.Tooltip'] = (
+        "The name of the destination folder. The extracted files are saved here.\n"
+        "${Property} syntax is recognized.")
+    __parameter_input_metadata['OutputFolder.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFolder.FileSelector.Title'] = "Select the destination folder"
+    __parameter_input_metadata['OutputFolder.Value.Default.Description'] = "parent folder of the File"
+    # DeleteFile
+    __parameter_input_metadata['DeleteFile.Description'] = 'whether to delete the file'
+    __parameter_input_metadata['DeleteFile.Label'] = "Delete file?"
+    __parameter_input_metadata['DeleteFile.Tooltip'] = (
+        "Boolean.\n\n"
+        "If True, the compressed file is deleted after the extraction.\n"
+        "If False, the compressed file remains after the extraction.")
+    __parameter_input_metadata['DeleteFile.Value.Default'] = "False"
+    __parameter_input_metadata['DeleteFile.Values'] = ["", "True", "False"]
+
     def __init__(self) -> None:
         """
         Initialize the command
@@ -68,46 +110,10 @@ class UnzipFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Unzip a compressed file."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # File
-        self.parameter_input_metadata['File.Description'] = "file to be unzipped"
-        self.parameter_input_metadata['File.Label'] = "File"
-        self.parameter_input_metadata['File.Required'] = True
-        self.parameter_input_metadata['File.Tooltip'] = \
-            "The file to be unzipped (relative or absolute path). ${Property} syntax is recognized."
-        self.parameter_input_metadata['File.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['File.FileSelector.Title'] = "Select the file to be unzipped"
-        # FileType
-        self.parameter_input_metadata['FileType.Description'] = "input file format"
-        self.parameter_input_metadata['FileType.Label'] = "File type"
-        self.parameter_input_metadata['FileType.Tooltip'] = (
-            "The file format of the input File. The following file formats are currently accepted.\n\n"
-            "TAR: a .tar file.\n"
-            "ZIP: A .zip file.")
-        self.parameter_input_metadata['FileType.Value.Default.Description'] = "from the File extension."
-        # OutputFolder
-        self.parameter_input_metadata['OutputFolder.Description'] = "name of the destination folder"
-        self.parameter_input_metadata['OutputFolder.Label'] = "Output folder"
-        self.parameter_input_metadata['OutputFolder.Tooltip'] = (
-            "The name of the destination folder. The extracted files are saved here.\n"
-            "${Property} syntax is recognized.")
-        self.parameter_input_metadata['OutputFolder.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFolder.FileSelector.Title'] = "Select the destination folder"
-        self.parameter_input_metadata['OutputFolder.Value.Default.Description'] = "parent folder of the File"
-        # DeleteFile
-        self.parameter_input_metadata['DeleteFile.Description'] = 'whether to delete the file'
-        self.parameter_input_metadata['DeleteFile.Label'] = "Delete file?"
-        self.parameter_input_metadata['DeleteFile.Tooltip'] = (
-            "Boolean.\n\n"
-            "If True, the compressed file is deleted after the extraction.\n"
-            "If False, the compressed file remains after the extraction.")
-        self.parameter_input_metadata['DeleteFile.Value.Default'] = "False"
-        self.parameter_input_metadata['DeleteFile.Values'] = ["", "True", "False"]
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

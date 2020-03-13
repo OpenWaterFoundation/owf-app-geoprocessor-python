@@ -64,6 +64,44 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         CommandParameterMetadata("OutputCRS", type("")),
         CommandParameterMetadata("ZipOutput", type(True))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Write a GeoLayer to a file in Esri Shapefile format."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The identifier of the GeoLayer to write."
+    # OutputFile
+    __parameter_input_metadata['OutputFile.Description'] = "the shapefile to write"
+    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.Tooltip'] = \
+        "The output Esri Shapefile (relative or absolute path). ${Property} syntax is recognized."
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select shapefile to write"
+    # OutputCRS
+    __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of the shapefile"
+    __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
+    __parameter_input_metadata['OutputCRS.Tooltip'] = (
+        "The coordinate reference system of the output GeoJSON. EPSG or ESRI code format required "
+        "(e.g. EPSG:4326, EPSG:26913, ESRI:102003).\n"
+        "If the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected "
+        "to the new CRS.")
+    __parameter_input_metadata['OutputCRS.Value.Default'] = "The GeoLayer's CRS"
+    # zipOutput
+    __parameter_input_metadata['ZipOutput.Description'] = "whether to zip the shapefile"
+    __parameter_input_metadata['ZipOutput.Label'] = "Zip output?"
+    __parameter_input_metadata['ZipOutput.Tooltip'] = (
+        "If TRUE, the GeoLayer is written as a zipped shapefile.\n"
+        "If FALSE the GeoLayer is witten as an unzipped shapefile.")
+    __parameter_input_metadata['ZipOutput.Value.Default'] = "FALSE"
+    __parameter_input_metadata['ZipOutput.Values'] = ["", "TRUE", "FALSE"]
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -75,42 +113,10 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Write a GeoLayer to a file in Esri Shapefile format."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The identifier of the GeoLayer to write."
-        # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "the shapefile to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
-        self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = \
-            "The output Esri Shapefile (relative or absolute path). ${Property} syntax is recognized."
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select shapefile to write"
-        # OutputCRS
-        self.parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of the shapefile"
-        self.parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
-        self.parameter_input_metadata['OutputCRS.Tooltip'] = (
-            "The coordinate reference system of the output GeoJSON. EPSG or ESRI code format required "
-            "(e.g. EPSG:4326, EPSG:26913, ESRI:102003).\n"
-            "If the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected "
-            "to the new CRS.")
-        self.parameter_input_metadata['OutputCRS.Value.Default'] = "The GeoLayer's CRS"
-        # zipOutput
-        self.parameter_input_metadata['ZipOutput.Description'] = "whether to zip the shapefile"
-        self.parameter_input_metadata['ZipOutput.Label'] = "Zip output?"
-        self.parameter_input_metadata['ZipOutput.Tooltip'] = (
-            "If TRUE, the GeoLayer is written as a zipped shapefile.\n"
-            "If FALSE the GeoLayer is witten as an unzipped shapefile.")
-        self.parameter_input_metadata['ZipOutput.Value.Default'] = "FALSE"
-        self.parameter_input_metadata['ZipOutput.Values'] = ["", "TRUE", "FALSE"]
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

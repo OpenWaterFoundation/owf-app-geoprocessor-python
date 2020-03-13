@@ -59,6 +59,66 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         CommandParameterMetadata("CRS", type(str)),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Create a new GeoLayer from input geometry data."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # NewGeoLayerID
+    __parameter_input_metadata['NewGeoLayerID.Description'] = "id of the new GeoLayer"
+    __parameter_input_metadata['NewGeoLayerID.Label'] = "New GeoLayerID"
+    __parameter_input_metadata['NewGeoLayerID.Required'] = True
+    __parameter_input_metadata['NewGeoLayerID.Tooltip'] = "The ID of the new GeoLayer."
+    # GeometryFormat
+    __parameter_input_metadata['GeometryFormat.Description'] = "format of the geometry data"
+    __parameter_input_metadata['GeometryFormat.Label'] = "Geometry format"
+    __parameter_input_metadata['GeometryFormat.Required'] = True
+    __parameter_input_metadata['GeometryFormat.Tooltip'] = (
+        "The format of the GeometryData. Choose from one of the options below.\n"
+        "WKT: Well-Known Text is text representing vector geometry.\n"
+        "BoundingBox: Bounding Box Coordinates are a list of 4 coordinates representing the minimum and maximum "
+        "latitude and longitude of a POLYGON vector.\n"
+        "WKB: Well-Known Binary is hexadecimal text representing vector geometry.\n"
+        "Only available with QGIS version 3.0 or later.")
+    __parameter_input_metadata['GeometryFormat.Values'] = ["", "WKT", "BoundingBox", "WKB"]
+    # GeometryData
+    __parameter_input_metadata['GeometryData.Description'] = "geometry data for the new GeoLayer"
+    __parameter_input_metadata['GeometryData.Label'] = "Geometry data"
+    __parameter_input_metadata['GeometryData.Required'] = True
+    __parameter_input_metadata['GeometryData.Tooltip'] = (
+        "The geometry data for the new GeoLayer.\n"
+        "The units are the same as the units of the coordinate reference system (CRS).\n"
+        "If GeometryFormat is WKT... use the syntax provided in the reference.\n"
+        "If GeometryFormat is BoundingBox... specify the coordinates as comma-separated values in the "
+        "following order.\n"
+        "    the left bound (minimum longitude)\n"
+        "    the bottom bound (minimum latitude)\n"
+        "    the right bound (maximum longitude)\n"
+        "    the top (maximum latitude) bound \n"
+        "If GeometryFormat is WKB... use the syntax provided in the reference.")
+    # CRS
+    __parameter_input_metadata['CRS.Description'] = "coordinate references system of the new GeoLayer"
+    __parameter_input_metadata['CRS.Label'] = "CRS"
+    __parameter_input_metadata['CRS.Required'] = True
+    __parameter_input_metadata['CRS.Tooltip'] = (
+        "The coordinate reference system of the new GeoLayer. EPSG or "
+        "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+    # IfGeoLayerIDExists
+    __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+        "The action that occurs if the NewGeoLayerID already exists within the GeoProcessor.\n"
+        "Replace: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+        "A warning is logged. \n"
+        "Warn: The new GeoLayer is not created. A warning is logged. \n"
+        "Fail: The new GeoLayer is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -70,64 +130,10 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Create a new GeoLayer from input geometry data."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # NewGeoLayerID
-        self.parameter_input_metadata['NewGeoLayerID.Description'] = "id of the new GeoLayer"
-        self.parameter_input_metadata['NewGeoLayerID.Label'] = "New GeoLayerID"
-        self.parameter_input_metadata['NewGeoLayerID.Required'] = True
-        self.parameter_input_metadata['NewGeoLayerID.Tooltip'] = "The ID of the new GeoLayer."
-        # GeometryFormat
-        self.parameter_input_metadata['GeometryFormat.Description'] = "format of the geometry data"
-        self.parameter_input_metadata['GeometryFormat.Label'] = "Geometry format"
-        self.parameter_input_metadata['GeometryFormat.Required'] = True
-        self.parameter_input_metadata['GeometryFormat.Tooltip'] = (
-            "The format of the GeometryData. Choose from one of the options below.\n"
-            "WKT: Well-Known Text is text representing vector geometry.\n"
-            "BoundingBox: Bounding Box Coordinates are a list of 4 coordinates representing the minimum and maximum "
-            "latitude and longitude of a POLYGON vector.\n"
-            "WKB: Well-Known Binary is hexadecimal text representing vector geometry.\n"
-            "Only available with QGIS version 3.0 or later.")
-        self.parameter_input_metadata['GeometryFormat.Values'] = ["", "WKT", "BoundingBox", "WKB"]
-        # GeometryData
-        self.parameter_input_metadata['GeometryData.Description'] = "geometry data for the new GeoLayer"
-        self.parameter_input_metadata['GeometryData.Label'] = "Geometry data"
-        self.parameter_input_metadata['GeometryData.Required'] = True
-        self.parameter_input_metadata['GeometryData.Tooltip'] = (
-            "The geometry data for the new GeoLayer.\n"
-            "The units are the same as the units of the coordinate reference system (CRS).\n"
-            "If GeometryFormat is WKT... use the syntax provided in the reference.\n"
-            "If GeometryFormat is BoundingBox... specify the coordinates as comma-separated values in the "
-            "following order.\n"
-            "    the left bound (minimum longitude)\n"
-            "    the bottom bound (minimum latitude)\n"
-            "    the right bound (maximum longitude)\n"
-            "    the top (maximum latitude) bound \n"
-            "If GeometryFormat is WKB... use the syntax provided in the reference.")
-        # CRS
-        self.parameter_input_metadata['CRS.Description'] = "coordinate references system of the new GeoLayer"
-        self.parameter_input_metadata['CRS.Label'] = "CRS"
-        self.parameter_input_metadata['CRS.Required'] = True
-        self.parameter_input_metadata['CRS.Tooltip'] = (
-            "The coordinate reference system of the new GeoLayer. EPSG or "
-            "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
-        # IfGeoLayerIDExists
-        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-            "The action that occurs if the NewGeoLayerID already exists within the GeoProcessor.\n"
-            "Replace: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-            "A warning is logged. \n"
-            "Warn: The new GeoLayer is not created. A warning is logged. \n"
-            "Fail: The new GeoLayer is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

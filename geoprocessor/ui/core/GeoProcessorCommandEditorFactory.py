@@ -97,7 +97,7 @@ class GeoProcessorCommandEditorFactory(object):
             # Generic editor is simple parameter: value text fields
             return GenericCommandEditor(command)
         elif editor_type == "InsertLineEditor":
-            # Single line commands like /* and */
+            # Single line commands like /*, */, and empty.
             return InsertLineEditor(command)
         elif editor_type == "InsertLineRulerEditor":
             # Multi-line commands that use a ruler, such as one or more # commands

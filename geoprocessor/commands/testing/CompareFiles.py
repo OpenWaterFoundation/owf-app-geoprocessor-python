@@ -50,6 +50,79 @@ class CompareFiles(AbstractCommand):
         CommandParameterMetadata("IfSame", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "Compare text files to determine differences.\n"
+        "For example, the command can be used to compare current and expected files produced by a program or "
+        "process.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Parameter Metadata
+    __parameter_input_metadata = dict()
+    # InputFile1
+    __parameter_input_metadata['InputFile1.Description'] = "name of the first file for comparison"
+    __parameter_input_metadata['InputFile1.Label'] = "First input file"
+    __parameter_input_metadata['InputFile1.Tooltip'] = \
+        "The name of the first file to compare.  Can be specified using ${Property}."
+    __parameter_input_metadata['InputFile1.Required'] = True
+    __parameter_input_metadata['InputFile1.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['InputFile1.FileSelector.Title'] = "Select first file to compare"
+    __parameter_input_metadata['InputFile1.FileSelector.Tooltip'] = "Browse for file"
+    # InputFile2
+    __parameter_input_metadata['InputFile2.Description'] = "name of the second file for comparison"
+    __parameter_input_metadata['InputFile2.Label'] = "Second input file"
+    __parameter_input_metadata['InputFile2.Tooltip'] = \
+        "The name of the second file to compare. Can be specified using ${Property}."
+    __parameter_input_metadata['InputFile2.Required'] = True
+    __parameter_input_metadata['InputFile2.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['InputFile2.FileSelector.Title'] = "Select second file to compare"
+    __parameter_input_metadata['InputFile2.FileSelector.Tooltip'] = "Browse for file"
+    # CommentLineChar
+    __parameter_input_metadata['CommentLineChar.Description'] = "character indicating comment lines"
+    __parameter_input_metadata['CommentLineChar.Label'] = "Comment line character"
+    __parameter_input_metadata['CommentLineChar.Tooltip'] = \
+        "The character(s) that if found at the start of a line indicate comment lines."
+    __parameter_input_metadata['CommentLineChar.Value.Default'] = "#"
+    # MatchCase
+    __parameter_input_metadata['MatchCase.Description'] = "match case"
+    __parameter_input_metadata['MatchCase.Label'] = "Match case"
+    __parameter_input_metadata['MatchCase.Tooltip'] = \
+        "If True, lines must match exactly. If False, case is ignored for the comparison."
+    __parameter_input_metadata['MatchCase.Values'] = ["", "True", "False"]
+    __parameter_input_metadata['MatchCase.Value.Default'] = "True"
+    # IgnoreWhitespace
+    __parameter_input_metadata['IgnoreWhitespace.Description'] = "ignore whitespace"
+    __parameter_input_metadata['IgnoreWhitespace.Label'] = "Ignore whitespace"
+    __parameter_input_metadata['IgnoreWhitespace.Tooltip'] = (
+        "If True, then each line is trimmed to remove leading and trailing whitespace characters ("
+        "spaces, tabs, etc.) before doing the comparison.  If False, then whitespace is retained for "
+        "the comparison.")
+    __parameter_input_metadata['IgnoreWhitespace.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['IgnoreWhitespace.Value.Default'] = "False"
+    # AllowedDiffCount
+    __parameter_input_metadata['AllowedDiffCount.Description'] = "number of lines allowed to be different"
+    __parameter_input_metadata['AllowedDiffCount.Label'] = "Allowed difference count"
+    __parameter_input_metadata['AllowedDiffCount.Tooltip'] = \
+        "The number of lines allowed to be different, when checking for differences. "
+    __parameter_input_metadata['AllowedDiffCount.Value.Default'] = "0"
+    # IfDifferent
+    __parameter_input_metadata['IfDifferent.Description'] = "indicate action if source files are different"
+    __parameter_input_metadata['IfDifferent.Label'] = "If different"
+    __parameter_input_metadata['IfDifferent.Tooltip'] = (
+        "Indicate the action if the source files are different: Ignore (ignore differences and do not "
+        "warn), Warn (generate a warning message), Fail (generate a failure message)")
+    __parameter_input_metadata['IfDifferent.Values'] = ["", "Ignore", "Warn", "Fail"]
+    __parameter_input_metadata['IfDifferent.Value.Default'] = "Ignore"
+    # IfSame
+    __parameter_input_metadata['IfSame.Description'] = "indicate action if source files are same"
+    __parameter_input_metadata['IfSame.Label'] = "If same"
+    __parameter_input_metadata['IfSame.Tooltip'] = (
+        "Indicate the action if the source files are the same: Ignore (ignore if same and do not warn), "
+        "Warn (generate a warning message), Fail (generate a failure message)")
+    __parameter_input_metadata['IfSame.Values'] = ["", "Ignore", "Warn", "Fail"]
+    __parameter_input_metadata['IfSame.Value.Default'] = "Ignore"
+
     # Choices for IfSourceFileNotFound, used to validate parameter and display in editor
     __choices_MatchCase = ["True", "False"]
     __choices_IgnoreWhitespace = ["True", "False"]
@@ -66,77 +139,10 @@ class CompareFiles(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "Compare text files to determine differences.\n"
-            "For example, the command can be used to compare current and expected files produced by a program or "
-            "process.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # InputFile1
-        self.parameter_input_metadata['InputFile1.Description'] = "name of the first file for comparison"
-        self.parameter_input_metadata['InputFile1.Label'] = "First input file"
-        self.parameter_input_metadata['InputFile1.Tooltip'] =\
-            "The name of the first file to compare.  Can be specified using ${Property}."
-        self.parameter_input_metadata['InputFile1.Required'] = True
-        self.parameter_input_metadata['InputFile1.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['InputFile1.FileSelector.Title'] = "Select first file to compare"
-        self.parameter_input_metadata['InputFile1.FileSelector.Tooltip'] = "Browse for file"
-        # InputFile2
-        self.parameter_input_metadata['InputFile2.Description'] = "name of the second file for comparison"
-        self.parameter_input_metadata['InputFile2.Label'] = "Second input file"
-        self.parameter_input_metadata['InputFile2.Tooltip'] =\
-            "The name of the second file to compare. Can be specified using ${Property}."
-        self.parameter_input_metadata['InputFile2.Required'] = True
-        self.parameter_input_metadata['InputFile2.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['InputFile2.FileSelector.Title'] = "Select second file to compare"
-        self.parameter_input_metadata['InputFile2.FileSelector.Tooltip'] = "Browse for file"
-        # CommentLineChar
-        self.parameter_input_metadata['CommentLineChar.Description'] = "character indicating comment lines"
-        self.parameter_input_metadata['CommentLineChar.Label'] = "Comment line character"
-        self.parameter_input_metadata['CommentLineChar.Tooltip'] =\
-            "The character(s) that if found at the start of a line indicate comment lines."
-        self.parameter_input_metadata['CommentLineChar.Value.Default'] = "#"
-        # MatchCase
-        self.parameter_input_metadata['MatchCase.Description'] = "match case"
-        self.parameter_input_metadata['MatchCase.Label'] = "Match case"
-        self.parameter_input_metadata['MatchCase.Tooltip'] =\
-            "If True, lines must match exactly. If False, case is ignored for the comparison."
-        self.parameter_input_metadata['MatchCase.Values'] = ["", "True", "False"]
-        self.parameter_input_metadata['MatchCase.Value.Default'] = "True"
-        # IgnoreWhitespace
-        self.parameter_input_metadata['IgnoreWhitespace.Description'] = "ignore whitespace"
-        self.parameter_input_metadata['IgnoreWhitespace.Label'] = "Ignore whitespace"
-        self.parameter_input_metadata['IgnoreWhitespace.Tooltip'] = (
-            "If True, then each line is trimmed to remove leading and trailing whitespace characters ("
-            "spaces, tabs, etc.) before doing the comparison.  If False, then whitespace is retained for "
-            "the comparison.")
-        self.parameter_input_metadata['IgnoreWhitespace.Values'] = ["", "False", "True"]
-        self.parameter_input_metadata['IgnoreWhitespace.Value.Default'] = "False"
-        # AllowedDiffCount
-        self.parameter_input_metadata['AllowedDiffCount.Description'] = "number of lines allowed to be different"
-        self.parameter_input_metadata['AllowedDiffCount.Label'] = "Allowed difference count"
-        self.parameter_input_metadata['AllowedDiffCount.Tooltip'] = \
-            "The number of lines allowed to be different, when checking for differences. "
-        self.parameter_input_metadata['AllowedDiffCount.Value.Default'] = "0"
-        # IfDifferent
-        self.parameter_input_metadata['IfDifferent.Description'] = "indicate action if source files are different"
-        self.parameter_input_metadata['IfDifferent.Label'] = "If different"
-        self.parameter_input_metadata['IfDifferent.Tooltip'] = (
-            "Indicate the action if the source files are different: Ignore (ignore differences and do not "
-            "warn), Warn (generate a warning message), Fail (generate a failure message)")
-        self.parameter_input_metadata['IfDifferent.Values'] = ["", "Ignore", "Warn", "Fail"]
-        self.parameter_input_metadata['IfDifferent.Value.Default'] = "Ignore"
-        # IfSame
-        self.parameter_input_metadata['IfSame.Description'] = "indicate action if source files are same"
-        self.parameter_input_metadata['IfSame.Label'] = "If same"
-        self.parameter_input_metadata['IfSame.Tooltip'] = (
-            "Indicate the action if the source files are the same: Ignore (ignore if same and do not warn), "
-            "Warn (generate a warning message), Fail (generate a failure message)")
-        self.parameter_input_metadata['IfSame.Values'] = ["", "Ignore", "Warn", "Fail"]
-        self.parameter_input_metadata['IfSame.Value.Default'] = "Ignore"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

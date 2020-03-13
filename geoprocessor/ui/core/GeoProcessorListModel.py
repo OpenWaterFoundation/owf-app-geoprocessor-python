@@ -271,6 +271,7 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
     def insert_command_at_index(self, command: AbstractCommand, index: int) -> None:
         """
         Insert a command string at the specified index.
+        This function also calls the data model methods to indicate begin and end of the insert.
 
         Args:
             command_string (str): Command string to be inserted to the command file.
@@ -280,18 +281,18 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             None
         """
         # Insert the command in the model
-        commands = []
-        commands.append(command)
+        commands = [command]
         self.insert_commands_at_index(commands, index)
         # Don't notify listeners because called method above will do it
 
     def insert_commands_at_index(self, commands: [AbstractCommand], insert_index: int) -> None:
         """
         Insert one or more command strings at the specified index.
+        This function also calls the data model methods to indicate begin and end of the insert.
 
         Args:
             command_strings ([str]): Command strings to be inserted to the command file.
-            insert_index (int): Index to insert.
+            insert_index (int): Index to insert.  The first command will be inserted at this position.
 
         Returns:
             None
@@ -301,13 +302,14 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         insert_row = insert_index
         insert_count = len(commands)
         insert_row_last = insert_row + insert_count - 1
-        logger.info("Inserting commands insert_row=" + str(insert_row) + " insert_count=" +
-                    str(insert_count) + " insert_row_last=" + str(insert_row_last))
+        logger.debug("Inserting commands insert_row=" + str(insert_row) + " insert_count=" +
+                     str(insert_count) + " insert_row_last=" + str(insert_row_last))
         self.beginInsertRows(QtCore.QModelIndex(), insert_row, insert_row_last)
         for command in commands:
             # TODO smalers 2020-01-19 previously was operating on strings, now operating on command class
             #self.gp.add_command_at_index(command, insert_index)
             self.gp.commands.insert(insert_index, command)
+            logger.debug("Inserting command [" + str(insert_index) + "]: " + command.command_string)
             insert_index += 1
         self.endInsertRows()
 

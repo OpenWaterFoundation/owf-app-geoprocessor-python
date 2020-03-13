@@ -42,6 +42,24 @@ class StartRegressionTestResultsReport(AbstractCommand):
         CommandParameterMetadata("OutputFile", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = \
+        "Start a report file (and optionally results table) to be written to as regression tests are run."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # OutputFile
+    __parameter_input_metadata['OutputFile.Description'] = "regression results report file"
+    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.Tooltip'] = (
+        "The regression results report file to write, as an absolute path or relative to the command file.\n"
+        "Can use ${Property}.")
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the report file to create"
+
     # Only one regression command test file
     __regression_test_fp = None  # Open file pointer to write regression test results
     __regression_test_line_count = 0
@@ -59,22 +77,10 @@ class StartRegressionTestResultsReport(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] =\
-            "Start a report file (and optionally results table) to be written to as regression tests are run."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "regression results report file"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
-        self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = (
-            "The regression results report file to write, as an absolute path or relative to the command file.\n"
-            "Can use ${Property}.")
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the report file to create"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     @classmethod
     def append_to_regression_test_report(cls, is_enabled: bool, run_time_ms: int, test_pass_fail: str,

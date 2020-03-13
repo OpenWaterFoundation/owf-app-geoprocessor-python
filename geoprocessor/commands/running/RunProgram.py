@@ -59,6 +59,100 @@ class RunProgram(AbstractCommand):
         CommandParameterMetadata("OutputFiles", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "Run an external program, given the full command line, "
+        "and wait until the program is finished before processing additional commands. ")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Parameter metadata
+    __parameter_input_metadata = dict()
+    # CommandLine
+    __parameter_input_metadata['CommandLine.Description'] = "command line with arguments"
+    __parameter_input_metadata['CommandLine.Label'] = "Command to run"
+    __parameter_input_metadata['CommandLine.Tooltip'] = ""
+    __parameter_input_metadata['CommandLine.Required'] = True
+    # UseCommandShell
+    __parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
+    __parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
+    __parameter_input_metadata['UseCommandShell.Tooltip'] = ""
+    __parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
+    # IncludeParentEnvVars
+    __parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
+    __parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
+    __parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = (
+        "Indicate whether the parent environment variables should be passed to the program run environment.")
+    __parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
+    __parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
+    # IncludeEnvVars
+    __parameter_input_metadata['IncludeEnvVars.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVars.Label'] = "Include environment variables"
+    __parameter_input_metadata['IncludeEnvVars.Tooltip'] = (
+        "Specify environment variables to be defined for the program run environment in format:"
+        "VAR1=Value1,VAR2=Value2.")
+    # IncludeEnvVarName1
+    __parameter_input_metadata['IncludeEnvVarName1.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarName1.Label'] = 'Include environment variable name 1'
+    __parameter_input_metadata['IncludeEnvVarName1.Tooltip'] = (
+        "Specify the name of as single environment variable to be defined for the program run environment.")
+    # IncludeEnvVarValue1
+    __parameter_input_metadata['IncludeEnvVarValue1.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarValue1.Label'] = 'Include environment variable value 1'
+    __parameter_input_metadata['IncludeEnvVarValue1.Tooltip'] = (
+        "Specify the value of as single environment variable to be defined for the program run environment. ")
+    # IncludeEnvVarName2
+    __parameter_input_metadata['IncludeEnvVarName2.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarName2.Label'] = 'Include environment variable name 2'
+    __parameter_input_metadata['IncludeEnvVarName2.Tooltip'] = (
+        "Specify the name of as single environment variable to be defined for the program run environment. ")
+    # IncludeEnvVarValue2
+    __parameter_input_metadata['IncludeEnvVarValue2.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarValue2.Label'] = 'Include environment variable value 2'
+    __parameter_input_metadata['IncludeEnvVarValue2.Tooltip'] = (
+        "Specify the value of as single environment variable to be defined for the program run environment. ")
+    # IncludeEnvVarName3
+    __parameter_input_metadata['IncludeEnvVarName3.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarName3.Label'] = 'Include environment variable name 3'
+    __parameter_input_metadata['IncludeEnvVarName3.Tooltip'] = (
+        "Specify the name of as single environment variable to be defined for the program run environment. ")
+    # IncludeEnvVarValue3
+    __parameter_input_metadata['IncludeEnvVarValue3.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarValue3.Label'] = 'Include environment variable value 3'
+    __parameter_input_metadata['IncludeEnvVarValue3.Tooltip'] = (
+        "Specify the value of as single environment variable to be defined for the program run environment. ")
+    # IncludeEnvVarName4
+    __parameter_input_metadata['IncludeEnvVarName4.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarName4.Label'] = 'Include environment variable name 4'
+    __parameter_input_metadata['IncludeEnvVarName4.Tooltip'] = (
+        "Specify the name of as single environment variable to be defined for the program run environment. ")
+    # IncludeEnvVarValue4
+    __parameter_input_metadata['IncludeEnvVarValue4.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarValue4.Label'] = 'Include environment variable value 4'
+    __parameter_input_metadata['IncludeEnvVarValue4.Tooltip'] = (
+        "Specify the value of as single environment variable to be defined for the program run environment. ")
+    # IncludeEnvVarName5
+    __parameter_input_metadata['IncludeEnvVarName5.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarName5.Label'] = 'Include environment variable name 5'
+    __parameter_input_metadata['IncludeEnvVarName5.Tooltip'] = (
+        "Specify the name of as single environment variable to be defined for the program run environment. ")
+    # IncludeEnvVarValue5
+    __parameter_input_metadata['IncludeEnvVarValue5.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVarValue5.Label'] = 'Include environment variable value 5'
+    __parameter_input_metadata['IncludeEnvVarValue5.Tooltip'] = (
+        "Specify the value of as single environment variable to be defined for the program run environment. ")
+    # ExcludeEnvVars
+    __parameter_input_metadata['ExcludeEnvVars.Description'] = ""
+    __parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude environment variables'
+    __parameter_input_metadata['ExcludeEnvVars.Tooltip'] = (
+        "Specify environment variables to be removed from the program run environment, separated by commas.")
+    # OutputFiles
+    __parameter_input_metadata['OutputFiles.Description'] = ""
+    __parameter_input_metadata['OutputFiles.Label'] = "Output files"
+    __parameter_input_metadata['OutputFiles.Tooltip'] = (
+        "Specify the output files, separated by commas.  Can specify with ${Property}.")
+
     # Choices for UseCommandShell, used to validate parameter and display in editor
     __choices_UseCommandShell = ["False", "True"]
 
@@ -75,98 +169,10 @@ class RunProgram(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "Run an external program, given the full command line, "
-            "and wait until the program is finished before processing additional commands. ")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Parameter metadata
-        self.parameter_input_metadata = dict()
-        # CommandLine
-        self.parameter_input_metadata['CommandLine.Description'] = "command line with arguments"
-        self.parameter_input_metadata['CommandLine.Label'] = "Command to run"
-        self.parameter_input_metadata['CommandLine.Tooltip'] = ""
-        self.parameter_input_metadata['CommandLine.Required'] = True
-        # UseCommandShell
-        self.parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
-        self.parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
-        self.parameter_input_metadata['UseCommandShell.Tooltip'] = ""
-        self.parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
-        self.parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
-        # IncludeParentEnvVars
-        self.parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
-        self.parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
-        self.parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = (
-            "Indicate whether the parent environment variables should be passed to the program run environment.")
-        self.parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
-        self.parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
-        # IncludeEnvVars
-        self.parameter_input_metadata['IncludeEnvVars.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVars.Label'] = "Include environment variables"
-        self.parameter_input_metadata['IncludeEnvVars.Tooltip'] = (
-            "Specify environment variables to be defined for the program run environment in format:"
-            "VAR1=Value1,VAR2=Value2.")
-        # IncludeEnvVarName1
-        self.parameter_input_metadata['IncludeEnvVarName1.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarName1.Label'] = 'Include environment variable name 1'
-        self.parameter_input_metadata['IncludeEnvVarName1.Tooltip'] = (
-            "Specify the name of as single environment variable to be defined for the program run environment.")
-        # IncludeEnvVarValue1
-        self.parameter_input_metadata['IncludeEnvVarValue1.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarValue1.Label'] = 'Include environment variable value 1'
-        self.parameter_input_metadata['IncludeEnvVarValue1.Tooltip'] = (
-            "Specify the value of as single environment variable to be defined for the program run environment. ")
-        # IncludeEnvVarName2
-        self.parameter_input_metadata['IncludeEnvVarName2.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarName2.Label'] = 'Include environment variable name 2'
-        self.parameter_input_metadata['IncludeEnvVarName2.Tooltip'] = (
-            "Specify the name of as single environment variable to be defined for the program run environment. ")
-        # IncludeEnvVarValue2
-        self.parameter_input_metadata['IncludeEnvVarValue2.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarValue2.Label'] = 'Include environment variable value 2'
-        self.parameter_input_metadata['IncludeEnvVarValue2.Tooltip'] = (
-            "Specify the value of as single environment variable to be defined for the program run environment. ")
-        # IncludeEnvVarName3
-        self.parameter_input_metadata['IncludeEnvVarName3.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarName3.Label'] = 'Include environment variable name 3'
-        self.parameter_input_metadata['IncludeEnvVarName3.Tooltip'] = (
-            "Specify the name of as single environment variable to be defined for the program run environment. ")
-        # IncludeEnvVarValue3
-        self.parameter_input_metadata['IncludeEnvVarValue3.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarValue3.Label'] = 'Include environment variable value 3'
-        self.parameter_input_metadata['IncludeEnvVarValue3.Tooltip'] = (
-            "Specify the value of as single environment variable to be defined for the program run environment. ")
-        # IncludeEnvVarName4
-        self.parameter_input_metadata['IncludeEnvVarName4.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarName4.Label'] = 'Include environment variable name 4'
-        self.parameter_input_metadata['IncludeEnvVarName4.Tooltip'] = (
-            "Specify the name of as single environment variable to be defined for the program run environment. ")
-        # IncludeEnvVarValue4
-        self.parameter_input_metadata['IncludeEnvVarValue4.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarValue4.Label'] = 'Include environment variable value 4'
-        self.parameter_input_metadata['IncludeEnvVarValue4.Tooltip'] = (
-            "Specify the value of as single environment variable to be defined for the program run environment. ")
-        # IncludeEnvVarName5
-        self.parameter_input_metadata['IncludeEnvVarName5.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarName5.Label'] = 'Include environment variable name 5'
-        self.parameter_input_metadata['IncludeEnvVarName5.Tooltip'] = (
-            "Specify the name of as single environment variable to be defined for the program run environment. ")
-        # IncludeEnvVarValue5
-        self.parameter_input_metadata['IncludeEnvVarValue5.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVarValue5.Label'] = 'Include environment variable value 5'
-        self.parameter_input_metadata['IncludeEnvVarValue5.Tooltip'] = (
-            "Specify the value of as single environment variable to be defined for the program run environment. ")
-        # ExcludeEnvVars
-        self.parameter_input_metadata['ExcludeEnvVars.Description'] = ""
-        self.parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude environment variables'
-        self.parameter_input_metadata['ExcludeEnvVars.Tooltip'] = (
-            "Specify environment variables to be removed from the program run environment, separated by commas.")
-        # OutputFiles
-        self.parameter_input_metadata['OutputFiles.Description'] = ""
-        self.parameter_input_metadata['OutputFiles.Label'] = "Output files"
-        self.parameter_input_metadata['OutputFiles.Tooltip'] = (
-            "Specify the output files, separated by commas.  Can specify with ${Property}.")
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

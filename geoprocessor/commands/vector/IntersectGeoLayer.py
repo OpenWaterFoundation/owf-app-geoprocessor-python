@@ -74,6 +74,57 @@ class IntersectGeoLayer(AbstractCommand):
         CommandParameterMetadata("OutputGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
+    __command_metadata = dict()
+    __command_metadata['Description'] = \
+        "Extract the overlapping portions of features in the input GeoLayer and the intersect GeoLayer."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "the ID of the input GeoLayer"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerId.Tooltip'] = "The ID of the input GeoLayer that will be intersected."
+    # IntersectGeoLayerID
+    __parameter_input_metadata['IntersectGeoLayerID.Description'] = "the ID of the intersect GeoLayer"
+    __parameter_input_metadata['IntersectGeoLayerID.Label'] = "Intersect GeoLayerID"
+    __parameter_input_metadata['IntersectGeoLayerID.Required'] = True
+    __parameter_input_metadata['IntersectGeoLayerID.Tooltip'] = "The ID of the intersect GeoLayer."
+    # IncludeIntersectAttributes
+    __parameter_input_metadata['IncludeIntersectAttributes.Description'] = \
+        "intersect layer attributes to include"
+    __parameter_input_metadata['IncludeIntersectAttributes.Label'] = "Include intersect attributes"
+    __parameter_input_metadata['IncludeIntersectAttributes.Tooltip'] = (
+        "A comma-separated list of the glob-style patterns filtering which attributes "
+        "from the intersect GeoLayer to include in the output GeoLayer.")
+    # ExcludeIntersectAttributes
+    __parameter_input_metadata['ExcludeIntersectAttributes.Description'] = \
+        "intersect layer attributes to exclude"
+    __parameter_input_metadata['ExcludeIntersectAttributes.Label'] = "Exclude intersect attributes"
+    __parameter_input_metadata['ExcludeIntersectAttributes.Tooltip'] = (
+        "A comma-separated list of the glob-style patterns filtering which attributes"
+        "from the intersect Geolayer to exclude in the output GeoLayer. ")
+    # OutputGeoLayerID
+    __parameter_input_metadata['OutputGeoLayerID.Description'] = "the ID of the intersected GeoLayer"
+    __parameter_input_metadata['OutputGeoLayerID.Label'] = "Output GeoLayerID"
+    __parameter_input_metadata['OutputGeoLayerID.Tooltip'] = "The ID of the intersected GeoLayer."
+    __parameter_input_metadata['OutputGeoLayerID.Value.Default.Description'] = \
+        "GeoLayerId_intersectedBy_IntersectGeoLayerID."
+    # IfGeoLayerIDExists
+    __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output layer exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+        "The action that occurs if the OutputGeoLayerID already exists within the GeoProcessor.\n"
+        "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer."
+        "A warning is logged.\n"
+        "Warn : The new GeoLayer is not created. A warning is logged.\n"
+        "Fail : The new GeoLayer is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -84,56 +135,10 @@ class IntersectGeoLayer(AbstractCommand):
         self.command_name = "IntersectGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        self.command_metadata = dict()
-        self.command_metadata['Description'] =\
-            "Extract the overlapping portions of features in the input GeoLayer and the intersect GeoLayer."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "the ID of the input GeoLayer"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerId.Tooltip'] = "The ID of the input GeoLayer that will be intersected."
-        # IntersectGeoLayerID
-        self.parameter_input_metadata['IntersectGeoLayerID.Description'] = "the ID of the intersect GeoLayer"
-        self.parameter_input_metadata['IntersectGeoLayerID.Label'] = "Intersect GeoLayerID"
-        self.parameter_input_metadata['IntersectGeoLayerID.Required'] = True
-        self.parameter_input_metadata['IntersectGeoLayerID.Tooltip'] = "The ID of the intersect GeoLayer."
-        # IncludeIntersectAttributes
-        self.parameter_input_metadata['IncludeIntersectAttributes.Description'] = \
-            "intersect layer attributes to include"
-        self.parameter_input_metadata['IncludeIntersectAttributes.Label'] = "Include intersect attributes"
-        self.parameter_input_metadata['IncludeIntersectAttributes.Tooltip'] = (
-            "A comma-separated list of the glob-style patterns filtering which attributes "
-            "from the intersect GeoLayer to include in the output GeoLayer.")
-        # ExcludeIntersectAttributes
-        self.parameter_input_metadata['ExcludeIntersectAttributes.Description'] =\
-            "intersect layer attributes to exclude"
-        self.parameter_input_metadata['ExcludeIntersectAttributes.Label'] = "Exclude intersect attributes"
-        self.parameter_input_metadata['ExcludeIntersectAttributes.Tooltip'] = (
-            "A comma-separated list of the glob-style patterns filtering which attributes"
-            "from the intersect Geolayer to exclude in the output GeoLayer. ")
-        # OutputGeoLayerID
-        self.parameter_input_metadata['OutputGeoLayerID.Description'] = "the ID of the intersected GeoLayer"
-        self.parameter_input_metadata['OutputGeoLayerID.Label'] = "Output GeoLayerID"
-        self.parameter_input_metadata['OutputGeoLayerID.Tooltip'] = "The ID of the intersected GeoLayer."
-        self.parameter_input_metadata['OutputGeoLayerID.Value.Default.Description'] =\
-            "GeoLayerId_intersectedBy_IntersectGeoLayerID."
-        # IfGeoLayerIDExists
-        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output layer exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-            "The action that occurs if the OutputGeoLayerID already exists within the GeoProcessor.\n"
-            "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer."
-            "A warning is logged.\n"
-            "Warn : The new GeoLayer is not created. A warning is logged.\n"
-            "Fail : The new GeoLayer is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

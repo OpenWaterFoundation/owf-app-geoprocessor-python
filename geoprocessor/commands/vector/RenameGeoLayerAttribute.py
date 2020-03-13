@@ -52,6 +52,33 @@ class RenameGeoLayerAttribute(AbstractCommand):
         CommandParameterMetadata("ExistingAttributeName", type("")),
         CommandParameterMetadata("NewAttributeName", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Rename a single attribute in a GeoLayer."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = \
+        "The ID of the GeoLayer with the attribute to be renamed."
+    # ExistingAttributeName
+    __parameter_input_metadata['ExistingAttributeName.Description'] = "existing attribute name"
+    __parameter_input_metadata['ExistingAttributeName.Label'] = "Existing attribute name"
+    __parameter_input_metadata['ExistingAttributeName.Required'] = True
+    __parameter_input_metadata['ExistingAttributeName.Tooltip'] = \
+        "The name of the existing attribute to be renamed. Case-specific."
+    # NewAttributeName
+    __parameter_input_metadata['NewAttributeName.Description'] = "new attribute name"
+    __parameter_input_metadata['NewAttributeName.Label'] = "New attribute name"
+    __parameter_input_metadata['NewAttributeName.Required'] = True
+    __parameter_input_metadata['NewAttributeName.Tooltip'] = (
+        "The new attribute name, recommended to be 10 or less characters if later output as a shapefile, "
+        "case-specific.")
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -63,31 +90,10 @@ class RenameGeoLayerAttribute(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Rename a single attribute in a GeoLayer."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = \
-            "The ID of the GeoLayer with the attribute to be renamed."
-        # ExistingAttributeName
-        self.parameter_input_metadata['ExistingAttributeName.Description'] = "existing attribute name"
-        self.parameter_input_metadata['ExistingAttributeName.Label'] = "Existing attribute name"
-        self.parameter_input_metadata['ExistingAttributeName.Required'] = True
-        self.parameter_input_metadata['ExistingAttributeName.Tooltip'] =\
-            "The name of the existing attribute to be renamed. Case-specific."
-        # NewAttributeName
-        self.parameter_input_metadata['NewAttributeName.Description'] = "new attribute name"
-        self.parameter_input_metadata['NewAttributeName.Label'] = "New attribute name"
-        self.parameter_input_metadata['NewAttributeName.Required'] = True
-        self.parameter_input_metadata['NewAttributeName.Tooltip'] = (
-            "The new attribute name, recommended to be 10 or less characters if later output as a shapefile, "
-            "case-specific.")
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

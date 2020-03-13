@@ -38,6 +38,16 @@ class Exit(AbstractCommand):
     __command_parameter_metadata: [CommandParameterMetadata] = [
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "This command stops command processing, which is useful when troubleshooting.\n"
+        "See also the /* */ commands, which can be used to comment out a block of commands.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+
     def __init__(self) -> None:
         """
         Initialize the command instance.
@@ -47,14 +57,10 @@ class Exit(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "This command stops command processing, which is useful when troubleshooting.  "
-            "See also the /* */ commands, which can be used to comment a block of commands.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

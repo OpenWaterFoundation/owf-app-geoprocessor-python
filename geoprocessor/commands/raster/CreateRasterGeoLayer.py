@@ -59,6 +59,49 @@ class CreateRasterGeoLayer(AbstractCommand):
         CommandParameterMetadata("CRS", type(str)),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Create a new raster GeoLayer."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # NewGeoLayerID
+    __parameter_input_metadata['NewGeoLayerID.Description'] = "id of the new GeoLayer"
+    __parameter_input_metadata['NewGeoLayerID.Label'] = "New GeoLayerID"
+    __parameter_input_metadata['NewGeoLayerID.Required'] = True
+    __parameter_input_metadata['NewGeoLayerID.Tooltip'] = "The ID of the new GeoLayer."
+    # NumColumns
+    __parameter_input_metadata['NumColumns.Description'] = "number of columns"
+    __parameter_input_metadata['NumColumns.Label'] = "Number of columns"
+    __parameter_input_metadata['NumColumns.Required'] = True
+    __parameter_input_metadata['NumColumns.Tooltip'] = "Number of columns in the raster layer."
+    # NumRows
+    __parameter_input_metadata['NumRows.Description'] = "number of rows"
+    __parameter_input_metadata['NumRows.Label'] = "Number of rows"
+    __parameter_input_metadata['NumRows.Required'] = True
+    __parameter_input_metadata['NumRows.Tooltip'] = "Number of rows in the raster layer."
+    # CRS
+    __parameter_input_metadata['CRS.Description'] = "coordinate references system of the new GeoLayer"
+    __parameter_input_metadata['CRS.Label'] = "CRS"
+    __parameter_input_metadata['CRS.Required'] = True
+    __parameter_input_metadata['CRS.Tooltip'] = (
+        "The coordinate reference system of the new GeoLayer. EPSG or "
+        "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+    # IfGeoLayerIDExists
+    __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+        "The action that occurs if the NewGeoLayerID already exists within the GeoProcessor.\n"
+        "Replace: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+        "A warning is logged. \n"
+        "Warn: The new GeoLayer is not created. A warning is logged. \n"
+        "Fail: The new GeoLayer is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -70,47 +113,10 @@ class CreateRasterGeoLayer(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Create a new raster GeoLayer."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # NewGeoLayerID
-        self.parameter_input_metadata['NewGeoLayerID.Description'] = "id of the new GeoLayer"
-        self.parameter_input_metadata['NewGeoLayerID.Label'] = "New GeoLayerID"
-        self.parameter_input_metadata['NewGeoLayerID.Required'] = True
-        self.parameter_input_metadata['NewGeoLayerID.Tooltip'] = "The ID of the new GeoLayer."
-        # NumColumns
-        self.parameter_input_metadata['NumColumns.Description'] = "number of columns"
-        self.parameter_input_metadata['NumColumns.Label'] = "Number of columns"
-        self.parameter_input_metadata['NumColumns.Required'] = True
-        self.parameter_input_metadata['NumColumns.Tooltip'] = "Number of columns in the raster layer."
-        # NumRows
-        self.parameter_input_metadata['NumRows.Description'] = "number of rows"
-        self.parameter_input_metadata['NumRows.Label'] = "Number of rows"
-        self.parameter_input_metadata['NumRows.Required'] = True
-        self.parameter_input_metadata['NumRows.Tooltip'] = "Number of rows in the raster layer."
-        # CRS
-        self.parameter_input_metadata['CRS.Description'] = "coordinate references system of the new GeoLayer"
-        self.parameter_input_metadata['CRS.Label'] = "CRS"
-        self.parameter_input_metadata['CRS.Required'] = True
-        self.parameter_input_metadata['CRS.Tooltip'] = (
-            "The coordinate reference system of the new GeoLayer. EPSG or "
-            "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
-        # IfGeoLayerIDExists
-        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-            "The action that occurs if the NewGeoLayerID already exists within the GeoProcessor.\n"
-            "Replace: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-            "A warning is logged. \n"
-            "Warn: The new GeoLayer is not created. A warning is logged. \n"
-            "Fail: The new GeoLayer is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

@@ -39,6 +39,24 @@ class EndIf(AbstractCommand):
         CommandParameterMetadata("Name", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "This command ends a block of commands that start with an If command.\n"
+        "The If and EndIf commands must have the same value for the Name parameter to "
+        "allow the command processor to determine the start and end of the block.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # Name
+    __parameter_input_metadata['Name.Description'] = "the name that will be matched with name of an If command"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = True
+    __parameter_input_metadata['Name.Tooltip'] = (
+        "The name that will be matched with the name of an If command to indicate the block of commands in the "
+        "if condition.")
+
     def __init__(self) -> None:
         """
         Initialize the command instance.
@@ -48,22 +66,10 @@ class EndIf(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "This command ends a block of commands that start with an If command.\n"
-            "The If and EndIf commands must have the same value for the Name parameter to "
-            "allow the command processor to determine the start and end of the block.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # Name
-        self.parameter_input_metadata['Name.Description'] = "the name that will be matched with name of an If command"
-        self.parameter_input_metadata['Name.Label'] = "Name"
-        self.parameter_input_metadata['Name.Required'] = True
-        self.parameter_input_metadata['Name.Tooltip'] = (
-            "The name that will be matched with the name of an If command to indicate the block of commands in the "
-            "if condition.")
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

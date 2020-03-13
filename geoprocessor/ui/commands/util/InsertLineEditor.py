@@ -28,7 +28,8 @@ import geoprocessor.ui.util.qt_util as qt_util
 
 class InsertLineEditor(AbstractCommandEditor):
     """
-    Command editor for single line commands such as /* and */.
+    Command editor for single line commands such as /*, */, and empty line.
+    The editor dialog shows the description and help button and the command string, but no parameters.
     """
 
     # def __init__(self, command_name, command_description, parameter_count, command_parameters, current_values):
@@ -66,251 +67,95 @@ class InsertLineEditor(AbstractCommandEditor):
         # Defined in AbstractCommandEditor
         # Position in the layout for components as they are added, 0=row at top, 1 is next down, etc.
         # - each addition should increment before adding a component
-        self.grid_layout_row = -1
-
-        # Bottom of dialog
-        # TODO smalers 2020-01-16 maybe should reuse the base class buttons
-        # NOT defined in AbstractCommandEditor - local to this class
-        self.OK_Cancel_Buttons: QtWidgets.QDialogButtonBox or None = None
+        # self.grid_layout_row = -1
 
         # Create variable to know if we are updating an existing command
         # or inserting a new command into the command list
         # NOT defined in AbstractCommandEditor - local to this class
-        self.update = False
+        # self.update = False
         # If command parameters have already been defined for command,  know that are updating an existing command.
-        if command.command_parameters is not None:
-            self.update = True
+        # if command.command_parameters is not None:
+        #    self.update = True
+
+        # NOT defined in AbstractCommandEditor - local to this class
+        # Indicate if an error status is currently in effect, due to invalid parameters
+        # - will be set in check_input() and is checked in ui_action_ok_clicked()
+        self.error_wait = False
 
         # Set up the UI for the command editor window
         self.setup_ui_core()
 
-    def add_ui_horizontal_separator(self) -> None:
-        # Create a line (frame object with special specifications). Add the line to the Dialog window.
-        # Set the size policy, the shape, the shadow, and the name of the frame object to create the line separator.
-        # The frame object, Separator, separates the command description from the input form section of the Dialog box.
-        self.Separator = QtWidgets.QFrame(self)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.Separator.sizePolicy().hasHeightForWidth())
-        self.Separator.setSizePolicy(size_policy)
-        self.Separator.setFrameShape(QtWidgets.QFrame.HLine)
-        self.Separator.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.Separator.setObjectName(qt_util.from_utf8("Separator"))
-        self.grid_layout_row = self.grid_layout_row + 1
-        self.grid_layout.addWidget(self.Separator, self.grid_layout_row, 0, 1, 8)
+        # Defined here and NOT in AbstractCommandEditor
+        # Initially call refresh to the UI in case updating a command
+        # - will transfer command parameter values into the UI components
+        self.refresh_ui()
 
-    def setup_ui_core(self) -> None:
-        # Set up the editor core elements, which apply to any command.
-        self.setup_ui_core_top()
-        # Add separator
-        self.add_ui_horizontal_separator()
-        # Set up the core components at the bottom
-        self.setup_ui_core_bottom()
-
-        # This will wire up the signals and slots depending on names.
-        # REF: http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
-        # - don't do this because not using QtDesigner
-        # QtCore.QMetaObject.connectSlotsByName(self)
-
-    def setup_ui_core_bottom(self) -> None:
+    def check_input(self) -> None:
         """
-        Setup core UI components at the bottom of the dialog.
+        Check the parameter values shown in the editor to make sure all values are valid.
+        There is nothing to check since no parameters.
 
-        Returns:  None
+        Returns:
+            None.
         """
-        self.setup_ui_core_command_area()
-        self.setup_ui_core_command_buttons()
+        pass
 
-    def setup_ui_core_top(self) -> None:
+    def refresh_ui(self) -> None:
         """
-        Setup core UI components at the top of the dialog.
+        This function is called to ensure that the UI and command are consistent in the UI:
 
-        Returns:  None
-        """
-        # Set the window title to the command name
-        self.setObjectName("InsertLineCommand")
-        self.setWindowTitle("Edit " + self.command.command_string + " command")
-        self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-        self.setWindowIcon(QtGui.QIcon(icon_path))
-
-        # Because components are added to the UI the dialog will have a size.
-        # - don't set the size unless a dialog misbehaves, perhaps a maximum size
-        # self.resize(684, 404)
-
-        # Add a grid layout for components to be added
-        self.grid_layout = QtWidgets.QGridLayout(self)
-        self.grid_layout.setObjectName(qt_util.from_utf8("gridLayout"))
-
-        self.setup_ui_core_command_description()
-
-    def setup_ui_core_command_area(self) -> None:
-        # Create a label object to the Dialog window.
-        # Set the alignment, the name, and the text of the label.
-        # The label, Command Display_Label, labels the CommandDisplay_View_TextBrowser text edit object.
-        self.grid_layout_row = self.grid_layout_row + 1
-        self.CommandDisplay_Label = QtWidgets.QLabel(self)
-        self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
-        self.CommandDisplay_Label.setObjectName(qt_util.from_utf8("CommandDisplay_Label"))
-        self.CommandDisplay_Label.setText(qt_util.translate("Dialog", "Command: ", None))
-        self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, 2, 1)
-        # Create a text edit object. Add the text edit object to the Dialog window.
-        # Set the size, the name and the html of the text edit object.
-        # The text edit object, CommandDisplay_View_TextBrowser, displays a dynamic view of the command string.
-        self.CommandDisplay_View_TextBrowser = QtWidgets.QTextEdit(self)
-        self.CommandDisplay_View_TextBrowser.setObjectName("CommandDisplay_View_TextBrowser")
-        command_string = self.command.command_string
-
-        if command_string == "Blank()":
-            command_string = ""
-        if command_string.endswith("()"):
-            command_string = command_string[:-2]
-        self.CommandDisplay_View_TextBrowser.setText(command_string)
-        self.CommandDisplay_View_TextBrowser.setReadOnly(True)
-        self.CommandDisplay_View_TextBrowser.setMaximumHeight(60)
-        # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
-        # self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
-        # #html = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">" \
-        # #       "\n<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\np, li { " \
-        # #       "white-space: pre-wrap; }\n</style></head><body style=\" font-family:\'MS Shell Dlg 2\';" \
-        # #       " font-size:8.25pt; font-weight:400; font-style:normal;\">\n<p style=\" margin-top:0px;" \
-        # #       " margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">" \
-        # #       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
-        # #self.CommandDisplay_View_TextBrowser.setHtml(qt_util.translate("Dialog", html, None))
-        self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 1, -1)
-
-    def setup_ui_core_command_buttons(self) -> None:
-        # Create a button box object. Add the button box object to the Dialog window.
-        # Set the orientation, the standard buttons, the name and the connections of the button box object.
-        # The button box object, OK_Cancel_Buttons, allow the user to accept or reject the changes made in the dialog.
-        self.OK_Cancel_Buttons = QtWidgets.QDialogButtonBox(self)
-        self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
-        self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.OK_Cancel_Buttons.setObjectName(qt_util.from_utf8("OK_Cancel_Buttons"))
-        self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Cancel).setToolTip(
-            "Cancel command edit and ignore changes.")
-        self.OK_Cancel_Buttons.button(QtWidgets.QDialogButtonBox.Ok).setToolTip("Save edits to command.")
-        self.OK_Cancel_Buttons.accepted.connect(self.accept)
-        self.OK_Cancel_Buttons.rejected.connect(self.reject)
-        self.grid_layout_row = self.grid_layout_row + 1
-        self.grid_layout.addWidget(self.OK_Cancel_Buttons, self.grid_layout_row, 6, 1, 2)
-
-    def setup_ui_core_command_description(self) -> None:
-        """
-        Setup the description component at the top of the dialog.
-        """
-        # Create a frame object. Add the frame object to the Dialog window.
-        # Set the shape, the shadow, and the name of the frame object.
-        # The frame object, Command_Description, holds the command description and the view documentation button.
-        # noinspection PyPep8Naming
-        description_Frame = QtWidgets.QFrame(self)
-        description_Frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        description_Frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        description_Frame.setObjectName(qt_util.from_utf8("Command_Description"))
-        self.grid_layout_row = self.grid_layout_row + 1
-        self.grid_layout.addWidget(description_Frame, self.grid_layout_row, 0, 1, 0)
-
-        # Create a grid layout object. Apply to the Command_Description frame object.
-        # Set the name of the grid layout object.
-        grid_layout_2 = QtWidgets.QGridLayout(description_Frame)
-        grid_layout_2.setObjectName(qt_util.from_utf8("grid_layout_2"))
-
-        # Create a label. Add the label to the Command_Description frame object.
-        # Set the name and the text of the label.
-        # The label, Command_Description_Label, briefly describes the command.
-        self.Command_Description_Label = QtWidgets.QLabel(description_Frame)
-        self.Command_Description_Label.setObjectName(qt_util.from_utf8("Command_Description_Label"))
-        self.Command_Description_Label.setText("This command ends a multi-line comment block, which is useful for "
-                                               "commenting out multiple commands.\n"
-                                               "Use the /* command to start the comment block.\n"
-                                               "See also the # command for commenting single lines.\n")
-        self.gridLayout_2.addWidget(self.Command_Description_Label, 0, 0, 1, 2)
-
-    def update_command_display(self) -> None:
-        """
-        Each command dialog box has a command display that shows the string representation of the command with the
-        user-specified input parameters. It is updated dynamically as the user enters/selects values for the different
-        command parameter fields (this function is called when any text is changed in the input field Qt widgets). The
-        function is responsible for reading the inputs, creating the updated string representation of the command and
-        updating the CommandDisplay widget.
+        1. The first time called:
+            - Make sure the UI is up to date with initial command parameters
+        2. Every time called:
+            - Update the command string from values in the UI components.
+            - Only non-empty values are set in the string.
+            - Because the comment start is just /*, always shows this string
 
         Returns:
             None
         """
+        command_string = self.command.to_string()
+        self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
 
-        # Iterate over the command parameters.
-        for command_parameter in self.parameters_list:
-
-            # Get the Qt Widget associated with the command parameter.
-            ui_obj = self.input_edit_objects[command_parameter]
-
-            # Get the user-specified value entered in the command parameter Qt Widget input field.
-            value = self.get_current_value(ui_obj)
-
-            # Update the current values dictionary with the new user-specified value.
-            self.command_parameter_current_values[command_parameter] = value
-
-        # If all of the command parameter values are set to "" (not set), continue.
-        if list(self.command_parameter_current_values.values()).count("") == len(self.command_parameter_current_values):
-
-            # The Command Display field should print the command name followed by an empty parenthesis.
-            # Ex: ReadGeoLayerFromGeoJSON()
-            display = "{}()".format(self.command_name)
-
-        # If AT LEAST ONE command parameter value has been set by the user, continue.
-        else:
-
-            # The parameter string text is a string that holds the user-specified parameter values for the
-            # command's parameters in a "CommandParameterName=CommandParameterValue" format.
-            parameter_string_text = ""
-
-            # Iterate over the command parameters.
-            for command_parameter in self.parameters_list:
-
-                # Get the current user-specified value.
-                value = self.command_parameter_current_values[command_parameter]
-
-                # If there is a value, add the parameter name and parameter value to the parameter_string_text in a
-                # "CommandParameterName=CommandParameterValue" format. A comma is added at the end in order to set up
-                # for the next command parameter.
-                if value != "":
-                    text = '{}="{}", '.format(command_parameter, value)
-                    parameter_string_text += text
-
-            # After all of the command parameters with user-specified values have been added to the
-            # parameter_string_text, remove the final comma.
-            updated_parameter_string_text = parameter_string_text.rsplit(", ", 1)[0]
-
-            # The Command Display field should print the command name followed by a parenthesis filled with the
-            # command parameters and associated values.
-            # Ex: ReadGeoLayerFromGeoJSON(SpatialDataFile="C:/example/path.geojson", GeoLayerID="Example")
-            display = "{}({})".format(self.command_name, updated_parameter_string_text)
-
-        # Update the Command Display Qt Widget to display the dynamic command display text.
-        self.CommandDisplay_View_TextBrowser.setText(display)
-
-    def get_current_value(self, obj: QtWidgets.QWidget) -> str:
+    def setup_ui(self) -> None:
         """
-        Get the value within a QtGui.Widget object.
-
-        Args:
-            obj (obj): the a QtGui.Widget object to read the value from
+        This function is called by AbstractCommandEditor.setup_ui_core(), which sets up the editor dialog.
+        Currently it does nothing because one-line commands without parameters just display in the command area.
 
         Returns:
-            the value within the QtGui.Widget object
+            None
         """
+        pass
 
-        # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
-        # value when one works.
-        # Reads LineEdit widgets.
-        # noinspection PyBroadException
-        try:
-            value = obj.text()
+    def ui_action_cancel_clicked(self) -> None:
+        """
+        Handle clicking on cancel button.
 
-        # Reads ComboBox widgets.
-        except Exception:
-            value = obj.currentText()
+        Returns:
+            None
+        """
+        # To cancel, call the standard reject() function, which will set the return value.
+        # - this allows the return value to be checked in the calling code
+        self.reject()
 
-        # Return the value within the input QtGui.Widget object.
-        return value
+    def ui_action_ok_clicked(self) -> None:
+        """
+        Handle clicking on OK button:
+
+        1. The parameters in the input components are validated - in this case no parameters need to be checked.
+        2. If OK, exit by calling accept().
+        3. If not OK, the editor stays open until the user corrects or presses Cancel.
+
+        Returns:
+            None
+        """
+        # Check the input
+        self.check_input()
+        if self.error_wait:
+            # User was shown a warning dialog and had to acknowledge it, so here just ignore the "OK"
+            # - errors in input parameters need to be fixed before OK works
+            pass
+        else:
+            # No error so OK to exit
+            # - call the standard accept() function to set the return value
+            self.accept()

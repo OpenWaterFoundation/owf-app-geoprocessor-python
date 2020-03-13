@@ -25,6 +25,16 @@ class Blank(AbstractCommand):
     A Blank command is used when the command contains only whitespace.
     The command does nothing when run.
     """
+
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = 'This command is a placeholder for an empty line in a command file.\n' \
+                                        'The command does not serve a purpose other than to store the ' \
+                                        'empty line.\n' \
+                                        'See also # comment command.'
+    __command_metadata['EditorType'] = 'InsertLineEditor'
+    __command_metadata['EditorTitle'] = 'Edit empty line'  # Title does not follow normal CommandName(...)
+
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
@@ -35,10 +45,7 @@ class Blank(AbstractCommand):
         self.command_name = "Blank"
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = 'This command is a placeholder for blank lines, which contain only ' \
-                                               'whitespace characters (spaces and tabs). '
-        self.command_metadata['EditorType'] = 'InsertLineEditor'
+        self.command_metadata = self.__command_metadata
 
     def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
@@ -67,3 +74,12 @@ class Blank(AbstractCommand):
         """
         # print("In Blank.run_command")
         pass
+
+    def to_string(self) -> str:
+        """
+        Return the string representation of the command, always an empty string.
+
+        Returns:
+            The string representation of the command, always an empty string.
+        """
+        return ''

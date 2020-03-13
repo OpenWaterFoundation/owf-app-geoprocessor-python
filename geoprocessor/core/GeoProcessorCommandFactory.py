@@ -65,9 +65,6 @@ from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
 from geoprocessor.commands.util.CommentBlockStart import CommentBlockStart
 from geoprocessor.commands.util.CopyFile import CopyFile
-from geoprocessor.commands.util.EnabledFalse import EnabledFalse
-from geoprocessor.commands.util.ExpectedStatusFailure import ExpectedStatusFailure
-from geoprocessor.commands.util.ExpectedStatusWarning import ExpectedStatusWarning
 from geoprocessor.commands.util.ListFiles import ListFiles
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
@@ -128,12 +125,9 @@ class GeoProcessorCommandFactory(object):
         "CREATEGEOLAYERFROMGEOMETRY": CreateGeoLayerFromGeometry(),
         "CREATERASTERGEOLAYER": CreateRasterGeoLayer(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
-        "ENABLEDFALSE": EnabledFalse(),
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
         "EXIT": Exit(),
-        "EXPECTEDSTATUSFAILURE": ExpectedStatusFailure(),
-        "EXPECTEDSTATUSWARNING": ExpectedStatusWarning(),
         "FOR": For(),
         "FREEGEOLAYERS": FreeGeoLayers(),
         "IF": If(),
@@ -208,7 +202,7 @@ class GeoProcessorCommandFactory(object):
         Creates the object of a command class called from a command line of the command file.
 
         Args:
-            command_string (str): the command string entered by the user in the command file
+            command_string (str): the command string or just the command name
             create_unknown_command_if_not_recognized (bool) If TRUE, create an UnknownCommand when the input
             command is not recognized, if FALSE, throw an error.
 
@@ -228,26 +222,27 @@ class GeoProcessorCommandFactory(object):
 
         # If the command is any variation of a comment return the
         # appropriate unique command editor
-        if command_string_trimmed.startswith('#'):
-            if command_string_trimmed == "#@enabled False()":
-                return EnabledFalse()
-            elif command_string_trimmed == "#@expectedStatus Failure()":
-                return ExpectedStatusFailure()
-            elif command_string_trimmed == "#@expectedStatus Warning()":
-                return ExpectedStatusWarning()
-            else:
-                return Comment()
+        if command_string_trimmed == "":
+            # Empty line
+            return Blank()
+        elif command_string_trimmed.startswith('#'):
+            return Comment()
         elif command_string_trimmed.startswith('/*'):
             return CommentBlockStart()
         elif command_string_trimmed.startswith('*/'):
             return CommentBlockEnd()
 
-        # The symbol '(' was found.
-        # Assume command of syntax CommandName(Param1="...",Param2="...").
-        elif paren_pos != -1:
-
-            # Get command name from command string, command name is before the first open parenthesis.
-            command_name = command_util.parse_command_name_from_command_string(command_string_trimmed)
+        # Assume command of syntax CommandName(Param1="...",Param2="...")
+        else:
+            if paren_pos >= 0:
+                # Get command name from command string CommandName(...)
+                # - command name is before the first open parenthesis
+                command_name = command_util.parse_command_name_from_command_string(command_string_trimmed)
+            else:
+                # Get command name from command string:  CommandName
+                # - command name is the string
+                # - TODO smalers 2020-03-11 evaluate whether to allow this or generate an error
+                command_name = command_string_trimmed
 
             # Initialize the command class object if it is a valid command.
             command_name_upper = command_name.upper()
@@ -396,10 +391,10 @@ class GeoProcessorCommandFactory(object):
                 raise ValueError('Unrecognized command "' + command_string + '"')
 
         # The syntax is not recognized so create an UnknownCommand or throw an exception.
-        else:
-            if create_unknown_command_if_not_recognized:
-                logger.warning("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
-                return UnknownCommand()
-            else:
-                logger.warning("Command line is unknown syntax.")
-                raise ValueError('Unrecognized command "' + command_string + '"')
+        #else:
+        #    if create_unknown_command_if_not_recognized:
+        #        logger.warning("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
+        #        return UnknownCommand()
+        #    else:
+        #        logger.warning("Command line is unknown syntax.")
+        #        raise ValueError('Unrecognized command "' + command_string + '"')

@@ -286,6 +286,24 @@ def format_dict(dict_to_format: dict, value_quote: str = '"') -> str:
     return formatted_string
 
 
+def get_leading_whitespace(s: str):
+    """
+    Get the leading whitespace for a string, used to get whitespace for indented commands.
+
+    Args:
+        s (str): string to process
+    """
+    white = ""
+    for i in range(len(s)):
+        if s[i] == " " or s[i] == "\t":
+            # Add to the whitespace
+            white += s[i]
+        else:
+            # Done processing
+            break
+    return white
+
+
 def glob2re(pat: str) -> str:
     """
     Translates a glob-style shell pattern using '*' for wildcards to a regular expression.

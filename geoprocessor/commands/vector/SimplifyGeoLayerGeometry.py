@@ -65,6 +65,55 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         CommandParameterMetadata("SimplifiedGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "Decrease the number of vertices within the geometries for each feature of a GeoLayer.\n"
+        "This command is useful when the file size of a GeoLayer is too large.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer to be simplified."
+    # Tolerance
+    __parameter_input_metadata['Tolerance.Description'] = "ε variable in the Douglas–Peucker algorithm"
+    __parameter_input_metadata['Tolerance.Label'] = "Tolerance"
+    __parameter_input_metadata['Tolerance.Required'] = True
+    __parameter_input_metadata['Tolerance.Tooltip'] = (
+        "Units are the same as the distance units of the GeoLayer's coordinate reference system.\n"
+        "For example, WGS84 EPSG:4326 uses decimal degrees and NAD83 Zone13N EPSG:26913 uses meters.")
+    # SimplifyMethod
+    __parameter_input_metadata['SimplifyMethod.Description'] = "simplification method"
+    __parameter_input_metadata['SimplifyMethod.Label'] = "Simplify method"
+    __parameter_input_metadata['SimplifyMethod.Tooltip'] = (
+        "The simplification method used to simplify the GeoLayer."
+        "\nDouglasPeucker : Use the Douglas-Peucker algorithm to simplify the GeoLayer.")
+    __parameter_input_metadata['SimplifyMethod.Values'] = ["", "DouglasPeucker"]
+    __parameter_input_metadata['SimplifyMethod.Value.Default'] = "DouglasPeucker"
+    # SimplifiedGeoLayerID
+    __parameter_input_metadata['SimplifiedGeoLayerID.Description'] = "output GeoLayer identifier"
+    __parameter_input_metadata['SimplifiedGeoLayerID.Label'] = "Simplified GeoLayerID"
+    __parameter_input_metadata['SimplifiedGeoLayerID.Tooltip'] = \
+        "A GeoLayer identifier for the output simplified GeoLayer."
+    __parameter_input_metadata['SimplifiedGeoLayerID.Value.Default.Description'] = "GeoLayerID_simple_Tolerance"
+    # IfGeoLayerIDExists
+    __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if OutputGeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+        "The action that occurs if the OutputGeoLayerID already exists within the GeoProcessor. \n"
+        "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
+        "A warning is logged.\n"
+        "Warn : The new GeoLayer is not created. A warning is logged. \n"
+        "Fail : The new GeoLayer is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -76,53 +125,10 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "Decrease the number of vertices within the geometries for each feature of a GeoLayer.\n"
-            "This command is useful when the file size of a GeoLayer is too large.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer to be simplified."
-        # Tolerance
-        self.parameter_input_metadata['Tolerance.Description'] = "ε variable in the Douglas–Peucker algorithm"
-        self.parameter_input_metadata['Tolerance.Label'] = "Tolerance"
-        self.parameter_input_metadata['Tolerance.Required'] = True
-        self.parameter_input_metadata['Tolerance.Tooltip'] = (
-            "Units are the same as the distance units of the GeoLayer's coordinate reference system.\n"
-            "For example, WGS84 EPSG:4326 uses decimal degrees and NAD83 Zone13N EPSG:26913 uses meters.")
-        # SimplifyMethod
-        self.parameter_input_metadata['SimplifyMethod.Description'] = "simplification method"
-        self.parameter_input_metadata['SimplifyMethod.Label'] = "Simplify method"
-        self.parameter_input_metadata['SimplifyMethod.Tooltip'] = (
-            "The simplification method used to simplify the GeoLayer."
-            "\nDouglasPeucker : Use the Douglas-Peucker algorithm to simplify the GeoLayer.")
-        self.parameter_input_metadata['SimplifyMethod.Values'] = ["", "DouglasPeucker"]
-        self.parameter_input_metadata['SimplifyMethod.Value.Default'] = "DouglasPeucker"
-        # SimplifiedGeoLayerID
-        self.parameter_input_metadata['SimplifiedGeoLayerID.Description'] = "output GeoLayer identifier"
-        self.parameter_input_metadata['SimplifiedGeoLayerID.Label'] = "Simplified GeoLayerID"
-        self.parameter_input_metadata['SimplifiedGeoLayerID.Tooltip'] = \
-            "A GeoLayer identifier for the output simplified GeoLayer."
-        self.parameter_input_metadata['SimplifiedGeoLayerID.Value.Default.Description'] = "GeoLayerID_simple_Tolerance"
-        # IfGeoLayerIDExists
-        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if OutputGeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-            "The action that occurs if the OutputGeoLayerID already exists within the GeoProcessor. \n"
-            "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-            "A warning is logged.\n"
-            "Warn : The new GeoLayer is not created. A warning is logged. \n"
-            "Fail : The new GeoLayer is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

@@ -42,6 +42,36 @@ class If(AbstractCommand):
         CommandParameterMetadata("CompareAsStrings", type(True))  # Not yet implemented
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "The If command evaluates a conditional statement and if true will "
+        "result in the commands between If and matching EndIf being executed. ")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # Name
+    __parameter_input_metadata['Name.Description'] = \
+        "the name of the If command to be matched with the EndIf command"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = True
+    __parameter_input_metadata['Name.Tooltip'] = (
+        "The name of the If command, which will be matched with the name of an EndIf command to indicate\n"
+        "the block of commands in the if condition.")
+    # Condition
+    __parameter_input_metadata['Condition.Description'] = "the conditional statement to evaluate"
+    __parameter_input_metadata['Condition.Label'] = "Condition"
+    __parameter_input_metadata['Condition.Required'] = True
+    __parameter_input_metadata['Condition.Tooltip'] = "The conditional statement to evaluate."
+    # CompareAsStrings
+    __parameter_input_metadata['CompareAsStrings.Description'] = "boolean"
+    __parameter_input_metadata['CompareAsStrings.Label'] = "Compare As Strings"
+    __parameter_input_metadata['CompareAsStrings.Tooltip'] = (
+        "If True, the comparison will be done as strings even if the values could be treated as numbers or "
+        "Booleans. ")
+    __parameter_input_metadata['CompareAsStrings.Value.Default'] = "FALSE"
+
     def __init__(self) -> None:
         """
         Initialize the command instance.
@@ -52,34 +82,10 @@ class If(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "The If command evaluates a conditional statement and if true will "
-            "result in the commands between If and matching EndIf being executed. ")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # Name
-        self.parameter_input_metadata['Name.Description'] = \
-            "the name of the If command to be matched with the EndIf command"
-        self.parameter_input_metadata['Name.Label'] = "Name"
-        self.parameter_input_metadata['Name.Required'] = True
-        self.parameter_input_metadata['Name.Tooltip'] = (
-            "The name of the If command, which will be matched with the name of an EndIf command to indicate\n"
-            "the block of commands in the if condition.")
-        # Condition
-        self.parameter_input_metadata['Condition.Description'] = "the conditional statement to evaluate"
-        self.parameter_input_metadata['Condition.Label'] = "Condition"
-        self.parameter_input_metadata['Condition.Required'] = True
-        self.parameter_input_metadata['Condition.Tooltip'] = "The conditional statement to evaluate."
-        # CompareAsStrings
-        self.parameter_input_metadata['CompareAsStrings.Description'] = "boolean"
-        self.parameter_input_metadata['CompareAsStrings.Label'] = "Compare As Strings"
-        self.parameter_input_metadata['CompareAsStrings.Tooltip'] = (
-            "If True, the comparison will be done as strings even if the values could be treated as numbers or "
-            "Booleans. ")
-        self.parameter_input_metadata['CompareAsStrings.Value.Default'] = "FALSE"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Local private data
         self.__condition_eval = True  # The result of evaluating the condition

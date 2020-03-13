@@ -27,6 +27,16 @@ class Comment(AbstractCommand):
     """
     # comment.
     """
+
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = ('Edit one or more single-line comments, each starting with #.\n'
+                                         'Spaces and tabs before the comment character is allowed.\n'
+                                         'Comments cannot be added after commands - '
+                                         'comments must exist on their own command line.')
+    __command_metadata['EditorType'] = 'InsertLineRulerEditor'
+    __command_metadata['EditorTitle'] = 'Edit # comment line(s)'  # Does not follow normal CommandName(...)
+
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
@@ -42,11 +52,7 @@ class Comment(AbstractCommand):
         self.command_name = "#"
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = ('Single-line comments start with #. Spaces and tabs before the '
-                                                'comment character is allowed. Comments cannot be added after '
-                                                'commands - comments must exist on their own command line.')
-        self.command_metadata['EditorType'] = 'InsertLineRulerEditor'
+        self.command_metadata = self.__command_metadata
 
     def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """

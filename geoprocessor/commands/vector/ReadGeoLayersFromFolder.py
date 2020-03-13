@@ -71,6 +71,49 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         CommandParameterMetadata("Subset_Pattern", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Read one or more GeoLayer(s) from a folder."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # SpatialDataFolder
+    __parameter_input_metadata['SpatialDataFolder.Description'] = "folder to read"
+    __parameter_input_metadata['SpatialDataFolder.Label'] = "Spatial data folder"
+    __parameter_input_metadata['SpatialDataFolder.Required'] = True
+    __parameter_input_metadata['SpatialDataFolder.Tooltip'] = "The folder to read."
+    __parameter_input_metadata['SpatialDataFolder.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['SpatialDataFolder.FileSelector.Title'] = "Select the spatial data folder to read"
+    # GeoLayerID_prefix
+    __parameter_input_metadata['GeoLayerID_prefix.Description'] = "output GeoLayer identifier prefix"
+    __parameter_input_metadata['GeoLayerID_prefix.Label'] = "GeoLayerID prefix"
+    __parameter_input_metadata['GeoLayerID_prefix.Tooltip'] = \
+        "GeoLayers read from a folder have an identifier in the GeoLayerID_prefix_Filename format."
+    __parameter_input_metadata['GeoLayerID_prefix.Value.Default'] = (
+        "No prefix is used. The GeoLayerID is the spatial data filename without the leading path and without the "
+        "file extension (Formatting character %f).")
+    # Subset_Pattern
+    __parameter_input_metadata['Subset_Pattern.Description'] = "globstyle pattern of feature classes to read"
+    __parameter_input_metadata['Subset_Pattern.Label'] = "Subset pattern"
+    __parameter_input_metadata['Subset_Pattern.Tooltip'] = \
+        "The glob-style pattern (e.g., CO_* or *_[MC]O) of spatial data files to read from the folder."
+    __parameter_input_metadata['Subset_Pattern.Value.Default'] = \
+        "No pattern is used. All spatial data files (.shp and .geojson) within the folder are read."
+    # IfGeoLayerIDExists
+    __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+        "The action that occurs if the GeoLayerID already exists within the GeoProcessor.\n"
+        "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer.  "
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
+        "GeoLayer. A warning is logged. \n"
+        "Warn : The new GeoLayer is not created. A warning is logged. \n"
+        "Fail : The new GeoLayer is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -82,47 +125,10 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Read one or more GeoLayer(s) from a folder."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # SpatialDataFolder
-        self.parameter_input_metadata['SpatialDataFolder.Description'] = "folder to read"
-        self.parameter_input_metadata['SpatialDataFolder.Label'] = "Spatial data folder"
-        self.parameter_input_metadata['SpatialDataFolder.Required'] = True
-        self.parameter_input_metadata['SpatialDataFolder.Tooltip'] = "The folder to read."
-        self.parameter_input_metadata['SpatialDataFolder.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['SpatialDataFolder.FileSelector.Title'] = "Select the spatial data folder to read"
-        # GeoLayerID_prefix
-        self.parameter_input_metadata['GeoLayerID_prefix.Description'] = "output GeoLayer identifier prefix"
-        self.parameter_input_metadata['GeoLayerID_prefix.Label'] = "GeoLayerID prefix"
-        self.parameter_input_metadata['GeoLayerID_prefix.Tooltip'] =\
-            "GeoLayers read from a folder have an identifier in the GeoLayerID_prefix_Filename format."
-        self.parameter_input_metadata['GeoLayerID_prefix.Value.Default'] = (
-            "No prefix is used. The GeoLayerID is the spatial data filename without the leading path and without the "
-            "file extension (Formatting character %f).")
-        # Subset_Pattern
-        self.parameter_input_metadata['Subset_Pattern.Description'] = "globstyle pattern of feature classes to read"
-        self.parameter_input_metadata['Subset_Pattern.Label'] = "Subset pattern"
-        self.parameter_input_metadata['Subset_Pattern.Tooltip'] =\
-            "The glob-style pattern (e.g., CO_* or *_[MC]O) of spatial data files to read from the folder."
-        self.parameter_input_metadata['Subset_Pattern.Value.Default'] = \
-            "No pattern is used. All spatial data files (.shp and .geojson) within the folder are read."
-        # IfGeoLayerIDExists
-        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-            "The action that occurs if the GeoLayerID already exists within the GeoProcessor.\n"
-            "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer.  "
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
-            "GeoLayer. A warning is logged. \n"
-            "Warn : The new GeoLayer is not created. A warning is logged. \n"
-            "Fail : The new GeoLayer is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

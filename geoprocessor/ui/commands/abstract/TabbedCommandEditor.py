@@ -152,7 +152,18 @@ class TabbedCommandEditor(AbstractCommandEditor):
         # The Dialog window object, Dialog, represents the entire dialog window.
         Dialog.setObjectName(qt_util.from_utf8("Dialog"))
         Dialog.resize(684, 404)
-        Dialog.setWindowTitle(qt_util.translate("Dialog", self.command_name, None))
+
+        # See if title is specified as 'EditorTitle' property (used for commands that don't follow the normal pattern)
+        editor_title = None
+        try:
+            editor_title = self.command.command_metadata['EditorTitle']
+        except KeyError:
+            editor_title = None
+        if editor_title is not None:
+            self.setWindowTitle(editor_title)
+        else:
+            # Typical CommandName() command
+            self.setWindowTitle("Edit " + self.command.command_name + " command")
 
         # Create a grid layout object. Apply the grid layout to the Dialog window object.
         # Set the name of the grid layout object.

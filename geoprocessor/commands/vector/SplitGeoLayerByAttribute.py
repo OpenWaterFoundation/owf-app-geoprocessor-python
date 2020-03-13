@@ -64,6 +64,67 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         CommandParameterMetadata("TemporaryFolder", type(""))]
     # CommandParameterMetadata("RemoveTemporaryFiles", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = \
+        "Split an input GeoLayer into one or more new GeoLayers by unique attribute value.\n" \
+        'For example, if the specified attribute name has unique values "a", "b", and "c", three layers will ' \
+        "be created."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # InputGeoLayerID
+    __parameter_input_metadata['InputGeoLayerID.Description'] = 'input GeoLayer identifier'
+    __parameter_input_metadata['InputGeoLayerID.Label'] = "Input GeoLayerID"
+    __parameter_input_metadata['InputGeoLayerID.Required'] = True
+    __parameter_input_metadata['InputGeoLayerID.Tooltip'] = "Input GeoLayer identifier."
+    # AttributeName
+    __parameter_input_metadata['AttributeName.Description'] = "attribute name to split by"
+    __parameter_input_metadata['AttributeName.Label'] = "Attribute name"
+    __parameter_input_metadata['AttributeName.Required'] = True
+    __parameter_input_metadata['AttributeName.Tooltip'] = "The attribute name that will be used to " \
+                                                             "split the input GeoLayer."
+    # OutputGeoLayerIDs
+    __parameter_input_metadata['OutputGeoLayerIDs.Description'] = "the identifiers of the output GeoLayers"
+    __parameter_input_metadata['OutputGeoLayerIDs.Label'] = "Output GeoLayerIDs"
+    __parameter_input_metadata['OutputGeoLayerIDs.Tooltip'] = "The identifiers of the output GeoLayers."
+    __parameter_input_metadata['OutputGeoLayerIDs.Value.Default'] = \
+        "The default Output GeoLayerID will be of the format 'InputGeoLayerID-AttributeValue'.\nThe attribute " \
+        "value being the resulting value identified from the AttributeName."
+    # IfGeoLayerIDExists
+    __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output layer exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+        "The action that occurs if the GeoLayerID already exists within the GeoProcessor.\n"
+        "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new"
+        "GeoLayer. No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
+        "GeoLayer. A warning is logged. \n"
+        "Warn : The new GeoLayer is not created. A warning is logged. \n"
+        "Fail : The new GeoLayer is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+    # TemporaryFolder
+    __parameter_input_metadata['TemporaryFolder.Description'] = "temporary location for output files"
+    __parameter_input_metadata['TemporaryFolder.Label'] = "Temporary files folder"
+    __parameter_input_metadata['TemporaryFolder.Tooltip'] = \
+        "Specify the folder for temporary files, useful for troubleshooting. See the documentation."
+    __parameter_input_metadata['TemporaryFolder.Value.Default'] = "default temporary folder directory"
+    __parameter_input_metadata['TemporaryFolder.FileSelector.Title'] = \
+        "Select the folder for temporary files"
+    __parameter_input_metadata['TemporaryFolder.FileSelector.SelectFolder'] = True
+    __parameter_input_metadata['TemporaryFolder.FileSelector.Type'] = "Write"
+
+    # RemoveTemporaryFiles
+    # self.parameter_input_metadata['RemoveTemporaryFiles.Description'] = "remove temporary files"
+    # self.parameter_input_metadata['RemoveTemporaryFiles.Label'] = "Remove temporary files"
+    # self.parameter_input_metadata['RemoveTemporaryFiles.Tooltip'] = \
+    #     "True (default): remove the temporary files created behind the scenes.\n" \
+    #     "False: leave the files so that they can be reviewed."
+    # self.parameter_input_metadata['RemoveTemporaryFiles.Value.Default'] = "True"
+    # self.parameter_input_metadata['RemoveTemporaryFiles.Values'] = ["", "True", "False"]
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -75,64 +136,10 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = \
-            "Split an input GeoLayer into one or more new GeoLayers by unique attribute value.\n" \
-            'For example, if the specified attribute name has unique values "a", "b", and "c", three layers will ' \
-            "be created."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # InputGeoLayerID
-        self.parameter_input_metadata['InputGeoLayerID.Description'] = 'input GeoLayer identifier'
-        self.parameter_input_metadata['InputGeoLayerID.Label'] = "Input GeoLayerID"
-        self.parameter_input_metadata['InputGeoLayerID.Required'] = True
-        self.parameter_input_metadata['InputGeoLayerID.Tooltip'] = "Input GeoLayer identifier."
-        # AttributeName
-        self.parameter_input_metadata['AttributeName.Description'] = "attribute name to split by"
-        self.parameter_input_metadata['AttributeName.Label'] = "Attribute name"
-        self.parameter_input_metadata['AttributeName.Required'] = True
-        self.parameter_input_metadata['AttributeName.Tooltip'] = "The attribute name that will be used to " \
-            "split the input GeoLayer."
-        # OutputGeoLayerIDs
-        self.parameter_input_metadata['OutputGeoLayerIDs.Description'] = "the identifiers of the output GeoLayers"
-        self.parameter_input_metadata['OutputGeoLayerIDs.Label'] = "Output GeoLayerIDs"
-        self.parameter_input_metadata['OutputGeoLayerIDs.Tooltip'] = "The identifiers of the output GeoLayers."
-        self.parameter_input_metadata['OutputGeoLayerIDs.Value.Default'] = \
-            "The default Output GeoLayerID will be of the format 'InputGeoLayerID-AttributeValue'.\nThe attribute " \
-            "value being the resulting value identified from the AttributeName."
-        # IfGeoLayerIDExists
-        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output layer exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-            "The action that occurs if the GeoLayerID already exists within the GeoProcessor.\n"
-            "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new"
-            "GeoLayer. No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
-            "GeoLayer. A warning is logged. \n"
-            "Warn : The new GeoLayer is not created. A warning is logged. \n"
-            "Fail : The new GeoLayer is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
-        # TemporaryFolder
-        self.parameter_input_metadata['TemporaryFolder.Description'] = "temporary location for output files"
-        self.parameter_input_metadata['TemporaryFolder.Label'] = "Temporary files folder"
-        self.parameter_input_metadata['TemporaryFolder.Tooltip'] = \
-            "Specify the folder for temporary files, useful for troubleshooting. See the documentation."
-        self.parameter_input_metadata['TemporaryFolder.Value.Default'] = "default temporary folder directory"
-        self.parameter_input_metadata['TemporaryFolder.FileSelector.Title'] = \
-            "Select the folder for temporary files"
-        self.parameter_input_metadata['TemporaryFolder.FileSelector.SelectFolder'] = True
-        self.parameter_input_metadata['TemporaryFolder.FileSelector.Type'] = "Write"
-        # RemoveTemporaryFiles
-        # self.parameter_input_metadata['RemoveTemporaryFiles.Description'] = "remove temporary files"
-        # self.parameter_input_metadata['RemoveTemporaryFiles.Label'] = "Remove temporary files"
-        # self.parameter_input_metadata['RemoveTemporaryFiles.Tooltip'] = \
-        #     "True (default): remove the temporary files created behind the scenes.\n" \
-        #     "False: leave the files so that they can be reviewed."
-        # self.parameter_input_metadata['RemoveTemporaryFiles.Value.Default'] = "True"
-        # self.parameter_input_metadata['RemoveTemporaryFiles.Values'] = ["", "True", "False"]
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

@@ -41,6 +41,28 @@ class Message(AbstractCommand):
         CommandParameterMetadata("CommandStatus", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "Print a message to the log file and optionally set the command status for notification.\n"
+        "For example, use with an If command to notify when a condition is met.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Parameter Metadata
+    __parameter_input_metadata = dict()
+    # Message
+    __parameter_input_metadata['Message.Description'] = "message to print"
+    __parameter_input_metadata['Message.Label'] = "Message"
+    __parameter_input_metadata['Message.Tooltip'] = "The message to print. Can be specified using ${Property}."
+    __parameter_input_metadata['Message.Required'] = True
+    # CommandStatus
+    __parameter_input_metadata['CommandStatus.Description'] = "status that should result from command"
+    __parameter_input_metadata['CommandStatus.Label'] = "Command status"
+    __parameter_input_metadata['CommandStatus.Tooltip'] = \
+        "Indicate the status that should result from running the command: SUCCESS, WARNING, FAILURE."
+    __parameter_input_metadata['CommandStatus.Values'] = ["", "SUCCESS", "WARNING", "FAILURE"]
+    __parameter_input_metadata['CommandStatus.Value.Default'] = "SUCCESS"
+
     def __init__(self) -> None:
         """
         Initialize the command instance.
@@ -50,26 +72,10 @@ class Message(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "Print a message to the log file and optionally set the command status for notification.\n"
-            "For example, use with an If command to notify when a condition is met.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # Message
-        self.parameter_input_metadata['Message.Description'] = "message to print"
-        self.parameter_input_metadata['Message.Label'] = "Message"
-        self.parameter_input_metadata['Message.Tooltip'] = "The message to print. Can be specified using ${Property}."
-        self.parameter_input_metadata['Message.Required'] = True
-        # CommandStatus
-        self.parameter_input_metadata['CommandStatus.Description'] = "status that should result from command"
-        self.parameter_input_metadata['CommandStatus.Label'] = "Command status"
-        self.parameter_input_metadata['CommandStatus.Tooltip'] = \
-            "Indicate the status that should result from running the command: SUCCESS, WARNING, FAILURE."
-        self.parameter_input_metadata['CommandStatus.Values'] = ["", "SUCCESS", "WARNING", "FAILURE"]
-        self.parameter_input_metadata['CommandStatus.Value.Default'] = "SUCCESS"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

@@ -136,6 +136,10 @@ def get_highest_command_status_severity(command_status: CommandStatusType) -> Co
 def parse_command_name_from_command_string(command_string: str) -> str:
     """
     Parses the command name out of the command string.
+    Strings are of format:
+
+    CommandName()
+    CommandName
 
     Args:
         command_string:  Full command string, may have leading whitespace.
@@ -149,8 +153,12 @@ def parse_command_name_from_command_string(command_string: str) -> str:
     # Determine the index of the first parenthesis within the command string.
     paren_start_pos = command_string.find("(")
 
-    # Get the command name from the command string (in front of the '(' symbol ).
-    command_name = command_string[:paren_start_pos].strip()
+    if paren_start_pos > 0:
+        # Get the command name from the command string (in front of the '(' symbol ).
+        command_name = command_string[:paren_start_pos].strip()
+    else:
+        # Assume just the command name, used in factory
+        command_name = command_string.strip()
 
     return command_name
 
@@ -210,6 +218,7 @@ def parse_parameter_string_from_command_string(command_string: str) -> str:
     Parses a command string to extract the parameter string between parentheses.
     For example, a command CommandName(Property1="Value1",Property2="Value2") would
     return: Property1="Value1",Property2="Value2"
+    Return an empty string if no parameters or just the command name.
 
     Args:
         command_string: The command string to parse.
@@ -227,6 +236,9 @@ def parse_parameter_string_from_command_string(command_string: str) -> str:
     # Determine the index of the first and last parenthesis within the command line string.
     # - ( and ) are allowed in parameters if quoted, as determined in further parsing.
     paren_start_pos = command_string_stripped.find("(")
+    if paren_start_pos < 0:
+        # No parameters so return an empty string
+        return ""
     # Find the right-most parenthesis in case one is included in the quoted part of the parameter value
     paren_end_pos = command_string_stripped.rfind(")")
 

@@ -50,10 +50,53 @@ class CreateGeoMap(AbstractCommand):
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("NewGeoMapId", type(str)),
-        CommandParameterMetadata("GeoMapName", type(str)),
-        CommandParameterMetadata("CRS", type(str)),
-        CommandParameterMetadata("IfGeoMapIdExists", type(str))]
+        CommandParameterMetadata("NewGeoMapId", type("")),
+        CommandParameterMetadata("GeoMapName", type("")),
+        CommandParameterMetadata("CRS", type("")),
+        CommandParameterMetadata("IfGeoMapIdExists", type(""))]
+
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Create a new GeoMap, for display and to save the map configuration."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # NewGeoMapId
+    __parameter_input_metadata['NewGeoMapId.Description'] = "identifier for the new GeoMap"
+    __parameter_input_metadata['NewGeoMapId.Label'] = "New GeoMapId"
+    __parameter_input_metadata['NewGeoMapId.Required'] = True
+    __parameter_input_metadata['NewGeoMapId.Tooltip'] = "The identifier for the new GeoMap."
+    # GeoMapName
+    __parameter_input_metadata['GeoMapName.Description'] = "name for the new GeoMap"
+    __parameter_input_metadata['GeoMapName.Label'] = "Name"
+    __parameter_input_metadata['GeoMapName.Required'] = True
+    __parameter_input_metadata['GeoMapName.Tooltip'] = "The name for the new GeoMap."
+    # Description
+    __parameter_input_metadata['Description.Description'] = "description for the new GeoMap"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = True
+    __parameter_input_metadata['Description.Tooltip'] = "The description for the new GeoMap."
+    # CRS
+    __parameter_input_metadata['CRS.Description'] = "coordinate references system for the new GeoMap"
+    __parameter_input_metadata['CRS.Label'] = "CRS"
+    __parameter_input_metadata['CRS.Required'] = True
+    __parameter_input_metadata['CRS.Tooltip'] = (
+        "The coordinate reference system of the new GeoMap. EPSG or "
+        "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+    # IfGeoMapIdExists
+    __parameter_input_metadata['IfGeoMapIdExists.Description'] = "action if map exists"
+    __parameter_input_metadata['IfGeoMapIdExists.Label'] = "If GeoMapId exists"
+    __parameter_input_metadata['IfGeoMapIdExists.Tooltip'] = (
+        "The action that occurs if the NewGeoMapId already exists within the GeoProcessor.\n"
+        "Replace: The existing GeoMap within the GeoProcessor is replaced with the new GeoMap. "
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoMap within the GeoProcessor is replaced with the new GeoMap. "
+        "A warning is logged.\n"
+        "Warn: The new GeoMap is not created. A warning is logged.\n"
+        "Fail: The new GeoMap is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoMapIdExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoMapIdExists.Value.Default'] = "Replace"
 
     def __init__(self) -> None:
         """
@@ -66,47 +109,10 @@ class CreateGeoMap(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Create a new GeoMap, for display and to save the map configuration."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # NewGeoMapId
-        self.parameter_input_metadata['NewGeoMapId.Description'] = "identifier for the new GeoMap"
-        self.parameter_input_metadata['NewGeoMapId.Label'] = "New GeoMapId"
-        self.parameter_input_metadata['NewGeoMapId.Required'] = True
-        self.parameter_input_metadata['NewGeoMapId.Tooltip'] = "The identifier for the new GeoMap."
-        # GeoMapName
-        self.parameter_input_metadata['GeoMapName.Description'] = "name for the new GeoMap"
-        self.parameter_input_metadata['GeoMapName.Label'] = "Name"
-        self.parameter_input_metadata['GeoMapName.Required'] = True
-        self.parameter_input_metadata['GeoMapName.Tooltip'] = "The name for the new GeoMap."
-        # Description
-        self.parameter_input_metadata['Description.Description'] = "description for the new GeoMap"
-        self.parameter_input_metadata['Description.Label'] = "Description"
-        self.parameter_input_metadata['Description.Required'] = True
-        self.parameter_input_metadata['Description.Tooltip'] = "The description for the new GeoMap."
-        # CRS
-        self.parameter_input_metadata['CRS.Description'] = "coordinate references system for the new GeoMap"
-        self.parameter_input_metadata['CRS.Label'] = "CRS"
-        self.parameter_input_metadata['CRS.Required'] = True
-        self.parameter_input_metadata['CRS.Tooltip'] = (
-            "The coordinate reference system of the new GeoMap. EPSG or "
-            "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
-        # IfGeoMapIdExists
-        self.parameter_input_metadata['IfGeoMapIdExists.Description'] = "action if map exists"
-        self.parameter_input_metadata['IfGeoMapIdExists.Label'] = "If GeoMapId exists"
-        self.parameter_input_metadata['IfGeoMapIdExists.Tooltip'] = (
-            "The action that occurs if the NewGeoMapId already exists within the GeoProcessor.\n"
-            "Replace: The existing GeoMap within the GeoProcessor is replaced with the new GeoMap. "
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoMap within the GeoProcessor is replaced with the new GeoMap. "
-            "A warning is logged.\n"
-            "Warn: The new GeoMap is not created. A warning is logged.\n"
-            "Fail: The new GeoMap is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoMapIdExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoMapIdExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

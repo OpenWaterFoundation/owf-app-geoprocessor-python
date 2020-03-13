@@ -48,6 +48,41 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         CommandParameterMetadata("OutputFile", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "This command is used for software functional testing and validation of workflow processes.\n"
+        "It searches all folders in the selected folder to find tests to run and creates a "
+        "test suite command file.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Parameter Metadata
+    __parameter_input_metadata = dict()
+    # SearchFolder
+    __parameter_input_metadata['SearchFolder.Description'] = ""
+    __parameter_input_metadata['SearchFolder.Label'] = "Search folder"
+    __parameter_input_metadata['SearchFolder.Tooltip'] = (
+        "The folder to search for regression test command files. "
+        "All subfolders will also be searched. Can use ${Property}.")
+    __parameter_input_metadata['SearchFolder.Required'] = True
+    __parameter_input_metadata['SearchFolder.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['SearchFolder.FileSelector.Button.Tooltip'] = "Browse for folder"
+    __parameter_input_metadata['SearchFolder.FileSelector.Tile'] = "Select folder to search for tests"
+    __parameter_input_metadata['SearchFolder.FileSelector.SelectFolder'] = True
+    # OutputFile
+    __parameter_input_metadata['OutputFile.Description'] = "property file to write"
+    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Tooltip'] = (
+        "The property file to write, as an absolute path or relative to the command file, can use ${Property}.")
+    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    # FilenamePattern
+    __parameter_input_metadata['FilenamePattern.Description'] = "pattern to find command files"
+    __parameter_input_metadata['FilenamePattern.Label'] = "Filename pattern"
+    __parameter_input_metadata['FilenamePattern.Tooltip'] = (
+        "Pattern to find GeoProcessor command files, using * wildcards.")
+    __parameter_input_metadata['FilenamePattern.Value.Default'] = "test-*.gp"
+
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
@@ -57,39 +92,10 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "This command is used for software functional testing and validation of workflow processes.\n"
-            "It searches all folders in the selected folder to find tests to run and creates a "
-            "test suite command file.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # SearchFolder
-        self.parameter_input_metadata['SearchFolder.Description'] = ""
-        self.parameter_input_metadata['SearchFolder.Label'] = "Search folder"
-        self.parameter_input_metadata['SearchFolder.Tooltip'] = (
-            "The folder to search for regression test command files. "
-            "All subfolders will also be searched. Can use ${Property}.")
-        self.parameter_input_metadata['SearchFolder.Required'] = True
-        self.parameter_input_metadata['SearchFolder.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['SearchFolder.FileSelector.Button.Tooltip'] = "Browse for folder"
-        self.parameter_input_metadata['SearchFolder.FileSelector.Tile'] = "Select folder to search for tests"
-        self.parameter_input_metadata['SearchFolder.FileSelector.SelectFolder'] = True
-        # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "property file to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
-        self.parameter_input_metadata['OutputFile.Tooltip'] = (
-            "The property file to write, as an absolute path or relative to the command file, can use ${Property}.")
-        self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        # FilenamePattern
-        self.parameter_input_metadata['FilenamePattern.Description'] = "pattern to find command files"
-        self.parameter_input_metadata['FilenamePattern.Label'] = "Filename pattern"
-        self.parameter_input_metadata['FilenamePattern.Tooltip'] = (
-            "Pattern to find GeoProcessor command files, using * wildcards.")
-        self.parameter_input_metadata['FilenamePattern.Value.Default'] = "test-*.gp"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

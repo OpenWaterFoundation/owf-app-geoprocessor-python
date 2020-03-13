@@ -50,6 +50,26 @@ class SetGeoLayerCRS(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("CRS", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Set the coordinate reference system (CRS) of a GeoLayer."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer."
+    # CRS
+    __parameter_input_metadata['CRS.Description'] = "coordinate references system"
+    __parameter_input_metadata['CRS.Label'] = "CRS"
+    __parameter_input_metadata['CRS.Required'] = True
+    __parameter_input_metadata['CRS.Tooltip'] = (
+        "The coordinate reference system of the GeoLayer. "
+        "EPSG or ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -61,24 +81,10 @@ class SetGeoLayerCRS(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Set the coordinate reference system (CRS) of a GeoLayer."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer."
-        # CRS
-        self.parameter_input_metadata['CRS.Description'] = "coordinate references system"
-        self.parameter_input_metadata['CRS.Label'] = "CRS"
-        self.parameter_input_metadata['CRS.Required'] = True
-        self.parameter_input_metadata['CRS.Tooltip'] = (
-            "The coordinate reference system of the GeoLayer. "
-            "EPSG or ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

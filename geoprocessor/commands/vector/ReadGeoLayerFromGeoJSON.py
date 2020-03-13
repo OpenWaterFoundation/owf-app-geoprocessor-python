@@ -66,6 +66,45 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Read a GeoLayer from a file in GeoJSON format."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Parameter Metadata
+    __parameter_input_metadata = dict()
+
+    # SpatialDataFile
+    __parameter_input_metadata['SpatialDataFile.Description'] = "GeoJSON file to read"
+    __parameter_input_metadata['SpatialDataFile.Label'] = "GeoJSON file"
+    __parameter_input_metadata['SpatialDataFile.Tooltip'] = (
+        "The GeoJSON file to read (relative or absolute path). ${Property} syntax is recognized.")
+    __parameter_input_metadata['SpatialDataFile.Required'] = True
+    __parameter_input_metadata['SpatialDataFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['SpatialDataFile.FileSelector.Title'] = "Select a GeoJSON file to read"
+
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = \
+        "A GeoLayer identifier. Formatting characters and ${Property} syntax are recognized."
+    __parameter_input_metadata['GeoLayerID.Value.Default'] = (
+        "The GeoJSON filename without the leading path and without the file extension.")
+
+    # IfGeoLayerIDExists
+    __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
+    __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
+        "The action that occurs if the GeoLayerID already exists within the GeoProcessor.\n"
+        "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer.  "
+        "No warning is logged.\n"
+        "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
+        "GeoLayer. A warning is logged. \n"
+        "  Warn : The new GeoLayer is not created. A warning is logged. \n"
+        "  Fail : The new GeoLayer is not created. A fail message is logged.")
+    __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+
     # Choices for IfGeoLayerIDExists, used to validate parameter and display in editor
     __choices_IfGeoLayerIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
@@ -81,43 +120,10 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         self.choices_IfGeoLayerIDExists = self.__choices_IfGeoLayerIDExists
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Read a GeoLayer from a file in GeoJSON format."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Parameter Metadata
-        self.parameter_input_metadata = dict()
-
-        # SpatialDataFile
-        self.parameter_input_metadata['SpatialDataFile.Description'] = "GeoJSON file to read"
-        self.parameter_input_metadata['SpatialDataFile.Label'] = "GeoJSON file"
-        self.parameter_input_metadata['SpatialDataFile.Tooltip'] = (
-            "The GeoJSON file to read (relative or absolute path). ${Property} syntax is recognized.")
-        self.parameter_input_metadata['SpatialDataFile.Required'] = True
-        self.parameter_input_metadata['SpatialDataFile.FileSelector.Type'] = "Read"
-        self.parameter_input_metadata['SpatialDataFile.FileSelector.Title'] = "Select a GeoJSON file to read"
-
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] =\
-            "A GeoLayer identifier. Formatting characters and ${Property} syntax are recognized."
-        self.parameter_input_metadata['GeoLayerID.Value.Default'] = (
-           "The GeoJSON filename without the leading path and without the file extension.")
-
-        # IfGeoLayerIDExists
-        self.parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
-        self.parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-            "The action that occurs if the GeoLayerID already exists within the GeoProcessor.\n"
-            "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer.  "
-            "No warning is logged.\n"
-            "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new "
-            "GeoLayer. A warning is logged. \n"
-            "  Warn : The new GeoLayer is not created. A warning is logged. \n"
-            "  Fail : The new GeoLayer is not created. A fail message is logged.")
-        self.parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-        self.parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

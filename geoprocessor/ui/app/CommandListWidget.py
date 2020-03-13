@@ -217,6 +217,33 @@ class CommandListWidget(object):
         # Update the UI state
         self.update_ui_status_commands()
 
+    # TODO smalers 2020-03-12 Can't seem to get this to work
+    def command_list_select_rows(self, rows: [int]) -> None:
+        """
+        Select commands in the command list given a list of indices.
+        For now this does not work.
+
+        Args:
+            row ([int]): Array of rows (each 0+).
+
+        Returns:
+            None
+        """
+        for row in rows:
+            # Select all in the main commands
+            index = self.gp_model.createIndex(row,0)
+            #self.command_ListView.select(index,QtWidgets.QAbstractItemView.SelectRow)
+            # Is it possible to use the selection model to select?
+            # See:  https://forum.qt.io/topic/57392/solved-how-to-click-the-first-row-in-qlistview-by-default/3
+            # Can't find an example.
+            # self.command_ListView.selectionModel.select(index,QItemSelectionModel.Select)
+            # Also select all in the secondary lists
+            # self.number_ListWidget.select(index)
+            # self.gutter_ListWidget.select(index)
+
+        # Update the UI state
+        self.update_ui_status_commands()
+
     @staticmethod
     def command_list_vertical_scroll(vs: QtWidgets.QScrollBar, value: int) -> None:
         """

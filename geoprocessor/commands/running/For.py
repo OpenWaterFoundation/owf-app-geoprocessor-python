@@ -51,6 +51,94 @@ class For(AbstractCommand):
         CommandParameterMetadata("TablePropertyMap", type("")),
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "This command repeatedly runs commands between For and EndFor being executed."
+        "The For loop is exited when input is completely processed.\n"
+        "The loop can iterate over one of the following:\n"
+        "   - sequence of numbers\n"
+        "   - list of strings from a property containing the list of strings\n"
+        "   - values from a column in a table (optionally, while setting other values as properties)")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # Name
+    __parameter_input_metadata['Name.Description'] = "the name of the For loop"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = True
+    __parameter_input_metadata['Name.Tooltip'] = (
+        "The name of the for loop, which will be matched with the name of an\n"
+        "EndFor command to indicate the block of commands in the loop.")
+    # IteratorProperty
+    __parameter_input_metadata['IteratorProperty.Description'] = \
+        "the processor property that will be set to the iterator property"
+    __parameter_input_metadata['IteratorProperty.Label'] = "Iterator property"
+    __parameter_input_metadata['IteratorProperty.Tooltip'] = (
+        "The processor property that will be set to the iterator property. The object type will depend on that\n"
+        "used to provide the iteration property list. For example, if a sequence of integers is being iterated,\n"
+        "the property will contain an integer.")
+    __parameter_input_metadata['IteratorProperty.Value.Default.Description'] = "same as Name"
+    # TODO jurentie 01/23/19 how to handle these different cases? maybe needs the tabbed options
+    # If iterating over a LIST ...
+    # ListProperty
+    __parameter_input_metadata['ListProperty.Description'] = "property containing list of strings"
+    __parameter_input_metadata['ListProperty.Label'] = "List property"
+    __parameter_input_metadata['ListProperty.Tooltip'] = \
+        "Specify if the list is iterating over a property that contains a list of strings."
+    __parameter_input_metadata['ListProperty.Value.Default.Description'] = \
+        "specify this or 'Sequence*' parameters"
+    # If iterating over a SEQUENCE ...
+    # SequenceStart
+    __parameter_input_metadata['SequenceStart.Description'] = \
+        "starting value when a sequence is specified for iteration"
+    __parameter_input_metadata['SequenceStart.Label'] = "Sequence start"
+    __parameter_input_metadata['SequenceStart.Tooltip'] = (
+        "Starting value when a sequence is specified for iteration, an integer or floating-point number "
+        "(with decimal).")
+    __parameter_input_metadata['SequenceStart.Value.Default'] = "No default if sequence is used"
+    # SequenceEnd
+    __parameter_input_metadata['SequenceEnd.Description'] = \
+        "ending value when a sequence is specified for iteration"
+    __parameter_input_metadata['SequenceEnd.Label'] = "Sequence end"
+    __parameter_input_metadata['SequenceEnd.Tooltip'] = (
+        "Ending value when a sequence is specified for iteration, an integer or floating-point number "
+        "(with decimal).")
+    __parameter_input_metadata['SequenceEnd.Value.Default.Description'] = "No default if sequence is used"
+    # SequenceIncrement
+    __parameter_input_metadata['SequenceIncrement.Description'] = "increment for sequence iterator"
+    __parameter_input_metadata['SequenceIncrement.Label'] = "Sequence increment"
+    __parameter_input_metadata['SequenceIncrement.Tooltip'] = "Increment for sequence iterator."
+    __parameter_input_metadata['SequenceIncrement.Value.Default.Description'] = \
+        "1 or 1.0 depending on type for SequenceStart"
+    # If iterating over TABLE...
+    # TableID
+    __parameter_input_metadata['TableID.Description'] = "the table identifier"
+    __parameter_input_metadata['TableID.Label'] = "TableID"
+    __parameter_input_metadata['TableID.Tooltip'] = \
+        "The table identifier, when specifying the iterator as a column from a table. ${Property} syntax is " \
+        "recognized."
+    __parameter_input_metadata['TableID.Value.Default'] = "No default if table is used"
+    # TableColumn
+    __parameter_input_metadata['TableColumn.Description'] = "the table column name"
+    __parameter_input_metadata['TableColumn.Label'] = "Table column"
+    __parameter_input_metadata['TableColumn.Tooltip'] = (
+        "The table column name, when specifying the iterator as a column from a table. ${Property} syntax is "
+        "recognized.")
+    __parameter_input_metadata['TableColumn.Value.Default.Description'] = "No default if table is used"
+    # TablePropertyMap
+    __parameter_input_metadata['TablePropertyMap.Description'] = \
+        "use to set properties from table data"
+    __parameter_input_metadata['TablePropertyMap.Label'] = "Table property map"
+    __parameter_input_metadata['TablePropertyMap.Tooltip'] = (
+        "Specify the names of column names and corresponding processor property names to set.\n"
+        "This allows other commands to access the values of those properties using ${Property} syntax.\n\n"
+        "Specify using format:\n"
+        "ColumnName1:PropertyName1,ColumnName2:PropertyName2")
+    __parameter_input_metadata['TablePropertyMap.Value.Default.Description'] = \
+        "None - only the iterator column value will be set as a property using IteratorProperty"
+
     def __init__(self) -> None:
         """
         Initialize an instance of the command.
@@ -61,92 +149,10 @@ class For(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "This command repeatedly runs commands between For and EndFor being executed."
-            "The For loop is exited when input is completely processed.\n"
-            "The loop can iterate over one of the following:\n"
-            "   - sequence of numbers\n"
-            "   - list of strings from a property containing the list of strings\n"
-            "   - values from a column in a table (optionally, while setting other values as properties)")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # Name
-        self.parameter_input_metadata['Name.Description'] = "the name of the For loop"
-        self.parameter_input_metadata['Name.Label'] = "Name"
-        self.parameter_input_metadata['Name.Required'] = True
-        self.parameter_input_metadata['Name.Tooltip'] = (
-            "The name of the for loop, which will be matched with the name of an\n"
-            "EndFor command to indicate the block of commands in the loop.")
-        # IteratorProperty
-        self.parameter_input_metadata['IteratorProperty.Description'] =\
-            "the processor property that will be set to the iterator property"
-        self.parameter_input_metadata['IteratorProperty.Label'] = "Iterator property"
-        self.parameter_input_metadata['IteratorProperty.Tooltip'] = (
-            "The processor property that will be set to the iterator property. The object type will depend on that\n"
-            "used to provide the iteration property list. For example, if a sequence of integers is being iterated,\n"
-            "the property will contain an integer.")
-        self.parameter_input_metadata['IteratorProperty.Value.Default.Description'] = "same as Name"
-        # TODO jurentie 01/23/19 how to handle these different cases? maybe needs the tabbed options
-        # If iterating over a LIST ...
-        # ListProperty
-        self.parameter_input_metadata['ListProperty.Description'] = "property containing list of strings"
-        self.parameter_input_metadata['ListProperty.Label'] = "List property"
-        self.parameter_input_metadata['ListProperty.Tooltip'] = \
-            "Specify if the list is iterating over a property that contains a list of strings."
-        self.parameter_input_metadata['ListProperty.Value.Default.Description'] =\
-            "specify this or 'Sequence*' parameters"
-        # If iterating over a SEQUENCE ...
-        # SequenceStart
-        self.parameter_input_metadata['SequenceStart.Description'] =\
-            "starting value when a sequence is specified for iteration"
-        self.parameter_input_metadata['SequenceStart.Label'] = "Sequence start"
-        self.parameter_input_metadata['SequenceStart.Tooltip'] = (
-            "Starting value when a sequence is specified for iteration, an integer or floating-point number "
-            "(with decimal).")
-        self.parameter_input_metadata['SequenceStart.Value.Default'] = "No default if sequence is used"
-        # SequenceEnd
-        self.parameter_input_metadata['SequenceEnd.Description'] =\
-            "ending value when a sequence is specified for iteration"
-        self.parameter_input_metadata['SequenceEnd.Label'] = "Sequence end"
-        self.parameter_input_metadata['SequenceEnd.Tooltip'] = (
-            "Ending value when a sequence is specified for iteration, an integer or floating-point number "
-            "(with decimal).")
-        self.parameter_input_metadata['SequenceEnd.Value.Default.Description'] = "No default if sequence is used"
-        # SequenceIncrement
-        self.parameter_input_metadata['SequenceIncrement.Description'] = "increment for sequence iterator"
-        self.parameter_input_metadata['SequenceIncrement.Label'] = "Sequence increment"
-        self.parameter_input_metadata['SequenceIncrement.Tooltip'] = "Increment for sequence iterator."
-        self.parameter_input_metadata['SequenceIncrement.Value.Default.Description'] = \
-            "1 or 1.0 depending on type for SequenceStart"
-        # If iterating over TABLE...
-        # TableID
-        self.parameter_input_metadata['TableID.Description'] = "the table identifier"
-        self.parameter_input_metadata['TableID.Label'] = "TableID"
-        self.parameter_input_metadata['TableID.Tooltip'] = \
-            "The table identifier, when specifying the iterator as a column from a table. ${Property} syntax is " \
-            "recognized."
-        self.parameter_input_metadata['TableID.Value.Default'] = "No default if table is used"
-        # TableColumn
-        self.parameter_input_metadata['TableColumn.Description'] = "the table column name"
-        self.parameter_input_metadata['TableColumn.Label'] = "Table column"
-        self.parameter_input_metadata['TableColumn.Tooltip'] = (
-            "The table column name, when specifying the iterator as a column from a table. ${Property} syntax is "
-            "recognized.")
-        self.parameter_input_metadata['TableColumn.Value.Default.Description'] = "No default if table is used"
-        # TablePropertyMap
-        self.parameter_input_metadata['TablePropertyMap.Description'] =\
-            "use to set properties from table data"
-        self.parameter_input_metadata['TablePropertyMap.Label'] = "Table property map"
-        self.parameter_input_metadata['TablePropertyMap.Tooltip'] = (
-            "Specify the names of column names and corresponding processor property names to set.\n"
-            "This allows other commands to access the values of those properties using ${Property} syntax.\n\n"
-            "Specify using format:\n"
-            "ColumnName1:PropertyName1,ColumnName2:PropertyName2")
-        self.parameter_input_metadata['TablePropertyMap.Value.Default.Description'] = \
-            "None - only the iterator column value will be set as a property using IteratorProperty"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Local data
         self.for_initialized = False  # For loop is not initialized, will be initialized in first next() call

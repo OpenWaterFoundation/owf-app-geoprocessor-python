@@ -57,6 +57,40 @@ class WebGet(AbstractCommand):
         CommandParameterMetadata("Username", type("")),
         CommandParameterMetadata("Password", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Download a file from a URL."
+    __command_metadata['EditorType'] = "Simple"
+
+    __parameter_input_metadata = dict()
+    # URL
+    __parameter_input_metadata['URL.Description'] = "URL to read content"
+    __parameter_input_metadata['URL.Label'] = "URL"
+    __parameter_input_metadata['URL.Tooltip'] = \
+        "Specify the URL from which to read content, can use ${Property}."
+    __parameter_input_metadata['URL.Required'] = True
+    __parameter_input_metadata['URL.FileSelector.Type'] = "Read"
+    # Output File
+    __parameter_input_metadata['OutputFile.Description'] = ""
+    __parameter_input_metadata['OutputFile.Label'] = "Output File"
+    __parameter_input_metadata['OutputFile.Tooltip'] = (
+        "The output file path (relative or absolute). ${Property} syntax is recognized.\n"
+        "Formatting specifiers such as %f are recognized.\n"
+        "The output file will be overwritten if it already exists.\n"
+        "The password is not encrypted here so read-only or public accounts are recommended.")
+    __parameter_input_metadata['OutputFile.Required'] = False
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    # Username
+    __parameter_input_metadata['Username.Description'] = "case-sensitive"
+    __parameter_input_metadata['Username.Label'] = "User name"
+    __parameter_input_metadata['Username.Tooltip'] = "Specify a valid username to access a private URL file."
+    __parameter_input_metadata['Username.Required'] = False
+    # Password
+    __parameter_input_metadata['Password.Description'] = "case-sensitive"
+    __parameter_input_metadata['Password.Label'] = "Password"
+    __parameter_input_metadata['Password.Tooltip'] = "Specify a valid password to access a private URL file."
+    __parameter_input_metadata['Password.Required'] = False
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -69,38 +103,9 @@ class WebGet(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Download a file from a URL."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
-        self.parameter_input_metadata = dict()
-        # URL
-        self.parameter_input_metadata['URL.Description'] = "URL to read content"
-        self.parameter_input_metadata['URL.Label'] = "URL"
-        self.parameter_input_metadata['URL.Tooltip'] =\
-            "Specify the URL from which to read content, can use ${Property}."
-        self.parameter_input_metadata['URL.Required'] = True
-        self.parameter_input_metadata['URL.FileSelector.Type'] = "Read"
-        # Output File
-        self.parameter_input_metadata['OutputFile.Description'] = ""
-        self.parameter_input_metadata['OutputFile.Label'] = "Output File"
-        self.parameter_input_metadata['OutputFile.Tooltip'] = (
-            "The output file path (relative or absolute). ${Property} syntax is recognized.\n"
-            "Formatting specifiers such as %f are recognized.\n"
-            "The output file will be overwritten if it already exists.\n"
-            "The password is not encrypted here so read-only or public accounts are recommended.")
-        self.parameter_input_metadata['OutputFile.Required'] = False
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        # Username
-        self.parameter_input_metadata['Username.Description'] = "case-sensitive"
-        self.parameter_input_metadata['Username.Label'] = "User name"
-        self.parameter_input_metadata['Username.Tooltip'] = "Specify a valid username to access a private URL file."
-        self.parameter_input_metadata['Username.Required'] = False
-        # Password
-        self.parameter_input_metadata['Password.Description'] = "case-sensitive"
-        self.parameter_input_metadata['Password.Label'] = "Password"
-        self.parameter_input_metadata['Password.Tooltip'] = "Specify a valid password to access a private URL file."
-        self.parameter_input_metadata['Password.Required'] = False
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

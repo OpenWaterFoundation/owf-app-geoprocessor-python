@@ -195,7 +195,7 @@ class AbstractCommand(object):
         The self.command_parameters dictionary is populated.
 
         Args:
-            command_string The full command string as in Command(Param1="Value1",Param2="Value2")
+            command_string The full command string as in Command(Param1="Value1",Param2="Value2"), or just Command
 
         Returns:
             None

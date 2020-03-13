@@ -61,6 +61,48 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         CommandParameterMetadata("OutputCRS", type("")),
         CommandParameterMetadata("OutputPrecision", type(2))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Write a GeoLayer to a file in GeoJSON format."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+    # OutputFile
+    __parameter_input_metadata['OutputFile.Description'] = "property file to write"
+    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.Tooltip'] = (
+        "The output GeoJSON file (relative or absolute path). ${Property} syntax is recognized. "
+        "${Property} syntax is recognized.")
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select GeoJSON file to write"
+    # OutputCRS
+    __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of output "
+    __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
+    __parameter_input_metadata['OutputCRS.Tooltip'] = (
+        "The coordinate reference system of the output GeoJSON.\nEPSG or ESRI code format required "
+        "(e.g. EPSG:4326, EPSG:26913, ESRI:102003).\n"
+        "If the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected "
+        "to the new CRS.")
+    __parameter_input_metadata['OutputCRS.Value.Default.Description'] = "the GeoLayer's CRS"
+    # OutputPrecision
+    __parameter_input_metadata['OutputPrecision.Description'] = "number of decimal points in output"
+    __parameter_input_metadata['OutputPrecision.Label'] = "Output precision"
+    __parameter_input_metadata['OutputPrecision.Tooltip'] = (
+        "The number of decimal points to include in the output GeoJSON file's coordinates. "
+        "Must be a positive integer at or between 0 and 15.\n"
+        "The precision of coordinate values can greatly impact the size of the file and precision of drawing "
+        "the features.\n"
+        "For example, a higher OutputPrecision value increases the output GeoJSON file size and "
+        "increases the geometry's precision.")
+    __parameter_input_metadata['OutputPrecision.Value.Default'] = "5"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -72,46 +114,10 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Write a GeoLayer to a file in GeoJSON format."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
-        # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "property file to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
-        self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = (
-            "The output GeoJSON file (relative or absolute path). ${Property} syntax is recognized. "
-            "${Property} syntax is recognized.")
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select GeoJSON file to write"
-        # OutputCRS
-        self.parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of output "
-        self.parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
-        self.parameter_input_metadata['OutputCRS.Tooltip'] = (
-            "The coordinate reference system of the output GeoJSON.\nEPSG or ESRI code format required " 
-            "(e.g. EPSG:4326, EPSG:26913, ESRI:102003).\n"
-            "If the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected "
-            "to the new CRS.")
-        self.parameter_input_metadata['OutputCRS.Value.Default.Description'] = "the GeoLayer's CRS"
-        # OutputPrecision
-        self.parameter_input_metadata['OutputPrecision.Description'] = "number of decimal points in output"
-        self.parameter_input_metadata['OutputPrecision.Label'] = "Output precision"
-        self.parameter_input_metadata['OutputPrecision.Tooltip'] = (
-            "The number of decimal points to include in the output GeoJSON file's coordinates. "
-            "Must be a positive integer at or between 0 and 15.\n"
-            "The precision of coordinate values can greatly impact the size of the file and precision of drawing "
-            "the features.\n"
-            "For example, a higher OutputPrecision value increases the output GeoJSON file size and "
-            "increases the geometry's precision.")
-        self.parameter_input_metadata['OutputPrecision.Value.Default'] = "5"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

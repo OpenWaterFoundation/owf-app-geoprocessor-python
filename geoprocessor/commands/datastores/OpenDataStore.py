@@ -65,6 +65,83 @@ class OpenDataStore(AbstractCommand):
         CommandParameterMetadata("ConfigFile", type("")),
         CommandParameterMetadata("IfDataStoreIDExists", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = ("This command creates a generic DataStore to provide data access "
+                                         "from: \n"
+                                         "- a database")
+    #                                    "- a web service")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # DataStoreID
+    __parameter_input_metadata['DataStoreID.Description'] = "identifier to assign to the DataStore"
+    __parameter_input_metadata['DataStoreID.Label'] = "DataStoreID"
+    __parameter_input_metadata['DataStoreID.Required'] = True
+    __parameter_input_metadata['DataStoreID.Tooltip'] = \
+        "Identifier to assign to the DataStore. This allows the DataStore to be used with other commands.\n" \
+        "Can be specified using ${Property}."
+    # IfDataStoreIDExists
+    __parameter_input_metadata['IfDataStoreIDExists.Description'] = "the action that occurs if the DataStoreID" \
+                                                                       " already exists"
+    __parameter_input_metadata['IfDataStoreIDExists.Label'] = "If DataStoreID Exists"
+    __parameter_input_metadata['IfDataStoreIDExists.Tooltip'] = \
+        "The action that occurs if the DataStoreID already exists within the GeoProcessor.\n" \
+        "Replace: The existing DataStore within the GeoProcessor is overwritten with the new DataStore. " \
+        "No warning is logged.\n" \
+        "Open: The existing DataStore is opened if closed. No warning is logged.\n" \
+        "ReplaceAndWarn: The existing DataStore within the GeoProcessor is overwritten with the new " \
+        "DataStore. A warning is logged.\n" \
+        "Warn : The new DataStore is not created. A warning is logged.\n" \
+        "Fail : The new DataStore is not created. A fail message is logged."
+    __parameter_input_metadata['IfDataStoreIDExists.Value.Default'] = "Replace"
+    __parameter_input_metadata['IfDataStoreIDExists.Values'] = \
+        ["", "Replace", "Open", "ReplaceAndWarn", "Warn", "Fail"]
+    # DatabaseServer
+    __parameter_input_metadata['DatabaseServer.Description'] = "the database server name or IP address"
+    __parameter_input_metadata['DatabaseServer.Label'] = "Database Server"
+    __parameter_input_metadata['DatabaseServer.Required'] = True
+    __parameter_input_metadata['DatabaseServer.Tooltip'] = \
+        "The database server name or IP address.\nCan be specified using ${Property}."
+    # DatabaseDialect
+    __parameter_input_metadata['DatabaseDialect.Description'] = "the database dialect"
+    __parameter_input_metadata['DatabaseDialect.Label'] = "Database Dialect"
+    __parameter_input_metadata['DatabaseDialect.Required'] = True
+    __parameter_input_metadata['DatabaseDialect.Tooltip'] = \
+        "The database dialect, used to format the database connection URL for the matching database driver " \
+        "software. "
+    # DatabaseName
+    __parameter_input_metadata['DatabaseName.Description'] = "the name of the database"
+    __parameter_input_metadata['DatabaseName.Label'] = "Database Name"
+    __parameter_input_metadata['DatabaseName.Required'] = True
+    __parameter_input_metadata['DatabaseName.Tooltip'] = \
+        "The name of the database. Can be specified using ${Property}."
+    # DatabaseUser
+    __parameter_input_metadata['DatabaseUser.Description'] = "the database user"
+    __parameter_input_metadata['DatabaseUser.Label'] = "Database User"
+    __parameter_input_metadata['DatabaseUser.Required'] = True
+    __parameter_input_metadata['DatabaseUser.Tooltip'] = \
+        "The database user. A read-only 'guest' (or similar) account should be used for read-only operations, " \
+        "if possible.\nCan be specified using ${Property}."
+    # DatabasePassword
+    __parameter_input_metadata['DatabasePassword.Description'] = "the database password"
+    __parameter_input_metadata['DatabasePassword.Label'] = "Database Password"
+    __parameter_input_metadata['DatabasePassword.Required'] = True
+    __parameter_input_metadata['DatabasePassword.Tooltip'] = \
+        "The database password. Can be specified using ${Property}."
+    # DatabasePort
+    __parameter_input_metadata['DatabasePort.Description'] = "the database port"
+    __parameter_input_metadata['DatabasePort.Label'] = "Database Port"
+    __parameter_input_metadata['DatabasePort.Tooltip'] = "The database port."
+    __parameter_input_metadata['DatabasePort.Value.Default'] = "The default port for the DatabaseDialect"
+    # ConfigFile
+    __parameter_input_metadata['ConfigFile.Description'] = "the path to the file"
+    __parameter_input_metadata['ConfigFile.Label'] = "Config File"
+    __parameter_input_metadata['ConfigFile.Required'] = True
+    __parameter_input_metadata['ConfigFile.Tooltip'] = \
+        "The path (relative or absolute) to the file containing the database configurations."
+
     # Choices for DatabaseDialect, used to validate parameter and display in editor
     __choices_DatabaseDialect: [str] = ["PostGreSQL"]
 
@@ -82,81 +159,10 @@ class OpenDataStore(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = ("This command creates a generic DataStore to provide data access "
-                                                "from: \n"
-                                                "- a database \n"
-                                                "- a web service")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # DataStoreID
-        self.parameter_input_metadata['DataStoreID.Description'] = "identifier to assign to the DataStore"
-        self.parameter_input_metadata['DataStoreID.Label'] = "DataStoreID"
-        self.parameter_input_metadata['DataStoreID.Required'] = True
-        self.parameter_input_metadata['DataStoreID.Tooltip'] = \
-            "Identifier to assign to the DataStore. This allows the DataStore to be used with other commands.\n" \
-            "Can be specified using ${Property}."
-        # IfDataStoreIDExists
-        self.parameter_input_metadata['IfDataStoreIDExists.Description'] = "the action that occurs if the DataStoreID" \
-            " already exists"
-        self.parameter_input_metadata['IfDataStoreIDExists.Label'] = "If DataStoreID Exists"
-        self.parameter_input_metadata['IfDataStoreIDExists.Tooltip'] = \
-            "The action that occurs if the DataStoreID already exists within the GeoProcessor.\n" \
-            "Replace: The existing DataStore within the GeoProcessor is overwritten with the new DataStore. " \
-            "No warning is logged.\n" \
-            "Open: The existing DataStore is opened if closed. No warning is logged.\n" \
-            "ReplaceAndWarn: The existing DataStore within the GeoProcessor is overwritten with the new " \
-            "DataStore. A warning is logged.\n" \
-            "Warn : The new DataStore is not created. A warning is logged.\n" \
-            "Fail : The new DataStore is not created. A fail message is logged."
-        self.parameter_input_metadata['IfDataStoreIDExists.Value.Default'] = "Replace"
-        self.parameter_input_metadata['IfDataStoreIDExists.Values'] =\
-            ["", "Replace", "Open", "ReplaceAndWarn", "Warn", "Fail"]
-        # DatabaseServer
-        self.parameter_input_metadata['DatabaseServer.Description'] = "the database server name or IP address"
-        self.parameter_input_metadata['DatabaseServer.Label'] = "Database Server"
-        self.parameter_input_metadata['DatabaseServer.Required'] = True
-        self.parameter_input_metadata['DatabaseServer.Tooltip'] = \
-            "The database server name or IP address.\nCan be specified using ${Property}."
-        # DatabaseDialect
-        self.parameter_input_metadata['DatabaseDialect.Description'] = "the database dialect"
-        self.parameter_input_metadata['DatabaseDialect.Label'] = "Database Dialect"
-        self.parameter_input_metadata['DatabaseDialect.Required'] = True
-        self.parameter_input_metadata['DatabaseDialect.Tooltip'] = \
-            "The database dialect, used to format the database connection URL for the matching database driver " \
-            "software. "
-        # DatabaseName
-        self.parameter_input_metadata['DatabaseName.Description'] = "the name of the database"
-        self.parameter_input_metadata['DatabaseName.Label'] = "Database Name"
-        self.parameter_input_metadata['DatabaseName.Required'] = True
-        self.parameter_input_metadata['DatabaseName.Tooltip'] = \
-            "The name of the database. Can be specified using ${Property}."
-        # DatabaseUser
-        self.parameter_input_metadata['DatabaseUser.Description'] = "the database user"
-        self.parameter_input_metadata['DatabaseUser.Label'] = "Database User"
-        self.parameter_input_metadata['DatabaseUser.Required'] = True
-        self.parameter_input_metadata['DatabaseUser.Tooltip'] = \
-            "The database user. A read-only 'guest' (or similar) account should be used for read-only operations, " \
-            "if possible.\nCan be specified using ${Property}."
-        # DatabasePassword
-        self.parameter_input_metadata['DatabasePassword.Description'] = "the database password"
-        self.parameter_input_metadata['DatabasePassword.Label'] = "Database Password"
-        self.parameter_input_metadata['DatabasePassword.Required'] = True
-        self.parameter_input_metadata['DatabasePassword.Tooltip'] = \
-            "The database password. Can be specified using ${Property}."
-        # DatabasePort
-        self.parameter_input_metadata['DatabasePort.Description'] = "the database port"
-        self.parameter_input_metadata['DatabasePort.Label'] = "Database Port"
-        self.parameter_input_metadata['DatabasePort.Tooltip'] = "The database port."
-        self.parameter_input_metadata['DatabasePort.Value.Default'] = "The default port for the DatabaseDialect"
-        # ConfigFile
-        self.parameter_input_metadata['ConfigFile.Description'] = "the path to the file"
-        self.parameter_input_metadata['ConfigFile.Label'] = "Config File"
-        self.parameter_input_metadata['ConfigFile.Required'] = True
-        self.parameter_input_metadata['ConfigFile.Tooltip'] = \
-            "The path (relative or absolute) to the file containing the database configurations."
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

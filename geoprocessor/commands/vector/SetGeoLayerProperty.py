@@ -45,6 +45,36 @@ class SetGeoLayerProperty(AbstractCommand):
         CommandParameterMetadata("PropertyValue", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Set the value of a GeoLayer property."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "GoeLayer identifier"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+    # PropertyName
+    __parameter_input_metadata['PropertyName.Description'] = "property name"
+    __parameter_input_metadata['PropertyName.Label'] = "Property name"
+    __parameter_input_metadata['PropertyName.Required'] = True
+    __parameter_input_metadata['PropertyName.Tooltip'] = "The property name."
+    # PropertyType
+    __parameter_input_metadata['PropertyType.Description'] = "property type"
+    __parameter_input_metadata['PropertyType.Label'] = "Property type"
+    __parameter_input_metadata['PropertyType.Required'] = True
+    __parameter_input_metadata['PropertyType.Tooltip'] = "The property type as bool, float, int, or str."
+    __parameter_input_metadata['PropertyType.Values'] = ['bool', 'float', 'int', 'str']
+    # PropertyValue
+    __parameter_input_metadata['PropertyValue.Description'] = "property value"
+    __parameter_input_metadata['PropertyValue.Label'] = "Property value"
+    __parameter_input_metadata['PropertyValue.Required'] = True
+    __parameter_input_metadata['PropertyValue.Tooltip'] = \
+        "The property value, as a string that can convert to the given type."
+
     def __init__(self) -> None:
         """
         Initialize a command instance.
@@ -55,34 +85,10 @@ class SetGeoLayerProperty(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Set the value of a GeoLayer property."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "GoeLayer identifier"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
-        # PropertyName
-        self.parameter_input_metadata['PropertyName.Description'] = "property name"
-        self.parameter_input_metadata['PropertyName.Label'] = "Property name"
-        self.parameter_input_metadata['PropertyName.Required'] = True
-        self.parameter_input_metadata['PropertyName.Tooltip'] = "The property name."
-        # PropertyType
-        self.parameter_input_metadata['PropertyType.Description'] = "property type"
-        self.parameter_input_metadata['PropertyType.Label'] = "Property type"
-        self.parameter_input_metadata['PropertyType.Required'] = True
-        self.parameter_input_metadata['PropertyType.Tooltip'] = "The property type as bool, float, int, or str."
-        self.parameter_input_metadata['PropertyType.Values'] = ['bool', 'float', 'int', 'str']
-        # PropertyValue
-        self.parameter_input_metadata['PropertyValue.Description'] = "property value"
-        self.parameter_input_metadata['PropertyValue.Label'] = "Property value"
-        self.parameter_input_metadata['PropertyValue.Required'] = True
-        self.parameter_input_metadata['PropertyValue.Tooltip'] =\
-            "The property value, as a string that can convert to the given type."
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

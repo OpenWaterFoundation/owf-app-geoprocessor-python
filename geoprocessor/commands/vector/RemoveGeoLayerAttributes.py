@@ -49,6 +49,25 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("AttributeNames", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Removes one or more attributes from a GeoLayer."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer with the attribute to be removed."
+    # AttributeNames
+    __parameter_input_metadata['AttributeNames.Description'] = "names of the attributes to remove"
+    __parameter_input_metadata['AttributeNames.Label'] = "Attribute Names"
+    __parameter_input_metadata['AttributeNames.Required'] = True
+    __parameter_input_metadata['AttributeNames.Tooltip'] = \
+        "The names of the attributes to be removed, separated by commas, case-specific."
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -60,23 +79,10 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Removes one or more attributes from a GeoLayer."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer with the attribute to be removed."
-        # AttributeNames
-        self.parameter_input_metadata['AttributeNames.Description'] = "names of the attributes to remove"
-        self.parameter_input_metadata['AttributeNames.Label'] = "Attribute Names"
-        self.parameter_input_metadata['AttributeNames.Required'] = True
-        self.parameter_input_metadata['AttributeNames.Tooltip'] =\
-            "The names of the attributes to be removed, separated by commas, case-specific."
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

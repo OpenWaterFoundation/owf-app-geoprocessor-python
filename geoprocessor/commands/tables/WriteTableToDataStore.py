@@ -74,6 +74,83 @@ class WriteTableToDataStore(AbstractCommand):
         CommandParameterMetadata("DataStoreRelatedColumnsMap", type("")),
         CommandParameterMetadata("WriteMode", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "This command processes each row in a Table and executes and "
+        "SQL statement to insert the row into a database DataStore.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # TableID
+    __parameter_input_metadata['TableID.Description'] = "table identifier"
+    __parameter_input_metadata['TableID.Label'] = "TableID"
+    __parameter_input_metadata['TableID.Required'] = True
+    __parameter_input_metadata['TableID.Tooltip'] = "A Table identifier"
+    # IncludeColumns
+    __parameter_input_metadata['IncludeColumns.Description'] = "table columns to include"
+    __parameter_input_metadata['IncludeColumns.Label'] = "Include columns"
+    __parameter_input_metadata['IncludeColumns.Tooltip'] = \
+        "A comma-separated list of the glob-style patterns filtering which columns to write."
+    __parameter_input_metadata['IncludeColumns.Value.Default'] = "'* - all columns are processed"
+    # ExcludeColumns
+    __parameter_input_metadata['ExcludeColumns.Description'] = "table columns to exclude"
+    __parameter_input_metadata['ExcludeColumns.Label'] = "Exclude columns"
+    __parameter_input_metadata['ExcludeColumns.Tooltip'] = \
+        "A comma-separated list of the glob-style patterns filtering which columns to write."
+    __parameter_input_metadata['ExcludeColumns.Value.Default.Description'] = "all columns"
+    # DataStoreID
+    __parameter_input_metadata['DataStoreID.Description'] = "database DataStore"
+    __parameter_input_metadata['DataStoreID.Label'] = "DataStoreID"
+    __parameter_input_metadata['DataStoreID.Required'] = True
+    __parameter_input_metadata['DataStoreID.Tooltip'] = \
+        "The ID of a database DataStore to recieve the data. ${Property} syntax is recognized."
+    # DataStoreTable
+    __parameter_input_metadata['DataStoreTable.Description'] = "database table to receive data"
+    __parameter_input_metadata['DataStoreTable.Label'] = "DataStore table"
+    __parameter_input_metadata['DataStoreTable.Tooltip'] = (
+        "The name of the database table to receive data. ${Property} syntax is recognized.\n"
+        "If specified, do not specify Sql or SqlFile.")
+    # TODO @jurentie 01/22/19 do these need to be read file selector type?
+    # ColumnMap
+    __parameter_input_metadata['ColumnMap.Description'] = "map table to datastore columns"
+    __parameter_input_metadata['ColumnMap.Label'] = "Column map"
+    __parameter_input_metadata['ColumnMap.Tooltip'] = (
+        "Specify which columns in the Table have different names in the DataStore table.\n"
+        "Use the syntax: ColumnName:DatastoreTableName, ColumnName:DatastoreTableName,...")
+    __parameter_input_metadata['ColumnMap.Value.Default.Description'] = \
+        "DataStore table columns names are assumed to match the Table column names."
+    # DataStoreRelatedColumnsMap
+    __parameter_input_metadata['DataStoreRelatedColumnsMap.Description'] = "datastore relate table columns"
+    __parameter_input_metadata['DataStoreRelatedColumnsMap.Label'] = "DataStore related column map"
+    __parameter_input_metadata['DataStoreRelatedColumnsMap.Tooltip'] = (
+        "Indicate datastore columns that need to match values in a related table in the datastore. '"
+        "This parameter is currently disabled.")
+    __parameter_input_metadata['DataStoreRelatedColumnsMap.Value.Default'] = (
+        "DataStore table columns are assumed to match the column names in TableID, "
+        "with no need to perform reference table value matching.")
+    # WriteMode
+    __parameter_input_metadata['WriteMode.Description'] = "method used to write data"
+    __parameter_input_metadata['WriteMode.Label'] = "Write mode"
+    __parameter_input_metadata['WriteMode.Tooltip'] = (
+        "The method used to write data.\n"
+        "NewTableInsert: a new table is added to the database and all rows of TableID are added to "
+        "the database table \n"
+        "ExistingTableOverwrite: the existing database table is dropped and another database table is "
+        "added (with the same name).\n"
+        "All rows of TableID are added to the database table\n"
+        "ExistingTableInsert: rows of the TableID that do NOT conflict with any of the rows in the existing \n"
+        "database table are appended to the database table.\n"
+        "ExistingTableUpdate: rows of the TableID that do conflict with any of the rows in the existing "
+        "database table are used to update the existing database rows.\n"
+        "The rows that do NOT conflict with any "
+        "of the rows in the existing database table are NOT appended to the database table.\n"
+        "ExistingTableInsertUpdate: rows of the TableID that do NOT conflict with any of the rows in the "
+        "existing database table are appended to the database table.\n"
+        "Rows of the TableID that do conflict with any of the rows in the existing database table are "
+        "used to update the existing database rows.")
+
     # Choices for WriteMode, used to validate parameter and display in editor
     __choices_WriteMode = ["NewTableInsert", "ExistingTableOverwrite", "ExistingTableInsert", "ExistingTableUpdate",
                            "ExistingTableInsertUpdate"]
@@ -89,81 +166,10 @@ class WriteTableToDataStore(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "This command processes each row in a Table and executes and "
-            "SQL statement to insert the row into a database DataStore.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # TableID
-        self.parameter_input_metadata['TableID.Description'] = "table identifier"
-        self.parameter_input_metadata['TableID.Label'] = "TableID"
-        self.parameter_input_metadata['TableID.Required'] = True
-        self.parameter_input_metadata['TableID.Tooltip'] = "A Table identifier"
-        # IncludeColumns
-        self.parameter_input_metadata['IncludeColumns.Description'] = "table columns to include"
-        self.parameter_input_metadata['IncludeColumns.Label'] = "Include columns"
-        self.parameter_input_metadata['IncludeColumns.Tooltip'] = \
-            "A comma-separated list of the glob-style patterns filtering which columns to write."
-        self.parameter_input_metadata['IncludeColumns.Value.Default'] = "'* - all columns are processed"
-        # ExcludeColumns
-        self.parameter_input_metadata['ExcludeColumns.Description'] = "table columns to exclude"
-        self.parameter_input_metadata['ExcludeColumns.Label'] = "Exclude columns"
-        self.parameter_input_metadata['ExcludeColumns.Tooltip'] = \
-            "A comma-separated list of the glob-style patterns filtering which columns to write."
-        self.parameter_input_metadata['ExcludeColumns.Value.Default.Description'] = "all columns"
-        # DataStoreID
-        self.parameter_input_metadata['DataStoreID.Description'] = "database DataStore"
-        self.parameter_input_metadata['DataStoreID.Label'] = "DataStoreID"
-        self.parameter_input_metadata['DataStoreID.Required'] = True
-        self.parameter_input_metadata['DataStoreID.Tooltip'] = \
-            "The ID of a database DataStore to recieve the data. ${Property} syntax is recognized."
-        # DataStoreTable
-        self.parameter_input_metadata['DataStoreTable.Description'] = "database table to receive data"
-        self.parameter_input_metadata['DataStoreTable.Label'] = "DataStore table"
-        self.parameter_input_metadata['DataStoreTable.Tooltip'] = (
-            "The name of the database table to receive data. ${Property} syntax is recognized.\n"
-            "If specified, do not specify Sql or SqlFile.")
-        # TODO @jurentie 01/22/19 do these need to be read file selector type?
-        # ColumnMap
-        self.parameter_input_metadata['ColumnMap.Description'] = "map table to datastore columns"
-        self.parameter_input_metadata['ColumnMap.Label'] = "Column map"
-        self.parameter_input_metadata['ColumnMap.Tooltip'] = (
-            "Specify which columns in the Table have different names in the DataStore table.\n"
-            "Use the syntax: ColumnName:DatastoreTableName, ColumnName:DatastoreTableName,...")
-        self.parameter_input_metadata['ColumnMap.Value.Default.Description'] = \
-            "DataStore table columns names are assumed to match the Table column names."
-        # DataStoreRelatedColumnsMap
-        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Description'] = "datastore relate table columns"
-        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Label'] = "DataStore related column map"
-        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Tooltip'] = (
-            "Indicate datastore columns that need to match values in a related table in the datastore. '"
-            "This parameter is currently disabled.")
-        self.parameter_input_metadata['DataStoreRelatedColumnsMap.Value.Default'] = (
-            "DataStore table columns are assumed to match the column names in TableID, "
-            "with no need to perform reference table value matching.")
-        # WriteMode
-        self.parameter_input_metadata['WriteMode.Description'] = "method used to write data"
-        self.parameter_input_metadata['WriteMode.Label'] = "Write mode"
-        self.parameter_input_metadata['WriteMode.Tooltip'] = (
-            "The method used to write data.\n"
-            "NewTableInsert: a new table is added to the database and all rows of TableID are added to "
-            "the database table \n"
-            "ExistingTableOverwrite: the existing database table is dropped and another database table is "
-            "added (with the same name).\n"
-            "All rows of TableID are added to the database table\n"
-            "ExistingTableInsert: rows of the TableID that do NOT conflict with any of the rows in the existing \n"
-            "database table are appended to the database table.\n"
-            "ExistingTableUpdate: rows of the TableID that do conflict with any of the rows in the existing "
-            "database table are used to update the existing database rows.\n"
-            "The rows that do NOT conflict with any "
-            "of the rows in the existing database table are NOT appended to the database table.\n"
-            "ExistingTableInsertUpdate: rows of the TableID that do NOT conflict with any of the rows in the "
-            "existing database table are appended to the database table.\n"
-            "Rows of the TableID that do conflict with any of the rows in the existing database table are "
-            "used to update the existing database rows.")
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

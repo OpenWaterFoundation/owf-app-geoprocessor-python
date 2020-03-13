@@ -69,6 +69,54 @@ class RunOgrProgram(AbstractCommand):
         "ogr2ogr": "Converts simple features data between file formats."
     }
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = (
+        "Run an ogr* program to process a vector spatial data file, given the program arguments.")
+    __command_metadata['EditorType'] = "Simple"
+
+    # Parameter metadata
+    __parameter_input_metadata = dict()
+    # OGR program
+    __parameter_input_metadata['OgrProgram.Description'] = "OGR program to run."
+    __parameter_input_metadata['OgrProgram.Label'] = "OGR program."
+    __parameter_input_metadata['OgrProgram.Tooltip'] = "OGR program to run."
+    __parameter_input_metadata['OgrProgram.Required'] = True
+    # CommandLine
+    __parameter_input_metadata['CommandArguments.Description'] = "Command line arguments."
+    __parameter_input_metadata['CommandArguments.Label'] = "Command arguments"
+    __parameter_input_metadata['CommandArguments.Tooltip'] = "Command arguments, separated by spaces."
+    __parameter_input_metadata['CommandArguments.Required'] = True
+    # UseCommandShell
+    __parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
+    __parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
+    __parameter_input_metadata['UseCommandShell.Tooltip'] = ""
+    __parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
+    # IncludeParentEnvVars
+    __parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
+    __parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
+    __parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = (
+        "Indicate whether the parent environment variables should be passed to the program run environment.")
+    __parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
+    __parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
+    # IncludeEnvVars
+    __parameter_input_metadata['IncludeEnvVars.Description'] = ""
+    __parameter_input_metadata['IncludeEnvVars.Label'] = "Include environment variables"
+    __parameter_input_metadata['IncludeEnvVars.Tooltip'] = (
+        "Specify environment variables to be defined for the program run environment in format:"
+        "VAR1=Value1,VAR2=Value2.")
+    # ExcludeEnvVars
+    __parameter_input_metadata['ExcludeEnvVars.Description'] = ""
+    __parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude environment variables'
+    __parameter_input_metadata['ExcludeEnvVars.Tooltip'] = (
+        "Specify environment variables to be removed from the program run environment, separated by commas.")
+    # OutputFiles
+    __parameter_input_metadata['OutputFiles.Description'] = ""
+    __parameter_input_metadata['OutputFiles.Label'] = "Output files"
+    __parameter_input_metadata['OutputFiles.Tooltip'] = (
+
+        "Specify the output files, separated by commas.  Can specify with ${Property}.")
     # Choices for UseCommandShell, used to validate parameter and display in editor
     __choices_UseCommandShell = ["False", "True"]
 
@@ -84,56 +132,14 @@ class RunOgrProgram(AbstractCommand):
         """
         # AbstractCommand data
         super().__init__()
-        self.command_name = "RunGdal"
+        self.command_name = "RunOgr"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = (
-            "Run an ogr* program to process a vector spatial data file, given the program arguments.")
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Parameter metadata
-        self.parameter_input_metadata = dict()
-        # GDAL program
-        self.parameter_input_metadata['OgrProgram.Description'] = "OGR program to run."
-        self.parameter_input_metadata['OgrProgram.Label'] = "OGR program"
-        self.parameter_input_metadata['OgrProgram.Tooltip'] = "OGR program to run."
-        self.parameter_input_metadata['OgrProgram.Required'] = True
-        # CommandLine
-        self.parameter_input_metadata['CommandArguments.Description'] = "Command line arguments."
-        self.parameter_input_metadata['CommandArguments.Label'] = "Command arguments"
-        self.parameter_input_metadata['CommandArguments.Tooltip'] = "Command arguments, separated by spaces."
-        self.parameter_input_metadata['CommandArguments.Required'] = True
-        # UseCommandShell
-        self.parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
-        self.parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
-        self.parameter_input_metadata['UseCommandShell.Tooltip'] = ""
-        self.parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
-        self.parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
-        # IncludeParentEnvVars
-        self.parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
-        self.parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
-        self.parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = (
-            "Indicate whether the parent environment variables should be passed to the program run environment.")
-        self.parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
-        self.parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
-        # IncludeEnvVars
-        self.parameter_input_metadata['IncludeEnvVars.Description'] = ""
-        self.parameter_input_metadata['IncludeEnvVars.Label'] = "Include environment variables"
-        self.parameter_input_metadata['IncludeEnvVars.Tooltip'] = (
-            "Specify environment variables to be defined for the program run environment in format:"
-            "VAR1=Value1,VAR2=Value2.")
-        # ExcludeEnvVars
-        self.parameter_input_metadata['ExcludeEnvVars.Description'] = ""
-        self.parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude environment variables'
-        self.parameter_input_metadata['ExcludeEnvVars.Tooltip'] = (
-            "Specify environment variables to be removed from the program run environment, separated by commas.")
-        # OutputFiles
-        self.parameter_input_metadata['OutputFiles.Description'] = ""
-        self.parameter_input_metadata['OutputFiles.Label'] = "Output files"
-        self.parameter_input_metadata['OutputFiles.Tooltip'] = (
-            "Specify the output files, separated by commas.  Can specify with ${Property}.")
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """
@@ -282,7 +288,7 @@ class RunOgrProgram(AbstractCommand):
         # Get data for the command
         print("command parameters=" + string_util.format_dict(self.command_parameters))
         # noinspection PyPep8Naming
-        pv_GdalProgram = self.get_parameter_value('GdalProgram')
+        pv_OgrProgram = self.get_parameter_value('OgrProgram')
         # noinspection PyPep8Naming
         pv_CommandLine = self.get_parameter_value('CommandLine')
         # noinspection PyPep8Naming

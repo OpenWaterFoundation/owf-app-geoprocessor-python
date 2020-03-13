@@ -79,6 +79,61 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         CommandParameterMetadata("OutputGeometryFormat", type("")),
         CommandParameterMetadata("OutputDelimiter", type(""))]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Write a GeoLayer to a delimited file."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The identifier of the GeoLayer to write."
+    # OutputFile
+    __parameter_input_metadata['OutputFile.Description'] = "property file to write"
+    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.Tooltip'] = (
+        "The output delimited file (relative or absolute path). The file extension is not required. "
+        "${Property} syntax is recognized.")
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write"
+    # OutputCRS
+    __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of output"
+    __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
+    __parameter_input_metadata['OutputCRS.Tooltip'] = (
+        "The output delimited file (relative or absolute path). "
+        "The file extension is not required.\n${Property} syntax is recognized.")
+    __parameter_input_metadata['OutputCRS.Value.Default'] = "The GeoLayer's CRS"
+    # OutputGeometryFormat
+    __parameter_input_metadata['OutputGeometryFormat.Description'] = "geometry representation"
+    __parameter_input_metadata['OutputGeometryFormat.Label'] = "Output geometry format"
+    __parameter_input_metadata['OutputGeometryFormat.Tooltip'] = (
+        "The geometry representation. Must be one of the following options:\n"
+        "WKT: The geometry is stored in one column in its Well Known Text (WKT) representation. "
+        "This type of geometry can represent 2D and 3D POINTS, LINES or POLYGONS. \n"
+        "XY: The geometry is stored in two columns as X and Y coordinates. "
+        "This type of geometry can only represent 2D POINTS. The X column is before the Y column.\n"
+        "YX: The geometry is stored in two columns as X and Y coordinates. "
+        "This type of geometry can only represent 2D POINTS. The Y column is before the X column.\n"
+        "XYZ: The geometry is stored in three columns as X, Y, and Z coordinates. "
+        "This type of geometry can only represent 3D POINTS.")
+    __parameter_input_metadata['OutputGeometryFormat.Values'] = ["", "WKT", "XY", "YX", "XYZ"]
+    __parameter_input_metadata['OutputGeometryFormat.Value.Default'] = "XY"
+    # OutputDelimiter
+    __parameter_input_metadata['OutputDelimiter.Description'] = "delimiter of the output file"
+    __parameter_input_metadata['OutputDelimter.Label'] = "Output delimiter"
+    __parameter_input_metadata['OutputDelimiter.Tooltip'] = (
+        "The delimiter of the output delimited file. Must be one of the following options:\n"
+        "COMMA: the comma (,)\n"
+        "SEMICOLON: the semicolon (;)\n"
+        "TAB: a tab character\n"
+        "SPACE: a space character")
+    __parameter_input_metadata['OutputDelimiter.Values'] = ["", "COMMA", "SEMICOLON", "TAB", "SPACE"]
+    __parameter_input_metadata['OutputDelimiter.Value.Default'] = "COMMA"
+
     def __init__(self) -> None:
         """
         Initialize the command.
@@ -90,59 +145,10 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Write a GeoLayer to a delimited file."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The identifier of the GeoLayer to write."
-        # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "property file to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
-        self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = (
-            "The output delimited file (relative or absolute path). The file extension is not required. "
-            "${Property} syntax is recognized.")
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write"
-        # OutputCRS
-        self.parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of output"
-        self.parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
-        self.parameter_input_metadata['OutputCRS.Tooltip'] = (
-            "The output delimited file (relative or absolute path). "
-            "The file extension is not required.\n${Property} syntax is recognized.")
-        self.parameter_input_metadata['OutputCRS.Value.Default'] = "The GeoLayer's CRS"
-        # OutputGeometryFormat
-        self.parameter_input_metadata['OutputGeometryFormat.Description'] = "geometry representation"
-        self.parameter_input_metadata['OutputGeometryFormat.Label'] = "Output geometry format"
-        self.parameter_input_metadata['OutputGeometryFormat.Tooltip'] = (
-            "The geometry representation. Must be one of the following options:\n"
-            "WKT: The geometry is stored in one column in its Well Known Text (WKT) representation. "
-            "This type of geometry can represent 2D and 3D POINTS, LINES or POLYGONS. \n"
-            "XY: The geometry is stored in two columns as X and Y coordinates. "
-            "This type of geometry can only represent 2D POINTS. The X column is before the Y column.\n"
-            "YX: The geometry is stored in two columns as X and Y coordinates. "
-            "This type of geometry can only represent 2D POINTS. The Y column is before the X column.\n"
-            "XYZ: The geometry is stored in three columns as X, Y, and Z coordinates. "
-            "This type of geometry can only represent 3D POINTS.")
-        self.parameter_input_metadata['OutputGeometryFormat.Values'] = ["", "WKT", "XY", "YX", "XYZ"]
-        self.parameter_input_metadata['OutputGeometryFormat.Value.Default'] = "XY"
-        # OutputDelimiter
-        self.parameter_input_metadata['OutputDelimiter.Description'] = "delimiter of the output file"
-        self.parameter_input_metadata['OutputDelimter.Label'] = "Output delimiter"
-        self.parameter_input_metadata['OutputDelimiter.Tooltip'] = (
-            "The delimiter of the output delimited file. Must be one of the following options:\n"
-            "COMMA: the comma (,)\n"
-            "SEMICOLON: the semicolon (;)\n"
-            "TAB: a tab character\n"
-            "SPACE: a space character")
-        self.parameter_input_metadata['OutputDelimiter.Values'] = ["", "COMMA", "SEMICOLON", "TAB", "SPACE"]
-        self.parameter_input_metadata['OutputDelimiter.Value.Default'] = "COMMA"
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
         self.warning_count = 0

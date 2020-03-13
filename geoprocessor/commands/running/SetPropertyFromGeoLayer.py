@@ -45,6 +45,30 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         CommandParameterMetadata("PropertyName", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = \
+        "Set the value of a property used by the processor, by using the value of a GeoLayer property."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer Identifier, can use ${Property} syntax."
+    # GeoLayerPropertyName
+    __parameter_input_metadata['GeoLayerPropertyName.Description'] = "name of the GeoLayer property"
+    __parameter_input_metadata['GeoLayerPropertyName.Label'] = "GeoLayer property name"
+    __parameter_input_metadata['GeoLayerPropertyName.Required'] = True
+    __parameter_input_metadata['GeoLayerPropertyName.Tooltip'] = "The name of the GeoLayer property."
+    # PropertyName
+    __parameter_input_metadata['PropertyName.Description'] = "GeoProcessor property name"
+    __parameter_input_metadata['PropertyName.Label'] = "Property name"
+    __parameter_input_metadata['PropertyName.Required'] = True
+    __parameter_input_metadata['PropertyName.Tooltip'] = "The GeoProcessor property name."
+
     def __init__(self) -> None:
         """
         Initialize a command instance.
@@ -55,28 +79,10 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] =\
-            "Set the value of a property used by the processor, by using the value of a GeoLayer property."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer Identifier, can use ${Property} syntax."
-        # GeoLayerPropertyName
-        self.parameter_input_metadata['GeoLayerPropertyName.Description'] = "name of the GeoLayer property"
-        self.parameter_input_metadata['GeoLayerPropertyName.Label'] = "GeoLayer property name"
-        self.parameter_input_metadata['GeoLayerPropertyName.Required'] = True
-        self.parameter_input_metadata['GeoLayerPropertyName.Tooltip'] = "The name of the GeoLayer property."
-        # PropertyName
-        self.parameter_input_metadata['PropertyName.Description'] = "GeoProcessor property name"
-        self.parameter_input_metadata['PropertyName.Label'] = "Property name"
-        self.parameter_input_metadata['PropertyName.Required'] = True
-        self.parameter_input_metadata['PropertyName.Tooltip'] = "The GeoProcessor property name."
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

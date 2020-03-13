@@ -46,6 +46,56 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         CommandParameterMetadata("SortOrder", type(""))
     ]
 
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Write GeoLayer properties to a file."
+    __command_metadata['EditorType'] = "Simple"
+
+    # Command Parameter Metadata
+    __parameter_input_metadata = dict()
+    # GeoLayerID
+    __parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
+    __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
+    __parameter_input_metadata['GeoLayerID.Required'] = True
+    __parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
+    # OutputFile
+    __parameter_input_metadata['OutputFile.Description'] = "property file to write"
+    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.Tooltip'] = \
+        "The property file to write, as an absolute path or relative to the command file, can use ${Property"
+    __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write"
+    # IncludeProperties
+    __parameter_input_metadata['IncludeProperties.Description'] = "properties to write"
+    __parameter_input_metadata['IncludeProperties.Label'] = "Include properties"
+    __parameter_input_metadata['IncludeProperties.Tooltip'] = (
+        "The names of properties to write, separated by commas. "
+        "The '*' wildcard can be used to indicate multiple properties.")
+    __parameter_input_metadata['IncludeProperties.Value.Default.Description'] = "write all properties"
+    # WriteMode
+    __parameter_input_metadata['WriteMode.Description'] = "how to write"
+    __parameter_input_metadata['WriteMode.Label'] = "Write mode"
+    __parameter_input_metadata['WriteMode.Tooltip'] = (
+        "Indicates how the file should be written:\n"
+        "Append – append the properties to the file without checking for matches (create the file if "
+        "it does not exist).\n"
+        "Overwrite – overwrite the properties file.")
+    __parameter_input_metadata['WriteMode.Values'] = ["", "Append", "Overwrite"]
+    __parameter_input_metadata['WriteMode.Value.Default'] = "Overwrite"
+    # FileFormat
+    __parameter_input_metadata['FileFormat.Description'] = "file format"
+    __parameter_input_metadata['FileFormat.Label'] = "File format"
+    __parameter_input_metadata['FileFormat.Tooltip'] = "The file format."
+    __parameter_input_metadata['FileFormat.Values'] = ["", "NameTypeValue", "NameTypeValuePython", "NameValue"]
+    __parameter_input_metadata['FileFormat.Value.Default'] = 'NameValueType'
+    # SortOrder
+    __parameter_input_metadata['SortOrder.Description'] = "sort order"
+    __parameter_input_metadata['SortOrder.Label'] = "Sort order"
+    __parameter_input_metadata['SortOrder.Tooltip'] = "The sort order."
+    __parameter_input_metadata['SortOrder.Values'] = ["", "Ascending", "Descending"]
+    __parameter_input_metadata['SortOrder.Value.Default'] = 'Ascending'
+
     # Choices for WriteMode, used to validate parameter and display in editor
     __choices_WriteMode = ["Append", "Overwrite"]
 
@@ -65,56 +115,10 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
-        self.command_metadata = dict()
-        self.command_metadata['Description'] = "Write GeoLayer properties to a file."
-        self.command_metadata['EditorType'] = "Simple"
+        self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # Command Parameter Metadata
-        self.parameter_input_metadata = dict()
-        # GeoLayerID
-        self.parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
-        self.parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-        self.parameter_input_metadata['GeoLayerID.Required'] = True
-        self.parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
-        # OutputFile
-        self.parameter_input_metadata['OutputFile.Description'] = "property file to write"
-        self.parameter_input_metadata['OutputFile.Label'] = "Output file"
-        self.parameter_input_metadata['OutputFile.Required'] = True
-        self.parameter_input_metadata['OutputFile.Tooltip'] = \
-            "The property file to write, as an absolute path or relative to the command file, can use ${Property"
-        self.parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-        self.parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write"
-        # IncludeProperties
-        self.parameter_input_metadata['IncludeProperties.Description'] = "properties to write"
-        self.parameter_input_metadata['IncludeProperties.Label'] = "Include properties"
-        self.parameter_input_metadata['IncludeProperties.Tooltip'] = (
-            "The names of properties to write, separated by commas. "
-            "The '*' wildcard can be used to indicate multiple properties.")
-        self.parameter_input_metadata['IncludeProperties.Value.Default.Description'] = "write all properties"
-        # WriteMode
-        self.parameter_input_metadata['WriteMode.Description'] = "how to write"
-        self.parameter_input_metadata['WriteMode.Label'] = "Write mode"
-        self.parameter_input_metadata['WriteMode.Tooltip'] = (
-            "Indicates how the file should be written:\n"
-            "Append – append the properties to the file without checking for matches (create the file if "
-            "it does not exist).\n"
-            "Overwrite – overwrite the properties file.")
-        self.parameter_input_metadata['WriteMode.Values'] = ["", "Append", "Overwrite"]
-        self.parameter_input_metadata['WriteMode.Value.Default'] = "Overwrite"
-        # FileFormat
-        self.parameter_input_metadata['FileFormat.Description'] = "file format"
-        self.parameter_input_metadata['FileFormat.Label'] = "File format"
-        self.parameter_input_metadata['FileFormat.Tooltip'] = "The file format."
-        self.parameter_input_metadata['FileFormat.Values'] = ["", "NameTypeValue", "NameTypeValuePython", "NameValue"]
-        self.parameter_input_metadata['FileFormat.Value.Default'] = 'NameValueType'
-        # SortOrder
-        self.parameter_input_metadata['SortOrder.Description'] = "sort order"
-        self.parameter_input_metadata['SortOrder.Label'] = "Sort order"
-        self.parameter_input_metadata['SortOrder.Tooltip'] = "The sort order."
-        self.parameter_input_metadata['SortOrder.Values'] = ["", "Ascending", "Descending"]
-        self.parameter_input_metadata['SortOrder.Value.Default'] = 'Ascending'
+        self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """

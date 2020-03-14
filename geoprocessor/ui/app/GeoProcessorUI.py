@@ -952,10 +952,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # - in most cases the string will not contain newlines
                 # - if a #-block of comments, multiple # lines will be separated by newline
                 if is_hash_comment_block:
-                    logger.debug("Command string after editing (may include line breaks):  " +
-                                 str(command_object.command_string))
+                    logger.debug("Command string after editing (may include line breaks):  '" +
+                                 str(command_object.command_string) + "'")
                 else:
-                    logger.debug("Command string after editing:  '" + str(command_object.command_string)) + "'"
+                    logger.debug("Command string after editing:  '" + str(command_object.command_string) + "'")
 
                 comment_commands = []
                 if is_hash_comment_block:

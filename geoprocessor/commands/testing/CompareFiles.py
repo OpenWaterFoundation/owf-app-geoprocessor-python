@@ -47,7 +47,9 @@ class CompareFiles(AbstractCommand):
         CommandParameterMetadata("IgnoreWhitespace", type("")),
         CommandParameterMetadata("AllowedDiffCount", type("")),
         CommandParameterMetadata("IfDifferent", type("")),
-        CommandParameterMetadata("IfSame", type(""))
+        CommandParameterMetadata("IfSame", type("")),
+        CommandParameterMetadata("LineDiffCountProperty", type("")),
+        CommandParameterMetadata("FileDiffProperty", type(""))
     ]
 
     # Command metadata for command editor display
@@ -122,6 +124,16 @@ class CompareFiles(AbstractCommand):
         "Warn (generate a warning message), Fail (generate a failure message)")
     __parameter_input_metadata['IfSame.Values'] = ["", "Ignore", "Warn", "Fail"]
     __parameter_input_metadata['IfSame.Value.Default'] = "Ignore"
+    # LineDiffCountProperty
+    __parameter_input_metadata['LineDiffCountProperty.Description'] = "property name for file difference count"
+    __parameter_input_metadata['LineDiffCountProperty.Label'] = "Property for difference count"
+    __parameter_input_metadata['LineDiffCountProperty.Tooltip'] = (
+        "Name of property to set count of file count differences (integer).")
+    # FileDiffProperty
+    __parameter_input_metadata['FileDiffProperty.Description'] = "property name for whether files are different"
+    __parameter_input_metadata['FileDiffProperty.Label'] = "Property for files different"
+    __parameter_input_metadata['FileDiffProperty.Tooltip'] = (
+        "Name of property to set whether files are different (boolean).")
 
     # Choices for IfSourceFileNotFound, used to validate parameter and display in editor
     __choices_MatchCase = ["True", "False"]
@@ -259,8 +271,7 @@ class CompareFiles(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    @classmethod
-    def __read_line(cls, inf: typing.TextIO, comment_line_char: str, ignore_whitespace: bool) -> str or None:
+    def read_line(self, inf: typing.TextIO, comment_line_char: str, ignore_whitespace: bool) -> str or None:
         """
         Read a single line from the indicated file.
 
@@ -310,25 +321,43 @@ class CompareFiles(AbstractCommand):
         logger = logging.getLogger(__name__)
 
         # Get runtime data for the command
+
+        # InputFile1
         # noinspection PyPep8Naming
         pv_InputFile1 = self.get_parameter_value('InputFile1')
+        if pv_InputFile1 is not None and (pv_InputFile1 != "") and pv_InputFile1.find('${') >= 0:
+            # noinspection PyPep8Naming
+            pv_InputFile1 = self.command_processor.expand_parameter_value(pv_InputFile1, self)
+
+        # InputFile2
         # noinspection PyPep8Naming
         pv_InputFile2 = self.get_parameter_value('InputFile2')
+        if pv_InputFile2 is not None and (pv_InputFile2 != "") and pv_InputFile2.find('${') >= 0:
+            # noinspection PyPep8Naming
+            pv_InputFile2 = self.command_processor.expand_parameter_value(pv_InputFile2, self)
+
+        # CommentLineChar
         # noinspection PyPep8Naming
         pv_CommentLineChar = self.get_parameter_value('CommentLineChar')
         if pv_CommentLineChar is None or pv_CommentLineChar == "":
             # noinspection PyPep8Naming
             pv_CommentLineChar = "#"  # Default value
+
+        # MatchCase
         # noinspection PyPep8Naming
         pv_MatchCase = self.get_parameter_value('MatchCase')
         if pv_MatchCase is None or pv_MatchCase == "":
             # noinspection PyPep8Naming
             pv_MatchCase = True  # Default value
+
+        # IgnoreWhitespace
         # noinspection PyPep8Naming
         pv_IgnoreWhitespace = self.get_parameter_value('IgnoreWhitespace')
         if pv_IgnoreWhitespace is None or pv_IgnoreWhitespace == "":
             # noinspection PyPep8Naming
             pv_IgnoreWhitespace = True  # Default value
+
+        # AllowedDiffCount
         # noinspection PyPep8Naming
         pv_AllowedDiffCount = self.get_parameter_value('AllowedDiffCount')
         if pv_AllowedDiffCount is None or pv_AllowedDiffCount == "":
@@ -336,6 +365,8 @@ class CompareFiles(AbstractCommand):
         else:
             allowed_diff_count = int(pv_AllowedDiffCount)
         # Convert IfDifferent and IfSame to internal types, Ignore will convert to None, which is OK
+
+        # IfDifferent
         # noinspection PyPep8Naming
         pv_IfDifferent = self.get_parameter_value('IfDifferent')
         if pv_IfDifferent is None or pv_IfDifferent == "":
@@ -343,6 +374,8 @@ class CompareFiles(AbstractCommand):
             pv_IfDifferent = "Ignore"  # Default value
         # noinspection PyPep8Naming
         pv_IfDifferent_CommandStatusType = CommandStatusType.value_of(pv_IfDifferent, True)
+
+        # IfSame
         # noinspection PyPep8Naming
         pv_IfSame = self.get_parameter_value('IfSame')
         if pv_IfSame is None or pv_IfSame == "":
@@ -350,6 +383,21 @@ class CompareFiles(AbstractCommand):
             pv_IfSame = "Ignore"  # Default value
         # noinspection PyPep8Naming
         pv_IfSame_CommandStatusType = CommandStatusType.value_of(pv_IfSame, True)
+
+        # LineDiffCountProperty
+        # noinspection PyPep8Naming
+        pv_LineDiffCountProperty = self.get_parameter_value('LineDiffCountProperty')
+        if pv_LineDiffCountProperty is not None and (pv_LineDiffCountProperty != "") and \
+            pv_LineDiffCountProperty.find('${') >= 0:
+            # noinspection PyPep8Naming
+            pv_LineDiffCountProperty = self.command_processor.expand_parameter_value(pv_LineDiffCountProperty, self)
+
+        # FileDiffProperty
+        # noinspection PyPep8Naming
+        pv_FileDiffProperty = self.get_parameter_value('FileDiffProperty')
+        if pv_FileDiffProperty is not None and (pv_FileDiffProperty != "") and pv_FileDiffProperty.find('${') >= 0:
+            # noinspection PyPep8Naming
+            pv_FileDiffProperty = self.command_processor.expand_parameter_value(pv_FileDiffProperty, self)
 
         # Runtime checks on input
 
@@ -369,8 +417,10 @@ class CompareFiles(AbstractCommand):
 
         # Do the processing
 
-        diff_count = 0
+        line_diff_count = 0
         line_count_compared = 0
+        file1_end_found = False
+        file2_end_found = False
         # noinspection PyBroadException
         try:
             input_count = 2
@@ -404,37 +454,59 @@ class CompareFiles(AbstractCommand):
                     # The following will discard comments and only return non-comment lines
                     # Therefore, comparisons are made on chunks of non-comment lines.
                     # TODO smalers 2018-01-08 Could make this comparison more intelligent if the # of comments varies
-                    iline1 = CompareFiles.__read_line(in1, pv_CommentLineChar, pv_IgnoreWhitespace)
-                    iline2 = CompareFiles.__read_line(in2, pv_CommentLineChar, pv_IgnoreWhitespace)
-                    if iline1 is None and iline2 is None:
-                        # Both are done at the same time...
+                    if not file1_end_found:
+                        # Read another line if not at the end of the first file
+                        iline1 = self.read_line(in1, pv_CommentLineChar, pv_IgnoreWhitespace)
+                        if iline1 is None:
+                            # First file is done...
+                            logger.info("Found end of first file.")
+                            file1_end_found = True
+                    if not file2_end_found:
+                        # Read another line if not at the end of the second file
+                        iline2 = self.read_line(in2, pv_CommentLineChar, pv_IgnoreWhitespace)
+                        if iline2 is None:
+                            # Second file is done...
+                            logger.info("Found end of second file.")
+                            file2_end_found = True
+                    if file1_end_found and file2_end_found:
+                        # Both are done so quit comparing...
                         break
-                    # TODO smalers 2006-04-20 The following needs to handle comments at the end...
-                    if iline1 is None and iline2 is not None:
-                        # First file is done (second is not) so files are different...
-                        diff_count += 1
-                        break
-                    if iline2 is None and iline1 is not None:
-                        # Second file is done (first is not) so files are different...
-                        diff_count += 1
-                        break
+                    # Increment the line count compared (eventually will be number of data lines in longest file)
                     line_count_compared += 1
-                    if pv_MatchCase:
-                        # Compare the lines as is since case-specific
-                        if iline1 != iline2:
-                            diff_count += 1
+                    if file1_end_found or file2_end_found:
+                        # One file is done so increment the difference count
+                        line_diff_count += 1
                     else:
-                        # Compare by ignoring case
-                        if iline1.upper() != iline2.upper():
-                            diff_count += 1
-                    # logger.debug('Compared:\n"' + iline1 + '"\n"' + iline2 + '"\ndiff_count=' + str(diff_count))
+                        # Both have strings so can compare
+                        if pv_MatchCase:
+                            # Compare the lines as is since case-specific
+                            if iline1 != iline2:
+                                line_diff_count += 1
+                        else:
+                            # Compare by ignoring case
+                            if iline1.upper() != iline2.upper():
+                                line_diff_count += 1
+                    # logger.debug('Compared:\n"' + iline1 + '"\n"' + iline2 + '"\nline_diff_count=' +
+                    # str(line_diff_count))
                 in1.close()
                 in2.close()
                 if line_count_compared == 0:
-                    line_count_compared = 1  # to avoid divide by zero below.
-                logger.info("There are " + str(diff_count) + " lines that are different, " +
-                            '{:4f}'.format(100.0*float(diff_count)/float(line_count_compared)) +
-                            '% (compared ' + str(line_count_compared) + ' lines).')
+                    line_count_compared = 1  # to avoid divide by zero below - should never happen
+                logger.info("There are " + str(line_diff_count) + " lines that are different, " +
+                            '{:4f}'.format(100.0*float(line_diff_count)/float(line_count_compared)) +
+                            '% (compared ' + str(line_count_compared) + ' lines from longest file).')
+
+                if pv_LineDiffCountProperty is not None and pv_LineDiffCountProperty:
+                    # Set a processor property for the line difference count property
+                    self.command_processor.set_property(pv_LineDiffCountProperty, line_diff_count)
+                    pass
+
+                if pv_FileDiffProperty is not None and pv_FileDiffProperty:
+                    if line_diff_count > allowed_diff_count:
+                        # Set a processor property for whether the files are different or not
+                        self.command_processor.set_property(pv_FileDiffProperty, True)
+                    else:
+                        self.command_processor.set_property(pv_FileDiffProperty, False)
 
         except Exception:
             warning_count += 1
@@ -446,12 +518,17 @@ class CompareFiles(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
-        if diff_count > allowed_diff_count and \
+        file_end_string = ""
+        if file1_end_found:
+            file_end_string = ", file1 shorter than file2"
+        elif file2_end_found:
+            file_end_string = ", file2 shorter than file1"
+        if line_diff_count > allowed_diff_count and \
             ((pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING) or
              (pv_IfDifferent_CommandStatusType == CommandStatusType.FAILURE)):
-            message = "" + str(diff_count) + " lines were different, " + \
-                '{:4f}'.format(100.0*float(diff_count)/float(line_count_compared)) + \
-                "% (compared " + str(line_count_compared) + " lines)."
+            message = "" + str(line_diff_count) + " lines were different, " + \
+                '{:4f}'.format(100.0*float(line_diff_count)/float(line_count_compared)) + \
+                "% (compared " + str(line_count_compared) + " lines" + file_end_string + ")."
             if pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING:
                 logger.warning(message)
             else:
@@ -461,7 +538,7 @@ class CompareFiles(AbstractCommand):
                 CommandLogRecord(pv_IfDifferent_CommandStatusType,
                                  message, "Check files because difference is not expected."))
             raise RuntimeError(message)
-        if diff_count == 0 and \
+        if (line_diff_count == 0) and (file1_end_found != file2_end_found) and \
             ((pv_IfSame_CommandStatusType == CommandStatusType.WARNING) or
              (pv_IfSame_CommandStatusType == CommandStatusType.FAILURE)):
             message = "No lines were different (the files are the same)."

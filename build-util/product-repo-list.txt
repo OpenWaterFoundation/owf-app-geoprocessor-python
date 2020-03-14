@@ -1,5 +1,6 @@
 # Repositories that comprise the GeoProcessor
 # - assumes that local folder name will match the repository name
 owf-app-geoprocessor-python
+owf-app-geoprocessor-python-doc-dev
 owf-app-geoprocessor-python-doc-user
 owf-app-geoprocessor-python-test

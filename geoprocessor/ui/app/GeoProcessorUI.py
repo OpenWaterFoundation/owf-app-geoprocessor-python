@@ -137,7 +137,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.menu_item_select_all_commands: QtWidgets.QAction or None = None
         self.menu_item_deselect_all_commands: QtWidgets.QAction or None = None
 
-        self.__commands_cut_buffer = []  # List of commands for cut/copy/paste
+        self.commands_cut_buffer : [AbstractCommand] = []  # List of commands for cut/copy/paste
 
         # Results area
         self.results_GroupBox: QtWidgets.QGroupBox or None = None
@@ -491,11 +491,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # If modified, open dialog box to ask if user wants to save file
         if command_list_modified:
-            save_command_dialog = QtWidgets.QMessageBox.question(self, 'GeoProcessor',
-                                                                 'Do you want to save the changes you made?',
-                                                                 QtWidgets.QMessageBox.Yes |
-                                                                 QtWidgets.QMessageBox.No |
-                                                                 QtWidgets.QMessageBox.Cancel)
+            save_command_dialog =\
+                QtWidgets.QMessageBox.question(self, 'GeoProcessor',
+                                               'Do you want to save the changes you made?\n\n' +
+                                               'To view differences, Cancel and use View / Command File Diff.',
+                                               QtWidgets.QMessageBox.Yes |
+                                               QtWidgets.QMessageBox.No |
+                                               QtWidgets.QMessageBox.Cancel)
 
             # If user selects yes to save commands
             if save_command_dialog == QtWidgets.QMessageBox.Yes:
@@ -615,53 +617,45 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             return
 
         # Clear what may previously have been in the cut buffer...
-        self.__commands_cut_buffer.clear()
+        self.commands_cut_buffer.clear()
 
         # Transfer Command instances to the cut buffer...
         command = None  # Command instance to process
-        """
-        for i = 0 in range(size):
-            command = self.__commands_ListWidget.item(selected_indices[i]).data()
-            __commandsCutBuffer.add( command.clone() )
-
-        if remove_original:
-            # If removing, delete the selected commands from the list ...
-            commandList_RemoveCommandsBasedOnUI()
-        """
+        for i in range(size):
+            command = self.gp_model.gp.commands[selected_indices[i]]
+            # It is OK ot store the original commands in the cut buffer because their command strings will be used
+            # to create new commands if necessary for copy.
+            self.commands_cut_buffer.append(command)
 
     def cut_commands_to_clipboard(self) -> None:
         """
-        Cut commands in the command list (to be used with paste).
+        Cut commands in the command list (to be used with paste) and also remove the commands.
 
         Returns:
             None
         """
-        # TODO smalers 2020-01-18 need to implement
-        pass
+        # The top of this function is the same as cut_commands_to_clipboard().
+        selected_indices = self.command_CommandListWidget.get_selected_indices()
+        size = 0
+        if selected_indices is not None:
+            size = len(selected_indices)
+        if size == 0:
+            return
 
-    # TODO smalers 2020-01-18 does not seem to be called by anything
-    def delete_numbered_list_item(self, index: int) -> None:
-        """
-        Delete the row in the numbered list and update the other numbers.
+        # Clear what may previously have been in the cut buffer...
+        self.commands_cut_buffer.clear()
 
-        Args:
-            index (int): numbered list item to be deleted, 0+.
+        # Transfer Command instances to the cut buffer...
+        command = None  # Command instance to process
+        for i in range(size):
+            command = self.gp_model.gp.commands[selected_indices[i]]
+            # It is OK ot store the original commands in the cut buffer because their command strings will be used
+            # to create new commands if necessary for paste.
+            self.commands_cut_buffer.append(command)
 
-        Returns:
-            None
-        """
-        # Remove item at index
-        self.number_ListWidget.takeItem(index)
-        # Get the length of the numbered list
-        count = self.number_ListWidget.count()
-
-        # Update numbers past the deleted row
-        for i in range(index, count):
-            list_text = self.number_ListWidget.item(i).text()
-            if list_text:
-                num = int(self.number_ListWidget.item(i).text())
-                num = num - 1
-                self.number_ListWidget.item(i).setText(str(num))
+        # Remove the selected commands - same as pressing the clear button
+        # - commands will be removed from the list, with prompt if all commands are removed
+        self.command_CommandListWidget.command_list_clear()
 
     def deselect_all_commands(self) -> None:
         """
@@ -1047,20 +1041,73 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         except Exception:
             # Unexpected error.
-            message = "Error editing new command"
+            message = "Error editing new command."
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
-            return
 
     def paste_commands_from_clipboard(self) -> None:
         """
-        Paste commands in the command list (to be used with copy and cut).
+        Paste commands in the command list (used with copy and cut).
+        Commands in the self.commands_cut_buffer list are inserted after the last selected command (or at end).
+        The logic is similar to inserting new commands except there is no edit involved.
 
         Returns:
             None
         """
-        # TODO smalers 2020-01-18 need to implement
-        pass
+        if len(self.commands_cut_buffer) == 0:
+            # No commands in the buffer so nothing to do - should not have been called but check anyway
+            return
+
+        logger = logging.getLogger(__name__)
+
+        # noinspection PyBroadException
+        try:
+            # Loop through the commands in the buffer and create new commands based on the command strings.
+            new_commands = []
+            command_factory = GeoProcessorCommandFactory()
+            for command in self.commands_cut_buffer:
+                # Initialize the command object (without parameters).
+                # - Work is done in the GeoProcessorCommandFactory class.
+                # - Do not allow unrecognized commands because this function should only be called with valid commands.
+                # - # comments at this point will only be one line (may be more than one line after editing).
+                create_unknown_command_if_not_recognized = False
+                command_object = command_factory.new_command(
+                    command.command_string,
+                    create_unknown_command_if_not_recognized)
+                #logger.debug("New command for paste " + str(type(command_object)))
+                new_commands.append(command_object)
+                # logger.debug("Description =" + command_object.command_metadata['Description'])
+
+                # Initialize additional command object data.
+                # - work is done in the AbstractCommand class
+                # - the processor is set in the command
+                # - full_initialization parses the command string, which won't do much here since new and no parameters
+                full_initialization = True
+                command_object.initialize_command(command.command_string, self.gp_model.gp, full_initialization)
+
+            # Check whether any commands are selected and if so reset the insert row.
+            selected_indices = self.command_CommandListWidget.command_ListView.selectedIndexes()
+            if (selected_indices is not None) and (len(selected_indices) > 0):
+                # Have selected commands
+                # - selected_indices are QModelIndex so get the integer row
+                # - reset the insert row to the row after the last selected row
+                insert_row = selected_indices[len(selected_indices) - 1].row() + 1
+            else:
+                # Insert after all commands
+                insert_row = len(self.gp_model)
+
+            self.gp_model.insert_commands_at_index(new_commands, insert_row)
+
+            # The item has been added to the GeoProcessor command list but the Widget needs to be informed.
+            # Synchronize the other lists with the main command list.
+            self.command_CommandListWidget.number_list_sync_with_commands()
+            self.command_CommandListWidget.gutter_list_sync_with_commands()
+            self.command_CommandListWidget.update_ui_status_commands()
+        except Exception:
+            # Unexpected error.
+            message = "Error pasting command(s)."
+            logger.warning(message, exc_info=True)
+            qt_util.warning_message_box(message)
 
     def select_all_commands(self) -> None:
         """
@@ -4579,12 +4626,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # The popup menu will not be populated until one right-click has occurred, so check for None once
         if num_selected > 0:
+            # Some commands are selected
             if self.menu_item_show_command_status is not None:
                 self.menu_item_show_command_status.setEnabled(True)
                 self.menu_item_edit_command.setEnabled(True)
-                self.menu_item_cut_commands.setEnabled(False)  # TODO smalers 2020-01-20 need to enable
-                self.menu_item_copy_commands.setEnabled(False)
-                self.menu_item_paste_commands.setEnabled(False)
+                self.menu_item_cut_commands.setEnabled(True)
+                self.menu_item_copy_commands.setEnabled(True)
                 self.menu_item_deselect_all_commands.setEnabled(True)
                 self.menu_item_increase_indent_command.setEnabled(True)
                 self.menu_item_decrease_indent_command.setEnabled(True)
@@ -4594,12 +4641,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.increase_indent_button.setEnabled(True)
             self.decrease_indent_button.setEnabled(True)
         else:
+            # No commands are selected
             if self.menu_item_show_command_status is not None:
                 self.menu_item_show_command_status.setEnabled(False)
                 self.menu_item_edit_command.setEnabled(False)
-                self.menu_item_cut_commands.setEnabled(False)  # TODO smalers 2020-01-20 need to enable
+                self.menu_item_cut_commands.setEnabled(False)
                 self.menu_item_copy_commands.setEnabled(False)
-                self.menu_item_paste_commands.setEnabled(False)
                 self.menu_item_deselect_all_commands.setEnabled(False)
                 self.menu_item_increase_indent_command.setEnabled(False)
                 self.menu_item_decrease_indent_command.setEnabled(False)
@@ -4608,6 +4655,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             self.increase_indent_button.setEnabled(False)
             self.decrease_indent_button.setEnabled(False)
+
+        if self.menu_item_paste_commands is not None:
+            if len(self.commands_cut_buffer) > 0:
+                # The cut/copy/paste command list has some commands
+                self.menu_item_paste_commands.setEnabled(True)
+            else:
+                # Nothing available to cut/copy/paste
+                self.menu_item_paste_commands.setEnabled(False)
 
         if self.menu_item_select_all_commands is not None:
             if num_commands == num_selected:
@@ -4692,6 +4747,30 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         row_num = str(self.results_Tables_Table.rowCount())
         slct_row_num = str(len(set(index.row() for index in self.results_Tables_Table.selectedIndexes())))
         self.results_Tables_GroupBox.setTitle("Tables ({} Tables, {} selected)".format(row_num, slct_row_num))
+
+    # TODO smalers 2020-01-18 does not seem to be called by anything - this has been moved to CommandListWidget
+    def x_delete_numbered_list_item(self, index: int) -> None:
+        """
+        Delete the row in the numbered list and update the other numbers.
+
+        Args:
+            index (int): numbered list item to be deleted, 0+.
+
+        Returns:
+            None
+        """
+        # Remove item at index
+        self.number_ListWidget.takeItem(index)
+        # Get the length of the numbered list
+        count = self.number_ListWidget.count()
+
+        # Update numbers past the deleted row
+        for i in range(index, count):
+            list_text = self.number_ListWidget.item(i).text()
+            if list_text:
+                num = int(self.number_ListWidget.item(i).text())
+                num = num - 1
+                self.number_ListWidget.item(i).setText(str(num))
 
     # TODO smalers 2020-03-13 a similar method exists in CommandListWidget and should be used direclty
     def x_update_ui_commands_list(self) -> None:

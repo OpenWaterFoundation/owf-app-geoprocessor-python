@@ -132,6 +132,7 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         for i in range(len(selected_indices)):
             if isinstance(selected_indices[i], QModelIndex):
                 selected_indices[i] = selected_indices[i].row()
+            # Else the list already contains integers
 
         size = len(selected_indices)
 
@@ -147,13 +148,15 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
                 continue
             else:
                 if index_i != (index_prev + 1):
+                    # Rows are not sequential
                     rows_sequential = False
                     break
                 else:
+                    # Rows are sequential - save the index as previous for the next loop
                     index_prev = index_i
 
         if rows_sequential:
-            # Can call the model's buil-in method
+            # Can call the model's built-in method
             self.removeRows(selected_indices[0], len(selected_indices), QtCore.QModelIndex())
         else:
             # Remove in reverse order so that commands are removed from the end of the list to the front,

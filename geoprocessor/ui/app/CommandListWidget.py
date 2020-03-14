@@ -185,6 +185,55 @@ class CommandListWidget(object):
             return
         self.command_main_ui_listener = listener
 
+    def command_list_clear(self) -> None:
+        """
+        Clear the command list based on commands that are selected.
+
+        Returns:
+            None
+        """
+
+        selected_indices = self.command_ListView.selectedIndexes()
+        if (selected_indices is not None) and (len(selected_indices) != 0) and \
+                (len(selected_indices)) < len(self.gp_model):
+            # Fewer than all commands are selected.
+            # Open a message box to confirm with the user that they want to delete all of the commands.
+            # - only do this if the selected commands are all the commands
+            # - otherwise the dialog interrupts normal workflow
+            do_confirm = False
+            if do_confirm:
+                response = qt_util.new_message_box(
+                    QtWidgets.QMessageBox.Question,
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                    "Are you sure you want to delete selected " + str(len(selected_indices)) + " commands?",
+                    "Clear Commands")
+            else:
+                # Always delete
+                response = QtWidgets.QMessageBox.Yes
+
+            # If the user confirms that they want to delete the selected commands, delete the commands.
+            # - Delete using objects so indices are not an issue
+            if response == QtWidgets.QMessageBox.Yes:
+                self.gp_model.clear_selected_commands(selected_indices)
+        elif (selected_indices is None) or (len(selected_indices) == 0) or \
+                (len(selected_indices) == len(self.gp_model)):
+            # Deleting all commands.
+            # Open a message box to confirm with the user that they want to delete all of the commands.
+            response = qt_util.new_message_box(
+                QtWidgets.QMessageBox.Question,
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                "Are you sure you want to delete ALL the commands?",
+                "Clear Commands")
+
+            # If the user confirms that they want to delete the selected commands, delete the commands.
+            # - Delete using objects so indices are not an issue
+            if response == QtWidgets.QMessageBox.Yes:
+                self.gp_model.clear_all_commands()
+
+        # TODO smalers 2020-01-19 need to do this via a listener
+        # Check to see if command list modified. If so notify the main UI.
+        self.command_main_ui_listener.update_ui_main_window_title()
+
     def command_list_deselect_all(self) -> None:
         """
         Deselect all commands in the command list.
@@ -283,7 +332,65 @@ class CommandListWidget(object):
                 num -= 1
                 self.number_ListWidget.item(i).setText(str(num))
 
-    def event_handler_commands_list_clicked(self, event: QtGui.QMouseEvent) -> None:
+    def event_handler_button_run_all_commands_clicked(self, event: QtCore.QEvent) -> None:
+        """
+        Notify GeoProcessorListModel that the run all commands button has been clicked.
+
+        Args:
+            event: Button clicked event, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
+        """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
+        self.notify_model_listener_main_ui_listener_run_all_commands_clicked()
+
+    def event_handler_button_run_selected_commands_clicked(self, event: QtCore.QEvent) -> None:
+        """
+        Notify GeoProcessorListModel that the run selected commands button has been clicked.
+
+        Args:
+            event: Button clicked event, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
+        """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
+        selected_q_indices = self.command_ListView.selectedIndexes()
+        selected_indices = [item.row() for item in selected_q_indices]
+        self.notify_model_listener_main_ui_listener_run_selected_commands_clicked(selected_indices)
+
+    def event_handler_button_clear_commands_clicked(self, event: QtCore.QEvent) -> None:
+        """
+        When clicking on the clear commands button clear all commands if none
+        individually selected or only clear the selected commands.
+
+        Args:
+            event: Button clicked event, necessary as a parameter so that this function
+                is recognized as a slot in response to the button clicked signal from PyQt5.
+
+        Returns:
+            None
+        """
+        # Event is not actually used (list is examined)
+        # - put in some code to use the event so PyCharm does not complain about not being used
+        if event is None:
+            pass
+
+        # Call the method to do the work
+        self.command_list_clear()
+
+    def event_handler_command_list_clicked(self, event: QtGui.QMouseEvent) -> None:
         """
         When clicking on a command list item also select the same
         row in the numbered list and gutter.
@@ -343,7 +450,7 @@ class CommandListWidget(object):
         # Update the UI status
         self.update_ui_status_commands()
 
-    def event_handler_commands_list_double_clicked(self, event: QtGui.QMouseEvent) -> None:
+    def event_handler_command_list_double_clicked(self, event: QtGui.QMouseEvent) -> None:
         """
         Handle a double click event on the command list.
 
@@ -358,91 +465,6 @@ class CommandListWidget(object):
         row = self.command_ListView.indexAt(event.pos()).row();
         logger.info("Double click detected on command list row [" + str(row) + "]")
         self.command_main_ui_listener.ui_action_command_list_double_click(row)
-
-    def event_handler_button_run_all_commands_clicked(self, event: QtCore.QEvent) -> None:
-        """
-        Notify GeoProcessorListModel that the run all commands button has been clicked.
-
-        Args:
-            event: Button clicked event, necessary as a parameter so that this function
-                is recognized as a slot in response to the button clicked signal from PyQt5.
-
-        Returns:
-            None
-        """
-        # Event is not actually used (list is examined)
-        # - put in some code to use the event so PyCharm does not complain about not being used
-        if event is None:
-            pass
-
-        self.notify_model_listener_main_ui_listener_run_all_commands_clicked()
-
-    def event_handler_button_run_selected_commands_clicked(self, event: QtCore.QEvent) -> None:
-        """
-        Notify GeoProcessorListModel that the run selected commands button has been clicked.
-
-        Args:
-            event: Button clicked event, necessary as a parameter so that this function
-                is recognized as a slot in response to the button clicked signal from PyQt5.
-
-        Returns:
-            None
-        """
-        # Event is not actually used (list is examined)
-        # - put in some code to use the event so PyCharm does not complain about not being used
-        if event is None:
-            pass
-
-        selected_q_indices = self.command_ListView.selectedIndexes()
-        selected_indices = [item.row() for item in selected_q_indices]
-        self.notify_model_listener_main_ui_listener_run_selected_commands_clicked(selected_indices)
-
-    def event_handler_button_clear_commands_clicked(self, event: QtCore.QEvent) -> None:
-        """
-        When clicking on the clear commands button clear all commands if none
-        individually selected or only clear the selected commands.
-
-        Args:
-            event: Button clicked event, necessary as a parameter so that this function
-                is recognized as a slot in response to the button clicked signal from PyQt5.
-
-        Returns:
-            None
-        """
-        # Event is not actually used (list is examined)
-        # - put in some code to use the event so PyCharm does not complain about not being used
-        if event is None:
-            pass
-
-        selected_indices = self.command_ListView.selectedIndexes()
-        if selected_indices:
-            # Open a message box to confirm with the user that they want to delete all of the commands.
-            response = qt_util.new_message_box(
-                QtWidgets.QMessageBox.Question,
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                "Are you sure you want to delete selected " + str(len(selected_indices)) + " commands?",
-                "Clear Commands")
-
-            # If the user confirms that they want to delete the selected commands, delete the commands.
-            # - Delete using objects so indices are not an issue
-            if response == QtWidgets.QMessageBox.Yes:
-                self.gp_model.clear_selected_commands(selected_indices)
-        else:
-            # Open a message box to confirm with the user that they want to delete all of the commands.
-            response = qt_util.new_message_box(
-                QtWidgets.QMessageBox.Question,
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                "Are you sure you want to delete ALL the commands?",
-                "Clear Commands")
-
-            # If the user confirms that they want to delete the selected commands, delete the commands.
-            # - Delete using objects so indices are not an issue
-            if response == QtWidgets.QMessageBox.Yes:
-                self.gp_model.clear_all_commands()
-
-        # TODO smalers 2020-01-19 need to do this via a listener
-        # Check to see if command list modified. If so notify the main ui
-        self.command_main_ui_listener.update_ui_main_window_title()
 
     # TODO smalers 2020-01-19 should not need this now - why?
     def event_handler_decrease_indent_button_clicked(self) -> None:
@@ -1076,8 +1098,8 @@ class CommandListWidget(object):
         self.command_ListView.setWordWrap(False)
         self.command_ListView.setSelectionRectVisible(False)
         # Remap list events to event handling functions
-        self.command_ListView.mouseReleaseEvent = self.event_handler_commands_list_clicked
-        self.command_ListView.mouseDoubleClickEvent = self.event_handler_commands_list_double_clicked
+        self.command_ListView.mouseReleaseEvent = self.event_handler_command_list_clicked
+        self.command_ListView.mouseDoubleClickEvent = self.event_handler_command_list_double_clicked
         self.command_ListView.setObjectName(_fromUtf8("command_ListView"))
         self.command_ListView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.commands_HBoxLayout_Commands.addWidget(self.command_ListView)

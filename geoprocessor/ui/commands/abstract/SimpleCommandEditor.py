@@ -115,9 +115,8 @@ class SimpleCommandEditor(AbstractCommandEditor):
         command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
         logger.info('Checking command parameter input using command string:' + str(command_string))
         # Initialize the parameters of the command object.
-        # - TODO smalers 2019-01-18 this will modify the contents of the command, needs to be a new instance from
-        #        what is in an existing command or else could corrupt the original data if invalid or cancel is
-        #        then pressed
+        # - the command being edited is either a new instance (OK to edit) or a copy of existing
+        #   (OK to edit because it is a copy and will be transferred to the existing command after committing changes)
         self.command.initialize_command(command_string, self.command.command_processor, True)
 
         self.error_wait = False

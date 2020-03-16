@@ -71,11 +71,11 @@ class SetProperty(AbstractCommand):
     __parameter_input_metadata['PropertyValue.Value.Default.Description'] = \
         "'PropertyValue' or 'PropertyValues' must be specified."
     # PropertyValues
-    __parameter_input_metadata['PropertyValues.Description'] = "property value as a list of strings"
+    __parameter_input_metadata['PropertyValues.Description'] = "property value as a list"
     __parameter_input_metadata['PropertyValues.Label'] = "Property values"
     __parameter_input_metadata['PropertyValues.Tooltip'] = (
-        "The property values, as a list of string. Currently, comma-separated values are supported with optional\n"
-        "surrounding [ ]. In the future single-quoted strings will be supported to allow commas in the strings.\n"
+        "The property values, as a list. Currently, comma-separated values are supported with optional"
+        "surrounding [ ].\nIn the future single-quoted strings will be supported to allow commas in the strings.\n"
         "Strings are stripped of surrounding whitespace.")
     __parameter_input_metadata['PropertyValues.Value.Default.Description'] = \
         "'PropertyValue' or 'PropertyValues' must be specified."

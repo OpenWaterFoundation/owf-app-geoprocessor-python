@@ -61,23 +61,23 @@ class GenericCommandEditor(AbstractCommandEditor):
         # NOT defined in AbstractCommandEditor - local to this class
         # Indicate whether first time refresh_ui is called
         # - the first time the UI components may be initialized from data
-        self.first_refresh_ui = True
+        # self.first_refresh_ui = True
 
         # Defined in AbstractCommandEditor
         # "input_ui_components" is a dictionary that relates each command parameter with its associated Qt Widget
         # input field
         # KEY (str): the command parameter name
         # VALUE (obj): the associated Qt Widget input component
-        self.input_ui_components = {}
+        # self.input_ui_components = {}
 
         # NOT defined in AbstractCommandEditor - local to this class
         # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
         # self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
-        self.parameter_LineEdit = dict()
+        # self.parameter_LineEdit = dict()
 
         # Defined in AbstractCommandEditor
         # The row position in the self.parameter_QGridLayout, used in setup_ui() and its helper functions.
-        self.y_parameter = -1
+        # self.y_parameter = -1
 
         # UI components
         # Defined in AbstractCommandEditor
@@ -87,11 +87,12 @@ class GenericCommandEditor(AbstractCommandEditor):
         # NOT defined in AbstractCommandEditor - local to this class
         # Create variable to know if we are updating an existing command
         # or inserting a new command into the command list
-        self.update = False
+        # self.update = False
+
         # if command parameters have already been defined for command
         # we know that we are updating an existing command
-        if command.command_parameters:
-            self.update = True
+        # if command.command_parameters:
+        #    self.update = True
 
         # Setup the UI in the abstract class, which will call back to set_ui() in this class.
         self.setup_ui_core()
@@ -100,6 +101,90 @@ class GenericCommandEditor(AbstractCommandEditor):
         self.refresh_ui()
 
     def check_input(self) -> None:
+        """
+        Check the parameter values shown in the editor to make sure all values are valid.
+        There is nothing to check since no parameters.
+
+        Returns:
+            None.
+        """
+        pass
+
+    def refresh_ui(self) -> None:
+        """
+        This function is called to ensure that the UI and command are consistent in the UI:
+
+        1. The first time called:
+            - Make sure the UI is up to date with initial command parameters
+        2. Every time called:
+            - Update the command string from values in the UI components.
+            - Only non-empty values are set in the string.
+            - Because the comment start is just /*, always shows this string
+
+        Returns:
+            None
+        """
+        command_string = self.command.to_string()
+        self.CommandDisplay_View_TextBrowser.setPlainText(command_string)
+
+    def setup_ui(self) -> None:
+        """
+        Setup the main UI input areas.
+        This does not do anything because the command is unknown.
+        Just make sure the command string is shown and can be retrieved.
+
+        Returns:
+            None.
+        """
+        pass
+
+    def setup_ui_2(self) -> None:
+        """
+        Setup the main UI input areas.
+        This does not do anything major because the command is unknown.
+        Set the command area to editable.
+
+        Returns:
+            None.
+        """
+        self.CommandDisplay_View_TextBrowser.setReadOnly(False)
+
+    def ui_action_cancel_clicked(self) -> None:
+        """
+        Handle clicking on cancel button.
+
+        Returns:
+            None
+        """
+        # To cancel, call the standard reject() function, which will set the return value.
+        # - this allows the return value to be checked in the calling code
+        self.reject()
+
+    def ui_action_ok_clicked(self) -> None:
+        """
+        Handle clicking on OK button:
+
+        1. The parameters in the input components are validated - in this case no parameters need to be checked.
+        2. If OK, exit by calling accept().  The command string displayed is set as the command object .command_string'.
+        3. If not OK, the editor stays open until the user corrects or presses Cancel.
+
+        Returns:
+            None
+        """
+        # Check the input
+        self.check_input()
+        if self.error_wait:
+            # User was shown a warning dialog and had to acknowledge it, so here just ignore the "OK"
+            # - errors in input parameters need to be fixed before OK works
+            pass
+        else:
+            # No error so OK to exit
+            # - set the text area content to the command string
+            self.command.command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
+            # - call the standard accept() function to set the return value
+            self.accept()
+
+    def x_check_input(self) -> None:
         """
         Check the parameter values shown in the editor to make sure all values are valid.
         If any invalid parameters are detected, set self.error_wait = True so ui_action_ok_clicked() can
@@ -129,7 +214,7 @@ class GenericCommandEditor(AbstractCommandEditor):
             logger.info(message)
             qt_util.warning_message_box(message)
 
-    def refresh_ui(self) -> None:
+    def x_refresh_ui(self) -> None:
         """
         This function is called to ensure that the UI and command are consistent in the UI:
 
@@ -253,7 +338,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         #     logger.warning(message, exc_info=True)
         #     qt_util.warning_message_box(message)
 
-    def setup_ui(self) -> None:
+    def x_setup_ui(self) -> None:
         """
         Set up the dialog UI elements.  This generic editor provides text fields for each property.
 
@@ -334,7 +419,7 @@ class GenericCommandEditor(AbstractCommandEditor):
             self.setup_ui_parameter_description(parameter_name, parameter_Description)
 
     # TODO smalers 2020-01-14 evaluate overloading being different than base class.
-    def setup_ui_parameter_description(self, parameter_name: str, parameter_desc: str) -> None:
+    def x_setup_ui_parameter_description(self, parameter_name: str, parameter_desc: str) -> None:
         """
         Override function in AbstractCommand class to add a description if it is specified
         in the command_parameter_metadata. This description will not be as specific as is
@@ -359,7 +444,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         # parameter_desc_Label.setAlignment(QtCore.Qt.AlignLeft) # |QtCore.Qt.AlignCenter)
         self.parameter_QGridLayout.addWidget(parameter_desc_Label, self.y_parameter, 6, 1, 1)
 
-    def ui_action_cancel_clicked(self) -> None:
+    def x_ui_action_cancel_clicked(self) -> None:
         """
         Handle clicking on cancel button:
 
@@ -372,7 +457,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         # - this allows the return value to be checked in the calling code
         self.reject()
 
-    def ui_action_ok_clicked(self) -> None:
+    def x_ui_action_ok_clicked(self) -> None:
         """
         Handle clicking on OK button:
 

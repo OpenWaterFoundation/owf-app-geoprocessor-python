@@ -75,6 +75,7 @@ class Comment(AbstractCommand):
     def run_command(self) -> None:
         """
         Run the command.  Does nothing since comments cause no action.
+        It does ensure that the run status is success.
 
         Returns:
             None.

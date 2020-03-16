@@ -1275,14 +1275,20 @@ class GeoProcessor(object):
 
                 if command_class == 'Comment':
                     # Hash-comment - TODO need to mark as processing successful - confirm when UI in place
+                    # Run the command to update the status to success.
+                    command.run_command()
                     continue
                 elif command_class == 'CommentBlockStart':
                     # /* comment block start - TODO need to mark as processing successful - confirm when UI in place
                     in_comment = True
+                    # Run the command to update the status to success.
+                    command.run_command()
                     continue
                 elif command_class == 'CommentBlockEnd':
                     # */ comment block end - TODO need to mark as processing successful - confirm when UI in place
                     in_comment = False
+                    # Run the command to update the status to success.
+                    command.run_command()
                     continue
 
                 if in_comment:

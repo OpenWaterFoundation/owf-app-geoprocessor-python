@@ -8,8 +8,8 @@ features to automate processing geospatial data.
 See the following online user and developer documentation:
 
 * [OWF GeoProcessor](http://software.openwaterfoundation.org/geoprocessor/) - download page (with links to versioned software and documentation)
-* [Learn OWF GeoProcessor](http://software.openwaterfoundation.org/geoprocessor/latest/doc-user/) - latest user documentation
-* [Learn OWF GeoProcessor (for Developers)](http://software.openwaterfoundation.org/latest/doc-dev/) - latest developer documentation
+* [Latest GeoProcessor user documentation](http://software.openwaterfoundation.org/geoprocessor/latest/doc-user/) - latest user documentation
+* [Latest GeoProcessor developer documentation)](http://software.openwaterfoundation.org/latest/doc-dev/) - latest developer documentation
 
 The following sections provide a summary of the project repository and getting started:
 
@@ -68,8 +68,6 @@ owf-app-geoprocessor-python/       The GeoProcessor code and documentation repos
   .gitignore/                      Standard Git configuration file to ignore dynamic working files.
   .idea/                           PyCharm project files (ignored using .gitignore).
   build-util/                      Scripts to help in the GeoProcessor development environment.
-  doc-dev-mkdocs-project/          MkDocs project for developer documentation.
-    build-util/                    Scripts to help with MkDocs project (see README.md in folder).
   geoprocessor/                    Main module folder for GeoProcessor software.
     app/                           Main GeoProcessor application module.
     commands/                      Modules containing GeoProcessor commands.
@@ -109,7 +107,7 @@ OWF has developed the GeoProcessor on Windows using Cygwin but other development
 as resources allow.
 
 * QGIS (Python 3 version - Python is included with QGIS) - recent version is supported, as resources allow
-* Python 3 (used with MkDocs documentation and testing framework version) - QGIS version compatible with QGIS
+* Python 3 (used with MkDocs documentation and testing framework version) - compatible with QGIS Python version
 * PyCharm Community Edition - latest version if possible
 * Git client such as Git for Windows - latest version for operating system
 

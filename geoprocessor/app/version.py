@@ -23,11 +23,13 @@ app_organization = "Open Water Foundation"
 app_organization_url = "http://openwaterfoundation.org"
 app_copyright = "Copyright 2017-2020, Open Water Foundation"
 app_license = "GPL 3.0"
-# The following parts are used to create a full version
+# The following parts are used to create a full version:
+# - the strings are also used in build process scripts
 app_version_major = 1
 app_version_minor = 3
 app_version_micro = 0
 app_version_mod = "dev"
+# Use 'str' for all because could be a number or not
 app_version = str(app_version_major) + "." + str(app_version_minor) + "." + str(app_version_micro) + "." + \
-              app_version_mod
+              str(app_version_mod)
 app_version_date = "2020-01-11"

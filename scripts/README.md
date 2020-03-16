@@ -1,4 +1,4 @@
-# Scripts #
+# scripts #
 
 This folder contains scripts used to run the GeoProcessor in various environments.
 The "gptest" version has the QGIS references stripped out so that the test framework can be used in a general way.

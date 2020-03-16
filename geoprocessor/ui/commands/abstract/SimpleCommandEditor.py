@@ -47,7 +47,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
             app_session (GeoProcessorAppSession): the application session, used to determine the user's home directory.
         """
 
-        # The following will initialize shared components
+        # The following will initialize shared components in AbstractCommandEditor
         super().__init__(command)
 
         # TODO smalers 2020-01-16 why is this needed here?  Does not seem to be used.

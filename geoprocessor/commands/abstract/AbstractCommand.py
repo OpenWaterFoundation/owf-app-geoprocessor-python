@@ -54,21 +54,24 @@ class AbstractCommand(object):
         # The parameter values are all strings, matching the parsed values from the command string.
         # This ensures that no internal conversion, decimal round-off, etc. is exhibited.
         # The parameters are converted to needed non-string values in the command's run_command() function.
-        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        # - Derived class typically defines as class data '__command_parameters' and then has a reference to class
+        #   data from the command instance 'command_parameters'.
         self.command_parameters: dict = {}
 
         # Command metadata, used to display the description, etc.
-        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        # - Derived class typically defines as class data '__command_metadata' and then has a reference to class
+        #   data from the command instance 'command_metadata'.
         self.command_metadata: dict = {}
 
         # Command parameter metadata, a list of CommandParameterMetadata to
         # describe parameter names and types used by the command.
-        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        # - Derived class typically defines as class data '__command_parameter_metadata' and then has a
+        #   reference to class data from the command instance 'command_parameter_metadata'.
         self.command_parameter_metadata: [CommandParameterMetadata] = []
 
         # Command parameter input metadata, a dictionary of properties that describe UI features
-        # - this is defined in command classes
-        # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
+        # - Derived class typically defines as class data '__parameter_input_metadata' and then has a
+        #   reference to class data from the command instance 'parameter_input_metadata'.
         self.parameter_input_metadata: dict = {}
 
         # Command status to track issues.

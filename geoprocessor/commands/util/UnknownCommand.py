@@ -26,15 +26,26 @@ class UnknownCommand(AbstractCommand):
     This allows the command to exist gracefully in a command file and command list.
     Running the command has no effect.
     """
+
+    # Command metadata for command editor display
+    __command_metadata = dict()
+    __command_metadata['Description'] = "Unknown command - running this command will result in a warning.\n" \
+        "Edits to the command will not be checked."
+    __command_metadata['EditorType'] = "Generic"
+    __command_metadata['EditorTitle'] = 'Edit unknown command'  # Does not follow normal CommandName(...)
+
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
-        self.command_name = "UnknownCommand"
-        self.command_description = "Used when the command is not recognized"
         # Don't set the command name because don't know that there is one.
         # The AbstractCommand.command_string will be used to output the full string:
         super().__init__()
+
+        self.command_name = "UnknownCommand"
+
+        # Command metadata for command editor display
+        self.command_metadata = self.__command_metadata
 
     def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
@@ -63,3 +74,9 @@ class UnknownCommand(AbstractCommand):
         """
         # print("In UnknownCommand.run_command")
         pass
+
+    def to_string(self) -> str:
+        """
+        Return the original command string.
+        """
+        return self.command_string

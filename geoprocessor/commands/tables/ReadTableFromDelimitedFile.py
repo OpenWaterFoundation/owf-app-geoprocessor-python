@@ -77,6 +77,8 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         "The delimited file (relative or absolute path) to read. ${Property} syntax is recognized."
     __parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
     __parameter_input_metadata['InputFile.FileSelector.Title'] = "Select a delimited file to read"
+    __parameter_input_metadata['InputFile.FileSelector.Filters'] = \
+        ["Delimited file (*.csv *.txt)", "All files (*)"]
     # TableID
     __parameter_input_metadata['TableID.Description'] = "output table identifier"
     __parameter_input_metadata['TableID.Label'] = "TableID"

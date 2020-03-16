@@ -96,6 +96,8 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         "The delimited file to read (relative or absolute path). ${Property} syntax is recognized."
     __parameter_input_metadata['DelimitedFile.FileSelector.Type'] = "Read"
     __parameter_input_metadata['DelimitedFile.FileSelector.Title'] = "Select a delimited file to read."
+    __parameter_input_metadata['DelimitedFile.FileSelector.Filters'] = \
+        ["Delimited file (*.csv *.txt)", "All files (*.*)"]
     # CRS
     __parameter_input_metadata['CRS.Description'] = "coordinate reference system"
     __parameter_input_metadata['CRS.Label'] = "CRS"

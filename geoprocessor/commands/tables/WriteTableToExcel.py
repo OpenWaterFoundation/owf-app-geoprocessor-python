@@ -76,10 +76,10 @@ class WriteTableToExcel(AbstractCommand):
     __parameter_input_metadata['OutputFile.Label'] = "Output file"
     __parameter_input_metadata['OutputFile.Required'] = True
     __parameter_input_metadata['OutputFile.Tooltip'] = (
-        "The name of the Excel workbook to write to (relative or absolute path). ${Property} syntax is "
-        "recognized.\n"
-        "Can be an existing or non-existing Excel file. If non-existing, the Excel workbook file (.xlsx) is "
-        "created.")
+        "The name of the Excel workbook to write to (relative or absolute path). ${Property} syntax is recognized.\n"
+        "Can be an existing or non-existing Excel file. If non-existing, the Excel workbook file (.xlsx) is created.")
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
+        ["Excel file (*.xlsx *.xls)", "All files (*)"]
     # OutputWorksheet
     __parameter_input_metadata['OutputWorksheet.Description'] = "worksheet to write"
     __parameter_input_metadata['OutputWorksheet.Label'] = "Output worksheet"

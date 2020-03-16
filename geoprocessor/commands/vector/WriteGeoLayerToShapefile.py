@@ -84,6 +84,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         "The output Esri Shapefile (relative or absolute path). ${Property} syntax is recognized."
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select shapefile to write"
+    __parameter_input_metadata['OuputFile.FileSelector.Filters'] = \
+        ["Shapefile (*.shp)", "All files (*.*)"]
     # OutputCRS
     __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of the shapefile"
     __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"

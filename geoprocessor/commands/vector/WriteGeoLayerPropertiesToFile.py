@@ -66,6 +66,8 @@ class WriteGeoLayerPropertiesToFile(AbstractCommand):
         "The property file to write, as an absolute path or relative to the command file, can use ${Property"
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write"
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
+        ["Properties file (*.txt)", "All files (*)"]
     # IncludeProperties
     __parameter_input_metadata['IncludeProperties.Description'] = "properties to write"
     __parameter_input_metadata['IncludeProperties.Label'] = "Include properties"

@@ -82,6 +82,8 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
     __parameter_input_metadata['SpatialDataFile.Required'] = True
     __parameter_input_metadata['SpatialDataFile.FileSelector.Type'] = "Read"
     __parameter_input_metadata['SpatialDataFile.FileSelector.Title'] = "Select a GeoJSON file to read"
+    __parameter_input_metadata['SpatialDataFile.FileSelector.Filters'] =\
+        ["GeoJSON file (*.geojson *.json)", "All files (*.*)"]
 
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"

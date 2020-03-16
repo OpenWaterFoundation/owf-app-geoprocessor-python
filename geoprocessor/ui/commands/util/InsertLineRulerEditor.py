@@ -177,12 +177,16 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         Returns:
             None
         """
+        # logger = logging.getLogger(__name__)
         self.CommandDisplay_View_TextBrowser.setFocus()
-        # Set the position of the cursor the end of the text
-        cursor = self.CommandDisplay_View_TextBrowser.textCursor()
-        # TODO smalers 2020-03-13 need to set the position
-        # See:  https://stackoverflow.com/questions/19990026/change-text-selection-in-pyqt-qtextedit
-        # cursor.setPosition()...
+        # TODO smalers 2020-03-15 the following only seems to work for new commands.
+        # Set the position of the cursor the end of the document (same as TSTool)
+        # - see:  https://doc.qt.io/qt-5/qtextcursor.html#MoveOperation-enum
+        # - see:  https://forum.qt.io/topic/12336/solved-always-show-the-end-of-qtextbrowser/4
+        # logger.debug("Command string: '" + str(self.command.command_string) + "'")
+        self.CommandDisplay_View_TextBrowser.moveCursor(QtGui.QTextCursor.End)
+        self.CommandDisplay_View_TextBrowser.verticalScrollBar().setValue(
+            self.CommandDisplay_View_TextBrowser.verticalScrollBar().maximum())
 
     def setup_ui_window(self) -> None:
         """

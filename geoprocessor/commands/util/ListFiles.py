@@ -85,6 +85,7 @@ class ListFiles(AbstractCommand):
         "Required if 'URL' parameter is not specified."
     __parameter_input_metadata['Folder.FileSelector.Title'] = "select a path to a folder"
     __parameter_input_metadata['Folder.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['Folder.FileSelector.SelectFolder'] = True
     # URL
     __parameter_input_metadata['URL.Description'] = "the URL of interest"
     __parameter_input_metadata['URL.Label'] = "URL"

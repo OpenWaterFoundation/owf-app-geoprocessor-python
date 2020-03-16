@@ -27,6 +27,7 @@ import geoprocessor.ui.util.qt_util as qt_util
 
 import logging
 import os
+from pathlib import Path
 import webbrowser
 
 
@@ -878,15 +879,32 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         object_name = event_button.objectName()
         print("object_name=" + str(object_name))
         parameter_name = object_name.split(".")[0]
+
         # Do the following first because it influences defaults below
         request_key = parameter_name + "." + "FileSelector.SelectFolder"
         select_folder = False
         try:
             # The following should match ParameterName.FileSelectorTitle
-            select_folder = self.command.command_parameter_metadata[request_key]
+            select_folder = self.command.parameter_input_metadata[request_key]
         except KeyError:
             # Default was specified above...
             pass
+
+        # Do the following first because it influences defaults below
+        request_key = parameter_name + "." + "FileSelector.Filters"
+        filters = None
+        try:
+            # The following should match ParameterName.FileSelectorTitle
+            filters_list = self.command.parameter_input_metadata[request_key]
+            filters = ""
+            for filter in filters_list:
+                if len(filters) > 0:
+                    filters += ";;"
+                filters += filter
+        except KeyError:
+            # Default was specified above...
+            pass
+
         request_key = parameter_name + "." + "FileSelector.Title"
         if select_folder:
             select_file_title = "Select folder"
@@ -894,7 +912,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             select_file_title = "Select file"
         try:
             # The following should match ParameterName.FileSelectorTitle
-            select_file_title = self.command.command_parameter_metadata[request_key]
+            select_file_title = self.command.parameter_input_metadata[request_key]
         except KeyError:
             # Default was specified above...
             pass
@@ -924,13 +942,34 @@ class AbstractCommandEditor(QtWidgets.QDialog):
                 if os.path.isabs(parameter_value):
                     # The input is an absolute path so use as is
                     folder_start = parameter_value
+                    if select_folder:
+                        # A folder is being selected and the parameter was probably already that folder so
+                        # use the parent so the folder will be listed as a selectable option.
+                        folder_start_path = Path(folder_start)
+                        parent = folder_start_path.parent
+                        # Reset the start
+                        folder_start = str(parent)
                 else:
                     # The input is relative to the working directory so append to working directory with
                     # filesystem separator.
                     if working_dir is not None:
                         folder_start = io_util.to_absolute_path(working_dir, parameter_value)
+                        if select_folder:
+                            # A folder is being selected and the parameter was probably already that folder so
+                            # use the parent so the folder will be listed as a selectable option.
+                            folder_start_path = Path(folder_start)
+                            parent = folder_start_path.parent
+                            # Reset the start
+                            folder_start = str(parent)
                     else:
                         folder_start = io_util.to_absolute_path(user_folder, parameter_value)
+                        if select_folder:
+                            # A folder is being selected and the parameter was probably already that folder so
+                            # use the parent so the folder will be listed as a selectable option.
+                            folder_start_path = Path(folder_start)
+                            parent = folder_start_path.parent
+                            # Reset the start
+                            folder_start = str(parent)
         except KeyError:
             # Can't determine the input component so will assume the working directory, if available
             if working_dir is not None:
@@ -945,7 +984,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         filepath_selected = None
         if use_qt_dialog:
             # noinspection PyPep8Naming
-            parameter_QFileDialog = QtWidgets.QFileDialog(self, select_file_title, folder_start)
+            parameter_QFileDialog = QtWidgets.QFileDialog(self, select_file_title, folder_start, filters)
             if select_folder:
                 # A directory is being selected
                 parameter_QFileDialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)

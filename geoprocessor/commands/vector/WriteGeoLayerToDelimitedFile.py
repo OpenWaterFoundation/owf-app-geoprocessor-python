@@ -100,6 +100,8 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         "${Property} syntax is recognized.")
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write"
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
+        ["Delimited file (*.csv *.txt)", "All files (*.*)"]
     # OutputCRS
     __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of output"
     __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"

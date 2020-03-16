@@ -72,6 +72,8 @@ class ReadTableFromExcel(AbstractCommand):
         "${Property} syntax is recognized.")
     __parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
     __parameter_input_metadata['InputFile.FileSelector.Title'] = "Select an Excel file to read"
+    __parameter_input_metadata['InputFile.FileSelector.Filters'] = \
+        ["Excel file (*.xlsx *.xls)", "All files (*)"]
     # Worksheet
     __parameter_input_metadata['Worksheet.Description'] = "Excel worksheet"
     __parameter_input_metadata['Worksheet.Label'] = "Worksheet"

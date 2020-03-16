@@ -61,6 +61,7 @@ class CopyFile(AbstractCommand):
         "The name of the source file to copy. Can be specified using ${Property}."
     __parameter_input_metadata['SourceFile.FileSelector.Type'] = "Read"
     __parameter_input_metadata['SourceFile.FileSelector.Title'] = "Select the source file to copy"
+    __parameter_input_metadata['SourceFile.FileSelector.Filters'] = ["All files (*)"]
     # DestinationFile
     __parameter_input_metadata['DestinationFile.Description'] = "the name of the destination file"
     __parameter_input_metadata['DestinationFile.Label'] = "Destination file"
@@ -69,6 +70,7 @@ class CopyFile(AbstractCommand):
         "The name of the destination file. Can be specified using ${Property}."
     __parameter_input_metadata['DestinationFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['DestinationFile.FileSelector.Title'] = "select the destination file"
+    __parameter_input_metadata['DestinationFile.FileSelector.Filters'] = ["All files (*)"]
     # IfSourceFileNotFound
     __parameter_input_metadata['IfSourceFileNotFound.Description'] = "action if file not found"
     __parameter_input_metadata['IfSourceFileNotFound.Label'] = "If not found?"

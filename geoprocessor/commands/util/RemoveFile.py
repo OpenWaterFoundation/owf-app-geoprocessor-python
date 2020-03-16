@@ -56,10 +56,10 @@ class RemoveFile(AbstractCommand):
     # SourceFile
     __parameter_input_metadata['SourceFile.Description'] = ""
     __parameter_input_metadata['SourceFile.Label'] = 'File to remove'
-    __parameter_input_metadata['SourceFile.Tooltip'] = \
-        "Specify the file to remove, can use ${Property} notation."
+    __parameter_input_metadata['SourceFile.Tooltip'] = "Specify the file to remove, can use ${Property} notation."
     __parameter_input_metadata['SourceFile.Required'] = True
     __parameter_input_metadata['SourceFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['SourceFile.FileSelector.Filters'] = ["All files (*)"]
     # IfSourceFileNotFound
     __parameter_input_metadata['IfSourceFileNotFound.Description'] = "action if file not found"
     __parameter_input_metadata['IfSourceFileNotFound.Label'] = "If not found?"

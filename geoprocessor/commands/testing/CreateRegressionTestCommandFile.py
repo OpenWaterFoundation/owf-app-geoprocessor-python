@@ -70,12 +70,14 @@ class CreateRegressionTestCommandFile(AbstractCommand):
     __parameter_input_metadata['SearchFolder.FileSelector.Tile'] = "Select folder to search for tests"
     __parameter_input_metadata['SearchFolder.FileSelector.SelectFolder'] = True
     # OutputFile
-    __parameter_input_metadata['OutputFile.Description'] = "property file to write"
+    __parameter_input_metadata['OutputFile.Description'] = "regression test command file to write"
     __parameter_input_metadata['OutputFile.Label'] = "Output file"
     __parameter_input_metadata['OutputFile.Tooltip'] = (
         "The property file to write, as an absolute path or relative to the command file, can use ${Property}.")
     __parameter_input_metadata['OutputFile.Required'] = True
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
+        ["GP command file (*.gp)", "All files (*)"]
     # FilenamePattern
     __parameter_input_metadata['FilenamePattern.Description'] = "pattern to find command files"
     __parameter_input_metadata['FilenamePattern.Label'] = "Filename pattern"

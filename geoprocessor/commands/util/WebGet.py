@@ -80,6 +80,7 @@ class WebGet(AbstractCommand):
         "The password is not encrypted here so read-only or public accounts are recommended.")
     __parameter_input_metadata['OutputFile.Required'] = False
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = ["All files (*)"]
     # Username
     __parameter_input_metadata['Username.Description'] = "case-sensitive"
     __parameter_input_metadata['Username.Label'] = "User name"

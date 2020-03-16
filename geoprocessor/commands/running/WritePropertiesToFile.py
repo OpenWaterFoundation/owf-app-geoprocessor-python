@@ -61,6 +61,8 @@ class WritePropertiesToFile(AbstractCommand):
         "Can use ${Property}.")
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the output file"
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
+        ["Properties file (*.txt)", "All files (*)"]
     # IncludeProperties
     __parameter_input_metadata['IncludeProperties.Description'] = "names of properties to write"
     __parameter_input_metadata['IncludeProperties.Label'] = "Include properties"

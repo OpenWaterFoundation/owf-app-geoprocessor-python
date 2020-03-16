@@ -72,6 +72,7 @@ class UnzipFile(AbstractCommand):
         "The file to be unzipped (relative or absolute path). ${Property} syntax is recognized."
     __parameter_input_metadata['File.FileSelector.Type'] = "Read"
     __parameter_input_metadata['File.FileSelector.Title'] = "Select the file to be unzipped"
+    __parameter_input_metadata['File.FileSelector.Filters'] = ["Zip file (*.tar *.zip)", "All files (*)"]
     # FileType
     __parameter_input_metadata['FileType.Description'] = "input file format"
     __parameter_input_metadata['FileType.Label'] = "File type"

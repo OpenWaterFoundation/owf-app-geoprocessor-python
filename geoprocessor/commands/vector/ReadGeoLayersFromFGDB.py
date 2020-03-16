@@ -97,7 +97,11 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     __parameter_input_metadata['SpatialDataFolder.Required'] = True
     __parameter_input_metadata['SpatialDataFolder.Tooltip'] = "The file geodatbase to read (must end in .gdb)."
     __parameter_input_metadata['SpatialDataFolder.FileSelector.Type'] = "Read"
-    __parameter_input_metadata['SpatialDataFolder.FileSelector.Title'] = "Select the file geodatabase to read."
+    __parameter_input_metadata['SpatialDataFolder.FileSelector.SelectFolder'] = "True"
+    __parameter_input_metadata['SpatialDataFolder.FileSelector.Title'] = "Select the file geodatabase folder"
+    # Filters only seem to work on files, not folders
+    # __parameter_input_metadata['SpatialDataFolder.FileSelector.Filters'] = \
+    #    ["Geodatabase (*.gdb)", "All folders (*.*)"]
     # ReadOnlyOneFeatureClass
     __parameter_input_metadata['ReadOnlyOneFeatureClass.Description'] = "whether to read one feature class"
     __parameter_input_metadata['ReadOnlyOneFeatureClass.Label'] = "Read only one feature class?"

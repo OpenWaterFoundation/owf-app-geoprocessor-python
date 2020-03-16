@@ -98,6 +98,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
         "${Property} syntax is recognized.")
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = 'Write'
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = 'Select delimited file'
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
+        ["Delimited file (*.csv *.txt)", "All files (*)"]
     # Delimiter
     __parameter_input_metadata['Delimiter.Description'] = "delimiter for file"
     __parameter_input_metadata['Delimiter.Label'] = "Delimiter"

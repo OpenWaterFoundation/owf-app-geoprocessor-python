@@ -59,6 +59,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
         "Can use ${Property}.")
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the report file to create"
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
+        ["Report file (*.txt)", "All files (*)"]
 
     # Only one regression command test file
     __regression_test_fp = None  # Open file pointer to write regression test results

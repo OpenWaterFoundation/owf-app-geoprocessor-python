@@ -80,6 +80,8 @@ class WriteGeoLayerToKML(AbstractCommand):
         "The output KML file (relative or absolute path). ${Property} syntax is recognized."
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select file to write output"
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
+        ["GeoJSON file (*.kmz)", "All files (*.*)"]
     # PlacemarkNameAttribute
     __parameter_input_metadata['PlacemarkNameAttribute.Description'] = \
         "geolayer attribute for the KML's placemark name"

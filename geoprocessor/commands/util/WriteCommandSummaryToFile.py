@@ -38,7 +38,6 @@ class WriteCommandSummaryToFile(AbstractCommand):
     CommandLogRecord instances are output to a simple HTML file.
     """
 
-    # TODO smalers 2018-01-28 in the future allow "Format", with "HTML" as default.
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("OutputFile", type(""))
     ]
@@ -59,6 +58,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
         "Can use ${Property}.")
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select the output file"
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = ["Summary file (*.html)", "All files (*)"]
 
     def __init__(self) -> None:
         """

@@ -71,6 +71,7 @@ class CompareFiles(AbstractCommand):
     __parameter_input_metadata['InputFile1.FileSelector.Type'] = "Read"
     __parameter_input_metadata['InputFile1.FileSelector.Title'] = "Select first file to compare"
     __parameter_input_metadata['InputFile1.FileSelector.Tooltip'] = "Browse for file"
+    __parameter_input_metadata['InputFile1.FileSelector.Filters'] = ["All files (*)"]
     # InputFile2
     __parameter_input_metadata['InputFile2.Description'] = "name of the second file for comparison"
     __parameter_input_metadata['InputFile2.Label'] = "Second input file"
@@ -80,6 +81,7 @@ class CompareFiles(AbstractCommand):
     __parameter_input_metadata['InputFile2.FileSelector.Type'] = "Read"
     __parameter_input_metadata['InputFile2.FileSelector.Title'] = "Select second file to compare"
     __parameter_input_metadata['InputFile2.FileSelector.Tooltip'] = "Browse for file"
+    __parameter_input_metadata['InputFile2.FileSelector.Filters'] = ["All files (*)"]
     # CommentLineChar
     __parameter_input_metadata['CommentLineChar.Description'] = "character indicating comment lines"
     __parameter_input_metadata['CommentLineChar.Label'] = "Comment line character"

@@ -88,6 +88,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
         "recognized.")
     __parameter_input_metadata['SpatialDataFile.Required'] = True
     __parameter_input_metadata['SpatialDataFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['SpatialDataFile.FileSelector.Filters'] = ["Shapefile (*.shp)", "All files (*.*)"]
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
     __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"

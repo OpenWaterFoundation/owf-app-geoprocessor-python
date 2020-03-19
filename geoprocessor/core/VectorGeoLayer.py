@@ -53,6 +53,8 @@ class VectorGeoLayer(GeoLayer):
     """
 
     def __init__(self, geolayer_id: str,
+                 name: str,
+                 description: str = None,
                  geolayer_qgs_vector_layer: QgsVectorLayer = None,
                  geolayer_source_path: str = None, properties: dict = None) -> None:
         """
@@ -62,6 +64,10 @@ class VectorGeoLayer(GeoLayer):
             geolayer_id (str):
                 String that is the GeoLayer's reference ID. This ID is used to access the GeoLayer from the
                 GeoProcessor for manipulation.
+            name (str):
+                Layer name, will be used in map legend, etc.
+            description (str):
+                Layer description, with more details.
             geolayer_qgs_vector_layer (QgsVectorLayer)
                 Object created by the QGIS processor. All GeoLayer spatial manipulations are
                 performed on the GeoLayer's qgs_layer.
@@ -75,7 +81,8 @@ class VectorGeoLayer(GeoLayer):
 
         # GeoLayer data
         # - the layer is stored in the parent class using QGIS QgsLayer
-        super().__init__(geolayer_id=geolayer_id, geolayer_qgs_layer=geolayer_qgs_vector_layer,
+        super().__init__(geolayer_id=geolayer_id, name=name, description=description,
+                         geolayer_qgs_layer=geolayer_qgs_vector_layer,
                          geolayer_source_path=geolayer_source_path, properties=properties)
 
         # All other differences are implemented through behavior with additional methods below.
@@ -261,6 +268,19 @@ class VectorGeoLayer(GeoLayer):
 
         # Run processing in the qgis utility function.
         qgis_util.split_qgsvectorlayer_by_attribute(self.qgs_layer, attribute_name, output_qgsvectorlayers)
+
+    def to_json(self):
+        """
+        Return dictionary of class data to support JSON serialization using json package.
+        Don't serialize all the data because daa are in the typical spatial data format.
+        Instead serialize what is needed to support web mapping and other visualization.
+        """
+        return {
+            "geoLayerId": self.id,
+            "name": self.name,
+            "description": self.description
+            # TODO smalers 2020-03-19 need to add the source and possibly source type
+        }
 
     def write_to_disk(self, output_file_absolute: str) -> GeoLayer:
         """

@@ -1115,6 +1115,8 @@ class CommandListWidget(object):
         else:
             # Do clicked event
             self.command_ListView.clicked.connect(self.update_ui_status_commands)
+        # Handle key event on list for delete key and Enter for edit
+        # - TODO smalers 2020-03-17 need to figure out how to handle Enter=edit and Delete=delete keys.
         # Other connections
         # Connect right-click of command_ListView widget item.
         self.command_ListView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)

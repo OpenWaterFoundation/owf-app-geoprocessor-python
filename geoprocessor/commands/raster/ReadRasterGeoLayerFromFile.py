@@ -319,7 +319,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
         # Determine success of command processing. Raise RuntimeError if any errors occurred
         if self.warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(self.warning_count)
+            message = "There were {} warnings processing the command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

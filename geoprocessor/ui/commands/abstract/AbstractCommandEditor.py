@@ -785,6 +785,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         Args:
             parameter_name (str):  Parameter name.
             parameter_Label (str):  Parameter label, for start of input line.
+              Typically a colon is not at the end and will be added.
 
         Returns:
             None
@@ -806,7 +807,11 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # noinspection PyPep8Naming
         parameter_QLabel = QtWidgets.QLabel(self.parameter_QFrame)
         parameter_QLabel.setObjectName("Command_Parameter_Label")
-        parameter_QLabel.setText(parameter_Label + ":")
+        # The label should end with a colon when displayed.
+        if parameter_Label.endswith(":"):
+            parameter_QLabel.setText(parameter_Label)
+        else:
+            parameter_QLabel.setText(parameter_Label + ":")
         parameter_QLabel.setAlignment(QtCore.Qt.AlignRight)  # |QtCore.Qt.AlignCenter)
         # Allow expanding horizontally
         parameter_QLabel.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)

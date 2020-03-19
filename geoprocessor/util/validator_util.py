@@ -18,11 +18,10 @@
 # ________________________________________________________________NoticeEnd___
 
 """
-Functions that provide validation for data values, in particular command parameters.
+Functions that provide validation for primitive data values.
 These functions are typically called from the check_command_parameters function
 of commands to validate a parameter value.
-Multiple functions may be called if necessary, although as many validator functions
-as necessary can be defined.
+More specific validation is provided by 'command_util.validate*' functions.
 """
 import os
 import ogr
@@ -38,9 +37,11 @@ import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.zip_util as zip_util
 
 from urllib.request import urlopen
+from logging import Logger
 
 
-def run_check(self, condition: str, parameter_name: str, parameter_value: str or int, fail_response: str or None,
+# TODO smalers 2020-03-16 legacy code that needs to be transferred to individual check functions.
+def run_check(command, condition: str, parameter_name: str, parameter_value: str or int, fail_response: str or None,
               other_values: [object] = None) -> bool:
     """
     The run_check utility function is used to store all of the checks done within the command classes. There are
@@ -48,23 +49,19 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str or
     the GeoProcessor was designed in a way that the checks for each command class (including messages and
     recommendations) were within each command class. This new design allows for all of the messages and recommendations
     (quite clunky and ugly code) to be pulled away from the command class and placed in this utility function.
-
     A benefit to this design is that popular checks that are called on many commands (for example: is the CRS_code, the
     coordinate reference code, valid) are only written out once. Then the same check can be called from however many
     command classes necessary. If the message and recommendation strings are changed for a given check, those messages
     only have to be changed once here in this utility command rather than in multiple command classes.
-
     Each check has a name called the condition. The checks are alphabetized below by their condition statement. In
     the developer documentation there is explanation for each available check. This way, when there are additional
     parameters required (entered by the other_values parameter), the developer knows exactly what the check requires.
     Before utilizing a check in the command class, it is highly recommended that the developer documentation for that
     check if read.
-
     Each check condition statement is written in a way that answers YES (or TRUE) if the check passes. This makes it
     easy for checks to be written and standardized by multiple developers.
-
     Args:
-        self: the class object of the command being checked
+        command: the command being checked
         condition: the condition statement (or name) of the check that is to be run
         parameter_name: the command parameter being checked (the name, not the value)
         parameter_value: the command parameter value being checked (the value, not the name)
@@ -75,21 +72,21 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str or
         other_values: an optional argument that allows the checks to take in more than one parameter_value for the check
             refer to the developer documentation for each individual check to determine if the other_values argument is
             used for that check.
-
     Returns:
         run_the_command: Boolean. If True, the check has determined that it is ok for the command to run. If False, the
         check has determined that it is not ok for the command to run.
     """
 
-    # Boolean to determine if the check failed. Set to FALSE until the check FAILS.
-    check_failed = False
+    # Boolean to determine if the data are valid. Set to True until check indicates invalid.
+    is_valid = True
 
-    # Check if the attributes in a list exist in a GeoLayer based off of its attribute name.
-    if condition.upper() == "DOATTRIBUTESEXIST":
+    condition_upper = condition.upper()
+    if condition_upper == "DOATTRIBUTESEXIST":
+        # Check whether the attributes in a list exist in a GeoLayer based off of its attribute name.
         geolayer_id = other_values[0]
 
         # Get the GeoLayer.
-        input_geolayer = self.command_processor.get_geolayer(geolayer_id)
+        input_geolayer = command.command_processor.get_geolayer(geolayer_id)
 
         # Get the existing attribute names of the input GeoLayer.
         list_of_existing_attributes = input_geolayer.get_attribute_field_names()
@@ -101,83 +98,70 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str or
             if attr not in list_of_existing_attributes:
                 invalid_attrs.append(attr)
 
-        # The message is dependent on the invalid_attrs varaible. Assign message AFTER invalid_attrs variable has been
-        # created.
-        message = "The following attributes ({}) of the {} parameter do" \
-                  " not exist within the GeoLayer ({}).".format(invalid_attrs, parameter_name, geolayer_id)
-        recommendation = "Specify valid attribute names."
-
         # If there are invalid attributes, the check failed.
         if invalid_attrs:
-            check_failed = True
+            message = "The following attributes ({}) of the {} parameter do" \
+                      " not exist within the GeoLayer ({}).".format(invalid_attrs, parameter_name, geolayer_id)
+            recommendation = "Specify valid attribute names."
+            is_valid = False
 
-    # Check if the parameter value (absolute file path) has a valid and existing folder.
-    elif condition.upper() == "DOESFILEPATHHAVEAVALIDFOLDER":
-
-        message = 'The folder of the {} ({}) is not a valid folder.'.format(parameter_name, parameter_value)
-        recommendation = "Specify a valid folder for the {} parameter.".format(parameter_name)
-
+    elif condition_upper == "DOESFILEPATHHAVEAVALIDFOLDER":
+        # Check whether the parameter value (absolute file path) has a valid and existing folder.
         output_folder = os.path.dirname(parameter_value)
         if not os.path.isdir(output_folder):
-            check_failed = True
+            message = 'The folder of the {} ({}) is not a valid folder.'.format(parameter_name, output_folder)
+            recommendation = "Specify a valid folder for the {} parameter.".format(parameter_name)
+            is_valid = False
 
-    # Check if the GeoLayer of the parameter value (GeoLayer ID) has the correct geometry type.
-    elif condition.upper() == "DOESGEOLAYERIDHAVECORRECTGEOMETRY":
+    elif condition_upper == "DOESGEOLAYERIDHAVECORRECTGEOMETRY":
+        # Check whether the GeoLayer of the parameter value (GeoLayer ID) has the correct geometry type.
         desired_geom_type_list = [item.upper() for item in other_values[0]]
+        if not command.command_processor.get_geolayer(parameter_value).get_geometry().upper() in desired_geom_type_list:
+            message = 'The {} ({}) does not have geometry in the correct ' \
+                      'format ({}).'.format(parameter_name, parameter_value, desired_geom_type_list)
+            recommendation = 'Specify a GeoLayerID of a GeoLayer with geometry in' \
+                             ' correct format ({}).'.format(desired_geom_type_list)
+            is_valid = False
 
-        message = 'The {} ({}) does not have geometry in the correct ' \
-                  'format ({}).'.format(parameter_name, parameter_value, desired_geom_type_list)
-        recommendation = 'Specify a GeoLayerID of a GeoLayer with geometry in' \
-                         ' correct format ({}).'.format(desired_geom_type_list)
-
-        if not self.command_processor.get_geolayer(parameter_value).get_geometry().upper() in desired_geom_type_list:
-            check_failed = True
-
-    # Check if the GeoLayer of the parameter value (GeoLayer ID) has a different CRS than another GeoLayer (referenced
-    # by its GeoLayer ID)
-    elif condition.upper() == "DOGEOLAYERIDSHAVEMATCHINGCRS":
+    elif condition_upper == "DOGEOLAYERIDSHAVEMATCHINGCRS":
+        # Check whether the GeoLayer of the parameter value (GeoLayer ID) has a different CRS than another GeoLayer
+        # (referenced by its GeoLayer ID)
         second_parameter_name = other_values[0]
         second_parameter_value = other_values[1]
 
-        message = 'The {} ({}) and the {} ({}) do not have the same coordinate reference' \
-                  ' system.'.format(parameter_name, parameter_value, second_parameter_name, second_parameter_value)
-        recommendation = 'Specify GeoLayers that have the same coordinate reference system.'
-
-        input_crs = self.command_processor.get_geolayer(parameter_value).get_crs()
-        second_crs = self.command_processor.get_geolayer(second_parameter_value).get_crs()
+        input_crs = command.command_processor.get_geolayer(parameter_value).get_crs()
+        second_crs = command.command_processor.get_geolayer(second_parameter_value).get_crs()
 
         if not input_crs == second_crs:
-            check_failed = True
+            message = 'The {} ({}) and the {} ({}) do not have the same coordinate reference' \
+                      ' system.'.format(parameter_name, parameter_value, second_parameter_name, second_parameter_value)
+            recommendation = 'Specify GeoLayers that have the same coordinate reference system.'
+            is_valid = False
 
-    # Check if the parameter value (crs code)is a valid CRS code usable in the QGIS environment.
-    elif condition.upper() == "ISCRSCODEVALID":
-
-        message = 'The {} ({}) is not a valid CRS code.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a valid CRS code (EPSG codes are an approved format).'
-
+    elif condition_upper == "ISCRSCODEVALID":
+        # Check whether the parameter value (crs code)is a valid CRS code usable in the QGIS environment.
         if qgis_util.get_qgscoordinatereferencesystem_obj(parameter_value) is None:
-            check_failed = True
+            message = 'The {} ({}) is not a valid CRS code.'.format(parameter_name, parameter_value)
+            recommendation =\
+                'Specify a valid CRS code (EPSG codes are an approved format).  See:  https://spatialreference.org/'
+            is_valid = False
 
-    # Check if the parameter value (DataStoreID) is an existing DataStoreID.
-    elif condition.upper() == "ISDATASTOREIDEXISTING":
+    elif condition_upper == "ISDATASTOREIDEXISTING":
+        # Check whether the parameter value (DataStoreID) is an existing DataStoreID.
+        if not command.command_processor.get_datastore(parameter_value):
+            message = 'The {} ({}) is not a valid DataStore ID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a valid DataStore ID.'
+            is_valid = False
 
-        message = 'The {} ({}) is not a valid DataStore ID.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a valid DataStore ID.'
-
-        if not self.command_processor.get_datastore(parameter_value):
-            check_failed = True
-
-    # Check if the parameter value (DataStore ID) is a unique DataStoreID.
-    elif condition.upper() == "ISDATASTOREIDUNIQUE":
-
-        message = 'The {} ({}) value is already in use as a DataStore ID.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a new {}.'.format(parameter_name)
-
-        if self.command_processor.get_geolayer(parameter_value):
-            check_failed = True
+    elif condition_upper == "ISDATASTOREIDUNIQUE":
+        # Check whether the parameter value (DataStore ID) is a unique DataStoreID.
+        if command.command_processor.get_geolayer(parameter_value):
+            message = 'The {} ({}) value is already in use as a DataStore ID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a new {}.'.format(parameter_name)
+            is_valid = False
 
             # noinspection PyPep8Naming
-            pv_IfDataStoreIDExists = self.get_parameter_value("IfDataStoreIDExists", default_value="Replace")
+            pv_IfDataStoreIDExists = command.get_parameter_value("IfDataStoreIDExists", default_value="Replace")
 
             if pv_IfDataStoreIDExists.upper() == "REPLACEANDWARN":
                 fail_response = "WARN"
@@ -186,63 +170,48 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str or
             elif pv_IfDataStoreIDExists.upper() == "FAIL":
                 fail_response = "FAIL"
             elif pv_IfDataStoreIDExists.upper() == "OPEN":
-                check_failed = False
+                is_valid = True
             elif pv_IfDataStoreIDExists.upper() == "REPLACE":
-                check_failed = False
+                is_valid = True
 
-    # Check if the parameter value (Table Name) is unique within the DataStore.
-    elif condition.upper() == "ISDATASTORETABLEUNIQUE":
+    elif condition_upper == "ISDATASTORETABLEUNIQUE":
+        # Check whether the parameter value (Table Name) is unique within the DataStore.
         data_store_id = other_values[0]
-
-        message = "The {} ({}) value is already an existing table in the {} DataStore.".format(parameter_name,
-                                                                                               parameter_value,
-                                                                                               data_store_id)
-        recommendation = "Specify a unique {} value.".format(parameter_name)
-
-        data_store_obj = self.command_processor.get_datastore(data_store_id)
+        data_store_obj = command.command_processor.get_datastore(data_store_id)
         list_of_tables = data_store_obj.return_table_names()
         if parameter_value in list_of_tables:
-            check_failed = True
+            message = "The {} ({}) value is already an existing table in the {} DataStore.".format(parameter_name,
+                                                                                                   parameter_value,
+                                                                                                   data_store_id)
+            recommendation = "Specify a unique {} value.".format(parameter_name)
+            is_valid = False
 
-    # Check if the parameter value (column name) is a valid column name of a delimited file.
-    elif condition.upper() == "ISDELIMITEDFILECOLUMNNAMEVALID":
-
+    elif condition_upper == "ISDELIMITEDFILECOLUMNNAMEVALID":
+        # Check whether the parameter value (column name) is a valid column name of a delimited file.
         delimited_file_abs = other_values[0]
         delimiter = other_values[1]
-
-        message = "The {} ({}) is not a valid column name in the delimited file ({}).".format(parameter_name,
-                                                                                              parameter_value,
-                                                                                              delimited_file_abs)
-        recommendation = "Specify an existing and valid {}.".format(parameter_name)
-
         if parameter_value not in io_util.get_col_names_from_delimited_file(delimited_file_abs, delimiter):
-            check_failed = True
+            message = "The {} ({}) is not a valid column name in the delimited file ({}).".format(parameter_name,
+                                                                                                  parameter_value,
+                                                                                                  delimited_file_abs)
+            recommendation = "Specify an existing and valid {}.".format(parameter_name)
+            is_valid = False
 
-    # Check if the paramter value (sheet name) is a valid sheet name of an excel file.
-    elif condition.upper() == "ISEXCELSHEETNAMEVALID":
-
+    elif condition_upper == "ISEXCELSHEETNAMEVALID":
+        # Check whether the parameter value (sheet name) is a valid sheet name of an excel file.
         excel_file_abs = other_values[0]
-
-        message = "The {} ({}) is not a valid excel worksheet name in the excel file ({}).".format(parameter_name,
-                                                                                                   parameter_value,
-                                                                                                   excel_file_abs)
-        recommendation = "Specify an existing and valid {}.".format(parameter_name)
-
         excel_workbook_obj = pandas_util.create_excel_workbook_obj(excel_file_abs)
         excel_worksheet_list = excel_workbook_obj.sheet_names
-
         if parameter_value not in excel_worksheet_list:
-            check_failed = True
+            message = "The {} ({}) is not a valid excel worksheet name in the excel file ({}).".format(parameter_name,
+                                                                                                       parameter_value,
+                                                                                                       excel_file_abs)
+            recommendation = "Specify an existing and valid {}.".format(parameter_name)
+            is_valid = False
 
-    # Check if the parameter value (feature class) is within a file geodatabase.
-    elif condition.upper() == "ISFEATURECLASSINFGDB":
-
+    elif condition_upper == "ISFEATURECLASSINFGDB":
+        # Check whether the parameter value (feature class) is within a file geodatabase.
         file_gdb_path_abs = other_values[0]
-
-        message = "The {} ({}) is not a valid feature class in the file geodatabase ({}).".format(parameter_name,
-                                                                                                  parameter_value,
-                                                                                                  file_gdb_path_abs)
-        recommendation = "Specify an existing and valid {}.".format(parameter_name)
         ogr.UseExceptions()
         driver = ogr.GetDriverByName("OpenFileGDB")
         gdb = driver.Open(file_gdb_path_abs)
@@ -252,56 +221,51 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str or
             feature_class_list.append(feature_class.GetName())
 
         if parameter_value not in feature_class_list:
-            check_failed = True
+            message = "The {} ({}) is not a valid feature class in the file geodatabase ({}).".format(parameter_name,
+                                                                                                      parameter_value,
+                                                                                                      file_gdb_path_abs)
+            recommendation = "Specify an existing and valid {}.".format(parameter_name)
+            is_valid = False
 
-    # Check if the parameter value (absolute file path) is a valid and existing file.
-    elif condition.upper() == "ISFILEPATHVALID":
-
-        message = "The {} ({}) is not a valid file.".format(parameter_name, parameter_value)
-        recommendation = "Specify a valid file for the {} parameter.".format(parameter_name)
+    elif condition_upper == "ISFILEPATHVALID":
+        # Check whether the parameter value (absolute file path) is a valid and existing file.
 
         if not os.path.isfile(parameter_value):
-            check_failed = True
+            message = "The {} ({}) is not a valid file.".format(parameter_name, parameter_value)
+            recommendation = "Specify a valid file for the {} parameter.".format(parameter_name)
+            is_valid = False
 
-    # Check if the parameter value (absolute folder path) is a valid file geodatabase.
-    elif condition.upper() == "ISFOLDERAFGDB":
-
-        message = "The {} ({}) is not a valid file geodatabase.".format(parameter_name, parameter_value)
-        recommendation = "Specify a valid file geodatabase for the {} parameter.".format(parameter_name)
-
+    elif condition_upper == "ISFOLDERAFGDB":
+        # Check whether the parameter value (absolute folder path) is a valid file geodatabase.
         ogr.UseExceptions()
         driver = ogr.GetDriverByName("OpenFileGDB")
         if driver.Open(parameter_value) is None:
-            check_failed = True
+            message = "The {} ({}) is not a valid file geodatabase.".format(parameter_name, parameter_value)
+            recommendation = "Specify a valid file geodatabase for the {} parameter.".format(parameter_name)
+            is_valid = False
 
-    # Check if the parameter value (absolute folder path) is a valid and existing folder.
-    elif condition.upper() == "ISFOLDERPATHVALID":
-
-        message = "The {} ({}) is not a valid folder.".format(parameter_name, parameter_value)
-        recommendation = "Specify a valid folder for the {} parameter.".format(parameter_name)
-
+    elif condition_upper == "ISFOLDERPATHVALID":
+        # Check whether the parameter value (absolute folder path) is a valid and existing folder.
         if not os.path.isdir(parameter_value):
-            check_failed = True
+            message = "The {} ({}) is not a valid folder.".format(parameter_name, parameter_value)
+            recommendation = "Specify a valid folder for the {} parameter.".format(parameter_name)
+            is_valid = False
 
-    # Check if the parameter value (GeoLayerID) is an existing GeoLayerID.
-    elif condition.upper() == "ISGEOLAYERIDEXISTING":
+    elif condition_upper == "ISGEOLAYERIDEXISTING":
+        # Check whether the parameter value (GeoLayerID) is an existing GeoLayerID.
+        if not command.command_processor.get_geolayer(parameter_value):
+            message = 'The {} ({}) is not a valid GeoLayer ID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a valid GeoLayer ID.'
+            is_valid = False
 
-        message = 'The {} ({}) is not a valid GeoLayer ID.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a valid GeoLayer ID.'
-
-        if not self.command_processor.get_geolayer(parameter_value):
-            check_failed = True
-
-    # Check if the parameter value (GeoLayer ID) is a unique GeoLayerID.
-    elif condition.upper() == "ISGEOLAYERIDUNIQUE":
-
-        message = 'The {} ({}) value is already in use as a GeoLayer ID.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a new {}.'.format(parameter_name)
-
-        if self.command_processor.get_geolayer(parameter_value):
-            check_failed = True
+    elif condition_upper == "ISGEOLAYERIDUNIQUE":
+        # Check whether the parameter value (GeoLayer ID) is a unique GeoLayerID.
+        if command.command_processor.get_geolayer(parameter_value):
+            message = 'The {} ({}) value is already in use as a GeoLayer ID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a new {}.'.format(parameter_name)
+            is_valid = False
             # noinspection PyPep8Naming
-            pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
+            pv_IfGeoLayerIDExists = command.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
             if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
                 fail_response = "WARN"
@@ -310,42 +274,72 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str or
             elif pv_IfGeoLayerIDExists.upper() == "FAIL":
                 fail_response = "FAIL"
             else:
-                check_failed = False
+                is_valid = True
 
-    # Check if the parameter value (integer) is between or at two values/numbers.
-    elif condition.upper() == "ISINTBETWEENRANGE":
+    elif condition_upper == "ISGEOLAYERVIEWGROUPIDEXISTING":
+        # Check whether the parameter value (GeoLayerViewGroupID) is an existing GeoLayerViewGroupID.
+        if not command.command_processor.get_geolayerviewgroup(parameter_value):
+            message = 'The {} ({}) is not a valid GeoLayerViewGroupID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a valid GeoLayerViewGroupID.'
+            is_valid = False
+
+    elif condition_upper == "ISGEOMAPIDUNIQUE":
+        # Check whether the parameter value (GeoMapID) is a unique GeoMapID.
+        if command.command_processor.get_geomap(parameter_value):
+            message = 'The {} ({}) value is already in use as a GeoMapID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a new {}.'.format(parameter_name)
+            is_valid = False
+            # noinspection PyPep8Naming
+            pv_IfGeoLayerIDExists = command.get_parameter_value("IfGeoMapIDExists", default_value="Replace")
+
+            if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+                fail_response = "WARN"
+            elif pv_IfGeoLayerIDExists.upper() == "WARN":
+                fail_response = "WARNBUTDONOTRUN"
+            elif pv_IfGeoLayerIDExists.upper() == "FAIL":
+                fail_response = "FAIL"
+            else:
+                is_valid = True
+
+    elif condition_upper == "ISGEOMAPIDEXISTING":
+        # Check whether the parameter value (GeoMapID) is an existing GeoMapID.
+        if not command.command_processor.get_geomap(parameter_value):
+            message = 'The {} ({}) is not a valid GeoMap ID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a valid GeoMap ID.'
+            is_valid = False
+
+    elif condition_upper == "ISINTBETWEENRANGE":
+        # Check whether the parameter value (integer) is between or at two values/numbers.
         int_min = other_values[0]
         int_max = other_values[1]
 
-        message = 'The {} ({}) must be at or between {} & {}'.format(parameter_name, parameter_value, int_min, int_max)
-        recommendation = 'Specify a valid {} value.'.format(parameter_name)
-
         if not validate_int_in_range(parameter_value, int_min, int_max, False, False):
-            check_failed = True
+            message = 'The {} ({}) must be at or between {} & {}'.format(parameter_name, parameter_value, int_min,
+                                                                         int_max)
+            recommendation = 'Specify a valid {} value.'.format(parameter_name)
+            is_valid = False
 
-    # Check if the length of a list is correct.
-    elif condition.upper() == "ISLISTLENGTHCORRECT":
+    elif condition_upper == "ISLISTLENGTHCORRECT":
+        # Check whether the length of a list is correct.
         delimiter = other_values[0]
         correct_length = other_values[1]
-
-        message = 'The {} ({}) must have {} number of items.'.format(parameter_name, parameter_value, correct_length)
-        recommendation = 'Specify a list of {} items for the {} parameter.'.format(correct_length, parameter_name)
 
         # Convert the string into a list.
         list_of_strings = string_util.delimited_string_to_list(parameter_value, delimiter)
         if len(list_of_strings) != correct_length:
-            check_failed = True
+            message = 'The {} ({}) must have {} number of items.'.format(parameter_name, parameter_value,
+                                                                         correct_length)
+            recommendation = 'Specify a list of {} items for the {} parameter.'.format(correct_length, parameter_name)
+            is_valid = False
 
-    # Check if the property name is a unique property name
-    elif condition.upper() == "ISPROPERTYUNIQUE":
-
-        message = 'The {} ({}) value is already in use.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a new {}.'.format(parameter_name)
-
-        if self.command_processor.get_property(parameter_value):
-            check_failed = True
+    elif condition_upper == "ISPROPERTYUNIQUE":
+        # Check whether the property name is a unique property name
+        if command.command_processor.get_property(parameter_value):
+            message = 'The {} ({}) value is already in use.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a new {}.'.format(parameter_name)
+            is_valid = False
             # noinspection PyPep8Naming
-            pv_IfPropertyExists = self.get_parameter_value("IfPropertyExists", default_value="Replace")
+            pv_IfPropertyExists = command.get_parameter_value("IfPropertyExists", default_value="Replace")
 
             if pv_IfPropertyExists.upper() == "REPLACEANDWARN":
                 fail_response = "WARN"
@@ -354,51 +348,42 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str or
             elif pv_IfPropertyExists.upper() == "FAIL":
                 fail_response = "FAIL"
             else:
-                check_failed = False
+                is_valid = True
 
-    # Check if the input string is a valid QGSExpression.
-    elif condition.upper() == "ISQGSEXPRESSIONVALID":
-
-        message = "{} ({}) is not a valid QgsExpression.".format(parameter_name, parameter_value)
-        recommendation = "Specify a valid QgsExpression for {}.".format(parameter_name)
-
+    elif condition_upper == "ISQGSEXPRESSIONVALID":
+        # Check whether the input string is a valid QGSExpression.
         if qgis_util.get_qgsexpression_obj(parameter_value) is None:
-            check_failed = True
+            message = "{} ({}) is not a valid QgsExpression.".format(parameter_name, parameter_value)
+            recommendation = "Specify a valid QgsExpression for {}.".format(parameter_name)
+            is_valid = False
 
-    # Check if the input string is the correct length.
-    elif condition.upper() == "ISSTRINGLENGTHCORRECT":
-
+    elif condition_upper == "ISSTRINGLENGTHCORRECT":
+        # Check whether the input string is the correct length.
         correct_length = other_values[0]
-
-        message = 'The {} ({}) must have exactly {} character(s).'.format(parameter_name, parameter_value,
-                                                                          correct_length)
-        recommendation = 'Specify a string with {} characters for the {} parameter.'.format(correct_length,
-                                                                                            parameter_name)
 
         # Convert the string into a list.
         if len(parameter_value) != correct_length:
-            check_failed = True
+            message = 'The {} ({}) must have exactly {} character(s).'.format(parameter_name, parameter_value,
+                                                                              correct_length)
+            recommendation = 'Specify a string with {} characters for the {} parameter.'.format(correct_length,
+                                                                                                parameter_name)
+            is_valid = False
 
-    # Check if the parameter value (Table ID) is an existing Table ID.
-    elif condition.upper() == "ISTABLEIDEXISTING":
+    elif condition_upper == "ISTABLEIDEXISTING":
+        # Check whether the parameter value (Table ID) is an existing Table ID.
+        if not command.command_processor.get_table(parameter_value):
+            message = 'The {} ({}) is not a valid Table ID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a valid Table ID.'
+            is_valid = False
 
-        message = 'The {} ({}) is not a valid Table ID.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a valid Table ID.'
-
-        if not self.command_processor.get_table(parameter_value):
-            check_failed = True
-
-    # Check if the parameter value (Table ID) is a unique TableID.
-    elif condition.upper() == "ISTABLEIDUNIQUE":
-
-        message = 'The {} ({}) value is already in use as a Table ID.'.format(parameter_name, parameter_value)
-        recommendation = 'Specify a new {}.'.format(parameter_name)
-
-        if self.command_processor.get_table(parameter_value):
-
-            check_failed = True
+    elif condition_upper == "ISTABLEIDUNIQUE":
+        # Check whether the parameter value (Table ID) is a unique TableID.
+        if command.command_processor.get_table(parameter_value):
+            message = 'The {} ({}) value is already in use as a Table ID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a new {}.'.format(parameter_name)
+            is_valid = False
             # noinspection PyPep8Naming
-            pv_IfTableIDExists = self.get_parameter_value("IfTableIDExists", default_value="Replace")
+            pv_IfTableIDExists = command.get_parameter_value("IfTableIDExists", default_value="Replace")
 
             if pv_IfTableIDExists.upper() == "REPLACEANDWARN":
                 fail_response = "WARN"
@@ -407,90 +392,80 @@ def run_check(self, condition: str, parameter_name: str, parameter_value: str or
             elif pv_IfTableIDExists.upper() == "FAIL":
                 fail_response = "FAIL"
             else:
-                check_failed = False
+                is_valid = True
 
-    # Check if the parameter value (Table Name) is a table within the DataStore.
-    elif condition.upper() == "ISTABLEINDATASTORE":
+    elif condition_upper == "ISTABLEINDATASTORE":
+        # Check whether the parameter value (Table Name) is a table within the DataStore.
         data_store_id = other_values[0]
-
-        message = "{} ({}) is not an existing table in the {} DataStore.".format(parameter_name, parameter_value,
-                                                                                 data_store_id)
-        recommendation = "Specify a valid {} value.".format(parameter_name)
-
-        data_store_obj = self.command_processor.get_datastore(data_store_id)
+        data_store_obj = command.command_processor.get_datastore(data_store_id)
         list_of_tables = data_store_obj.return_table_names()
         if parameter_value not in list_of_tables:
-            check_failed = True
+            message = "{} ({}) is not an existing table in the {} DataStore.".format(parameter_name, parameter_value,
+                                                                                     data_store_id)
+            recommendation = "Specify a valid {} value.".format(parameter_name)
+            is_valid = False
 
-    # Check if the file is a valid tar file.
-    elif condition.upper() == "ISTARFILE":
-
-        message = "{} ({}) is not a valid TAR file.".format(parameter_name, parameter_value)
-        recommendation = "Specify a valid TAR file for {}.".format(parameter_name)
-
+    elif condition_upper == "ISTARFILE":
+        # Check whether the file is a valid tar file.
         if not zip_util.is_tar_file(parameter_value):
-            check_failed = True
+            message = "{} ({}) is not a valid TAR file.".format(parameter_name, parameter_value)
+            recommendation = "Specify a valid TAR file for {}.".format(parameter_name)
+            is_valid = False
 
-    # Check if the input string is a valid URL.
-    elif condition.upper() == "ISURLVALID":
-
-        message = "{} ({}) is not a valid URL.".format(parameter_name, parameter_value)
-        recommendation = "Specify a valid URL for {}.".format(parameter_name)
-
+    elif condition_upper == "ISURLVALID":
+        # Check whether the input string is a valid URL.
         # noinspection PyBroadException
         try:
             urlopen(parameter_value)
         except Exception:
-            check_failed = True
+            message = "{} ({}) is not a valid URL.".format(parameter_name, parameter_value)
+            recommendation = "Specify a valid URL for {}.".format(parameter_name)
+            is_valid = False
 
-    # Check if the file is a valid zip file.
-    elif condition.upper() == "ISZIPFILE":
-
-        message = "{} ({}) is not a valid ZIP file.".format(parameter_name, parameter_value)
-        recommendation = "Specify a valid ZIP file for {}.".format(parameter_name)
-
+    elif condition_upper == "ISZIPFILE":
+        # Check whether the file is a valid zip file.
         if not zip_util.is_zip_file(parameter_value):
-            check_failed = True
+            message = "{} ({}) is not a valid ZIP file.".format(parameter_name, parameter_value)
+            recommendation = "Specify a valid ZIP file for {}.".format(parameter_name)
+            is_valid = False
 
     else:
-
         message = "Check {} is not a valid check in the validators.".format(condition)
         recommendation = "Contact the maintainers of the GeoProcessor software."
-        check_failed = True
+        is_valid = False
         fail_response = "FAIL"
 
-    # If the check failed, increase the warning count of the command instance by one.
+    # If the data is not valid, increase the warning count of the command instance by one.
     run_the_command = None
-    if check_failed:
-        self.warning_count += 1
+    if not is_valid:
+        command.warning_count += 1
 
-        # If configured, log a FAILURE message about the failed check. Set the run_the_command boolean to False.
-        if fail_response.upper() == "FAIL":
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
-                                                                                  message, recommendation))
+        fail_response_upper = fail_response.upper()
+        if fail_response_upper == "FAIL":
+            # If configured, log a FAILURE message about the failed check. Set the run_the_command boolean to False.
+            command.logger.warning(message)
+            command.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
+                                                                                     message, recommendation))
             run_the_command = False
 
-        # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to True.
-        elif fail_response.upper() == "WARN":
-
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                           CommandLogRecord(CommandStatusType.WARNING,
-                                                            message, recommendation))
+        elif fail_response_upper == "WARN":
+            # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to True.
+            command.logger.warning(message)
+            command.command_status.add_to_log(CommandPhaseType.RUN,
+                                              CommandLogRecord(CommandStatusType.WARNING,
+                                                               message, recommendation))
             run_the_command = True
 
-        # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to False.
-        elif fail_response.upper() == "WARNBUTDONOTRUN":
-
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                           CommandLogRecord(CommandStatusType.WARNING,
-                                                            message, recommendation))
+        elif fail_response_upper == "WARNBUTDONOTRUN":
+            # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to False.
+            command.logger.warning(message)
+            command.command_status.add_to_log(CommandPhaseType.RUN,
+                                              CommandLogRecord(CommandStatusType.WARNING,
+                                                               message, recommendation))
             run_the_command = False
 
-    # If the check passed, set the run_the_command boolean to True.
     else:
+        # If the check passed, set the run_the_command boolean to True.
         run_the_command = True
 
     # Return the run_the_command boolean.
@@ -602,6 +577,43 @@ def validate_int(int_value: str or int, none_allowed: bool, empty_string_allowed
         # May do more checks later but for now above should be sufficient
         pass
     return True
+
+
+def validate_list_has_one_value(object_list: [object], allow_more_than_one: bool = False) -> bool:
+    """
+    Validate that a list has only one value that is not None and not empty string.
+
+    Args:
+        object_list ([object]): List of objects.
+        allow_more_than_one (bool):  If True, allow more than one value result to be True.
+            If False, exactly one value must be in the list.
+
+    Returns:
+        True if the list has required number of items item, False if not.
+    """
+
+    non_missing_count = 0
+    for o in object_list:
+        if o is not None:
+            non_missing_count += 1
+        else:
+            if isinstance(o,str) and (len(str(o)) > 0):
+                # Non-empty string
+                non_missing_count += 1
+
+    if not allow_more_than_one:
+        # More restrictive case, so consider first.
+        # Exactly one value must be non-missing
+        if non_missing_count == 1:
+            return True
+        else:
+            return False
+    else:
+        # At least one value must be non-missing.
+        if non_missing_count >= 1:
+            return True
+        else:
+            return False
 
 
 def validate_int_in_range(int_value: int, int_min: int, int_max: int, none_allowed: bool,

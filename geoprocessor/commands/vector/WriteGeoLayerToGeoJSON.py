@@ -74,11 +74,11 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
     __parameter_input_metadata['GeoLayerID.Required'] = True
     __parameter_input_metadata['GeoLayerID.Tooltip'] = "The GeoLayer identifier, can use ${Property}."
     # OutputFile
-    __parameter_input_metadata['OutputFile.Description'] = "property file to write"
+    __parameter_input_metadata['OutputFile.Description'] = "GeoJSON file to write"
     __parameter_input_metadata['OutputFile.Label'] = "Output file"
     __parameter_input_metadata['OutputFile.Required'] = True
     __parameter_input_metadata['OutputFile.Tooltip'] = (
-        "The output GeoJSON file (relative or absolute path). ${Property} syntax is recognized. "
+        "The output GeoJSON file (relative or absolute path)."
         "${Property} syntax is recognized.")
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select GeoJSON file to write"
@@ -285,7 +285,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(self.warning_count)
+            message = "There were {} warnings processing the command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

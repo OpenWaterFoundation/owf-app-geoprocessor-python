@@ -516,3 +516,51 @@ def validate_command_parameter_names(command, warning: str, deprecated_parameter
             CommandPhaseType.INITIALIZATION,
             CommandLogRecord(CommandStatusType.WARNING, msg, "Specify only valid parameters - see documentation."))
     return warning
+
+
+# TODO smalers 2020-03-16 this code is experimental - need to figure out better way to implement validation.
+def validate_geolayer_attributes_exist(command, command_phase_type: CommandPhaseType,
+                                       command_status_type: CommandStatusType, geolayerid_parameter: str,
+                                       geolayer_id: str, attributes: [str],
+                                       logger: logging.Logger = None) -> ():
+    """
+    Check that the attributes exist in a GeoLayer's attribute table.
+
+    Args:
+        command:  Command being processed.
+        command_phase_type:  The CommandPhaseType for command log record.
+        command_status_type:  The CommandStatusType for command log record.
+        geolayerid_parameter:  Parameter name that provides value for 'geolayer_id'.
+        geolayer_id:  GeoLayerID for layer to check.
+        attributes:  List of attribute names to check for.
+        logger:  If not None, log a message.
+
+    Returns:
+        Tuple of (is_valid, warning_count, message), where
+    """
+
+    # Get the GeoLayer.
+    geolayer = command.command_processor.get_geolayer(geolayer_id)
+
+    # Get the existing attribute names of the input GeoLayer.
+    list_of_existing_attributes = geolayer.get_attribute_field_names()
+
+    # Create a list of invalid input attribute names.
+    # An invalid attribute name is an input attribute name that does not match any of the existing attribute names of
+    # the GeoLayer.
+    invalid_attributes = []
+    for attribute in attributes:
+        if attribute not in list_of_existing_attributes:
+            invalid_attributes.append(attribute)
+
+    warning_count = 0
+    if len(invalid_attributes) > 0:
+        # If there are invalid attributes, the check failed.
+        is_valid = False
+        # Log the issue
+        message = "Parameter {}:  GeoLayerID {} does not contain attributes: {}".format(
+                  geolayerid_parameter, geolayer_id, invalid_attributes)
+        recommendation = "Specify valid attribute names."
+        warning_count += 1
+
+    return is_valid, warning_count, message, recommendation

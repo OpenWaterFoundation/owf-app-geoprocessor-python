@@ -331,7 +331,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(self.warning_count)
+            message = "There were {} warnings processing the command.".format(self.warning_count)
             logger.warning(message)
             raise RuntimeError(message)
 

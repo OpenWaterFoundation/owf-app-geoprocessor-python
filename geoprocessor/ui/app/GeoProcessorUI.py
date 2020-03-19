@@ -152,12 +152,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_GeoLayers_Table: QtWidgets.QTableWidget or None = None
 
-        # Results / Map
-        self.results_Maps_Tab: QtWidgets.QWidget or None = None
-        self.results_Maps_VerticalLayout: QtWidgets.QVBoxLayout or None = None
-        self.results_Maps_GroupBox: QtWidgets.QGroupBox or None = None
-        self.results_Maps_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
-        self.results_Maps_Table: QtWidgets.QTableWidget or None = None
+        # Results / GeoMaps
+        self.results_GeoMaps_Tab: QtWidgets.QWidget or None = None
+        self.results_GeoMaps_VerticalLayout: QtWidgets.QVBoxLayout or None = None
+        self.results_GeoMaps_GroupBox: QtWidgets.QGroupBox or None = None
+        self.results_GeoMaps_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
+        self.results_GeoMaps_Table: QtWidgets.QTableWidget or None = None
 
         # Map canvas components and actions
         self.map_window: QtWidgets.QDialog or None = None
@@ -296,8 +296,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Commands / Map Processing
         self.Menu_Commands_MapProcessing: QtWidgets.QMenu or None = None
         self.Menu_Commands_MapProcessing_CreateGeoMap: QtWidgets.QAction or None = None
-        self.Menu_Commands_MapProcessing_AddGeoLayerGroupToMap: QtWidgets.QAction or None = None
-        self.Menu_Commands_MapProcessing_AddGeoLayerToMap: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToGeoMap: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewToGeoMap: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol: QtWidgets.QAction or None = None
 
         # Commands/ Network Processing
         self.Menu_Commands_NetworkProcessing: QtWidgets.QMenu or None = None
@@ -906,7 +909,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             command_object.initialize_command(command_string, self.gp_model.gp, full_initialization)
             command_object.initialize_geoprocessor_ui(self)
         except Exception:
-            message = "Error creating new command, unable to edit for command string: " + command_string
+            message = "Error creating new command, unable to edit command string: " + command_string
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
             return
@@ -1806,7 +1809,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_DatastoreProcessing.addAction(self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore)
 
         # ------------------------------------------------------------------------------------------------------------
-        # Commands / Map Processing menu
+        # Commands / GeoMap Processing menu
         # ------------------------------------------------------------------------------------------------------------
         self.Menu_Commands_MapProcessing = QtWidgets.QMenu(self.Menu_Commands)
         self.Menu_Commands_MapProcessing.setObjectName(
@@ -1820,35 +1823,82 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_MapProcessing_CreateGeoMap"))
         self.Menu_Commands_MapProcessing_CreateGeoMap.setText(
             "CreateGeoMap()... <create a new GeoMap>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_MapProcessing_CreateGeoMap.triggered.connect(
             functools.partial(self.edit_new_command, "CreateGeoMap()"))
         self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_CreateGeoMap)
 
-        # AddGeoLayerViewGroupToMap
-        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToMap = QtWidgets.QAction(main_window)
-        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToMap.setObjectName(
-            qt_util.from_utf8("Menu_Commands_MapProcessing_AddGeoLayerViewGroupToMap"))
-        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToMap.setText(
-            "AddGeoLayerGroupToMap()... <add a GeoLayer view group to map>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToMap.triggered.connect(
-            functools.partial(self.edit_new_command, "AddGeoLayerViewGroupToMap()"))
-        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToMap)
+        self.Menu_Commands_MapProcessing.addSeparator()
 
-        # AddGeoLayerToMap
-        self.Menu_Commands_MapProcessing_AddGeoLayerToMap = QtWidgets.QAction(main_window)
-        self.Menu_Commands_MapProcessing_AddGeoLayerToMap.setObjectName(
-            qt_util.from_utf8("Menu_Commands_MapProcessing_AddGeoLayerToMap"))
-        self.Menu_Commands_MapProcessing_AddGeoLayerToMap.setText(
-            "AddGeoLayerToMap()... <add a GeoLayer to GeoMap>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # AddGeoLayerViewGroupToGeoMap
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToGeoMap = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToGeoMap.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_AddGeoLayerViewGroupToGeoMap"))
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToGeoMap.setText(
+            "AddGeoLayerViewGroupToGeoMap()... <add a GeoLayerViewGroup to a GeoMap>")
         # noinspection PyUnresolvedReferences
-        self.Menu_Commands_MapProcessing_AddGeoLayerToMap.triggered.connect(
-            functools.partial(self.edit_new_command, "AddGeoLayerToMap()"))
-        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_AddGeoLayerToMap)
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToGeoMap.triggered.connect(
+            functools.partial(self.edit_new_command, "AddGeoLayerViewGroupToGeoMap()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_AddGeoLayerViewGroupToGeoMap)
+
+        # AddGeoLayerViewToGeoMap
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewToGeoMap = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewToGeoMap.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_AddGeoLayerViewToGeoMap"))
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewToGeoMap.setText(
+            "AddGeoLayerViewToGeoMap()... <add a GeoLayerView to a GeoMap>")
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_MapProcessing_AddGeoLayerViewToGeoMap.triggered.connect(
+            functools.partial(self.edit_new_command, "AddGeoLayerViewToGeoMap()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_AddGeoLayerViewToGeoMap)
+
+        self.Menu_Commands_MapProcessing.addSeparator()
+
+        # SetGeoLayerViewCategorizedSymbol
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol"))
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol.setText(
+            "SetGeoLayerViewCategorizedSymbol()... <set a GeoLayerView to use categorized symbol>")
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol.triggered.connect(
+            functools.partial(self.edit_new_command, "SetGeoLayerViewCategorizedSymbol()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol)
+
+        # SetGeoLayerViewGraduatedSymbol
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol"))
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol.setText(
+            "SetGeoLayerViewGraduatedSymbol()... <set a GeoLayerView to use graduated symbol>")
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol.triggered.connect(
+            functools.partial(self.edit_new_command, "SetGeoLayerViewGraduatedSymbol()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol)
+
+        # SetGeoLayerViewSingleSymbol
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol"))
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol.setText(
+            "SetGeoLayerViewSingleSymbol()... <set a GeoLayerView to use a single symbol>")
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol.triggered.connect(
+            functools.partial(self.edit_new_command, "SetGeoLayerViewSingleSymbol()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol)
+
+        self.Menu_Commands_MapProcessing.addSeparator()
+
+        # WriteGeoMapToJSON
+        self.Menu_Commands_MapProcessing_WriteGeoMapToJSON = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_WriteGeoMapToJSON.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_WriteGeoMapToJSON"))
+        self.Menu_Commands_MapProcessing_WriteGeoMapToJSON.setText(
+            "WriteGeoMapToJSON()... <write a GeoMap to JSON file>")
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_MapProcessing_WriteGeoMapToJSON.triggered.connect(
+            functools.partial(self.edit_new_command, "WriteGeoMapToJSON()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_WriteGeoMapToJSON)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Network Processing menu (disabled)
@@ -2593,16 +2643,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_Table.setObjectName(qt_util.from_utf8("results_GeoLayers_Table"))
         self.results_GeoLayers_Table.setColumnCount(5)
         self.results_GeoLayers_Table.setRowCount(0)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_GeoLayers_Table.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_GeoLayers_Table.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_GeoLayers_Table.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_GeoLayers_Table.setHorizontalHeaderItem(3, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_GeoLayers_Table.setHorizontalHeaderItem(4, item)
+        self.results_GeoLayers_Table.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem())
+        self.results_GeoLayers_Table.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem())
+        self.results_GeoLayers_Table.setHorizontalHeaderItem(2, QtWidgets.QTableWidgetItem())
+        self.results_GeoLayers_Table.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem())
+        self.results_GeoLayers_Table.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem())
         self.results_GeoLayers_Table.horizontalHeader().setCascadingSectionResizes(False)
         self.results_GeoLayers_Table.horizontalHeader().setDefaultSectionSize(200)
         self.results_GeoLayers_Table.setSortingEnabled(True)
@@ -2613,16 +2658,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_TabWidget.addTab(self.results_GeoLayers_Tab, qt_util.from_utf8(""))
         # Used to be in retranslateUi
         self.results_GeoLayers_GroupBox.setTitle("GeoLayers (0 GeoLayers, 0 selected)")
-        self.results_GeoLayers_Table.horizontalHeaderItem(0).setText("GeoLayer ID")
-        self.results_GeoLayers_Table.horizontalHeaderItem(0).setToolTip("GeoLayer ID")
-        self.results_GeoLayers_Table.horizontalHeaderItem(1).setText("Geometry")
-        self.results_GeoLayers_Table.horizontalHeaderItem(1).setToolTip("Geometry")
-        self.results_GeoLayers_Table.horizontalHeaderItem(2).setText("Feature Count")
-        self.results_GeoLayers_Table.horizontalHeaderItem(2).setToolTip("Feature Count")
-        self.results_GeoLayers_Table.horizontalHeaderItem(3).setText("Coordinate Reference System")
-        self.results_GeoLayers_Table.horizontalHeaderItem(3).setToolTip("Coordinate Reference System")
-        self.results_GeoLayers_Table.horizontalHeaderItem(4).setText("Command Reference")
-        self.results_GeoLayers_Table.horizontalHeaderItem(4).setToolTip("Command Reference")
+        self.results_GeoLayers_Table.horizontalHeaderItem(0).setText("GeoLayerID")
+        self.results_GeoLayers_Table.horizontalHeaderItem(0).setToolTip("GeoLayerID - unique identifier for GeoLayer")
+        self.results_GeoLayers_Table.horizontalHeaderItem(1).setText("Name")
+        self.results_GeoLayers_Table.horizontalHeaderItem(1).setToolTip("GeoLayer name")
+        self.results_GeoLayers_Table.horizontalHeaderItem(2).setText("Geometry")
+        self.results_GeoLayers_Table.horizontalHeaderItem(2).setToolTip("Geometry")
+        self.results_GeoLayers_Table.horizontalHeaderItem(3).setText("Feature Count")
+        self.results_GeoLayers_Table.horizontalHeaderItem(3).setToolTip("Feature Count")
+        self.results_GeoLayers_Table.horizontalHeaderItem(4).setText("Coordinate Reference System")
+        self.results_GeoLayers_Table.horizontalHeaderItem(4).setToolTip("Coordinate Reference System")
         self.results_GeoLayers_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_GeoLayers_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         # Use the following because connect() is shown as unresolved reference in PyCharm
@@ -2630,45 +2675,44 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_Table.customContextMenuRequested.connect(self.ui_action_geolayers_right_click)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_GeoLayers_Tab), "GeoLayers")
 
-        # Results - Maps tab
-        self.results_Maps_Tab = QtWidgets.QWidget()
-        self.results_Maps_Tab.setObjectName(qt_util.from_utf8("results_Maps_Tab"))
-        self.results_Maps_VerticalLayout = QtWidgets.QVBoxLayout(self.results_Maps_Tab)
-        self.results_Maps_VerticalLayout.setObjectName(qt_util.from_utf8("results_Maps_VerticalLayout"))
-        self.results_Maps_GroupBox = QtWidgets.QGroupBox(self.results_Maps_Tab)
-        self.results_Maps_GroupBox.setObjectName(qt_util.from_utf8("results_Maps_GroupBox"))
-        self.results_Maps_GroupBox_VerticalLayout = QtWidgets.QVBoxLayout(self.results_Maps_GroupBox)
-        self.results_Maps_GroupBox_VerticalLayout.setObjectName(
-            qt_util.from_utf8("results_Maps_GroupBox_VerticalLayout"))
-        self.results_Maps_Table = QtWidgets.QTableWidget(self.results_Maps_GroupBox)
-        self.results_Maps_Table.setObjectName(qt_util.from_utf8("results_Maps_Table"))
-        self.results_Maps_Table.setColumnCount(4)
-        self.results_Maps_Table.setRowCount(0)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_Maps_Table.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_Maps_Table.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_Maps_Table.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.results_Maps_Table.setHorizontalHeaderItem(3, item)
-        self.results_Maps_Table.horizontalHeader().setDefaultSectionSize(175)
-        self.results_Maps_Table.horizontalHeader().setStretchLastSection(True)
-        self.results_Maps_GroupBox_VerticalLayout.addWidget(self.results_Maps_Table)
-        self.results_Maps_VerticalLayout.addWidget(self.results_Maps_GroupBox)
-        self.results_TabWidget.addTab(self.results_Maps_Tab, qt_util.from_utf8(""))
+        # Results - GeoMaps tab
+        self.results_GeoMaps_Tab = QtWidgets.QWidget()
+        self.results_GeoMaps_Tab.setObjectName(qt_util.from_utf8("results_GeoMaps_Tab"))
+        self.results_GeoMaps_VerticalLayout = QtWidgets.QVBoxLayout(self.results_GeoMaps_Tab)
+        self.results_GeoMaps_VerticalLayout.setObjectName(qt_util.from_utf8("results_GeoMaps_VerticalLayout"))
+        self.results_GeoMaps_GroupBox = QtWidgets.QGroupBox(self.results_GeoMaps_Tab)
+        self.results_GeoMaps_GroupBox.setObjectName(qt_util.from_utf8("results_GeoMaps_GroupBox"))
+        self.results_GeoMaps_GroupBox_VerticalLayout = QtWidgets.QVBoxLayout(self.results_GeoMaps_GroupBox)
+        self.results_GeoMaps_GroupBox_VerticalLayout.setObjectName(
+            qt_util.from_utf8("results_GeoMaps_GroupBox_VerticalLayout"))
+        self.results_GeoMaps_Table = QtWidgets.QTableWidget(self.results_GeoMaps_GroupBox)
+        self.results_GeoMaps_Table.setObjectName(qt_util.from_utf8("results_GeoMaps_Table"))
+        self.results_GeoMaps_Table.setColumnCount(5)
+        self.results_GeoMaps_Table.setRowCount(0)
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(0,QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(1,QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(2,QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(3,QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(4,QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.horizontalHeader().setDefaultSectionSize(175)
+        self.results_GeoMaps_Table.horizontalHeader().setStretchLastSection(True)
+        self.results_GeoMaps_GroupBox_VerticalLayout.addWidget(self.results_GeoMaps_Table)
+        self.results_GeoMaps_VerticalLayout.addWidget(self.results_GeoMaps_GroupBox)
+        self.results_TabWidget.addTab(self.results_GeoMaps_Tab, qt_util.from_utf8(""))
         # Used to be in retranslateUi
-        self.results_Maps_GroupBox.setTitle("Maps (0 Maps, 0 selected)")
-        self.results_Maps_Table.horizontalHeaderItem(0).setText("Map ID")
-        self.results_Maps_Table.horizontalHeaderItem(0).setToolTip("Map ID")
-        self.results_Maps_Table.horizontalHeaderItem(1).setText("Included GeoLayers")
-        self.results_Maps_Table.horizontalHeaderItem(1).setToolTip("Included GeoLayers")
-        self.results_Maps_Table.horizontalHeaderItem(2).setText("Coordinate Reference System")
-        self.results_Maps_Table.horizontalHeaderItem(2).setToolTip("Coordinate Reference System")
-        self.results_Maps_Table.horizontalHeaderItem(3).setText("Command Reference")
-        self.results_Maps_Table.horizontalHeaderItem(3).setToolTip("Command Reference")
-        self.results_Maps_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
-        self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Maps_Tab), "Maps")
+        self.results_GeoMaps_GroupBox.setTitle("GeoMaps (0 GeoMaps, 0 selected)")
+        self.results_GeoMaps_Table.horizontalHeaderItem(0).setText("GeoMapID")
+        self.results_GeoMaps_Table.horizontalHeaderItem(0).setToolTip("GeoMapID - uniquely identifies the GeoMap")
+        self.results_GeoMaps_Table.horizontalHeaderItem(1).setText("Name")
+        self.results_GeoMaps_Table.horizontalHeaderItem(1).setToolTip("GeoLayerViewGroup Name")
+        self.results_GeoMaps_Table.horizontalHeaderItem(2).setText("GeoLayerViewGroups")
+        self.results_GeoMaps_Table.horizontalHeaderItem(2).setToolTip("How many GeoLayerViewGroups in the GeoMap")
+        self.results_GeoMaps_Table.horizontalHeaderItem(3).setText("GeoLayers")
+        self.results_GeoMaps_Table.horizontalHeaderItem(3).setToolTip("How many GeoLayers in the GeoMap")
+        self.results_GeoMaps_Table.horizontalHeaderItem(4).setText("Coordinate Reference System")
+        self.results_GeoMaps_Table.horizontalHeaderItem(4).setToolTip("Coordinate Reference System")
+        self.results_GeoMaps_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
+        self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_GeoMaps_Tab), "GeoMaps")
 
         # Results - Output Files tab
         self.results_OutputFiles_Tab = QtWidgets.QWidget()
@@ -2805,10 +2849,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.results_Tables_Table.itemSelectionChanged.connect(self.update_ui_status)
-        # Listen for a change in item selection within the results_Maps_Table widget.
+        # Listen for a change in item selection within the results_GeoMaps_Table widget.
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
-        self.results_Maps_Table.itemSelectionChanged.connect(self.update_ui_status)
+        self.results_GeoMaps_Table.itemSelectionChanged.connect(self.update_ui_status)
         # Listen for a change in item selection within the results_OutputFiles_Table widget.
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
@@ -3243,7 +3287,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def show_results(self) -> None:
         """
         Populates the Results tables of the UI to reflect results of running the GeoProcessor, including
-        the existing GeoLayers, Maps, Output Files, Properties, and Tables.
+        the existing GeoLayers, GeoMaps, Output Files, Properties, and Tables.
 
         Returns:
             None
@@ -3258,24 +3302,28 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         except Exception:
             message = "Error showing GeoLayers in Results"
             logger.warning(message, exc_info=True)
+
         # noinspection PyBroadException
         try:
-            self.show_results_maps()
+            self.show_results_geomaps()
         except Exception:
-            message = "Error showing Maps in Results"
+            message = "Error showing GeoMaps in Results"
             logger.warning(message, exc_info=True)
+
         # noinspection PyBroadException
         try:
             self.show_results_output_files()
         except Exception:
             message = "Error showing Output Files in Results"
             logger.warning(message, exc_info=True)
+
         # noinspection PyBroadException
         try:
             self.show_results_properties()
         except Exception:
             message = "Error showing Properties in Results"
             logger.warning(message, exc_info=True)
+
         # noinspection PyBroadException
         try:
             self.show_results_tables()
@@ -3293,56 +3341,101 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Remove items from the Results GeoLayers table (from a previous run).
         self.results_GeoLayers_Table.setRowCount(0)
 
+        # Display the GeoLayers from the run
         for geolayer in self.gp.geolayers:
 
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_GeoLayers_Table.rowCount()
             self.results_GeoLayers_Table.insertRow(new_row_index)
 
-            # Retrieve the GeoLayer's GeoLayer ID and set as the attribute for the GeoLayer ID column.
-            self.results_GeoLayers_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(geolayer.id))
+            col = -1
+            # GeoLayerID
+            # - should not be null
+            col += 1
+            self.results_GeoLayers_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(str(geolayer.id)))
 
-            # Retrieve the GeoLayer's geometry and set as the attribute for the Geometry column.
-            logger = logging.getLogger(__name__)
-            self.results_GeoLayers_Table.setItem(new_row_index, 1,
-                                                 QtWidgets.QTableWidgetItem(geolayer.get_geometry()))
+            # Name
+            # - should not be null
+            col += 1
+            self.results_GeoLayers_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(str(geolayer.name)))
 
-            # Retrieve the number of features within the GeoLayer and set as the attribute for the Feature Count column.
+            # Geometry
+            # - should not be null
+            col += 1
+            self.results_GeoLayers_Table.setItem(new_row_index, col,
+                                                 QtWidgets.QTableWidgetItem(str(geolayer.get_geometry())))
+
+            # Number of features
             if geolayer.is_vector():
                 # Display the feature count
-                self.results_GeoLayers_Table.setItem(new_row_index, 2,
+                col += 1
+                self.results_GeoLayers_Table.setItem(new_row_index, col,
                                                      QtWidgets.QTableWidgetItem(str(geolayer.get_feature_count())))
             elif geolayer.is_raster():
                 # Display the row, column, and cell count in a formatted string
-                self.results_GeoLayers_Table.setItem(new_row_index, 2,
-                                                     QtWidgets.QTableWidgetItem(str(geolayer.get_num_rows()) + " x " +
+                col += 1
+                self.results_GeoLayers_Table.setItem(new_row_index, col,
+                                                     QtWidgets.QTableWidgetItem(str(geolayer.get_num_rows()) +
+                                                                                " rows x " +
                                                                                 str(geolayer.get_num_columns()) +
-                                                                                " = " +
+                                                                                " columns = " +
                                                                                 str(geolayer.get_num_rows() *
                                                                                     geolayer.get_num_columns()) +
                                                                                 " cells"))
 
             # Retrieve the GeoLayer's CRS and set as the attribute for the Coordinate Reference System column.
-            self.results_GeoLayers_Table.setItem(new_row_index, 3,
+            col += 1
+            self.results_GeoLayers_Table.setItem(new_row_index, col,
                                                  QtWidgets.QTableWidgetItem(geolayer.get_crs()))
 
+        self.results_GeoLayers_Table.resizeColumnsToContents()
         self.update_ui_status_results_geolayers()
 
-    def show_results_maps(self) -> None:
+    def show_results_geomaps(self) -> None:
         """
-        Populates the Results / Maps display.
+        Populates the Results / GeoMaps display.
 
         Returns:
             None
         """
-        # Remove items from the Results Maps table (from a previous run).
-        self.results_Maps_Table.setRowCount(0)
-        # TODO egiles 2018-05-14 Populate the Results / Maps display
+        # Remove items from the Results GeoMaps table (from a previous run).
+        self.results_GeoMaps_Table.setRowCount(0)
 
-        # Remove items from the Results Output Files table (from a previous run).
-        self.results_OutputFiles_Table.setRowCount(0)
+        # Display the GeoMaps from the run
+        for geomap in self.gp.geomaps:
 
-        self.update_ui_status_results_maps()
+            # Get the index of the next available row in the table. Add a new row to the table.
+            new_row_index = self.results_GeoMaps_Table.rowCount()
+            self.results_GeoMaps_Table.insertRow(new_row_index)
+
+            col = -1
+            # Retrieve the GeoMap's GeoMapID and set as the attribute for the GeoMapID column.
+            col += 1
+            self.results_GeoMaps_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(geomap.id))
+
+            # Name
+            col += 1
+            self.results_GeoMaps_Table.setItem(new_row_index, col,
+                                               QtWidgets.QTableWidgetItem(str(geomap.name)))
+
+            # Number of GeoLayerViewGroup.
+            col += 1
+            self.results_GeoMaps_Table.setItem(new_row_index, col,
+                                               QtWidgets.QTableWidgetItem(str(len(geomap.geolayerviewgroups))))
+
+            # Number of GeoLayer.
+            col += 1
+            self.results_GeoMaps_Table.setItem(new_row_index, col,
+                                               QtWidgets.QTableWidgetItem(str(len(geomap.geolayers))))
+
+            # CRS
+            col += 1
+            # - the CRS might be null, but should not be
+            self.results_GeoMaps_Table.setItem(new_row_index, col,
+                                               QtWidgets.QTableWidgetItem(str(geomap.get_crs_code())))
+
+        self.results_GeoMaps_Table.resizeColumnsToContents()
+        self.update_ui_status_results_geomaps()
 
     def show_results_output_files(self) -> None:
         """
@@ -4611,7 +4704,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         self.update_ui_status_commands_popup()
         self.update_ui_status_results_geolayers()
-        self.update_ui_status_results_maps()
+        self.update_ui_status_results_geomaps()
         self.update_ui_status_results_output_files()
         self.update_ui_status_results_properties()
         self.update_ui_status_results_tables()
@@ -4693,18 +4786,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_GroupBox.setTitle(
             "GeoLayers ({} GeoLayers, {} selected)".format(row_num, len(selected_rows)))
 
-    def update_ui_status_results_maps(self) -> None:
+    def update_ui_status_results_geomaps(self) -> None:
         """
-        Update the UI status for Results / Maps area.
+        Update the UI status for Results / GeoMaps area.
 
         Returns:
             None
         """
         # Count the total and selected number of rows within the Maps table. Update the label to reflect counts.
-        row_num = str(self.results_Maps_Table.rowCount())
-        # slct_row_num = str(len(set(index.row() for index in self.results_Maps_Table.selectedIndexes())))
-        slct_row_num = str(len(self.results_Maps_Table.selectedIndexes()))
-        self.results_Maps_GroupBox.setTitle("Maps ({} Maps, {} selected)".format(row_num, slct_row_num))
+        row_num = str(self.results_GeoMaps_Table.rowCount())
+        # slct_row_num = str(len(set(index.row() for index in self.results_GeoMaps_Table.selectedIndexes())))
+        slct_row_num = str(len(self.results_GeoMaps_Table.selectedIndexes()))
+        self.results_GeoMaps_GroupBox.setTitle("GeoMaps ({} GeoMaps, {} selected)".format(row_num, slct_row_num))
 
     def update_ui_status_results_output_files(self) -> None:
         """

@@ -155,7 +155,6 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                                                       command_parameters=command_parameters)
 
         if not validator_util.validate_string(pv_SpatialDataFile, False, False):
-
             message = "SpatialDataFile parameter has no value."
             recommendation = "Specify the SpatialDataFile parameter to indicate the spatial data layer file."
             warning += "\n" + message
@@ -335,7 +334,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(self.warning_count)
+            message = "There were {} warnings processing the command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

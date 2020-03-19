@@ -50,6 +50,8 @@ class GeoLayer(object):
     """
 
     def __init__(self, geolayer_id: str,
+                 name: str,
+                 description: str = "",
                  geolayer_qgs_layer: QgsMapLayer = None,
                  geolayer_source_path: str = None, properties: dict = None) -> None:
         """
@@ -59,6 +61,10 @@ class GeoLayer(object):
             geolayer_id (str):
                 String that is the GeoLayer's reference ID. This ID is used to access the GeoLayer from the
                 GeoProcessor for manipulation.
+            name (str):
+                Layer name, will be used in map legend, etc.
+            description (str):
+                Layer description, with more details.
             geolayer_qgs_layer (QgsVectorLayer or QgsRasterLayer instance via those class __init__() function):
                 Object created by the QGIS processor. All GeoLayer spatial manipulations are
                 performed on the GeoLayer's qgs_vector_layer.
@@ -73,6 +79,12 @@ class GeoLayer(object):
         # "id" is a string that is the GeoLayer's reference ID. This ID is used to access the GeoLayer from the
         # GeoProcessor for manipulation.
         self.id = geolayer_id
+
+        # Name that will be used as a legend label
+        self.name = name
+
+        # Description that will be used as a legend label
+        self.description = description
 
         # "qgs_layer" is a QgsVectorLayer or QgsRasterLayer object created by the QGIS processor.
         # All spatial manipulations are performed on the GeoLayer's qgs_layer.

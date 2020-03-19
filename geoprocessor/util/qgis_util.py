@@ -593,7 +593,7 @@ def get_qgscoordinatereferencesystem_obj(crs_code: str) -> QgsCoordinateReferenc
     """
     Checks if the crs_code create a valid and usable QgsCoordinateReferenceSystem object. If so, return
     the QgsCoordinateReferenceSystem object. If not, return None.
-    REF: https://qgis.org/api/2.18/classQgsCoordinateReferenceSystem.html#aa88613351434eeefdbdfbbd77ff33025
+    See: https://qgis.org/pyqgis/master/core/QgsCoordinateReferenceSystem.html
 
     Args:
         crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
@@ -602,12 +602,15 @@ def get_qgscoordinatereferencesystem_obj(crs_code: str) -> QgsCoordinateReferenc
         The QgsCoordinateReferenceSystem object. If not valid, returns None.
     """
 
-    # Check if the crs_code is valid. If so, return the QgsCoordinateReferenceSystem object.
+    # logger = logging.getLogger(__name__)
+    # logger.debug("Getting CRS for '" + crs_code + "'")
     if QgsCoordinateReferenceSystem(crs_code).isValid():
+        # Check if the crs_code is valid. If so, return the QgsCoordinateReferenceSystem object.
+        # logger.debug("CRS is valid.")
         return QgsCoordinateReferenceSystem(crs_code)
-
-    # If not, return None.
     else:
+        # Not valid, return None.
+        # logger.debug("CRS is not valid.")
         return None
 
 

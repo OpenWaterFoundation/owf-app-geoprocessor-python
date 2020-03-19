@@ -39,39 +39,44 @@ class CreateGeoMap(AbstractCommand):
     Creates a new GeoMap.
 
     Command Parameters
-    * NewGeoMapId (str, required): The identifier for the new GeoMap.
+    * NewGeoMapID (str, required): The identifier for the new GeoMap.
     * GeoMapName (str, required): The name of the new GeoMap, used for displays.
     * Description (str, optional): The description of the new GeoMap, used for displays.
     * CRS (str, required): The coordinate reference system for the new GeoMap.
-    * IfGeoMapIdExists (str, optional): This parameter determines the action that occurs if the GeoMapId
+    * IfGeoMapIDExists (str, optional): This parameter determines the action that occurs if the GeoMapID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("NewGeoMapId", type("")),
-        CommandParameterMetadata("GeoMapName", type("")),
+        CommandParameterMetadata("NewGeoMapID", type("")),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("CRS", type("")),
-        CommandParameterMetadata("IfGeoMapIdExists", type(""))]
+        CommandParameterMetadata("IfGeoMapIDExists", type(""))]
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Create a new GeoMap, for display and to save the map configuration."
+    __command_metadata['Description'] = "Create a new GeoMap, for display and to save the map configuration.\n"\
+        "    GeoMap  <=====\n" \
+        "      GeoLayerViewGroup\n" \
+        "        GeoLayerView\n" \
+        "          GeoLayer + GeoLayerSymbol\n"
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
     __parameter_input_metadata = dict()
-    # NewGeoMapId
-    __parameter_input_metadata['NewGeoMapId.Description'] = "identifier for the new GeoMap"
-    __parameter_input_metadata['NewGeoMapId.Label'] = "New GeoMapId"
-    __parameter_input_metadata['NewGeoMapId.Required'] = True
-    __parameter_input_metadata['NewGeoMapId.Tooltip'] = "The identifier for the new GeoMap."
+    # NewGeoMapID
+    __parameter_input_metadata['NewGeoMapID.Description'] = "identifier for the new GeoMap"
+    __parameter_input_metadata['NewGeoMapID.Label'] = "New GeoMapID"
+    __parameter_input_metadata['NewGeoMapID.Required'] = True
+    __parameter_input_metadata['NewGeoMapID.Tooltip'] = "The identifier for the new GeoMap."
     # GeoMapName
-    __parameter_input_metadata['GeoMapName.Description'] = "name for the new GeoMap"
-    __parameter_input_metadata['GeoMapName.Label'] = "Name"
-    __parameter_input_metadata['GeoMapName.Required'] = True
-    __parameter_input_metadata['GeoMapName.Tooltip'] = "The name for the new GeoMap."
+    __parameter_input_metadata['Name.Description'] = "name for the new GeoMap"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = True
+    __parameter_input_metadata['Name.Tooltip'] = "The name for the new GeoMap."
     # Description
     __parameter_input_metadata['Description.Description'] = "description for the new GeoMap"
     __parameter_input_metadata['Description.Label'] = "Description"
@@ -84,19 +89,19 @@ class CreateGeoMap(AbstractCommand):
     __parameter_input_metadata['CRS.Tooltip'] = (
         "The coordinate reference system of the new GeoMap. EPSG or "
         "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
-    # IfGeoMapIdExists
-    __parameter_input_metadata['IfGeoMapIdExists.Description'] = "action if map exists"
-    __parameter_input_metadata['IfGeoMapIdExists.Label'] = "If GeoMapId exists"
-    __parameter_input_metadata['IfGeoMapIdExists.Tooltip'] = (
-        "The action that occurs if the NewGeoMapId already exists within the GeoProcessor.\n"
+    # IfGeoMapIDExists
+    __parameter_input_metadata['IfGeoMapIDExists.Description'] = "action if map exists"
+    __parameter_input_metadata['IfGeoMapIDExists.Label'] = "If GeoMapID exists"
+    __parameter_input_metadata['IfGeoMapIDExists.Tooltip'] = (
+        "The action that occurs if the NewGeoMapID already exists within the GeoProcessor.\n"
         "Replace: The existing GeoMap within the GeoProcessor is replaced with the new GeoMap. "
         "No warning is logged.\n"
         "ReplaceAndWarn: The existing GeoMap within the GeoProcessor is replaced with the new GeoMap. "
         "A warning is logged.\n"
         "Warn: The new GeoMap is not created. A warning is logged.\n"
         "Fail: The new GeoMap is not created. A fail message is logged.")
-    __parameter_input_metadata['IfGeoMapIdExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-    __parameter_input_metadata['IfGeoMapIdExists.Value.Default'] = "Replace"
+    __parameter_input_metadata['IfGeoMapIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
+    __parameter_input_metadata['IfGeoMapIDExists.Value.Default'] = "Replace"
 
     def __init__(self) -> None:
         """
@@ -135,13 +140,11 @@ class CreateGeoMap(AbstractCommand):
 
         warning = ""
 
-        parameters = ["NewGeoMapId", "GeoMapName", "CRS"]
+        parameters = ["NewGeoMapID", "Name", "Description", "CRS"]
 
-        # Check that the parameters are non-empty, non-None strings.
+        # Check that required parameters are non-empty, non-None strings.
         for parameter in parameters:
-
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-
             if not validator_util.validate_string(parameter_value, False, False):
                 message = "{} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
@@ -149,15 +152,15 @@ class CreateGeoMap(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that optional IfGeoMapIdExists param is either `Replace`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
+        # Check that optional IfGeoMapIDExists param is either `Replace`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
         # noinspection PyPep8Naming
-        pv_IfGeoMapIdExists = self.get_parameter_value(parameter_name="IfGeoMapIdExists",
+        pv_IfGeoMapIDExists = self.get_parameter_value(parameter_name="IfGeoMapIDExists",
                                                        command_parameters=command_parameters)
         acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
-        if not validator_util.validate_string_in_list(pv_IfGeoMapIdExists, acceptable_values, none_allowed=True,
+        if not validator_util.validate_string_in_list(pv_IfGeoMapIDExists, acceptable_values, none_allowed=True,
                                                       empty_string_allowed=True, ignore_case=True):
-            message = "IfGeoMapIdExists parameter value ({}) is not recognized.".format(pv_IfGeoMapIdExists)
-            recommendation = "Specify one of the acceptable values ({}) for the IfGeoMapIdExists parameter.".format(
+            message = "IfGeoMapIDExists parameter value ({}) is not recognized.".format(pv_IfGeoMapIDExists)
+            recommendation = "Specify one of the acceptable values ({}) for the IfGeoMapIDExists parameter.".format(
                 acceptable_values)
             warning += "\n" + message
             self.command_status.add_to_log(
@@ -176,19 +179,19 @@ class CreateGeoMap(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geomap_be_created(self, geomap_id: str, crs: str):
+    def validate_runtime_data(self, geomap_id: str, crs: str):
         """
         Checks the following:
         * the CRS is a valid CRS
-        * the identifier of the new GeoMap is unique (not an existing GeoMapId)
+        * the identifier of the new GeoMap is unique (not an existing GeoMapID)
 
         Args:
             geomap_id: the id of the GeoMap to be created
-            crs: the crs code of the GeoMap to be created
+            crs: the crs code for the GeoMap
 
         Returns:
-             Boolean. If TRUE, the GeoMap should be created.
-             If FALSE, at least one check failed and the GeoMap should not be created.
+             Boolean. If True, the GeoMap should be created.
+             If False, at least one check failed and the GeoMap should not be created.
         """
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
@@ -198,9 +201,9 @@ class CreateGeoMap(AbstractCommand):
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
 
-        # If the GeoMapId is the same as an already-existing GeoMapId, raise a WARNING or FAILURE
-        # (depends on the value of the IfGeoMapIdExists parameter.)
-        should_run_command.append(validator_util.run_check(self, "IsGeoMapIdUnique", "GeoMapId", geomap_id, None))
+        # If the GeoMapID is the same as an already-existing GeoMapID, raise a WARNING or FAILURE
+        # (depends on the value of the IfGeoMapIDExists parameter.)
+        should_run_command.append(validator_util.run_check(self, "IsGeoMapIDUnique", "NewGeoMapID", geomap_id, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -222,38 +225,38 @@ class CreateGeoMap(AbstractCommand):
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming
-        pv_GeoMapId = self.get_parameter_value("GeoMapId")
+        pv_NewGeoMapID = self.get_parameter_value("NewGeoMapID")
         # noinspection PyPep8Naming
-        pv_GeoMapName = self.get_parameter_value("GeoMapName")
+        pv_Name = self.get_parameter_value("Name")
+        # noinspection PyPep8Naming
+        pv_Description = self.get_parameter_value("Description")
         # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
 
-        if self.__should_geomap_be_created(pv_GeoMapId, pv_CRS):
-
+        if self.validate_runtime_data(pv_NewGeoMapID, pv_CRS):
             # noinspection PyBroadException
             try:
-                layer = None
-                # Add the map (with the appropriate geometry) to the Qgs map list.
                 # TODO smalers 2020-03-09 need to decide if manage a list of QGIS maps or just GeoProcessor form
-                # qgis_util.add_map_to_qgsmaplayer(layer, xxx)
-
-                # Create a new GeoMap and add it to the GeoProcesor's geomaps list.
-                new_geomap = GeoMap(geomap_id=pv_GeoMapId, geomap_name=pv_GeoMapName, crs=pv_CRS)
-                self.command_processor.add_geolayer(new_geomap)
+                # Create a new GeoMap and add it to the GeoProcesor's geomaps list if the ID does not exist.
+                self.logger.debug("Creating map with ID: '" + str(pv_NewGeoMapID) + "' CRS='" + str(pv_CRS) + "'")
+                new_geomap = GeoMap(geomap_id=pv_NewGeoMapID, name=pv_Name, description=pv_Description, crs_code=pv_CRS)
+                self.command_processor.add_geomap(new_geomap)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process.
 
                 self.warning_count += 1
-                message = "Unexpected error creating GeoMap ({}).".format(pv_GeoMapId)
+                message = "Unexpected error creating GeoMap ({}).".format(pv_NewGeoMapID)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        else:
+            self.logger.debug("Not enough data to create GeoMap.")
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(self.warning_count)
+            message = "There were {} warnings processing the command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

@@ -18,6 +18,7 @@
 # ________________________________________________________________NoticeEnd___
 
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.GeoMap import GeoMap
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
@@ -83,6 +84,9 @@ class GeoProcessor(object):
         # GeoLayer list that holds all registered GeoLayer objects.
         # - can contain vector and raster layers
         self.geolayers: [GeoLayer] = []
+
+        # GeoMap list that holds all registered GeoMap objects.
+        self.geomaps: [GeoMap] = []
 
         # Table list that holds all registered tables object.
         self.tables: list = []
@@ -231,7 +235,7 @@ class GeoProcessor(object):
     def add_geolayer(self, geolayer: GeoLayer) -> None:
         """
         Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
-        existing GeoLayer will be overwritten with the input GeoLayer.
+        existing GeoLayer will be replaced with the input GeoLayer.
         The GeoLayer can be either a VectorGeoLayer or RasterGeoLayer.
 
         Args:
@@ -243,7 +247,6 @@ class GeoProcessor(object):
 
         # Iterate over the existing GeoLayers.
         for existing_geolayer in self.geolayers:
-
             # If an existing GeoLayer has the same ID as the input GeoLayer, remove the existing GeoLayer from the
             # geolayers list.
             if existing_geolayer.id == geolayer.id:
@@ -251,6 +254,28 @@ class GeoProcessor(object):
 
         # Add the input GeoLayer to the geolayers list.
         self.geolayers.append(geolayer)
+
+    def add_geomap(self, geomap: GeoMap) -> None:
+        """
+        Add a GeoMap object to the geomaps list. If a geomap already exists with the same GeoMap ID, the
+        existing GeoMap will be replaced with the input GeoMap.
+
+        Args:
+            geomap: instance of a GeoMap object
+
+        Returns:
+            None
+        """
+
+        # Iterate over the existing GeoMaps.
+        for existing_geomap in self.geomaps:
+            # If an existing GeoLayer has the same ID as the input GeoLayer, remove the existing GeoLayer from the
+            # geolayers list.
+            if existing_geomap.id == geomap.id:
+                self.free_geomap(existing_geomap)
+
+        # Add the input GeoMap to the geomaps list.
+        self.geomaps.append(geomap)
 
     def add_output_file(self, output_file_abs_path: str) -> None:
         """
@@ -546,6 +571,18 @@ class GeoProcessor(object):
         """
         self.geolayers.remove(geolayer)
 
+    def free_geomap(self, geomap: GeoMap) -> None:
+        """
+        Removes a GeoMap object from the geomaps list.
+
+        Args:
+            geomap: instance of a GeoMap object
+
+        Return:
+            None
+        """
+        self.geomaps.remove(geomap)
+
     def free_table(self, table) -> None:
         """
         Removes a Table object from the tables list.
@@ -618,6 +655,24 @@ class GeoProcessor(object):
                 if geolayer.id == geolayer_id:
                     # Found the requested identifier
                     return geolayer
+        # Did not find the requested identifier so return None
+        return None
+
+    def get_geomap(self, geomap_id: str) -> GeoMap or None:
+        """
+        Return the GeoMap that has the requested ID.
+
+        Args:
+            geomap_id (str):  GeoMap ID string.
+
+        Returns:
+            The GeoMap that has the requested ID, or None if not found.
+        """
+        for geomap in self.geomaps:
+            if geomap is not None:
+                if geomap.id == geomap_id:
+                    # Found the requested identifier
+                    return geomap
         # Did not find the requested identifier so return None
         return None
 
@@ -1038,6 +1093,7 @@ class GeoProcessor(object):
         self.properties["OutputEnd"] = None
         self.properties["OutputYearType"] = None
         # Free all data from the previous run rather than append
+        # - TODO smalers 2020-03-16 why is this "not append_results"?
         if append_results:
             # All in-memory lists of results, such as layers, should be cleared.
             # If a list (future design change?)...
@@ -1045,6 +1101,7 @@ class GeoProcessor(object):
             # del self.GeoLists[:]
             # ...but currently a dictionary...
             self.geolayers.clear()
+            self.geomaps.clear()
 
     def __reset_workflow_properties(self) -> None:
         """
@@ -1144,7 +1201,9 @@ class GeoProcessor(object):
         warning_count = 0
 
         # Remove all items within the geoprocessor from the previous run.
+        # - TODO smalers 2020-03-16 evaluate how this relates to __reset_data_for_run_start
         self.geolayers = []
+        self.geomaps = []
         self.tables = []
         self.output_files = []
 
@@ -1262,14 +1321,14 @@ class GeoProcessor(object):
                 if debug:
                     command.print_for_debug()
 
-                if not in_comment and If_stack_ok_to_run:
-                    # The following message brackets any command class run_command messages that may be generated
-                    message = '-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
-                        command.command_string
-                    # print(message)
-                    logger.info(message)
-                    # notify listener that command has started running
-                    self.notify_command_processor_listeners_of_command_started(i_command, n_commands, command)
+                # if not in_comment and If_stack_ok_to_run:
+                # The following message brackets any command class run_command messages that may be generated
+                message = '-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
+                command.command_string
+                # print(message)
+                logger.info(message)
+                # notify listener that command has started running
+                self.notify_command_processor_listeners_of_command_started(i_command, n_commands, command)
 
                 command_class = command.__class__.__name__
 
@@ -1277,22 +1336,26 @@ class GeoProcessor(object):
                     # Hash-comment - TODO need to mark as processing successful - confirm when UI in place
                     # Run the command to update the status to success.
                     command.run_command()
+                    self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
                     continue
                 elif command_class == 'CommentBlockStart':
                     # /* comment block start - TODO need to mark as processing successful - confirm when UI in place
                     in_comment = True
                     # Run the command to update the status to success.
                     command.run_command()
+                    self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
                     continue
                 elif command_class == 'CommentBlockEnd':
                     # */ comment block end - TODO need to mark as processing successful - confirm when UI in place
                     in_comment = False
                     # Run the command to update the status to success.
                     command.run_command()
+                    self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
                     continue
 
                 if in_comment:
                     # In a /* */ comment block so set status to successful
+                    # - TODO smalers 2020-03-16 need to implemen this
                     continue
 
                 # TODO smalers 2017-12-21 this is in TSTool but need to confirm if really need - redundant?

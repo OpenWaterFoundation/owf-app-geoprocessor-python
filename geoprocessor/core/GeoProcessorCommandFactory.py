@@ -31,7 +31,11 @@ from geoprocessor.commands.datastores.RunSql import RunSql
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
 
+from geoprocessor.commands.map.AddGeoLayerViewToGeoMap import AddGeoLayerViewToGeoMap
+from geoprocessor.commands.map.AddGeoLayerViewGroupToGeoMap import AddGeoLayerViewGroupToGeoMap
 from geoprocessor.commands.map.CreateGeoMap import CreateGeoMap
+from geoprocessor.commands.map.SetGeoLayerViewSingleSymbol import SetGeoLayerViewSingleSymbol
+from geoprocessor.commands.map.WriteGeoMapToJSON import WriteGeoMapToJSON
 
 from geoprocessor.commands.raster.CreateRasterGeoLayer import CreateRasterGeoLayer
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromFile import ReadRasterGeoLayerFromFile
@@ -113,6 +117,8 @@ class GeoProcessorCommandFactory(object):
     # 2) It provides the list of constructor functions to call, to simplify logic
     registered_commands = {
         "ADDGEOLAYERATTRIBUTE": AddGeoLayerAttribute(),
+        "ADDGEOLAYERVIEWGROUPTOGEOMAP": AddGeoLayerViewGroupToGeoMap(),
+        "ADDGEOLAYERVIEWTOGEOMAP": AddGeoLayerViewToGeoMap(),
         "BLANK": Blank(),  # Actually has no name, is whitespace only
         "CLIPGEOLAYER": ClipGeoLayer(),
         "CLOSEDATASTORE": CloseDataStore(),
@@ -122,6 +128,7 @@ class GeoProcessorCommandFactory(object):
         "COMPAREFILES": CompareFiles(),
         "COPYFILE": CopyFile(),
         "COPYGEOLAYER": CopyGeoLayer(),
+        "COPYGEOMAP": CreateGeoMap(),
         "CREATEGEOLAYERFROMGEOMETRY": CreateGeoLayerFromGeometry(),
         "CREATERASTERGEOLAYER": CreateRasterGeoLayer(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
@@ -262,6 +269,10 @@ class GeoProcessorCommandFactory(object):
                 # - Alphabetize the commands.
                 if command_name_upper == "ADDGEOLAYERATTRIBUTE":
                     return AddGeoLayerAttribute()
+                elif command_name_upper == "ADDGEOLAYERVIEWGROUPTOGEOMAP":
+                    return AddGeoLayerViewGroupToGeoMap()
+                elif command_name_upper == "ADDGEOLAYERVIEWTOGEOMAP":
+                    return AddGeoLayerViewToGeoMap()
                 elif command_name_upper == "BLANK":
                     return Blank()
                 elif command_name_upper == "CLIPGEOLAYER":
@@ -344,6 +355,8 @@ class GeoProcessorCommandFactory(object):
                     return SetGeoLayerCRS()
                 elif command_name_upper == "SETGEOLAYERPROPERTY":
                     return SetGeoLayerProperty()
+                elif command_name_upper == "SETGEOLAYERVIEWSINGLESYMBOL":
+                    return SetGeoLayerViewSingleSymbol()
                 elif command_name_upper == "SETPROPERTY":
                     return SetProperty()
                 elif command_name_upper == "SETPROPERTYFROMGEOLAYER":
@@ -372,6 +385,8 @@ class GeoProcessorCommandFactory(object):
                     return WriteGeoLayerToKML()
                 elif command_name_upper == "WRITEGEOLAYERTOSHAPEFILE":
                     return WriteGeoLayerToShapefile()
+                elif command_name_upper == "WRITEGEOMAPTOJSON":
+                    return WriteGeoMapToJSON()
                 elif command_name_upper == "WRITEPROPERTIESTOFILE":
                     return WritePropertiesToFile()
                 elif command_name_upper == "WRITETABLETODELIMITEDFILE":

@@ -54,6 +54,8 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("NewGeoLayerID", type("")),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("GeometryFormat", type(str)),
         CommandParameterMetadata("GeometryData", type(str)),
         CommandParameterMetadata("CRS", type(str)),
@@ -71,6 +73,16 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
     __parameter_input_metadata['NewGeoLayerID.Label'] = "New GeoLayerID"
     __parameter_input_metadata['NewGeoLayerID.Required'] = True
     __parameter_input_metadata['NewGeoLayerID.Tooltip'] = "The ID of the new GeoLayer."
+    # Name
+    __parameter_input_metadata['Name.Description'] = "GeoLayerViewGroup name"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = True
+    __parameter_input_metadata['Name.Tooltip'] = "The GeoLayerViewGroup name, can use ${Property}."
+    # Description
+    __parameter_input_metadata['Description.Description'] = "GeoLayerViewGroup description"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = True
+    __parameter_input_metadata['Description.Tooltip'] = "The GeoLayerViewGroup description, can use ${Property}."
     # GeometryFormat
     __parameter_input_metadata['GeometryFormat.Description'] = "format of the geometry data"
     __parameter_input_metadata['GeometryFormat.Label'] = "Geometry format"
@@ -156,15 +168,12 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
 
         warning = ""
 
-        parameters = ["NewGeoLayerID", "GeometryData", "CRS"]
-
-        # Check that the parameters are non-empty, non-None strings.
-        for parameter in parameters:
-
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = ["NewGeoLayerID", "Name", "GeometryData", "CRS"]
+        for parameter in required_parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-
             if not validator_util.validate_string(parameter_value, False, False):
-                message = "{} parameter has no value.".format(parameter)
+                message = "Required {} parameter is not specified.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
                 warning += "\n" + message
                 self.command_status.add_to_log(
@@ -213,8 +222,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geolayer_be_created(self, geolayer_id: str, crs: str, geometry_format: str,
-                                     geometry_data: str) -> bool:
+    def validate_runtime_data(self, geolayer_id: str, crs: str, geometry_format: str, geometry_data: str) -> bool:
         """
         Checks the following:
         * the CRS is a valid CRS
@@ -275,13 +283,17 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         # noinspection PyPep8Naming
         pv_NewGeoLayerID = self.get_parameter_value("NewGeoLayerID")
         # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name")
+        # noinspection PyPep8Naming
+        pv_Description = self.get_parameter_value("Description")
+        # noinspection PyPep8Naming
         pv_GeometryFormat = self.get_parameter_value("GeometryFormat").upper()
         # noinspection PyPep8Naming
         pv_GeometryData = self.get_parameter_value("GeometryData")
         # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
 
-        if self.__should_geolayer_be_created(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
+        if self.validate_runtime_data(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
 
             layer = None
             qgs_geometry = None
@@ -344,6 +356,8 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
 
                 # Create a new GeoLayer with the QgsVectorLayer and add it to the GeoProcesor's geolayers list.
                 new_geolayer = VectorGeoLayer(geolayer_id=pv_NewGeoLayerID,
+                                              name=pv_Name,
+                                              description=pv_Description,
                                               geolayer_qgs_vector_layer=layer,
                                               geolayer_source_path="MEMORY")
                 self.command_processor.add_geolayer(new_geolayer)
@@ -360,7 +374,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
-            message = "There were {} warnings proceeding this command.".format(self.warning_count)
+            message = "There were {} warnings processing the command.".format(self.warning_count)
             raise RuntimeError(message)
 
         # Set command status type as SUCCESS if there are no errors.

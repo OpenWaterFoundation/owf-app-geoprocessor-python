@@ -51,7 +51,7 @@ class RasterGeoLayer(GeoLayer):
     is set to 'MEMORY'.
     """
 
-    def __init__(self, geolayer_id: str,
+    def __init__(self, geolayer_id: str, name: str, description: str = "",
                  geolayer_qgs_raster_layer: QgsRasterLayer = None,
                  geolayer_source_path: str = None, properties: dict = None) -> None:
         """
@@ -61,6 +61,10 @@ class RasterGeoLayer(GeoLayer):
             geolayer_id (str):
                 String that is the GeoLayer's reference ID. This ID is used to access the GeoLayer from the
                 GeoProcessor for manipulation.
+            name (str):
+                Layer name, will be used in map legend, etc.
+            description (str):
+                Layer description, with more details.
             geolayer_qgs_raster_layer (QgsRasterLayer):
                 Object created by a command . All GeoLayer spatial manipulations are
                 performed on the GeoLayer's qgs_raster_vector_layer.
@@ -74,7 +78,8 @@ class RasterGeoLayer(GeoLayer):
 
         # GeoLayer data
         # - the layer is stored in the parent class using QGIS QgsLayer
-        super().__init__(geolayer_id=geolayer_id, geolayer_qgs_layer=geolayer_qgs_raster_layer,
+        super().__init__(geolayer_id=geolayer_id, name=name, description=description,
+                         geolayer_qgs_layer=geolayer_qgs_raster_layer,
                          geolayer_source_path=geolayer_source_path, properties=properties)
 
         # All other differences are implemented through behavior with additional methods below.
@@ -96,7 +101,8 @@ class RasterGeoLayer(GeoLayer):
         # Update the layer's fields.
         self.qgs_layer.updateFields()
 
-        # Create and return a new RasterGeoLayer object with the copied qgs vector layer. The source will be an empty string.
+        # Create and return a new RasterGeoLayer object with the copied qgs vector layer.
+        # The source will be an empty string.
         # The GeoLayer ID is provided by the argument parameter `copied_geolayer_id`.
         return RasterGeoLayer(copied_geolayer_id, duplicate_qgs_raster_layer, "")
 
@@ -182,4 +188,4 @@ class RasterGeoLayer(GeoLayer):
         return False
 
     # TODO smalers 2020-01-13 evaluate whether this is needed for raster
-    #def write_to_disk(self, output_file_absolute):
+    # def write_to_disk(self, output_file_absolute):

@@ -233,8 +233,7 @@ class SetGeoLayerProperty(AbstractCommand):
             logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
-                CommandLogRecord(CommandStatusType.FAILURE, message,
-                                 "Check the log file for details."))
+                CommandLogRecord(CommandStatusType.FAILURE, message, "Check the log file for details."))
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."

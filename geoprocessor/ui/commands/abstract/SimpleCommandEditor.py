@@ -261,6 +261,10 @@ class SimpleCommandEditor(AbstractCommandEditor):
         # 4. Setting up the standard editor bottom.
         # 5. Calls setup_ui_2() to activate the first component so user does not need to position.
 
+        if len(self.command.command_parameter_metadata) == 0:
+            # The command has no parameters (like Exit()) so no need to add anything
+            return
+
         # Set up an area for a list of parameters
         self.parameter_QFrame = QtWidgets.QFrame(self)
         self.parameter_QFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)

@@ -40,6 +40,11 @@ import geoprocessor.util.string_util as string_util
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5 import QtCore
 
+"""
+This module contains functions that perform spatial data processing using QGIS library functions.
+The code in this file should NOT have knowledge about the GeoProcessor, to allow updates to QGIS and also to
+allow implementing a similar ArcGIS Pro version of these functions.
+"""
 
 # TODO smalers 2018-01-28 Evaluate whether to make this private via Pythonic underscore naming
 # QGIS application environment instance
@@ -792,7 +797,9 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
         raise IOError(message)
 
 
-def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs: str, delimiter: str, crs: str,
+def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs: str,
+                                                delimiter: str,
+                                                crs_code: str,
                                                 wkt_col_name: str) -> QgsVectorLayer:
     """
     Reads a delimited file (with WKT column) and returns a QGSVectorLayerObject.
@@ -800,7 +807,7 @@ def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs: str, delimit
     Args:
         delimited_file_abs (str): the full pathname to a delimited file
         delimiter (str): the delimiter symbol (often times is a comma)
-        crs (str): the coordinate reference system (in EPSG code)
+        crs_code (str): the coordinate reference system (in EPSG code)
         wkt_col_name (str): the name of the field/column containing the WKT geometry data
 
     Raises:
@@ -816,10 +823,10 @@ def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs: str, delimit
     #   (3) the coordinate reference system (EPSG code)
     #   (4) the name of the field containing the wkt geometry data
     # REF: https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html
-    uri = "file:///{}?delimiter={}&crs={}&wktField={}".format(delimited_file_abs, delimiter, crs, wkt_col_name)
+    uri = "file:///{}?delimiter={}&crs={}&wktField={}".format(delimited_file_abs, delimiter, crs_code, wkt_col_name)
     qgsvectorlayer = QgsVectorLayer(uri, os.path.basename(delimited_file_abs), "delimitedtext")
 
-    # If the QgsVectorLayer is valid, return it. Otherwise return None.
+    # If the QgsVectorLayer is valid, return it.  Otherwise return None.
     if qgsvectorlayer.isValid():
         return qgsvectorlayer
     else:
@@ -829,7 +836,7 @@ def read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs: str, delimit
         raise IOError(message)
 
 
-def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs: str, delimiter: str, crs: str,
+def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs: str, delimiter: str, crs_code: str,
                                                x_col_name: str, y_col_name: str) -> QgsVectorLayer:
     """
     Reads a delimited file (with X and Y coordinates) and returns a QGSVectorLayerObject.
@@ -837,7 +844,7 @@ def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs: str, delimite
     Args:
         delimited_file_abs (str): the full pathname to a delimited file
         delimiter (str): the delimiter symbol (often times is a comma)
-        crs (str): the coordinate reference system (in EPSG code)
+        crs_code (str): the coordinate reference system (in EPSG code)
         x_col_name (str): the name of the field containing the x coordinates
         y_col_name(str): the name of the filed containing the y coordinates
 
@@ -857,7 +864,7 @@ def read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs: str, delimite
     #   (5) the name of the field containing the y coordinates
     # REF: https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html
     uri = "file:///{}?delimiter={}&crs={}&xField={}&yField={}".format(delimited_file_abs,
-                                                                      delimiter, crs, x_col_name, y_col_name)
+                                                                      delimiter, crs_code, x_col_name, y_col_name)
     qgsvectorlayer = QgsVectorLayer(uri, os.path.basename(delimited_file_abs), "delimitedtext")
 
     # If the QgsVectorLayer is valid, return it. Otherwise return None.
@@ -1117,8 +1124,11 @@ def split_qgsvectorlayer_by_attribute(qgsvectorlayer: QgsVectorLayer, attribute_
     processing.run('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
 
 
-def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer: QgsVectorLayer, output_file:str, crs:str, geometry_type:str,
-                                           separator:str = "COMMA") -> None:
+def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer: QgsVectorLayer,
+                                           output_file: str,
+                                           crs_code: str,
+                                           geometry_type: str,
+                                           separator: str = "COMMA") -> None:
     """
     Write the QgsVectorLayer object to a spatial data file in CSV format.
     REF: QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>
@@ -1134,7 +1144,7 @@ def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer: QgsVectorLayer, outpu
     Args:
         qgsvectorlayer (QgsVectorLayer): the QGSVectorLayer object
         output_file (str): the full pathname to the output file (do not include .csv extension)
-        crs (str): the output coordinate reference system in EPSG code
+        crs_code (str): the output coordinate reference system in EPSG code
         geometry_type (str): the type of geometry to export ( `AS_WKT`, `AS_XYZ`, `AS_XY` or `AS_YX`)
         separator (str): the symbol to use as the delimiter of the output delimited file (`COMMA`, `SEMICOLON`,
            `TAB` or `SPACE`)
@@ -1149,13 +1159,16 @@ def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer: QgsVectorLayer, outpu
     QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
                                             output_file,
                                             "utf-8",
-                                            QgsCoordinateReferenceSystem(crs),
+                                            QgsCoordinateReferenceSystem(crs_code),
                                             "CSV",
                                             layerOptions=['GEOMETRY=AS_{}'.format(geometry_type),
                                                           'SEPARATOR={}'.format(separator)])
 
 
-def write_qgsvectorlayer_to_geojson(qgsvectorlayer: QgsVectorLayer, output_file: str, crs: str, precision: int) -> None:
+def write_qgsvectorlayer_to_geojson(qgsvectorlayer: QgsVectorLayer,
+                                    output_file_full: str,
+                                    crs_code: str,
+                                    precision: int) -> None:
     """
     Write the QgsVectorLayer object to a spatial data file in GeoJSON format.
     REF: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
@@ -1170,8 +1183,8 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer: QgsVectorLayer, output_file:
 
     Args:
         qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object
-        output_file (str): the full pathname to the output file (do not include .shp extension)
-        crs (str): the output coordinate reference system in EPSG code
+        output_file_full (str): the full pathname to the output file
+        crs_code (str): the output coordinate reference system code in EPSG code
         precision (int): a integer at or between 0 and 15 that determines the number of decimal places to include
             in the output geometry
 
@@ -1179,19 +1192,23 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer: QgsVectorLayer, output_file:
         None
     """
 
-    # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
+    # Write the QgsVectorLayer object to a spatial data file in GeoJSON format.
     # Note to developers:
     #   IGNORE `Unexpected Argument` error for layerOptions. This value is appropriate and functions properly.
     QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
-                                            output_file,
+                                            output_file_full,
                                             "utf-8",
-                                            QgsCoordinateReferenceSystem(crs),
+                                            QgsCoordinateReferenceSystem(crs_code),
                                             "GeoJSON",
                                             layerOptions=['COORDINATE_PRECISION={}'.format(precision), 'WRITE_NAME=NO'])
 
 
-def write_qgsvectorlayer_to_kml(qgsvectorlayer: QgsVectorLayer, output_file: str, crs: str, name_field: str,
-                                desc_field: str, altitude_mode: str) -> None:
+def write_qgsvectorlayer_to_kml(qgsvectorlayer: QgsVectorLayer,
+                                output_file_full: str,
+                                crs_code: str,
+                                name_field: str,
+                                desc_field: str,
+                                altitude_mode: str) -> None:
     """
     Write the QgsVectorLayer object to a spatial data file in KML format.
     REF: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
@@ -1211,9 +1228,11 @@ def write_qgsvectorlayer_to_kml(qgsvectorlayer: QgsVectorLayer, output_file: str
 
     Args:
         qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object
-        output_file (str): the full pathname to the output file (do not include .shp extension)
-        crs (str): the output coordinate reference system in EPSG code
-        name_field (str): the field holding the
+        output_file_full (str): the full pathname to the output file (do not include .shp extension)
+        crs_code (str): the output coordinate reference system in EPSG code
+        name_field (str): the name field
+        desc_field (str): the description field
+        altitude_mode (str): the altitude mode
 
     Returns:
         None
@@ -1223,16 +1242,18 @@ def write_qgsvectorlayer_to_kml(qgsvectorlayer: QgsVectorLayer, output_file: str
     # Note to developers:
     #   IGNORE `Unexpected Argument` error for datasourceOptions. This value is appropriate and functions properly.
     QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
-                                            output_file,
+                                            output_file_full,
                                             "utf-8",
-                                            QgsCoordinateReferenceSystem(crs),
+                                            QgsCoordinateReferenceSystem(crs_code),
                                             "KML",
                                             datasourceOptions=['NameField={}'.format(name_field),
                                                                'DescriptionField={}'.format(desc_field),
                                                                'AltitudeMode={}'.format(altitude_mode)])
 
 
-def write_qgsvectorlayer_to_shapefile(qgsvectorlayer: QgsVectorLayer, output_file: str, crs: str) -> None:
+def write_qgsvectorlayer_to_shapefile(qgsvectorlayer: QgsVectorLayer,
+                                      output_file_full: str,
+                                      crs_code: str) -> None:
     """
     Write the QgsVectorLayer object to a spatial data file in Esri Shapefile format.
     REF: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
@@ -1246,8 +1267,8 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer: QgsVectorLayer, output_fil
 
     Args:
         qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object
-        output_file (str): the full pathname to the output file (do not include .shp extension)
-        crs (str): the output coordinate reference system in EPSG code
+        output_file_full (str): the full pathname to the output file (do not include .shp extension)
+        crs_code (str): the output coordinate reference system in EPSG code
 
     Returns:
         None
@@ -1255,7 +1276,7 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer: QgsVectorLayer, output_fil
 
     # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
     QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
-                                            output_file,
+                                            output_file_full,
                                             "utf-8",
-                                            QgsCoordinateReferenceSystem(crs),
+                                            QgsCoordinateReferenceSystem(crs_code),
                                             "ESRI Shapefile")

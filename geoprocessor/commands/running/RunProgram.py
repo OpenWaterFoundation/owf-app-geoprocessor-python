@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -191,16 +193,16 @@ class RunProgram(AbstractCommand):
         warning_message = ""
         logger = logging.getLogger(__name__)
 
-        # CommandLine is required, pending other options
-        # noinspection PyPep8Naming
-        pv_CommandLine = self.get_parameter_value(parameter_name='CommandLine', command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_CommandLine, False, False):
-            message = "The CommandLine must be specified."
-            recommendation = "Specify the command line."
-            warning_message += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # IncludeParentEnvVars is optional, will default to True at runtime
         # noinspection PyPep8Naming
@@ -241,7 +243,7 @@ class RunProgram(AbstractCommand):
         # If any warnings were generated, throw an exception
         if len(warning_message) > 0:
             logger.warning(warning_message)
-            raise ValueError(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
@@ -419,7 +421,7 @@ class RunProgram(AbstractCommand):
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
-            raise ValueError(message)
+            raise CommandError(message)
 
         # Run the program as a subprocess
         # noinspection PyBroadException
@@ -463,6 +465,6 @@ class RunProgram(AbstractCommand):
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
             logger.warning(message)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

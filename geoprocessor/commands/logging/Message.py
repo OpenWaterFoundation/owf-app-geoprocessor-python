@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -91,19 +93,20 @@ class Message(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
         logger = logging.getLogger("gp")
 
-        # Message is required
-        # noinspection PyPep8Naming
-        pv_Message = self.get_parameter_value(parameter_name='Message', command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_Message, False, False):
-            message = "Message parameter has no value."
-            recommendation = "Specify text for the Message parameter."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
         # noinspection PyPep8Naming
         pv_CommandStatus = self.get_parameter_value(parameter_name='CommandStatus',
                                                     command_parameters=command_parameters)
@@ -111,7 +114,7 @@ class Message(AbstractCommand):
                                                       CommandStatusType.get_command_status_types_as_str(), True, True):
             message = 'The requested command status "' + pv_CommandStatus + '"" is invalid.'
             recommendation = "Specify a valid command status."
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -119,12 +122,12 @@ class Message(AbstractCommand):
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
         # triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception
-        if len(warning) > 0:
-            logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
@@ -164,6 +167,6 @@ class Message(AbstractCommand):
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

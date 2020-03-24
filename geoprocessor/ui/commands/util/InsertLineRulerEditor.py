@@ -551,7 +551,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
 
             # The Command Display field should print the command name followed by a parenthesis filled with the
             # command parameters and associated values.
-            # Ex: ReadGeoLayerFromGeoJSON(SpatialDataFile="C:/example/path.geojson", GeoLayerID="Example")
+            # Ex: ReadGeoLayerFromGeoJSON(InputFile="C:/example/path.geojson", GeoLayerID="Example")
             display = "{}({})".format(self.command_name, updated_parameter_string_text)
 
         # Update the Command Display Qt Widget to display the dynamic command display text.

@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -175,27 +177,16 @@ class CompareFiles(AbstractCommand):
         warning_message = ""
         logger = logging.getLogger(__name__)
 
-        # InputFile1 is required
-        # noinspection PyPep8Naming
-        pv_InputFile1 = self.get_parameter_value(parameter_name='InputFile1', command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_InputFile1, False, False):
-            message = "The InputFile1 parameter must be specified."
-            recommendation = "Specify the first input file."
-            warning_message += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # InputFile2 is required
-        # noinspection PyPep8Naming
-        pv_InputFile2 = self.get_parameter_value(parameter_name='InputFile2', command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_InputFile2, False, False):
-            message = "The InputFile2 parameter must be specified."
-            recommendation = "Specify the second input file."
-            warning_message += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # CommentLineChar is optional, defaults to # at runtime, for now no checks
 
@@ -268,7 +259,7 @@ class CompareFiles(AbstractCommand):
         # If any warnings were generated, throw an exception
         if len(warning_message) > 0:
             logger.warning(warning_message)
-            raise ValueError(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
@@ -389,8 +380,8 @@ class CompareFiles(AbstractCommand):
         # LineDiffCountProperty
         # noinspection PyPep8Naming
         pv_LineDiffCountProperty = self.get_parameter_value('LineDiffCountProperty')
-        if pv_LineDiffCountProperty is not None and (pv_LineDiffCountProperty != "") and \
-            pv_LineDiffCountProperty.find('${') >= 0:
+        if pv_LineDiffCountProperty is not None and (pv_LineDiffCountProperty != "") and\
+                pv_LineDiffCountProperty.find('${') >= 0:
             # noinspection PyPep8Naming
             pv_LineDiffCountProperty = self.command_processor.expand_parameter_value(pv_LineDiffCountProperty, self)
 
@@ -413,7 +404,7 @@ class CompareFiles(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_InputFile2, self)))
 
         if warning_count > 0:
-            message = "There were " + str(warning_count) + " warnings about command parameters."
+            message = "There are " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
             raise ValueError(message)
 
@@ -456,6 +447,8 @@ class CompareFiles(AbstractCommand):
                     # The following will discard comments and only return non-comment lines
                     # Therefore, comparisons are made on chunks of non-comment lines.
                     # TODO smalers 2018-01-08 Could make this comparison more intelligent if the # of comments varies
+                    iline1 = None
+                    iline2 = None
                     if not file1_end_found:
                         # Read another line if not at the end of the first file
                         iline1 = self.read_line(in1, pv_CommentLineChar, pv_IgnoreWhitespace)
@@ -494,9 +487,9 @@ class CompareFiles(AbstractCommand):
                 in2.close()
                 if line_count_compared == 0:
                     line_count_compared = 1  # to avoid divide by zero below - should never happen
-                logger.info("There are " + str(line_diff_count) + " lines that are different, " +
-                            '{:4f}'.format(100.0*float(line_diff_count)/float(line_count_compared)) +
-                            '% (compared ' + str(line_count_compared) + ' lines from longest file).')
+                logger.info("There are {} lines that are different, {:.2f}% (compared {} lines from longest file).".
+                            format(line_diff_count, 100.0*float(line_diff_count)/float(line_count_compared),
+                                   line_count_compared))
 
                 if pv_LineDiffCountProperty is not None and pv_LineDiffCountProperty:
                     # Set a processor property for the line difference count property
@@ -528,9 +521,11 @@ class CompareFiles(AbstractCommand):
         if line_diff_count > allowed_diff_count and \
             ((pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING) or
              (pv_IfDifferent_CommandStatusType == CommandStatusType.FAILURE)):
-            message = "" + str(line_diff_count) + " lines were different, " + \
-                '{:4f}'.format(100.0*float(line_diff_count)/float(line_count_compared)) + \
-                "% (compared " + str(line_count_compared) + " lines" + file_end_string + ")."
+            message = "{} lines are different, {:.2f}% (compared {} lines{}).".format(line_diff_count,100.0*float(
+                                                                                          line_diff_count)/float(
+                                                                                          line_count_compared),
+                                                                                      line_count_compared,
+                                                                                      file_end_string)
             if pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING:
                 logger.warning(message)
             else:
@@ -539,11 +534,11 @@ class CompareFiles(AbstractCommand):
                 CommandPhaseType.RUN,
                 CommandLogRecord(pv_IfDifferent_CommandStatusType,
                                  message, "Check files because difference is not expected."))
-            raise RuntimeError(message)
+            raise CommandError(message)
         if (line_diff_count == 0) and (file1_end_found != file2_end_found) and \
             ((pv_IfSame_CommandStatusType == CommandStatusType.WARNING) or
              (pv_IfSame_CommandStatusType == CommandStatusType.FAILURE)):
-            message = "No lines were different (the files are the same)."
+            message = "No lines are different (the files are the same)."
             if pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING:
                 logger.warning(message)
             else:
@@ -552,10 +547,10 @@ class CompareFiles(AbstractCommand):
                 CommandPhaseType.RUN,
                 CommandLogRecord(pv_IfSame_CommandStatusType,
                                  message, "Check files because match is not expected."))
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         if warning_count > 0:
-            message = "There were " + str(warning_count) + " warnings processing the command."
-            raise RuntimeError(message)
+            message = "There are " + str(warning_count) + " warnings processing the command."
+            raise CommandError(message)
 
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

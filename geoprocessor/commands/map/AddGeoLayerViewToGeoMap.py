@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -50,13 +52,15 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         CommandParameterMetadata("InsertAfter", type(""))]
 
     # Command metadata for command editor display
+    # - * character takes up two spaces for indent below
     __command_metadata = dict()
-    __command_metadata['Description'] = "Add a GeoLayerView to a GeoLayerViewGroup in a GeoMap.\n" \
-        "A GeoLayerView consists of GeoLayer and GeoLayerSymbol.\n" \
-        "    GeoMap\n" \
-        "      GeoLayerViewGroup\n" \
-        "        GeoLayerView  <=====\n" \
-        "          GeoLayer + GeoLayerSymbol\n"\
+    __command_metadata['Description'] = "Create a new GeoLayerView and add to a GeoLayerViewGroup in a GeoMap.\n"\
+        "A GeoLayerView consists of GeoLayer and GeoLayerSymbol (see SetGeoLayerView*Symbol commands).\n"\
+        "    GeoMapProject\n"\
+        "      GeoMap [ ]\n"\
+        "*      GeoLayerViewGroup [ ]\n"\
+        "*        GeoLayerView [ ]\n"\
+        "            GeoLayer + GeoLayerSymbol\n"\
         "The first GeoLayerView in the list is displayed on the top of the group.\n"\
         "The last GeoLayerView in the list is displayed on the bottom of the group."
     __command_metadata['EditorType'] = "Simple"
@@ -83,6 +87,19 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
     __parameter_input_metadata['GeoLayerViewID.Label'] = "GeoLayerViewID"
     __parameter_input_metadata['GeoLayerViewID.Required'] = True
     __parameter_input_metadata['GeoLayerViewID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
+    # Name
+    __parameter_input_metadata['Name.Description'] = "GeoLayerView name"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = False
+    __parameter_input_metadata['Name.Tooltip'] = "The GeoLayerView name, can use ${Property}, default is layer name."
+    __parameter_input_metadata['Name.Value.Default'] = ''
+    # Description
+    __parameter_input_metadata['Description.Description'] = "GeoLayerView description"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = False
+    __parameter_input_metadata['Description.Tooltip'] =\
+        "The GeoLayerView description, can use ${Property}, default is description."
+    __parameter_input_metadata['Description.Value.Default'] = ''
     # InsertPosition
     __parameter_input_metadata['InsertPosition.Description'] = "insert position"
     __parameter_input_metadata['InsertPosition.Label'] = "Insert position"
@@ -138,16 +155,16 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
         # Check that required parameters are non-empty, non-None strings.
-        required_parameters = ["GeoLayerID", "GeoMapID", "GeoLayerViewGroupID", "GeoLayerViewID"]
+        required_parameters = command_util.get_required_parameter_names(self)
         for parameter in required_parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
             if not validator_util.validate_string(parameter_value, False, False):
                 message = "Required {} parameter is not specified.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -169,27 +186,27 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
             # List has at least one value
             if not validator_util.validate_list_has_one_value(check_list):
                 # List does not have exactly one value
-                message = "Zero or one of InsertPosition, InsertBefore, and InsertAfer can be specified."
+                message = "Zero or one of InsertPosition, InsertBefore, and InsertAfter can be specified."
                 recommendation = "Specify only one insert parameter (or none)."
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def validate_runtime_data(self, geolayer_id, geomap_id, geolayerviewgroup_id, geolayerview_id,
-                              insert_before, insert_after) -> bool:
+    def check_runtime_data(self, geolayer_id, geomap_id, geolayerviewgroup_id,
+                           insert_before, insert_after) -> bool:
         """
         Checks whether runtime data are valid.  Checks the following:
         * the ID of the GeoLayer is an existing GeoLayerID
@@ -200,7 +217,6 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
             geolayer_id (str): the ID of the GeoLayer to add
             geomap_id (str): the ID of the GeoMap to be modify
             geolayerviewgroup_id (str): the ID of the GeoLayerViewGroup to modify
-            geolayerview_id (str): the ID of the GeoLayerView to modify
             insert_before (str):  the GeoLayerID to insert before
             insert_after (str):  the GeoLayerID to insert after
 
@@ -274,9 +290,11 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerViewID = self.get_parameter_value("GeoLayerViewID")
         # noinspection PyPep8Naming
-        pv_Name = self.get_parameter_value("Name")
+        pv_Name = self.get_parameter_value("Name", default_value=self.parameter_input_metadata['Name.Value.Default'])
         # noinspection PyPep8Naming
-        pv_Description = self.get_parameter_value("Description")
+        pv_Description =\
+            self.get_parameter_value("Description",
+                                     default_value=self.parameter_input_metadata['Description.Value.Default'])
         # noinspection PyPep8Naming
         pv_InsertPosition = self.get_parameter_value("InsertPosition")  # None is OK
         # noinspection PyPep8Naming
@@ -304,8 +322,8 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         # - TODO smalers 2020-03-18 not sure if the following is useful because need to handle checks granularly
-        if self.validate_runtime_data(pv_GeoLayerID, pv_GeoMapID, pv_GeoLayerViewGroupID, pv_GeoLayerViewID,
-                                      pv_InsertBefore, pv_InsertAfter):
+        if self.check_runtime_data(pv_GeoLayerID, pv_GeoMapID, pv_GeoLayerViewGroupID,
+                                   pv_InsertBefore, pv_InsertAfter):
             # noinspection PyBroadException
             try:
                 # Get the GeoLayer
@@ -338,7 +356,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
                 # Create a new GeoLayerView
-                geolayerview = GeoLayerView(pv_GeoLayerViewID, geolayer, pv_Name, pv_Description)
+                geolayerview = GeoLayerView(pv_GeoLayerViewID, geolayer, name=pv_Name, description=pv_Description)
 
                 # Add the GeoLayerView to the GeoMap
                 if (geomap is not None) and (geolayerviewgroup is not None):
@@ -360,7 +378,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
         else:

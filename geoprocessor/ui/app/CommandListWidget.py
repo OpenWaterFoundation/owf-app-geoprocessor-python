@@ -26,6 +26,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 # Need the following for Qt.ControlModifier, etc.
 from PyQt5.QtCore import Qt
 
+from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.ui.core.GeoProcessorListModel import GeoProcessorListModel
@@ -403,7 +404,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        debug = True
+        debug = False
         logger = None
         if debug:
             logger = logging.getLogger(__name__)
@@ -415,7 +416,8 @@ class CommandListWidget(object):
             control_pressed = True
         if event.modifiers() & Qt.ShiftModifier:
             shift_pressed = True
-        logger.info("Shift pressed=" + str(shift_pressed) + " control pressed=" + str(control_pressed))
+        if debug:
+            logger.info("Shift pressed=" + str(shift_pressed) + " control pressed=" + str(control_pressed))
 
         # Event is not actually used (list is examined)
         # - put in some code to use the event so PyCharm does not complain about not being used
@@ -646,11 +648,11 @@ class CommandListWidget(object):
         item_height = math.floor(current_height / count)
         # logger.info("Gutter size=" + str(self.gutter_ListWidget.count()))
         if current_items_height > current_height - 4:
-            for i in range(0, command_count):
+            for i in range(command_count):
                 item = self.gutter_ListWidget.item(i)
                 item.setSizeHint(QtCore.QSize(-1, item_height))
         else:
-            for i in range(0, command_count):
+            for i in range(command_count):
                 item = self.gutter_ListWidget.item(i)
                 item.setSizeHint(QtCore.QSize(-1, 16))
 
@@ -805,6 +807,7 @@ class CommandListWidget(object):
                 GeoProcessorListModel instance that generated the event.
             cmd_filepath:
                 Path to command file that was read.
+
         Returns:
             None.
         """
@@ -815,6 +818,8 @@ class CommandListWidget(object):
             pass
         logger = logging.getLogger(__name__)
         logger.info("In CommandListWidget.list_model_read_command_file()")
+        # The following is needed to make sure commands that were read result in updated error count
+        # self.update_ui_command_list_errors()
         # The command view will already have been updated because it tracks the data model.
         # Also need to synchronize the number and gutter lists.
         self.number_list_sync_with_commands()
@@ -1004,20 +1009,6 @@ class CommandListWidget(object):
         error_icon = QtGui.QIcon(icon_path)
         # Add icon to QListWidgetItem
         item.setIcon(error_icon)
-
-    def x_set_command_list(self, command_list: [AbstractCommand]) -> None:
-        """
-        This method is no longer used.  Instead, use set_gp_model().
-
-        Assign the command list to the passed in command list
-        coming from geoprocessor in the GeoProcessorListModel.
-
-        Args:
-            command_list: Array of commands
-
-        Returns: None
-        """
-        self.command_list = command_list
 
     def set_gp_model(self, gp_model: GeoProcessorListModel) -> None:
         """
@@ -1254,7 +1245,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        for i in range(0, len(selected_indices)):
+        for i in range(len(selected_indices)):
             index = selected_indices[i]
             self.command_ListView.item(index).setSelected(True)
             self.number_ListWidget.item(index).setSelected(True)
@@ -1293,6 +1284,10 @@ class CommandListWidget(object):
         else:
             self.commands_RunSelectedCommands_PushButton.setEnabled(False)
 
+        # Call code to count the errors
+        # - TODO smalers 2020-03-22 this is called elsewhere
+        # self.update_ui_command_list_errors()
+
         # Update the Command_List widget label to display the total and selected number of commands.
         self.commands_GroupBox.setTitle(
             "Commands ({} commands, {} selected, {} with failures, {} with warnings)".format(
@@ -1301,71 +1296,6 @@ class CommandListWidget(object):
         # Update the UI via listener so it can update the indent button state
         # - TODO smalers 2020-03-13 the listener is the main UI
         self.command_main_ui_listener.update_ui_status()
-
-    def x_update_command_list(self, command_string: str) -> None:
-        """
-        This method is no longer used.  Instead, add or remove commands in the model.
-
-        Add data to the command list.
-
-        Args:
-            command_string: a command string to add to the command list
-
-        Returns:
-            None
-        """
-        # If inserting blank line
-        if not command_string:
-            item = QtWidgets.QListWidgetItem()
-            item.setText("")
-            qsize = QtCore.QSize()
-            qsize.setHeight(16)
-            qsize.setWidth(self.command_ListView.size().width())
-            item.setSizeHint(qsize)
-            self.command_ListView.addItem(item)
-            return
-        
-        item = QtWidgets.QListWidgetItem()
-        item.setText(command_string.rstrip())
-        qsize = QtCore.QSize()
-        qsize.setHeight(16)
-        qsize.setWidth(self.command_ListView.size().width())
-        item.setSizeHint(qsize)
-        if command_string.strip() == "/*":
-            self.comment_block = True
-        # Check to see if comment block started or ended
-        if command_string.strip()[0] == '#' or self.comment_block is True:
-            item.setForeground(QtGui.QColor(68, 121, 206))
-        self.command_ListView.addItem(item)
-
-        if command_string.strip() == "*/":
-            self.comment_block = False
-
-    def update_command_list_widget(self) -> None:
-        """
-        This method is no longer used.  Instead, update data in the model.
-
-        Update the command list widget from a command list that
-        has already been initialized.
-
-        Returns:
-            None
-        """
-        # Start by clearing all data from the command list widget
-        # self.command_ListView.clear()
-        self.number_ListWidget.clear()
-        self.gutter_ListWidget.clear()
-
-        self.comment_block = False
-
-        # Loop through command_list from geoprocessor and add data to command list widget
-        for i, command in self.gp_model.gp.commands:
-            command_string = command.command_string
-            # self.update_command_list(command_string)
-            self.update_numbered_list(i)
-            self.update_gutter()
-
-        self.number_ListWidget.addItem("")
 
     def update_numbered_list(self, index: int) -> None:
         """
@@ -1405,15 +1335,16 @@ class CommandListWidget(object):
         width = maximum_int_width + 38
         self.number_ListWidget.setFixedWidth(width)
 
-    def update_ui_command_list_errors(self) -> None:
+    def update_ui_command_list_errors(self, command_phase_type=CommandPhaseType.RUN) -> None:
         """
         Once commands have been run. Loop through and check for any errors or warnings.
+        This is called from:  GeoProcessorUI.command_completed().
 
         Returns:
             None
         """
         # Start by clearing previous icons from numbered list and gutter
-        for i in range(0, len(self.gp_model)):
+        for i in range(len(self.gp_model)):
             numbered_list_item = self.number_ListWidget.item(i)
             numbered_list_item.setIcon(QtGui.QIcon())
             gutter_item = self.gutter_ListWidget.item(i)
@@ -1424,8 +1355,15 @@ class CommandListWidget(object):
         self.num_warnings = 0
 
         # Now update the numbered list and gutter with current errors and warnings
-        for i in range(0, len(self.gp_model)):
-            command_status = self.gp_model.gp.commands[i].command_status.run_status
+        for i in range(len(self.gp_model)):
+            if command_phase_type is CommandPhaseType.INITIALIZATION:
+                # Will be used after loading a command file, but have not run yet
+                command_status = self.gp_model.gp.commands[i].command_status.initialization_status
+            elif command_phase_type is CommandPhaseType.DISCOVERY:
+                command_status = self.gp_model.gp.commands[i].command_status.initialization_status
+            elif command_phase_type is CommandPhaseType.RUN:
+                # Will be used by default, after running commands
+                command_status = self.gp_model.gp.commands[i].command_status.run_status
             if command_status is CommandStatusType.FAILURE:
                 self.numbered_list_error_at_row(i)
                 self.gutter_error_at_row(i)
@@ -1446,3 +1384,83 @@ class CommandListWidget(object):
         item = QtWidgets.QListWidgetItem()
         item.setSizeHint(QtCore.QSize(-1, 16))
         self.gutter_ListWidget.addItem(item)
+
+    def x_set_command_list(self, command_list: [AbstractCommand]) -> None:
+        """
+        This method is no longer used.  Instead, use set_gp_model().
+
+        Assign the command list to the passed in command list
+        coming from geoprocessor in the GeoProcessorListModel.
+
+        Args:
+            command_list: Array of commands
+
+        Returns: None
+        """
+        self.command_list = command_list
+
+    def x_update_command_list(self, command_string: str) -> None:
+        """
+        This method is no longer used.  Instead, add or remove commands in the model.
+
+        Add data to the command list.
+
+        Args:
+            command_string: a command string to add to the command list
+
+        Returns:
+            None
+        """
+        # If inserting blank line
+        if not command_string:
+            item = QtWidgets.QListWidgetItem()
+            item.setText("")
+            qsize = QtCore.QSize()
+            qsize.setHeight(16)
+            qsize.setWidth(self.command_ListView.size().width())
+            item.setSizeHint(qsize)
+            self.command_ListView.addItem(item)
+            return
+
+        item = QtWidgets.QListWidgetItem()
+        item.setText(command_string.rstrip())
+        qsize = QtCore.QSize()
+        qsize.setHeight(16)
+        qsize.setWidth(self.command_ListView.size().width())
+        item.setSizeHint(qsize)
+        if command_string.strip() == "/*":
+            self.comment_block = True
+        # Check to see if comment block started or ended
+        if command_string.strip()[0] == '#' or self.comment_block is True:
+            item.setForeground(QtGui.QColor(68, 121, 206))
+        self.command_ListView.addItem(item)
+
+        if command_string.strip() == "*/":
+            self.comment_block = False
+
+    def x_update_command_list_widget(self) -> None:
+        """
+        This method is no longer used.  Instead, update data in the model.
+
+        Update the command list widget from a command list that
+        has already been initialized.
+
+        Returns:
+            None
+        """
+        # Start by clearing all data from the command list widget
+        # self.command_ListView.clear()
+        self.number_ListWidget.clear()
+        self.gutter_ListWidget.clear()
+
+        self.comment_block = False
+
+        # Loop through command_list from geoprocessor and add data to command list widget
+        for i, command in self.gp_model.gp.commands:
+            command_string = command.command_string
+            # self.update_command_list(command_string)
+            self.update_numbered_list(i)
+            self.update_gutter()
+
+        self.number_ListWidget.addItem("")
+

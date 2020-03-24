@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -125,49 +127,32 @@ class WebGet(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter URL is a non-empty, non-None string.
-        # - existence of the url will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_URL = self.get_parameter_value(parameter_name='URL', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_URL, False, False):
-
-            message = "URL parameter has no value."
-            recommendation = "Specify the URL parameter to indicate the URL of the file to download."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # Check that parameter OutputFile is a non-empty string (can be None).
-        # - existence of the folder will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_OutputFile, True, False):
-
-            message = "OutputFile parameter has no value."
-            recommendation = "Specify the OutputFile parameter to indicate the output file."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_run_webget(self, output_file_abs: str) -> bool:
+    def check_runtime_data(self, output_file_abs: str) -> bool:
         """
        Checks the following:
        * the output folder is a valid folder
@@ -267,17 +252,16 @@ class WebGet(AbstractCommand):
 
         # If the OutputFile parameter is NOT specified, continue.
         else:
-            original_filename = io_util.get_filename(pv_URL) + io_util.get_extension(pv_URL)
+            # original_filename = io_util.get_filename(pv_URL) + io_util.get_extension(pv_URL)
+            original_filename = io_util.get_filename(pv_URL)
             output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
                 self.command_processor.get_property('WorkingDir'),
                 self.command_processor.expand_parameter_value(original_filename, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_run_webget(output_file_absolute):
-
+        if self.check_runtime_data(output_file_absolute):
             # noinspection PyBroadException
             try:
-
                 # Get the output folder.
                 output_folder = os.path.dirname(output_file_absolute)
 
@@ -293,8 +277,8 @@ class WebGet(AbstractCommand):
                 if os.path.exists(output_file_absolute):
                     os.remove(output_file_absolute)
 
-                # If the URL file is a zip file, process as a zip file.
                 if zip_util.is_zip_file_request(r):
+                    # If the URL file is a zip file, process as a zip file.
 
                     # Create an empty list to hold the files that were downloaded/extracted to the output folder.
                     downloaded_files = []
@@ -310,7 +294,6 @@ class WebGet(AbstractCommand):
                                                         new_filename=output_filename)
 
                 else:
-
                     # Download the file to the output folder.
                     with open(os.path.join(output_folder, os.path.basename(url_abs)), "wb") as downloaded_file:
                         downloaded_file.write(r.content)
@@ -322,9 +305,8 @@ class WebGet(AbstractCommand):
                                                         folder_path=output_folder,
                                                         new_filename=output_filename)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
-
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error downloading file from URL {}.".format(url_abs)
                 recommendation = "Check the log file for details."
@@ -335,7 +317,7 @@ class WebGet(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
         else:

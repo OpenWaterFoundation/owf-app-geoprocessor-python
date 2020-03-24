@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -108,17 +110,16 @@ class CloseDataStore(AbstractCommand):
 
         warning = ""
 
-        # Check that the DataStoreID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID",
-                                                  command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_DataStoreID, False, False):
-            message = "DataStoreID parameter has no value."
-            recommendation = "Specify a valid DataStore ID."
-            warning += "\n" + message
-            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
-                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -127,12 +128,12 @@ class CloseDataStore(AbstractCommand):
         # If any warnings were generated, throw an exception.
         if len(warning) > 0:
             self.logger.warning(warning)
-            raise ValueError(warning)
+            raise CommandParameterError(warning)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_close_datastore(self, datastore_id: str) -> bool:
+    def check_runtime_data(self, datastore_id: str) -> bool:
         """
         Checks the following:
             * the DataStore ID is an existing DataStore ID
@@ -183,11 +184,9 @@ class CloseDataStore(AbstractCommand):
         pv_StatusMessage = self.command_processor.expand_parameter_value(pv_StatusMessage, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_close_datastore(pv_DataStoreID):
-
+        if self.check_runtime_data(pv_DataStoreID):
             # noinspection PyBroadException
             try:
-
                 # Get the DataStore object
                 datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
 
@@ -197,7 +196,6 @@ class CloseDataStore(AbstractCommand):
                 # Update the DataStore's status message.
                 datastore_obj.update_status_message(pv_StatusMessage)
 
-            # Raise an exception if an unexpected error occurs during the process
             except Exception:
                 self.warning_count += 1
                 message = "Unexpected error closing DataStore {}.".format(pv_DataStoreID)
@@ -209,8 +207,8 @@ class CloseDataStore(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

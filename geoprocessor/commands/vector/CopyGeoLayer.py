@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -48,8 +50,8 @@ class CopyGeoLayer(AbstractCommand):
     * IncludeFeaturesIf (str, optional): a valid qgis expression determining which features to keep in the
         copied GeoLayer. Default: all features are copied to the new GeoLayer. See the following reference:
         https://docs.qgis.org/2.14/en/docs/user_manual/working_with_vector/expression.html#fields-and-values
-    * CopiedGeoLayerID (str, optional): The ID of the copied GeoLayer. Default "{}_copy".format(GeoLayerID)
-    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
+    * OutputGeoLayerID (str, optional): The ID of the copied GeoLayer. Default "{}_copy".format(GeoLayerID)
+    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the OutputGeoLayerID
         already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
@@ -60,7 +62,9 @@ class CopyGeoLayer(AbstractCommand):
         CommandParameterMetadata("IncludeAttributes", type("")),
         CommandParameterMetadata("ExcludeAttributes", type("")),
         CommandParameterMetadata("IncludeFeaturesIf", type("")),
-        CommandParameterMetadata("CopiedGeoLayerID", type("")),
+        CommandParameterMetadata("OutputGeoLayerID", type("")),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     # Command metadata for command editor display
@@ -94,17 +98,30 @@ class CopyGeoLayer(AbstractCommand):
         "An attribute query specifying features to include in the copied GeoLayer.\n"
         "Expression syntax and capabilities follows QGIS Expression standards. ${Property} syntax is recognized.")
     __parameter_input_metadata['IncludeFeaturesIf.Value.Default.Description'] = "all features are copied"
-    # CopiedGeoLayerID
-    __parameter_input_metadata['CopiedGeoLayerID.Description'] = "the ID of the copied GeoLayer"
-    __parameter_input_metadata['CopiedGeoLayerID.Label'] = "Copied GeoLayerID"
-    __parameter_input_metadata['CopiedGeoLayerID.Tooltip'] = \
+    # OutputGeoLayerID
+    __parameter_input_metadata['OutputGeoLayerID.Description'] = "the ID of the copied GeoLayer"
+    __parameter_input_metadata['OutputGeoLayerID.Label'] = "Output GeoLayerID"
+    __parameter_input_metadata['OutputGeoLayerID.Tooltip'] = \
         "The ID of the copied GeoLayer. ${Property} syntax is recognized."
-    __parameter_input_metadata['CopiedGeoLayerID.Value.Default'] = "GeoLayerID_copy"
+    __parameter_input_metadata['OutputGeoLayerID.Value.Default'] = "GeoLayerID_copy"
+    # Name
+    __parameter_input_metadata['Name.Description'] = "copied GeoLayer name"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = False
+    __parameter_input_metadata['Name.Tooltip'] = "The copied GeoLayer name, can use ${Property}."
+    __parameter_input_metadata['Name.Value.Default'] = ""
+    __parameter_input_metadata['Name.Value.Default.Description'] = "OutputGeoLayerID"
+    # Description
+    __parameter_input_metadata['Description.Description'] = "copied GeoLayer description"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = False
+    __parameter_input_metadata['Description.Tooltip'] = "The copied GeoLayer description, can use ${Property}."
+    __parameter_input_metadata['Description.Value.Default'] = ''
     # IfGeoLayerIDExists
     __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Tooltip'] = (
-        "The action that occurs if the CopiedGeoLayerID already exists within the GeoProcessor.\n"
+        "The action that occurs if the OutputGeoLayerID already exists within the GeoProcessor.\n"
         "Replace : The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
         "No warning is logged. \n"
         "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer.  "
@@ -147,20 +164,18 @@ class CopyGeoLayer(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter GeoLayerID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
-                                                 command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_GeoLayerID, False, False):
-            message = "GeoLayerID parameter has no value."
-            recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to copy."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         # noinspection PyPep8Naming
@@ -172,25 +187,25 @@ class CopyGeoLayer(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_copy_geolayer(self, input_geolayer_id: str, output_geolayer_id: str,
-                               include_feats_if_expression: str) -> bool:
+    def check_runtime_data(self, input_geolayer_id: str, output_geolayer_id: str,
+                           include_feats_if_expression: str) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -217,14 +232,13 @@ class CopyGeoLayer(AbstractCommand):
 
         # If the IncludeFeaturesIf parameter is defined, continue with the checks.
         if include_feats_if_expression is not None:
-
             # If the IncludeFeaturesIf parameter value is not a valid QgsExpression, raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "IsQgsExpressionValid", "IncludeFeaturesIf",
                                                                include_feats_if_expression, "FAIL"))
 
-        # If the CopiedGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
+        # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
         # on the value of the IfGeoLayerIDExists parameter.)
-        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "CopiedGeoLayerID",
+        should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
                                                            output_geolayer_id, None))
 
         # Return the Boolean to determine if the process should be run.
@@ -250,8 +264,14 @@ class CopyGeoLayer(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         # noinspection PyPep8Naming
-        pv_CopiedGeoLayerID = self.get_parameter_value("CopiedGeoLayerID",
+        pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID",
                                                        default_value="{}_copy".format(pv_GeoLayerID))
+        # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name", default_value=pv_OutputGeoLayerID)
+        # noinspection PyPep8Naming
+        pv_Description =\
+            self.get_parameter_value("Description",
+                                     default_value=self.parameter_input_metadata['Description.Value.Default'])
         # noinspection PyPep8Naming
         pv_IncludeAttributes = self.get_parameter_value("IncludeAttributes", default_value="*")
         # noinspection PyPep8Naming
@@ -267,24 +287,29 @@ class CopyGeoLayer(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
         # noinspection PyPep8Naming
-        pv_CopiedGeoLayerID = self.command_processor.expand_parameter_value(pv_CopiedGeoLayerID, self)
+        pv_OutputGeoLayerID = self.command_processor.expand_parameter_value(pv_OutputGeoLayerID, self)
+        # noinspection PyPep8Naming
+        pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
+        # noinspection PyPep8Naming
+        pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
         # noinspection PyPep8Naming
         pv_IncludeFeaturesIf = self.command_processor.expand_parameter_value(pv_IncludeFeaturesIf, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_copy_geolayer(pv_GeoLayerID, pv_CopiedGeoLayerID, pv_IncludeFeaturesIf):
-
+        if self.check_runtime_data(pv_GeoLayerID, pv_OutputGeoLayerID, pv_IncludeFeaturesIf):
             # Copy the GeoLayer and add the copied GeoLayer to the GeoProcessor's geolayers list.
             # noinspection PyBroadException
             try:
-
                 # Get the input GeoLayer.
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
-                copied_geolayer = input_geolayer.deepcopy(pv_CopiedGeoLayerID)
+                copied_geolayer = input_geolayer.deepcopy(pv_OutputGeoLayerID)
+
+                # Set the name and description
+                copied_geolayer.name = pv_Name
+                copied_geolayer.description = pv_Description
 
                 # If the features are configured to be removed, continue.
                 if pv_IncludeFeaturesIf:
-
                     # Get the QGSExpression object.
                     exp = qgis_util.get_qgsexpression_obj(pv_IncludeFeaturesIf)
 
@@ -319,8 +344,8 @@ class CopyGeoLayer(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

@@ -308,6 +308,32 @@ def run_check(command, condition: str, parameter_name: str, parameter_value: str
             recommendation = 'Specify a valid GeoMap ID.'
             is_valid = False
 
+    elif condition_upper == "ISGEOMAPPROJECTIDEXISTING":
+        # Check whether the parameter value (GeoMapProjectID) is an existing GeoMapProjectID.
+        if not command.command_processor.get_geomapproject(parameter_value):
+            message = 'The {} ({}) is not a valid GeoMapProject ID.'.format(parameter_name, parameter_value)
+            recommendation = 'Specify a valid GeoMapProject ID.'
+            is_valid = False
+
+    elif condition_upper == "ISGEOMAPPROJECTIDUNIQUE":
+        # Check whether the parameter value (GeoMapProjectID) is a unique GeoMapProjectID.
+        if command.command_processor.get_geomap(parameter_value):
+            message = 'The {} ({}) value is already in use as a GeoMapProjectID.'.format(
+                parameter_name, parameter_value)
+            recommendation = 'Specify a new {}.'.format(parameter_name)
+            is_valid = False
+            # noinspection PyPep8Naming
+            pv_IfGeoLayerIDExists = command.get_parameter_value("IfGeoMapProjectIDExists", default_value="Replace")
+
+            if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+                fail_response = "WARN"
+            elif pv_IfGeoLayerIDExists.upper() == "WARN":
+                fail_response = "WARNBUTDONOTRUN"
+            elif pv_IfGeoLayerIDExists.upper() == "FAIL":
+                fail_response = "FAIL"
+            else:
+                is_valid = True
+
     elif condition_upper == "ISINTBETWEENRANGE":
         # Check whether the parameter value (integer) is between or at two values/numbers.
         int_min = other_values[0]

@@ -19,8 +19,11 @@
 
 from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.GeoMap import GeoMap
+from geoprocessor.core.GeoMapProject import GeoMapProject
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.DataStore import DataStore
@@ -87,6 +90,9 @@ class GeoProcessor(object):
 
         # GeoMap list that holds all registered GeoMap objects.
         self.geomaps: [GeoMap] = []
+
+        # GeoMap list that holds all registered GeoMapProject objects.
+        self.geomapprojects: [GeoMapProject] = []
 
         # Table list that holds all registered tables object.
         self.tables: list = []
@@ -269,13 +275,36 @@ class GeoProcessor(object):
 
         # Iterate over the existing GeoMaps.
         for existing_geomap in self.geomaps:
-            # If an existing GeoLayer has the same ID as the input GeoLayer, remove the existing GeoLayer from the
-            # geolayers list.
+            # If an existing GeoMap has the same ID as the input GeoMap, remove the existing GeoMap from the
+            # geomaps list.
             if existing_geomap.id == geomap.id:
                 self.free_geomap(existing_geomap)
 
         # Add the input GeoMap to the geomaps list.
         self.geomaps.append(geomap)
+
+    def add_geomapproject(self, geomapproject: GeoMapProject) -> None:
+        """
+        Add a GeoMapProject object to the geomapprojects list.
+        If a geomapproject already exists with the same GeoMap ID, the
+        existing GeoMapProject will be replaced with the input GeoMapProject.
+
+        Args:
+            geomapproject: instance of a GeoMapProject object
+
+        Returns:
+            None
+        """
+
+        # Iterate over the existing GeoMapProjects.
+        for existing_geomapproject in self.geomapprojects:
+            # If an existing GeoMapProject has the same ID as the input GeoMapProject,
+            # remove the existing GeoMapProject from the geomapprojects list.
+            if existing_geomapproject.id == geomapproject.id:
+                self.free_geomapproject(existing_geomapproject)
+
+        # Add the input GeoMap to the geomaps list.
+        self.geomapprojects.append(geomapproject)
 
     def add_output_file(self, output_file_abs_path: str) -> None:
         """
@@ -498,6 +527,7 @@ class GeoProcessor(object):
             # TODO smalers 2007-12-23 Evaluate whether to skip None.  For now show "None" in result.
             propval = None
             propval_string = ""
+            # noinspection PyBroadException
             try:
                 if found_pos_env_start >= 0:
                     # Looking up an environment variable
@@ -582,6 +612,18 @@ class GeoProcessor(object):
             None
         """
         self.geomaps.remove(geomap)
+
+    def free_geomapproject(self, geomapproject: GeoMapProject) -> None:
+        """
+        Removes a GeoMapProject object from the geomapprojects list.
+
+        Args:
+            geomapproject: instance of a GeoMapProject object
+
+        Return:
+            None
+        """
+        self.geomapprojects.remove(geomapproject)
 
     def free_table(self, table) -> None:
         """
@@ -673,6 +715,24 @@ class GeoProcessor(object):
                 if geomap.id == geomap_id:
                     # Found the requested identifier
                     return geomap
+        # Did not find the requested identifier so return None
+        return None
+
+    def get_geomapproject(self, geomapproject_id: str) -> GeoMapProject or None:
+        """
+        Return the GeoMapProject that has the requested ID.
+
+        Args:
+            geomapproject_id (str):  GeoMapProject ID string.
+
+        Returns:
+            The GeoMapProject that has the requested ID, or None if not found.
+        """
+        for geomapproject in self.geomapprojects:
+            if geomapproject is not None:
+                if geomapproject.id == geomapproject_id:
+                    # Found the requested identifier
+                    return geomapproject
         # Did not find the requested identifier so return None
         return None
 
@@ -856,6 +916,24 @@ class GeoProcessor(object):
             for listener_from_array in self.command_processor_listener_array:
                 listener_from_array.command_completed(icommand, ncommand, command, -1.0, "Command completed.")
 
+    def notify_command_processor_listeners_of_command_exception(self, icommand: int, ncommand: int,
+                                                                command: AbstractCommand) -> None:
+        """
+        Notify registed command processor listeners about a command exception.
+
+        Args:
+            icommand (int): The index (0+) of the command that is starting.
+            ncommand (int): The number of commands being processed. This will often be the
+                total number of commands but calling code may process a subset.
+            command (Command): The instance of the command that is starting.
+
+        Returns:
+            None
+        """
+        if self.command_processor_listener_array:
+            for listener_from_array in self.command_processor_listener_array:
+                listener_from_array.command_exception(icommand, ncommand, command, -1.0, "Command exception.")
+
     def notify_command_processor_listeners_of_command_started(self, icommand: int, ncommand: int,
                                                               command: AbstractCommand) -> None:
         """
@@ -896,6 +974,7 @@ class GeoProcessor(object):
         Read a command file and initialize the command list in the geoprocessor.
         The processor properties "InitialWorkingDir" and "WorkingDir" are set to the command file folder,
         or the current working directory if the path to the command file is not absolute.
+        This is similar to TSTool TSCommandProcessor.addCommandsFromStringList()
 
         Args:
             command_file (str): Name of the command file to read, typically should be an absolute path as
@@ -927,10 +1006,13 @@ class GeoProcessor(object):
 
         # Remove all items within the geoprocessor from the previous run.
         self.commands = []
-        self.properties = {}
+        # self.datastores remain open since opened when the software starts
         self.geolayers = []
-        self.tables = []
+        self.geomaps = []
+        self.geomapprojects = []
         self.output_files = []
+        self.properties = {}
+        self.tables = []
 
         # Set the processor properties.
         if os.path.isabs(command_file):
@@ -957,7 +1039,6 @@ class GeoProcessor(object):
 
         # Iterate over each line in the command file.
         for command_file_string in command_file_strings:
-
             # Initialize the command object (without parameters).
             # Work is done in the GeoProcessorCommandFactory class.
             command_object = command_factory.new_command(
@@ -965,8 +1046,17 @@ class GeoProcessor(object):
                 create_unknown_command_if_not_recognized)
 
             # Initialize the parameters of the command object.
-            # Work is done in the AbstractCommand class.
             command_object.initialize_command(command_file_string, self, True)
+
+            # Check the command parameters so that initialization log messages are generated
+            # - this ensures that the UI will display initialization messages
+            # noinspection PyBroadException
+            try:
+                command_object.check_command_parameters(command_object.command_parameters)
+            except Exception:
+                # Errors will have been added to the command log and should display in the UI
+                # - TODO smalers 2020-03-22 TSTool logic does more - do simple logging here
+                logger.warning("Command has errors.  See command log in UI and log file.")
 
             # Append the initialized command (object with parameters) to the geoprocessor command list.
             self.commands.append(command_object)
@@ -1051,7 +1141,7 @@ class GeoProcessor(object):
         # Notify the command list model that the commands list UI in CommandListWidget
         # needs to be updated to reflect changes made to commands in GeoProcessor
         # TODO smalers 2020-03-10 Not sure this is needed in current design
-        #self.notify_command_list_processor_listener_update_commands()
+        # self.notify_command_list_processor_listener_update_commands()
 
     def remove_command(self, index: str) -> None:
         """
@@ -1145,9 +1235,9 @@ class GeoProcessor(object):
         gdal_bin_software = ""
         if app_util.is_qgis_install_standalone():
             qgis_install_folder = app_util.get_qgis_install_folder()
-            gis_bin_folder = qgis_install_folder.replace("\\","/") + "/bin"
+            gis_bin_folder = qgis_install_folder.replace("\\", "/") + "/bin"
             gis_software = "QGIS"
-            gdal_bin_folder = qgis_install_folder.replace("\\","/") + "/bin"
+            gdal_bin_folder = qgis_install_folder.replace("\\", "/") + "/bin"
         elif app_util.is_qgis_install_osgeo():
             # OSGeo shared installation folder.
             # Installation folder will be something like C:\OSGeo4W64\apps\qgis
@@ -1324,7 +1414,7 @@ class GeoProcessor(object):
                 # if not in_comment and If_stack_ok_to_run:
                 # The following message brackets any command class run_command messages that may be generated
                 message = '-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
-                command.command_string
+                    command.command_string
                 # print(message)
                 logger.info(message)
                 # notify listener that command has started running
@@ -1355,22 +1445,24 @@ class GeoProcessor(object):
 
                 if in_comment:
                     # In a /* */ comment block so set status to successful
-                    # - TODO smalers 2020-03-16 need to implemen this
+                    # - TODO smalers 2020-03-16 need to implement this
                     continue
 
-                # TODO smalers 2017-12-21 this is in TSTool but need to confirm if really need - redundant?
-                # - probably need for the UI since the processor will be re-run multiple times
-                # - comment out of the geoprocessor
-                # Initialize the command for running
-                # - this reparses the commands and parameters
-                # - this clears out previous results
-                # command.initialize_command( command.command_string, self, True )
+                # Clear the log for the commands
+                command.command_status.clear_log(CommandPhaseType.INITIALIZATION)
+                command.command_status.clear_log(CommandPhaseType.DISCOVERY)
+                # TODO smalers 2020-03-22 need to handle clearing of log in For loops - for now clear all
+                # - would be nice to figure this out at the processor level, TSTool seems not optimal
+                command.command_status.clear_log(CommandPhaseType.RUN)
+
+                # Initialize the command by parsing command string, which will regenerate command log for issues
+                # - need for the UI since the processor will be re-run multiple times
+                command.initialize_command(command.command_string, self, True)
 
                 # Check the command parameters
                 # - this is called when editing the command but also need to check here when running
                 # - the list of parameters is passed because the code is reused with editors that check
                 #   parameters before saving the edits
-
                 command.check_command_parameters(command.command_parameters)
 
                 # Check to see whether the If stack evaluates to True and can run the command
@@ -1477,18 +1569,11 @@ class GeoProcessor(object):
                         continue
                     else:
                         # A typical command - run it
-
-                        # Check to see if command.run_command() runs with no errors. If an error
-                        # arises it is caught with try, except which logs a message and increases
-                        # the warning_count. At the end of GeoProcessor.run_commands() there needs to
-                        # be a check if warning_count is greater than 0 and if so raise an exception.
-                        # noinspection PyBroadException
-                        try:
-                            command.run_command()
-                        except Exception:
-                            message = "Error running command in GeoProcessor.py"
-                            warning_count += 1
-                            logger.warning(message, exc_info=True)
+                        # - exceptions for CommandParameterError and CommandError are handled below and unexpected
+                        #   errors of other types are added to the command log
+                        # - this detects unknown Python coding errors
+                        command.run_command()
+                        # TODO smalers 2020-03-22 not sure these comments or concerns are relevant anymore
                         # If the command generated an output file, add it to the list of output files.
                         # The list is used by the UI to display results.
                         # TODO smalers 2017-12-21 - add the file list generator like TSEngine
@@ -1528,18 +1613,33 @@ class GeoProcessor(object):
                           command.command_string
                 logger.info(message)
                 # logger.info("Notify Command Processor Listener of Command Completed")
-                # Notify listener that commands are finished running
+                # Notify listeners that the command has completed
                 self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
+            except CommandParameterError as cpe:
+                # Will be raised by command.check_command_parameters() when parsing the command
+                logger.warning("Error in command parameter(s) ({}).".format(cpe))
+                # Notify listeners that the command has completed
+                warning_count += 1
+                self.notify_command_processor_listeners_of_command_exception(i_command, n_commands, command)
+            except CommandError as ce:
+                # Will be raised by command.run_command() when running the command
+                logger.warning("Error in running command ({}).".format(ce))
+                # Notify listeners that the command has completed
+                warning_count += 1
+                self.notify_command_processor_listeners_of_command_exception(i_command, n_commands, command)
             except Exception:
-                # TODO smalers 2017-12-21 need to expand error handling by type but for now catch generically
-                # because Python exception handling uses fewer exception classes than Java code to keep simple
                 message = "Unexpected error processing command - unable to complete command"
                 logger.warning(message, exc_info=True)
                 # Don't raise an exception because want all commands to run as best they can, each with
                 # message logging, so that user can troubleshoot all at once rather than first error at a time
+                # Do add to the command log so that the exception will be known to the software developer and user,
+                # typically requiring code changes.
                 command.command_status.add_to_log(
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message, "See the log file for details."))
+                # Notify listeners that the command has completed
+                warning_count += 1
+                self.notify_command_processor_listeners_of_command_exception(i_command, n_commands, command)
 
         # The following checks to see if any warnings were caught in the above code.
         # If there were any warnings raise and exception.
@@ -1549,6 +1649,7 @@ class GeoProcessor(object):
             # raise RuntimeError(message)
 
         # TODO smalers 2020-03-09 need to evaluate how to deal with this
+        # - listeners are notified when each command completes.  If the last command or Exit, the UI status is updated.
         # self.notify_command_list_processor_listener_of_all_commands_completed()
 
         # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts

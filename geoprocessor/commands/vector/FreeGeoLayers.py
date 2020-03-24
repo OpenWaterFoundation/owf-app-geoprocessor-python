@@ -19,6 +19,8 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
@@ -92,34 +94,32 @@ class FreeGeoLayers(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter GeoLayerIDs is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_GeoLayerIDs = self.get_parameter_value(parameter_name='GeoLayerIDs',
-                                                  command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_GeoLayerIDs, False, False):
-            message = "GeoLayerIDs parameter has no value."
-            recommendation = "Specify the GeoLayerIDs parameter to indicate the GeoLayer to copy."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geolayer_be_deleted(self, geolayer_id_list: [str]) -> bool:
+    def check_runtime_data(self, geolayer_id_list: [str]) -> bool:
         """
         Checks the following:
         * the IDs of the input GeoLayers are existing GeoLayer IDs
@@ -180,14 +180,11 @@ class FreeGeoLayers(AbstractCommand):
             list_of_geolayer_ids = string_util.delimited_string_to_list(pv_GeoLayerIDs)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_geolayer_be_deleted(list_of_geolayer_ids):
-
+        if self.check_runtime_data(list_of_geolayer_ids):
             # noinspection PyBroadException
             try:
-
                 # Iterate over the GeoLayer IDS.
                 for geolayer_id in list_of_geolayer_ids:
-
                     # Get GeoLayer to remove.
                     geolayer = self.command_processor.get_geolayer(geolayer_id)
 
@@ -215,8 +212,8 @@ class FreeGeoLayers(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

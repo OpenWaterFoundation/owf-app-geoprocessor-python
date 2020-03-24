@@ -1,4 +1,4 @@
-# WriteGeoMapToJSON - command to write a GeoMap to a JSON file
+# WriteGeoMapProjectToJSON - command to write a GeoMapProject to a JSON file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -27,36 +29,35 @@ from geoprocessor.core.GeoMapCustomJsonEncoder import GeoMapCustomJsonEncoder
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
-import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validator_util as validator_util
 
 import json
 import logging
 
 
-class WriteGeoMapToJSON(AbstractCommand):
+class WriteGeoMapProjectToJSON(AbstractCommand):
     """
-    Writes a GeoMap to a JSON file, suitable for use in other applications such as web mapping.
+    Writes a GeoMapProject to a JSON file, suitable for use in other applications such as web mapping.
     """
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("GeoMapID", type("")),
+        CommandParameterMetadata("GeoMapProjectID", type("")),
         CommandParameterMetadata("Indent", int),
         CommandParameterMetadata("OutputFile", type(""))]
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Write a GeoMap to a JSON file."
+    __command_metadata['Description'] = "Write a GeoMapProject to a JSON file."
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
     __parameter_input_metadata = dict()
     # GeoMapID
-    __parameter_input_metadata['GeoMapID.Description'] = "GeoMap identifier"
-    __parameter_input_metadata['GeoMapID.Label'] = "GeoMapID"
-    __parameter_input_metadata['GeoMapID.Required'] = True
-    __parameter_input_metadata['GeoMapID.Tooltip'] = "The GeoMap identifier, can use ${Property}."
+    __parameter_input_metadata['GeoMapProjectID.Description'] = "GeoMapProject identifier"
+    __parameter_input_metadata['GeoMapProjectID.Label'] = "GeoMapProjectID"
+    __parameter_input_metadata['GeoMapProjectID.Required'] = True
+    __parameter_input_metadata['GeoMapProjectID.Tooltip'] = "The GeoMapProject identifier, can use ${Property}."
     # Indent
     __parameter_input_metadata['Indent.Description'] = "indent number"
     __parameter_input_metadata['Indent.Label'] = "Indent (# of spaces)"
@@ -81,7 +82,7 @@ class WriteGeoMapToJSON(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "WriteGeoMapToJSON"
+        self.command_name = "WriteGeoMapProjectToJSON"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -99,29 +100,28 @@ class WriteGeoMapToJSON(AbstractCommand):
         Check the command parameters for validity.
 
         Args:
-            command_parameters: the dictionary of command parameters to check (key:string_value)
+            command_parameters (dict): the dictionary of command parameters to check (key:string_value)
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter GeoMapID is a non-empty, non-None string.
-        # - existence of the GeoMap will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_GeoMapID = self.get_parameter_value(parameter_name='GeoMapID', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_GeoMapID, False, False):
-            message = "GeoMapID parameter has not been specified."
-            recommendation = "Specify the GeoMapID parameter to indicate the GeoMap to write."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that parameter Indent is a valid integer if specified.
         # noinspection PyPep8Naming
@@ -130,56 +130,43 @@ class WriteGeoMapToJSON(AbstractCommand):
         if not validator_util.validate_int(pv_Indent, True, True):
             message = "The Indent parameter ({}) is invalid.".format(pv_Indent)
             recommendation = "Specify the Indent parameter as the number of spaces to indent."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # Check that parameter OutputFile is a non-empty, non-None string.
-        # - existence of the folder will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_OutputFile, False, False):
-            message = "OutputFile parameter has not been specified."
-            recommendation = "Specify the OutputFile parameter (relative or absolute pathname) to indicate the " \
-                             "location and name of the output file in JSON format."
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def validate_runtime_data(self, geomap_id, output_file_abs):
+    def check_runtime_data(self, geomapproject_id, output_file_abs):
         """
        Checks the following:
-       * the ID of the GeoMap is an existing GeoMapID
+       * the ID of the GeoMapProject is an existing GeoMapProjectID
        * the output folder is a valid folder
 
        Args:
-           geomap_id (str): the ID of the GeoMap to be written
+           geomapproject_id (str): the ID of the GeoMapProject to be written
            output_file_abs (str): the full pathname to the output file
 
        Returns:
-             True if the GeoMap should be written, False if not.
+             True if the GeoMapProject should be written, False if not.
        """
 
         # The Boolean values correspond to the results of the following tests.
         should_run_command = list()
 
         # If the GeoMap ID is not an existing GeoMap ID, fail.
-        should_run_command.append(validator_util.run_check(self, "IsGeoMapIdExisting", "GeoMapID", geomap_id, "FAIL"))
+        should_run_command.append(validator_util.run_check(self, "IsGeoMapProjectIdExisting", "GeoMapProjectID",
+                                                           geomapproject_id, "FAIL"))
 
         # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
@@ -193,7 +180,7 @@ class WriteGeoMapToJSON(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Write the GeoMap to a JSON format.
+        Run the command. Write the GeoMapProject to a JSON format.
 
         Returns:
             None.
@@ -206,7 +193,7 @@ class WriteGeoMapToJSON(AbstractCommand):
 
         # Obtain the parameter values
         # noinspection PyPep8Naming
-        pv_GeoMapID = self.get_parameter_value("GeoMapID")
+        pv_GeoMapProjectID = self.get_parameter_value("GeoMapProjectID")
         # noinspection PyPep8Naming
         pv_Indent = self.get_parameter_value("Indent")  # None is OK
         indent = None
@@ -217,7 +204,7 @@ class WriteGeoMapToJSON(AbstractCommand):
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
-        pv_GeoMapID = self.command_processor.expand_parameter_value(pv_GeoMapID, self)
+        pv_GeoMapProjectID = self.command_processor.expand_parameter_value(pv_GeoMapProjectID, self)
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -225,23 +212,23 @@ class WriteGeoMapToJSON(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Run the checks on the runtime data. Only continue if the checks passed.
-        if self.validate_runtime_data(pv_GeoMapID, output_file_absolute):
+        if self.check_runtime_data(pv_GeoMapProjectID, output_file_absolute):
             # noinspection PyBroadException
             try:
                 # Get the GeoMap
-                geomap = self.command_processor.get_geomap(pv_GeoMapID)
-                if geomap is None:
+                geomapproject = self.command_processor.get_geomapproject(pv_GeoMapProjectID)
+                if geomapproject is None:
                     self.warning_count += 1
-                    message = "GeoMap for GeoMapID={} was not found.".format(pv_GeoMapID)
-                    recommendation = "Check that the GeoMapID is valid."
+                    message = "GeoMapProject for GeoMapProjectID={} was not found.".format(pv_GeoMapProjectID)
+                    recommendation = "Check that the GeoMapProjectID is valid."
                     self.logger.warning(message, exc_info=True)
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
                 # Create the JSON string to write
-                # - the GeoMapCustomJsonEncoder.default() function handles encoding types that cannot otherwise
+                # - the GeoMapProjectCustomJsonEncoder.default() function handles encoding types that cannot otherwise
                 #   be serialized, for example PyQGIS types
-                json_string = json.dumps(geomap, indent=indent, cls=GeoMapCustomJsonEncoder)
+                json_string = json.dumps(geomapproject, indent=indent, cls=GeoMapCustomJsonEncoder)
 
                 # Write the JSON string
                 with open(output_file_absolute, 'w') as file:
@@ -253,7 +240,7 @@ class WriteGeoMapToJSON(AbstractCommand):
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
-                message = "Unexpected error writing GeoMap {} to JSON format.".format(pv_GeoMapID)
+                message = "Unexpected error writing GeoMapProject {} to JSON format.".format(pv_GeoMapProjectID)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
@@ -262,7 +249,7 @@ class WriteGeoMapToJSON(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
         else:

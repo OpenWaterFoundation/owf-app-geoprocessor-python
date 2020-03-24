@@ -19,11 +19,13 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-
+from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -87,19 +89,16 @@ class CreateGeoLayer(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        parameters = ["GeoLayerID", "GeometryInput", "CRS"]
-
-        # Check that the parameters are non-empty, non-None strings.
-        for parameter in parameters:
-
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-
             if not validator_util.validate_string(parameter_value, False, False):
-                message = "{} parameter has no value.".format(parameter)
+                message = "Required {} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -113,7 +112,7 @@ class CreateGeoLayer(AbstractCommand):
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -128,25 +127,24 @@ class CreateGeoLayer(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geolayer_be_created(self, geolayer_id: str, crs: str, geometry_format: str,
-                                     geometry_input: str) -> bool:
+    def check_runtime_data(self, geolayer_id: str, crs: str, geometry_format: str, geometry_input: str) -> bool:
         """
         Checks the following:
         * the CRS is a valid CRS
@@ -212,8 +210,7 @@ class CreateGeoLayer(AbstractCommand):
         # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
 
-        if self.__should_geolayer_be_created(pv_GeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryInput):
-
+        if self.check_runtime_data(pv_GeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryInput):
             # noinspection PyBroadException
             try:
                 layer = None
@@ -221,7 +218,6 @@ class CreateGeoLayer(AbstractCommand):
                 # If the geometry format is bounding box, continue.
                 # noinspection PyPep8Naming
                 if pv_GeometryFormat == "BOUNDINGBOX":
-
                     # Convert the geometry input from a string to a list of strings.
                     # Items are in the following order:
                     #   1. Left (West) bound coordinate
@@ -241,8 +237,8 @@ class CreateGeoLayer(AbstractCommand):
                     # Create the QgsGeometry object for the bounding box geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKT", wkt_conversion)
 
-                # If the geometry format is Well-Known Text, continue.
                 elif pv_GeometryFormat == "WKT":
+                    # If the geometry format is Well-Known Text, continue.
 
                     # Get the equivalent QGS geometry type to the input WKT geometry.
                     # Ex: MultiLineString is converted to LineString.
@@ -254,8 +250,8 @@ class CreateGeoLayer(AbstractCommand):
                     # Create the QgsGeometry object for the Well-Known Text geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKT", pv_GeometryInput)
 
-                # If the geometry format is Well-Known Binary, continue.
                 elif pv_GeometryFormat == "WKB":
+                    # If the geometry format is Well-Known Binary, continue.
 
                     # Create the QgsGeometry object for the Well-Known Binary geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKB", pv_GeometryInput)
@@ -275,8 +271,9 @@ class CreateGeoLayer(AbstractCommand):
 
                 # Create a new GeoLayer with the QgsVectorLayer and add it to the GeoProcesor's geolayers list.
                 new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
-                                              geolayer_qgs_vector_layer=layer,
-                                              geolayer_source_path="MEMORY")
+                                              qgs_vector_layer=layer,
+                                              input_path_full=GeoLayer.SOURCE_MEMORY,
+                                              input_path=GeoLayer.SOURCE_MEMORY)
                 self.command_processor.add_geolayer(new_geolayer)
 
             except Exception:
@@ -292,8 +289,8 @@ class CreateGeoLayer(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

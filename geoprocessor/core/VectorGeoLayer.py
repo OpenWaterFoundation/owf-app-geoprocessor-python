@@ -33,30 +33,21 @@ class VectorGeoLayer(GeoLayer):
     The VectorGeoLayer class stores geometry and identifier data for a vector spatial data layer.
     The core layer data are stored in GeoLayer base class.
     Internally, a QgsVectorLayer object is used in order to leverage the QGIS data model and functionality.
-    Additional data members are used to store data that are not part of QgsVectorLayer objects and are required by the
-    GeoProcessor, such as source filename and identifier used by the GeoProcessor.
+    Additional data members are used to store data that are not part of QgsVectorLayer objects, as needed.
 
-    A list of registered GeoLayer instances are maintained in the GeoProcessor's self.geolayers property (type: list).
+    A list of registered GeoLayer instances are maintained in the GeoProcessor's self.geolayers property.
     The GeoProcessor's commands retrieve in-memory GeoLayer instances from the GeoProcessor's self.geolayers property
     using the GeoProcessor.get_geolayer() function. New GeoLayer instances are added to the GeoProcessor list using the
     add_geolayer() function.
-
-    There are a number of properties associated with each GeoLayer (id, coordinate reference system, feature count,
-    etc.) The GeoLayer properties stored within each GeoLayer instance are the STATIC properties that will never change
-    (ids, QgsVectorLayer object, and source path). The DYNAMIC GeoLayer properties (coordinate reference
-    system, feature count, etc.) are created when needed by accessing class functions.
-
-    GeoLayers can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
-    creates a new GeoLayer (example: Clip). When this occurs, the in-memory GeoLayer is assigned a geolayer_id from
-    within the command, the geolayer_qgs_vector_layer is created from within the command and the geolayer_source_path
-    is set to 'MEMORY'.
     """
 
     def __init__(self, geolayer_id: str,
                  name: str,
                  description: str = None,
-                 geolayer_qgs_vector_layer: QgsVectorLayer = None,
-                 geolayer_source_path: str = None, properties: dict = None) -> None:
+                 qgs_vector_layer: QgsVectorLayer = None,
+                 input_path_full: str = GeoLayer.SOURCE_MEMORY,
+                 input_path: str = GeoLayer.SOURCE_MEMORY,
+                 properties: dict = None) -> None:
         """
         Initialize a new GeoLayer instance.
 
@@ -68,12 +59,19 @@ class VectorGeoLayer(GeoLayer):
                 Layer name, will be used in map legend, etc.
             description (str):
                 Layer description, with more details.
-            geolayer_qgs_vector_layer (QgsVectorLayer)
-                Object created by the QGIS processor. All GeoLayer spatial manipulations are
-                performed on the GeoLayer's qgs_layer.
-            geolayer_source_path (str):
-                The full pathname to the original spatial data file on the user's local computer. If the geolayer was
-                made in memory from the GeoProcessor, this value is set to `MEMORY`.
+            qgs_vector_layer (QgsVectorLayer):
+                Object created by the QGIS processor.
+                All GeoLayer spatial manipulations are performed on the GeoLayer's qgs_layer.
+            input_path_full (str):
+                The full pathname to the input spatial data file on the local computer,
+                consistent with a GeoProcessor read command after the path is expanded.
+                TODO smalers 2020-03-20 evaluate whether to allow URL.
+                If not specified, GeoLayer.SOURCE_MEMORY ('MEMORY') is used, assuming the layer was created in memory.
+            input_path (str):
+                The pathname to the input spatial data file on the local computer,
+                consistent with a GeoProcessor read command before the path is expanded.
+                This is typically a relevant path but could be absolute (same as 'input_source_path_full').
+                If not specified, GeoLayer.SOURCE_MEMORY ('MEMORY') is used, assuming the layer was created in memory.
             properties ({}):
                 A dictionary of user (non-built-in) properties that can be assigned to the layer.
                 These properties facilitate processing.
@@ -81,11 +79,13 @@ class VectorGeoLayer(GeoLayer):
 
         # GeoLayer data
         # - the layer is stored in the parent class using QGIS QgsLayer
-        super().__init__(geolayer_id=geolayer_id, name=name, description=description,
-                         geolayer_qgs_layer=geolayer_qgs_vector_layer,
-                         geolayer_source_path=geolayer_source_path, properties=properties)
-
-        # All other differences are implemented through behavior with additional methods below.
+        super().__init__(geolayer_id,
+                         name=name,
+                         description=description,
+                         qgs_layer=qgs_vector_layer,
+                         input_path_full=input_path_full,
+                         input_path=input_path,
+                         properties=properties)
 
     def add_attribute(self, attribute_name: str, attribute_type: str) -> None:
         """
@@ -94,7 +94,7 @@ class VectorGeoLayer(GeoLayer):
         Args:
             attribute_name (str): the name of the attribute to add.
             attribute_type (str): the attribute field type.
-                Can be int (int), double (real number), string (text) or date.
+                Can be int (int), double (real number), str (text) or date.
 
         Returns:
             None.
@@ -114,7 +114,7 @@ class VectorGeoLayer(GeoLayer):
             The copied GeoLayer object.
         """
 
-        # Create a deep copy of the qgs vecotor layer.
+        # Create a deep copy of the qgs vector layer.
         duplicate_qgs_vector_layer = qgis_util.deepcopy_qqsvectorlayer(self.qgs_layer)
 
         # Update the layer's fields.
@@ -122,7 +122,8 @@ class VectorGeoLayer(GeoLayer):
 
         # Create and return a new GeoLayer object with the copied qgs vector layer. The source will be an empty string.
         # The GeoLayer ID is provided by the argument parameter `copied_geolayer_id`.
-        return VectorGeoLayer(copied_geolayer_id, duplicate_qgs_vector_layer, "")
+        copy_name = ""
+        return VectorGeoLayer(copied_geolayer_id, qgs_vector_layer=duplicate_qgs_vector_layer, name=copy_name)
 
     def get_attribute_field_names(self) -> [str]:
         """
@@ -143,7 +144,7 @@ class VectorGeoLayer(GeoLayer):
         # "feature_count" (int) is the number of features within the GeoLayer. Return the feature_count variable.
         return self.qgs_layer.featureCount()
 
-    def get_geometry(self, geom_format: str = "qgis") -> str:
+    def get_geometry(self, geom_format: str = "QGIS") -> str:
         """
         Returns the GeoLayer's geometry in desired format.
 
@@ -269,27 +270,23 @@ class VectorGeoLayer(GeoLayer):
         # Run processing in the qgis utility function.
         qgis_util.split_qgsvectorlayer_by_attribute(self.qgs_layer, attribute_name, output_qgsvectorlayers)
 
-    def to_json(self):
+    def update_properties(self) -> None:
         """
-        Return dictionary of class data to support JSON serialization using json package.
-        Don't serialize all the data because daa are in the typical spatial data format.
-        Instead serialize what is needed to support web mapping and other visualization.
-        """
-        return {
-            "geoLayerId": self.id,
-            "name": self.name,
-            "description": self.description
-            # TODO smalers 2020-03-19 need to add the source and possibly source type
-        }
+        Update properties, typically before writing the output file.
+        For example, this includes the extent of the file
 
-    def write_to_disk(self, output_file_absolute: str) -> GeoLayer:
+        Returns:
+            None
+        """
+
+    def write_to_disk(self, output_path_full: str) -> GeoLayer:
         """
         Write the GeoLayer to a file on disk. The in-memory GeoLayer will be replaced by the on-disk GeoLayer. This
         utility method is useful when running a command that requires the input of a source path rather than a
         QgsVectorLayer object. For example, the "qgis:mergevectorlayers" requires source paths as inputs.
 
         Args:
-            output_file_absolute: the full file path for the on-disk GeoLayer
+            output_path_full: the full file path for the on-disk GeoLayer
 
         Returns:
             geolayer_on_disk: GeoLayer object of on-disk file. The id of the returned GeoLayer in the same as the
@@ -299,28 +296,31 @@ class VectorGeoLayer(GeoLayer):
         # Remove the shapefile (with its component files) from the temporary directory if it already exists. This
         # block of code was developed to see if it would fix the issue of tests failing when running under suite mode
         # and passing when running as a single test.
-        if os.path.exists(output_file_absolute + '.shp'):
+        if os.path.exists(output_path_full + '.shp'):
 
             # Iterate over the possible extensions of a shapefile.
             for extension in ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg', '.sbn', '.sbx', '.shp.xml']:
 
                 # Get the full pathname of the shapefile component file.
-                output_file_full_path = os.path.join(output_file_absolute + extension)
+                output_path_full = os.path.join(output_path_full + extension)
 
                 # If the shapefile component file exists, add it' s absolute path to the files_to_archive list.
                 # Note that not all shapefile component files are required -- some may not exist.
-                if os.path.exists(output_file_full_path):
-                    os.remove(output_file_full_path)
+                if os.path.exists(output_path_full):
+                    os.remove(output_path_full)
 
         # Write the GeoLayer (generally an in-memory GeoLayer) to a GeoJSON on disk (with the input absolute path).
-        qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_layer, output_file_absolute, self.get_crs())
+        qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_layer, output_path_full, self.get_crs_code())
 
         # Read a QgsVectorLayer object from the on disk spatial data file (GeoJSON)
-        qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(output_file_absolute + ".shp")
+        qgs_vector_layer_disk = qgis_util.read_qgsvectorlayer_from_file(output_path_full + ".shp")
 
         # Create a new GeoLayer object with the same ID as the current object. The data however is not written to disk.
         # Return the new on-disk GeoLayer object.
+
+        qgs_vector_layer_disk_name = ""
         geolayer_on_disk = VectorGeoLayer(geolayer_id=self.id,
-                                          geolayer_qgs_vector_layer=qgs_vector_layer,
-                                          geolayer_source_path=output_file_absolute + ".shp")
+                                          qgs_vector_layer=qgs_vector_layer_disk,
+                                          name=qgs_vector_layer_disk_name,
+                                          input_path_full=output_path_full + ".shp")
         return geolayer_on_disk

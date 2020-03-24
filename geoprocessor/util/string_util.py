@@ -224,10 +224,8 @@ def filter_list_of_strings(input_list: [str], include_glob_patterns: [str] = Non
 
     # Iterate over the include glob patterns.
     for pattern in include_glob_patterns:
-
         # Make sure that a None value is not passed.
-        if pattern:
-
+        if pattern is not None:
             # Get the input list items that match the pattern. Add the items to the master_items_to_include list.
             items_to_include = list(i for i in input_list if re.match(glob2re(pattern), i))
             master_items_to_include.extend(items_to_include)
@@ -237,10 +235,8 @@ def filter_list_of_strings(input_list: [str], include_glob_patterns: [str] = Non
 
     # Iterate over the exclude glob patterns.
     for pattern in exclude_glob_patterns:
-
         # Make sure that a None value is not passed.
-        if pattern:
-
+        if pattern is not None:
             # Get the input list items that match the pattern. Add the items to the master_items_to_exclude list.
             items_to_exclude = list(i for i in input_list if re.match(glob2re(pattern), i))
             master_items_to_exclude.extend(items_to_exclude)
@@ -257,7 +253,6 @@ def filter_list_of_strings(input_list: [str], include_glob_patterns: [str] = Non
     # Return the appropriate list based off of the return_inclusions boolean.
     if return_inclusions:
         return include_list_final
-
     else:
         return exclude_list_final
 
@@ -319,7 +314,6 @@ def glob2re(pat: str) -> str:
     Returns:
         A pattern in regular expression.
     """
-
     i, n = 0, len(pat)
     res = ''
     while i < n:

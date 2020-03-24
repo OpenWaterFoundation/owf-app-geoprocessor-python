@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -170,19 +172,16 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        # Check that the appropriate parameters have a string value.
-        for parameter in ['GeoLayerID', 'OutputFile']:
-
-            # Get the parameter value.
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-
-            # Check that the parameter value is a non-empty, non-None string. If not, raise a FAILURE.
             if not validator_util.validate_string(parameter_value, False, False):
-                message = "{} parameter has no value.".format(parameter)
+                message = "Required {} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -196,7 +195,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
             message = "OutputGeometryFormat parameter value ({}) is not recognized.".format(pv_OutputGeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the OutputGeometryFormat parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -211,24 +210,24 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
             message = "OutputDelimiter parameter value ({}) is not recognized.".format(pv_OutputDelimiter)
             recommendation = "Specify one of the acceptable values ({}) for the OutputDelimiter parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_write_geolayer(self, geolayer_id: str, output_file_abs: str, crs: str,
+    def check_runtime_data(self, geolayer_id: str, output_file_abs: str, crs: str,
                                 output_geom_format: str) -> bool:
         """
         Checks the following:
@@ -320,7 +319,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         filename_wo_ext_path = os.path.join(path, os.path.splitext(filename)[0])
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_write_geolayer(pv_GeoLayerID, filename_wo_ext_path, pv_OutputCRS, pv_OutputGeometryFormat):
+        if self.check_runtime_data(pv_GeoLayerID, filename_wo_ext_path, pv_OutputCRS, pv_OutputGeometryFormat):
 
             # noinspection PyBroadException
             try:
@@ -351,7 +350,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
         else:

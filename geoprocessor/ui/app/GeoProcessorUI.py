@@ -47,7 +47,6 @@ from geoprocessor.ui.core.GeoProcessorListModel import GeoProcessorListModel
 from geoprocessor.ui.util.CommandListBackup import CommandListBackup  # previously command_list_backup
 import geoprocessor.ui.util.qt_util as qt_util
 
-import copy
 import datetime
 import functools
 import logging
@@ -137,7 +136,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.menu_item_select_all_commands: QtWidgets.QAction or None = None
         self.menu_item_deselect_all_commands: QtWidgets.QAction or None = None
 
-        self.commands_cut_buffer : [AbstractCommand] = []  # List of commands for cut/copy/paste
+        self.commands_cut_buffer: [AbstractCommand] = []  # List of commands for cut/copy/paste
+
+        # Dialog for command status
+        # - apparently cannot make 'command_status_dialog' - must be a class member or goes out of scope in function?
+        self.command_status_dialog: QtWidgets.QDialog or None = None
 
         # Results area
         self.results_GroupBox: QtWidgets.QGroupBox or None = None
@@ -158,6 +161,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoMaps_GroupBox: QtWidgets.QGroupBox or None = None
         self.results_GeoMaps_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_GeoMaps_Table: QtWidgets.QTableWidget or None = None
+
+        # Results / GeoMapProjects
+        self.results_GeoMapProjects_Tab: QtWidgets.QWidget or None = None
+        self.results_GeoMapProjects_VerticalLayout: QtWidgets.QVBoxLayout or None = None
+        self.results_GeoMapProjects_GroupBox: QtWidgets.QGroupBox or None = None
+        self.results_GeoMapProjects_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
+        self.results_GeoMapProjects_Table: QtWidgets.QTableWidget or None = None
 
         # Map canvas components and actions
         self.map_window: QtWidgets.QDialog or None = None
@@ -301,6 +311,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol: QtWidgets.QAction or None = None
         self.Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol: QtWidgets.QAction or None = None
         self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_CreateGeoMapProject: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_AddGeoMapToGeoMapProject: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_WriteGeoMapProjectToJSON: QtWidgets.QAction or None = None
 
         # Commands/ Network Processing
         self.Menu_Commands_NetworkProcessing: QtWidgets.QMenu or None = None
@@ -514,7 +527,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                           percent_completed: float, message: str) -> None:
         """
         Indicate that a command has completed. The success/failure of the command is not indicated.
-        This function is called from GeoProcessor.notify_command_processor_listener_of_command_completed().
+        This function is called from GeoProcessor.notify_command_processor_listeners_of_command_completed().
+        See also 'command_exception', which has similar logic,
+        especially to handle case when the last command run has an exception.
 
         Args:
             icommand (int):  The command index (0+).
@@ -531,6 +546,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
 
+        debug = True
         logger = logging.getLogger(__name__)
         if command is None:
             # Not really needed but prevents a warning
@@ -539,31 +555,113 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Get the class name
         command_class = command.__class__.__name__
 
-        # Update the progress to indicate progress (1 to number of commands... completed).
-        self.status_CommandWorkflow_StatusBar.setValue(icommand + 1)
+        # Update the progress to indicate progress (0 to number of commands... completed).
+        # - icommand starts at 0 so need to update add 2, one for zero value and 1 for zero offset index
+        self.status_CommandWorkflow_StatusBar.setValue(icommand + 2)
         self.status_CurrentCommand_StatusBar.setValue(100)
 
         # Set the tooltip text for the progress bar to indicate the numbers
         hint = ("Completed command " + str(icommand + 1) + " of " + str(ncommand))
         self.status_CommandWorkflow_StatusBar.setToolTip(hint)
 
-        self.status_Label.setText("Ready")
-        self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
-
         # Last command has complete or Exit() command.
-        if ((icommand + 1) == ncommand) or (command_class == "Exit"):
+        detected_end = False
+        if (icommand + 1) == ncommand:
             # Last command has completed (or Exit() command) so refresh the command status.
-            logger.info("Detected (from listener) running the last command.")
+            logger.info("Detected (from listener) completed running the last command ({})...updating UI status.".format(
+                (icommand + 1)))
+            detected_end = True
+        elif command_class == "Exit":
+            # Last command has completed (or Exit() command) so refresh the command status.
+            logger.info("Detected (from listener) running Exit command...updating UI status.")
+            detected_end = True
+        else:
+            if debug:
+                logger.debug("Completed command {}.".format((icommand + 1)))
+
+        if detected_end:
+            # Last command being run has completed.
+            self.status_Label.setText("Ready")
+            self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
             # The following updates the command status and displays warning/fail icons
             self.command_CommandListWidget.update_ui_command_list_errors()
             # TODO smalers 2020-03-13 old logic
             # self.update_ui_commands_list()
+            # Cause the labels to be updated
+            self.command_CommandListWidget.update_ui_status_commands()
+
+    def command_exception(self, icommand: int, ncommand: int, command: AbstractCommand,
+                          percent_completed: float, message: str) -> None:
+        """
+        Indicate that a command had an exception.
+        This function is called from GeoProcessor.notify_command_processor_listeners_of_command_exception().
+        See also 'command_completed', which has similar logic for normal (non-exception) case.
+
+        Args:
+            icommand (int):  The command index (0+).
+            ncommand (int): The total number of commands to process
+            command (Command): The reference to the command that is starting to run,
+                provided to allow future interaction with the command.
+            percent_completed (float):  If >= 0, the value can be used to indicate progress
+                running a list of commands (not the single command). If less than zero, then no
+                estimate is given for the percent complete and calling code can make its own determination
+                (e.g. ((icommand + 1)/ncommand)*100)
+            message (str):  A short message describing the status (e.g. "Running command...")
+
+        Returns:
+            None
+        """
+
+        debug = True
+        logger = logging.getLogger(__name__)
+        if command is None:
+            # Not really needed but prevents a warning
+            return
+
+        # Get the class name
+        command_class = command.__class__.__name__
+
+        # Update the progress to indicate progress (0 to number of commands... completed).
+        # - icommand starts at 0 so need to update add 2, one for zero value and 1 for zero offset index
+        self.status_CommandWorkflow_StatusBar.setValue(icommand + 2)
+        self.status_CurrentCommand_StatusBar.setValue(100)
+
+        # Set the tooltip text for the progress bar to indicate the numbers
+        hint = ("Exception for command " + str(icommand + 1) + " of " + str(ncommand))
+        self.status_CommandWorkflow_StatusBar.setToolTip(hint)
+
+        # Last command has complete or Exit() command.
+        detected_end = False
+        if (icommand + 1) == ncommand:
+            # Last command has completed (or Exit() command) so refresh the command status.
+            logger.info("Detected (from listener) exception running the last command ({})...updating UI status.".format(
+                (icommand + 1)))
+            detected_end = True
+        elif command_class == "Exit":
+            # Last command has completed (or Exit() command) so refresh the command status.
+            # - should not get an exception but put in code for consistency with 'command_completed'
+            logger.info("Detected (from listener) exception running Exit command...updating UI status.")
+            detected_end = True
+        else:
+            if debug:
+                logger.debug("Exception for command {}.".format((icommand + 1)))
+
+        if detected_end:
+            # Last command being run has completed.
+            self.status_Label.setText("Ready")
+            self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
+            # The following updates the command status and displays warning/fail icons
+            self.command_CommandListWidget.update_ui_command_list_errors()
+            # TODO smalers 2020-03-13 old logic
+            # self.update_ui_commands_list()
+            # Cause the labels to be updated
+            self.command_CommandListWidget.update_ui_status_commands()
 
     def command_started(self, icommand: int, ncommand: int, command: AbstractCommand,
                         percent_completed: float, message: str) -> None:
         """
         Indicate that a command has started running.
-        This function is called from GeoProcessor.notify_command_processor_listener_of_command_started().
+        This function is called from GeoProcessor.notify_command_processor_listeners_of_command_started().
 
         Args:
             icommand (int): The command index (0+) in the list of commands being run (see ncommand)
@@ -1077,7 +1175,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 command_object = command_factory.new_command(
                     command.command_string,
                     create_unknown_command_if_not_recognized)
-                #logger.debug("New command for paste " + str(type(command_object)))
+                # logger.debug("New command for paste " + str(type(command_object)))
                 new_commands.append(command_object)
                 # logger.debug("Description =" + command_object.command_metadata['Description'])
 
@@ -1889,16 +1987,38 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.Menu_Commands_MapProcessing.addSeparator()
 
-        # WriteGeoMapToJSON
-        self.Menu_Commands_MapProcessing_WriteGeoMapToJSON = QtWidgets.QAction(main_window)
-        self.Menu_Commands_MapProcessing_WriteGeoMapToJSON.setObjectName(
-            qt_util.from_utf8("Menu_Commands_MapProcessing_WriteGeoMapToJSON"))
-        self.Menu_Commands_MapProcessing_WriteGeoMapToJSON.setText(
-            "WriteGeoMapToJSON()... <write a GeoMap to JSON file>")
+        # CreateGeoMapProject
+        self.Menu_Commands_MapProcessing_CreateGeoMapProject = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_CreateGeoMapProject.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_CreateGeoMapProject"))
+        self.Menu_Commands_MapProcessing_CreateGeoMapProject.setText(
+            "CreateGeoMapProject()... <create a new GeoMapProject>")
         # noinspection PyUnresolvedReferences
-        self.Menu_Commands_MapProcessing_WriteGeoMapToJSON.triggered.connect(
-            functools.partial(self.edit_new_command, "WriteGeoMapToJSON()"))
-        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_WriteGeoMapToJSON)
+        self.Menu_Commands_MapProcessing_CreateGeoMapProject.triggered.connect(
+            functools.partial(self.edit_new_command, "CreateGeoMapProject()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_CreateGeoMapProject)
+
+        # AddGeoMapToGeoMapProject
+        self.Menu_Commands_MapProcessing_AddGeoMapToGeoMapProject = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_AddGeoMapToGeoMapProject.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_AddGeoMapToGeoMapProject"))
+        self.Menu_Commands_MapProcessing_AddGeoMapToGeoMapProject.setText(
+            "AddGeoMapToGeoMapProject()... <add a GeoMap to a GeoMapProject>")
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_MapProcessing_AddGeoMapToGeoMapProject.triggered.connect(
+            functools.partial(self.edit_new_command, "AddGeoMapToGeoMapProject()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_AddGeoMapToGeoMapProject)
+
+        # WriteGeoMapProjectToJSON
+        self.Menu_Commands_MapProcessing_WriteGeoMapProjectToJSON = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_WriteGeoMapProjectToJSON.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_WriteGeoMapProjectToJSON"))
+        self.Menu_Commands_MapProcessing_WriteGeoMapProjectToJSON.setText(
+            "WriteGeoMapProjectToJSON()... <write a GeoMapProject to JSON file>")
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_MapProcessing_WriteGeoMapProjectToJSON.triggered.connect(
+            functools.partial(self.edit_new_command, "WriteGeoMapProjectToJSON()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_WriteGeoMapProjectToJSON)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Network Processing menu (disabled)
@@ -1981,7 +2101,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_MultipleEnd.triggered.connect(
             functools.partial(self.edit_new_command, "*/"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_MultipleEnd)
+
         self.Menu_Commands_General_Comments.addSeparator()
+
+        # Comments / General - Comments / #@docExample
+        self.Menu_Commands_General_Comments_DocExample = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_Comments_DocExample.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_Comments_DocExample"))
+        self.Menu_Commands_General_Comments_DocExample.setText(
+            "#@docExample <command file is documentation example>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_General_Comments_DocExample.triggered.connect(
+            functools.partial(self.edit_new_command, "#@docExample"))
+        self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_DocExample)
 
         # Comments / General - Comments / Enabled menu
         self.Menu_Commands_General_Comments_EnabledFalse = QtWidgets.QAction(main_window)
@@ -1994,8 +2127,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "#@enabled False"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_EnabledFalse)
 
-        # Comments / General - Comments / Expected Status menus
-        # Comments / General - Comments / Expected Status Fail
+        # Comments / General - Comments / special comments for testing fail/warn
+
+        # Comments / General - Comments / #@expectedStatus Failure
         self.Menu_Commands_General_Comments_ExpectedStatusFail = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_ExpectedStatusFail.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_ExpectedStatusFail"))
@@ -2007,7 +2141,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "#@expectedStatus Failure"))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_ExpectedStatusFail)
 
-        # Comments / General - Comments / Expected Status Warn
+        # Comments / General - Comments / #@expectedStatus Warning
         self.Menu_Commands_General_Comments_ExpectedStatusWarn = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_Comments_ExpectedStatusWarn.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_ExpectedStatusWarn"))
@@ -2666,8 +2800,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_Table.horizontalHeaderItem(2).setToolTip("Geometry")
         self.results_GeoLayers_Table.horizontalHeaderItem(3).setText("Feature Count")
         self.results_GeoLayers_Table.horizontalHeaderItem(3).setToolTip("Feature Count")
-        self.results_GeoLayers_Table.horizontalHeaderItem(4).setText("Coordinate Reference System")
-        self.results_GeoLayers_Table.horizontalHeaderItem(4).setToolTip("Coordinate Reference System")
+        self.results_GeoLayers_Table.horizontalHeaderItem(4).setText("Coordinate Reference System (CRS)")
+        self.results_GeoLayers_Table.horizontalHeaderItem(4).setToolTip("Coordinate Reference System (CRS)")
         self.results_GeoLayers_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_GeoLayers_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         # Use the following because connect() is shown as unresolved reference in PyCharm
@@ -2689,11 +2823,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoMaps_Table.setObjectName(qt_util.from_utf8("results_GeoMaps_Table"))
         self.results_GeoMaps_Table.setColumnCount(5)
         self.results_GeoMaps_Table.setRowCount(0)
-        self.results_GeoMaps_Table.setHorizontalHeaderItem(0,QtWidgets.QTableWidgetItem())
-        self.results_GeoMaps_Table.setHorizontalHeaderItem(1,QtWidgets.QTableWidgetItem())
-        self.results_GeoMaps_Table.setHorizontalHeaderItem(2,QtWidgets.QTableWidgetItem())
-        self.results_GeoMaps_Table.setHorizontalHeaderItem(3,QtWidgets.QTableWidgetItem())
-        self.results_GeoMaps_Table.setHorizontalHeaderItem(4,QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(2, QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem())
+        self.results_GeoMaps_Table.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem())
         self.results_GeoMaps_Table.horizontalHeader().setDefaultSectionSize(175)
         self.results_GeoMaps_Table.horizontalHeader().setStretchLastSection(True)
         self.results_GeoMaps_GroupBox_VerticalLayout.addWidget(self.results_GeoMaps_Table)
@@ -2704,15 +2838,55 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoMaps_Table.horizontalHeaderItem(0).setText("GeoMapID")
         self.results_GeoMaps_Table.horizontalHeaderItem(0).setToolTip("GeoMapID - uniquely identifies the GeoMap")
         self.results_GeoMaps_Table.horizontalHeaderItem(1).setText("Name")
-        self.results_GeoMaps_Table.horizontalHeaderItem(1).setToolTip("GeoLayerViewGroup Name")
+        self.results_GeoMaps_Table.horizontalHeaderItem(1).setToolTip("GeoMap Name")
         self.results_GeoMaps_Table.horizontalHeaderItem(2).setText("GeoLayerViewGroups")
         self.results_GeoMaps_Table.horizontalHeaderItem(2).setToolTip("How many GeoLayerViewGroups in the GeoMap")
         self.results_GeoMaps_Table.horizontalHeaderItem(3).setText("GeoLayers")
         self.results_GeoMaps_Table.horizontalHeaderItem(3).setToolTip("How many GeoLayers in the GeoMap")
-        self.results_GeoMaps_Table.horizontalHeaderItem(4).setText("Coordinate Reference System")
-        self.results_GeoMaps_Table.horizontalHeaderItem(4).setToolTip("Coordinate Reference System")
+        self.results_GeoMaps_Table.horizontalHeaderItem(4).setText("Coordinate Reference System (CRS)")
+        self.results_GeoMaps_Table.horizontalHeaderItem(4).setToolTip("Coordinate Reference System (CRS)")
         self.results_GeoMaps_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_GeoMaps_Tab), "GeoMaps")
+
+        # Results - GeoMapProjects tab
+        self.results_GeoMapProjects_Tab = QtWidgets.QWidget()
+        self.results_GeoMapProjects_Tab.setObjectName(qt_util.from_utf8("results_GeoMapProjects_Tab"))
+        self.results_GeoMapProjects_VerticalLayout = QtWidgets.QVBoxLayout(self.results_GeoMapProjects_Tab)
+        self.results_GeoMapProjects_VerticalLayout.setObjectName(
+            qt_util.from_utf8("results_GeoMapProjects_VerticalLayout"))
+        self.results_GeoMapProjects_GroupBox = QtWidgets.QGroupBox(self.results_GeoMapProjects_Tab)
+        self.results_GeoMapProjects_GroupBox.setObjectName(qt_util.from_utf8("results_GeoMapProjects_GroupBox"))
+        self.results_GeoMapProjects_GroupBox_VerticalLayout =\
+            QtWidgets.QVBoxLayout(self.results_GeoMapProjects_GroupBox)
+        self.results_GeoMapProjects_GroupBox_VerticalLayout.setObjectName(
+            qt_util.from_utf8("results_GeoMapProjects_GroupBox_VerticalLayout"))
+        self.results_GeoMapProjects_Table = QtWidgets.QTableWidget(self.results_GeoMapProjects_GroupBox)
+        self.results_GeoMapProjects_Table.setObjectName(qt_util.from_utf8("results_GeoMapProjects_Table"))
+        self.results_GeoMapProjects_Table.setColumnCount(4)
+        self.results_GeoMapProjects_Table.setRowCount(0)
+        self.results_GeoMapProjects_Table.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem())
+        self.results_GeoMapProjects_Table.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem())
+        self.results_GeoMapProjects_Table.setHorizontalHeaderItem(2, QtWidgets.QTableWidgetItem())
+        self.results_GeoMapProjects_Table.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem())
+        self.results_GeoMapProjects_Table.horizontalHeader().setDefaultSectionSize(175)
+        self.results_GeoMapProjects_Table.horizontalHeader().setStretchLastSection(True)
+        self.results_GeoMapProjects_GroupBox_VerticalLayout.addWidget(self.results_GeoMapProjects_Table)
+        self.results_GeoMapProjects_VerticalLayout.addWidget(self.results_GeoMapProjects_GroupBox)
+        self.results_TabWidget.addTab(self.results_GeoMapProjects_Tab, qt_util.from_utf8(""))
+        # Used to be in retranslateUi
+        self.results_GeoMapProjects_GroupBox.setTitle("GeoMapProjects (0 GeoMapProjects, 0 selected)")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(0).setText("GeoMapProjectID")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(0).setToolTip(
+            "GeoMapProjectID - uniquely identifies the GeoMapProject")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(1).setText("Name")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(1).setToolTip("GeoMapProject Name")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(2).setText("GeoMapProjects")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(2).setToolTip("How many GeoMaps in the GeoMapProject")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(3).setText("Description")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(3).setToolTip("GeoMapProject Description")
+        self.results_GeoMapProjects_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
+        self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(
+            self.results_GeoMapProjects_Tab), "GeoMapProjects")
 
         # Results - Output Files tab
         self.results_OutputFiles_Tab = QtWidgets.QWidget()
@@ -2841,22 +3015,36 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Set up event handlers
 
+        # GeoLayers
         # Listen for a change in item selection within the results_GeoLayers_Table widget.
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.results_GeoLayers_Table.itemSelectionChanged.connect(self.update_ui_status)
-        # Listen for a change in item selection within the results_Tables_Table widget.
-        # Use the following because connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.results_Tables_Table.itemSelectionChanged.connect(self.update_ui_status)
+        # GeoMaps
         # Listen for a change in item selection within the results_GeoMaps_Table widget.
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.results_GeoMaps_Table.itemSelectionChanged.connect(self.update_ui_status)
+        # GeoMapProjects
+        # Listen for a change in item selection within the results_GeoMaps_Table widget.
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.results_GeoMapProjects_Table.itemSelectionChanged.connect(self.update_ui_status)
+        # Output Files
         # Listen for a change in item selection within the results_OutputFiles_Table widget.
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.results_OutputFiles_Table.itemSelectionChanged.connect(self.update_ui_status)
+        # Properties
+        # Listen for a change in item selection within the results_Properties_Table widget.
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.results_Properties_Table.itemSelectionChanged.connect(self.update_ui_status)
+        # Tables
+        # Listen for a change in item selection within the results_Tables_Table widget.
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.results_Tables_Table.itemSelectionChanged.connect(self.update_ui_status)
 
     # TODO smalers 2018-07-24 evaluate whether the following status components can be moved to status bar area
     def setup_ui_status(self, main_window: GeoProcessorUI, y_centralwidget: int) -> None:
@@ -2961,7 +3149,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Get the command that was selected
 
         # Create command status dialog box
-        # TODO smalers 2020-01-19 this can probably be local to this method rather than instance data
         self.command_status_dialog = QtWidgets.QDialog()
         self.command_status_dialog.resize(600, 290)
         self.command_status_dialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
@@ -3027,11 +3214,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 style = ""
 
                 if command_status.initialization_status is CommandStatusType.WARNING:
-                    style = "style='background-color:yellow'"
+                    style = "style='background-color:yellow'"  # Yellow
                 elif command_status.initialization_status is CommandStatusType.FAILURE:
-                    style = "style='background-color:#ffa8a8'"
+                    style = "style='background-color:#ffa8a8'"  # Red
                 elif command_status.initialization_status is CommandStatusType.SUCCESS:
-                    style = "style='background-color:#7dba71'"
+                    style = "style='background-color:#7dba71'"  # Green
+                else:
+                    # Typically UNKNOWN
+                    style = "style='background-color:white'"  # White
 
                 html_string += (
                     "<tr>" +
@@ -3047,7 +3237,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 elif command_status.discovery_status is CommandStatusType.FAILURE:
                     style = "style='background-color:#ffa8a8'"
                 elif command_status.discovery_status is CommandStatusType.SUCCESS:
-                    style = "style='background-color:green'"
+                    style = "style='background-color:#7dba71'"  # Green
+                else:
+                    # Typically UNKNOWN
+                    style = "style='background-color:white'"  # White
 
                 html_string += (
                     "<tr>" +
@@ -3062,8 +3255,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     style = "style='background-color:yellow'"
                 elif command_status.run_status is CommandStatusType.FAILURE:
                     style = "style='background-color:#ffa8a8'"
+                elif command_status.run_status is CommandStatusType.SUCCESS:
+                    style = "style='background-color:#ffa8a8'"
                 else:
-                    style = "style='background-color:#7dba71'"
+                    # Typically UNKNOWN
+                    style = "style='background-color:white'"
 
                 html_string += (
                     "<tr>" +
@@ -3161,11 +3357,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         command_status_text_browser.setHtml(qt_util.translate("Dialog", html_string, None))
 
-        # self.setWindowModality(QtCore.Qt.NonModal)
-        # command_status_dialog.setModal(False)
-        # print("modality: ")
-        # print(command_status_dialog.isModal())
-        # print(self.isModal())
+        # Make non-modeal so the status window can be viewed at the same time as the main application.
+        # - this allows errors to be fixed
         self.command_status_dialog.setModal(False)
         self.command_status_dialog.show()
 
@@ -3189,7 +3382,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         row_index = self.command_CommandListWidget.number_ListWidget.row(item)
         # if (row_index >= self.command_CommandListWidget.command_ListWidget.count()) or row_index == -1:
         if (row_index >= len(self.command_CommandListWidget.gp_model.gp.commands)) or row_index == -1:
-                return
+            return
         selected_command = gp.commands[row_index]
 
         command_status = selected_command.command_status
@@ -3296,6 +3489,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Call the specific functions for each output category
         # - Each call will also update the status information in the UI (counts, selected, etc.)
         logger = logging.getLogger(__name__)
+        # GeoLayers
         # noinspection PyBroadException
         try:
             self.show_results_geolayers()
@@ -3303,6 +3497,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             message = "Error showing GeoLayers in Results"
             logger.warning(message, exc_info=True)
 
+        # GeoMaps
         # noinspection PyBroadException
         try:
             self.show_results_geomaps()
@@ -3310,6 +3505,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             message = "Error showing GeoMaps in Results"
             logger.warning(message, exc_info=True)
 
+        # GeoMapProjects
+        # noinspection PyBroadException
+        try:
+            self.show_results_geomapprojects()
+        except Exception:
+            message = "Error showing GeoMapProjects in Results"
+            logger.warning(message, exc_info=True)
+
+        # Output Files
         # noinspection PyBroadException
         try:
             self.show_results_output_files()
@@ -3317,6 +3521,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             message = "Error showing Output Files in Results"
             logger.warning(message, exc_info=True)
 
+        # Properties
         # noinspection PyBroadException
         try:
             self.show_results_properties()
@@ -3324,6 +3529,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             message = "Error showing Properties in Results"
             logger.warning(message, exc_info=True)
 
+        # Tables
         # noinspection PyBroadException
         try:
             self.show_results_tables()
@@ -3343,7 +3549,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Display the GeoLayers from the run
         for geolayer in self.gp.geolayers:
-
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_GeoLayers_Table.rowCount()
             self.results_GeoLayers_Table.insertRow(new_row_index)
@@ -3365,7 +3570,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_GeoLayers_Table.setItem(new_row_index, col,
                                                  QtWidgets.QTableWidgetItem(str(geolayer.get_geometry())))
 
-            # Number of features
+            # Feature Count
             if geolayer.is_vector():
                 # Display the feature count
                 col += 1
@@ -3383,10 +3588,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                                                                                     geolayer.get_num_columns()) +
                                                                                 " cells"))
 
-            # Retrieve the GeoLayer's CRS and set as the attribute for the Coordinate Reference System column.
+            # CRS
             col += 1
             self.results_GeoLayers_Table.setItem(new_row_index, col,
-                                                 QtWidgets.QTableWidgetItem(geolayer.get_crs()))
+                                                 QtWidgets.QTableWidgetItem(geolayer.get_crs_code()))
 
         self.results_GeoLayers_Table.resizeColumnsToContents()
         self.update_ui_status_results_geolayers()
@@ -3403,13 +3608,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Display the GeoMaps from the run
         for geomap in self.gp.geomaps:
-
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_GeoMaps_Table.rowCount()
             self.results_GeoMaps_Table.insertRow(new_row_index)
 
             col = -1
-            # Retrieve the GeoMap's GeoMapID and set as the attribute for the GeoMapID column.
+            # GeoMapID
             col += 1
             self.results_GeoMaps_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(geomap.id))
 
@@ -3418,12 +3622,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_GeoMaps_Table.setItem(new_row_index, col,
                                                QtWidgets.QTableWidgetItem(str(geomap.name)))
 
-            # Number of GeoLayerViewGroup.
+            # GeoLayerViewGroups (count)
             col += 1
             self.results_GeoMaps_Table.setItem(new_row_index, col,
                                                QtWidgets.QTableWidgetItem(str(len(geomap.geolayerviewgroups))))
 
-            # Number of GeoLayer.
+            # GeoLayers (count)
             col += 1
             self.results_GeoMaps_Table.setItem(new_row_index, col,
                                                QtWidgets.QTableWidgetItem(str(len(geomap.geolayers))))
@@ -3436,6 +3640,45 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.results_GeoMaps_Table.resizeColumnsToContents()
         self.update_ui_status_results_geomaps()
+
+    def show_results_geomapprojects(self) -> None:
+        """
+        Populates the Results / GeoMapProjects display.
+
+        Returns:
+            None
+        """
+        # Remove items from the Results GeoMapProjects table (from a previous run).
+        self.results_GeoMapProjects_Table.setRowCount(0)
+
+        # Display the GeoMapProjects from the run
+        for geomapproject in self.gp.geomapprojects:
+            # Get the index of the next available row in the table. Add a new row to the table.
+            new_row_index = self.results_GeoMapProjects_Table.rowCount()
+            self.results_GeoMapProjects_Table.insertRow(new_row_index)
+
+            col = -1
+            # GeoMapProject
+            col += 1
+            self.results_GeoMapProjects_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(geomapproject.id))
+
+            # Name
+            col += 1
+            self.results_GeoMapProjects_Table.setItem(new_row_index, col,
+                                                      QtWidgets.QTableWidgetItem(str(geomapproject.name)))
+
+            # GeoMap (count)
+            col += 1
+            self.results_GeoMapProjects_Table.setItem(new_row_index, col,
+                                                      QtWidgets.QTableWidgetItem(str(len(geomapproject.geomaps))))
+
+            # Description
+            col += 1
+            self.results_GeoMapProjects_Table.setItem(new_row_index, col,
+                                                      QtWidgets.QTableWidgetItem(str(geomapproject.description)))
+
+        self.results_GeoMapProjects_Table.resizeColumnsToContents()
+        self.update_ui_status_results_geomapprojects()
 
     def show_results_output_files(self) -> None:
         """
@@ -3451,7 +3694,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Iterate through all of the Output Files in the GeoProcessor.
         single_column = True  # Like TSTool, only the filename
         for output_file in self.gp.output_files:
-
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_OutputFiles_Table.rowCount()
             self.results_OutputFiles_Table.insertRow(new_row_index)
@@ -3468,7 +3710,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                                         '.geojson': 'GeoJSON',
                                         '.xls': 'Microsoft Excel 97-2003 Worksheet'}
 
-                # Retrieve the output file type and set as the attribute for the File Type column. If h
+                # Retrieve the output file type and set as the attribute for the File Type column.
                 if output_file_ext in extension_dictionary.keys():
                     self.results_OutputFiles_Table.setItem(
                         new_row_index, 1, QtWidgets.QTableWidgetItem(extension_dictionary[output_file_ext]))
@@ -3496,10 +3738,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             #      str(new_row_index))
             self.results_Properties_Table.insertRow(new_row_index)
 
-            # Set the property name as the attribute for the Property Name column.
+            # Property Name
             self.results_Properties_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(prop_name))
 
-            # Set the property value as the attribute for the Property Value column.
+            # Property Value
             # - Have to cast to string because table is configured to display strings
             self.results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(prop_value)))
 
@@ -3548,8 +3790,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         This is the same as right-click Edit.
 
         Arg:
-            row:
-                Command list row (0+).
+            row (int): Command list row (0+).
 
         Returns:
             None
@@ -3668,7 +3909,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         self.gp.convert_command_line_from_comment(selected_indices)
 
-        #self.gp_model.update_command_list_ui()
+        # self.gp_model.update_command_list_ui()
         self.command_CommandListWidget.update_ui_status_commands()
 
     def ui_action_command_list_right_click_convert_to_command(self) -> None:
@@ -3693,8 +3934,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
         pass
-
-        logger = logging.getLogger(__name__)
 
         message = "The format tool is not yet enabled.  When enabled, it will auto-indent the commands."
         qt_util.warning_message_box(message)
@@ -3793,7 +4032,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 os_distro = "unknown"
 
             # Format a string with content for Software/System Information:
-            TAB = "     "
+            tab = "     "
+            tab2 = tab + tab
             properties = ""
 
             program_name = app_util.get_property('ProgramName')
@@ -3809,14 +4049,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             program_resources_path = app_util.get_property('ProgramResourcesPath')
 
             properties += ("GeoProcessor Application and Session Information:\n" +
-                           TAB + "Program Name: " + program_name + " " + version + " " + version_date + "\n" +
-                           TAB + "User Name: " + user_name + "\n" +
-                           TAB + "Date: " + current_date + "\n" +
-                           TAB + "Host: " + host + "\n" +
-                           TAB + "Working Directory: " + working_dir + "\n" +
-                           TAB + "Command: gpdev.bat --ui\n" +
-                           TAB + 'Program Home: ' + program_home + "\n" +
-                           TAB + 'Program Resources Path: ' + program_resources_path + "\n" +
+                           tab + "Program Name: " + program_name + " " + version + " " + version_date + "\n" +
+                           tab + "User Name: " + user_name + "\n" +
+                           tab + "Date: " + current_date + "\n" +
+                           tab + "Host: " + host + "\n" +
+                           tab + "Working Directory: " + working_dir + "\n" +
+                           tab + "Command: gpdev.bat --ui\n" +
+                           tab + 'Program Home: ' + program_home + "\n" +
+                           tab + 'Program Resources Path: ' + program_resources_path + "\n" +
                            "\n")
 
             operating_system = platform.uname()[0] + " " + platform.uname()[2]
@@ -3832,32 +4072,32 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 architecture = "Code not implemented to check on operating system"
 
             properties += ("Operating System Information:\n" +
-                           TAB + "Type: " + os_type + "\n" +
-                           TAB + "Distribution: " + os_distro + "\n" +
-                           TAB + "Name (platform.uname[0] and [2]): " + operating_system + "\n" +
-                           TAB + "Version (platform.uname[3]): " + version + "\n")
+                           tab + "Type: " + os_type + "\n" +
+                           tab + "Distribution: " + os_distro + "\n" +
+                           tab + "Name (platform.uname[0] and [2]): " + operating_system + "\n" +
+                           tab + "Version (platform.uname[3]): " + version + "\n")
             if is_windows:
-                properties += (TAB + "System Architecture (os.environ['MSYSTEM_CARCH']): " + architecture + "\n")
+                properties += (tab + "System Architecture (os.environ['MSYSTEM_CARCH']): " + architecture + "\n")
             else:
                 # Linux variant
                 # - TODO smalers 2018-12-31 need to standardize
-                properties += (TAB + "System Architecture: " + architecture + "\n")
+                properties += (tab + "System Architecture: " + architecture + "\n")
             properties += "\n"
 
             # Replace newlines in system version
             system_version = sys.version.replace("\r\n", " ").replace("\n", " ")
             system_path = ''
             for line in sys.path[1:]:
-                system_path += str(line) + '\n' + TAB + TAB
+                system_path += str(line) + '\n' + tab + tab
 
             # Python properties
 
             properties += ("Python Information:\n" +
-                           TAB + 'Python Executable (sys.executable): ' + str(sys.executable) + "\n" +
-                           TAB + 'Python Version (sys.version): ' + system_version + "\n" +
-                           TAB + 'Python Bit Size: ' + str(8*struct.calcsize("P")) + "\n" +
-                           TAB + 'Python Path (sys.path):\n' +
-                           TAB + TAB + system_path + "\n")
+                           tab + 'Python Executable (sys.executable): ' + str(sys.executable) + "\n" +
+                           tab + 'Python Version (sys.version): ' + system_version + "\n" +
+                           tab + 'Python Bit Size: ' + str(8*struct.calcsize("P")) + "\n" +
+                           tab + 'Python Path (sys.path):\n' +
+                           tab + tab + system_path + "\n")
 
             # Check if QGIS is being used at runtime
             # - may want to provide information about what is installed even if not used at runtime but
@@ -3881,45 +4121,45 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # QGIS does not appear to be used at runtime so provide minimal information
                 properties += (
                             "QGIS Information:\n" +
-                            TAB + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
-                            TAB + "The GeoProcessor testing framework is being used without QGIS dependencies.\n" +
+                            tab + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
+                            tab + "The GeoProcessor testing framework is being used without QGIS dependencies.\n" +
                             "\n"
                 )
             else:
                 qgis_root = ""
                 properties += (
                                "QGIS Properties:\n" +
-                               TAB + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
-                               TAB + "QGIS Installation Folder: " + str(qgis_install_folder) + "\n" +
-                               TAB + "QGIS Version: " + str(qgis_version) + "\n" +
-                               TAB + "QGIS Environment Variables (set up by QGIS and GeoProcessor startup scripts):\n" +
-                               TAB + TAB + "GDAL_DATA: " + str(os.environ.get('GDAL_DATA')) + "\n" +
-                               TAB + TAB + "GDAL_DRIVER_PATH: " + str(os.environ.get('GDAL_DRIVER_PATH')) + "\n" +
-                               TAB + TAB + "GDAL_FILENAME_IS_UTF8: " + str(os.environ.get('GDAL_FILENAME_IS_UTF8')) +
+                               tab + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
+                               tab + "QGIS Installation Folder: " + str(qgis_install_folder) + "\n" +
+                               tab + "QGIS Version: " + str(qgis_version) + "\n" +
+                               tab + "QGIS Environment Variables (set up by QGIS and GeoProcessor startup scripts):\n" +
+                               tab2 + "GDAL_DATA: " + str(os.environ.get('GDAL_DATA')) + "\n" +
+                               tab2 + "GDAL_DRIVER_PATH: " + str(os.environ.get('GDAL_DRIVER_PATH')) + "\n" +
+                               tab2 + "GDAL_FILENAME_IS_UTF8: " + str(os.environ.get('GDAL_FILENAME_IS_UTF8')) +
                                "\n" +
-                               TAB + TAB + "GEOTIFF_CSV: " + str(os.environ.get('GEOTIFF_CSV')) + "\n" +
-                               TAB + TAB + "OSGEO4W_ROOT: " + str(os.environ.get('OSGEO4W_ROOT')) + "\n" +
-                               TAB + TAB + "O4W_QT_BINARIES: " + str(os.environ.get('O4W_QT_BINARIES')) + "\n" +
-                               TAB + TAB + "O4W_QT_DOC: " + str(os.environ.get('O4W_QT_DOC')) + "\n" +
-                               TAB + TAB + "O4W_QT_HEADERS: " + str(os.environ.get('O4W_QT_HEADERS')) + "\n" +
-                               TAB + TAB + "O4W_QT_LIBRARIES: " + str(os.environ.get('O4W_QT_LIBRARIES')) + "\n" +
-                               TAB + TAB + "O4W_QT_PLUGINS: " + str(os.environ.get('O4W_QT_PLUGINS')) + "\n" +
-                               TAB + TAB + "O4W_QT_PREFIX: " + str(os.environ.get('O4W_QT_PREFIX')) + "\n" +
-                               TAB + TAB + "O4W_QT_TRANSLATIONS: " + str(os.environ.get('O4W_QT_TRANSLATION')) + "\n" +
-                               TAB + TAB + "PYTHONHOME: " + str(os.environ.get('PYTHONHOME')) + "\n" +
-                               TAB + TAB + "QGIS_PREFIX_PATH: " + str(os.environ.get('QGIS_PREFIX_PATH')) + "\n" +
-                               TAB + TAB + "QT_PLUGIN_PATH: " + str(os.environ.get('QT_PLUGIN_PATH')) + "\n" +
-                               TAB + TAB + "VSI_CACHE: " + str(os.environ.get('VSI_CACHE')) + "\n" +
-                               TAB + TAB + "VSI_CACHE_SIZE: " + str(os.environ.get('VSI_CACHE_SIZE')) + "\n" +
+                               tab2 + "GEOTIFF_CSV: " + str(os.environ.get('GEOTIFF_CSV')) + "\n" +
+                               tab2 + "OSGEO4W_ROOT: " + str(os.environ.get('OSGEO4W_ROOT')) + "\n" +
+                               tab2 + "O4W_QT_BINARIES: " + str(os.environ.get('O4W_QT_BINARIES')) + "\n" +
+                               tab2 + "O4W_QT_DOC: " + str(os.environ.get('O4W_QT_DOC')) + "\n" +
+                               tab2 + "O4W_QT_HEADERS: " + str(os.environ.get('O4W_QT_HEADERS')) + "\n" +
+                               tab2 + "O4W_QT_LIBRARIES: " + str(os.environ.get('O4W_QT_LIBRARIES')) + "\n" +
+                               tab2 + "O4W_QT_PLUGINS: " + str(os.environ.get('O4W_QT_PLUGINS')) + "\n" +
+                               tab2 + "O4W_QT_PREFIX: " + str(os.environ.get('O4W_QT_PREFIX')) + "\n" +
+                               tab2 + "O4W_QT_TRANSLATIONS: " + str(os.environ.get('O4W_QT_TRANSLATION')) + "\n" +
+                               tab2 + "PYTHONHOME: " + str(os.environ.get('PYTHONHOME')) + "\n" +
+                               tab2 + "QGIS_PREFIX_PATH: " + str(os.environ.get('QGIS_PREFIX_PATH')) + "\n" +
+                               tab2 + "QT_PLUGIN_PATH: " + str(os.environ.get('QT_PLUGIN_PATH')) + "\n" +
+                               tab2 + "VSI_CACHE: " + str(os.environ.get('VSI_CACHE')) + "\n" +
+                               tab2 + "VSI_CACHE_SIZE: " + str(os.environ.get('VSI_CACHE_SIZE')) + "\n" +
                                "\n")
 
             # Add information for Qt
 
             properties += (
                  "Qt Information (used for graphics):\n" +
-                 TAB + "Qt Version: " + QtCore.QT_VERSION_STR + "\n" +
-                 TAB + "SIP Version: " + SIP_VERSION_STR + "\n" +
-                 TAB + "PyQt Version: " + Qt.PYQT_VERSION_STR + "\n" +
+                 tab + "Qt Version: " + QtCore.QT_VERSION_STR + "\n" +
+                 tab + "SIP Version: " + SIP_VERSION_STR + "\n" +
+                 tab + "PyQt Version: " + Qt.PYQT_VERSION_STR + "\n" +
                  "\n")
 
             # Create Software/System Information Dialog Box
@@ -4153,6 +4393,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box(message)
             # Return so history is not changed to include a file that does not exist
             return False
+
+        # Update the error status for initialization run mode
+        self.command_CommandListWidget.update_ui_command_list_errors(command_phase_type=CommandPhaseType.INITIALIZATION)
+        # And refresh display of the messages
+        self.command_CommandListWidget.update_ui_status_commands()
 
         # Push new command onto history
         self.app_session.push_history(cmd_filepath)
@@ -4418,7 +4663,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # implement an application configuration file.
         diff_program = None
         if prop is not None:
-            #diff_program = "/C/Program Files/KDiff3/kdiff3.exe"
+            # diff_program = "/C/Program Files/KDiff3/kdiff3.exe"
             diff_program = Path("C:/Program Files/KDiff3/kdiff3.exe")
         else:
             message = "The visual diff program has not been configured in the TSTool configuration file.\n" \
@@ -4509,6 +4754,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Open the GeoProcessor user documentation in the default browser (new window).
         logger = logging.getLogger(__name__)
         user_doc_url = None
+        # noinspection PyBroadException
         try:
             user_doc_url = app_util.get_property('ProgramUserDocumentationUrl')
             message = "Displaying documentation using URL: " + user_doc_url
@@ -4617,7 +4863,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        logger = logging.getLogger(__name__)
+        # logger = logging.getLogger(__name__)
         # Set the maximum amount of recent command files to open.
         # If there are less than 20 cached commands in the command file history then set the maximum to be the
         # number of recently opened files.
@@ -4705,6 +4951,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.update_ui_status_commands_popup()
         self.update_ui_status_results_geolayers()
         self.update_ui_status_results_geomaps()
+        self.update_ui_status_results_geomapprojects()
         self.update_ui_status_results_output_files()
         self.update_ui_status_results_properties()
         self.update_ui_status_results_tables()
@@ -4793,11 +5040,23 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Count the total and selected number of rows within the Maps table. Update the label to reflect counts.
+        # Count the total and selected number of rows within the GeoMaps table. Update the label to reflect counts.
         row_num = str(self.results_GeoMaps_Table.rowCount())
-        # slct_row_num = str(len(set(index.row() for index in self.results_GeoMaps_Table.selectedIndexes())))
-        slct_row_num = str(len(self.results_GeoMaps_Table.selectedIndexes()))
-        self.results_GeoMaps_GroupBox.setTitle("GeoMaps ({} GeoMaps, {} selected)".format(row_num, slct_row_num))
+        selected_rows = str(len(self.results_GeoMaps_Table.selectedIndexes()))
+        self.results_GeoMaps_GroupBox.setTitle("GeoMaps ({} GeoMaps, {} selected)".format(row_num, selected_rows))
+
+    def update_ui_status_results_geomapprojects(self) -> None:
+        """
+        Update the UI status for Results / GeoMapProjects area.
+
+        Returns:
+            None
+        """
+        # Count the total and selected number of rows within the GeoMapProjets table. Update the label to reflect counts.
+        row_num = str(self.results_GeoMapProjects_Table.rowCount())
+        selected_rows = str(len(self.results_GeoMapProjects_Table.selectedIndexes()))
+        self.results_GeoMapProjects_GroupBox.setTitle("GeoMapProjects ({} GeoMapProjects, {} selected)".format(
+            row_num, selected_rows))
 
     def update_ui_status_results_output_files(self) -> None:
         """
@@ -4808,10 +5067,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         # Count the total and selected number of rows within the Output Files table. Update the label to reflect counts.
         row_num = str(self.results_OutputFiles_Table.rowCount())
-        # slct_row_num = str(len(set(index.row() for index in self.results_OutputFiles_Table.selectedIndexes())))
-        slct_row_num = str(len(self.results_OutputFiles_Table.selectedIndexes()))
+        selected_rows = str(len(self.results_OutputFiles_Table.selectedIndexes()))
         self.results_OutputFiles_GroupBox.setTitle(
-            "Output Files ({} Output Files, {} selected)".format(row_num, slct_row_num))
+            "Output Files ({} Output Files, {} selected)".format(row_num, selected_rows))
 
         # Hide last column to ensure horizontal scroll
         self.results_OutputFiles_Table.setColumnWidth(1, 0)
@@ -4826,10 +5084,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Count the total and selected number of rows within the Properties table. Update the label to reflect counts.
         row_num = str(self.results_Properties_Table.rowCount())
-        # slct_row_num = str(len(set(index.row() for index in self.results_GeoLayers_Table.selectedIndexes())))
-        slct_row_num = str(len(self.results_Properties_Table.selectedIndexes()))
+        selected_rows = str(len(self.results_Properties_Table.selectedIndexes()))
         self.results_Properties_GroupBox.setTitle(
-            "Properties ({} Properties, {} selected)".format(row_num, slct_row_num))
+            "Properties ({} Properties, {} selected)".format(row_num, selected_rows))
 
         self.results_Properties_Table.setColumnWidth(2, 0)
 
@@ -4842,8 +5099,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         # Count the total and selected number of rows within the Tables table. Update the label to reflect counts.
         row_num = str(self.results_Tables_Table.rowCount())
-        slct_row_num = str(len(set(index.row() for index in self.results_Tables_Table.selectedIndexes())))
-        self.results_Tables_GroupBox.setTitle("Tables ({} Tables, {} selected)".format(row_num, slct_row_num))
+        selected_rows = str(len(set(index.row() for index in self.results_Tables_Table.selectedIndexes())))
+        self.results_Tables_GroupBox.setTitle("Tables ({} Tables, {} selected)".format(row_num, selected_rows))
 
     # TODO smalers 2020-01-18 does not seem to be called by anything - this has been moved to CommandListWidget
     def x_delete_numbered_list_item(self, index: int) -> None:
@@ -4869,7 +5126,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 num = num - 1
                 self.number_ListWidget.item(i).setText(str(num))
 
-    # TODO smalers 2020-03-13 a similar method exists in CommandListWidget and should be used direclty
+    # TODO smalers 2020-03-13 a similar method exists in CommandListWidget and should be used directly
     def x_update_ui_commands_list(self) -> None:
         """
         Once commands have been run. Loop through and check for any errors or warnings.

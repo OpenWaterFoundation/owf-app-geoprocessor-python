@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -81,18 +83,18 @@ class RunSql(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        # Check that the DataStoreID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID", command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_DataStoreID, False, False):
-            message = "DataStoreID parameter has no value."
-            recommendation = "Specify a valid DataStore ID."
-            warning += "\n" + message
-            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
-                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that one (and only one) sql method is a non-empty and non-None string.
         is_string_list = []
@@ -106,7 +108,7 @@ class RunSql(AbstractCommand):
             message = "Must enable one (and ONLY one) of the following parameters: {}".format(sql_method_parameter_list)
             recommendation = "Specify the value for one (and ONLY one) of the following parameters: {}".format(
                 sql_method_parameter_list)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -121,24 +123,24 @@ class RunSql(AbstractCommand):
             if validator_util.validate_string(pv_DataStoreProcedure, none_allowed=False, empty_string_allowed=False):
                 message = "DataStoreProcedure is not currently enabled."
                 recommendation = "Specify the Sql method or the SqlFile method. "
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_run_sql(self, datastore_id: str) -> bool:
+    def check_runtime_data(self, datastore_id: str) -> bool:
         """
         Checks the following:
             * the DataStore ID is an existing DataStore ID
@@ -148,7 +150,7 @@ class RunSql(AbstractCommand):
 
         Returns:
              Boolean. If TRUE, the  process should be run. If FALSE, it should not be run.
-       """
+        """
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
@@ -200,26 +202,25 @@ class RunSql(AbstractCommand):
                                                     self.command_processor.expand_parameter_value(pv_SqlFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_run_sql(pv_DataStoreID):
+        if self.check_runtime_data(pv_DataStoreID):
             # noinspection PyBroadException
             try:
-
                 # Get the DataStore object
                 datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
 
-                # If using the Sql method, the sql_statement is the user-provided sql statement.
                 if pv_Sql:
+                    # If using the Sql method, the sql_statement is the user-provided sql statement.
                     sql_statement = pv_Sql
 
-                # If using the SqlFile method, the sql_statement in read from the provided file.
                 elif pv_SqlFile:
+                    # If using the SqlFile method, the sql_statement in read from the provided file.
 
                     # Get the SQL statement from the file.
                     f = open(pv_SqlFile, 'r')
                     sql_statement = f.read().strip()
 
-                # If using the DataStoreProcedure method, ... .
                 else:
+                    # If using the DataStoreProcedure method, ... .
                     sql_statement = None
 
                 # Execute and commit the SQL statement.
@@ -237,8 +238,8 @@ class RunSql(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

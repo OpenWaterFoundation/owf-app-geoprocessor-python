@@ -130,10 +130,10 @@ class CommandStatus(object):
 
     def refresh_phase_severity(self, phase: CommandPhaseType, severity_if_unknown: CommandStatusType) -> None:
         """
-        Refresh the command status for a phase.  This should normally only be called when
-        initializing a status or setting to success.  Otherwise, add_to_log() should be
-        used and the status determined from the CommandLogRecord status values.
+        Refresh the command status for a phase.
         This ensures that the command has a status even if no log messages were generated.
+        This should normally only be called when initializing a status or setting to success.
+        Otherwise, add_to_log() should be used and the status determined from the CommandLogRecord status values.
 
         Args:
             phase: Command phase, such as CommandPhaseType.RUN.

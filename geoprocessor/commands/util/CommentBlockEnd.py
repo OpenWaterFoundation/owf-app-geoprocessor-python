@@ -82,7 +82,7 @@ class CommentBlockEnd(AbstractCommand):
         """
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)
 
-    def to_string(self) -> str:
+    def to_string(self, command_parameters: dict = None, format_all: bool = False) -> str:
         """
         Return the string representation of the command, always the command name (*/).
 

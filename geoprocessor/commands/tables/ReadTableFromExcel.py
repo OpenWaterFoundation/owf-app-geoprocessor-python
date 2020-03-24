@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -134,21 +136,18 @@ class ReadTableFromExcel(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter InputFile is a non-empty, non-None string.
-        # - existence of the file will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_InputFile = self.get_parameter_value(parameter_name='InputFile', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_InputFile, False, False):
-
-            message = "InputFile parameter has no value."
-            recommendation = "Specify the InputFile parameter to indicate the input Excel data file."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfTableIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         # noinspection PyPep8Naming
@@ -161,25 +160,24 @@ class ReadTableFromExcel(AbstractCommand):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_table(self, file_abs, sheet_name, table_id):
-
+    def check_runtime_data(self, file_abs, sheet_name, table_id):
         """
         Checks the following:
         * the InputFile (absolute) is a valid file
@@ -261,11 +259,9 @@ class ReadTableFromExcel(AbstractCommand):
             pv_TableID = io_util.expand_formatter(file_absolute, pv_TableID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_table(file_absolute, pv_Worksheet, pv_TableID):
-
+        if self.check_runtime_data(file_absolute, pv_Worksheet, pv_TableID):
             # noinspection PyBroadException
             try:
-
                 # Assign the Worksheet parameter to the name of the first Excel worksheet, if it was not specified.
                 if pv_Worksheet is None:
                     # noinspection PyPep8Naming
@@ -295,8 +291,8 @@ class ReadTableFromExcel(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

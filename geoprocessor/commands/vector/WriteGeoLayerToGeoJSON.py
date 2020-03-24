@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -139,64 +141,47 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter GeoLayerID is a non-empty, non-None string.
-        # - existence of the GeoLayer will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_GeoLayerID, False, False):
-            message = "GeoLayerID parameter has no value."
-            recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to write."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # Check that parameter OutputFile is a non-empty, non-None string.
-        # - existence of the folder will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_OutputFile = self.get_parameter_value(parameter_name='OutputFile', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_OutputFile, False, False):
-            message = "OutputFile parameter has no value."
-            recommendation = "Specify the OutputFile parameter (relative or absolute pathname) to indicate the " \
-                             "location and name of the output spatial data file in GeoJSON format."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_write_geolayer(self, geolayer_id, output_file_abs, output_precision):
+    def check_runtime_data(self, geolayer_id, output_file_abs, output_precision):
         """
-       Checks the following:
-       * the ID of the GeoLayer is an existing GeoLayer ID
-       * the output folder is a valid folder
-       * the output precision is at or between 0 and 15
+        Checks the following:
+        * the ID of the GeoLayer is an existing GeoLayer ID
+        * the output folder is a valid folder
+        * the output precision is at or between 0 and 15
 
+        Args:
+            geolayer_id: the ID of the GeoLayer to be written
+            output_file_abs: the full pathname to the output file
+            output_precision (int): the precision of the output GeoJSON file
 
-       Args:
-           geolayer_id: the ID of the GeoLayer to be written
-           output_file_abs: the full pathname to the output file
-           output_precision (int): the precision of the output GeoJSON file
-
-       Returns:
-             Boolean. If TRUE, the GeoLayer should be written. If FALSE, at least one check failed and the GeoLayer
-                should not be written.
-       """
+        Returns:
+            Boolean. If TRUE, the GeoLayer should be written. If FALSE, at least one check failed and the GeoLayer
+               should not be written.
+        """
 
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
@@ -237,7 +222,9 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         # noinspection PyPep8Naming
-        pv_OutputPrecision = int(self.get_parameter_value("OutputPrecision", default_value=5))
+        pv_OutputPrecision = int(
+            self.get_parameter_value("OutputPrecision",
+                                     default_value=self.parameter_input_metadata['OutputPrecision.Value.Default']))
         # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value("OutputFile")
 
@@ -251,7 +238,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_write_geolayer(pv_GeoLayerID, output_file_absolute, pv_OutputPrecision):
+        if self.check_runtime_data(pv_GeoLayerID, output_file_absolute, pv_OutputPrecision):
 
             # noinspection PyBroadException
             try:
@@ -259,19 +246,26 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
                 # Get the current coordinate reference system (in EPSG code) of the current GeoLayer
-                geolayer_crs = geolayer.get_crs()
+                geolayer_crs_code = geolayer.get_crs_code()
 
                 # Obtain the parameter value of the OutputCRS
+                # - if not found, use the CRS from the layer
                 # noinspection PyPep8Naming
-                pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
+                pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs_code)
 
-                # Write the GeoLayer to a spatial data file in GeoJSONformat
+                # Write the GeoLayer to a spatial data file in GeoJSON format
                 qgis_util.write_qgsvectorlayer_to_geojson(geolayer.qgs_layer,
                                                           output_file_absolute,
                                                           pv_OutputCRS,
                                                           pv_OutputPrecision)
 
-                # Save the output file in the processor
+                # Save the output file names in the layer, used when creating a GeoMapProject
+                self.logger.debug("Setting output_path_full='" + output_file_absolute + "' output_path='" +
+                                  pv_OutputFile + "'")
+                geolayer.output_path_full = output_file_absolute
+                geolayer.output_path = pv_OutputFile
+
+                # Save the output file in the processor, used by the UI to list output files
                 self.command_processor.add_output_file(output_file_absolute)
 
             except Exception:
@@ -286,7 +280,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
         else:

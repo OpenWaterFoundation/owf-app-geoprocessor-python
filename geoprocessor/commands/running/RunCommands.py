@@ -21,7 +21,9 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
 from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -116,16 +118,16 @@ class RunCommands(AbstractCommand):
         warning_message = ""
         logger = logging.getLogger(__name__)
 
-        # CommandFile is required
-        # noinspection PyPep8Naming
-        pv_CommandFile = self.get_parameter_value(parameter_name='CommandFile', command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_CommandFile, False, False):
-            message = "The CommandFile must be specified."
-            recommendation = "Specify the command file."
-            warning_message += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # ExpectedStatus is optional, will default to Success at runtime
         # noinspection PyPep8Naming
@@ -149,7 +151,7 @@ class RunCommands(AbstractCommand):
         # If any warnings were generated, throw an exception
         if len(warning_message) > 0:
             logger.warning(warning_message)
-            raise ValueError(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
@@ -191,7 +193,7 @@ class RunCommands(AbstractCommand):
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings about command parameters."
             logger.warning(message)
-            raise ValueError(message)
+            raise CommandError(message)
 
         # Write the output file
 
@@ -360,6 +362,6 @@ class RunCommands(AbstractCommand):
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
             logger.warning(message)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

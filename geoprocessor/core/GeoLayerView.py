@@ -18,7 +18,6 @@
 # ________________________________________________________________NoticeEnd___
 
 from geoprocessor.core.GeoLayer import GeoLayer
-from geoprocessor.core.GeoLayerSymbol import GeoLayerSymbol
 
 
 class GeoLayerView(object):
@@ -40,6 +39,9 @@ class GeoLayerView(object):
         # Name for the layer view
         self.name = name
 
+        # Properties, currently not used
+        self.properties = dict()
+
         # Description for the layer view
         self.description = description
 
@@ -51,5 +53,11 @@ class GeoLayerView(object):
             "geoLayerViewId": self.id,
             "name": self.name,
             "description": self.description,
+            # GeoLayer information is provided by reference to the main list of GeoLayer
+            # - this allows sharing the layers if software allows, although Leaflet does not allow sharing
+            #   layers between maps (?)
+            # - TODO smalers 2020-03-20 may need a property to indicate whether sharing or not
+            "geoLayerId": self.geolayer.id,
+            "properties": self.properties,
             "geoLayerSymbol": self.geolayersymbol
         }

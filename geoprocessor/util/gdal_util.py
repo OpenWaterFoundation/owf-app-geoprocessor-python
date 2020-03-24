@@ -42,8 +42,9 @@ def polygonize(raster_full_path: str, field_name: str, output_format: str, outpu
     # Get the appropriate driver and destination data source. Can either be Shapefile or GeoJSON.
     if output_format.upper() == "SHAPEFILE":
         drv = ogr.GetDriverByName("ESRI Shapefile")
+        remove_extension = True
         dst_ds = drv.CreateDataSource(os.path.join(io_util.get_path(output_file),
-                                                   io_util.get_filename(output_file) + ".shp"))
+                                                   io_util.get_filename(output_file, remove_extension) + ".shp"))
     elif output_format.upper() == "GEOJSON":
         drv = ogr.GetDriverByName("GeoJSON")
         dst_ds = drv.CreateDataSource(output_file)

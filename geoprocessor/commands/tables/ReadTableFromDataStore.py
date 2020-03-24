@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -189,39 +191,24 @@ class ReadTableFromDataStore(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter TableID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_TableID, False, False):
-            message = "TableID parameter has no value."
-            recommendation = "Specify the TableID parameter to indicate the Table to write."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # Check that parameter DataStoreID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_DataStoreID = self.get_parameter_value(parameter_name='DataStoreID', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_DataStoreID, False, False):
-            message = "DataStoreID parameter has no value."
-            recommendation = "Specify the DataStoreID parameter (relative or absolute pathname) to indicate the " \
-                             "location and name of the output delimited file."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that one (and only one) selection method is a non-empty and non-None string.
         is_string_list = []
         selection_method_parameter_list = ["Sql", "SqlFile", "DataStoreTable"]
 
         for parameter in selection_method_parameter_list:
-
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
             is_string_list.append(validator_util.validate_string(parameter_value, False, False))
 
@@ -230,7 +217,7 @@ class ReadTableFromDataStore(AbstractCommand):
                 selection_method_parameter_list)
             recommendation = "Specify the value for one (and ONLY one) of the following parameters: {}".format(
                 selection_method_parameter_list)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -258,7 +245,7 @@ class ReadTableFromDataStore(AbstractCommand):
 
                 message = "Top parameter value ({}) is not a valid integer value.".format(pv_Top)
                 recommendation = "Specify a positive integer for the Top parameter to specify how many rows to return."
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -267,7 +254,7 @@ class ReadTableFromDataStore(AbstractCommand):
 
                 message = "Top parameter value ({}) is not a positive, non-zero integer value.".format(pv_Top)
                 recommendation = "Specify a positive integer for the Top parameter to specify how many rows to return."
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -280,23 +267,23 @@ class ReadTableFromDataStore(AbstractCommand):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
                 self.__choices_IfTableIDExists)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_table(self, sql_file_abs: str, table_id: str, datastore_id: str) -> bool:
+    def check_runtime_data(self, sql_file_abs: str, table_id: str, datastore_id: str) -> bool:
         """
         Checks the following:
             * the SqlFile (absolute) is a valid file, if not None
@@ -605,26 +592,24 @@ class ReadTableFromDataStore(AbstractCommand):
                 self.command_processor.expand_parameter_value(pv_SqlFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_table(pv_SqlFile, pv_TableID, pv_DataStoreID):
-
+        if self.check_runtime_data(pv_SqlFile, pv_TableID, pv_DataStoreID):
             # noinspection PyBroadException
             try:
-
                 # Get the DataStore object
                 datastore = self.command_processor.get_datastore(pv_DataStoreID)
 
                 # Set the SQL statement to None until proof that SQL statement exists.
                 sql_statement = None
 
-                # If using the Sql method, the sql_statement is the user-provided sql statement.
                 if pv_Sql:
+                    # If using the Sql method, the sql_statement is the user-provided sql statement.
 
                     sql_statement = pv_Sql
                     if '%' in sql_statement:
                         sql_statement = sql_statement.replace('%', '%%')
 
-                # If using the Sql method, the sql_statement is the user-provided sql statement within a file.
                 if pv_SqlFile:
+                    # If using the Sql method, the sql_statement is the user-provided sql statement within a file.
 
                     # Get the SQL statement from the file.
                     f = open(pv_SqlFile, 'r')
@@ -652,8 +637,8 @@ class ReadTableFromDataStore(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

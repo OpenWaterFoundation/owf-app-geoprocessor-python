@@ -20,6 +20,9 @@
 from typing import Callable
 
 
+# TODO smalers 2020-03-21 the more verbose 'parameter_name' rather than 'name' was used before type hinting
+# was implemented.  It might be desirable to switch to shorter names but at this point it is a lot of work to
+# change code, so go with the longer names for now.
 class CommandParameterMetadata(object):
     """
     Metadata for the command parameters, a list of which is maintained as

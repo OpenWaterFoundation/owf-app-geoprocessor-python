@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -151,32 +153,18 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter InputFile is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_InputFile = self.get_parameter_value(parameter_name='InputFile', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_InputFile, False, False):
-            message = "InputFile parameter has no value."
-            recommendation = "Specify the InputFile parameter (relative or absolute pathname) to indicate the " \
-                             "location and name of the output Excel file."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-            
-        # Check that parameter TableID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_TableID = self.get_parameter_value(parameter_name='TableID', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_TableID, False, False):
-            message = "TableID parameter has no value."
-            recommendation = "Specify the TableID parameter."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfTableIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         # noinspection PyPep8Naming
@@ -188,7 +176,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             message = "IfTableIDExists parameter value ({}) is not recognized.".format(pv_IfTableIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfTableIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -204,23 +192,23 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 message = "HeaderLines parameter value ({}) is not a valid integer value.".format(pv_HeaderLines)
                 recommendation = "Specify a positive integer for the HeaderLines parameter to specify how" \
                                  " many rows represent the header contnet of the delimited file."
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_table(self, input_file_abs: str, table_id: str) -> bool:
+    def check_runtime_data(self, input_file_abs: str, table_id: str) -> bool:
         """
        Checks the following:
         * the InputFile (absolute) is a valid file
@@ -371,11 +359,9 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         pv_NullValues = string_util.delimited_string_to_list(pv_NullValues)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_table(input_file_absolute, pv_TableID):
-
+        if self.check_runtime_data(input_file_absolute, pv_TableID):
             # noinspection PyBroadException
             try:
-
                 # Create the table from the delimited file.
                 table = self.__read_table_from_delimited_file(input_file_absolute, pv_TableID, pv_Delimiter,
                                                               pv_HeaderLines, pv_NullValues)
@@ -396,8 +382,8 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

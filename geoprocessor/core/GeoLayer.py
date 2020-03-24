@@ -23,6 +23,9 @@
 from __future__ import annotations
 
 from qgis.core import QgsMapLayer as QgsMapLayer
+from qgis.core import QgsCoordinateReferenceSystem as QgsCoordinateReferenceSystem
+
+# import logging
 
 
 class GeoLayer(object):
@@ -49,31 +52,44 @@ class GeoLayer(object):
     is set to 'MEMORY'.
     """
 
+    # Indicates that the layer source is memory, rather than being read from a file.
+    # - used with input_source* and output_source* values
+    SOURCE_MEMORY = 'MEMORY'
+
     def __init__(self, geolayer_id: str,
                  name: str,
                  description: str = "",
-                 geolayer_qgs_layer: QgsMapLayer = None,
-                 geolayer_source_path: str = None, properties: dict = None) -> None:
+                 qgs_layer: QgsMapLayer = None,
+                 input_path_full: str = SOURCE_MEMORY,
+                 input_path: str = SOURCE_MEMORY,
+                 properties: dict = None) -> None:
         """
         Initialize a new GeoLayer instance.
 
         Args:
             geolayer_id (str):
-                String that is the GeoLayer's reference ID. This ID is used to access the GeoLayer from the
-                GeoProcessor for manipulation.
+                String that is the GeoLayer's reference ID.
+                This ID is used to access the GeoLayer from the GeoProcessor for manipulation.
             name (str):
                 Layer name, will be used in map legend, etc.
             description (str):
                 Layer description, with more details.
-            geolayer_qgs_layer (QgsVectorLayer or QgsRasterLayer instance via those class __init__() function):
-                Object created by the QGIS processor. All GeoLayer spatial manipulations are
-                performed on the GeoLayer's qgs_vector_layer.
-            geolayer_source_path (str):
-                The full pathname to the original spatial data file on the user's local computer. If the geolayer was
-                made in memory from the GeoProcessor, this value is set to `MEMORY`.
+            qgs_layer (QgsVectorLayer or QgsRasterLayer instance via those class __init__() function):
+                Object created by the QGIS processor.
+                All GeoLayer spatial manipulations are performed on the GeoLayer's qgs_vector_layer.
+            input_path_full (str):
+                The full pathname to the input spatial data file on the local computer,
+                consistent with a GeoProcessor read command after the path is expanded.
+                TODO smalers 2020-03-20 evaluate whether to allow URL.
+                If not specified, 'MEMORY' is used, assuming the layer was created in memory.
+            input_path (str):
+                The pathname to the input spatial data file on the local computer,
+                consistent with a GeoProcessor read command before the path is expanded.
+                This is typically a relevant path but could be absolute (same as 'input_source_path_full').
+                If not specified, 'MEMORY' is used, assuming the layer was created in memory.
             properties ({}):
                 A dictionary of user (non-built-in) properties that can be assigned to the layer.
-                These properties facilitate processing.
+                These properties facilitate processing by external applications if written to map project.
         """
 
         # "id" is a string that is the GeoLayer's reference ID. This ID is used to access the GeoLayer from the
@@ -88,14 +104,31 @@ class GeoLayer(object):
 
         # "qgs_layer" is a QgsVectorLayer or QgsRasterLayer object created by the QGIS processor.
         # All spatial manipulations are performed on the GeoLayer's qgs_layer.
-        self.qgs_layer = geolayer_qgs_layer
+        self.qgs_layer = qgs_layer
 
-        # "source_path" (str) is the full pathname to the original spatial data file on the user's local computer
-        self.source_path = geolayer_source_path
+        # "input_path_full" (str) is the full pathname to the original spatial data file on the local computer:
+        # - this is the expanded path using the working directory and command path
+        self.input_path_full = input_path_full
+
+        # "input_path" (str) is the relative pathname to the original spatial data file on the local computer:
+        # - this is relative to the current working folder, typically just the filename or ../folder/filename
+        # - it could also be the full path, which would be the same value as self.input__path_full
+        self.input_path = input_path
+
+        # "output_path_full" (str) is the full pathname to the output spatial data file on the local computer:
+        # - this is the expanded path using the working directory and command path
+        # - set by GeoProcessor write commands
+        # - set to 'MEMORY' if the layer has not been written yet
+        self.output_path_full = 'MEMORY'
+
+        # "output_path" (str) is the relative pathname to the most recently written data file on the local computer:
+        # - this is relative to the current working folder, typically just the filename or ../folder/filename
+        # - it could also be the full path, which would be the same value as self.input_path_full
+        self.output_path = 'MEMORY'
 
         # "qgs_id" (str) is the GeoLayer's id in the Qgs environment (this is automatically assigned by the QGIS
         # GeoProcessor when a GeoLayer is originally created)
-        self.qgs_id = geolayer_qgs_layer.id()
+        self.qgs_id = qgs_layer.id()
 
         # "properties" (dict) is a dictionary of user (non-built-in) properties that are assigned to the layer.
         # These properties facilitate processing and may or may not be output to to a persistent format,
@@ -120,13 +153,22 @@ class GeoLayer(object):
         """
         raise RuntimeError("deepcopy() function should be implemented in derived class.")
 
-    def get_crs(self) -> str:
+    def get_crs(self) -> QgsCoordinateReferenceSystem:
         """
-        Returns the coordinate reference system (str, EPSG code) of a GeoLayer.
+        Returns the coordinate reference system EPSG object.
         """
 
         # "crs" (str) is the GeoLayer's coordinate reference system in
-        # <EPSG format 'http://spatialreference.org/ref/epsg/'>_. Return the crs variable.
+        # <EPSG format 'http://spatialreference.org/ref/epsg/'>_.
+        return self.qgs_layer.crs()
+
+    def get_crs_code(self) -> str:
+        """
+        Returns the coordinate reference system EPSG code of a GeoLayer.
+        """
+
+        # "crs" (str) is the GeoLayer's coordinate reference system in
+        # <EPSG format 'http://spatialreference.org/ref/epsg/'>_.
         return self.qgs_layer.crs().authid()
 
     def get_feature_count(self) -> int:
@@ -206,3 +248,43 @@ class GeoLayer(object):
             property_value (object):  Value of property, can be any built-in Python type or class instance.
         """
         self.properties[property_name] = property_value
+
+    def set_properties(self, properties: dict, clear_first: bool = False) -> None:
+        """
+        Set properties.  This does not replace the properties - it resets existing properties or resets
+        existing properties.
+
+        Args:
+            properties (dict): properties to set.
+            clear_first (bool) if True, clear the dictionary first (default is False)
+
+        Returns:
+            None
+        """
+        if clear_first:
+            self.properties.clear()
+
+        for key in properties:
+            self.properties[key] = properties[key]
+
+    def to_json(self):
+        """
+        Return dictionary of class data to support JSON serialization using Python 'json' package.
+        """
+        use_dict = False
+        if use_dict:
+            # Dictionary has too much information but is useful to illustrate what objects need to be handled.
+            return self.__dict__
+        else:
+            # Return a dictionary with JSON objects
+            # - this remaps the names to camelcase, which is is more consistent with JSON standards
+            # - sourcePath maps to the output file because what is written serves as the path
+            return {
+                "geoLayerId": self.id,
+                "name": self.name,
+                "description": self.description,
+                "crs": self.get_crs_code(),
+                "geometryType": ("WKT:" + self.get_geometry()),
+                "sourcePath": self.output_path,
+                "properties": self.properties
+            }

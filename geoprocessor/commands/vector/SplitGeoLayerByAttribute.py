@@ -19,10 +19,13 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 # from processing.core.Processing import Processing
 from qgis.core import QgsVectorLayer
@@ -156,34 +159,18 @@ class SplitGeoLayerByAttribute(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter InputGeoLayerID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_InputGeoLayerID = self.get_parameter_value(parameter_name='InputGeoLayerID',
-                                                      command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_InputGeoLayerID, False, False):
-            message = "InputGeoLayerID parameter has no value."
-            recommendation = "Specify the InputGeoLayerID parameter to indicate the input GeoLayer."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # Check that parameter AttributeName is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_AttributeName = self.get_parameter_value(parameter_name='AttributeName',
-                                                    command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_AttributeName, False, False):
-
-            message = "AttributeName parameter has no value."
-            recommendation = "Specify the AttributeName parameter to indicate the attribute to split on."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `Warn`, `Fail` or None.
         # noinspection PyPep8Naming
@@ -195,24 +182,24 @@ class SplitGeoLayerByAttribute(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_command_input(self, input_geolayer_id: str, attribute_name: str, output_geolayer_ids: [str]) -> bool:
+    def check_runtime_data(self, input_geolayer_id: str, attribute_name: str, output_geolayer_ids: [str]) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -329,9 +316,9 @@ class SplitGeoLayerByAttribute(AbstractCommand):
 
         # @jurentie
         # The following line is currently commented out but needs to be added back in once
-        # __should_split_geolayer is functioning properly...
+        # check_runtime_data is functioning properly...
 
-        if self.check_command_input(pv_InputGeoLayerID, pv_AttributeName, pv_OutputGeoLayerIDs):
+        if self.check_runtime_data(pv_InputGeoLayerID, pv_AttributeName, pv_OutputGeoLayerIDs):
 
             # noinspection PyBroadException
             try:
@@ -347,7 +334,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
 
                 # TODO jurentie 01/26/2019 still need to figure out what the code below is for...
                 # If the input GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
-                if input_geolayer.source_path is None or input_geolayer.source_path.upper() in ["", "MEMORY"]:
+                if input_geolayer.source_path is None or input_geolayer.source_path.upper() in\
+                        ["", GeoLayer.SOURCE_MEMORY]:
 
                     # Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
@@ -370,7 +358,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # Assuming relative path for the moment....
 
                 # Perform the QGIS split vector layer function. Refer to the reference below for parameter descriptions.
-                # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer
+                # REF: https://docs.qgis.org/
+                # 2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer
 
                 # @jurentie
                 # Check to see if parameter temporary folder has been specified, otherwise use the
@@ -450,13 +439,15 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                     # noinspection PyBroadException
                     try:
                         new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerIDs[i],
-                                                      geolayer_qgs_vector_layer=layer,
-                                                      geolayer_source_path=path)
+                                                      qgs_vector_layer=layer,
+                                                      input_path_full=path,
+                                                      input_path=path)
                     except Exception:
                         # Default Output GeoLayerID's will be default title of output files from .runAlgorithm above
                         new_geolayer = VectorGeoLayer(geolayer_id=pv_InputGeoLayerID + "-" + str(attribute),
-                                                      geolayer_qgs_vector_layer=layer,
-                                                      geolayer_source_path=path)
+                                                      qgs_vector_layer=layer,
+                                                      input_path_full=path,
+                                                      input_path=path)
                     self.command_processor.add_geolayer(new_geolayer)
 
                 # @jurentie
@@ -474,12 +465,12 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # In QGIS 2 the clipped_output["OUTPUT"] returned the full file pathname of the memory output layer
                 # (saved in a QGIS temporary folder)
                 # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
-                # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, "MEMORY")
+                # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, GeoLayer.SOURCE_MEMORY)
                 # Get this list of ID's, name can be changed later to make more sense
                 # in a dynamic fashion
 
                 # In QGIS 3 the clipped_output["OUTPUT"] returns the QGS vector layer object
-                # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerIDs, split_output["OUTPUT"], "MEMORY")
+                # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerIDs, split_output["OUTPUT"], GeoLayer.SOURCE_MEMORY)
                 # self.command_processor.add_geolayer(new_geolayer)
 
             except Exception:
@@ -496,8 +487,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

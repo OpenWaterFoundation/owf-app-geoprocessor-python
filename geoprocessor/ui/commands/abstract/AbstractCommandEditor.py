@@ -616,7 +616,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             parameter_Required (boolean):  Whether the parameter is required.
             parameter_Tooltip (str):  Tooltip text.
             parameter_ValueDefault (str):  Parameter default value if not specified.
-            parameter_ValueDefaultDescription (str):  Description for default value.
+            parameter_ValueDefaultDescription (str):  Description for default value,
+               for example when not a simple string such as value assigned at runtime
 
         Returns:
             None
@@ -630,8 +631,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         #     logger.warning(message, exc_info=True)
         #     qt_util.warning_message_box(message)
         debug = True
+        logger = logging.getLogger(__name__)
         if self.debug:
-            logger = logging.getLogger(__name__)
             logger.info("For parameter '" + parameter_name + "', adding description")
         # noinspection PyPep8Naming
         parameter_desc_Label = QtWidgets.QLabel(self.parameter_QFrame)
@@ -650,9 +651,12 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             # - if required, check_command_parameters should will not allow blank input
             if parameter_ValueDefaultDescription is not None and parameter_ValueDefaultDescription != "":
                 # A description is provided for the default value so use in the description rather than Value.Default
-                if len(parameter_ValueDefaultDescription) > 15:
+                default_description_max = 30  # length of Value.Default.Description before pointing to tooltip
+                if len(parameter_ValueDefaultDescription) > default_description_max:
                     # Default value description is long so don't show in full description and put in the
                     # input component tooltip
+                    logger.info("Value.Default.Description is longer than " + str(default_description_max) +
+                                " characters.  Not showing.")
                     parameter_desc += " (default=see tooltip)."
                     parameter_Tooltip += "\n(default=" + parameter_ValueDefaultDescription + ")."
                     # Update the tooltip for the input component
@@ -1150,7 +1154,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
             # The Command Display field should print the command name followed by a parenthesis filled with the
             # command parameters and associated values.
-            # Ex: ReadGeoLayerFromGeoJSON(SpatialDataFile="C:/example/path.geojson", GeoLayerID="Example")
+            # Ex: ReadGeoLayerFromGeoJSON(InputFile="C:/example/path.geojson", GeoLayerID="Example")
             display = "{}({})".format(self.command_name, updated_parameter_string_text)
 
         # Update the Command Display Qt Widget to display the dynamic command display text.

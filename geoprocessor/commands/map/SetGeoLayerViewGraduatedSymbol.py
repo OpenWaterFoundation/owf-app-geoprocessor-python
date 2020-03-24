@@ -19,14 +19,14 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 from geoprocessor.core.GeoLayerGraduatedSymbol import GeoLayerGraduatedSymbol
-
-from geoprocessor.core.GeoLayerView import GeoLayerView
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
@@ -43,16 +43,20 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoMapID", type("")),
         CommandParameterMetadata("GeoLayerViewGroupID", type("")),
-        CommandParameterMetadata("GeoLayerViewID", type(""))]
+        CommandParameterMetadata("GeoLayerViewID", type("")),
+        CommandParameterMetadata("ClassificationAttribute", type("")),
+        CommandParameterMetadata("Properties", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
+    # - The * character is equivalent to two spaces for indent.
     __command_metadata = dict()
     __command_metadata['Description'] = "Set a GeoLayerView to use a graduated symbol."\
-        "  All features will be drawn similarly.\n" \
-        "    GeoMap\n" \
-        "      GeoLayerViewGroup\n" \
-        "        GeoLayerView\n" \
-        "          GeoLayer + GeoLayerSymbol  <=====\n"
+        "  Features will be drawn with color map.\n"\
+        "    GeoMapProject\n"\
+        "      GeoMap [ ]\n"\
+        "        GeoLayerViewGroup [ ]\n"\
+        "          GeoLayerView [ ]\n"\
+        "*          GeoLayer + GeoLayerSymbol\n"
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
@@ -72,6 +76,17 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
     __parameter_input_metadata['GeoLayerViewID.Label'] = "GeoLayerViewID"
     __parameter_input_metadata['GeoLayerViewID.Required'] = True
     __parameter_input_metadata['GeoLayerViewID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
+    # ClassificationAttribute
+    __parameter_input_metadata['ClassificationAttribute.Description'] = "classification attribute"
+    __parameter_input_metadata['ClassificationAttribute.Label'] = "Classification attribute"
+    __parameter_input_metadata['ClassificationAttribute.Required'] = True
+    __parameter_input_metadata['ClassificationAttribute.Tooltip'] = "The classification attribute, can use ${Property}."
+    # Properties
+    __parameter_input_metadata['Properties.Description'] = "properties for the symbol"
+    __parameter_input_metadata['Properties.Label'] = "Properties"
+    __parameter_input_metadata['Properties.Required'] = False
+    __parameter_input_metadata['Properties.Tooltip'] = \
+        "Properties for the symbol using syntax:  property:value,property:'value'"
 
     def __init__(self) -> None:
         """
@@ -107,33 +122,47 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
         # Check that required parameters are non-empty, non-None strings.
-        required_parameters = ["GeoMapID", "GeoLayerViewGroupID", "GeoLayerViewID"]
+        required_parameters = command_util.get_required_parameter_names(self)
         for parameter in required_parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
             if not validator_util.validate_string(parameter_value, False, False):
                 message = "Required {} parameter is not specified.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
+        # Properties - verify that the properties can be parsed
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
+        try:
+            command_util.parse_properties_from_parameter_string(pv_Properties)
+        except ValueError as e:
+            # Use the exception
+            message = str(e)
+            recommendation = "Check the properties string format."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def validate_runtime_data(self, geomap_id, geolayerviewgroup_id, geolayerview_id) -> bool:
+    def check_runtime_data(self, geomap_id, geolayerviewgroup_id, geolayerview_id) -> bool:
         """
         Checks whether runtime data are valid.  Checks the following:
         * the ID of the GeoMap is an existing GeoMapID
@@ -210,6 +239,8 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
         pv_GeoLayerViewID = self.get_parameter_value("GeoLayerViewID")
         # noinspection PyPep8Naming
         pv_ClassificationAttribute = self.get_parameter_value("ClassificationAttribute")
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value("Properties")
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
@@ -220,12 +251,17 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
         pv_GeoLayerViewID = self.command_processor.expand_parameter_value(pv_GeoLayerViewID, self)
         # noinspection PyPep8Naming
         pv_ClassificationAttribute = self.command_processor.expand_parameter_value(pv_ClassificationAttribute, self)
+        # noinspection PyPep8Naming
+        pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         # - TODO smalers 2020-03-18 not sure if the following is useful because need to handle checks granularly
-        if self.validate_runtime_data(pv_GeoMapID, pv_GeoLayerViewGroupID, pv_GeoLayerViewID):
+        if self.check_runtime_data(pv_GeoMapID, pv_GeoLayerViewGroupID, pv_GeoLayerViewID):
             # noinspection PyBroadException
             try:
+                # Initialize so can check below
+                geolayerview = None
+                geolayerviewgroup = None
                 # Get the GeoMap
                 geomap = self.command_processor.get_geomap(pv_GeoMapID)
                 if geomap is None:
@@ -259,20 +295,23 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
                             self.command_status.add_to_log(CommandPhaseType.RUN,
                                                            CommandLogRecord(CommandStatusType.FAILURE,
                                                                             message, recommendation))
-                    # Create the GeoLayerSymbol
 
-                    properties = dict()
+                if (geomap is not None) and (geolayerviewgroup is not None) and (geolayerview is not None):
+                    # Set the properties
+                    properties = command_util.parse_properties_from_parameter_string(pv_Properties)
+
+                    # Create the GeoLayerSymbol
                     # TODO smalers 2020-03-18 may not need name and description
+                    # noinspection PyPep8Naming
                     pv_Name = ""
+                    # noinspection PyPep8Naming
                     pv_Description = ""
-                    pv_ClassificationAttribute = ""  # Not required for single symbol
                     geolayersymbol = GeoLayerGraduatedSymbol(pv_ClassificationAttribute,
                                                              properties=properties, name=pv_Name,
                                                              description=pv_Description)
 
                     # Set the symbol
-                    if geolayerview is not None:
-                        geolayerview.geolayersymbol = geolayersymbol
+                    geolayerview.geolayersymbol = geolayersymbol
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process
@@ -286,7 +325,7 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
         else:

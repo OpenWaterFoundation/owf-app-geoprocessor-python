@@ -30,6 +30,7 @@ import platform
 import re
 import sys
 from typing import TextIO
+from pathlib import Path
 
 
 def expand_formatter(absolute_path: str, formatter: str) -> str or None:
@@ -297,18 +298,26 @@ def get_extension(full_path: str) -> str:
     return extension
 
 
-def get_filename(full_path: str) -> str:
+def get_filename(full_path: str, remove_extension: bool = True) -> str:
     """
     Returns the filename of a full path (without the extension).
 
     Args:
         full_path (str): the input full path
+        remove_extension (bool): whether or not to remove the file extension
 
-    Returns: The filename as a string.
+    Returns:
+        The filename as a string.
     """
 
-    filename, extension = os.path.splitext(os.path.basename(full_path))
-    return filename
+    if remove_extension:
+        # Remove the extension
+        filename, extension = os.path.splitext(os.path.basename(full_path))
+        return filename
+    else:
+        # Return the filename, with extension
+        full_path2 = Path(full_path)
+        return full_path2.name
 
 
 def get_path(full_path: str) -> str:
@@ -368,19 +377,19 @@ def print_standard_file_header(ofp: TextIO, comment_line_prefix: str = '#', max_
     ofp.flush()
 
 
-def to_absolute_path(parent_dir: str, path: str) -> str:
+def to_absolute_path(parent_dir: str or Path, path: str or Path) -> str:
     """
     Convert an absolute "parent_dir" and path to an absolute path.
     If the path is already an absolute path it is returned as is.
     If the path is a relative path, it is joined to the absolute path "parent_dir" and returned.
 
     Args:
-        parent_dir (str): Directory to prepend to path, for example the current working directory.
+        parent_dir (str):
+            Absolute path to prepend to path, for example the current working directory with path.
         path (str): Path to append to parent_dir to create an absolute path.
-                   If absolute, it will be returned.
-                   If relative, it will be appended to parent_dir.
-                   If the path includes "..", the directory will be truncated before appending the non-".."
-                   part of the path.
+            If absolute, it will be returned.
+            If relative, it will be appended to parent_dir.
+            If the path includes "..", the directory will be truncated before appending the non-".." part of the path.
 
     Returns:
         The absolute path given the provided input path parts.
@@ -389,6 +398,22 @@ def to_absolute_path(parent_dir: str, path: str) -> str:
     logger = None
     if debug:
         logger = logging.getLogger(__name__)
+
+    if debug:
+        logger.debug("start: path='" + str(parent_dir) + "' path='" + str(path) + "'")
+
+    # The logic below operates on str so convert Path input to str if necessary.
+    if isinstance(parent_dir, Path):
+        parent_dir = str(parent_dir.absolute)
+    if isinstance(path, Path):
+        if path.is_absolute():
+            path = str(path.absolute)
+        else:
+            parent_dir = str(parent_dir)
+
+    if debug:
+        logger.debug("after converstion to str: path='" + str(parent_dir) + "' path='" + str(path) + "'")
+
     if os.path.isabs(path):
         # No need to do anything since an absolute path so return the path without modification
         return path
@@ -738,7 +763,7 @@ def write_property_file(output_file_absolute: str, all_properties: dict,
     """
     fout = None
     logger = logging.getLogger(__name__)
-    debug = True
+    debug = False
     # The following gets rid of IDE warning about catching Exception, which is considered "too broad".
     # noinspection PyBroadException
     try:

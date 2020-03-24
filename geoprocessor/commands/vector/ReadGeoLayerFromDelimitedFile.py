@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -49,7 +51,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
     `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects.
 
     Command Parameters
-    * DelimitedFile (str, required): The path (relative or absolute) to the delimited file to be read.
+    * InputFile (str, required): The path (relative or absolute) to the delimited file to be read.
     * GeometryFormat (str, required): The geometry representation used within the delimited file. Must either be `XY`
         or `WKT`.
     * XColumn (str, required if GeometryFormat is `XY`): The name of the delimited file column that holds the x
@@ -71,7 +73,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("DelimitedFile", type("")),        
+        CommandParameterMetadata("InputFile", type("")),
         CommandParameterMetadata("GeometryFormat", type("")),
         CommandParameterMetadata("XColumn", type("")),
         CommandParameterMetadata("YColumn", type("")),
@@ -79,6 +81,8 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("CRS", type("")),
         CommandParameterMetadata("Delimiter", type("")),
         CommandParameterMetadata("GeoLayerID", type("")),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     # Command metadata for command editor display
@@ -88,15 +92,15 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
 
     # Command Parameter Metadata
     __parameter_input_metadata = dict()
-    # DelimitedFile
-    __parameter_input_metadata['DelimitedFile.Description'] = "delimited file to read"
-    __parameter_input_metadata['DelimitedFile.Label'] = "Delimited file"
-    __parameter_input_metadata['DelimitedFile.Required'] = True
-    __parameter_input_metadata['DelimitedFile.Tooltip'] = \
+    # InputFile
+    __parameter_input_metadata['InputFile.Description'] = "delimited file to read"
+    __parameter_input_metadata['InputFile.Label'] = "Delimited file"
+    __parameter_input_metadata['InputFile.Required'] = True
+    __parameter_input_metadata['InputFile.Tooltip'] = \
         "The delimited file to read (relative or absolute path). ${Property} syntax is recognized."
-    __parameter_input_metadata['DelimitedFile.FileSelector.Type'] = "Read"
-    __parameter_input_metadata['DelimitedFile.FileSelector.Title'] = "Select a delimited file to read."
-    __parameter_input_metadata['DelimitedFile.FileSelector.Filters'] = \
+    __parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['InputFile.FileSelector.Title'] = "Select a delimited file to read."
+    __parameter_input_metadata['InputFile.FileSelector.Filters'] = \
         ["Delimited file (*.csv *.txt)", "All files (*.*)"]
     # CRS
     __parameter_input_metadata['CRS.Description'] = "coordinate reference system"
@@ -153,6 +157,18 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
     __parameter_input_metadata['GeoLayerID.Value.Default'] = (
         "The delimited filename without the leading path and without the file extension "
         "(equivalent to formatting character %f).")
+    # Name
+    __parameter_input_metadata['Name.Description'] = "GeoLayer name"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = False
+    __parameter_input_metadata['Name.Tooltip'] = "The GeoLayer name, can use ${Property}."
+    __parameter_input_metadata['Name.Value.Default.Description'] = "GeoLayerID"
+    # Description
+    __parameter_input_metadata['Description.Description'] = "GeoLayer description"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = False
+    __parameter_input_metadata['Description.Tooltip'] = "The GeoLayer description, can use ${Property}."
+    __parameter_input_metadata['Description.Value.Default'] = ''
     # IfGeoLayerIDExists
     __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if GeoLayerID exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
@@ -199,20 +215,16 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that the appropriate parameters have a string value.
-        for parameter in ['DelimitedFile', 'Delimiter', 'CRS', 'GeoLayerID']:
-
-            # Get the parameter value.
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-
-            # Check that the parameter value is a non-empty, non-None string. If not, raise a FAILURE.
             if not validator_util.validate_string(parameter_value, False, False):
-
-                message = "{} parameter has no value.".format(parameter)
-                recommendation = "Specify the {} parameter.".format(parameter)
-                warning += "\n" + message
+                message = "Required '{}' parameter has no value.".format(parameter)
+                recommendation = "Specify the '{}' parameter.".format(parameter)
+                warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -228,39 +240,33 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that the correct ColumnName variables are correct.
         else:
-
-            # If the pv_GeometryFormat is "WKT" then check that the WKTColumn has a string value.
+            # Check that the correct ColumnName variables are correct.
+            # -if the pv_GeometryFormat is "WKT" then check that the WKTColumn has a string value.
             if pv_GeometryFormat is not None and pv_GeometryFormat.upper() == "WKT":
-
                 # Check that the parameter value is a non-None string. If not, raise a FAILURE.
                 if not validator_util.validate_string("WKTColumn", False, True):
                     message = "WKTColumn parameter has no value."
                     recommendation = "Specify the WKTColumn parameter."
-                    warning += "\n" + message
+                    warning_message += "\n" + message
                     self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                     recommendation))
-
             else:
-
                 # Check that the appropriate parameters have a string value.
                 for parameter in ['XColumn', 'YColumn']:
-
                     # Get the parameter value.
                     parameter_value = self.get_parameter_value(parameter_name=parameter,
                                                                command_parameters=command_parameters)
-
                     # Check that the parameter value is a non-None string. If not, raise a FAILURE.
                     if not validator_util.validate_string(parameter_value, False, True):
                         message = "{} parameter has no value.".format(parameter)
                         recommendation = "Specify the {} parameter.".format(parameter)
-                        warning += "\n" + message
+                        warning_message += "\n" + message
                         self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
@@ -276,29 +282,28 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_geolayer(self, delimited_file: str, delimiter: str, geom_format: str, x_col: str, y_col: str,
-                               wkt_col: str, crs: str, geolayer_id: str) -> bool:
-
+    def check_runtime_data(self, delimited_file: str, delimiter: str, geom_format: str, x_col: str, y_col: str,
+                           wkt_col: str, crs: str, geolayer_id: str) -> bool:
         """
         Checks the following:
-        * the DelimitedFile (absolute) is a valid file
+        * the InputFile (absolute) is a valid file
         * if the CSV is using XY coordinates
         * -- > the XColumn is an actual field name
         * -- > the YColumn is an actual field name
@@ -308,13 +313,14 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
         Args:
-            * delimited_file (str, required): The absolute path to the delimited file to be read.
-            * delimiter (str, required): The delimiter symbol used in the delimited file. Often times a comma.
-            * geom_format (str): The format of the geometry representation in the delimited file. Either `WKT` or `XY`.
-            * x_col (str): The name of the delimited file column that holds the x coordinate data.
-            * y_col (str): The name of the delimited file column that holds the y coordinate data.
-            * crs (str, EPSG format): The coordinate reference system code associated with the X and Y coordinates.
-            * geolayer_id (str): the GeoLayer identifier.
+            delimited_file (str, required): The absolute path to the delimited file to be read.
+            delimiter (str, required): The delimiter symbol used in the delimited file. Often times a comma.
+            geom_format (str): The format of the geometry representation in the delimited file. Either `WKT` or `XY`.
+            x_col (str): The name of the delimited file column that holds the x coordinate data.
+            y_col (str): The name of the delimited file column that holds the y coordinate data.
+            wkt_col (str): The name of the delimited file column that holds the WKT data.
+            crs (str, EPSG format): The coordinate reference system code associated with the X and Y coordinates.
+            geolayer_id (str): the GeoLayer identifier.
 
         Returns:
             Boolean. If TRUE, the geolayer should be read. If FALSE, the geolayer should not be read.
@@ -324,16 +330,14 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         # test confirms that the command should be run. 
         should_run_command = list()
 
-        # If the input DelimitedFile is not a valid file path, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "DelimitedFile", delimited_file,
+        # If the input InputFile is not a valid file path, raise a FAILURE.
+        should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "InputFile", delimited_file,
                                                            "FAIL"))
 
         # If the Delimited File exists, continue with the following checks.
         if should_run_command[0] is True:
-
             # If the geometry format is "XY", continue.
             if geom_format.upper() == "XY":
-
                 # If the XColumn is not an existing column name in the delimited file, raise a FAILURE.
                 should_run_command.append(validator_util.run_check(self, "IsDelimitedFileColumnNameValid",
                                                                    "XColumn", x_col,
@@ -382,7 +386,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming
-        pv_DelimitedFile = self.get_parameter_value("DelimitedFile")
+        pv_InputFile = self.get_parameter_value("InputFile")
         # noinspection PyPep8Naming
         pv_Delimiter = self.get_parameter_value("Delimiter", default_value=',')
         # noinspection PyPep8Naming
@@ -397,12 +401,25 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         pv_CRS = self.get_parameter_value("CRS")
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
+        # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name", default_value=pv_GeoLayerID)
+        # noinspection PyPep8Naming
+        pv_Description =\
+            self.get_parameter_value("Description",
+                                     default_value=self.parameter_input_metadata['Description.Value.Default'])
 
-        # Convert the DelimitedFile parameter value relative path to an absolute path and expand for ${Property}
-        # syntax
+        # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
+        pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+        # noinspection PyPep8Naming
+        pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
+        # noinspection PyPep8Naming
+        pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
+
+        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         delimited_file_abs = io_util.verify_path_for_os(io_util.to_absolute_path(
             self.command_processor.get_property('WorkingDir'),
-            self.command_processor.expand_parameter_value(pv_DelimitedFile, self)))
+            self.command_processor.expand_parameter_value(pv_InputFile, self)))
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
         if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
@@ -410,14 +427,11 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             pv_GeoLayerID = io_util.expand_formatter(delimited_file_abs, pv_GeoLayerID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_geolayer(delimited_file_abs, pv_Delimiter, pv_GeometryFormat, pv_XColumn,
-                                       pv_YColumn, pv_WKTColumn, pv_CRS, pv_GeoLayerID):
-
+        if self.check_runtime_data(delimited_file_abs, pv_Delimiter, pv_GeometryFormat, pv_XColumn,
+                                   pv_YColumn, pv_WKTColumn, pv_CRS, pv_GeoLayerID):
             # noinspection PyBroadException
             try:
-
                 if pv_GeometryFormat.upper() == "XY":
-
                     # Create a QGSVectorLayer object with the delimited file.
                     qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs,
                                                                                             pv_Delimiter, pv_CRS,
@@ -431,24 +445,27 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
                                                                                              pv_WKTColumn)
 
                 # Create a VectorGeoLayer and add it to the geoprocessor's GeoLayers list.
-                geolayer_obj = VectorGeoLayer(pv_GeoLayerID, qgs_vector_layer, delimited_file_abs)
+                geolayer_obj = VectorGeoLayer(pv_GeoLayerID,
+                                              qgs_vector_layer=qgs_vector_layer,
+                                              name=pv_Name,
+                                              description=pv_Description,
+                                              input_path_full=delimited_file_abs,
+                                              input_path=pv_InputFile)
                 self.command_processor.add_geolayer(geolayer_obj)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error reading GeoLayer {} from delimited file {}.".format(pv_GeoLayerID,
-                                                                                                pv_DelimitedFile)
+                                                                                                pv_InputFile)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
-
-        # Set command status type as SUCCESS if there are no errors.
+            raise CommandError(message)
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

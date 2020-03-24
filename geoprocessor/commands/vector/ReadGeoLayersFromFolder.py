@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -66,7 +68,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("SpatialDataFolder", type("")),
+        CommandParameterMetadata("InputFolder", type("")),
         CommandParameterMetadata("GeoLayerID_prefix", type("")),
         CommandParameterMetadata("Subset_Pattern", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
@@ -78,13 +80,13 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
     # Command Parameter Metadata
     __parameter_input_metadata = dict()
-    # SpatialDataFolder
-    __parameter_input_metadata['SpatialDataFolder.Description'] = "folder to read"
-    __parameter_input_metadata['SpatialDataFolder.Label'] = "Spatial data folder"
-    __parameter_input_metadata['SpatialDataFolder.Required'] = True
-    __parameter_input_metadata['SpatialDataFolder.Tooltip'] = "The folder to read."
-    __parameter_input_metadata['SpatialDataFolder.FileSelector.Type'] = "Read"
-    __parameter_input_metadata['SpatialDataFolder.FileSelector.Title'] = "Select the spatial data folder to read"
+    # InputFolder
+    __parameter_input_metadata['InputFolder.Description'] = "folder to read"
+    __parameter_input_metadata['InputFolder.Label'] = "Spatial data folder"
+    __parameter_input_metadata['InputFolder.Required'] = True
+    __parameter_input_metadata['InputFolder.Tooltip'] = "The folder to read."
+    __parameter_input_metadata['InputFolder.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['InputFolder.FileSelector.Title'] = "Select the spatial data folder to read"
     # GeoLayerID_prefix
     __parameter_input_metadata['GeoLayerID_prefix.Description'] = "output GeoLayer identifier prefix"
     __parameter_input_metadata['GeoLayerID_prefix.Label'] = "GeoLayerID prefix"
@@ -147,20 +149,18 @@ class ReadGeoLayersFromFolder(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter SpatialDataFolder is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_SpatialDataFolder = self.get_parameter_value(parameter_name='SpatialDataFolder',
-                                                        command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_SpatialDataFolder, False, False):
-            message = "SpatialDataFolder parameter has no value."
-            recommendation = "Specify text for the SpatialDataFolder parameter."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         # noinspection PyPep8Naming
@@ -172,31 +172,30 @@ class ReadGeoLayersFromFolder(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_folder(self, spatial_data_folder_abs: str) -> bool:
-
+    def check_runtime_data_folder(self, input_folder_absolute: str) -> bool:
         """
         Checks the following:
-        * the SpatialDataFolder (absolute) is a valid folder
+        * the InputFolder (absolute) is a valid folder
 
         Args:
-            spatial_data_folder_abs: the full pathname to the input spatial data folder
+            input_folder_absolute: the full pathname to the input spatial data folder
 
         Returns:
             run_read: Boolean. If TRUE, the folder read process should be run. If FALSE, it should not be run.
@@ -206,11 +205,11 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         run_read = True
 
         # If the input spatial data folder is not a valid file path, raise a FAILURE.
-        if not os.path.isdir(spatial_data_folder_abs):
+        if not os.path.isdir(input_folder_absolute):
 
             run_read = False
             self.warning_count += 1
-            message = "The SpatialDataFolder ({}) is not a valid folder.".format(spatial_data_folder_abs)
+            message = "The InputFolder ({}) is not a valid folder.".format(input_folder_absolute)
             recommendation = "Specify a valid folder."
             self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
@@ -220,7 +219,7 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         # one or many checks failed.
         return run_read
 
-    def __should_read_geolayer(self, geolayer_id: str) -> bool:
+    def check_runtime_data_geolayer(self, geolayer_id: str) -> bool:
         """
         Checks the following:
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
@@ -239,8 +238,6 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
         if self.command_processor.get_geolayer(geolayer_id):
-
-            # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
 
@@ -297,20 +294,19 @@ class ReadGeoLayersFromFolder(AbstractCommand):
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming
-        pv_SpatialDataFolder = self.get_parameter_value("SpatialDataFolder")
+        pv_InputFolder = self.get_parameter_value("InputFolder")
         # noinspection PyPep8Naming
         pv_Subset_Pattern = self.get_parameter_value("Subset_Pattern")
         # noinspection PyPep8Naming
         pv_GeoLayerID_prefix = self.get_parameter_value("GeoLayerID_prefix")
 
-        # Convert the SpatialDataFolder parameter value relative path to an absolute path
+        # Convert the InputFolder parameter value relative path to an absolute path
         sd_folder_abs = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_SpatialDataFolder, self)))
+                                     self.command_processor.expand_parameter_value(pv_InputFolder, self)))
 
         # Run the initial checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_folder(sd_folder_abs):
-
+        if self.check_runtime_data_folder(sd_folder_abs):
             # Determine which files within the folder should be processed. All files will be processed if
             # pv_Subset_Pattern is set to None. Otherwise only files that match the given pattern will be processed.
             # Check that each file in the folder is:
@@ -318,46 +314,45 @@ class ReadGeoLayersFromFolder(AbstractCommand):
             #   2. a spatial data file (ends in .shp or .geojson)
             #   3. follows the given pattern (if Subset_Pattern parameter value does not equal None)
             if pv_Subset_Pattern:
-                spatial_data_files_abs = [os.path.join(sd_folder_abs, source_file)
-                                          for source_file in glob.glob(os.path.join(sd_folder_abs, pv_Subset_Pattern))
-                                          if os.path.isfile(os.path.join(sd_folder_abs, source_file))
-                                          and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
+                input_files_abs = [os.path.join(sd_folder_abs, source_file)
+                                   for source_file in glob.glob(os.path.join(sd_folder_abs, pv_Subset_Pattern))
+                                   if os.path.isfile(os.path.join(sd_folder_abs, source_file))
+                                   and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
 
             else:
-                spatial_data_files_abs = [os.path.join(sd_folder_abs, source_file)
-                                          for source_file in os.listdir(sd_folder_abs)
-                                          if os.path.isfile(os.path.join(sd_folder_abs, source_file))
-                                          and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
+                input_files_abs = [os.path.join(sd_folder_abs, source_file)
+                                   for source_file in os.listdir(sd_folder_abs)
+                                   if os.path.isfile(os.path.join(sd_folder_abs, source_file))
+                                   and (source_file.endswith(".shp") or source_file.endswith(".geojson"))]
 
             # Iterate through the desired spatial data files
-            for spatial_data_file_absolute in spatial_data_files_abs:
-
+            for input_file_absolute in input_files_abs:
                 # Determine the GeoLayerID.
                 if pv_GeoLayerID_prefix:
                     geolayer_id = "{}_{}".format(pv_GeoLayerID_prefix,
-                                                 io_util.expand_formatter(spatial_data_file_absolute, '%f'))
+                                                 io_util.expand_formatter(input_file_absolute, '%f'))
                 else:
-                    geolayer_id = io_util.expand_formatter(spatial_data_file_absolute, '%f')
+                    geolayer_id = io_util.expand_formatter(input_file_absolute, '%f')
 
                 # Run the secondary checks on the parameter values. Only continue if the checks passed.
-                if self.__should_read_geolayer(geolayer_id):
-
+                if self.check_runtime_data_geolayer(geolayer_id):
                     # noinspection PyBroadException
                     try:
-                        # Create a QGSVectorLayer object with the GeoJSON SpatialDataFile
-                        qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(spatial_data_file_absolute)
+                        # Create a QGSVectorLayer object with the GeoJSON InputFolder
+                        qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(input_files_abs)
 
                         # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
                         geolayer_obj = VectorGeoLayer(geolayer_id=geolayer_id,
-                                                      geolayer_qgs_vector_layer=qgs_vector_layer,
-                                                      geolayer_source_path=spatial_data_file_absolute)
+                                                      qgs_vector_layer=qgs_vector_layer,
+                                                      input_path_full=input_file_absolute,
+                                                      input_path=pv_InputFolder)
                         self.command_processor.add_geolayer(geolayer_obj)
 
                     # Raise an exception if an unexpected error occurs during the process
                     except Exception:
                         self.warning_count += 1
                         message = "Unexpected error reading GeoLayer {} from" \
-                                  " file {}.".format(geolayer_id, spatial_data_file_absolute)
+                                  " file {}.".format(geolayer_id, input_file_absolute)
                         recommendation = "Check the log file for details."
                         self.logger.warning(message, exc_info=True)
                         self.command_status.add_to_log(CommandPhaseType.RUN,
@@ -367,8 +362,8 @@ class ReadGeoLayersFromFolder(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

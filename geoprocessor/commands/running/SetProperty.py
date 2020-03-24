@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -112,48 +114,30 @@ class SetProperty(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
         logger = logging.getLogger(__name__)
 
-        # PropertyName is required
-        # noinspection PyPep8Naming
-        pv_PropertyName = self.get_parameter_value(parameter_name='PropertyName', command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_PropertyName, False, False):
-            message = "PropertyName parameter has no value."
-            recommendation = "Specify a property name."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # PropertyType is required
-        # noinspection PyPep8Naming
-        pv_PropertyType = self.get_parameter_value(parameter_name='PropertyType', command_parameters=command_parameters)
-        if not validator_util.validate_string_in_list(pv_PropertyType, self.__choices_PropertyType, False, False):
-            message = 'The requested property type "' + pv_PropertyType + '"" is invalid.'
-            recommendation = "Specify a valid property type:  " + str(SetProperty.__choices_PropertyType)
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # TODO smalers 2017-12-28 add other parameters similar to TSTool to set special values
+        # TODO smalers 2020-03-21 make sure type can be parsed into the indiated type, also for the list
 
-        property_value_parameter_count = 0  # increment for PropertyValue or PropertyValues, only one is allowed
-        # PropertyValue or PropertyValues are required
+        # Only one of PropertyValue and PropertyValues can be specified
+        property_value_parameter_count = 0
         # noinspection PyPep8Naming
         pv_PropertyValue = self.get_parameter_value(
             parameter_name='PropertyValue', command_parameters=command_parameters)
         if pv_PropertyValue is not None and pv_PropertyValue != "":
             property_value_parameter_count += 1
-            if not validator_util.validate_string(pv_PropertyValue, True, True):
-                message = "PropertyValue parameter is not specified."
-                recommendation = "Specify a property value."
-                warning += "\n" + message
-                self.command_status.add_to_log(
-                    CommandPhaseType.INITIALIZATION,
-                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
         # noinspection PyPep8Naming
         pv_PropertyValues = self.get_parameter_value(
             parameter_name='PropertyValues', command_parameters=command_parameters)
@@ -162,7 +146,7 @@ class SetProperty(AbstractCommand):
             if not validator_util.validate_list(pv_PropertyValues, True, True, brackets_required=False):
                 message = "PropertyValues parameter is not valid."
                 recommendation = "Specify a list of values separated by commas and optional spaces."
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -170,7 +154,7 @@ class SetProperty(AbstractCommand):
         if property_value_parameter_count != 1:
             message = "PropertyValue (single value) or PropertyValues (for list) parameter must be specified."
             recommendation = "Specify a single value with PropertyValue or list of values with PropertyValues."
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -178,14 +162,14 @@ class SetProperty(AbstractCommand):
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
         # triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception
-        if len(warning) > 0:
+        if len(warning_message) > 0:
             # Message.printWarning ( warning_level,
             #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
-            logger.warning(warning)
-            raise ValueError(warning)
+            logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
@@ -282,6 +266,6 @@ class SetProperty(AbstractCommand):
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

@@ -29,8 +29,7 @@ class Blank(AbstractCommand):
     # Command metadata for command editor display
     __command_metadata = dict()
     __command_metadata['Description'] = 'This command is a placeholder for an empty line in a command file.\n' \
-                                        'The command does not serve a purpose other than to store the ' \
-                                        'empty line.\n' \
+                                        'The command does not serve a purpose other than to store the empty line.\n' \
                                         'See also # comment command.'
     __command_metadata['EditorType'] = 'InsertLineEditor'
     __command_metadata['EditorTitle'] = 'Edit empty line'  # Title does not follow normal CommandName(...)
@@ -75,7 +74,7 @@ class Blank(AbstractCommand):
         # print("In Blank.run_command")
         pass
 
-    def to_string(self) -> str:
+    def to_string(self, command_parameters: dict = None, format_all: bool = False) -> str:
         """
         Return the string representation of the command, always an empty string.
 

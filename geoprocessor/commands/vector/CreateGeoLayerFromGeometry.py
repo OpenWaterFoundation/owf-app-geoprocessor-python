@@ -19,11 +19,13 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-
+from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -35,7 +37,6 @@ import logging
 
 
 class CreateGeoLayerFromGeometry(AbstractCommand):
-
     """
     Creates a new GeoLayer. The feature geometry is provided by the parameters.
 
@@ -59,6 +60,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         CommandParameterMetadata("GeometryFormat", type(str)),
         CommandParameterMetadata("GeometryData", type(str)),
         CommandParameterMetadata("CRS", type(str)),
+        CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     # Command metadata for command editor display
@@ -74,15 +76,17 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
     __parameter_input_metadata['NewGeoLayerID.Required'] = True
     __parameter_input_metadata['NewGeoLayerID.Tooltip'] = "The ID of the new GeoLayer."
     # Name
-    __parameter_input_metadata['Name.Description'] = "GeoLayerViewGroup name"
+    __parameter_input_metadata['Name.Description'] = "GeoLayer name"
     __parameter_input_metadata['Name.Label'] = "Name"
-    __parameter_input_metadata['Name.Required'] = True
-    __parameter_input_metadata['Name.Tooltip'] = "The GeoLayerViewGroup name, can use ${Property}."
+    __parameter_input_metadata['Name.Required'] = False
+    __parameter_input_metadata['Name.Tooltip'] = "The GeoLayer name, can use ${Property}."
+    __parameter_input_metadata['Name.Value.Default.Description'] = "NewGeoLayerID"
     # Description
-    __parameter_input_metadata['Description.Description'] = "GeoLayerViewGroup description"
+    __parameter_input_metadata['Description.Description'] = "GeoLayer description"
     __parameter_input_metadata['Description.Label'] = "Description"
-    __parameter_input_metadata['Description.Required'] = True
-    __parameter_input_metadata['Description.Tooltip'] = "The GeoLayerViewGroup description, can use ${Property}."
+    __parameter_input_metadata['Description.Required'] = False
+    __parameter_input_metadata['Description.Tooltip'] = "The GeoLayer description, can use ${Property}."
+    __parameter_input_metadata['Description.Value.Default'] = ''
     # GeometryFormat
     __parameter_input_metadata['GeometryFormat.Description'] = "format of the geometry data"
     __parameter_input_metadata['GeometryFormat.Label'] = "Geometry format"
@@ -117,6 +121,12 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
     __parameter_input_metadata['CRS.Tooltip'] = (
         "The coordinate reference system of the new GeoLayer. EPSG or "
         "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+    # Properties
+    __parameter_input_metadata['Properties.Description'] = "properties for the new GeoLayer"
+    __parameter_input_metadata['Properties.Label'] = "Properties"
+    __parameter_input_metadata['Properties.Required'] = False
+    __parameter_input_metadata['Properties.Tooltip'] = \
+        "Properties for the new GeoLayer using syntax:  property:value,property:'value'"
     # IfGeoLayerIDExists
     __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
@@ -166,19 +176,18 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
         # Check that required parameters are non-empty, non-None strings.
-        required_parameters = ["NewGeoLayerID", "Name", "GeometryData", "CRS"]
+        required_parameters = command_util.get_required_parameter_names(self)
         for parameter in required_parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
             if not validator_util.validate_string(parameter_value, False, False):
-                message = "Required {} parameter is not specified.".format(parameter)
+                message = "Required {} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
-                warning += "\n" + message
-                self.command_status.add_to_log(
-                    CommandPhaseType.INITIALIZATION,
-                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that GeometryFormat parameter is either `BoundingBox`, `WKT` or `WKB`.
         # noinspection PyPep8Naming
@@ -190,7 +199,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -205,24 +214,38 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Properties - verify that the properties can be parsed
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
+        try:
+            command_util.parse_properties_from_parameter_string(pv_Properties)
+        except ValueError as e:
+            # Use the exception
+            message = str(e)
+            recommendation = "Check the properties string format."
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def validate_runtime_data(self, geolayer_id: str, crs: str, geometry_format: str, geometry_data: str) -> bool:
+    def check_runtime_data(self, geolayer_id: str, crs: str, geometry_format: str, geometry_data: str) -> bool:
         """
         Checks the following:
         * the CRS is a valid CRS
@@ -283,18 +306,37 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         # noinspection PyPep8Naming
         pv_NewGeoLayerID = self.get_parameter_value("NewGeoLayerID")
         # noinspection PyPep8Naming
-        pv_Name = self.get_parameter_value("Name")
+        pv_Name = self.get_parameter_value("Name", default_value=pv_NewGeoLayerID)
         # noinspection PyPep8Naming
-        pv_Description = self.get_parameter_value("Description")
+        pv_Description =\
+            self.get_parameter_value("Description",
+                                     default_value=self.parameter_input_metadata['Description.Value.Default'])
         # noinspection PyPep8Naming
         pv_GeometryFormat = self.get_parameter_value("GeometryFormat").upper()
         # noinspection PyPep8Naming
         pv_GeometryData = self.get_parameter_value("GeometryData")
         # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value("Properties")
 
-        if self.validate_runtime_data(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
+        # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
+        pv_NewGeoLayerID = self.command_processor.expand_parameter_value(pv_NewGeoLayerID, self)
+        # noinspection PyPep8Naming
+        pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
+        # noinspection PyPep8Naming
+        pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
+        # noinspection PyPep8Naming
+        pv_GeometryFormat = self.command_processor.expand_parameter_value(pv_GeometryFormat, self)
+        # noinspection PyPep8Naming
+        pv_GeometryData = self.command_processor.expand_parameter_value(pv_GeometryData, self)
+        # noinspection PyPep8Naming
+        pv_CRS = self.command_processor.expand_parameter_value(pv_CRS, self)
+        # noinspection PyPep8Naming
+        pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
+        if self.check_runtime_data(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
             layer = None
             qgs_geometry = None
             # noinspection PyBroadException
@@ -302,7 +344,6 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
 
                 # If the geometry format is bounding box, continue.
                 if pv_GeometryFormat == "BOUNDINGBOX":
-
                     # Convert the geometry input from a string to a list of strings.
                     # Items are in the following order:
                     #   1. Left (West) bound coordinate
@@ -358,8 +399,16 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
                 new_geolayer = VectorGeoLayer(geolayer_id=pv_NewGeoLayerID,
                                               name=pv_Name,
                                               description=pv_Description,
-                                              geolayer_qgs_vector_layer=layer,
-                                              geolayer_source_path="MEMORY")
+                                              qgs_vector_layer=layer,
+                                              input_path_full=GeoLayer.SOURCE_MEMORY,
+                                              input_path=GeoLayer.SOURCE_MEMORY)
+
+                # Set the properties
+                properties = command_util.parse_properties_from_parameter_string(pv_Properties)
+                # Set the properties as additional properties (don't just reset the properties dictionary)
+                new_geolayer.set_properties(properties)
+
+                # Add the geolayer to the processor
                 self.command_processor.add_geolayer(new_geolayer)
 
             except Exception:
@@ -375,7 +424,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
         else:

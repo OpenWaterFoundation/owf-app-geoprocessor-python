@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -78,20 +80,18 @@ class CreatePointsAlongLine(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter GeoLayerID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
-                                                 command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_GeoLayerID, False, False):
-            message = "GeoLayerID parameter has no value."
-            recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to copy."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         # noinspection PyPep8Naming
@@ -103,24 +103,24 @@ class CreatePointsAlongLine(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_create_points(self, input_geolayer_id: str, output_geolayer_id: str) -> bool:
+    def check_runtime_data(self, input_geolayer_id: str, output_geolayer_id: str) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -153,7 +153,6 @@ class CreatePointsAlongLine(AbstractCommand):
         # If the output GeoLayer ID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
         elif self.command_processor.get_geolayer(output_geolayer_id):
-
             # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
@@ -162,8 +161,8 @@ class CreatePointsAlongLine(AbstractCommand):
             message = 'The CopiedGeoLayerID ({}) value is already in use as a GeoLayer ID.'.format(output_geolayer_id)
             recommendation = 'Specify a new GeoLayerID.'
 
-            # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
             if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+                # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
 
                 self.warning_count += 1
                 self.logger.warning(message)
@@ -171,8 +170,8 @@ class CreatePointsAlongLine(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
-            # The registered GeoLayer should not be replaced. A warning should be logged.
             if pv_IfGeoLayerIDExists.upper() == "WARN":
+                # The registered GeoLayer should not be replaced. A warning should be logged.
 
                 run_copy = False
                 self.warning_count += 1
@@ -181,8 +180,8 @@ class CreatePointsAlongLine(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
-            # The matching IDs should cause a FAILURE.
             elif pv_IfGeoLayerIDExists.upper() == "FAIL":
+                # The matching IDs should cause a FAILURE.
 
                 run_copy = False
                 self.warning_count += 1

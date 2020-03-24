@@ -19,8 +19,6 @@
 
 from geoprocessor.core.GeoLayerSymbolClassificationType import GeoLayerSymbolClassificationType
 
-import logging
-
 
 class GeoLayerSymbol(object):
     """
@@ -30,7 +28,7 @@ class GeoLayerSymbol(object):
     """
 
     def __init__(self, classification_type: GeoLayerSymbolClassificationType, classification_attribute: str,
-                 name: str, properties: dict, description: str = "") -> None:
+                 properties: dict, name: str, description: str = "") -> None:
         # Name for the symbol.
         self.name: str = name
 
@@ -44,18 +42,23 @@ class GeoLayerSymbol(object):
         self.classification_attribute: str = description
 
         # Properties that define the symbol, different for each classification type.
-        self.properties: dict = dict()
+        self.properties: dict = properties
 
     def to_json(self):
         """
         Return dictionary of class data to support JSON serialization using json package.
         This should be overridden in child classes.
         """
-        classification_type = self.classification_type.to_json_string()
-        return {
-            "name": self.name,
-            "description": self.description,
-            "classificationType": classification_type,
-            "classificationAttribute": self.classification_attribute,
-            "properties": self.properties
-        }
+        use_dict = False
+        if use_dict:
+            # Dictionary has too much information but is useful to illustrate what objects need to be handled.
+            return self.__dict__
+        else:
+            classification_type = self.classification_type.to_json_string()
+            return {
+                "name": self.name,
+                "description": self.description,
+                "classificationType": classification_type,
+                "classificationAttribute": self.classification_attribute,
+                "properties": self.properties
+            }

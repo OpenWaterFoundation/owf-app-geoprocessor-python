@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -189,18 +191,16 @@ class WriteTableToDataStore(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        # Check that the required parameters are non-empty, non-None strings.
-        required_parameters = ["TableID", "DataStoreID", "DataStoreTable"]
-
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
         for parameter in required_parameters:
-
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
             if not validator_util.validate_string(parameter_value, False, False):
-                message = "{} parameter has no value.".format(parameter)
-                recommendation = "Specify a valid value for the {} parameter.".format(parameter)
-                warning += "\n" + message
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -213,18 +213,18 @@ class WriteTableToDataStore(AbstractCommand):
             message = "WriteMode parameter value ({}) is not recognized.".format(pv_WriteMode)
             recommendation = "Specify one of the acceptable values ({}) for the WriteMode parameter.".format(
                 self.__choices_WriteMode)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
@@ -344,7 +344,7 @@ class WriteTableToDataStore(AbstractCommand):
         # Return the list of the columns in the DataStore that are configured to receive data.
         return datastore_table_cols_to_receive
 
-    def __should_write_table(self, table_id: str, datastore_id: str, datastore_table_name: str, writemode: str) -> bool:
+    def check_runtime_data(self, table_id: str, datastore_id: str, datastore_table_name: str, writemode: str) -> bool:
         """
         Checks the following:
             * the Table ID exists
@@ -397,8 +397,8 @@ class WriteTableToDataStore(AbstractCommand):
         else:
             return True
 
-    def __should_write_table2(self, datastore: DataStore, datastore_table_name: str,
-                              datastore_table_cols_to_receive: [str], writemode: str) -> bool:
+    def check_runtime_data(self, datastore: DataStore, datastore_table_name: str,
+                           datastore_table_cols_to_receive: [str], writemode: str) -> bool:
         """
             Checks the following:
                 * the datastore columns configured to receive data are existing columns within the DataStore table
@@ -493,7 +493,7 @@ class WriteTableToDataStore(AbstractCommand):
         pv_DataStoreTable = self.command_processor.expand_parameter_value(pv_DataStoreTable, self)
 
         # Run the checks on the parameter values. Only continue if the checks pass.
-        if self.__should_write_table(pv_TableID, pv_DataStoreID, pv_DataStoreTable, pv_WriteMode):
+        if self.check_runtime_data_table(pv_TableID, pv_DataStoreID, pv_DataStoreTable, pv_WriteMode):
 
             # Get the Table object.
             table_obj = self.command_processor.get_table(pv_TableID)
@@ -511,8 +511,8 @@ class WriteTableToDataStore(AbstractCommand):
             datastore_table_cols_to_receive = self.__get_datastore_cols_to_receive(table_cols_to_write, col_map_dic)
 
             # Run a second level of checks. Only continue if the check passes.
-            if self.__should_write_table2(datastore_obj, pv_DataStoreTable, datastore_table_cols_to_receive,
-                                          pv_WriteMode):
+            if self.check_runtime_data_table2(datastore_obj, pv_DataStoreTable, datastore_table_cols_to_receive,
+                                              pv_WriteMode):
 
                 # noinspection PyBroadException
                 try:
@@ -572,7 +572,7 @@ class WriteTableToDataStore(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
         else:

@@ -51,9 +51,14 @@ class RasterGeoLayer(GeoLayer):
     is set to 'MEMORY'.
     """
 
-    def __init__(self, geolayer_id: str, name: str, description: str = "",
-                 geolayer_qgs_raster_layer: QgsRasterLayer = None,
-                 geolayer_source_path: str = None, properties: dict = None) -> None:
+    def __init__(self,
+                 geolayer_id: str,
+                 name: str,
+                 description: str = "",
+                 qgs_raster_layer: QgsRasterLayer = None,
+                 input_path_full: str = GeoLayer.SOURCE_MEMORY,
+                 input_path: str = GeoLayer.SOURCE_MEMORY,
+                 properties: dict = None) -> None:
         """
         Initialize a new RasterGeoLayer instance.
 
@@ -65,12 +70,19 @@ class RasterGeoLayer(GeoLayer):
                 Layer name, will be used in map legend, etc.
             description (str):
                 Layer description, with more details.
-            geolayer_qgs_raster_layer (QgsRasterLayer):
-                Object created by a command . All GeoLayer spatial manipulations are
-                performed on the GeoLayer's qgs_raster_vector_layer.
-            geolayer_source_path (str):
-                The full pathname to the original spatial data file on the user's local computer. If the geolayer was
-                made in memory from the GeoProcessor, this value is set to `MEMORY`.
+            qgs_raster_layer (QgsRasterLayer):
+                Object created by the QGIS processor.
+                All GeoLayer spatial manipulations are performed on the GeoLayer's qgs_layer.
+            input_path_full (str):
+                The full pathname to the input spatial data file on the local computer,
+                consistent with a GeoProcessor read command after the path is expanded.
+                TODO smalers 2020-03-20 evaluate whether to allow URL.
+                If not specified, GeoLayer.SUMMARY_MEMORY ('MEMORY') is used, assuming the layer was created in memory.
+            input_path (str):
+                The pathname to the input spatial data file on the local computer,
+                consistent with a GeoProcessor read command before the path is expanded.
+                This is typically a relevant path but could be absolute (same as 'input_source_path_full').
+                If not specified, GeoLayer.SUMMARY_MEMORY ('MEMORY') is used, assuming the layer was created in memory.
             properties ({}):
                 A dictionary of user (non-built-in) properties that can be assigned to the layer.
                 These properties facilitate processing.
@@ -78,9 +90,13 @@ class RasterGeoLayer(GeoLayer):
 
         # GeoLayer data
         # - the layer is stored in the parent class using QGIS QgsLayer
-        super().__init__(geolayer_id=geolayer_id, name=name, description=description,
-                         geolayer_qgs_layer=geolayer_qgs_raster_layer,
-                         geolayer_source_path=geolayer_source_path, properties=properties)
+        super().__init__(geolayer_id=geolayer_id,
+                         name=name,
+                         description=description,
+                         qgs_layer=qgs_raster_layer,
+                         input_path_full=input_path_full,
+                         input_path=input_path,
+                         properties=properties)
 
         # All other differences are implemented through behavior with additional methods below.
 

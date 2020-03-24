@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -34,31 +36,21 @@ import os
 import logging
 
 
+# TODO smalers 2020-03-21 need to fully implement - add Name and Description parameters.
 class ReadRasterGeoLayerFromFile(AbstractCommand):
-
     """
-    Reads a raster GeoLayer from a raster data file (any recognized file extension).
+    Read a raster GeoLayer from a raster data file (any recognized file extension).
 
     This command reads a raster GeoLayer from a file and creates a GeoLayer object within the
     geoprocessor. The GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
 
     In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
     `QgsRasterLayer <https://qgis.org/api/classQgsRasterLayer.html>` objects.
-
-    Command Parameters
-    * SpatialDataFile (str, required): the relative pathname to the spatial data file (shapefile format)
-    * GeoLayerID (str, optional): the GeoLayer identifier. If None, the spatial data filename (without the .geojson
-        extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the absolute
-        pathname to the spatial data file is C:/Desktop/Example/example_file.geojson, then the GeoLayerID will be
-        `example_file`.
-    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
-        already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
-        (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
 
     # Define the command parameters.
     __command_parameter_metadata = [
-        CommandParameterMetadata("SpatialDataFile", type(""),
+        CommandParameterMetadata("InputFile", type(""),
                                  parameter_description="Path to file",
                                  editor_tooltip="Path to raster file to read, can use ${Property}."),
         CommandParameterMetadata("GeoLayerID", type(""),
@@ -76,14 +68,14 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
     # Parameter Metadata
     __parameter_input_metadata = dict()
-    # SpatialDataFile
-    __parameter_input_metadata['SpatialDataFile.Description'] = "Raster file to read"
-    __parameter_input_metadata['SpatialDataFile.Label'] = "Raster file to read"
-    __parameter_input_metadata['SpatialDataFile.Tooltip'] = \
+    # InputFile
+    __parameter_input_metadata['InputFile.Description'] = "Raster file to read"
+    __parameter_input_metadata['InputFile.Label'] = "Raster file to read"
+    __parameter_input_metadata['InputFile.Tooltip'] = \
         "The raster file to read (relative or absolute path, must have recognized extension)." + \
         "${Property} syntax is recognized."
-    __parameter_input_metadata['SpatialDataFile.Required'] = True
-    __parameter_input_metadata['SpatialDataFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['InputFile.Required'] = True
+    __parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
     __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
@@ -141,22 +133,18 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter SpatialDataFile is a non-empty, non-None string.
-        # - existence of the file will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_SpatialDataFile = self.get_parameter_value(parameter_name='SpatialDataFile',
-                                                      command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_SpatialDataFile, False, False):
-
-            message = "SpatialDataFile parameter has no value."
-            recommendation = "Specify the SpatialDataFile parameter to indicate the spatial data layer file."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is one of the acceptable values or is None.
         # noinspection PyPep8Naming
@@ -167,33 +155,32 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 self.__choices_IfGeoLayerIDExists)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_read_geolayer(self, spatial_data_file_abs: str, geolayer_id: str) -> bool:
-
+    def check_runtime_data(self, input_file_abs: str, geolayer_id: str) -> bool:
         """
         Checks the following:
-        * the SpatialDataFile (absolute) is a valid file
+        * the input file (absolute) is a valid file
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
         Args:
-            spatial_data_file_abs: the full pathname to the input spatial data file
+            input_file_abs: the full pathname to the input spatial data file
             geolayer_id: the ID of the output GeoLayer
 
         Returns:
@@ -204,11 +191,11 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         run_read = True
 
         # If the input spatial data file is not a valid file path, raise a FAILURE.
-        if not os.path.isfile(spatial_data_file_abs):
+        if not os.path.isfile(input_file_abs):
 
             run_read = False
             self.warning_count += 1
-            message = "The SpatialDataFile ({}) is not a valid file.".format(spatial_data_file_abs)
+            message = "The InputFile ({}) is not a valid file.".format(input_file_abs)
             recommendation = "Specify a valid file."
             self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
@@ -217,7 +204,6 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
         elif self.command_processor.get_geolayer(geolayer_id):
-
             # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
@@ -226,17 +212,16 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
             message = 'The GeoLayerID ({}) value is already in use as a GeoLayer ID.'.format(geolayer_id)
             recommendation = 'Specify a new GeoLayerID.'
 
-            # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
             if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+                # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
                 self.warning_count += 1
                 self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
-            # The registered GeoLayer should not be replaced. A warning should be logged.
             if pv_IfGeoLayerIDExists.upper() == "WARN":
-
+                # The registered GeoLayer should not be replaced. A warning should be logged.
                 run_read = False
                 self.warning_count += 1
                 self.logger.warning(message)
@@ -244,9 +229,8 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
-            # The matching IDs should cause a FAILURE.
             elif pv_IfGeoLayerIDExists.upper() == "FAIL":
-
+                # The matching IDs should cause a FAILURE.
                 run_read = False
                 self.warning_count += 1
                 self.logger.warning(message)
@@ -273,7 +257,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming
-        pv_SpatialDataFile = self.get_parameter_value("SpatialDataFile")
+        pv_InputFile = self.get_parameter_value("InputFile")
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
 
@@ -281,29 +265,29 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
 
-        # Convert the SpatialDataFile parameter value relative path to an absolute path and expand for ${Property}
+        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property}
         # syntax
-        spatial_data_file_absolute = io_util.verify_path_for_os(
+        input_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_SpatialDataFile, self)))
+                                     self.command_processor.expand_parameter_value(pv_InputFile, self)))
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
         if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
             # noinspection PyPep8Naming
-            pv_GeoLayerID = io_util.expand_formatter(spatial_data_file_absolute, pv_GeoLayerID)
+            pv_GeoLayerID = io_util.expand_formatter(input_file_absolute, pv_GeoLayerID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_read_geolayer(spatial_data_file_absolute, pv_GeoLayerID):
+        if self.check_runtime_data(input_file_absolute, pv_GeoLayerID):
             # noinspection PyBroadException
             try:
-
-                # Create a QGSRasterLayer object with the SpatialDataFile in raster format
-                qgs_raster_layer = qgis_util.read_qgsrasterlayer_from_file(spatial_data_file_absolute)
+                # Create a QGSRasterLayer object in raster format
+                qgs_raster_layer = qgis_util.read_qgsrasterlayer_from_file(input_file_absolute)
 
                 # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
                 geolayer_obj = RasterGeoLayer(geolayer_id=pv_GeoLayerID,
-                                              geolayer_qgs_raster_layer=qgs_raster_layer,
-                                              geolayer_source_path=spatial_data_file_absolute)
+                                              qgs_raster_layer=qgs_raster_layer,
+                                              input_path_full=input_file_absolute,
+                                              input_path=pv_InputFile)
                 self.command_processor.add_geolayer(geolayer_obj)
 
             # Raise an exception if an unexpected error occurs during the process
@@ -311,7 +295,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
                 self.warning_count += 1
                 message = "Unexpected error reading RasterGeoLayer {} from raster file {}.".format(
-                    pv_GeoLayerID, pv_SpatialDataFile)
+                    pv_GeoLayerID, input_file_absolute)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
@@ -320,8 +304,8 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         # Determine success of command processing. Raise RuntimeError if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

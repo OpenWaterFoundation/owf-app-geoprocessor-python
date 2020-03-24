@@ -19,11 +19,13 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-
+from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -34,6 +36,7 @@ import geoprocessor.util.validator_util as validator_util
 import logging
 
 
+# TODO smalers 2020-03-21 this command needs to be implemented
 class CreateRasterGeoLayer(AbstractCommand):
 
     """
@@ -137,19 +140,16 @@ class CreateRasterGeoLayer(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        parameters = ["NewGeoLayerID", "GeometryData", "CRS"]
-
-        # Check that the parameters are non-empty, non-None strings.
-        for parameter in parameters:
-
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
             parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
-
             if not validator_util.validate_string(parameter_value, False, False):
-                message = "{} parameter has no value.".format(parameter)
+                message = "Required {} parameter has no value.".format(parameter)
                 recommendation = "Specify the {} parameter.".format(parameter)
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -164,7 +164,7 @@ class CreateRasterGeoLayer(AbstractCommand):
             message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
             recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -179,25 +179,24 @@ class CreateRasterGeoLayer(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_geolayer_be_created(self, geolayer_id: str, crs: str, geometry_format: str,
-                                     geometry_data: str) -> bool:
+    def check_runtime_data(self, geolayer_id: str, crs: str, geometry_format: str, geometry_data: str) -> bool:
         """
         Checks the following:
         * the CRS is a valid CRS
@@ -264,14 +263,12 @@ class CreateRasterGeoLayer(AbstractCommand):
         # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
 
-        if self.__should_geolayer_be_created(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
+        if self.check_runtime_data(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
             # noinspection PyBroadException
             try:
                 layer = None
                 qgs_geometry = None
-                # If the geometry format is bounding box, continue.
                 if pv_GeometryFormat == "BOUNDINGBOX":
-
                     # Convert the geometry input from a string to a list of strings.
                     # Items are in the following order:
                     #   1. Left (West) bound coordinate
@@ -291,9 +288,7 @@ class CreateRasterGeoLayer(AbstractCommand):
                     # Create the QgsGeometry object for the bounding box geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKT", wkt_conversion)
 
-                # If the geometry format is Well-Known Text, continue.
                 elif pv_GeometryFormat == "WKT":
-
                     # Get the equivalent QGS geometry type to the input WKT geometry.
                     # Ex: MultiLineString is converted to LineString.
                     qgsvectorlayer_geom_type = qgis_util.get_geometrytype_qgis_from_wkt(pv_GeometryData)
@@ -304,9 +299,7 @@ class CreateRasterGeoLayer(AbstractCommand):
                     # Create the QgsGeometry object for the Well-Known Text geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKT", pv_GeometryData)
 
-                # If the geometry format is Well-Known Binary, continue.
                 elif pv_GeometryFormat == "WKB":
-
                     # Create the QgsGeometry object for the Well-Known Binary geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKB", pv_GeometryData)
 
@@ -324,12 +317,13 @@ class CreateRasterGeoLayer(AbstractCommand):
                 qgis_util.add_feature_to_qgsvectorlayer(layer, qgs_geometry)
 
                 # Create a new GeoLayer with the QgsVectorLayer and add it to the GeoProcesor's geolayers list.
-                new_geolayer = RasterGeoLayer(pv_NewGeoLayerID, layer, "MEMORY")
+                new_geolayer = RasterGeoLayer(geolayer_id=pv_NewGeoLayerID,
+                                              qgs_raster_layer=layer,
+                                              input_path_full=GeoLayer.SOURCE_MEMORY,
+                                              input_path=GeoLayer.SOURCE_MEMORY)
                 self.command_processor.add_geolayer(new_geolayer)
 
-            # Raise an exception if an unexpected error occurs during the process.
             except Exception:
-
                 self.warning_count += 1
                 message = "Unexpected error creating GeoLayer ({}).".format(pv_NewGeoLayerID)
                 recommendation = "Check the log file for details."
@@ -337,11 +331,10 @@ class CreateRasterGeoLayer(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

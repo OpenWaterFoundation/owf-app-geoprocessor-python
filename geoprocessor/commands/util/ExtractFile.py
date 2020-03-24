@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -83,20 +85,18 @@ class ExtractFile(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that either the parameter File is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_File = self.get_parameter_value(parameter_name='File', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_File, False, False):
-
-            message = "File parameter has no value."
-            recommendation = "Specify the File parameter to indicate the compressed file to extract."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter FileType is an acceptable value or is None.
         # noinspection PyPep8Naming
@@ -109,7 +109,7 @@ class ExtractFile(AbstractCommand):
             message = "FileType parameter value ({}) is not recognized.".format(pv_FileType)
             recommendation = "Specify one of the acceptable values ({}) for the" \
                              " FileType parameter.".format(acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
@@ -120,24 +120,24 @@ class ExtractFile(AbstractCommand):
         if not validator_util.validate_bool(pv_DeleteFile, none_allowed=True, empty_string_allowed=False):
             message = "DeleteFile parameter value ({}) is not a recognized boolean value.".format(pv_DeleteFile)
             recommendation = "Specify either 'True' or 'False for the DeleteFile parameter."
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_extract_file(self, file_abs: str, output_folder_abs: str, file_type: str) -> bool:
+    def check_runtime_data(self, file_abs: str, output_folder_abs: str, file_type: str) -> bool:
         """
         Checks the following:
         * the File is a valid file
@@ -214,23 +214,19 @@ class ExtractFile(AbstractCommand):
             self.command_processor.expand_parameter_value(pv_OutputFolder, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_extract_file(file_abs, output_folder_abs, pv_FileType):
-
+        if self.check_runtime_data(file_abs, output_folder_abs, pv_FileType):
             # noinspection PyBroadException
             try:
-
-                # If the file is a .zip file, extract the zip file.
                 if pv_FileType == "ZIP":
-
+                    # If the file is a .zip file, extract the zip file.
                     zip_util.unzip_all_files(file_abs, output_folder_abs)
 
-                # If the file is a .tar file, extract the tar file.
                 elif pv_FileType == "TAR":
-
+                    # If the file is a .tar file, extract the tar file.
                     zip_util.untar_all_files(file_abs, output_folder_abs)
 
-                # If configured, remove the input compressed file.
                 if string_util.str_to_bool(pv_DeleteFile):
+                    # If configured, remove the input compressed file.
                     os.remove(file_abs)
 
             # Raise an exception if an unexpected error occurs during the process
@@ -245,8 +241,8 @@ class ExtractFile(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

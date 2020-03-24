@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -104,68 +106,29 @@ class SetGeoLayerProperty(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
         logger = logging.getLogger(__name__)
 
-        # GeoLayerID is required
-        # - non-empty, non-None string.
-        # - existence of the GeoLayer will also be checked in run_command().
-        # noinspection PyPep8Naming
-        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
-                                                 command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_GeoLayerID, False, False):
-            message = "GeoLayerID parameter has no value."
-            recommendation = "Specify the GeoLayerID parameter to indicate the GeoLayer to process."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # PropertyName is required
-        # noinspection PyPep8Naming
-        pv_PropertyName = self.get_parameter_value(parameter_name='PropertyName', command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_PropertyName, False, False):
-            message = "PropertyName parameter has no value."
-            recommendation = "Specify a property name."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # PropertyType is required
-        # noinspection PyPep8Naming
-        pv_PropertyType = self.get_parameter_value(parameter_name='PropertyType', command_parameters=command_parameters)
-        property_types = ["bool", "float", "int", "long", "str"]
-        if not validator_util.validate_string_in_list(pv_PropertyType, property_types, False, False):
-            message = 'The requested property type "' + pv_PropertyType + '"" is invalid.'
-            recommendation = "Specify a valid property type:  " + str(property_types)
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # PropertyValue is required
-        # noinspection PyPep8Naming
-        pv_PropertyValue = self.get_parameter_value(
-            parameter_name='PropertyValue', command_parameters=command_parameters)
-        if not validator_util.validate_string(pv_PropertyValue, False, False):
-            # TODO smalers 2017-12-28 add other parameters similar to TSTool to set special values
-            message = "PropertyValue parameter is not specified."
-            recommendation = "Specify a property value."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
         # triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception
-        if len(warning) > 0:
-            logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
@@ -237,6 +200,6 @@ class SetGeoLayerProperty(AbstractCommand):
 
         if warning_count > 0:
             message = "There were " + str(warning_count) + " warnings processing the command."
-            raise RuntimeError(message)
+            raise CommandError(message)
 
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

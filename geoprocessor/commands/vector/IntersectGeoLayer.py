@@ -19,10 +19,13 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -72,6 +75,8 @@ class IntersectGeoLayer(AbstractCommand):
         CommandParameterMetadata("IncludeIntersectAttributes", type("")),
         CommandParameterMetadata("ExcludeIntersectAttributes", type("")),
         CommandParameterMetadata("OutputGeoLayerID", type("")),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     __command_metadata = dict()
@@ -111,6 +116,18 @@ class IntersectGeoLayer(AbstractCommand):
     __parameter_input_metadata['OutputGeoLayerID.Tooltip'] = "The ID of the intersected GeoLayer."
     __parameter_input_metadata['OutputGeoLayerID.Value.Default.Description'] = \
         "GeoLayerId_intersectedBy_IntersectGeoLayerID."
+    # Name
+    __parameter_input_metadata['Name.Description'] = "intersected GeoLayer name"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = False
+    __parameter_input_metadata['Name.Tooltip'] = "The intersected GeoLayer name, can use ${Property}."
+    __parameter_input_metadata['Name.Value.Default.Description'] = "OutputGeoLayerID"
+    # Description
+    __parameter_input_metadata['Description.Description'] = "intersected GeoLayer description"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = False
+    __parameter_input_metadata['Description.Tooltip'] = "The intersected GeoLayer description, can use ${Property}."
+    __parameter_input_metadata['Description.Value.Default'] = ''
     # IfGeoLayerIDExists
     __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output layer exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
@@ -158,34 +175,18 @@ class IntersectGeoLayer(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameter GeoLayerID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID',
-                                                 command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_GeoLayerID, False, False):
-            message = "GeoLayerID parameter has no value."
-            recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # Check that parameter IntersectGeoLayerID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_IntersectGeoLayerID = self.get_parameter_value(parameter_name='IntersectGeoLayerID',
-                                                          command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_IntersectGeoLayerID, False, False):
-
-            message = "IntersectGeoLayerID parameter has no value."
-            recommendation = "Specify the IntersectGeoLayerID parameter to indicate the clipping GeoLayer."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that opt parameter OutputFormat is either `SingleSingle`, `SingleMultiple`, `MulipleSingle` or None.
         # noinspection PyPep8Naming
@@ -196,7 +197,7 @@ class IntersectGeoLayer(AbstractCommand):
             message = "OutputFormat parameter value ({}) is not recognized.".format(pv_OutputFormat)
             recommendation = "Specify one of the acceptable values ({}) for the OutputFormat parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -211,25 +212,24 @@ class IntersectGeoLayer(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_intersect_geolayer(self, input_geolayer_id: str, intersect_geolayer_id: str,
-                                    output_geolayer_id: str) -> bool:
+    def check_runtime_data(self, input_geolayer_id: str, intersect_geolayer_id: str, output_geolayer_id: str) -> bool:
         """
         Checks the following:
         * the ID of the input GeoLayer is an existing GeoLayer ID
@@ -475,9 +475,27 @@ class IntersectGeoLayer(AbstractCommand):
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID", default_value="{}_intersectedBy_{}".format(
             pv_GeoLayerID, pv_IntersectGeoLayerID))
         # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name", default_value=pv_OutputGeoLayerID)
+        # noinspection PyPep8Naming
+        pv_Description = \
+            self.get_parameter_value("Description",
+                                     default_value=self.parameter_input_metadata['Description.Value.Default'])
+        # noinspection PyPep8Naming
         pv_IncludeIntersectAttributes = self.get_parameter_value("IncludeIntersectAttributes", default_value="*")
         # noinspection PyPep8Naming
         pv_ExcludeIntersectAttributes = self.get_parameter_value("ExcludeIntersectAttributes", default_value="''")
+
+        # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
+        pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+        # noinspection PyPep8Naming
+        pv_IntersectGeoLayerID = self.command_processor.expand_parameter_value(pv_IntersectGeoLayerID, self)
+        # noinspection PyPep8Naming
+        pv_OutputGeoLayerID = self.command_processor.expand_parameter_value(pv_OutputGeoLayerID, self)
+        # noinspection PyPep8Naming
+        pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
+        # noinspection PyPep8Naming
+        pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
 
         # Set the method used for the command. The IntersectGeoLayer methodology can be completed in many different
         # ways. Currently there are two designs:
@@ -497,11 +515,9 @@ class IntersectGeoLayer(AbstractCommand):
         attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeIntersectAttributes)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_intersect_geolayer(pv_GeoLayerID, pv_IntersectGeoLayerID, pv_OutputGeoLayerID):
-
+        if self.check_runtime_data(pv_GeoLayerID, pv_IntersectGeoLayerID, pv_OutputGeoLayerID):
             # noinspection PyBroadException
             try:
-
                 # Get the Input GeoLayer and the Intersect GeoLayer.
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
                 intersect_geolayer = self.command_processor.get_geolayer(pv_IntersectGeoLayerID)
@@ -514,8 +530,9 @@ class IntersectGeoLayer(AbstractCommand):
                 # intersected GeoLayer.
                 intersect_geolayer_copy.remove_attributes(attrs_to_include, attrs_to_exclude)
 
-                # If the input GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
-                if input_geolayer.source_path is None or input_geolayer.source_path.upper() in ["", "MEMORY"]:
+                if input_geolayer.input_path_full is None or input_geolayer.input_path_full.upper() in\
+                        ["", GeoLayer.SOURCE_MEMORY]:
+                    # If the input GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
 
                     # Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
@@ -526,9 +543,10 @@ class IntersectGeoLayer(AbstractCommand):
                     input_geolayer = input_geolayer.write_to_disk(geolayer_disk_abs_path)
                     self.command_processor.add_geolayer(input_geolayer)
 
-                # If the intersect GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
-                if intersect_geolayer_copy.source_path is None or intersect_geolayer_copy.source_path.upper() in \
-                        ["", "MEMORY"]:
+                if intersect_geolayer_copy.input_path_full is None or\
+                    intersect_geolayer_copy.input_path_full.upper() in \
+                        ["", GeoLayer.SOURCE_MEMORY]:
+                    # If the intersect GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
                     #  Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
                                                           intersect_geolayer_copy.id)
@@ -538,9 +556,8 @@ class IntersectGeoLayer(AbstractCommand):
                     intersect_geolayer_copy = intersect_geolayer_copy.write_to_disk(geolayer_disk_abs_path)
                     self.command_processor.add_geolayer(intersect_geolayer_copy)
 
-                # If using QGIS version of intersect. Set to TRUE always until later notice.
                 if qgis_method:
-
+                    # If using QGIS version of intersect. Set to TRUE always until later notice.
                     # Perform the QGIS intersection function. Refer to the reference below for parameter descriptions.
                     # REF: https://docs.qgis.org/2.18/en/docs/user_manual/processing_algs/qgis/
                     # vector_overlay_tools.html#intersection
@@ -554,8 +571,11 @@ class IntersectGeoLayer(AbstractCommand):
                     # in QGIS3, intersected_output["OUTPUT"] returns the returns the QGS vector layer object
                     # see ClipGeoLayer.py for information about value in QGIS2 environment
                     new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerID,
-                                                  geolayer_qgs_vector_layer=intersected_output["OUTPUT"],
-                                                  geolayer_source_path="MEMORY")
+                                                  qgs_vector_layer=intersected_output["OUTPUT"],
+                                                  name=pv_Name,
+                                                  description=pv_Description,
+                                                  input_path_full=GeoLayer.SOURCE_MEMORY,
+                                                  input_path=GeoLayer.SOURCE_MEMORY)
                     self.command_processor.add_geolayer(new_geolayer)
 
                 elif owf_method:
@@ -584,8 +604,8 @@ class IntersectGeoLayer(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

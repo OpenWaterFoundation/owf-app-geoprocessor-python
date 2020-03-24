@@ -75,7 +75,7 @@ class UnknownCommand(AbstractCommand):
         # print("In UnknownCommand.run_command")
         pass
 
-    def to_string(self) -> str:
+    def to_string(self, command_parameters: dict = None, format_all: bool = False) -> str:
         """
         Return the original command string.
         """

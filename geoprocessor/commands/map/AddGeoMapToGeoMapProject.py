@@ -1,4 +1,4 @@
-# AddGeoLayerViewGroupToGeoMap - command to add a GeoLayerViewGroup to GeoMap
+# AddGeoMapToGeoMapProject - command to add a GeoMap to GeoMapProject
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -25,7 +25,6 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.GeoLayerViewGroup import GeoLayerViewGroup
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
@@ -33,18 +32,15 @@ import geoprocessor.util.validator_util as validator_util
 import logging
 
 
-class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
+class AddGeoMapToGeoMapProject(AbstractCommand):
     """
-    Add a GeoLayerViewGroup to a GeoMap, which allows layers to be added to the view group.
+    Add a GeoMap to a GeoMapProject, which allows maps to be added for configuration output.
     """
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
+        CommandParameterMetadata("GeoMapProjectID", type("")),
         CommandParameterMetadata("GeoMapID", type("")),
-        CommandParameterMetadata("GeoLayerViewGroupID", type("")),
-        CommandParameterMetadata("Name", type("")),
-        CommandParameterMetadata("Description", type("")),
-        CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("InsertPosition", type("")),
         CommandParameterMetadata("InsertBefore", type("")),
         CommandParameterMetadata("InsertAfter", type(""))]
@@ -52,45 +48,29 @@ class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
     # Command metadata for command editor display
     # - * character takes up about two spaces for indentation
     __command_metadata = dict()
-    __command_metadata['Description'] = "Add a GeoLayerViewGroup to a GeoMap, to group similar layers for display.\n" \
-        "    GeoMapProject\n"\
-        "     GeoMap [ ]\n"\
-        "*      GeoLayerViewGroup [ ]\n"\
+    __command_metadata['Description'] = "Add a GeoMap to a GeoMapProject, to construct an overall visualization.\n"\
+        "*  GeoMapProject\n"\
+        "*    GeoMap [ ]\n"\
+        "       GeoLayerViewGroup [ ]\n"\
         "          GeoLayerView [ ]\n"\
         "            GeoLayer + GeoLayerSymbol\n"\
-        "The first GeoLayerViewGroup in the list is displayed on the top of the map.\n"\
-        "The last GeoLayerViewGroup in the list is displayed on the bottom of the map."
+        "The first GeoMap in the list is displayed on the top of the map.\n"\
+        "The last GeoMap in the list is displayed on the bottom of the map."
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
     __parameter_input_metadata = dict()
+    # GeoMapProjectID
+    __parameter_input_metadata['GeoMapProject.Description'] = "GeoMapProject identifier"
+    __parameter_input_metadata['GeoMapProject.Label'] = "GeoMapProjectID"
+    __parameter_input_metadata['GeoMapProject.Required'] = True
+    __parameter_input_metadata['GeoMapProject.Tooltip'] = "The GeoMapProject identifier, can use ${Property}."
     # GeoMapID
     __parameter_input_metadata['GeoMapID.Description'] = "GeoMap identifier"
     __parameter_input_metadata['GeoMapID.Label'] = "GeoMapID"
     __parameter_input_metadata['GeoMapID.Required'] = True
     __parameter_input_metadata['GeoMapID.Tooltip'] = "The GeoMap identifier, can use ${Property}."
-    # GeoLayerViewGroupID
-    __parameter_input_metadata['GeoLayerViewGroupID.Description'] = "GeoLayerViewGroup identifier"
-    __parameter_input_metadata['GeoLayerViewGroupID.Label'] = "GeoLayerViewGroupID"
-    __parameter_input_metadata['GeoLayerViewGroupID.Required'] = True
-    __parameter_input_metadata['GeoLayerViewGroupID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
-    # Name
-    __parameter_input_metadata['Name.Description'] = "GeoLayerViewGroup name"
-    __parameter_input_metadata['Name.Label'] = "Name"
-    __parameter_input_metadata['Name.Required'] = True
-    __parameter_input_metadata['Name.Tooltip'] = "The GeoLayerViewGroup name, can use ${Property}."
-    # Description
-    __parameter_input_metadata['Description.Description'] = "GeoLayerViewGroup description"
-    __parameter_input_metadata['Description.Label'] = "Description"
-    __parameter_input_metadata['Description.Required'] = False
-    __parameter_input_metadata['Description.Value.Default'] = ''
     __parameter_input_metadata['Description.Tooltip'] = "The GeoLayerViewGroup description, can use ${Property}."
-    # Properties
-    __parameter_input_metadata['Properties.Description'] = "properties for the new GeoLayerViewGroup"
-    __parameter_input_metadata['Properties.Label'] = "Properties"
-    __parameter_input_metadata['Properties.Required'] = False
-    __parameter_input_metadata['Properties.Tooltip'] = \
-        "Properties for the new GeoLayerViewGroup using syntax:  property:value,property:'value'"
     # InsertPosition
     __parameter_input_metadata['InsertPosition.Description'] = "insert position"
     __parameter_input_metadata['InsertPosition.Label'] = "Insert position"
@@ -119,7 +99,7 @@ class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "AddGeoLayerViewGroupToGeoMap"
+        self.command_name = "AddGeoMapToGeoMapProject"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -160,20 +140,6 @@ class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
-        # noinspection PyPep8Naming
-        pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
-        try:
-            command_util.parse_properties_from_parameter_string(pv_Properties)
-        except ValueError as e:
-            # Use the exception
-            message = str(e)
-            recommendation = "Check the properties string format."
-            warning_message += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
         # Only allow one of InsertPosition, InsertBefore, and InsertAfter can be specified
         # noinspection PyPep8Naming
         pv_InsertPosition = self.get_parameter_value(parameter_name='InsertPosition',
@@ -211,13 +177,15 @@ class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_runtime_data(self, geomap_id, insert_before, insert_after) -> bool:
+    def check_runtime_data(self, geomapproject_id: str, geomap_id: str,
+                           insert_before: str, insert_after: str) -> bool:
         """
         Checks whether runtime data are valid.  Checks the following:
         * the ID of the GeoMap is an existing GeoMapID
 
         Args:
-            geomap_id (str): the ID of the GeoMap to be written
+            geomapproject_id (str): the ID of the GeoMapProject
+            geomap_id (str): the ID of the GeoMap
             insert_before (str):  the GeoLayerViewGroupID to insert before
             insert_after (str):  the GeoLayerViewGroupID to insert after
 
@@ -227,6 +195,10 @@ class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
 
         # The Boolean values correspond to the results of the following tests.
         should_run_command = list()
+
+        # If the GeoMapProject ID is not an existing GeoMapProject ID, fail.
+        should_run_command.append(validator_util.run_check(self, "IsGeoMapProjectIdExisting", "GeoMapProjectID",
+                                                           geomapproject_id, "FAIL"))
 
         # If the GeoMap ID is not an existing GeoMap ID, fail.
         should_run_command.append(validator_util.run_check(self, "IsGeoMapIdExisting", "GeoMapID", geomap_id, "FAIL"))
@@ -262,17 +234,9 @@ class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
 
         # Obtain the parameter values
         # noinspection PyPep8Naming
+        pv_GeoMapProjectID = self.get_parameter_value("GeoMapProjectID")
+        # noinspection PyPep8Naming
         pv_GeoMapID = self.get_parameter_value("GeoMapID")
-        # noinspection PyPep8Naming
-        pv_GeoLayerViewGroupID = self.get_parameter_value("GeoLayerViewGroupID")
-        # noinspection PyPep8Naming
-        pv_Name = self.get_parameter_value("Name")  # None is OK
-        # noinspection PyPep8Naming
-        pv_Description =\
-            self.get_parameter_value("Description",
-                                     default_value=self.parameter_input_metadata['Description.Value.Default'])
-        # noinspection PyPep8Naming
-        pv_Properties = self.get_parameter_value("Properties")
         # noinspection PyPep8Naming
         pv_InsertPosition = self.get_parameter_value("InsertPosition")  # None is OK
         # noinspection PyPep8Naming
@@ -282,24 +246,28 @@ class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
+        pv_GeoMapProjectID = self.command_processor.expand_parameter_value(pv_GeoMapProjectID, self)
+        # noinspection PyPep8Naming
         pv_GeoMapID = self.command_processor.expand_parameter_value(pv_GeoMapID, self)
-        # noinspection PyPep8Naming
-        pv_GeoLayerViewGroupID = self.command_processor.expand_parameter_value(pv_GeoLayerViewGroupID, self)
-        # noinspection PyPep8Naming
-        pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
-        # noinspection PyPep8Naming
-        pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
-        # noinspection PyPep8Naming
-        pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
         # noinspection PyPep8Naming
         pv_InsertBefore = self.command_processor.expand_parameter_value(pv_InsertBefore, self)
         # noinspection PyPep8Naming
         pv_InsertAfter = self.command_processor.expand_parameter_value(pv_InsertAfter, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.check_runtime_data(pv_GeoMapID, pv_InsertBefore, pv_InsertAfter):
+        if self.check_runtime_data(pv_GeoMapProjectID, pv_GeoMapID, pv_InsertBefore, pv_InsertAfter):
             # noinspection PyBroadException
             try:
+                # Get the GeoMapProject
+                geomapproject = self.command_processor.get_geomapproject(pv_GeoMapProjectID)
+                if geomapproject is None:
+                    self.warning_count += 1
+                    message = "GeoMapProject for GeoMapProjectID={} was not found.".format(pv_GeoMapProjectID)
+                    recommendation = "Check that the GeoMapProjectID is valid."
+                    self.logger.warning(message, exc_info=True)
+                    self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                   CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
                 # Get the GeoMap
                 geomap = self.command_processor.get_geomap(pv_GeoMapID)
                 if geomap is None:
@@ -310,24 +278,16 @@ class AddGeoLayerViewGroupToGeoMap(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-                # Create the new GeoLayerViewGroup
-                new_geolayerviewgroup = GeoLayerViewGroup(geolayerviewgroup_id=pv_GeoLayerViewGroupID,
-                                                          name=pv_Name, description=pv_Description)
-
-                # Set the properties
-                properties = command_util.parse_properties_from_parameter_string(pv_Properties)
-                # Set the properties as additional properties (don't just reset the properties dictionary)
-                new_geolayerviewgroup.set_properties(properties)
-
-                # Add the group to the GeoMap
-                geomap.add_geolayerviewgroup(new_geolayerviewgroup, insert_position=pv_InsertPosition,
+                # Add the GeoMap to the GeoMapProject
+                if (geomapproject is not None) and (geomap is not None):
+                    geomapproject.add_geomap(geomap, insert_position=pv_InsertPosition,
                                              insert_before=pv_InsertBefore, insert_after=pv_InsertAfter)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
-                message = "Unexpected error adding GeoLayerViewGroup {} to GeoMap {}.".format(pv_GeoLayerViewGroupID,
-                                                                                              pv_GeoMapID)
+                message = "Unexpected error adding GeoMap {} to GeoMapProject {}.".format(pv_GeoMapID,
+                                                                                          pv_GeoMapProjectID)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,

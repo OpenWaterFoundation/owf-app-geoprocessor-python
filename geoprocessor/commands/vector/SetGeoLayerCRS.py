@@ -19,10 +19,13 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -103,46 +106,32 @@ class SetGeoLayerCRS(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-        warning = ""
+        warning_message = ""
 
-        # Check that parameters GeoLayerID and is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_GeoLayerID = self.get_parameter_value(parameter_name='GeoLayerID', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_GeoLayerID, False, False):
-            message = "GeoLayerID parameter has no value."
-            recommendation = "Specify the GeoLayerID parameter to indicate the input GeoLayer."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # Check that parameter CRS is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_CRS = self.get_parameter_value(parameter_name='CRS', command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_CRS, False, False):
-
-            message = "CRS parameter has no value."
-            recommendation = "Specify the CRS parameter to indicate the new coordinate reference system."
-            warning += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
         else:
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_set_crs(self, geolayer_id: str, crs_code: str) -> bool:
+    def check_runtime_data(self, geolayer_id: str, crs_code: str) -> bool:
         """
         Checks the following:
          * The ID of the input GeoLayer is an actual GeoLayer (if not, log an error message & do not continue.)
@@ -187,9 +176,9 @@ class SetGeoLayerCRS(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the input CRS code is that same as the GeoLayer's current CRS, raise a WARNING.
-        if input_geolayer_exists and self.command_processor.get_geolayer(geolayer_id).get_crs():
+        if input_geolayer_exists and self.command_processor.get_geolayer(geolayer_id).get_crs_code():
 
-            if crs_code.upper() == self.command_processor.get_geolayer(geolayer_id).get_crs().upper():
+            if crs_code.upper() == self.command_processor.get_geolayer(geolayer_id).get_crs_code().upper():
 
                 set_crs = False
                 self.warning_count += 1
@@ -228,18 +217,15 @@ class SetGeoLayerCRS(AbstractCommand):
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_set_crs(pv_GeoLayerID, pv_CRS):
-
+        if self.check_runtime_data(pv_GeoLayerID, pv_CRS):
             # Run the process.
             # noinspection PyBroadException
             try:
-
                 # Get the input GeoLayer.
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
                 # Check if the input GeoLayer already has an assigned CRS.
-                if input_geolayer.get_crs():
-
+                if input_geolayer.get_crs_code():
                     # Reproject the GeoLayer.
                     alg_parameters = {"INPUT": input_geolayer.qgs_layer,
                                       "TARGET_CRS": pv_CRS,
@@ -252,12 +238,16 @@ class SetGeoLayerCRS(AbstractCommand):
                     # In QGIS 2 the reprojected["OUTPUT"] returned the full file pathname of the memory output layer
                     # (saved in a QGIS temporary folder)
                     # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(reprojected["OUTPUT"])
-                    # new_geolayer = VectorGeoLayer(input_geolayer.id, qgs_vector_layer, "MEMORY")
+                    # new_geolayer = VectorGeoLayer(input_geolayer.id, qgs_vector_layer, GeoLayer.SOURCE_MEMORY)
 
                     # In QGIS 3 the reprojected["OUTPUT"] returns the QGS vector layer object
+                    # - use the same name and description as the original
                     new_geolayer = VectorGeoLayer(geolayer_id=input_geolayer.id,
-                                                  geolayer_qgs_vector_layer=reprojected["OUTPUT"],
-                                                  geolayer_source_path="MEMORY")
+                                                  qgs_vector_layer=reprojected["OUTPUT"],
+                                                  name=input_geolayer.name,
+                                                  description=input_geolayer.description,
+                                                  input_path_full=GeoLayer.SOURCE_MEMORY,
+                                                  input_path=GeoLayer.SOURCE_MEMORY)
                     self.command_processor.add_geolayer(new_geolayer)
 
                 else:
@@ -277,8 +267,8 @@ class SetGeoLayerCRS(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

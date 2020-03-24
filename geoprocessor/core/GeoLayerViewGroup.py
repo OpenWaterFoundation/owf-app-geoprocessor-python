@@ -27,22 +27,24 @@ class GeoLayerViewGroup(object):
         Create a GeoLayerViewGroup, which contains a list of GeoLayerView.
 
         Args:
-            geolayerview_id (str):  Identifier for the GeoLayerView, used for data manipulation.
-            name (str):  Name of the GeoLayerView used to label the view group.
+            geolayerviewgroup_id (str):  Identifier for the GeoLayerViewGroup, used for data manipulation.
+            name (str):  Name of the GeoLayerViewGroup used to label the view group.
             description (str):  Description, used to describe the view group (default is empty string).
         """
 
-        #
+        # Unique identifier
         self.id = geolayerviewgroup_id
 
+        # Name, used to display layer legend
         self.name = name
 
-        self.description =  description
+        # Description
+        self.description = description
 
         # Additional properties for the layer view
         self.properties = dict()
 
-        # List of GeoLayerView
+        # List of GeoLayerView in the group
         self.geolayerviews = []
 
     def get_geolayerview(self, geolayerview_id: str) -> GeoLayerView or None:
@@ -63,14 +65,37 @@ class GeoLayerViewGroup(object):
         # Did not find the requested identifier so return None
         return None
 
+    def set_properties(self, properties: dict, clear_first: bool = False) -> None:
+        """
+        Set properties.  This does not replace the properties - it resets existing properties or resets
+        existing properties.
+
+        Args:
+            properties (dict): properties to set.
+            clear_first (bool) if True, clear the dictionary first (default is False)
+
+        Returns:
+            None
+        """
+        if clear_first:
+            self.properties.clear()
+
+        for key in properties:
+            self.properties[key] = properties[key]
+
     def to_json(self):
         """
         Return dictionary of class data to support JSON serialization using json package.
         """
-        return {
-            "geoLayerViewGroupId": self.id,
-            "name": self.name,
-            "description": self.description,
-            "properties": self.properties,
-            "geoLayerViews": self.geolayerviews
-        }
+        use_dict = False
+        if use_dict:
+            # Dictionary has too much information but is useful to illustrate what objects need to be handled.
+            return self.__dict__
+        else:
+            return {
+                "geoLayerViewGroupId": self.id,
+                "name": self.name,
+                "description": self.description,
+                "properties": self.properties,
+                "geoLayerViews": self.geolayerviews
+            }

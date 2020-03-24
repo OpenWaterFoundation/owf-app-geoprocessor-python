@@ -62,21 +62,21 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
 
     # UI label objects are to be assigned within the setupUI function
     # These label objects are non-changing and are present in each ReadGeoLayerFromGeoJSON dialog box.
-    #   SpatialDataFile_Label: labels the SpatialDataFile input text field. Note that the SpatialDataFile parameter
+    #   I: labels the InputFile input text field. Note that the InputFile parameter
     #   does not need a description label object because the parameter description is written in the text field as
     #   placeholder text.
     #   GeoLayerID_Label: labels the GeoLayerID inpubst text field
     #   GeoLayerID_Description_Label: describes the GeoLayerID parameter
     #   IfGeoLayerIDExists_Label: labels the IfGeoLayerIDExists input text field
     #   IfGeoLayerIDExists_Description_Label: describes the IfGeoLayerIDExists parameter
-    SpatialDataFile_Label = None
+    InputFile_Label = None
     GeoLayerID_Label = None
     GeoLayerID_Description_Label = None
     IfGeoLayerIDExists_Label = None
     IfGeoLayerIDExists_Description_Label = None
 
-    # Command parameter descriptions for the SpatialDataFile parameter.
-    cp_SpatialDataFile = CommandParameter(name="SpatialDataFile",
+    # Command parameter descriptions for the InputFile parameter.
+    cp_InputFile = CommandParameter(name="InputFile",
                                           description="absolute or relative path to the input GeoJSON file",
                                           optional=False,
                                           tooltip="The GeoJSON file to read (relative or absolute path).\n${Property} "
@@ -89,7 +89,7 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
                                      optional=True,
                                      tooltip="A GeoLayer identifier.\n Formatting characters and ${Property} syntax "
                                              "are recognized.",
-                                     default_value_description="filename of the input Spatial Data File")
+                                     default_value_description="filename of the input input data file")
 
     # Command parameter descriptions for the IfGeoLayerIDExists parameter.
     cp_IfGeoLayerIDExists = CommandParameter(name="IfGeoLayerIDExists",
@@ -106,7 +106,7 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
                                              default_value_description="Replace")
 
     # "ui_commandparameters" is a list of the CommandParameter objects (UI-specific class).
-    ui_commandparameters = [cp_SpatialDataFile, cp_GeoLayerID, cp_IfGeoLayerIDExists]
+    ui_commandparameters = [cp_InputFile, cp_GeoLayerID, cp_IfGeoLayerIDExists]
 
     def __init__(self, command: ReadGeoLayerFromGeoJSON) -> None:
         """
@@ -128,13 +128,13 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
         # UI input field objects are to be assigned within the setupUI function
         # The values of these input field objects are dynamic and unique to the instance. They are, however, all
         # present in each ReadGeoLayerFromGeoJSON dialog box.
-        #   SpatialDataFile_LineEdit: the input field (PyQt5 LineEdit obj) for the SpatialDataFile parameter
-        #   SpatialDataFile_ToolButton: the button (PyQt5 ToolButton obj) to select a file for the SpatialDataFile
+        #   InputFile_LineEdit: the input field (PyQt5 LineEdit obj) for the InputFile parameter
+        #   InputFile_ToolButton: the button (PyQt5 ToolButton obj) to select a file for the InputFile
         #   parameter
         #   GeoLayerID_LineEdit: the input field (PyQt5 LineEdit obj) for the GeoLayerID parameter
         #   IfGeoLayerIDExists_ComboBox: the input field (PyQt5 ComboBox obj) for the IfGeoLayerIDExists parameter
-        self.SpatialDataFile_LineEdit = None
-        self.SpatialDataFile_ToolButton = None
+        self.InputFile_LineEdit = None
+        self.InputFile_ToolButton = None
         self.GeoLayerID_LineEdit = None
         self.IfGeoLayerIDExists_ComboBox = None
 
@@ -152,27 +152,27 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
         # windows.
         self.setupUi_Abstract(Dialog)
 
-        # SpatialDataFile ##
-        # Initialize a Qt QLabel object for the SpatialDataFile label.
-        UiDialog.SpatialDataFile_Label = QtWidgets.QLabel(Dialog)
+        # InputFile
+        # Initialize a Qt QLabel object for the InputFile label.
+        UiDialog.InputFile_Label = QtWidgets.QLabel(Dialog)
 
         # Configure the label to display the parameter name and align with the left side of the dialog window.
-        self.configureLabel(UiDialog.SpatialDataFile_Label, UiDialog.cp_SpatialDataFile.name)
+        self.configureLabel(UiDialog.InputFile_Label, UiDialog.cp_InputFile.name)
 
-        # Initialize a Qt QLineEdit object for the SpatialDataFile input field.
-        self.SpatialDataFile_LineEdit = QtWidgets.QLineEdit(Dialog)
+        # Initialize a Qt QLineEdit object for the InputFile input field.
+        self.InputFile_LineEdit = QtWidgets.QLineEdit(Dialog)
 
         # Configure the input field to be extra long, display the placeholder description and include tooltip help.
-        self.configureLineEdit(self.SpatialDataFile_LineEdit, UiDialog.cp_SpatialDataFile.name, long=True,
-                               placeholder_text=UiDialog.cp_SpatialDataFile.description,
-                               tooltip=UiDialog.cp_SpatialDataFile.tooltip)
+        self.configureLineEdit(self.InputFile_LineEdit, UiDialog.cp_InputFile.name, long=True,
+                               placeholder_text=UiDialog.cp_InputFile.description,
+                               tooltip=UiDialog.cp_InputFile.tooltip)
 
-        # Initialize a Qt QToolButton to open a browser to select a file for the SpatialDataFile parameter.
-        self.SpatialDataFile_ToolButton = QtWidgets.QToolButton(Dialog)
+        # Initialize a Qt QToolButton to open a browser to select a file for the InputFile parameter.
+        self.InputFile_ToolButton = QtWidgets.QToolButton(Dialog)
 
-        # Configure the button to link the selection to the SpatialDataFile_LineEdit input field.
-        self.configureToolButton(self.SpatialDataFile_ToolButton, UiDialog.cp_SpatialDataFile.name,
-                                 self.SpatialDataFile_LineEdit)
+        # Configure the button to link the selection to the InputFile_LineEdit input field.
+        self.configureToolButton(self.InputFIle_ToolButton, UiDialog.cp_InputFile.name,
+                                 self.InputFile_LineEdit)
 
         # GeoLayerID ##
         # Initialize a Qt QLabel object for the GeoLayerID label.
@@ -227,14 +227,14 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
         # Get the values of the previously-defined command dialog box. Assign to static variables before updating
         # the command dialog window. As the command dialog window is updated, the command_parameter_values
         # dictionary is altered.
-        spatialdatafile_value = self.command_parameter_values["SpatialDataFile"]
+        inputfile_value = self.command_parameter_values["InputFile"]
         geolayerid_value = self.command_parameter_values["GeoLayerID"]
         ifgeolayeridexists_value = self.command_parameter_values["IfGeoLayerIDExists"]
 
-        # Set the text of the SpatialDataFile input field to the predefined value of the SpatialDataFile parameter.
-        self.SpatialDataFile_LineEdit.setText(spatialdatafile_value)
+        # Set the text of the InputFile input field to the predefined value of the InputFile parameter.
+        self.InputFile_LineEdit.setText(inputfile_value)
 
-        # Set the text of the SpatialDataFile input field to the predefined value of the SpatialDataFile parameter.
+        # Set the text of the InputFile input field to the predefined value of the InputFile parameter.
         self.GeoLayerID_LineEdit.setText(geolayerid_value)
 
         # If the predefined IfGeoLayerIDExists parameter value is within one of the available options, the index of

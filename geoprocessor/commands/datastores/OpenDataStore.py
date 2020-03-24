@@ -19,7 +19,9 @@
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
+from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
+from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -83,8 +85,8 @@ class OpenDataStore(AbstractCommand):
         "Identifier to assign to the DataStore. This allows the DataStore to be used with other commands.\n" \
         "Can be specified using ${Property}."
     # IfDataStoreIDExists
-    __parameter_input_metadata['IfDataStoreIDExists.Description'] = "the action that occurs if the DataStoreID" \
-                                                                       " already exists"
+    __parameter_input_metadata['IfDataStoreIDExists.Description'] =\
+        "the action that occurs if the DataStoreID already exists"
     __parameter_input_metadata['IfDataStoreIDExists.Label'] = "If DataStoreID Exists"
     __parameter_input_metadata['IfDataStoreIDExists.Tooltip'] = \
         "The action that occurs if the DataStoreID already exists within the GeoProcessor.\n" \
@@ -182,18 +184,18 @@ class OpenDataStore(AbstractCommand):
             The command status messages for initialization are populated with validation messages.
         """
 
-        warning = ""
+        warning_message = ""
 
-        # Check that the DataStoreID is a non-empty, non-None string.
-        # noinspection PyPep8Naming
-        pv_DataStoreID = self.get_parameter_value(parameter_name="DataStoreID", command_parameters=command_parameters)
-
-        if not validator_util.validate_string(pv_DataStoreID, False, False):
-            message = "DataStoreID parameter has no value."
-            recommendation = "Specify a valid DataStore ID."
-            warning += "\n" + message
-            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
-                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        # Check that required parameters are non-empty, non-None strings.
+        required_parameters = command_util.get_required_parameter_names(self)
+        for parameter in required_parameters:
+            parameter_value = self.get_parameter_value(parameter_name=parameter, command_parameters=command_parameters)
+            if not validator_util.validate_string(parameter_value, False, False):
+                message = "Required {} parameter has no value.".format(parameter)
+                recommendation = "Specify the {} parameter.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional IfDataStoreIDExists param is `Replace`, `Open`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
         # noinspection PyPep8Naming
@@ -205,27 +207,22 @@ class OpenDataStore(AbstractCommand):
             message = "IfDataStoreIDExists parameter value ({}) is not recognized.".format(pv_IfDataStoreIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfDataStoreIDExists parameter.". \
                 format(self.__choices_IfDataStoreIDExists)
-            warning += "\n" + message
+            warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check if the ConfigFile parameter is a non-empty, non-None string.
         # noinspection PyPep8Naming
         pv_ConfigFile = self.get_parameter_value(parameter_name="ConfigFile", command_parameters=command_parameters)
 
-        # If there is a value for ConfigFile, assume "Configuration file configures datastore" method.
         if validator_util.validate_string(pv_ConfigFile, False, False):
-
+            # If there is a value for ConfigFile, assume "Configuration file configures datastore" method.
             pass
-
-        # If the IfDataStoreIDExists parameter is set to "Open", ignore all checks.
         elif validator_util.validate_string_in_list(pv_IfDataStoreIDExists, ["OPEN"], False, False, True):
-
+            # If the IfDataStoreIDExists parameter is set to "Open", ignore all checks.
             pass
-
-        # If there is no value for ConfigFile, assume "Parameters configure datastore" method.
         else:
+            # If there is no value for ConfigFile, assume "Parameters configure datastore" method.
 
             # Check that the required parameters are non-empty, non-None string.
             required_parameters = ["DatabaseServer", "DatabaseName", "DatabaseUser", "DatabasePassword"]
@@ -237,7 +234,7 @@ class OpenDataStore(AbstractCommand):
                 if not validator_util.validate_string(parameter_value, False, False):
                     message = "{} parameter has no value.".format(parameter)
                     recommendation = "Specify a valid {} parameter.".format(parameter)
-                    warning += "\n" + message
+                    warning_message += "\n" + message
                     self.command_status.add_to_log(
                         CommandPhaseType.INITIALIZATION,
                         CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -252,23 +249,23 @@ class OpenDataStore(AbstractCommand):
                 message = "DatabaseDialect parameter value ({}) is not recognized.".format(pv_DatabaseDialect)
                 recommendation = "Specify one of the acceptable values ({}) for the DatabaseDialect parameter.".format(
                     self.__choices_DatabaseDialect)
-                warning += "\n" + message
+                warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
-        warning = command_util.validate_command_parameter_names(self, warning)
+        warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
-        if len(warning) > 0:
-            self.logger.warning(warning)
-            raise ValueError(warning)
+        if len(warning_message) > 0:
+            self.logger.warning(warning_message)
+            raise CommandParameterError(warning_message)
 
         # Refresh the phase severity
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def __should_open_datastore(self, datastore_id: str, file_path_abs: str, if_datastore_id_exists: str) -> bool:
+    def check_runtime_data(self, datastore_id: str, file_path_abs: str, if_datastore_id_exists: str) -> bool:
         """
             Checks the following:
                 * the DataStore ID is unique
@@ -374,25 +371,21 @@ class OpenDataStore(AbstractCommand):
                     pv_ConfigFile, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.__should_open_datastore(pv_DataStoreID, pv_ConfigFile, pv_IfDataStoreIDExists):
-
+        if self.check_runtime_data(pv_DataStoreID, pv_ConfigFile, pv_IfDataStoreIDExists):
             # noinspection PyBroadException
             try:
-
-                # If the DataStoreID already exists and the IfDataStoreIDExists parameter is set to "Open", continue.
                 if self.command_processor.get_datastore(pv_DataStoreID) and pv_IfDataStoreIDExists.upper() == "OPEN":
-
                     # Get the DataStore obj from the ID and open the connection.
                     datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
                     datastore_obj.open_db_connection()
 
-                # If the "Configuration file configures datastore" method is used.
                 elif pv_ConfigFile is not None:
+                    # If the "Configuration file configures datastore" method is used.
 
                     print("WARNING: The 'Configuration file configures datastore' method is not currently enabled.")
 
-                # If the "Parameters configure datastore" method is used.
                 else:
+                    # If the "Parameters configure datastore" method is used.
 
                     # Create a new DataStore object and assign the DataStore ID.
                     new_datastore = DataStore(pv_DataStoreID)
@@ -419,8 +412,8 @@ class OpenDataStore(AbstractCommand):
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
-            raise RuntimeError(message)
+            raise CommandError(message)
 
-        # Set command status type as SUCCESS if there are no errors.
         else:
+            # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

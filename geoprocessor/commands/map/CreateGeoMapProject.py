@@ -25,8 +25,9 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-
 from geoprocessor.core.GeoMapProject import GeoMapProject
+from geoprocessor.core.GeoMapProjectType import GeoMapProjectType
+from geoprocessor.core.IfExistsActionType import IfExistsActionType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
@@ -37,19 +38,11 @@ import logging
 class CreateGeoMapProject(AbstractCommand):
     """
     Creates a new GeoMapProject, which is used to serialize a map product.
-
-    Command Parameters
-    * NewGeoMapProjectID (str, required): The identifier for the new GeoMapProject.
-    * Name (str, required): The name of the new GeoMapProject, used for displays.
-    * Description (str, optional): The description of the new GeoMapProject, used for displays.
-    * IfGeoMapProjectIDExists (str, optional): This parameter determines the action that occurs if the GeoMapProjectID
-        already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
-        (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
-
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("NewGeoMapProjectID", type("")),
+        CommandParameterMetadata("ProjectType", type("")),
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("Properties", type("")),
@@ -69,10 +62,18 @@ class CreateGeoMapProject(AbstractCommand):
     # Command Parameter Metadata
     __parameter_input_metadata = dict()
     # NewGeoMapID
-    __parameter_input_metadata['NewGeoMapProjctID.Description'] = "identifier for the new GeoMapProject"
-    __parameter_input_metadata['NewGeoMapProjctID.Label'] = "New GeoMapProjectID"
-    __parameter_input_metadata['NewGeoMapProjctID.Required'] = True
-    __parameter_input_metadata['NewGeoMapProjctID.Tooltip'] = "The identifier for the new GeoMapProject."
+    __parameter_input_metadata['NewGeoMapProjectID.Description'] = "identifier for the new GeoMapProject"
+    __parameter_input_metadata['NewGeoMapProjectID.Label'] = "New GeoMapProjectID"
+    __parameter_input_metadata['NewGeoMapProjectID.Required'] = True
+    __parameter_input_metadata['NewGeoMapProjectID.Tooltip'] = "The identifier for the new GeoMapProject."
+    # ProjectType
+    __parameter_input_metadata['ProjectType.Description'] = "project type"
+    __parameter_input_metadata['ProjectType.Label'] = "Project type"
+    __parameter_input_metadata['ProjectType.Tooltip'] = (
+        "GeoMapProject type, used by applications that display maps.")
+    __parameter_input_metadata['ProjectType.Values'] =\
+        GeoMapProjectType.get_geomapproject_types_as_str(include_blank=True)
+    __parameter_input_metadata['ProjectType.Value.Default'] = str(GeoMapProjectType.SingleMap)
     # GeoMapName
     __parameter_input_metadata['Name.Description'] = "name for the new GeoMapProject"
     __parameter_input_metadata['Name.Label'] = "Name"
@@ -99,16 +100,16 @@ class CreateGeoMapProject(AbstractCommand):
         "No warning is logged.\n"
         "ReplaceAndWarn: The existing GeoMap within the GeoProcessor is replaced with the new GeoMapProject. "
         "A warning is logged.\n"
-        "Warn: The new GeoMapProject is not created. A warning is logged.\n"
+        "Warn: The new GeoMapProject is not created. A warning message is logged.\n"
         "Fail: The new GeoMapProject is not created. A fail message is logged.")
-    __parameter_input_metadata['IfGeoMapProjectIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
-    __parameter_input_metadata['IfGeoMapProjectIDExists.Value.Default'] = "Replace"
+    __parameter_input_metadata['IfGeoMapProjectIDExists.Values'] =\
+        IfExistsActionType.get_ifexistsaction_types_as_str(include_blank=True)
+    __parameter_input_metadata['IfGeoMapProjectIDExists.Value.Default'] = str(IfExistsActionType.ReplaceAndWarn)
 
     def __init__(self) -> None:
         """
         Initialize the command.
         """
-
         # AbstractCommand data
         super().__init__()
         self.command_name = "CreateGeoMapProject"
@@ -138,7 +139,6 @@ class CreateGeoMapProject(AbstractCommand):
             ValueError if any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
-
         warning_message = ""
 
         # Check that required parameters are non-empty, non-None strings.
@@ -157,7 +157,7 @@ class CreateGeoMapProject(AbstractCommand):
         # noinspection PyPep8Naming
         pv_IfGeoMapIDExists = self.get_parameter_value(parameter_name="IfGeoMapProjectIDExists",
                                                        command_parameters=command_parameters)
-        acceptable_values = ["Replace", "Warn", "Fail", "ReplaceAndWarn"]
+        acceptable_values = IfExistsActionType.get_ifexistsaction_types_as_str(include_blank=True)
         if not validator_util.validate_string_in_list(pv_IfGeoMapIDExists, acceptable_values, none_allowed=True,
                                                       empty_string_allowed=True, ignore_case=True):
             message = "IfGeoMapProjectIDExists parameter value ({}) is not recognized.".format(pv_IfGeoMapIDExists)
@@ -195,26 +195,59 @@ class CreateGeoMapProject(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_runtime_data(self, geomapproject_id: str):
+    # noinspection PyPep8Naming
+    def check_runtime_data(self, geomapproject_id: str, project_type_str: str,
+                           ifgeomapprojectidexists: IfExistsActionType):
         """
         Checks the following:
         * the identifier of the new GeoMapProject is unique (not an existing GeoMapProjectID)
+        * the project type is a valid type
 
         Args:
             geomapproject_id (str): the id of the GeoMapProject to be created
+            project_type_str (str): the project type as a string
+            ifgeomapprojectidexists (str): action to take if a GeoMapProjectID exists in the processor
 
         Returns:
-             True if the GeoMap should be created or False if at least one check failed.
+             True if the GeoMapProject should be created or False if at least one check failed.
         """
-
         # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
         # test confirms that the command should be run.
         should_run_command = list()
 
-        # If the GeoMapID is the same as an already-existing GeoMapID, raise a WARNING or FAILURE
+        # If the ProjectType is in the list of recognized values
         # (depends on the value of the IfGeoMapIDExists parameter.)
-        should_run_command.append(validator_util.run_check(self, "IsGeoMapProjectIDUnique",
-                                                           "NewGeoMapProjectID", geomapproject_id, None))
+        should_run_command.append(validator_util.validate_string_in_list(
+            project_type_str, GeoMapProjectType.get_geomapproject_types_as_str(), False, False, True))
+
+        # If the GeoMapProjectID is the same as an already-existing GeoMapProjectID, take action
+        if self.command_processor.get_geomapproject(geomapproject_id) is not None:
+            # Warnings/recommendations if the GeolayerID is the same as a registered GeoLayerID.
+            message = 'The GeoMapProjectID ({}) is already in use.'.format(geomapproject_id)
+            recommendation = 'Specify a new unique GeoMapProjectID.'
+
+            if ifgeomapprojectidexists is IfExistsActionType.ReplaceAndWarn:
+                # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
+                self.logger.warning(message)
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
+            elif ifgeomapprojectidexists is IfExistsActionType.Warn:
+                # The registered GeoLayer should not be replaced. A warning should be logged.
+                self.warning_count += 1
+                self.logger.warning(message)
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
+                should_run_command.append(False)
+            elif ifgeomapprojectidexists is IfExistsActionType.Fail:
+                # The matching IDs should cause a failure.
+                self.warning_count += 1
+                self.logger.warning(message)
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                should_run_command.append(False)
+            else:
+                # "Replace" requires no logging.
+                pass
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -231,12 +264,15 @@ class CreateGeoMapProject(AbstractCommand):
         Raises:
             RuntimeError if any warnings occurred during run_command method.
         """
-
         self.warning_count = 0
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_NewGeoMapProjectID = self.get_parameter_value("NewGeoMapProjectID")
+        # noinspection PyPep8Naming
+        pv_ProjectType = \
+            self.get_parameter_value("ProjectType",
+                                     default_value=self.parameter_input_metadata['ProjectType.Value.Default'])
         # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value("Name")
         # noinspection PyPep8Naming
@@ -245,10 +281,18 @@ class CreateGeoMapProject(AbstractCommand):
                                      default_value=self.parameter_input_metadata['Description.Value.Default'])
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value("Properties")
+        # noinspection PyPep8Naming
+        pv_IfGeoMapProjectIDExists =\
+            self.get_parameter_value("IfGeoMapProjectIDExists",
+                                     default_value=self.parameter_input_metadata[
+                                         'IfGeoMapProjectIDExists.Value.Default'])
+        ifgeomapprojectidexists = IfExistsActionType.value_of_ignore_case(pv_IfGeoMapProjectIDExists)
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
         pv_NewGeoMapProjectID = self.command_processor.expand_parameter_value(pv_NewGeoMapProjectID, self)
+        # noinspection PyPep8Naming
+        pv_ProjectType = self.command_processor.expand_parameter_value(pv_ProjectType, self)
         # noinspection PyPep8Naming
         pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
         # noinspection PyPep8Naming
@@ -256,21 +300,23 @@ class CreateGeoMapProject(AbstractCommand):
         # noinspection PyPep8Naming
         pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
-        if self.check_runtime_data(pv_NewGeoMapProjectID):
+        if self.check_runtime_data(pv_NewGeoMapProjectID, pv_ProjectType, ifgeomapprojectidexists):
             # noinspection PyBroadException
             try:
-                # TODO smalers 2020-03-09 need to decide if manage a list of QGIS maps or just GeoProcessor form
-                # Create a new GeoMapProject and add it to the GeoProcesor's geomapprojects list if the
-                # ID does not exist.
+                # Create a new GeoMapProject and add it to the GeoProcesor's geomapprojects list.
                 self.logger.debug("Creating map project with ID: '" + str(pv_NewGeoMapProjectID) + "'")
-                new_geomaproject = GeoMapProject(geomapproject_id=pv_NewGeoMapProjectID, name=pv_Name,
-                                                 description=pv_Description)
-                self.command_processor.add_geomapproject(new_geomaproject)
 
-                # Set the properties
+                project_type = GeoMapProjectType.value_of_ignore_case(pv_ProjectType)
                 properties = command_util.parse_properties_from_parameter_string(pv_Properties)
-                # Set the properties as additional properties (don't just reset the properties dictionary)
-                new_geomaproject.set_properties(properties)
+
+                new_geomaproject = GeoMapProject(geomapproject_id=pv_NewGeoMapProjectID,
+                                                 project_type=project_type,
+                                                 name=pv_Name,
+                                                 description=pv_Description,
+                                                 properties=properties)
+
+                # This will replace the existing if a matching identifier
+                self.command_processor.add_geomapproject(new_geomaproject)
 
             except Exception as e:
                 # Raise an exception if an unexpected error occurs during the process.

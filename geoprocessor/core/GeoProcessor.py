@@ -919,7 +919,7 @@ class GeoProcessor(object):
     def notify_command_processor_listeners_of_command_exception(self, icommand: int, ncommand: int,
                                                                 command: AbstractCommand) -> None:
         """
-        Notify registed command processor listeners about a command exception.
+        Notify registered command processor listeners about a command exception.
 
         Args:
             icommand (int): The index (0+) of the command that is starting.
@@ -937,7 +937,7 @@ class GeoProcessor(object):
     def notify_command_processor_listeners_of_command_started(self, icommand: int, ncommand: int,
                                                               command: AbstractCommand) -> None:
         """
-        Notify registed command processor listeners about a command starting.
+        Notify registered command processor listeners about a command starting.
 
         Args:
             icommand (int): The index (0+) of the command that is starting.
@@ -1089,10 +1089,12 @@ class GeoProcessor(object):
 
         # Remove all items within the geoprocessor from the previous run.
         self.commands = []
-        self.properties = {}
         self.geolayers = []
-        self.tables = []
+        self.geomaps = []
+        self.geomapprojects = []
         self.output_files = []
+        self.properties = {}
+        self.tables = []
 
         # Set the working directory to that indicated by the properties
 
@@ -1192,6 +1194,9 @@ class GeoProcessor(object):
             # ...but currently a dictionary...
             self.geolayers.clear()
             self.geomaps.clear()
+            self.geomapprojects.clear()
+            self.output_files.clear()
+            self.tables.clear()
 
     def __reset_workflow_properties(self) -> None:
         """
@@ -1294,8 +1299,11 @@ class GeoProcessor(object):
         # - TODO smalers 2020-03-16 evaluate how this relates to __reset_data_for_run_start
         self.geolayers = []
         self.geomaps = []
-        self.tables = []
+        self.geomapprojects = []
         self.output_files = []
+        # Properties?
+        # self.properties = {}
+        self.tables = []
 
         # Reset the global workflow properties if requested, used when RunCommands command calls recursively...
         # - This code is a port of Java TSCommandProcessor.runCommands().

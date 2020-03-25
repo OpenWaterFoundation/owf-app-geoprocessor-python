@@ -252,17 +252,15 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 self.warning_count += 1
                 self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
-                                               CommandLogRecord(CommandStatusType.WARNING,
-                                                                message, recommendation))
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
-            if pv_IfGeoLayerIDExists.upper() == "WARN":
+            elif pv_IfGeoLayerIDExists.upper() == "WARN":
                 # The registered GeoLayer should not be replaced. A warning should be logged.
                 run_read = False
                 self.warning_count += 1
                 self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
-                                               CommandLogRecord(CommandStatusType.WARNING,
-                                                                message, recommendation))
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
             elif pv_IfGeoLayerIDExists.upper() == "FAIL":
                 # The matching IDs should cause a FAILURE.
@@ -270,8 +268,10 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 self.warning_count += 1
                 self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
-                                               CommandLogRecord(CommandStatusType.FAILURE,
-                                                                message, recommendation))
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+            else:
+                # Default is "REPLACE"
+                pass
 
         # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.

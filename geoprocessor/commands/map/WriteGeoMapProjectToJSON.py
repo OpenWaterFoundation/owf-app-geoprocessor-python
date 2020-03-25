@@ -26,6 +26,7 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoMapCustomJsonEncoder import GeoMapCustomJsonEncoder
+from geoprocessor.core.GeoMapProjectType import GeoMapProjectType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -171,6 +172,20 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
         # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
                                                            output_file_abs, "FAIL"))
+
+        geomapproject = self.command_processor.get_geomapproject(geomapproject_id)
+        if geomapproject is not None:
+            # Check if the project type is SingleMap and more than one map is included.
+            if geomapproject.project_type is GeoMapProjectType.SingleMap:
+                num_geomaps = len(self.command_processor.geomaps)
+                if num_geomaps != 1:
+                    message = "The GeoMapProject has {} GeoMap for {} project type - 1 is required.".format(
+                        num_geomaps, GeoMapProjectType.SingleMap)
+                    recommendation = "Specify only 1 GeoMap for the project."
+                    self.command_status.add_to_log(
+                        CommandPhaseType.RUN,
+                        CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                should_run_command.append(False)
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:

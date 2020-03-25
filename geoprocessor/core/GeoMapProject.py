@@ -18,6 +18,7 @@
 # ________________________________________________________________NoticeEnd___
 
 from geoprocessor.core.GeoMap import GeoMap
+from geoprocessor.core.GeoMapProjectType import GeoMapProjectType
 
 
 class GeoMapProject(object):
@@ -37,7 +38,9 @@ class GeoMapProject(object):
 
     def __init__(self,
                  geomapproject_id: str,
+                 project_type: GeoMapProjectType = GeoMapProjectType.SingleMap,
                  name: str = "",
+                 properties: dict = None,
                  description: str = "") -> None:
         """
         Create a new GeoMapProject.
@@ -58,13 +61,15 @@ class GeoMapProject(object):
         self.description = description
 
         # Project type (dashboard, grid, story, single map, etc.)
-        # - TODO smalers 2020-03-23 need to define as enumeration
-        self.project_type = ""
+        self.project_type = project_type
 
         # Dictionary of general map properties
         # - name
         # - description
-        self.properties = dict()
+        if properties is None:
+            self.properties = dict()
+        else:
+            self.properties = properties
 
         # Array of GeoMap objects
         self.geomaps = []
@@ -204,7 +209,7 @@ class GeoMapProject(object):
                 "geoMapProjectId": self.id,
                 "name": self.name,
                 "description": self.description,
+                "projectType": str(self.project_type),
                 "properties": self.properties,
-                "projectType": "",
                 "geoMaps": self.geomaps,
             }

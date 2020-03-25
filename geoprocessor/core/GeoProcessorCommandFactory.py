@@ -24,9 +24,9 @@ import geoprocessor.util.command_util as command_util
 # Cannot import AbstractCommand for type hint because it results in a circular dependency
 # from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 
-from geoprocessor.commands.datastores.CloseDataStore import CloseDataStore
-from geoprocessor.commands.datastores.OpenDataStore import OpenDataStore
-from geoprocessor.commands.datastores.RunSql import RunSql
+from geoprocessor.commands.datastore.CloseDataStore import CloseDataStore
+from geoprocessor.commands.datastore.OpenDataStore import OpenDataStore
+from geoprocessor.commands.datastore.RunSql import RunSql
 
 from geoprocessor.commands.logging.Message import Message
 from geoprocessor.commands.logging.StartLog import StartLog
@@ -58,12 +58,12 @@ from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
 
-from geoprocessor.commands.tables.ReadTableFromDataStore import ReadTableFromDataStore
-from geoprocessor.commands.tables.ReadTableFromDelimitedFile import ReadTableFromDelimitedFile
-from geoprocessor.commands.tables.ReadTableFromExcel import ReadTableFromExcel
-from geoprocessor.commands.tables.WriteTableToDelimitedFile import WriteTableToDelimitedFile
-from geoprocessor.commands.tables.WriteTableToDataStore import WriteTableToDataStore
-from geoprocessor.commands.tables.WriteTableToExcel import WriteTableToExcel
+from geoprocessor.commands.table.ReadTableFromDataStore import ReadTableFromDataStore
+from geoprocessor.commands.table.ReadTableFromDelimitedFile import ReadTableFromDelimitedFile
+from geoprocessor.commands.table.ReadTableFromExcel import ReadTableFromExcel
+from geoprocessor.commands.table.WriteTableToDelimitedFile import WriteTableToDelimitedFile
+from geoprocessor.commands.table.WriteTableToDataStore import WriteTableToDataStore
+from geoprocessor.commands.table.WriteTableToExcel import WriteTableToExcel
 
 from geoprocessor.commands.testing.CompareFiles import CompareFiles
 from geoprocessor.commands.testing.CreateRegressionTestCommandFile import CreateRegressionTestCommandFile

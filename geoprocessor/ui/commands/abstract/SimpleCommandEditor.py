@@ -279,7 +279,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
         self.parameter_QGridLayout.setObjectName("Command_Parameters_Layout")
 
         # Add input components for each parameter
-        # - add in the order of the command_parameter_metdata
+        # - add in the order of the command_parameter_metadata
         # - details of the UI are determined from parameter_input_metadata
         self.y_parameter = -1
         for command_parameter_metadata in self.command.command_parameter_metadata:
@@ -297,8 +297,7 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     # It is likely tha the command class has not been updated to the latest design
                     # that uses parameter_input_metadata so create an empty dictionary.
                     # - all values will be defaulted below, possibly resulting in GenericCommandEditor being used
-                    logger.info(parameter_name +
-                                " does not have parameter_input_metadata defined.  Command '" +
+                    logger.info(parameter_name + " does not have parameter_input_metadata defined.  Command '" +
                                 self.command.command_name + " code needs to be updated.")
                     self.command.parameter_input_metadata = dict()
 

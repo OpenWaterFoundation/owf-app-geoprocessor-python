@@ -323,13 +323,16 @@ def run_check(command, condition: str, parameter_name: str, parameter_value: str
             recommendation = 'Specify a new {}.'.format(parameter_name)
             is_valid = False
             # noinspection PyPep8Naming
-            pv_IfGeoLayerIDExists = command.get_parameter_value("IfGeoMapProjectIDExists", default_value="Replace")
+            pv_IfGeoMapProjectIDExists =\
+                command.get_parameter_value("IfGeoMapProjectIDExists",
+                                            default_value=command.parameter_input_metadata[
+                                                'IfGeoMapProjectIDExists.Value.Default'])
 
-            if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+            if pv_IfGeoMapProjectIDExists.upper() == "REPLACEANDWARN":
                 fail_response = "WARN"
-            elif pv_IfGeoLayerIDExists.upper() == "WARN":
+            elif pv_IfGeoMapProjectIDExists.upper() == "WARN":
                 fail_response = "WARNBUTDONOTRUN"
-            elif pv_IfGeoLayerIDExists.upper() == "FAIL":
+            elif pv_IfGeoMapProjectIDExists.upper() == "FAIL":
                 fail_response = "FAIL"
             else:
                 is_valid = True
@@ -477,17 +480,15 @@ def run_check(command, condition: str, parameter_name: str, parameter_value: str
         elif fail_response_upper == "WARN":
             # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to True.
             command.logger.warning(message)
-            command.command_status.add_to_log(CommandPhaseType.RUN,
-                                              CommandLogRecord(CommandStatusType.WARNING,
-                                                               message, recommendation))
+            command.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.WARNING,
+                                                                                     message, recommendation))
             run_the_command = True
 
         elif fail_response_upper == "WARNBUTDONOTRUN":
             # If configured, log a WARNING message about the failed check. Set the run_the_command boolean to False.
             command.logger.warning(message)
-            command.command_status.add_to_log(CommandPhaseType.RUN,
-                                              CommandLogRecord(CommandStatusType.WARNING,
-                                                               message, recommendation))
+            command.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.WARNING,
+                                                                                     message, recommendation))
             run_the_command = False
 
     else:

@@ -2880,7 +2880,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             "GeoMapProjectID - uniquely identifies the GeoMapProject")
         self.results_GeoMapProjects_Table.horizontalHeaderItem(1).setText("Name")
         self.results_GeoMapProjects_Table.horizontalHeaderItem(1).setToolTip("GeoMapProject Name")
-        self.results_GeoMapProjects_Table.horizontalHeaderItem(2).setText("GeoMapProjects")
+        self.results_GeoMapProjects_Table.horizontalHeaderItem(2).setText("GeoMaps")
         self.results_GeoMapProjects_Table.horizontalHeaderItem(2).setToolTip("How many GeoMaps in the GeoMapProject")
         self.results_GeoMapProjects_Table.horizontalHeaderItem(3).setText("Description")
         self.results_GeoMapProjects_Table.horizontalHeaderItem(3).setToolTip("GeoMapProject Description")
@@ -3145,9 +3145,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-
-        # Get the command that was selected
-
         # Create command status dialog box
         self.command_status_dialog = QtWidgets.QDialog()
         self.command_status_dialog.resize(600, 290)
@@ -3171,6 +3168,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         html_string = ""
 
+        # Set colors for different status levels
+        color_warning = 'yellow'
+        color_failure = '#ffa8a8'  # Red (dull so does not overwhelm text)
+        color_success = '#7dba71'  # Green (dull so does not overwhelm text)
+        color_unknown = 'white'
+
         logger = logging.getLogger(__name__)
         gp = self.gp
         if len(gp.commands) == 0:
@@ -3193,15 +3196,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             html_string = 'No command found to show status.'
         else:
             # Format the information similar to TSTool status
-            # - TSTool uses an HTML-formatted status, but for now show as simple text
             # - HTML formatting or other free-form format is preferred because content will fill table cells
+            show_all_log_messages = True   # False only shows warning and failure messages
             # noinspection PyBroadException
             try:
                 command_status = selected_command.command_status
 
                 html_string = (
                     "<style> td.failure{background-color:red} </style>" +
-                    "<p><b>Command:<br>" + selected_command.command_string + "</b></p>"
+                    "<p><b>Command {}:<br>{}</b></p>".format(row_index + 1, selected_command.command_string) +
                                                                              
                     "<p><b>Command Status Summary</b> (see below for details if problems exist):</p>" +
                     "<table border='1'>" +
@@ -3211,17 +3214,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     "</tr>"
                 )
 
-                style = ""
-
                 if command_status.initialization_status is CommandStatusType.WARNING:
-                    style = "style='background-color:yellow'"  # Yellow
+                    style = "style='background-color:{}'".format(color_warning)
                 elif command_status.initialization_status is CommandStatusType.FAILURE:
-                    style = "style='background-color:#ffa8a8'"  # Red
+                    style = "style='background-color:{}'".format(color_failure)
                 elif command_status.initialization_status is CommandStatusType.SUCCESS:
-                    style = "style='background-color:#7dba71'"  # Green
+                    style = "style='background-color:{}'".format(color_success)
                 else:
                     # Typically UNKNOWN
-                    style = "style='background-color:white'"  # White
+                    style = "style='background-color:{}'".format(color_unknown)
 
                 html_string += (
                     "<tr>" +
@@ -3230,17 +3231,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     "</tr>"
                 )
 
-                style = ""
-
                 if command_status.discovery_status is CommandStatusType.WARNING:
-                    style = "style='background-color:yellow'"
+                    style = "style='background-color:{}'".format(color_warning)
                 elif command_status.discovery_status is CommandStatusType.FAILURE:
-                    style = "style='background-color:#ffa8a8'"
+                    style = "style='background-color:{}'".format(color_failure)
                 elif command_status.discovery_status is CommandStatusType.SUCCESS:
-                    style = "style='background-color:#7dba71'"  # Green
+                    style = "style='background-color:{}'".format(color_success)
                 else:
                     # Typically UNKNOWN
-                    style = "style='background-color:white'"  # White
+                    style = "style='background-color:{}'".format(color_unknown)
 
                 html_string += (
                     "<tr>" +
@@ -3249,17 +3248,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     "</tr>"
                 )
 
-                style = ""
-
                 if command_status.run_status is CommandStatusType.WARNING:
-                    style = "style='background-color:yellow'"
+                    style = "style='background-color:{}'".format(color_warning)
                 elif command_status.run_status is CommandStatusType.FAILURE:
-                    style = "style='background-color:#ffa8a8'"
+                    style = "style='background-color:{}'".format(color_failure)
                 elif command_status.run_status is CommandStatusType.SUCCESS:
-                    style = "style='background-color:#ffa8a8'"
+                    style = "style='background-color:{}'".format(color_success)
                 else:
                     # Typically UNKNOWN
-                    style = "style='background-color:white'"
+                    style = "style='background-color:{}'".format(color_unknown)
 
                 html_string += (
                     "<tr>" +
@@ -3269,8 +3266,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     "</table>" +
 
                     "<p><b>Command Status Details (" +
-                    str(command_status.get_log_count(phase=None, severity=CommandStatusType.WARNING)) +
-                    " warnings, " +
+                    str(command_status.get_log_count(phase=None, severity=CommandStatusType.WARNING)) + " warnings, " +
                     str(command_status.get_log_count(phase=None, severity=CommandStatusType.FAILURE)) +
                     " failures):</p>" +
                     "<table border='1'>" +
@@ -3286,14 +3282,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 log_count = 0
                 for log_record in command_status.initialization_log_list:
                     if log_record.severity is CommandStatusType.WARNING or \
-                            log_record.severity is CommandStatusType.FAILURE:
+                            log_record.severity is CommandStatusType.FAILURE or show_all_log_messages:
                         
-                        style = ""
-
                         if log_record.severity is CommandStatusType.WARNING:
-                            style = "style='background-color:yellow'"
+                            style = "style='background-color:{}'".format(color_warning)
                         elif log_record.severity is CommandStatusType.FAILURE:
-                            style = "style='background-color:#ffa8a8'"
+                            style = "style='background-color:{}'".format(color_failure)
+                        elif log_record.severity is CommandStatusType.SUCCESS:
+                            style = "style='background-color:{}'".format(color_success)
+                        else:
+                            style = "style='background-color:{}'".format(color_unknown)
 
                         log_count = log_count + 1
                         html_string += (
@@ -3307,14 +3305,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                         )
                 for log_record in command_status.discovery_log_list:
                     if log_record.severity is CommandStatusType.WARNING or \
-                            log_record.severity is CommandStatusType.FAILURE:
-
-                        style = ""
+                            log_record.severity is CommandStatusType.FAILURE or show_all_log_messages:
 
                         if log_record.severity is CommandStatusType.WARNING:
-                            style = "style='background-color:yellow'"
+                            style = "style='background-color:{}'".format(color_warning)
                         elif log_record.severity is CommandStatusType.FAILURE:
-                            style = "style='background-color:#ffa8a8'"
+                            style = "style='background-color:{}'".format(color_failure)
+                        elif log_record.severity is CommandStatusType.SUCCESS:
+                            style = "style='background-color:{}'".format(color_success)
+                        else:
+                            style = "style='background-color:{}'".format(color_unknown)
 
                         log_count = log_count + 1
                         html_string += (
@@ -3326,17 +3326,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                             "<td>" + log_record.recommendation + "</td>" +
                             "</tr>"
                         )
-                print("Have " + str(len(command_status.run_log_list)) + " log records")
+                # print("Have " + str(len(command_status.run_log_list)) + " log records")
                 for log_record in command_status.run_log_list:
                     if log_record.severity is CommandStatusType.WARNING or \
-                            log_record.severity is CommandStatusType.FAILURE:
-
-                        style = ""
+                            log_record.severity is CommandStatusType.FAILURE or show_all_log_messages:
 
                         if log_record.severity is CommandStatusType.WARNING:
-                            style = "style='background-color:yellow'"
+                            style = "style='background-color:{}'".format(color_warning)
                         elif log_record.severity is CommandStatusType.FAILURE:
-                            style = "style='background-color:#ffa8a8'"
+                            style = "style='background-color:{}'".format(color_failure)
+                        elif log_record.severity is CommandStatusType.SUCCESS:
+                            style = "style='background-color:{}'".format(color_success)
+                        else:
+                            style = "style='background-color:{}'".format(color_unknown)
 
                         log_count = log_count + 1
                         html_string += (
@@ -3357,7 +3359,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         command_status_text_browser.setHtml(qt_util.translate("Dialog", html_string, None))
 
-        # Make non-modeal so the status window can be viewed at the same time as the main application.
+        # Make non-modal so the status window can be viewed at the same time as the main application.
         # - this allows errors to be fixed
         self.command_status_dialog.setModal(False)
         self.command_status_dialog.show()

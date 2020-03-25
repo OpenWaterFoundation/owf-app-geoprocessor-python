@@ -217,7 +217,7 @@ def translate(context: str, text: str, disambig: Optional[str]) -> str:
 
     Args:
         context (str):  ? - need to figure out
-        text (str):  test to translate
+        text (str):  text to translate
         disambig (str): ? - need to figure out
 
     Returns:

@@ -1189,7 +1189,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        debug = True
+        debug = False
         if debug:
             logger = logging.getLogger(__name__)
         # Commands area list

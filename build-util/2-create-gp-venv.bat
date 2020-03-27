@@ -26,13 +26,29 @@ rem - see useful commands:  https://www.dostips.com/DtTipsStringManipulation.php
 echo.
 echo Determining GeoProcessor version from version.py file
 set gpTempFile=%TMP%\2-create-gp-venv.bat.tmp
+
+rem TODO smalers 2020-03-25 Hard code the version for now because the following nees more work
+echo Hard-coding version...
+echo.
+set gpVersion=1.3.0.dev
+
+rem Must query the parts of the version because the full version is created from parts at runtime.
 rem The following will result in quoted version such as: "1.2.0dev"
-findstr app_version %scriptFolder%..\geoprocessor\app\version.py | findstr /v _date > %gpTempFile%
-set /p versionFullLine=<%gpTempFile%
-echo versionFullLine=%versionFullLine%
-rem Remove the leading app_version
-set versionQuoted=%versionFullLine:app_version =%
-set gpVersion=%versionQuoted:~3,-1%
+rem findstr /b app_version_major %scriptFolder%..\geoprocessor\app\version.py > %gpTempFile%
+rem set /p versionMajor=<%gpTempFile%
+rem findstr /b app_version_minor %scriptFolder%..\geoprocessor\app\version.py > %gpTempFile%
+rem set /p versionMinor=<%gpTempFile%
+rem findstr /b app_version_micro %scriptFolder%..\geoprocessor\app\version.py > %gpTempFile%
+rem set /p versionMicro=<%gpTempFile%
+rem findstr /b app_version_mod %scriptFolder%..\geoprocessor\app\version.py > %gpTempFile%
+rem set /p versionMod=<%gpTempFile%
+rem set versionFullLine=%versionMajor%.%versionMinor%.%versionMicro%.%versionMod%
+rem if "%versionMod%"=="" set versionFullLine=%versionMajor%.%versionMinor%.%versionMicro%
+
+rem echo versionFullLine=%versionFullLine%
+rem rem Remove the leading app_version
+rem set versionQuoted=%versionFullLine:app_version =%
+rem set gpVersion=%versionQuoted:~3,-1%
 echo.
 echo GeoProcessor version determined to be:  %gpVersion%
 

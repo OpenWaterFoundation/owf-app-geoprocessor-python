@@ -562,7 +562,11 @@ if __name__ == '__main__':
     # Print the version using (will store True in the 'version' variable)
     # --version
     parser.add_argument("--version", help="Print program version.", action="store_true")
-    args = parser.parse_args()
+    # The following will result in exit if unknown argument
+    # args = parser.parse_args()
+    # TODO smalers 2020-03-27 Need to print out unknown arguments, but for move on.
+    # - this handles /o, etc. that are used with calling bat file so program can continue and not exit.
+    args, unknown_args = parser.parse_known_args()
 
     # # If handling QGIS environment here, rather than in GeoProcessor
     # # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once

@@ -185,7 +185,7 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
                     self.command_status.add_to_log(
                         CommandPhaseType.RUN,
                         CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-                should_run_command.append(False)
+                    should_run_command.append(False)
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:

@@ -4118,7 +4118,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             # The QGIS environment variables are set by configuration scripts prior to running Python GeoProcessor
             # - output in case they are useful for troubleshooting
-            # - use str() to sensure that None values won't cause problems
+            # - use str() to ensure that None values won't cause problems
             if qgis_install_type == "Unknown":
                 # QGIS does not appear to be used at runtime so provide minimal information
                 properties += (
@@ -4130,7 +4130,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             else:
                 qgis_root = ""
                 properties += (
-                               "QGIS Properties:\n" +
+                               "QGIS Information:\n" +
                                tab + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
                                tab + "QGIS Installation Folder: " + str(qgis_install_folder) + "\n" +
                                tab + "QGIS Version: " + str(qgis_version) + "\n" +
@@ -4158,7 +4158,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Add information for Qt
 
             properties += (
-                 "Qt Information (used for graphics):\n" +
+                 "Qt Information (used for user interface):\n" +
                  tab + "Qt Version: " + QtCore.QT_VERSION_STR + "\n" +
                  tab + "SIP Version: " + SIP_VERSION_STR + "\n" +
                  tab + "PyQt Version: " + Qt.PYQT_VERSION_STR + "\n" +

@@ -299,7 +299,7 @@ rem This code is similar to the initial check at the top of the batch file.
 for %%D in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
   echo Checking for existence of %%D:\Program Files\QGIS %targetQgisVersion%
   if exist "%%D:\Program Files\QGIS !targetQgisVersion!" (
-    SET QGIS_SA_INSTALL_HOME=%%D\Program Files\QGIS !targetQgisVersion!
+    SET QGIS_SA_INSTALL_HOME=%%D:\Program Files\QGIS !targetQgisVersion!
     echo Standard QGIS exists in:  !QGIS_SA_INSTALL_HOME!
     goto setupStandalone1b
   ) 

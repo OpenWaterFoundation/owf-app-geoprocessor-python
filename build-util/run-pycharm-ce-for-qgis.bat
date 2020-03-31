@@ -317,7 +317,6 @@ for %%Q in (qgis-ltr qgis qgis-dev) do (
   if exist %QGIS_SA_ROOT%\apps\%%Q\python (
     set PATH=%PATH%;%QGIS_SA_ROOT%\apps\%%Q\bin
     set QGIS_PREFIX_PATH=%QGIS_SA_ROOT%\apps\%%Q
-
     set QT_PLUGIN_PATH=%QGIS_SA_ROOT%\apps\%%Q\qtplugins;%QGIS_SA_ROOT%\apps\qt5\plugins
 
     set PYTHONPATH_QGIS_PYTHON=%QGIS_SA_ROOT%\apps\%%Q\python

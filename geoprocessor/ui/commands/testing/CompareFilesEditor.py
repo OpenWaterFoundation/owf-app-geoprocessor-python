@@ -145,18 +145,10 @@ class CompareFilesEditor(SimpleCommandEditor):
             # TODO smalers 2018-12-16 handle standard input and output
             env_dict = {}
             use_command_shell = False
-            p = subprocess.Popen(command_line, shell=use_command_shell, env=env_dict)
-            # Wait for the process to terminate since need it to be done before other commands do their work
-            # with the command output.
-            p.wait()
-            return_status = p.poll()
-            if return_status != 0:
-                # TODO smalers 2020-03-30 KDiff3 seems to exist with 1 when it should be 0
-                # - therefore, don't include this check for now
-                # message = 'Error running program (exit code {}):  {}'.format(return_status, command_line)
-                # logger.warning(message, exc_info=True)
-                # qt_util.warning_message_box(message)
-                pass
+            # Use parameters for no-wait process
+            p = subprocess.Popen(command_line, shell=use_command_shell, env=env_dict, stdin=None, stdout=None,
+                                 close_fds=True, creationflags=subprocess.DETACHED_PROCESS)
+            # Don't wait for exit status since an independent process
 
         except Exception:
             message = 'Error running program:  {}'.format(command_line)

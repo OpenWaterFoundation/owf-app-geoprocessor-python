@@ -152,9 +152,8 @@ class SetGeoLayerCRS(AbstractCommand):
         # Boolean to determine if the input GeoLayer id is a valid GeoLayer ID. Set to TRUE until proved False.
         input_geolayer_exists = True
 
-        # If the input GeoLayer does not exist, raise a FAILURE.
-        if not self.command_processor.get_geolayer(geolayer_id):
-
+        if self.command_processor.get_geolayer(geolayer_id) is None:
+            # If the input GeoLayer does not exist, FAILURE.
             set_crs = False
             input_geolayer_exists = False
             self.warning_count += 1
@@ -164,12 +163,11 @@ class SetGeoLayerCRS(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # If the input CRS code is not a valid code, raise a FAILURE.
         if qgis_util.get_qgscoordinatereferencesystem_obj(crs_code) is None:
-
+            # If the input CRS code is not a valid code, FAILURE.
             set_crs = False
             self.warning_count += 1
-            message = 'The input CRS ({}) is not a valid CRS code.'.format(geolayer_id)
+            message = 'The input CRS ({}) is not a valid CRS code.'.format(crs_code)
             recommendation = 'Specify a valid CRS code (EPSG codes are an approved format).'
             self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
@@ -177,9 +175,7 @@ class SetGeoLayerCRS(AbstractCommand):
 
         # If the input CRS code is that same as the GeoLayer's current CRS, raise a WARNING.
         if input_geolayer_exists and self.command_processor.get_geolayer(geolayer_id).get_crs_code():
-
             if crs_code.upper() == self.command_processor.get_geolayer(geolayer_id).get_crs_code().upper():
-
                 set_crs = False
                 self.warning_count += 1
                 message = 'The input GeoLayer ({}) already is projected to the input' \

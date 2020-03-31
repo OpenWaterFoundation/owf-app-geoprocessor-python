@@ -324,6 +324,20 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     # noinspection PyPep8Naming
                     parameter_Description = parameter_name
 
+                # Enabled (boolean)
+                request_key = parameter_name + "." + "Enabled"
+                # noinspection PyPep8Naming
+                parameter_Enabled = True
+                try:
+                    # noinspection PyPep8Naming
+                    parameter_Enabled = input_metadata[request_key]
+                except KeyError:
+                    # Default to a simple statement with parameter name.
+                    logger.warning(parameter_name + " does not have parameter_input_metadata value " + request_key +
+                                   ".  Defaulting to True.")
+                    # noinspection PyPep8Naming
+                    parameter_Enabled = True
+
                 # FileSelector.Type
                 # - new is FileSelector.Type
                 # - old is FileSelectorType
@@ -507,7 +521,8 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 # LineEdit (text field)
                 # - default if properties don't indicate any other component
                 # --------------------
-                self.setup_ui_parameter_text_field(parameter_name, parameter_Tooltip)
+                self.setup_ui_parameter_text_field(parameter_name, parameter_Tooltip,
+                                                   parameter_Enabled = parameter_Enabled)
 
             # ---------------
             # Next from the left is the parameter description components

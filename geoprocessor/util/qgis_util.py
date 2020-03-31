@@ -149,29 +149,43 @@ def create_qgsgeometry(geometry_format: str, geometry_input_as_string: str) -> Q
         geometry_format (str): the type of geometry that the data is in. Can be either of the following:
             WKT: well-known text
             WKB: well-known binary
-        geometry_input_as_string (str): the geometry data to convert to QGSGeometry object. Data must match the
-            correct syntax for the geometry format value.
+        geometry_input_as_string (str): the geometry data to convert to QGSGeometry object.
+            Data must match the correct syntax for the geometry format value.
 
     Returns:
         - QgsGeometry object if geometry_format is valid,
         - None if the geometry is invalid.
     """
-
-    # If the geometry format is well-known text, return the corresponding QgsGeometry object.
+    debug = False
+    if debug:
+        logger = logging.getLogger(__name__)
     if geometry_format.upper() == "WKT":
-        return QgsGeometry.fromWkt(geometry_input_as_string)
+        # Well-known text
+        if debug:
+            logger.debug("Creating geometry from WKT:  {}".format(geometry_input_as_string))
+        geometry = QgsGeometry.fromWkt(geometry_input_as_string)
+        return geometry
 
-    # If the geometry format is well-known binary, continue.
     elif geometry_format.upper() == "WKB":
+        # Well-known binary
 
         # Convert the WKB string into a a binary input. Return the corresponding QgsGeometry object.
-        # This feature is only available for Python 3 upgrade. See reference below:
+        # This feature is only available for Python 3. See reference below:
         # https://stackoverflow.com/questions/5901706/the-bytes-type-in-python-2-7-and-pep-358
+        if debug:
+            logger.debug("Creating geometry from WKB:  {}".format(geometry_input_as_string))
         wkb = bytes.fromhex(geometry_input_as_string)
-        return QgsGeometry().fromWkb(wkb)
+        if debug:
+            if wkb is None:
+                logger.debug("WKB bytes is None.")
+        geometry = QgsGeometry().fromWkb(wkb)
+        if debug:
+            if geometry is None:
+                logger.debug("Geometry from WKB is None.")
+        return geometry
 
-    # If the geometry format is unknown, return None.
     else:
+        # Unknown geometry format, return None.
         return None
 
 
@@ -1165,6 +1179,7 @@ def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer: QgsVectorLayer,
                                                           'SEPARATOR={}'.format(separator)])
 
 
+# TODO smalers 2020-03-30 need to enable more properties without breaking default options for testing
 def write_qgsvectorlayer_to_geojson(qgsvectorlayer: QgsVectorLayer,
                                     output_file_full: str,
                                     crs_code: str,
@@ -1180,6 +1195,8 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer: QgsVectorLayer,
         4. destination coordinate reference system
         5. driver name for the output file
         6. optional layerOptions (specific to driver name) : for GeoJSON, coordinate precision is defined
+        See:  https://gdal.org/drivers/vector/geojson.html
+        Use minimal defaults suitable for automated testing.
 
     Args:
         qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object
@@ -1195,12 +1212,16 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer: QgsVectorLayer,
     # Write the QgsVectorLayer object to a spatial data file in GeoJSON format.
     # Note to developers:
     #   IGNORE `Unexpected Argument` error for layerOptions. This value is appropriate and functions properly.
-    QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
-                                            output_file_full,
-                                            "utf-8",
-                                            QgsCoordinateReferenceSystem(crs_code),
-                                            "GeoJSON",
-                                            layerOptions=['COORDINATE_PRECISION={}'.format(precision), 'WRITE_NAME=NO'])
+    layer_options = ['COORDINATE_PRECISION={}'.format(precision),
+                     'RFC7946=YES',
+                     'WRITE_NAME=NO']
+    # 'WRITE_BBOX=YES',
+    QgsVectorFileWriter.writeAsVectorFormat(layer=qgsvectorlayer,
+                                            fileName=output_file_full,
+                                            fileEncoding="utf-8",
+                                            destCRS=QgsCoordinateReferenceSystem(crs_code),
+                                            driverName="GeoJSON",
+                                            layerOptions=layer_options)
 
 
 def write_qgsvectorlayer_to_kml(qgsvectorlayer: QgsVectorLayer,

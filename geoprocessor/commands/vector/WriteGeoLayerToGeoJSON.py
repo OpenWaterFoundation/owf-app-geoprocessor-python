@@ -36,24 +36,12 @@ import logging
 
 class WriteGeoLayerToGeoJSON(AbstractCommand):
     """
-    Writes a GeoLayer to a spatial data file in GeoJSON format.
+    This command writes a vector GeoLayer to a GeoJSON spatial data file.
+    The GeoJSON file can then be viewed within a GIS, moved within folders on the local computer, published, etc.
 
-    This command writes a GeoLayer registered within the geoprocessor to a GeoJSON spatial data file. The GeoJSON
-    spatial data file can then be viewed within a GIS, moved within folders on the local computer, packaged for
-    delivery, etc.
-
-    Registered GeoLayers are stored as GeoLayer objects within the geoprocessor's GeoLayers list. Each GeoLayer has one
-    feature type (point, line, polygon, etc.) and other data (an identifier, a coordinate reference system, etc). This
-    function only writes one single GeoLayer to a single spatial data file in GeoJSON format.
-
-    Command Parameters
-    * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in GeoJSON format.
-    * OutputFile (str, required): the relative pathname of the output spatial data file.
-    * OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
-        projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
-    * OutputPrecision (int, 0-15, optional): the precision (number of integers behind the GeoJSON geometry's decimal
-        point) of the output spatial data file in GeoJSON format. Must be at or between 0 and 15. By default, the
-        precision parameter is set to 5.
+    Each GeoLayer object within the geoprocessor's GeoLayers list has one feature type (point, line, polygon, etc.)
+    and other data (an identifier, a coordinate reference system, etc). This
+    function only writes as single GeoLayer to a single GeoJSON file.
     """
 
     # Define the command parameters.
@@ -65,7 +53,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Write a GeoLayer to a file in GeoJSON format."
+    __command_metadata['Description'] = "Write a GeoLayer to a file in GeoJSON format, using RFC-7946 standard."
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
@@ -87,14 +75,12 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
     __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
         ["GeoJSON file (*.geojson *.json)", "All files (*.*)"]
     # OutputCRS
-    __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of output "
+    __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of output (always WGS84)"
     __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
     __parameter_input_metadata['OutputCRS.Tooltip'] = (
-        "The coordinate reference system of the output GeoJSON.\nEPSG or ESRI code format required "
-        "(e.g. EPSG:4326, EPSG:26913, ESRI:102003).\n"
-        "If the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected "
-        "to the new CRS.")
-    __parameter_input_metadata['OutputCRS.Value.Default.Description'] = "the GeoLayer's CRS"
+        "The coordinate reference system of the output GeoJSON, always EPSG:4326 (WGS84)." )
+    __parameter_input_metadata['OutputCRS.Value.Default'] = "EPSG:4326" # WGS84
+    __parameter_input_metadata['OutputCRS.Enabled'] = False  # Because default value is always used
     # OutputPrecision
     __parameter_input_metadata['OutputPrecision.Description'] = "number of decimal points in output"
     __parameter_input_metadata['OutputPrecision.Label'] = "Output precision"
@@ -105,7 +91,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         "the features.\n"
         "For example, a higher OutputPrecision value increases the output GeoJSON file size and "
         "increases the geometry's precision.")
-    __parameter_input_metadata['OutputPrecision.Value.Default'] = "5"
+    __parameter_input_metadata['OutputPrecision.Value.Default'] = "5"  # must be between 0 and 15
 
     def __init__(self) -> None:
         """
@@ -134,10 +120,11 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         Args:
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
-        Returns: None.
+        Returns:
+            None.
 
         Raises:
-            ValueError if any parameters are invalid or do not have a valid value.
+            ValueError:  If any parameters are invalid or do not have a valid value.
             The command status messages for initialization are populated with validation messages.
         """
 
@@ -248,10 +235,17 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
                 # Get the current coordinate reference system (in EPSG code) of the current GeoLayer
                 geolayer_crs_code = geolayer.get_crs_code()
 
-                # Obtain the parameter value of the OutputCRS
-                # - if not found, use the CRS from the layer
+                # OutputCRS is always EPSG:4326 (WGS84)
                 # noinspection PyPep8Naming
-                pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs_code)
+                pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value='EPSG:4326')
+                if pv_OutputCRS != "EPSG:4326":
+                    self.warning_count += 1
+                    message = "OutputCRS must be EPSG:4326 (resetting automatically)"
+                    recommendation = "Change the OutputCRS to ESPG:4326 (using text editor)."
+                    self.logger.warning(message, exc_info=True)
+                    self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                   CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                    pv_OutputCRS = "EPSG:4326"
 
                 # Write the GeoLayer to a spatial data file in GeoJSON format
                 qgis_util.write_qgsvectorlayer_to_geojson(geolayer.qgs_layer,

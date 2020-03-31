@@ -290,8 +290,8 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Create the GeoLayer with the input geometries. Add GeoLayer to the GeoProcessor's geolayers
-         list.
+        Run the command. Create the GeoLayer with the input geometries.
+        Add GeoLayer to the GeoProcessor's geolayers list.
 
         Returns:
             None.
@@ -341,7 +341,6 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
             qgs_geometry = None
             # noinspection PyBroadException
             try:
-
                 # If the geometry format is bounding box, continue.
                 if pv_GeometryFormat == "BOUNDINGBOX":
                     # Convert the geometry input from a string to a list of strings.
@@ -363,9 +362,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
                     # Create the QgsGeometry object for the bounding box geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKT", wkt_conversion)
 
-                # If the geometry format is Well-Known Text, continue.
                 elif pv_GeometryFormat == "WKT":
-
                     # Get the equivalent QGS geometry type to the input WKT geometry.
                     # Ex: MultiLineString is converted to LineString.
                     qgsvectorlayer_geom_type = qgis_util.get_geometrytype_qgis_from_wkt(pv_GeometryData)
@@ -376,9 +373,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
                     # Create the QgsGeometry object for the Well-Known Text geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKT", pv_GeometryData)
 
-                # If the geometry format is Well-Known Binary, continue.
                 elif pv_GeometryFormat == "WKB":
-
                     # Create the QgsGeometry object for the Well-Known Binary geometry.
                     qgs_geometry = qgis_util.create_qgsgeometry("WKB", pv_GeometryData)
 

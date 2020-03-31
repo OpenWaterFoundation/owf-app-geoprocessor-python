@@ -576,7 +576,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
                                     parameter_ValueDefaultForDisplay: str,
                                     parameter_Tooltip: str,
                                     parameter_Values: str,
-                                    parameter_ValuesEditable: bool) -> None:
+                                    parameter_ValuesEditable: bool,
+                                    parameter_Enabled: bool = True) -> None:
         """
         Add combobox UI components for a command parameter:
 
@@ -590,6 +591,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             parameter _Tooltip (str):  Tooltip text.
             parameter_Values (str):  List of values for list, comma-delimited
             parameter_ValuesEditable (bool):  Whether the list of values is editable in the text field.
+            parameter_Enabled (bool):  Whether the parameter is enabled.
 
         Returns:
             None
@@ -611,6 +613,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         parameter_QComboBox = QtWidgets.QComboBox(self.parameter_QFrame)
         parameter_QComboBox.setObjectName(qt_util.from_utf8("Drop_Down_Menu"))
         parameter_QComboBox.setEditable(True)
+        # Set other properties
+        if not parameter_Enabled:
+            parameter_QComboBox.setEnabled(False)
         # Handle blank value at start of the list
         # - a blank item is not automatically added but will be added if Value.DefaultForDisplay is ""
         # - the Values list can also have a blank at the start
@@ -864,7 +869,10 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.parameter_QGridLayout.setColumnStretch(0, 0)
 
     # noinspection PyPep8Naming
-    def setup_ui_parameter_text_field(self, parameter_name: str, parameter_Tooltip: str) -> None:
+    def setup_ui_parameter_text_field(self,
+                                      parameter_name: str,
+                                      parameter_Tooltip: str,
+                                      parameter_Enabled: bool = True) -> None:
         """
         Add text field (Qt LineEdit) UI components for a command parameter:
 
@@ -874,6 +882,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         Args:
             parameter_name (str):  Parameter name.
             parameter_Tooltip (str):  Tooltip text.
+            parameter_Enabled (bool):  Indicates whether the field is enabled.
 
         Returns:
             None
@@ -889,6 +898,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         self.parameter_QGridLayout.setColumnStretch(1, 4)
         if parameter_Tooltip != "":
             parameter_QLineEdit.setToolTip(parameter_Tooltip)
+        # Set other properties
+        if not parameter_Enabled:
+            parameter_QLineEdit.setEnabled(False)
         # Create a listener that reacts if the line edit field has been changed. If so, run the
         # refresh_ui function.
         # If this command is being updated add the command parameters to the text fields

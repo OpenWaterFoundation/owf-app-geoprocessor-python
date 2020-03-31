@@ -259,7 +259,8 @@ class CommandListWidget(object):
         self.command_ListView.clearSelection()
         # Also deselect all in the secondary lists
         self.number_ListWidget.clearSelection()
-        self.gutter_ListWidget.clearSelection()
+        # TODO smalers 2020-03-30 is anything needed?
+        # self.gutter_Frame.clear()
         # Update the UI state
         self.update_ui_status_commands()
 
@@ -274,7 +275,8 @@ class CommandListWidget(object):
         self.command_ListView.selectAll()
         # Also select all in the secondary lists
         self.number_ListWidget.selectAll()
-        self.gutter_ListWidget.selectAll()
+        # TODO smalers 2020-03-30 - is anything needed?
+        #self.gutter_Frame.selectAll()
         # Update the UI state
         self.update_ui_status_commands()
 
@@ -582,7 +584,8 @@ class CommandListWidget(object):
         if event is None:
             pass
 
-        index = self.gutter_ListWidget.currentRow()
+        if self.gutter_is_list:
+            index = self.gutter_ListWidget.currentRow()
         if debug:
             logger.debug("Clicked in gutter in row " + str(index + 1))
         self.number_ListWidget.setCurrentRow(index)
@@ -614,7 +617,8 @@ class CommandListWidget(object):
         index = self.number_ListWidget.currentRow()
         model_index = self.gp_model.createIndex(index, -1)
         self.command_ListView.setCurrentIndex(model_index)
-        self.gutter_ListWidget.setCurrentRow(index)
+        if self.gutter_is_list:
+            self.gutter_ListWidget.setCurrentRow(index)
 
         selected_command = self.gp_model.gp.commands[index]
         command_status = selected_command.command_status

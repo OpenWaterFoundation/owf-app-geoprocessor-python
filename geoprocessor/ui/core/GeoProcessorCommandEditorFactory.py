@@ -26,6 +26,7 @@ from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.ui.commands.abstract.AbstractCommandEditor import AbstractCommandEditor
 from geoprocessor.ui.commands.abstract.SimpleCommandEditor import SimpleCommandEditor
 from geoprocessor.ui.commands.abstract.GenericCommandEditor import GenericCommandEditor
+from geoprocessor.ui.commands.testing.CompareFilesEditor import CompareFilesEditor
 from geoprocessor.ui.commands.util.InsertLineEditor import InsertLineEditor
 from geoprocessor.ui.commands.util.InsertLineRulerEditor import InsertLineRulerEditor
 
@@ -93,7 +94,12 @@ class GeoProcessorCommandEditorFactory(object):
             editor_type = 'Generic'
 
         # Create the appropriate editor type
-        if editor_type == "Generic":
+        if editor_type == "Custom":
+            # TODO smalers 2020-03-30 for now hard-code commands that use custom editors but once
+            # have an example make this generic
+            if command.command_name == "CompareFiles":
+                return CompareFilesEditor(command, app_session)
+        elif editor_type == "Generic":
             # Generic editor is simple parameter: value text fields
             return GenericCommandEditor(command)
         elif editor_type == "InsertLineEditor":

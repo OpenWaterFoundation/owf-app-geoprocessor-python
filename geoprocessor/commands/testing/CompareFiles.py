@@ -55,12 +55,12 @@ class CompareFiles(AbstractCommand):
     ]
 
     # Command metadata for command editor display
+    # - use a custom editor so that button can be added to compare files
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Compare text files to determine differences.\n"
-        "For example, the command can be used to compare current and expected files produced by a program or "
-        "process.")
-    __command_metadata['EditorType'] = "Simple"
+        "For example, the command can be used to compare current and expected files produced by a program or process.")
+    __command_metadata['EditorType'] = "Custom"
 
     # Parameter Metadata
     __parameter_input_metadata = dict()
@@ -521,7 +521,7 @@ class CompareFiles(AbstractCommand):
         if line_diff_count > allowed_diff_count and \
             ((pv_IfDifferent_CommandStatusType == CommandStatusType.WARNING) or
              (pv_IfDifferent_CommandStatusType == CommandStatusType.FAILURE)):
-            message = "{} lines are different, {:.2f}% (compared {} lines{}).".format(line_diff_count,100.0*float(
+            message = "{} lines are different, {:.2f}% (compared {} lines{}).".format(line_diff_count, 100.0*float(
                                                                                           line_diff_count)/float(
                                                                                           line_count_compared),
                                                                                       line_count_compared,

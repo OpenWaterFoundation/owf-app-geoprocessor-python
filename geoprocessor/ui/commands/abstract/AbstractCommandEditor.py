@@ -225,6 +225,46 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Return the value within the input QtGui.Widget object.
         return value
 
+    def get_parameter_value(self, parameter_name: str) -> str or None:
+        """
+        Return the parameter value from the UI.
+        This is a utility method to be used in custom editors, for example CompareFiles 'Visual Diff' button.
+        It is not as robust as the code in the refresh() function.
+
+        Args:
+            parameter_name (str):  The parameter name to return a value for, or None if no value from UI.
+
+        Returns:
+            str:  Parameter value as string, or None if no value set in the UI.
+
+        Raises:
+            RuntimeError: if the UI component type is not handled for the requested parameter name.
+        """
+        logger = logging.getLogger(__name__)
+
+        parameter_value = None
+        # Get the UI input component for the parameter
+        parameter_ui = self.input_ui_components[parameter_name]
+        # Based on the UI component type, retrieve the parameter value
+        # - check the object type with isinstance
+        # - use the class name for logging, should agree with object type
+        ui_type = parameter_ui.__class__.__name__
+        # But try the isinstance
+        if isinstance(parameter_ui, QtWidgets.QLineEdit):
+            parameter_value = parameter_ui.text()
+        elif isinstance(parameter_ui, QtWidgets.QComboBox):
+            # TODO smalers 2019-01-19 does this aways return something?
+            # - in Java combo boxes have text value and list value and
+            parameter_value = parameter_ui.currentText()
+        else:
+            # Should not happen
+            logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
+                           parameter_name + "' - code problem.")
+            raise RuntimeError("Component type is not handled requesting parameter '{}'.").format(parameter_name)
+
+        return parameter_value
+
+
     @staticmethod
     def select_file(qt_widget: QtWidgets.QWidget) -> None:
         """
@@ -435,6 +475,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.cancel_button.clicked.connect(self.ui_action_cancel_clicked)
+
         # Button box is added regardless of how buttons are defined
         buttons_GridLayout.addWidget(self.dialog_ButtonBox, self.grid_layout_row, 6, 1, 2)
 

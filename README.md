@@ -80,11 +80,11 @@ owf-app-geoprocessor-python/       The GeoProcessor code and documentation repos
     util/                          Utility modules.
   LICENSE.md                       GeoProcessor license (GPL v3).
   README.md                        This README file.
-  scripts/                         Scripts for the deployed application.
-  venv/                            Virtual environment used by PyCharm (ignored using .gitignore),
-                                   old general name.
+  scripts/                         Scripts to run GeoProcesssor in the development and tdeployed environments.
+  venv/                            Virtual environments used by PyCharm (ignored using .gitignore).
+    venv-qgis-3.10-python37/       Example virtual environment used for development.
   venv-qgis-python37/              Virtual environment used by PyCharm (ignored using .gitignore),
-                                   new version-specific name to allow environment updates.
+                                   old convention that is being phased out.
   z-local-notes/                   Use for local files that won't be committed to the repository.
 ```
 
@@ -107,7 +107,7 @@ OWF has developed the GeoProcessor on Windows using Cygwin but other development
 as resources allow.
 
 * QGIS (Python 3 version - Python is included with QGIS) - recent version is supported, as resources allow
-* Python 3 (used with MkDocs documentation and testing framework version) - compatible with QGIS Python version
+* Python 3 (used with MkDocs documentation) - compatible with QGIS Python version
 * PyCharm Community Edition - latest version if possible
 * Git client such as Git for Windows - latest version for operating system
 

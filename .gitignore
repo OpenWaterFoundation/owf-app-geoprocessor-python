@@ -1,13 +1,21 @@
 # Ignore files in repository working files
+# See also:
+#   ./venv/.gitignore - working virtual environments for different combinations of QGIS and Python versions
+#   ./build-util/build-tmp/.gitignore - temporary files used in build process for installers
+#   ./build-util/venv-tmp/.gitignore - temporary files used in build process for installers
+#   ./tests/.pytest_cache/.gitignore - ignore dynamic Python cache files
+#   ./z-local-notes/.gitignore - local notes for developers
+
 
 # Ignore user-specific files in PyCharm environment
 # - based on experience, it is easy enough to set up a PyCharm dev environment
 #   so don't hand off any PyCharm files in the repository
 .idea/
-venv/
 __pycache__/
-# The following is a newer convention
+# The following is a newer convention but will be phased out in favor of venv/ folder
 venv-qgis-python37/
+# The following is a temporary folder to hold an archive of an earlier venv - it will be removed
+x-venv/
 
 # Ignore "junk" and other files often used for work
 junk

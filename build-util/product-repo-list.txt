@@ -1,5 +1,7 @@
 # Repositories that comprise the GeoProcessor
 # - assumes that local folder name will match the repository name
+# - the arcpy product is not under active development and may be handled as a separate product
+# owf-app-geoprocessor-arcpy
 owf-app-geoprocessor-python
 owf-app-geoprocessor-python-doc-dev
 owf-app-geoprocessor-python-doc-user

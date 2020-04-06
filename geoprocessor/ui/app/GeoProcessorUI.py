@@ -2,12 +2,12 @@
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
-# 
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -459,10 +459,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
         When exiting out of the main window do checks to see if the command file has been modified.
         If modified warn user and ask if command file should be saved.
-        
+
         Args:
             event: close event
-        
+
         Returns:
             None
         """
@@ -3205,7 +3205,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 html_string = (
                     "<style> td.failure{background-color:red} </style>" +
                     "<p><b>Command {}:<br>{}</b></p>".format(row_index + 1, selected_command.command_string) +
-                                                                             
+
                     "<p><b>Command Status Summary</b> (see below for details if problems exist):</p>" +
                     "<table border='1'>" +
                     "<tr style='background-color:#d0d0ff; font-weight:bold;'>" +
@@ -3283,7 +3283,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 for log_record in command_status.initialization_log_list:
                     if log_record.severity is CommandStatusType.WARNING or \
                             log_record.severity is CommandStatusType.FAILURE or show_all_log_messages:
-                        
+
                         if log_record.severity is CommandStatusType.WARNING:
                             style = "style='background-color:{}'".format(color_warning)
                         elif log_record.severity is CommandStatusType.FAILURE:
@@ -4034,7 +4034,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 os_distro = "unknown"
 
             # Format a string with content for Software/System Information:
-            tab = "     "
+            tab = "    "
             tab2 = tab + tab
             properties = ""
 
@@ -4084,22 +4084,53 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Linux variant
                 # - TODO smalers 2018-12-31 need to standardize
                 properties += (tab + "System Architecture: " + architecture + "\n")
+
+            properties += tab + "\n" + tab + "Environment Variables (os.environ):\n"
+            for env_var in os.environ.keys():
+                properties += "{}{}={}\n".format(tab2, env_var, os.environ[env_var])
+
+            # Add unsorted path, each part on a separate line
+            path = ''
+            for path_item in os.environ['PATH'].split(os.pathsep):
+                path += "{}{}\n".format(tab2, path_item)
+
+            # Add sorted path, each part on a separate line
+            path_sorted = ''
+            for path_item in os.environ['PATH'].split(os.pathsep):
+                path_sorted += "{}{}\n".format(tab2, path_item)
+
+            properties += (
+                tab + "\n" + tab +
+                "PATH Environment Variable, unsorted, indicates order of finding a program:\n" + path +
+                tab + "\n" + tab + "PATH Environment Variable, sorted, useful for troubleshooting:\n" + path_sorted)
+
             properties += "\n"
 
             # Replace newlines in system version
             system_version = sys.version.replace("\r\n", " ").replace("\n", " ")
             system_path = ''
-            for line in sys.path[1:]:
-                system_path += str(line) + '\n' + tab + tab
+            system_path_sorted = ''
+            for path_item in sys.path:
+                system_path += str(path_item) + '\n' + tab2
+            for path_item in sorted(sys.path):
+                system_path_sorted += str(path_item) + '\n' + tab2
 
             # Python properties
+
+            try:
+                python_home = os.environ['PYTHONHOME']
+            except KeyError:
+                python_home = "not set"
 
             properties += ("Python Information:\n" +
                            tab + 'Python Executable (sys.executable): ' + str(sys.executable) + "\n" +
                            tab + 'Python Version (sys.version): ' + system_version + "\n" +
                            tab + 'Python Bit Size: ' + str(8*struct.calcsize("P")) + "\n" +
-                           tab + 'Python Path (sys.path):\n' +
-                           tab + tab + system_path + "\n")
+                           tab + 'PYTHONHOME Environment Variable: ' + python_home + "\n" +
+                           tab + 'Python Path (sys.path), unsorted, which indicates import search order:\n' +
+                           tab2 + system_path + "\n" +
+                           tab + 'Python Path (sys.path), sorted, useful for troubleshooting:\n' +
+                           tab2 + system_path_sorted + "\n")
 
             # Check if QGIS is being used at runtime
             # - may want to provide information about what is installed even if not used at runtime but

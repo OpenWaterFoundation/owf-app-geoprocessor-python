@@ -24,10 +24,13 @@ rem - this way it is not necessary to recreate the virtual environment from scra
 rem Determine the folder that the script was called in
 rem - includes the trailing backslash
 set scriptFolder=%~dp0
+rem Remove trailing \ from scriptFolder
+set scriptFolder=%scriptFolder:~0,-1%
 
 rem Call the create batch file in UI mode.
 rem - use the full path because 'gp' may not be in the PATH
-call "%scriptFolder%\2-create-gp-venv.bat" -u -z
+echo Calling: 2-create-gp-venv.bat -u -z
+call "%scriptFolder%\2-create-gp-venv.bat" -u --nozip
 
 rem Exit with the error level of the gp.bat command
 exit /b %ERRORLEVEL%

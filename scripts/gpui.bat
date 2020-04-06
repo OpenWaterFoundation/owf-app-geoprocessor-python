@@ -23,13 +23,15 @@ rem user interface.
 rem - If it does not work, make sure that gp.bat works.
 
 rem Determine the folder that the script was called in
-rem - includes the trailing backslash
 set scriptFolder=%~dp0
+rem Remove trailing \ from scriptFolder
+set scriptFolder=%scriptFolder:~0,-1%
 
 rem Call the GeoProcessor in UI mode.
 rem - use the full path because 'gp' may not be in the PATH
-rem - this batch file may be called with /s or /u so pass arguments to general batch file
-call "%scriptFolder%\gp" --ui %*
+rem - this batch file may be called with /s or /u so pass arguments to gp.bat
+echo Calling:  gp.bat --ui %*
+call "%scriptFolder%\gp.bat" --ui %*
 
 rem Exit with the error level of the gp.bat command
 exit /b %ERRORLEVEL%

@@ -1,0 +1,71 @@
+#!/bin/sh
+(set -o igncr) 2>/dev/null && set -o igncr; # this comment is required
+# The above line ensures that the script can be run on Cygwin/Linux even with Windows CRNL
+#
+# gp - run the geoprocessor, defaulting to command mode
+#
+#_________________________________________________________________NoticeStart_
+# GeoProcessor
+# Copyright (C) 2017-2020 Open Water Foundation
+# 
+# GeoProcessor is free software:  you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     GeoProcessor is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
+#_________________________________________________________________NoticeEnd___
+
+# gpversion - print out the geoprocessor version from current development or deployed environment
+#
+# - This is useful because bat files are more difficult to deal with.
+# - The version is taken from parts in the geoprocessor/app/version.py file.
+# - ONLY THE VERSION should be printed to stdout, diagnostics and errors should print to stderr
+
+# Supporting functions, alphabetized...
+
+# Echo to stderr, for example so diagnostics are not mixed with actual program output.
+# $1 is the string to be echoed
+echoStderr() {
+    echo "$1" 1>&2
+}
+
+# Print the GeoProcessor version, currently just the numeric part, not the (YYYY-MM-DD) date/time part.
+# The lines being parsed are expected to like:
+#   app_version_major = 1
+#   app_version_minor = 3
+#   app_version_micro = 0
+#   app_version_mod = "dev"
+printGeoProcessorVersion() {
+    major=$(cat ${versionFile} | grep 'app_version_major =' | cut -d = -f 2 | tr -d ' ' | tr -d '"')
+    minor=$(cat ${versionFile} | grep 'app_version_minor =' | cut -d = -f 2 | tr -d ' ' | tr -d '"')
+    micro=$(cat ${versionFile} | grep 'app_version_micro =' | cut -d = -f 2 | tr -d ' ' | tr -d '"')
+    mod=$(cat ${versionFile} | grep 'app_version_mod =' | cut -d = -f 2 | tr -d ' ' | tr -d '"')
+    if [ -n "${mod}" ]; then
+        # Have modifier
+        echo "${major}.${minor}.${micro}.${mod}"
+    else
+        # Don't have modifier
+        echo "${major}.${minor}.${micro}"
+    fi
+}
+
+# Version of this script, helpful for troubleshooting
+version="1.0.0 (2020-04-01)"
+
+# Get the location where this script is located since it may have been run from any folder
+scriptFolder=$(cd $(dirname "$0") && pwd)
+repoFolder=$(dirname ${scriptFolder})
+versionFile="${repoFolder}/geoprocessor/app/version.py"
+echoStderr "Running 'gpversion' to determine GeoProcessor version from version.py..."
+echoStderr "scriptFolder=${scriptFolder}"
+echoStderr "versionFile=${versionFile}"
+
+# Print the GeoProcessor version to standard output
+printGeoProcessorVersion

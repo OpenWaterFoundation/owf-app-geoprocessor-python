@@ -22,9 +22,18 @@ set pycharmBatVersion=1.0.0
 set pycharmBatVersionDate=2020-03-30
 
 rem Get the current folder, used to specify the path to the project
-rem - will have \ at the end
 SET scriptFolder=%~dp0%
-echo Script folder=%scriptFolder%
+rem Remove trailing \ from scriptFolder
+set scriptFolder=%scriptFolder:~0,-1%
+set scriptName=%~nx0
+rem Have to get parent folder using Windows for loop approach
+for %%i in (%scriptFolder%) do set installFolder=%%~dpi
+rem Remove trailing \ from installFolder
+set installFolder=%installFolder:~0,-1%
+
+echo Batch file name is: %scriptName%
+echo %scriptName% is located in folder: %scriptFolder%
+echo GeoProcessor development project is located in folder: %installFolder%
 
 rem Set the absolute path to PyCharm program 
 rem - check the newest first
@@ -95,7 +104,7 @@ goto runStandaloneQgis
 
 :runOsGeoQgis
 echo.
-echo Using OSGeo4W64 version of QGIS...
+echo Using OSGeo4W64 version of QGIS.
 
 rem TODO smalers 2020-03-30 renable if needed but for now the code has not been updated to standalone level
 echo.
@@ -199,7 +208,7 @@ rem - Specify the folder for the project so it does not default to some other pr
 rem   that was opened last
 echo Starting PyCharm using:  start ... /B %PYCHARM% %GP_PROJECT_DIR% %*
 echo Prompt will display and PyCharm may take a few seconds to start.
-SET GP_PROJECT_DIR=%scriptFolder%..
+SET GP_PROJECT_DIR=%insallFolder%
 if exist %GP_PROJECT_DIR% start "PyCharm aware of QGIS" /B %PYCHARM% %GP_PROJECT_DIR% %*
 if not exist %GP_PROJECT_DIR% goto noproject
 goto endofbat
@@ -208,7 +217,7 @@ goto endofbat
 
 rem Run the standalone version of QGIS
 echo.
-echo Using standalone version of QGIS...
+echo Using standalone version of QGIS.
 
 echo Target standalone QGIS version = %targetQgisVersion%
 if "%targetQgisVersion%"=="unknown" (
@@ -263,7 +272,14 @@ rem if exist "C:\Program Files\QGIS 3.4" SET QGIS_SA_INSTALL_HOME=C:\Program Fil
 
 :setupStandalone1b
 
-SET QGIS_SA_ROOT=%QGIS_SA_INSTALL_HOME%
+rem Get the short version of the install home
+echo Initial standalone install home before 8.3 conversion:  !QGIS_SA_INSTALL_HOME!
+for %%H in ("!QGIS_SA_INSTALL_HOME!") do set QGIS_SA_INSTALL_HOME_83=%%~sH
+rem TODO smalers 2020-04-01 Try using 8.3 names
+echo Resetting standalone QGIS install home !QGIS_SA_INSTALL_HOME! to short version: !QGIS_SA_INSTALL_HOME_83!
+set QGIS_SA_INSTALL_HOME=!QGIS_SA_INSTALL_HOME_83!
+rem set QGIS_SA_ROOT=%QGIS_SA_INSTALL_HOME%
+set QGIS_SA_ROOT=%QGIS_SA_INSTALL_HOME_83%
 echo Running GeoProcessor using standalone GQGIS in:  %QGIS_SA_INSTALL_HOME%
 
 rem Where QGIS is installed
@@ -311,8 +327,11 @@ rem   See:  https://docs.qgis.org/3.4/pdf/en/QGIS-3.4-PyQGISDeveloperCookbook-en
 rem - The qgis-ltr folder needs to be checked first because for a long term release
 rem   the qgis-ltr/python and qgis/python folders each exist, but qgis/python is empty.
 rem - Only apps/qgis-ltr/python needs to be checked for qgis-ltr.
+rem - Also get the Windows short name for QGIS install folder (troubleshooting whether this is needed)
+rem for %%H in ("%PYTHONHOME%") do PYTHONHOME_83=%%~sH
 echo PYTHONHOME after QGIS setup:  %PYTHONHOME%
-echo PYTHONPATH after QGIS setup:  %PYTHONPATH%
+rem echo PYTHONHOME 8.3 after QGIS setup:  %PYTHONHOME_83%
+echo PYTHONPATH after QGIS setup:  !PYTHONPATH!
 for %%Q in (qgis-ltr qgis qgis-dev) do (
   if exist %QGIS_SA_ROOT%\apps\%%Q\python (
     set PATH=%PATH%;%QGIS_SA_ROOT%\apps\%%Q\bin
@@ -321,7 +340,7 @@ for %%Q in (qgis-ltr qgis qgis-dev) do (
 
     set PYTHONPATH_QGIS_PYTHON=%QGIS_SA_ROOT%\apps\%%Q\python
     echo Adding standalone QGIS Python to front of PYTHONPATH: !PYTHONPATH_QGIS_PYTHON!
-    set PYTHONPATH=!PYTHONPATH_QGIS_PYTHON!;%PYTHONPATH%
+    set PYTHONPATH=!PYTHONPATH_QGIS_PYTHON!;!PYTHONPATH!
 
     rem Plugins folder does not use 'qgis-ltr'
     rem See https://anitagraser.com/2018/01/28/porting-processing-scripts-to-qgis3/
@@ -344,9 +363,52 @@ rem - cannot get if else if to work so use goto
 for %%V in (37 36) do (
   echo Checking for existence of %QGIS_SA_ROOT%\apps\Python%%V
   if exist %QGIS_SA_ROOT%\apps\Python%%V\ (
-    set PYTHONPATH_QGIS_SITEPACKAGES=%QGIS_SA_ROOT%\apps\Python%%V\Lib\site-packages
-    echo Adding standalone QGIS Python%%V site-packages to front of PYTHONPATH: !PYTHONPATH_QGIS_SITEPACKAGES!
-    set PYTHONPATH=!PYTHONPATH_QGIS_SITEPACKAGES!;%PYTHONPATH%
+    rem It appears that QGIS Python uses lowercase "lib" is used rather than "Lib", so use lowercase below.
+    rem - not sure why that is done (maybe for Linux?) but make lowercase here
+    set PYTHONPATH_QGIS_SITEPACKAGES=%QGIS_SA_ROOT%\apps\Python%%V\lib\site-packages
+    echo Adding standalone QGIS Python%%V 'lib\site-packages' to front of PYTHONPATH: !PYTHONPATH_QGIS_SITEPACKAGES!
+    set PYTHONPATH=!PYTHONPATH_QGIS_SITEPACKAGES!;!PYTHONPATH!
+
+    rem Viewing sys.path for working gpdev.bat shows 8.3 paths for some files so add again here and below
+    rem The following are listed in Python sys.path when running gpdev.bat (without specifically adding)
+    rem but don't by default get added in the PyCharm environment.
+    rem TODO smalers 2020-04-01 need to add
+    set PYTHONPATH_QGIS_SITE_PACKAGES_PYTHONWIN=%QGIS_SA_ROOT%\apps\Python%%V\lib\site-packages\Pythonwin
+    echo Adding standalone QGIS Python%%V 'lib\site-packages\Pythonwin' to front of PYTHONPATH: !PYTHONPATH_QGIS_SITE_PACKAGES_PYTHONWIN!
+    set PYTHONPATH=!PYTHONPATH_QGIS_SITE_PACKAGES_PYTHONWIN!;!PYTHONPATH!
+
+    set PYTHONPATH_QGIS_SITE_PACKAGES_WIN32=%QGIS_SA_ROOT%\apps\Python%%V\lib\site-packages\win32
+    echo Adding standalone QGIS Python%%V 'lib\site-packages\win32' to front of PYTHONPATH: !PYTHONPATH_QGIS_SITE_PACKAGES_WIN32!
+    set PYTHONPATH=!PYTHONPATH_QGIS_SITE_PACKAGES_WIN32!;!PYTHONPATH!
+
+    set PYTHONPATH_QGIS_SITE_PACKAGES_WIN32_LIB=%QGIS_SA_ROOT%\apps\Python%%V\lib\site-packages\win32\lib
+    echo Adding standalone QGIS Python%%V 'lib\site-packages\win32\lib' to front of PYTHONPATH: !PYTHONPATH_QGIS_SITE_PACKAGES_WIN32_LIB!
+    set PYTHONPATH=!PYTHONPATH_QGIS_SITE_PACKAGES_WIN32_LIB!;!PYTHONPATH!
+
+    rem Similarly, the PATH needs to have additional folders to agree with working gpdev.bat
+    set PATH_QGIS_SITE_PACKAGES_PYWIN32_SYSTEM32=%QGIS_SA_ROOT%\apps\Python%%V\lib\site-packages\pywin32_system32
+    echo Adding standalone QGIS Python%%V 'lib\site-packages\win32' to front of PYTHONPATH: !PATH_QGIS_SITE_PACKAGES_PYWIN32_SYSTEM32!
+    set PATH=!PATH!;!PATH_QGIS_SITE_PACKAGES_PYWIN32_SYSTEM32!
+
+    goto standalonePathSet2
+  )
+)
+rem Warning because could not find QGIS Python
+echo Error: could not find Python37 or Python36 in %QGIS_SA_ROOT%\apps for site-packages
+exit /b 1
+
+:standalonePathSet2
+
+rem Add additional packages to PYTHONPATH, located in PyCharm development venv
+rem TODO smalers 2020-03-30 this should just use the Python version from PYTHONHOME
+rem List the following in order so most recent Python for target version is found first.
+rem - it would seem that this should be done automatically but based on testing
+for %%T in (37 36) do (
+  echo Checking for existence of %installFolder%\venv\venv-qgis-!targetQgisVersion!-python%%T
+  if exist %installFolder%\venv\venv-qgis-!targetQgisVersion!-python%%T\ (
+    set PYTHONPATH_PYCHARM_SITEPACKAGES=%installFolder%\venv\venv-qgis-!targetQgisVersion!-python%%T\Lib\site-packages
+    echo Adding PyCharm Python%%T site-packages to front of PYTHONPATH: !PYTHONPATH_PYCHARM_SITEPACKAGES!
+    set PYTHONPATH=!PYTHONPATH_PYCHARM_SITEPACKAGES!;!PYTHONPATH!
     goto setupStandalone2
   )
 )
@@ -358,9 +420,10 @@ exit /b 1
 
 rem Add the GeoProcessor to the PYTHONPATH
 rem - OK to put at the front because geoprocessor should not conflict with anything else
-set GEOPROCESSOR_HOME=%scriptFolder%..
+set GEOPROCESSOR_HOME=%installFolder%
 echo Adding GeoProcessor Python developer code to start of PYTHONPATH:  %GEOPROCESSOR_HOME%
-set PYTHONPATH=%GEOPROCESSOR_HOME%;%PYTHONPATH%
+set PYTHONPATH=%GEOPROCESSOR_HOME%;!PYTHONPATH!
+
 
 rem Indicate that the setup has been completed
 rem - this will ensure that the script when run again does not repeat setup
@@ -390,7 +453,7 @@ echo Environment for Python/GeoProcessor:
 echo QGIS_SA_INSTALL_HOME=%QGIS_SA_INSTALL_HOME%
 echo PATH=%PATH%
 echo PYTHONHOME=%PYTHONHOME%
-echo PYTHONPATH=%PYTHONPATH%
+echo PYTHONPATH=!PYTHONPATH!
 echo QGIS_PREFIX_PATH=%QGIS_PREFIX_PATH%
 echo QT_PLUGIN_PATH=%QT_PLUGIN_PATH%
 echo.
@@ -406,7 +469,7 @@ rem   that was opened last
 rem echo Starting PyCharm using:  start ... /B %PYCHARM% %GP_PROJECT_DIR% %*
 echo Starting PyCharm using:  start ... /B %PYCHARM% %GP_PROJECT_DIR%
 echo Prompt will display and PyCharm may take a few seconds to start.
-SET GP_PROJECT_DIR=%scriptFolder%..
+SET GP_PROJECT_DIR=%installFolder%
 rem TODO smalers 2020-03-30 need to figure out how to strip out /s3.10, etc. so PyCharm won't complain
 rem if exist %GP_PROJECT_DIR% start "PyCharm aware of QGIS" /B %PYCHARM% %GP_PROJECT_DIR% %*
 if exist %GP_PROJECT_DIR% start "PyCharm aware of QGIS" /B %PYCHARM% %GP_PROJECT_DIR%

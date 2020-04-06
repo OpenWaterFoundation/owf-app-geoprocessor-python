@@ -53,7 +53,7 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Write a GeoLayer to a file in GeoJSON format, using RFC-7946 standard."
+    __command_metadata['Description'] = "Write a GeoLayer to a file in GeoJSON format, using RFC 7946 standard."
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata

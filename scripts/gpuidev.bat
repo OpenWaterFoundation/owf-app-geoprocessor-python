@@ -22,8 +22,9 @@ rem Windows batch file to run the Open Water Foundation GeoProcessor application
 rem - if it does not work, run gpdev.bat first to troubleshoot
 
 rem Determine the folder that the script was called in
-rem - includes the trailing backslash
 set scriptFolder=%~dp0
+rem Remove trailing \ from scriptFolder
+set scriptFolder=%scriptFolder:~0,-1%
 
 rem Call the GeoProcessor in UI mode for development environment.
 rem - use the full path because 'gpdev' may not be in the PATH

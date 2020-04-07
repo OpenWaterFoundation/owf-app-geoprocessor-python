@@ -36,6 +36,7 @@ import datetime
 import getpass
 import logging
 import os
+from pathlib import Path
 import platform
 
 # The name of the current application level log file handler,
@@ -58,7 +59,7 @@ def get_logfile_handler() -> logging.FileHandler or None:
     return __logfile_handler
 
 
-def get_logfile_name() -> str:
+def get_logfile_name() -> str or None:
     """
     Get the name of the logfile that is currently being used.
 

@@ -483,7 +483,9 @@ def set_global_data() -> None:
     except Exception:
         message = "Error setting up program data."
         print(message)
-        logger.error(message, exc_info=True)
+        # TODO smalers 2020-04-07 logging is not set up yet
+        # logger.error(message, exc_info=True)
+        print("Error setting program data.")
 
 
 def setup_logging(session) -> None:
@@ -500,11 +502,12 @@ def setup_logging(session) -> None:
     # - For now use default log levels defined by the utility function
     print("Setting up application logging configuration...")
     initial_file_log_level = logging.DEBUG
-    logger = log_util.initialize_logging(app_name="gp", logfile_name=session.get_user_log_file(),
+    log_file = session.get_user_log_file()
+    logger = log_util.initialize_logging(app_name="gp", logfile_name=log_file,
                                          logfile_log_level=initial_file_log_level)
 
     # Test some logging messages
-    message = 'Opened initial log file: "' + session.get_user_log_file() + '"'
+    message = 'Opened initial log file: "' + log_file + '"'
     logger.info(message)
     # Also print to the console because normal the console should only have error messages
     print(message)

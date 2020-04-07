@@ -99,10 +99,9 @@ class GeoProcessorAppSession(object):
         if cls._instance is None:
             # None instance because called the first time, so create an instance
             cls._instance = GeoProcessorAppSession(app_major_version=app_major_version)
-        else:
-            # Else an instance exists so return it
-            # - the following won't do anything if already initialized
-            cls._instance.initialize_user_files()
+        # Else an instance exists so can use it
+        # - the following won't do anything if already initialized
+        cls._instance.initialize_user_files()
 
         return cls._instance
 
@@ -200,6 +199,20 @@ class GeoProcessorAppSession(object):
             return False
 
         # Create the version folder if it does not exist
+        if not os.path.exists(user_folder):
+            # The following gets rid of IDE warning about catching Exception, which is considered "too broad".
+            # noinspection PyBroadException
+            try:
+                os.mkdir(user_folder)
+            except Exception:
+                logger.warning("Could not create application user folder \"" + user_folder + "\"",
+                               exc_info=True)
+                return False
+        else:
+            # Make sure it is writeable
+            if os.access(user_folder, os.W_OK):
+                logger.warning("Application user folder \"" + user_folder + "\" is not writeable.")
+                return False
 
         version_folder = self.get_user_app_major_version_folder()
         if not os.path.exists(version_folder):

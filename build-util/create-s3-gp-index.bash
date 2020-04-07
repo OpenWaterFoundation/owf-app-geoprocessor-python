@@ -93,6 +93,16 @@ createIndexHtmlFiles() {
   echo '<meta http-equiv="Pragma" content="no-cache" />' >> $indexHtmlTmpFile
   echo '<meta http-equiv="Expires" content="0" />' >> $indexHtmlTmpFile
   echo '<meta charset="utf-8"/>' >> $indexHtmlTmpFile
+  # Add Google Analytics for OWF
+  echo '<!-- Global Site Tag (gtag.js) - Google Analytics -->' >> $indexHtmlTmpFile
+  echo '<script async src="https://www.googletagmanager.com/gtag/js?id=UA-135465513-1"></script>' >> $indexHtmlTmpFile
+  echo '<script>' >> $indexHtmlTmpFile
+  echo 'window.dataLayer = window.dataLayer || [];' >> $indexHtmlTmpFile
+  echo 'function gtag(){dataLayer.push(arguments);}' >> $indexHtmlTmpFile
+  echo 'gtag('js', new Date());' >> $indexHtmlTmpFile
+  echo '' >> $indexHtmlTmpFile
+  echo 'gtag('config', 'UA-135465513-1');' >> $indexHtmlTmpFile
+  echo '</script>' >> $indexHtmlTmpFile
   echo '<style>' >> $indexHtmlTmpFile
   echo '   body { font-family: "Trebuchet MS", Helvetica, sans-serif !important; }' >> $indexHtmlTmpFile
   echo '   table {' >> $indexHtmlTmpFile

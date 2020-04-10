@@ -451,7 +451,7 @@ def set_global_data() -> None:
     """
     # Determine the absolute path to the application, useful later when trying to find resources such as
     # configuration and image
-    logger = logging.getLogger(__name__)
+    # logger = logging.getLogger(__name__)
     # noinspection PyBroadException
     try:
         # ps = os.sep  # \\ on Windows / on Linux
@@ -475,15 +475,21 @@ def set_global_data() -> None:
         # Resources are in geoprocessor/resources
         app_util.set_property('ProgramResourcesPath', program_home + ps + ".." + ps + "resources")
         # User documentation URL, without trailing slash
+        # - preferred documentation matches the version
+        # - backup is the latest published, which may be older if in "dev" release, etc.
         app_util.set_property('ProgramUserDocumentationUrl',
-                              "http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-user")
+                              "http://software.openwaterfoundation.org/geoprocessor/{}/doc-user".format(
+                                  version.app_version))
+        app_util.set_property('ProgramUserDocumentationUrl2',
+                              "http://software.openwaterfoundation.org/geoprocessor/latest/doc-user")
         # Program version, tracks with release notes
         app_util.set_property('ProgramVersion', version.app_version)
         app_util.set_property('ProgramVersionDate', version.app_version_date)
     except Exception:
         message = "Error setting up program data."
         print(message)
-        # TODO smalers 2020-04-07 logging is not set up yet
+        # TODO smalers 2020-04-07 logging is not set up yet so don't use logger
+        # - maybe need to reorder so some initial properties are set the allow logger to be used
         # logger.error(message, exc_info=True)
         print("Error setting program data.")
 

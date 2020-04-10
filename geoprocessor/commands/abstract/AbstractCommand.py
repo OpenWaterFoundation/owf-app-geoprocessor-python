@@ -22,6 +22,8 @@ from geoprocessor.core.CommandStatus import CommandStatus
 
 import geoprocessor.util.command_util as command_util
 
+from typing import Any
+
 
 class AbstractCommand(object):
     """
@@ -103,7 +105,7 @@ class AbstractCommand(object):
 
     def get_parameter_metadata(self, parameter_name: str) -> CommandParameterMetadata or None:
         """
-        Return the metadata for the requested parameter name.
+        Return the metadata for the requested parameter name from the self.command_parameter_metadata dictionary.
         This can also be used to figure out if a parameter name is valid
         (return value of None indicates invalid).
 
@@ -119,6 +121,40 @@ class AbstractCommand(object):
                 return parameter_metadata
         # Matching parameter not found so return None
         return None
+
+    def get_parameter_input_metadata_value(self,
+                                           parameter_input_metadata_name: str,
+                                           parameter_input_metadata: dict = None,
+                                           default_value: object = None) -> Any:
+        """
+        Return the self.parameter_input_metadata for the requested input parameter name.
+        This can also be used to figure out if a parameter input metadata name is valid
+        (return value of None indicates invalid).
+
+        Args:
+            parameter_input_metadata_name (str):
+                Parameter input metadata name of interest, for example 'Name.Value.Default'
+            parameter_input_metadata (dict):
+                A dictionary of parameter_input_metadata, defaults to the commands dictionary.
+            default_value (object):
+                Default value if no value is found, if None then won't be used.
+
+        Returns:
+            object:
+                Parameter input metadata object for the requested parameter input metadata name,
+                or None if not found.
+        """
+        try:
+            if parameter_input_metadata is None:
+                # Get the parameter from the command's dictionary
+                parameter_input_metadata_value = self.parameter_input_metadata[parameter_input_metadata_name]
+            else:
+                # Get the parameter from the provided parameter dictionary
+                parameter_input_metadata_value = parameter_input_metadata[parameter_input_metadata_name]
+            return parameter_input_metadata_value
+        except KeyError:
+            # Parameter was not found, return the default value or None
+            return default_value
 
     def get_parameter_value(self, parameter_name: str, command_parameters: dict = None,
                             default_value: object = None) -> str or None:
@@ -149,7 +185,7 @@ class AbstractCommand(object):
                 parameter_value = command_parameters[parameter_name]
             return parameter_value
         except KeyError:
-            # Parameter was not found
+            # Parameter was not found, return the default value or None
             return default_value
 
     # TODO smalers 2020-01-14 Don't type hint processor to GeoProcessor because it will result in circular import

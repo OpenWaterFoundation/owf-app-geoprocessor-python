@@ -128,7 +128,16 @@ class GeoLayer(object):
 
         # "qgs_id" (str) is the GeoLayer's id in the Qgs environment (this is automatically assigned by the QGIS
         # GeoProcessor when a GeoLayer is originally created)
-        self.qgs_id = qgs_layer.id()
+        if qgs_layer is None:
+            # This may happen if an error or map service
+            self.qgs_id = ""
+        else:
+            self.qgs_id = qgs_layer.id()
+
+        # History of modifications to the layer, performed by the GeoProcessor, as a list of strings.
+        # - this is equivalent to the TSTool "genesis" data.
+        # - it is useful to understand how data have been manipulated
+        self.history: [str] = []
 
         # "properties" (dict) is a dictionary of user (non-built-in) properties that are assigned to the layer.
         # These properties facilitate processing and may or may not be output to to a persistent format,
@@ -140,6 +149,32 @@ class GeoLayer(object):
             self.properties = {}
         else:
             self.properties = properties
+
+    def append_to_history(self, history_comment: str or [str]) -> None:
+        """
+        Append the string to the layer history.
+        Multiple lines should be appended with multiple calls rather than using newlines,
+        perhaps with indent to represent related comments.
+        For example, add a comment indicating the file that the layer was read, if manipulated, etc.
+
+        Args:
+            history_comment (str or [str]): history comment or list of comments
+
+        Returns:
+            None
+        """
+        if history_comment is None:
+            return
+
+        if isinstance(history_comment, str):
+            # Single string so append
+            self.history.append(history_comment)
+        elif isinstance(history_comment, list):
+            # List of strings or other objects
+            for history_comment2 in history_comment:
+                if history_comment2 is not None:
+                    # Append the string representation of the object
+                    self.history.append(str(history_comment2))
 
     def deepcopy(self, copied_geolayer_id: str) -> GeoLayer:
         """
@@ -162,14 +197,17 @@ class GeoLayer(object):
         # <EPSG format 'http://spatialreference.org/ref/epsg/'>_.
         return self.qgs_layer.crs()
 
-    def get_crs_code(self) -> str:
+    def get_crs_code(self) -> str or None:
         """
         Returns the coordinate reference system EPSG code of a GeoLayer.
         """
 
         # "crs" (str) is the GeoLayer's coordinate reference system in
         # <EPSG format 'http://spatialreference.org/ref/epsg/'>_.
-        return self.qgs_layer.crs().authid()
+        if self.qgs_layer is None:
+            return None
+        else:
+            return self.qgs_layer.crs().authid()
 
     def get_feature_count(self) -> int:
         """
@@ -279,12 +317,30 @@ class GeoLayer(object):
             # Return a dictionary with JSON objects
             # - this remaps the names to camelcase, which is is more consistent with JSON standards
             # - sourcePath maps to the output file because what is written serves as the path
+            # - if the layer was written, then the output source path will e set and can be used;
+            #   otherwise, use the input source path
+            source_path = None
+            if self.output_path is not None and self.output_path != GeoLayer.SOURCE_MEMORY:
+                source_path = self.output_path
+            elif self.input_path is not None and self.input_path != GeoLayer.SOURCE_MEMORY:
+                source_path = self.input_path
+            # Determine the layer type, to inform the application how to handle, especially for web services
+            # - can't use isinstance() because this will result in a circular import dependency,
+            #   therefore check the class name
+            layerType = None
+            layer_class = self.__class__.__name__
+            if layer_class == 'VectorGeoLayer':
+                layer_type = 'Vector'
+            elif layer_class == 'RasterGeoLayer':
+                layer_type = 'Raster'
             return {
                 "geoLayerId": self.id,
                 "name": self.name,
                 "description": self.description,
                 "crs": self.get_crs_code(),
                 "geometryType": ("WKT:" + self.get_geometry()),
-                "sourcePath": self.output_path,
-                "properties": self.properties
+                "layerType": layer_type,
+                "sourcePath": source_path,
+                "properties": self.properties,
+                "history:": self.history
             }

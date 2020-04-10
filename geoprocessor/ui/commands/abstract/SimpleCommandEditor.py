@@ -156,6 +156,12 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 # - if a new command most values will not be set
                 # - if an existing command then need to make sure all previous data is handled
                 parameter_value = self.command.get_parameter_value(parameter_name)
+                if parameter_value is None:
+                    # See if there is a default value that should be used for initial display.
+                    default_for_display = self.command.get_parameter_input_metadata_value(
+                        parameter_name + ".Value.DefaultForDisplay")
+                    if default_for_display is not None:
+                        parameter_value = default_for_display
                 try:
                     # Get the UI input component for the parameter
                     parameter_ui = self.input_ui_components[parameter_name]

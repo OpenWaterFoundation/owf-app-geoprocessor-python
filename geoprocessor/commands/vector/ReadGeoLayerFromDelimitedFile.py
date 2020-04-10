@@ -83,6 +83,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("Description", type("")),
+        CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     # Command metadata for command editor display
@@ -169,6 +170,12 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
     __parameter_input_metadata['Description.Required'] = False
     __parameter_input_metadata['Description.Tooltip'] = "The GeoLayer description, can use ${Property}."
     __parameter_input_metadata['Description.Value.Default'] = ''
+    # Properties
+    __parameter_input_metadata['Properties.Description'] = "properties for the new GeoLayer"
+    __parameter_input_metadata['Properties.Label'] = "Properties"
+    __parameter_input_metadata['Properties.Required'] = False
+    __parameter_input_metadata['Properties.Tooltip'] = \
+        "Properties for the new GeoLayer using syntax:  property:value,property:'value'"
     # IfGeoLayerIDExists
     __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if GeoLayerID exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
@@ -282,6 +289,20 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
             message = "IfGeoLayerIDExists parameter value ({}) is not recognized.".format(pv_IfGeoLayerIDExists)
             recommendation = "Specify one of the acceptable values ({}) for the IfGeoLayerIDExists parameter.".format(
                 acceptable_values)
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Properties - verify that the properties can be parsed
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
+        try:
+            command_util.parse_properties_from_parameter_string(pv_Properties)
+        except ValueError as e:
+            # Use the exception
+            message = str(e)
+            recommendation = "Check the Properties string format."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -407,6 +428,8 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         pv_Description =\
             self.get_parameter_value("Description",
                                      default_value=self.parameter_input_metadata['Description.Value.Default'])
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value("Properties")
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
@@ -415,43 +438,54 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
         pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
         # noinspection PyPep8Naming
         pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
+        # noinspection PyPep8Naming
+        pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax
-        delimited_file_abs = io_util.verify_path_for_os(io_util.to_absolute_path(
+        input_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
             self.command_processor.get_property('WorkingDir'),
             self.command_processor.expand_parameter_value(pv_InputFile, self)))
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
         if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
             # noinspection PyPep8Naming
-            pv_GeoLayerID = io_util.expand_formatter(delimited_file_abs, pv_GeoLayerID)
+            pv_GeoLayerID = io_util.expand_formatter(input_file_absolute, pv_GeoLayerID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.check_runtime_data(delimited_file_abs, pv_Delimiter, pv_GeometryFormat, pv_XColumn,
+        if self.check_runtime_data(input_file_absolute, pv_Delimiter, pv_GeometryFormat, pv_XColumn,
                                    pv_YColumn, pv_WKTColumn, pv_CRS, pv_GeoLayerID):
             # noinspection PyBroadException
             try:
                 if pv_GeometryFormat.upper() == "XY":
                     # Create a QGSVectorLayer object with the delimited file.
-                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_xy(delimited_file_abs,
+                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_xy(input_file_absolute,
                                                                                             pv_Delimiter, pv_CRS,
                                                                                             pv_XColumn,
                                                                                             pv_YColumn)
 
                 else:
                     # Create a QGSVectorLayer object with the delimited file.
-                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_wkt(delimited_file_abs,
+                    qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_delimited_file_wkt(input_file_absolute,
                                                                                              pv_Delimiter, pv_CRS,
                                                                                              pv_WKTColumn)
 
                 # Create a VectorGeoLayer and add it to the geoprocessor's GeoLayers list.
-                geolayer_obj = VectorGeoLayer(pv_GeoLayerID,
+                new_geolayer = VectorGeoLayer(pv_GeoLayerID,
                                               qgs_vector_layer=qgs_vector_layer,
                                               name=pv_Name,
                                               description=pv_Description,
-                                              input_path_full=delimited_file_abs,
+                                              input_path_full=input_file_absolute,
                                               input_path=pv_InputFile)
-                self.command_processor.add_geolayer(geolayer_obj)
+
+                # Set the properties
+                properties = command_util.parse_properties_from_parameter_string(pv_Properties)
+                # Set the properties as additional properties (don't just reset the properties dictionary)
+                new_geolayer.set_properties(properties)
+
+                # Add a history comment
+                new_geolayer.append_to_history("Read GeoLayer from delimited file:  '" + input_file_absolute + "'")
+
+                self.command_processor.add_geolayer(new_geolayer)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process.

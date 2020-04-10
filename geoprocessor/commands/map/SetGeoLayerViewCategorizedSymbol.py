@@ -44,6 +44,8 @@ class SetGeoLayerViewCategorizedSymbol(AbstractCommand):
         CommandParameterMetadata("GeoMapID", type("")),
         CommandParameterMetadata("GeoLayerViewGroupID", type("")),
         CommandParameterMetadata("GeoLayerViewID", type("")),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("ClassificationAttribute", type("")),
         CommandParameterMetadata("Properties", type(""))]
 
@@ -76,6 +78,16 @@ class SetGeoLayerViewCategorizedSymbol(AbstractCommand):
     __parameter_input_metadata['GeoLayerViewID.Label'] = "GeoLayerViewID"
     __parameter_input_metadata['GeoLayerViewID.Required'] = True
     __parameter_input_metadata['GeoLayerViewID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
+    # Name
+    __parameter_input_metadata['Name.Description'] = "Symbol name"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = False
+    __parameter_input_metadata['Name.Tooltip'] = "The symbol name, can use ${Property}."
+    # Description
+    __parameter_input_metadata['Description.Description'] = "Symbol description"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = False
+    __parameter_input_metadata['Description.Tooltip'] = "The symbol description, can use ${Property}."
     # ClassificationAttribute
     __parameter_input_metadata['ClassificationAttribute.Description'] = "classification attribute"
     __parameter_input_metadata['ClassificationAttribute.Label'] = "Classification attribute"
@@ -219,7 +231,7 @@ class SetGeoLayerViewCategorizedSymbol(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Add the GeoLayer to the GeoMap.
+        Run the command.  Set the symbol as categorized symbol.
 
         Returns:
             None.
@@ -238,6 +250,10 @@ class SetGeoLayerViewCategorizedSymbol(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerViewID = self.get_parameter_value("GeoLayerViewID")
         # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name", default_value='')
+        # noinspection PyPep8Naming
+        pv_Description = self.get_parameter_value("Description", default_value='')
+        # noinspection PyPep8Naming
         pv_ClassificationAttribute = self.get_parameter_value("ClassificationAttribute")
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value("Properties")
@@ -249,6 +265,10 @@ class SetGeoLayerViewCategorizedSymbol(AbstractCommand):
         pv_GeoLayerViewGroupID = self.command_processor.expand_parameter_value(pv_GeoLayerViewGroupID, self)
         # noinspection PyPep8Naming
         pv_GeoLayerViewID = self.command_processor.expand_parameter_value(pv_GeoLayerViewID, self)
+        # noinspection PyPep8Naming
+        pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
+        # noinspection PyPep8Naming
+        pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
         # noinspection PyPep8Naming
         pv_ClassificationAttribute = self.command_processor.expand_parameter_value(pv_ClassificationAttribute, self)
         # noinspection PyPep8Naming
@@ -301,11 +321,6 @@ class SetGeoLayerViewCategorizedSymbol(AbstractCommand):
                     properties = command_util.parse_properties_from_parameter_string(pv_Properties)
 
                     # Create the GeoLayerSymbol
-                    # TODO smalers 2020-03-18 may not need name and description
-                    # noinspection PyPep8Naming
-                    pv_Name = ""
-                    # noinspection PyPep8Naming
-                    pv_Description = ""
                     geolayersymbol = GeoLayerCategorizedSymbol(pv_ClassificationAttribute,
                                                                properties=properties, name=pv_Name,
                                                                description=pv_Description)

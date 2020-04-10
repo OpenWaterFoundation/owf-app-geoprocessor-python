@@ -35,7 +35,6 @@ import logging
 
 
 class CopyGeoLayer(AbstractCommand):
-
     """
     Creates a copy of a GeoLayer in the GeoProcessor's geolayers list. The copied GeoLayer is added to the
     GeoProcessor's geolayers list.

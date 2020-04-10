@@ -263,8 +263,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile: QtWidgets.QAction or None = None
-        self.Menu_Commands_Read_ReadGeoLayersFromFGDB: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayersFromFolder: QtWidgets.QAction or None = None
+        self.Menu_Commands_Read_ReadGeoLayersFromFGDB: QtWidgets.QAction or None = None
+        self.Menu_Commands_Read_ReadGeoLayerFromTileMapService: QtWidgets.QAction or None = None
+        self.Menu_Commands_Read_ReadGeoLayerFromWebMapService: QtWidgets.QAction or None = None
 
         # Commands / Fill GeoLayer
         self.Menu_Commands_FillGeoLayerMissingData: QtWidgets.QMenu or None = None
@@ -311,6 +313,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_MapProcessing_SetGeoLayerViewCategorizedSymbol: QtWidgets.QAction or None = None
         self.Menu_Commands_MapProcessing_SetGeoLayerViewGraduatedSymbol: QtWidgets.QAction or None = None
         self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol: QtWidgets.QAction or None = None
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewEventHandler: QtWidgets.QAction or None = None
         self.Menu_Commands_MapProcessing_CreateGeoMapProject: QtWidgets.QAction or None = None
         self.Menu_Commands_MapProcessing_AddGeoMapToGeoMapProject: QtWidgets.QAction or None = None
         self.Menu_Commands_MapProcessing_WriteGeoMapProjectToJSON: QtWidgets.QAction or None = None
@@ -384,6 +387,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Commands(Raster) / Read GeoLayer
         self.Menu_Commands_Raster_Read_RasterGeoLayers: QtWidgets.QMenu or None = None
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile: QtWidgets.QAction or None = None
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileService: QtWidgets.QAction or None = None
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService: QtWidgets.QAction or None = None
 
         # Commands(Table) menu
         self.Menu_Commands_Table: QtWidgets.QMenu or None = None
@@ -1595,6 +1600,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "ReadGeoLayerFromDelimitedFile()"))
         self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile)
 
+        # ReadGeoLayersFromFolder
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setObjectName(
+            qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromFolder"))
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setText(
+            "ReadGeoLayersFromFolder()... <reads 1+ GeoLayer(s) from a local folder>")
+        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFolder)
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.triggered.connect(
+            functools.partial(self.edit_new_command, "ReadGeoLayersFromFolder()"))
+
         # ReadGeoLayerFromGeoJSON
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setObjectName(
@@ -1619,6 +1636,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromShapefile()"))
 
+        self.Menu_Commands_Read_GeoLayers.addSeparator()
+
         # ReadGeoLayersFromFGDB
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setObjectName(
@@ -1630,18 +1649,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayersFromFGDB()"))
-
-        # ReadGeoLayersFromFolder
-        self.Menu_Commands_Read_ReadGeoLayersFromFolder = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setObjectName(
-            qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromFolder"))
-        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setText(
-            "ReadGeoLayersFromFolder()... <reads 1+ GeoLayer(s) from a local folder>")
-        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFolder)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.Menu_Commands_Read_ReadGeoLayersFromFolder.triggered.connect(
-            functools.partial(self.edit_new_command, "ReadGeoLayersFromFolder()"))
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Fill GeoLayer Missing Data menu (disabled)
@@ -1984,6 +1991,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol.triggered.connect(
             functools.partial(self.edit_new_command, "SetGeoLayerViewSingleSymbol()"))
         self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_SetGeoLayerViewSingleSymbol)
+
+        self.Menu_Commands_MapProcessing.addSeparator()
+
+        # SetGeoLayerViewEventHandler
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewEventHandler = QtWidgets.QAction(main_window)
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewEventHandler.setObjectName(
+            qt_util.from_utf8("Menu_Commands_MapProcessing_SetGeoLayerViewEventHandler"))
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewEventHandler.setText(
+            "SetGeoLayerViewEventHandler()... <set a GeoLayerView event handler>")
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_MapProcessing_SetGeoLayerViewEventHandler.triggered.connect(
+            functools.partial(self.edit_new_command, "SetGeoLayerViewEventHandler()"))
+        self.Menu_Commands_MapProcessing.addAction(self.Menu_Commands_MapProcessing_SetGeoLayerViewEventHandler)
 
         self.Menu_Commands_MapProcessing.addSeparator()
 
@@ -2562,6 +2582,34 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromFile()"))
         self.Menu_Commands_Raster_Read_RasterGeoLayers.addAction(
             self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile)
+
+        self.Menu_Commands_Raster_Read_RasterGeoLayers.addSeparator()
+
+        # ReadRasterGeoLayerFromTileMapService
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService"))
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService.setText(
+            "ReadRasterGeoLayerFromTileMapService()... <read a Raster GeoLayer from a file>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService.triggered.connect(
+            functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromTileMapService()"))
+        self.Menu_Commands_Raster_Read_RasterGeoLayers.addAction(
+            self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService)
+
+        # ReadRasterGeoLayerFromWebMapService
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService"))
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService.setText(
+            "ReadRasterGeoLayerFromWebMapService()... <read a Raster GeoLayer from a file>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService.triggered.connect(
+            functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromWebMapService()"))
+        self.Menu_Commands_Raster_Read_RasterGeoLayers.addAction(
+            self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService)
 
         # ============================================================================================================
         # Commands(Table) menu
@@ -4742,6 +4790,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 return
 
             # Run the diff program
+            # noinspection PyBroadException
             try:
                 # Files must be Platform-specific to work with with called program
                 # TODO smalers 2020-03-10 the following did not work
@@ -4753,11 +4802,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 args = shlex.split(command_line)
                 # use_command_shell = True   # Use shell to handle spaces in paths
                 use_command_shell = False  # Seems to work OK with command line parsed above
-                env_dict = None
-                capture_output = None
-                stdout = None
-                stderr = None
-                timeout = 0
+                # env_dict = None
+                # capture_output = None
+                # stdout = None
+                # stderr = None
+                # timeout = 0
                 do_thread = True
                 if do_thread:
                     # The following runs the diff tool as a separate thread

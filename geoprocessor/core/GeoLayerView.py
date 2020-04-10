@@ -18,6 +18,8 @@
 # ________________________________________________________________NoticeEnd___
 
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.GeoLayerSymbol import GeoLayerSymbol
+from geoprocessor.core.GeoLayerViewEventHandler import GeoLayerViewEventHandler
 
 
 class GeoLayerView(object):
@@ -28,22 +30,28 @@ class GeoLayerView(object):
         # Identifier
         self.id = geolayerview_id
 
+        # Name for the layer view
+        self.name = name
+
+        # Description for the layer view
+        self.description = description
+
         # GeoLayer object
         self.geolayer = geolayer
 
         # GeoLayerSymbol object
         # - TODO smalers 2020-03-18 need to define a default based on data
         # - the symbol is expected to be set by calling a set method because it originates in a separate command
-        self.geolayersymbol = None
-
-        # Name for the layer view
-        self.name = name
+        # - specific child classes may be derived from parent class GeoLayerSymbol
+        self.geolayersymbol: GeoLayerSymbol or None = None
 
         # Properties, currently not used
         self.properties = dict()
 
-        # Description for the layer view
-        self.description = description
+        # Event handlers for the GeoLayerView
+        # - code that reads the map should implement handlers for the specified event types
+        # - initialize to an empty list
+        self.event_handlers: [GeoLayerViewEventHandler] or None = []
 
     def to_json(self):
         """
@@ -59,5 +67,6 @@ class GeoLayerView(object):
             # - TODO smalers 2020-03-20 may need a property to indicate whether sharing or not
             "geoLayerId": self.geolayer.id,
             "properties": self.properties,
-            "geoLayerSymbol": self.geolayersymbol
+            "geoLayerSymbol": self.geolayersymbol,
+            "eventHandlers": self.event_handlers
         }

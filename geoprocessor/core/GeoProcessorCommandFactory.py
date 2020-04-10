@@ -37,6 +37,7 @@ from geoprocessor.commands.map.AddGeoMapToGeoMapProject import AddGeoMapToGeoMap
 from geoprocessor.commands.map.CreateGeoMap import CreateGeoMap
 from geoprocessor.commands.map.CreateGeoMapProject import CreateGeoMapProject
 from geoprocessor.commands.map.SetGeoLayerViewCategorizedSymbol import SetGeoLayerViewCategorizedSymbol
+from geoprocessor.commands.map.SetGeoLayerViewEventHandler import SetGeoLayerViewEventHandler
 from geoprocessor.commands.map.SetGeoLayerViewGraduatedSymbol import SetGeoLayerViewGraduatedSymbol
 from geoprocessor.commands.map.SetGeoLayerViewSingleSymbol import SetGeoLayerViewSingleSymbol
 # from geoprocessor.commands.map.WriteGeoMapToJSON import WriteGeoMapToJSON
@@ -44,6 +45,8 @@ from geoprocessor.commands.map.WriteGeoMapProjectToJSON import WriteGeoMapProjec
 
 from geoprocessor.commands.raster.CreateRasterGeoLayer import CreateRasterGeoLayer
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromFile import ReadRasterGeoLayerFromFile
+from geoprocessor.commands.raster.ReadRasterGeoLayerFromWebMapService import ReadRasterGeoLayerFromWebMapService
+from geoprocessor.commands.raster.ReadRasterGeoLayerFromTileMapService import ReadRasterGeoLayerFromTileMapService
 
 from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.EndIf import EndIf
@@ -156,6 +159,8 @@ class GeoProcessorCommandFactory(object):
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
         "READRASTERGEOLAYERFROMFILE": ReadRasterGeoLayerFromFile(),
+        "READRASTERGEOLAYERFROMTILEMAPSERVICE": ReadRasterGeoLayerFromTileMapService(),
+        "READRASTERGEOLAYERFROMWEBMAPSERVICE": ReadRasterGeoLayerFromWebMapService(),
         "READTABLEFROMDATASTORE": ReadTableFromDataStore(),
         "READTABLEFROMDELIMITEDFILE": ReadTableFromDelimitedFile(),
         "READTABLEFROMEXCEL": ReadTableFromExcel(),
@@ -171,6 +176,7 @@ class GeoProcessorCommandFactory(object):
         "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
         "SETGEOLAYERVIEWCATEGORIZEDSYMBOL": SetGeoLayerViewCategorizedSymbol(),
         "SETGEOLAYERVIEWGRADUATEDSYMBOL": SetGeoLayerViewGraduatedSymbol(),
+        "SETGEOLAYERVIEWEVENTHANDLER": SetGeoLayerViewEventHandler(),
         "SETGEOLAYERVIEWSINGLESYMBOL": SetGeoLayerViewSingleSymbol(),
         "SETPROPERTY": SetProperty(),
         "SETPROPERTYFROMGEOLAYER": SetPropertyFromGeoLayer(),
@@ -343,6 +349,10 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayersFromFolder()
                 elif command_name_upper == "READRASTERGEOLAYERFROMFILE":
                     return ReadRasterGeoLayerFromFile()
+                elif command_name_upper == "READRASTERGEOLAYERFROMTILEMAPSERVICE":
+                    return ReadRasterGeoLayerFromTileMapService()
+                elif command_name_upper == "READRASTERGEOLAYERFROMWEBMAPSERVICE":
+                    return ReadRasterGeoLayerFromWebMapService()
                 elif command_name_upper == "READTABLEFROMDATASTORE":
                     return ReadTableFromDataStore()
                 elif command_name_upper == "READTABLEFROMDELIMITEDFILE":
@@ -371,6 +381,8 @@ class GeoProcessorCommandFactory(object):
                     return SetGeoLayerProperty()
                 elif command_name_upper == "SETGEOLAYERVIEWCATEGORIZEDSYMBOL":
                     return SetGeoLayerViewCategorizedSymbol()
+                elif command_name_upper == "SETGEOLAYERVIEWEVENTHANDLER":
+                    return SetGeoLayerViewEventHandler()
                 elif command_name_upper == "SETGEOLAYERVIEWGRADUATEDSYMBOL":
                     return SetGeoLayerViewGraduatedSymbol()
                 elif command_name_upper == "SETGEOLAYERVIEWSINGLESYMBOL":
@@ -426,7 +438,7 @@ class GeoProcessorCommandFactory(object):
                 raise ValueError('Unrecognized command "' + command_string + '"')
 
         # The syntax is not recognized so create an UnknownCommand or throw an exception.
-        #else:
+        # else:
         #    if create_unknown_command_if_not_recognized:
         #        logger.warning("Command line is unknown syntax. Adding UnknownCommand: " + command_string_trimmed)
         #        return UnknownCommand()

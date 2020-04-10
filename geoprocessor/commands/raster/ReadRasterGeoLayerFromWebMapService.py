@@ -1,4 +1,4 @@
-# ReadGeoLayerFromShapefile - command to read a GeoLayer from a shapefile
+# ReadRasterGeoLayerFromWebMapService - command to read a GeoLayer from a web map service (WMS)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -25,73 +25,56 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
+from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
 import geoprocessor.util.command_util as command_util
-import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.io_util as io_util
 import geoprocessor.util.validator_util as validator_util
 
-import os
 import logging
 
 
-class ReadGeoLayerFromShapefile(AbstractCommand):
+# TODO smalers 2020-03-21 need to fully implement - add Name and Description parameters.
+class ReadRasterGeoLayerFromWebMapService(AbstractCommand):
     """
-    Reads a GeoLayer from a Shapefile spatial data file.
+    Read a raster GeoLayer from a web map service (WMS).
 
-    This command reads a GeoLayer from a Shapefile file and creates a GeoLayer object within the
+    This command reads a raster GeoLayer from a file and creates a GeoLayer object within the
     geoprocessor. The GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
 
-    GeoLayers are stored on a computer or are available for download as a spatial data file (GeoJSON, shapefile,
-    feature class in a file geodatabase, etc.). Each GeoLayer has one feature type (point, line, polygon, etc.) and
-    other data (an identifier, a coordinate reference system, etc). Note that this function only reads a single
-    GeoLayer from a single file in Shapefile format.
-
-    In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
-    `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects.
-
-    Command Parameters
-    * InputFile (str, required): the relative pathname to the spatial data file (shapefile format)
-    * GeoLayerID (str, optional): the GeoLayer identifier. If None, the spatial data filename (without the .geojson
-        extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the absolute
-        pathname to the spatial data file is C:/Desktop/Example/example_file.geojson, then the GeoLayerID will be
-        `example_file`.
-    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the CopiedGeoLayerID
-        already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
-        (Refer to user documentation for detailed description.) Default value is `Replace`.
+    TODO smalers 2020-04-09 need to ealuate for processing, for now use to store the URL
     """
 
     # Define the command parameters.
-    __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("InputFile", type("")),
+    __command_parameter_metadata = [
+        CommandParameterMetadata("InputUrl", type("")),
         CommandParameterMetadata("GeoLayerID", type("")),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Read a GeoLayer from a file in Esri Shapefile format."
+    __command_metadata['Description'] = "Read a raster GeoLayer from a Web Map Service (WMS).\n" \
+                                        "This layer is typically used for a background layer."
     __command_metadata['EditorType'] = "Simple"
 
     # Parameter Metadata
     __parameter_input_metadata = dict()
-    # InputFile
-    __parameter_input_metadata['InputFile.Description'] = "Shapefile file to read"
-    __parameter_input_metadata['InputFile.Label'] = "Shapefile to read"
-    __parameter_input_metadata['InputFile.Tooltip'] = (
-        "The Esri Shapefile to read (relative or absolute path; must end in .shp). ${Property} syntax is "
-        "recognized.")
-    __parameter_input_metadata['InputFile.Required'] = True
-    __parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
-    __parameter_input_metadata['InputFile.FileSelector.Filters'] = ["Shapefile (*.shp)", "All files (*.*)"]
+    # InputUrl
+    __parameter_input_metadata['InputUrl.Description'] = "URL to WMS server"
+    __parameter_input_metadata['InputUrl.Label'] = "WMS Url"
+    __parameter_input_metadata['InputUrl.Tooltip'] = \
+        "The Web Map Server (WMS) URL to read. ${Property} syntax is recognized."
+    __parameter_input_metadata['InputUrl.Required'] = True
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
     __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
-    __parameter_input_metadata['GeoLayerID.Required'] = False
+    __parameter_input_metadata['GeoLayerID.Required'] = True
     __parameter_input_metadata['GeoLayerID.Tooltip'] = (
         "A GeoLayer identifier. Formatting characters and ${Property} syntax is recognized.")
-    __parameter_input_metadata['GeoLayerID.Value.Default'] = '%f'
+    __parameter_input_metadata['GeoLayerID.Value.Default'] = (
+        "The GeoJSON filename without the leading path and without the file extension.")
     # Name
     __parameter_input_metadata['Name.Description'] = "GeoLayer name"
     __parameter_input_metadata['Name.Label'] = "Name"
@@ -134,7 +117,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "ReadGeoLayerFromShapefile"
+        self.command_name = "ReadRasterGeoLayerFromWebMapService"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -173,20 +156,6 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
-        # noinspection PyPep8Naming
-        pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
-        try:
-            command_util.parse_properties_from_parameter_string(pv_Properties)
-        except ValueError as e:
-            # Use the exception
-            message = str(e)
-            recommendation = "Check the Properties string format."
-            warning_message += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
         # Check that optional parameter IfGeoLayerIDExists is one of the acceptable values or is None.
         # noinspection PyPep8Naming
         pv_IfGeoLayerIDExists = self.get_parameter_value(parameter_name="IfGeoLayerIDExists",
@@ -214,15 +183,14 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_runtime_data(self, input_file_absolute: str, geolayer_id: str) -> bool:
+    def check_runtime_data(self, input_url: str, geolayer_id: str) -> bool:
         """
         Checks the following:
-        * the InputFile (absolute) is a valid file
-        * the InputFile (absolute) ends in .SHP (warning, not error)
+        * the input file (absolute) is a valid file
         * the ID of the output GeoLayer is unique (not an existing GeoLayer ID)
 
         Args:
-            input_file_absolute: the full pathname to the input spatial data file
+            input_url: the URL to the Web Map Service
             geolayer_id: the ID of the output GeoLayer
 
         Returns:
@@ -232,30 +200,20 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
         # Boolean to determine if the read process should be run. Set to true until an error occurs.
         run_read = True
 
-        # If the input spatial data file is not a valid file path, raise a FAILURE.
-        if not os.path.isfile(input_file_absolute):
-
-            run_read = False
-            self.warning_count += 1
-            message = "The InputFile ({}) is not a valid file.".format(input_file_absolute)
-            recommendation = "Specify a valid file."
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # If the input spatial data file does not end in .geojson, raise a WARNING.
-        if not input_file_absolute.upper().endswith(".SHP"):
-            self.warning_count += 1
-            message = 'The InputFile ({}) does not end with the .shp extension.'.format(input_file_absolute)
-            recommendation = "No recommendation logged."
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                           CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
+        # If the input URL is not a valid URL, raise a FAILURE.
+        # - TODO need to implement some type of check
+        # if not os.path.isfile(input_file_abs):
+        #     run_read = False
+        #     self.warning_count += 1
+        #     message = "The InputFile ({}) is not a valid file.".format(input_file_abs)
+        #     recommendation = "Specify a valid file."
+        #     self.logger.warning(message)
+        #     self.command_status.add_to_log(CommandPhaseType.RUN,
+        #                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
-        elif self.command_processor.get_geolayer(geolayer_id):
-
+        if self.command_processor.get_geolayer(geolayer_id):
             # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
@@ -264,17 +222,16 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
             message = 'The GeoLayerID ({}) value is already in use as a GeoLayer ID.'.format(geolayer_id)
             recommendation = 'Specify a new GeoLayerID.'
 
-            # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
             if pv_IfGeoLayerIDExists.upper() == "REPLACEANDWARN":
+                # The registered GeoLayer should be replaced with the new GeoLayer (with warnings).
                 self.warning_count += 1
                 self.logger.warning(message)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
-            # The registered GeoLayer should not be replaced. A warning should be logged.
             if pv_IfGeoLayerIDExists.upper() == "WARN":
-
+                # The registered GeoLayer should not be replaced. A warning should be logged.
                 run_read = False
                 self.warning_count += 1
                 self.logger.warning(message)
@@ -282,9 +239,8 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.WARNING,
                                                                 message, recommendation))
 
-            # The matching IDs should cause a FAILURE.
             elif pv_IfGeoLayerIDExists.upper() == "FAIL":
-
+                # The matching IDs should cause a FAILURE.
                 run_read = False
                 self.warning_count += 1
                 self.logger.warning(message)
@@ -298,11 +254,10 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Read the layer file from a Shapefile, create a GeoLayer object, and add to the
+        Run the command. Read the layer file from a Web Map Service (WMS), create a GeoLayer object, and add to the
         GeoProcessor's geolayer list.
 
-        Returns:
-            None.
+        Returns: None.
 
         Raises:
             RuntimeError if any warnings occurred during run_command method.
@@ -312,11 +267,23 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
         # Obtain the parameter values.
         # noinspection PyPep8Naming
-        pv_InputFile = self.get_parameter_value("InputFile")
+        pv_InputUrl = self.get_parameter_value("InputUrl")
         # noinspection PyPep8Naming
-        pv_GeoLayerID = \
-            self.get_parameter_value("GeoLayerID",
-                                     default_value=self.parameter_input_metadata['GeoLayerID.Value.Default'])
+        pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
+        # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name", default_value=pv_GeoLayerID)
+        # noinspection PyPep8Naming
+        pv_Description = \
+            self.get_parameter_value("Description",
+                                     default_value=self.parameter_input_metadata['Description.Value.Default'])
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value("Properties")
+
+        # Expand for ${Property} syntax.
+        # noinspection PyPep8Naming
+        pv_InputUrl = self.command_processor.expand_parameter_value(pv_InputUrl, self)
+        # noinspection PyPep8Naming
+        pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
         # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value("Name", default_value=pv_GeoLayerID)
         # noinspection PyPep8Naming
@@ -338,48 +305,57 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property}
         # syntax
-        input_file_absolute = io_util.verify_path_for_os(
-            io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_InputFile, self)))
+        # input_file_absolute = io_util.verify_path_for_os(
+        #     io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
+        #                              self.command_processor.expand_parameter_value(pv_InputFile, self)))
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
-        if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
-            # noinspection PyPep8Naming
-            pv_GeoLayerID = io_util.expand_formatter(input_file_absolute, pv_GeoLayerID)
+        # if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
+        #     # noinspection PyPep8Naming
+        #     pv_GeoLayerID = io_util.expand_formatter(input_file_absolute, pv_GeoLayerID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.check_runtime_data(input_file_absolute, pv_GeoLayerID):
-            # noinspection PyBroadException
-            try:
-                # Create a QGSVectorLayer object with the InputFile in Shapefile format
-                qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(input_file_absolute)
+        # if self.check_runtime_data(input_file_absolute, pv_GeoLayerID):
+        #     # noinspection PyBroadException
+        #     try:
+        #         # Create a QGSRasterLayer object in raster format
+        #         qgs_raster_layer = qgis_util.read_qgsrasterlayer_from_file(input_file_absolute)
 
-                # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
-                                              qgs_vector_layer=qgs_vector_layer,
+        #         # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+        #         geolayer_obj = RasterGeoLayer(geolayer_id=pv_GeoLayerID,
+        #                                       qgs_raster_layer=qgs_raster_layer,
+        #                                       input_path_full=input_file_absolute,
+        #                                       input_path=pv_InputFile)
+        #         self.command_processor.add_geolayer(geolayer_obj)
+
+        if self.check_runtime_data(pv_InputUrl, pv_GeoLayerID):
+            try:
+                qgs_raster_layer = None
+                geolayer_obj = RasterGeoLayer(geolayer_id=pv_GeoLayerID,
                                               name=pv_Name,
                                               description=pv_Description,
-                                              input_path_full=input_file_absolute,
-                                              input_path=pv_InputFile)
+                                              qgs_raster_layer=qgs_raster_layer,
+                                              input_path_full=pv_InputUrl,
+                                              input_path=pv_InputUrl)
 
                 # Set the properties
                 properties = command_util.parse_properties_from_parameter_string(pv_Properties)
                 # Set the properties as additional properties (don't just reset the properties dictionary)
-                new_geolayer.set_properties(properties)
+                geolayer_obj.set_properties(properties)
 
-                # Add a history comment
-                new_geolayer.append_to_history("Read GeoLayer from shapefile:  '" + input_file_absolute + "'")
-
-                self.command_processor.add_geolayer(new_geolayer)
+                self.command_processor.add_geolayer(geolayer_obj)
 
             except Exception:
+                # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
-                message = "Unexpected error reading GeoLayer {} from Shapefile {}.".format(pv_GeoLayerID, pv_InputFile)
+                message = "Unexpected error reading RasterGeoLayer {} from Web Map Service {}.".format(
+                    pv_GeoLayerID, pv_InputUrl)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
+        # Determine success of command processing. Raise RuntimeError if any errors occurred
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

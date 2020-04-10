@@ -68,6 +68,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("Description", type("")),
+        CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     # Command metadata for command editor display
@@ -107,6 +108,12 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
     __parameter_input_metadata['Description.Required'] = False
     __parameter_input_metadata['Description.Tooltip'] = "The GeoLayer description, can use ${Property}."
     __parameter_input_metadata['Description.Value.Default'] = ''
+    # Properties
+    __parameter_input_metadata['Properties.Description'] = "properties for the new GeoLayer"
+    __parameter_input_metadata['Properties.Label'] = "Properties"
+    __parameter_input_metadata['Properties.Required'] = False
+    __parameter_input_metadata['Properties.Tooltip'] = \
+        "Properties for the new GeoLayer using syntax:  property:value,property:'value'"
     # IfGeoLayerIDExists
     __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
@@ -171,6 +178,20 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Properties - verify that the properties can be parsed
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
+        try:
+            command_util.parse_properties_from_parameter_string(pv_Properties)
+        except ValueError as e:
+            # Use the exception
+            message = str(e)
+            recommendation = "Check the Properties string format."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check that optional parameter IfGeoLayerIDExists is one of the acceptable values or is None.
         # noinspection PyPep8Naming
@@ -304,6 +325,8 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         pv_Description =\
             self.get_parameter_value("Description",
                                      default_value=self.parameter_input_metadata['Description.Value.Default'])
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value("Properties")
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
@@ -312,6 +335,8 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
         # noinspection PyPep8Naming
         pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
+        # noinspection PyPep8Naming
+        pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property}
         # syntax
@@ -339,13 +364,22 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(input_file_absolute)
 
                 # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
-                geolayer_obj = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
+                new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
                                               name=pv_Name,
                                               description=pv_Description,
                                               qgs_vector_layer=qgs_vector_layer,
                                               input_path_full=input_file_absolute,
                                               input_path=pv_InputFile)
-                self.command_processor.add_geolayer(geolayer_obj)
+
+                # Set the properties
+                properties = command_util.parse_properties_from_parameter_string(pv_Properties)
+                # Set the properties as additional properties (don't just reset the properties dictionary)
+                new_geolayer.set_properties(properties)
+
+                # Add a history comment
+                new_geolayer.append_to_history("Read GeoLayer from GeoJSON file:  '" + input_file_absolute + "'")
+
+                self.command_processor.add_geolayer(new_geolayer)
 
             # Raise an exception if an unexpected error occurs during the process.
             except Exception:

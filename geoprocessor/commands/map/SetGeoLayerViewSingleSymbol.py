@@ -44,6 +44,8 @@ class SetGeoLayerViewSingleSymbol(AbstractCommand):
         CommandParameterMetadata("GeoMapID", type("")),
         CommandParameterMetadata("GeoLayerViewGroupID", type("")),
         CommandParameterMetadata("GeoLayerViewID", type("")),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("Properties", type(""))]
 
     # Command metadata for command editor display.
@@ -75,6 +77,16 @@ class SetGeoLayerViewSingleSymbol(AbstractCommand):
     __parameter_input_metadata['GeoLayerViewID.Label'] = "GeoLayerViewID"
     __parameter_input_metadata['GeoLayerViewID.Required'] = True
     __parameter_input_metadata['GeoLayerViewID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
+    # Name
+    __parameter_input_metadata['Name.Description'] = "Symbol name"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = False
+    __parameter_input_metadata['Name.Tooltip'] = "The symbol name, can use ${Property}."
+    # Description
+    __parameter_input_metadata['Description.Description'] = "Symbol description"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = False
+    __parameter_input_metadata['Description.Tooltip'] = "The symbol description, can use ${Property}."
     # Properties
     __parameter_input_metadata['Properties.Description'] = "properties for the symbol"
     __parameter_input_metadata['Properties.Label'] = "Properties"
@@ -213,7 +225,7 @@ class SetGeoLayerViewSingleSymbol(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Add the GeoLayer to the GeoMap.
+        Run the command.  Set the symbol as a single symbol.
 
         Returns:
             None.
@@ -232,6 +244,10 @@ class SetGeoLayerViewSingleSymbol(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerViewID = self.get_parameter_value("GeoLayerViewID")
         # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name")
+        # noinspection PyPep8Naming
+        pv_Description = self.get_parameter_value("Description", default_value='')
+        # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value("Properties")
 
         # Expand for ${Property} syntax.
@@ -241,6 +257,10 @@ class SetGeoLayerViewSingleSymbol(AbstractCommand):
         pv_GeoLayerViewGroupID = self.command_processor.expand_parameter_value(pv_GeoLayerViewGroupID, self)
         # noinspection PyPep8Naming
         pv_GeoLayerViewID = self.command_processor.expand_parameter_value(pv_GeoLayerViewID, self)
+        # noinspection PyPep8Naming
+        pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
+        # noinspection PyPep8Naming
+        pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
         # noinspection PyPep8Naming
         pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
@@ -290,10 +310,6 @@ class SetGeoLayerViewSingleSymbol(AbstractCommand):
                     # Set the properties
                     properties = command_util.parse_properties_from_parameter_string(pv_Properties)
 
-                    # noinspection PyPep8Naming
-                    pv_Name = ""
-                    # noinspection PyPep8Naming
-                    pv_Description = ""
                     geolayersymbol = GeoLayerSingleSymbol(properties=properties, name=pv_Name,
                                                           description=pv_Description)
 

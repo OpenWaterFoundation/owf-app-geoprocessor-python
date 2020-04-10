@@ -86,6 +86,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         CommandParameterMetadata("Subset_Pattern", type("")),
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("Description", type("")),
+        CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
     # Command metadata for command editor display
@@ -166,6 +167,12 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     __parameter_input_metadata['Description.Required'] = False
     __parameter_input_metadata['Description.Tooltip'] = "The GeoLayer description, can use ${Property}."
     __parameter_input_metadata['Description.Value.Default'] = ''
+    # Properties
+    __parameter_input_metadata['Properties.Description'] = "properties for the new GeoLayer"
+    __parameter_input_metadata['Properties.Label'] = "Properties"
+    __parameter_input_metadata['Properties.Required'] = False
+    __parameter_input_metadata['Properties.Tooltip'] = \
+        "Properties for the new GeoLayer using syntax:  property:value,property:'value'"
 
     def __init__(self) -> None:
         """
@@ -254,6 +261,20 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 self.command_status.add_to_log(
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Properties - verify that the properties can be parsed
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
+        try:
+            command_util.parse_properties_from_parameter_string(pv_Properties)
+        except ValueError as e:
+            # Use the exception
+            message = str(e)
+            recommendation = "Check the Properties string format."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -395,6 +416,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         pv_Description = \
             self.get_parameter_value("Description",
                                      default_value=self.parameter_input_metadata['Description.Value.Default'])
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value("Properties")
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
@@ -403,6 +426,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
         # noinspection PyPep8Naming
         pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
+        # noinspection PyPep8Naming
+        pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
         # Convert the ReadOnlyOneFeatureClass from a string value to a Boolean value.
         # noinspection PyPep8Naming
@@ -430,13 +455,19 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                                                             pv_FeatureClass)
 
                         # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
-                        geolayer_obj = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
+                        new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
                                                       qgs_vector_layer=qgs_vector_layer,
                                                       name=pv_Name,
                                                       description=pv_Description,
                                                       input_path_full=input_folder_absolute,
                                                       input_path=pv_InputFolder)
-                        self.command_processor.add_geolayer(geolayer_obj)
+
+                        # Set the properties
+                        properties = command_util.parse_properties_from_parameter_string(pv_Properties)
+                        # Set the properties as additional properties (don't just reset the properties dictionary)
+                        new_geolayer.set_properties(properties)
+
+                        self.command_processor.add_geolayer(new_geolayer)
 
                     except Exception:
                         # Raise an exception if an unexpected error occurs during the process

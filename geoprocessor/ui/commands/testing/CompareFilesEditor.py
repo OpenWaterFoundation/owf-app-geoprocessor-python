@@ -41,17 +41,21 @@ class CompareFilesEditor(SimpleCommandEditor):
 
     def __init__(self, command: AbstractCommand, app_session: GeoProcessorAppSession) -> None:
         """
-        Initialize the Abstract Dialog instance.
+        Initialize the AbstractCommandEditor instance.
 
         Args:
             command (AbstractCommand): a command object derived from AbstractCommand
             app_session (GeoProcessorAppSession): the application session, used to determine the user's home directory.
+
+        Returns:
+            None
         """
+
+        # Declare this before calling super because called code initializes the buttons
+        self.visual_diff_button: QtWidgets.QPushButton or None = None
 
         # The following will initialize shared components in AbstractCommandEditor
         super().__init__(command, app_session)
-
-        self.visual_diff_button: QtWidgets.QPushButton or None = None
 
     def refresh_ui(self) -> None:
         """
@@ -146,9 +150,10 @@ class CompareFilesEditor(SimpleCommandEditor):
             env_dict = {}
             use_command_shell = False
             # Use parameters for no-wait process
-            p = subprocess.Popen(command_line, shell=use_command_shell, env=env_dict, stdin=None, stdout=None,
-                                 close_fds=True, creationflags=subprocess.DETACHED_PROCESS)
-            # Don't wait for exit status since an independent process
+            subprocess.Popen(command_line, shell=use_command_shell, env=env_dict, stdin=None, stdout=None,
+                             close_fds=True, creationflags=subprocess.DETACHED_PROCESS)
+            # Don't wait for exit status since an independent process.
+            # Just let the process run separately until the diff tool is closed.
 
         except Exception:
             message = 'Error running program:  {}'.format(command_line)

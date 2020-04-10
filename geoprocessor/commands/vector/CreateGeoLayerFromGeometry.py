@@ -227,7 +227,7 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
         except ValueError as e:
             # Use the exception
             message = str(e)
-            recommendation = "Check the properties string format."
+            recommendation = "Check the Properties string format."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -402,6 +402,10 @@ class CreateGeoLayerFromGeometry(AbstractCommand):
                 properties = command_util.parse_properties_from_parameter_string(pv_Properties)
                 # Set the properties as additional properties (don't just reset the properties dictionary)
                 new_geolayer.set_properties(properties)
+
+                # Add a history comment
+                new_geolayer.append_to_history("Created GeoLayer from '" + pv_GeometryFormat +
+                                               "' data: '" + pv_GeometryData + "'")
 
                 # Add the geolayer to the processor
                 self.command_processor.add_geolayer(new_geolayer)

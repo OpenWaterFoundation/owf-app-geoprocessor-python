@@ -1,4 +1,4 @@
-# SetGeoLayerViewGraduatedSymbol - command to set a GeoLayerView to use Graduated symbol
+# SetGeoLayerViewEventHandler - command to set a GeoLayerView event handler
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -26,7 +26,7 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
-from geoprocessor.core.GeoLayerGraduatedSymbol import GeoLayerGraduatedSymbol
+from geoprocessor.core.GeoLayerViewEventHandler import GeoLayerViewEventHandler
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
@@ -34,9 +34,9 @@ import geoprocessor.util.validator_util as validator_util
 import logging
 
 
-class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
+class SetGeoLayerViewEventHandler(AbstractCommand):
     """
-    Set a GeoLayerView to use graduated symbol.
+    Set a GeoLayerView event handler, to be implemented by application that uses map configuration.
     """
 
     # Define the command parameters.
@@ -44,21 +44,23 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
         CommandParameterMetadata("GeoMapID", type("")),
         CommandParameterMetadata("GeoLayerViewGroupID", type("")),
         CommandParameterMetadata("GeoLayerViewID", type("")),
+        CommandParameterMetadata("EventType", type("")),
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("Description", type("")),
-        CommandParameterMetadata("ClassificationAttribute", type("")),
         CommandParameterMetadata("Properties", type(""))]
 
     # Command metadata for command editor display.
     # - The * character is equivalent to two spaces for indent.
     __command_metadata = dict()
-    __command_metadata['Description'] = "Set a GeoLayerView to use a graduated symbol."\
-        "  Features will be drawn with color map.\n"\
+    __command_metadata['Description'] =\
+        "Set a GeoLayerView event handler, which handles layer/symbol interaction events.\n" \
+        "An application that uses the map configuration should implement features to handle the event,"\
+        "based on the EventType and properties.\n"\
         "    GeoMapProject\n"\
         "      GeoMap [ ]\n"\
         "        GeoLayerViewGroup [ ]\n"\
         "          GeoLayerView [ ]\n"\
-        "*          GeoLayer + GeoLayerSymbol\n"
+        "*          GeoLayer + GeoLayerSymbol + EventHandler"
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
@@ -78,27 +80,27 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
     __parameter_input_metadata['GeoLayerViewID.Label'] = "GeoLayerViewID"
     __parameter_input_metadata['GeoLayerViewID.Required'] = True
     __parameter_input_metadata['GeoLayerViewID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
+    # EventType
+    __parameter_input_metadata['EventHandler.Description'] = "Event type"
+    __parameter_input_metadata['EventHandler.Label'] = "Name"
+    __parameter_input_metadata['EventHandler.Required'] = True
+    __parameter_input_metadata['EventHandler.Tooltip'] = "The event type, can use ${Property}."
     # Name
-    __parameter_input_metadata['Name.Description'] = "Symbol name"
+    __parameter_input_metadata['Name.Description'] = "Event handler name"
     __parameter_input_metadata['Name.Label'] = "Name"
     __parameter_input_metadata['Name.Required'] = False
-    __parameter_input_metadata['Name.Tooltip'] = "The symbol name, can use ${Property}."
+    __parameter_input_metadata['Name.Tooltip'] = "The event handler name, can use ${Property}."
     # Description
-    __parameter_input_metadata['Description.Description'] = "Symbol description"
+    __parameter_input_metadata['Description.Description'] = "Event handler description"
     __parameter_input_metadata['Description.Label'] = "Description"
     __parameter_input_metadata['Description.Required'] = False
-    __parameter_input_metadata['Description.Tooltip'] = "The symbol description, can use ${Property}."
-    # ClassificationAttribute
-    __parameter_input_metadata['ClassificationAttribute.Description'] = "classification attribute"
-    __parameter_input_metadata['ClassificationAttribute.Label'] = "Classification attribute"
-    __parameter_input_metadata['ClassificationAttribute.Required'] = True
-    __parameter_input_metadata['ClassificationAttribute.Tooltip'] = "The classification attribute, can use ${Property}."
+    __parameter_input_metadata['Description.Tooltip'] = "The event handler description, can use ${Property}."
     # Properties
-    __parameter_input_metadata['Properties.Description'] = "properties for the symbol"
+    __parameter_input_metadata['Properties.Description'] = "properties for the event handler"
     __parameter_input_metadata['Properties.Label'] = "Properties"
     __parameter_input_metadata['Properties.Required'] = False
     __parameter_input_metadata['Properties.Tooltip'] = \
-        "Properties for the symbol using syntax:  property:value,property:'value'"
+        "Properties for the event handler using syntax:  property:value,property:'value'"
 
     def __init__(self) -> None:
         """
@@ -107,7 +109,7 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "SetGeoLayerViewGraduatedSymbol"
+        self.command_name = "SetGeoLayerViewEventHandler"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -231,7 +233,7 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command.  Set the symbol as graduated symbol.
+        Run the command.  Set an event handler for the GeoLayerView.
 
         Returns:
             None.
@@ -250,11 +252,11 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerViewID = self.get_parameter_value("GeoLayerViewID")
         # noinspection PyPep8Naming
-        pv_Name = self.get_parameter_value("Name", default_value='')
+        pv_EventType = self.get_parameter_value("EventType")
+        # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name")
         # noinspection PyPep8Naming
         pv_Description = self.get_parameter_value("Description", default_value='')
-        # noinspection PyPep8Naming
-        pv_ClassificationAttribute = self.get_parameter_value("ClassificationAttribute")
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value("Properties")
 
@@ -266,11 +268,11 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerViewID = self.command_processor.expand_parameter_value(pv_GeoLayerViewID, self)
         # noinspection PyPep8Naming
+        pv_EventType = self.command_processor.expand_parameter_value(pv_EventType, self)
+        # noinspection PyPep8Naming
         pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
         # noinspection PyPep8Naming
         pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
-        # noinspection PyPep8Naming
-        pv_ClassificationAttribute = self.command_processor.expand_parameter_value(pv_ClassificationAttribute, self)
         # noinspection PyPep8Naming
         pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
@@ -320,18 +322,16 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
                     # Set the properties
                     properties = command_util.parse_properties_from_parameter_string(pv_Properties)
 
-                    # Create the GeoLayerSymbol
-                    geolayersymbol = GeoLayerGraduatedSymbol(pv_ClassificationAttribute,
-                                                             properties=properties, name=pv_Name,
+                    event_handler = GeoLayerViewEventHandler(pv_EventType, properties=properties, name=pv_Name,
                                                              description=pv_Description)
 
-                    # Set the symbol
-                    geolayerview.geolayersymbol = geolayersymbol
+                    # Append the event handler
+                    geolayerview.event_handlers.append(event_handler)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
-                message = "Unexpected error setting the symbol for GeoLayerView {}.".format(pv_GeoLayerViewID)
+                message = "Unexpected error setting event handler for GeoLayerView {}.".format(pv_GeoLayerViewID)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,

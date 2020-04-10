@@ -586,9 +586,10 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         Args:
             parameter_name (str):  Parameter name, used for troubleshooting
-            parameter_ValueDefaultForDisplay (str):  Display value corresponding to Value.Default,
-                added to parameter choices.
-            parameter _Tooltip (str):  Tooltip text.
+            parameter_ValueDefaultForDisplay (str):
+                Display value corresponding to Value.Default, added to parameter choices.
+                For example, may want to display a blank in addition to valid choices.
+            parameter_Tooltip (str):  Tooltip text.
             parameter_Values (str):  List of values for list, comma-delimited
             parameter_ValuesEditable (bool):  Whether the list of values is editable in the text field.
             parameter_Enabled (bool):  Whether the parameter is enabled.
@@ -1086,7 +1087,7 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         command_doc_url = None
         # Command name does not work in all cases because of commands like /*, */ and empty line.
         # Therefore, use the command class name.
-        #command_name = self.command.command_name
+        # command_name = self.command.command_name
         command_name = self.command.__class__.__name__
         if ref_command_name is not None and ref_command_name != "":
             # Use the specific command name for documentation
@@ -1095,15 +1096,22 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             #             "' ref='"+str(ref_command_name)+"'")
             # command_name = ref_command_name
             pass
+
+        # Indicate whether documentation displayed OK
+        doc_displayed_ok = False
         # noinspection PyBroadException
         try:
+            # TODO smalers 2020-04-07 this code needs to check for the existence of the URL, like TSTool
             user_doc_url = app_util.get_property('ProgramUserDocumentationUrl')
-            if user_doc_url is None:
+            user_doc_url2 = app_util.get_property('ProgramUserDocumentationUrl2')
+            if user_doc_url is None and user_doc_url2 is None:
+                # This should not happen if geoprocessor.app.gp sets initial properties correctly
                 qt_util.warning_message_box(
-                    "Can't view documentation...no application configuration value for 'ProgramUserDocumenationUrl'")
+                    "Can't view documentation...no application configuration value for "
+                    "'ProgramUserDocumentationUrl' or 'ProgramUserDocumentationUrl2'")
                 return
+            # Else have at least one URL defined to try
             # Append the command name to the documentation
-            logger.info("Now, command name '" + str(command_name) + "'")
             command_doc_url = "{}/command-ref/{}/{}/".format(user_doc_url, command_name, command_name)
             # message = "Displaying command documentation using URL: " + command_doc_url
             # logger.info(message)
@@ -1112,13 +1120,39 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             # noinspection PyBroadException
             try:
                 webbrowser.open_new_tab(command_doc_url)
+                doc_displayed_ok = True
             except Exception:
                 # Try the other variant, may work on different operating system
                 webbrowser.open(command_doc_url)
+                doc_displayed_ok = True
         except Exception:
-            message = 'Error viewing command documentation using url "' + str(command_doc_url) + '"'
-            logger.warning(message, exc_info=True)
-            qt_util.warning_message_box(message)
+            doc_displayed_ok = False
+
+        if not doc_displayed_ok:
+            # Try the same logic with the second documentation URL
+            # noinspection PyBroadException
+            try:
+                user_doc_url = app_util.get_property('ProgramUserDocumentationUrl2')
+                if user_doc_url is None:
+                    qt_util.warning_message_box( "Can't view documentation...no application configuration value for"
+                                                 "'ProgramUserDocumentationUrl2'")
+                    return
+                # Append the command name to the documentation
+                command_doc_url = "{}/command-ref/{}/{}/".format(user_doc_url, command_name, command_name)
+                # message = "Displaying command documentation using URL: " + command_doc_url
+                # logger.info(message)
+                # Open the command's user documentation in the default browser.
+                # - open in a new tab or if this fails open a new window
+                # noinspection PyBroadException
+                try:
+                    webbrowser.open_new_tab(command_doc_url)
+                except Exception:
+                    # Try the other variant, may work on different operating system
+                    webbrowser.open(command_doc_url)
+            except Exception:
+                message = 'Error viewing command documentation using url "' + str(command_doc_url) + '"'
+                logger.warning(message, exc_info=True)
+                qt_util.warning_message_box(message)
 
     # TODO smalers 2020-01-14 This method does not seem to be used - need to remove?
     def x_are_required_parameters_specified(self, ui_command_parameter_list: []) -> bool:

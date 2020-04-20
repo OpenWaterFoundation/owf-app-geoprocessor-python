@@ -26,7 +26,21 @@ class GeoLayerView(object):
     """
     The GeoLayerView class encapsulates a GeoLayer and a GeoLayerSymbol object used to symbolize that layer.
     """
-    def __init__(self, geolayerview_id: str, geolayer: GeoLayer, name: str, description: str = "") -> None:
+    def __init__(self, geolayerview_id: str, geolayer: GeoLayer, name: str, description: str = "",
+                 properties: dict = None) -> None:
+        """
+        Construct a new GeoLayerView.
+
+        Args:
+            geolayerview_id (str):  Unique GeoLayerView identifier.
+            geolayer (GeoLayer):  The GeoLayer to associate with the GeoLayerView.
+            name (str):  GeoLayerView name.
+            description (str):  GeoLayerView description.
+            properties (dict):  A dictionary of properties for the GeoLayerView.
+
+        Returns:
+            None
+        """
         # Identifier
         self.id = geolayerview_id
 
@@ -45,8 +59,12 @@ class GeoLayerView(object):
         # - specific child classes may be derived from parent class GeoLayerSymbol
         self.geolayersymbol: GeoLayerSymbol or None = None
 
-        # Properties, currently not used
-        self.properties = dict()
+        if properties is None:
+            # No properties were provided so use an empty dictionary
+            self.properties = dict()
+        else:
+            # Use the provided properties
+            self.properties = properties
 
         # Event handlers for the GeoLayerView
         # - code that reads the map should implement handlers for the specified event types

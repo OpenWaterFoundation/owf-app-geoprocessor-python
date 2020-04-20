@@ -47,6 +47,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         CommandParameterMetadata("GeoLayerViewID", type("")),
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("Description", type("")),
+        CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("InsertPosition", type("")),
         CommandParameterMetadata("InsertBefore", type("")),
         CommandParameterMetadata("InsertAfter", type(""))]
@@ -100,6 +101,12 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
     __parameter_input_metadata['Description.Tooltip'] =\
         "The GeoLayerView description, can use ${Property}, default is description."
     __parameter_input_metadata['Description.Value.Default'] = ''
+    # Properties
+    __parameter_input_metadata['Properties.Description'] = "properties for the new GeoLayerViewGroup"
+    __parameter_input_metadata['Properties.Label'] = "Properties"
+    __parameter_input_metadata['Properties.Required'] = False
+    __parameter_input_metadata['Properties.Tooltip'] = \
+        "Properties for the new GeoLayerViewGroup using syntax:  property:value,property:'value'"
     # InsertPosition
     __parameter_input_metadata['InsertPosition.Description'] = "insert position"
     __parameter_input_metadata['InsertPosition.Label'] = "Insert position"
@@ -168,6 +175,20 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                 self.command_status.add_to_log(
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Properties - verify that the properties can be parsed
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
+        try:
+            command_util.parse_properties_from_parameter_string(pv_Properties)
+        except ValueError as e:
+            # Use the exception
+            message = str(e)
+            recommendation = "Check the properties string format."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Only allow one of InsertPosition, InsertBefore, and InsertAfter
         # noinspection PyPep8Naming
@@ -296,6 +317,8 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
             self.get_parameter_value("Description",
                                      default_value=self.parameter_input_metadata['Description.Value.Default'])
         # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value("Properties")
+        # noinspection PyPep8Naming
         pv_InsertPosition = self.get_parameter_value("InsertPosition")  # None is OK
         # noinspection PyPep8Naming
         pv_InsertBefore = self.get_parameter_value("InsertBefore")  # None is OK
@@ -315,6 +338,8 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
         # noinspection PyPep8Naming
         pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
+        # noinspection PyPep8Naming
+        pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
         # noinspection PyPep8Naming
         pv_InsertBefore = self.command_processor.expand_parameter_value(pv_InsertBefore, self)
         # noinspection PyPep8Naming
@@ -356,7 +381,9 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
                 # Create a new GeoLayerView
-                geolayerview = GeoLayerView(pv_GeoLayerViewID, geolayer, name=pv_Name, description=pv_Description)
+                properties = command_util.parse_properties_from_parameter_string(pv_Properties)
+                geolayerview = GeoLayerView(pv_GeoLayerViewID, geolayer, name=pv_Name, description=pv_Description,
+                                            properties=properties)
 
                 # Add the GeoLayerView to the GeoMap
                 if (geomap is not None) and (geolayerviewgroup is not None):

@@ -379,21 +379,22 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str, delimiter
 def parse_properties_from_parameter_string(properties_string: str, delimiter1: str = ",",
                                            delimiter2: str = ":") -> dict:
     """
-    Parses a command parameter string containing properties, where values are optionally surrounded by single quotes:
+    Parses a command parameter string containing properties, where values are optionally surrounded by single quotes.
+    There is currently no support for escaping the single quotes.
 
-        Property1=Value1,Property2=Value2) would
-        Property1='Value1',Property2='Value2')
+        Property1=Value1,Property2='Value 2')
 
-    return: Property1="Value1",Property2="Value2"
-    Return an dictionary of the parsed properties, may be an empty dictionary.
+    would parse as:
+
+    Property1="Value1",Property2="Value2 "
 
     Args:
         properties_string (str): The command string to parse.
-        delimiter1 (str): Delimiter between properies, defaults to ",".
+        delimiter1 (str): Delimiter between properties, defaults to ",".
         delimiter2 (str): Delimiter between property and value, defaults to ":".
 
-    Return:
-        Dictionary of the parsed properties.
+    Returns:
+        Dictionary of the parsed properties, may be an empty dictionary.
 
     Raises:
         ValueError if the command syntax is invalid.

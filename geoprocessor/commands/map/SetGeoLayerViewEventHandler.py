@@ -60,7 +60,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
         "      GeoMap [ ]\n"\
         "        GeoLayerViewGroup [ ]\n"\
         "          GeoLayerView [ ]\n"\
-        "*          GeoLayer + GeoLayerSymbol + EventHandler"
+        "*          GeoLayer + GeoLayerSymbol + EventHandler [ ]"
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata

@@ -84,7 +84,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
     __parameter_input_metadata['GeoLayerViewGroupID.Required'] = True
     __parameter_input_metadata['GeoLayerViewGroupID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
     # GeoLayerViewID
-    __parameter_input_metadata['GeoLayerViewID.Description'] = "GeoLayerView identifier"
+    __parameter_input_metadata['GeoLayerViewID.Description'] = "New GeoLayerView identifier"
     __parameter_input_metadata['GeoLayerViewID.Label'] = "GeoLayerViewID"
     __parameter_input_metadata['GeoLayerViewID.Required'] = True
     __parameter_input_metadata['GeoLayerViewID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."

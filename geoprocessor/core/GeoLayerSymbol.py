@@ -39,7 +39,7 @@ class GeoLayerSymbol(object):
         self.classification_type: GeoLayerSymbolClassificationType = classification_type
 
         # Classification attribute.
-        self.classification_attribute: str = description
+        self.classification_attribute: str = classification_attribute
 
         # Properties that define the symbol, different for each classification type.
         self.properties: dict = properties

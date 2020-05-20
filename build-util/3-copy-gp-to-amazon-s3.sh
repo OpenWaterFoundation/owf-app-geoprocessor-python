@@ -176,7 +176,7 @@ parseCommandLine() {
 # - calling code must exit with appropriate code
 printUsage() {
   echoStderr ""
-  echoStderr "Usage:  $programName -a awsProfile"
+  echoStderr "Usage:  $programName --aws-profile=profile"
   echoStderr ""
   echoStderr "Copy the GeoProcessor installer files to the Amazon S3 static website folder:"
   echoStderr "  $s3FolderUrl"
@@ -197,7 +197,7 @@ printUsage() {
 # - calling code must exit with appropriate code
 printVersion() {
   echoStderr ""
-  echoStderr "$programName version $programVersion ${programVrsionDate}"
+  echoStderr "$programName version $programVersion ${programVersionDate}"
   echoStderr ""
   echoStderr "GeoProcessor"
   echoStderr "Copyright 2017-2020 Open Water Foundation."
@@ -346,16 +346,9 @@ gpVersion=$(${scriptsFolder}/gpversion)
 # Folder for the virtual environment installer
 virtualenvTmpFolder="${buildUtilFolder}/venv-tmp"
 
-# Default is not to do 'aws' dry run
-# - override with --dryrun
-dryrun=""
-
 # Root AWS S3 location where files are to be uploaded 
 s3FolderUrl="s3://software.openwaterfoundation.org/geoprocessor"
 gpDownloadUrl="http://software.openwaterfoundation.org/geoprocessor"
-
-# Specify AWS profile with --aws-profile
-awsProfile=""
 
 # Defaults for whether operating systems are included in upload
 # - default is to upload all but change when Windows is not involved since won't be on the machine
@@ -368,6 +361,11 @@ if [ "${operatingSystem}" = "linux" ]; then
 fi
 
 # Parse the command line.
+# Specify AWS profile with --aws-profile
+awsProfile=""
+# Default is not to do 'aws' dry run
+# - override with --dryrun
+dryrun=""
 parseCommandLine "$@"
 
 # Check input:

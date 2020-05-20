@@ -2097,7 +2097,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_Single.triggered.connect(
-            functools.partial(self.edit_new_command, "#"))
+            functools.partial(self.edit_new_command, "# "))
         self.Menu_Commands_General_Comments.addAction(self.Menu_Commands_General_Comments_Single)
 
         # Comments / General - Comments / Multi-line menus
@@ -4094,17 +4094,25 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # TODO @jurentie get appropriate timezone if possible
             current_date = current_date.strftime("%c %Z")
             host = platform.uname()[1]
-            working_dir = os.getcwd()
+            working_dir_start = os.getcwd()
             program_home = app_util.get_property('ProgramHome')
             program_resources_path = app_util.get_property('ProgramResourcesPath')
+            command_line = ""
+            for i in range(len(sys.argv)):
+                if i > 0:
+                    command_line += " "
+                command_line += sys.argv[i]
 
             properties += ("GeoProcessor Application and Session Information:\n" +
                            tab + "Program Name: " + program_name + " " + version + " " + version_date + "\n" +
                            tab + "User Name: " + user_name + "\n" +
                            tab + "Date: " + current_date + "\n" +
                            tab + "Host: " + host + "\n" +
-                           tab + "Working Directory: " + working_dir + "\n" +
-                           tab + "Command: gpdev.bat --ui\n" +
+                           tab + "Working Directory (from software start): " + working_dir_start + "\n" +
+                           tab + "Last Saved Command File:  " + self.saved_file + "\n" +
+                           tab + "Working Directory (from processor): " +
+                           self.gp.get_property('WorkingDir') + "\n" +
+                           tab + "Command: " + command_line + "\n" +
                            tab + 'Program Home: ' + program_home + "\n" +
                            tab + 'Program Resources Path: ' + program_resources_path + "\n" +
                            "\n")

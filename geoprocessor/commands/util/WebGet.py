@@ -293,6 +293,8 @@ class WebGet(AbstractCommand):
                         self.__rename_files_in_a_folder(list_of_files=downloaded_files, folder_path=output_folder,
                                                         new_filename=output_filename)
 
+                    # TODO smalers 2020-05-10 evaluate how to tell processor output file - could be a lot of files
+
                 else:
                     # Download the file to the output folder.
                     with open(os.path.join(output_folder, os.path.basename(url_abs)), "wb") as downloaded_file:
@@ -304,6 +306,8 @@ class WebGet(AbstractCommand):
                         self.__rename_files_in_a_folder(list_of_files=[os.path.basename(url_abs)],
                                                         folder_path=output_folder,
                                                         new_filename=output_filename)
+                        # Save the output file in the processor, used by the UI to list output files
+                        self.command_processor.add_output_file(output_file_absolute)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process

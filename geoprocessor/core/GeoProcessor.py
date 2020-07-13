@@ -100,7 +100,10 @@ class GeoProcessor(object):
         # List that holds the absolute paths to the output files.
         self.output_files: [str] = []
 
-        # Holds the initialized qgis processor.
+        # Holds the initialized QGIS processor, to run processing algorithms.
+        # - this uses plugins.processing.core.Processing.runAlgorithm
+        # - alternatively, could use qgis.processing.processAlgorithm
+        # - TODO smalers 2020-07-12 is there any real difference between the two?  Parameters seem similar.
         self.qgis_processor: Processing = qgis_util.initialize_qgis_processor()
 
         # qgis version
@@ -1625,13 +1628,13 @@ class GeoProcessor(object):
                 self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
             except CommandParameterError as cpe:
                 # Will be raised by command.check_command_parameters() when parsing the command
-                logger.warning("Error in command parameter(s) ({}).".format(cpe))
+                logger.warning("Error in command parameter(s) ({}).".format(cpe), exc_info=True)
                 # Notify listeners that the command has completed
                 warning_count += 1
                 self.notify_command_processor_listeners_of_command_exception(i_command, n_commands, command)
             except CommandError as ce:
                 # Will be raised by command.run_command() when running the command
-                logger.warning("Error in running command ({}).".format(ce))
+                logger.warning("Error in running command ({}).".format(ce), exc_info=True)
                 # Notify listeners that the command has completed
                 warning_count += 1
                 self.notify_command_processor_listeners_of_command_exception(i_command, n_commands, command)

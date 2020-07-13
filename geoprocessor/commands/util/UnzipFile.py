@@ -34,6 +34,7 @@ import geoprocessor.util.zip_util as zip_util
 
 import logging
 import os
+from pathlib import Path
 
 
 class UnzipFile(AbstractCommand):
@@ -57,6 +58,7 @@ class UnzipFile(AbstractCommand):
         CommandParameterMetadata("File", type("")),
         CommandParameterMetadata("FileType", type("")),
         CommandParameterMetadata("OutputFolder", type("")),
+        CommandParameterMetadata("IfFolderDoesNotExist", type("")),
         CommandParameterMetadata("DeleteFile", type(""))]
 
     # Command metadata for command editor display
@@ -79,7 +81,7 @@ class UnzipFile(AbstractCommand):
     __parameter_input_metadata['FileType.Description'] = "input file format"
     __parameter_input_metadata['FileType.Label'] = "File type"
     __parameter_input_metadata['FileType.Tooltip'] = (
-        "The file format of the input File. The following file formats are currently accepted.\n\n"
+        "The file format of the input File. The following file formats are currently accepted:\n\n"
         "TAR: a .tar file.\n"
         "ZIP: A .zip file.")
     __parameter_input_metadata['FileType.Value.Default.Description'] = "from the File extension."
@@ -92,8 +94,16 @@ class UnzipFile(AbstractCommand):
     __parameter_input_metadata['OutputFolder.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFolder.FileSelector.Title'] = "Select the destination folder"
     __parameter_input_metadata['OutputFolder.Value.Default.Description'] = "parent folder of the File"
+    # IfFolderDoesNotExist
+    __parameter_input_metadata['IfFolderDoesNotExist.Description'] = 'action if output folder does not exist'
+    __parameter_input_metadata['IfFolderDoesNotExist.Label'] = "If folder does not exist?"
+    __parameter_input_metadata['IfFolderDoesNotExist.Tooltip'] = (
+        "If Create, create the output folder if it does not exist.\n"
+        "If Warn, warn and do not complete the command.")
+    __parameter_input_metadata['IfFolderDoesNotExist.Value.Default'] = "Warn"
+    __parameter_input_metadata['IfFolderDoesNotExist.Values'] = ["", "Create", "Warn", "Fail"]
     # DeleteFile
-    __parameter_input_metadata['DeleteFile.Description'] = 'whether to delete the file'
+    __parameter_input_metadata['DeleteFile.Description'] = 'whether to delete the zip file when done'
     __parameter_input_metadata['DeleteFile.Label'] = "Delete file?"
     __parameter_input_metadata['DeleteFile.Tooltip'] = (
         "Boolean.\n\n"
@@ -163,6 +173,21 @@ class UnzipFile(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
+        # Check that optional IfFolderDoesNotExist parameter value is a valid value or is None.
+        # noinspection PyPep8Naming
+        pv_IfFolderDoesNotExist = self.get_parameter_value(parameter_name="IfFolderDoesNotExist",
+                                                           command_parameters=command_parameters)
+
+        if not validator_util.validate_string_in_list(pv_IfFolderDoesNotExist, self.
+                                                      __parameter_input_metadata['IfFolderDoesNotExist.Values'],
+                                                      True, True, False):
+            message = "IfFolderDoesNotExist parameter value ({}) is not a recognized value.".format(
+            pv_IfFolderDoesNotExist)
+            recommendation = "Specify either 'Create', 'Warn', or 'Fail' for the IfFolderDoesNotExist parameter."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
         # Check that optional DeleteFile parameter value is a valid Boolean value or is None.
         # noinspection PyPep8Naming
         pv_DeleteFile = self.get_parameter_value(parameter_name="DeleteFile", command_parameters=command_parameters)
@@ -187,16 +212,14 @@ class UnzipFile(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_runtime_data(self, file_abs: str, output_folder_abs: str, file_type: str) -> bool:
+    def check_runtime_data(self, file_abs: str, file_type: str) -> bool:
         """
         Checks the following:
         * the File is a valid file
-        * the OutputFolder is a valid folder
         * the FileType correctly identifies the File's type
 
         Args:
             file_abs (str): the full path to the input compressed File
-            output_folder_abs(str): the full path to the OutputFolder
             file_type(str): the FileType value depicting the file type of the input File
 
         Returns:
@@ -210,10 +233,6 @@ class UnzipFile(AbstractCommand):
 
         # If the File parameter value is not a valid file, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "File", file_abs, "FAIL"))
-
-        # If the OutputFolder parameter value is not a valid folder, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "IsFolderPathValid", "OutputFolder", output_folder_abs,
-                                                           "FAIL"))
 
         # If the File Type is not recognized, raise a FAILURE.
         if file_type is None:
@@ -278,6 +297,11 @@ class UnzipFile(AbstractCommand):
         # noinspection PyPep8Naming
         pv_File = self.get_parameter_value("File")
         # noinspection PyPep8Naming
+        pv_IfFolderDoesNotExist = \
+            self.get_parameter_value("IfFolderDoesNotExist",
+                                     default_value=self.__parameter_input_metadata[
+                                         'IfFolderDoesNotExist.Value.Default'])
+        # noinspection PyPep8Naming
         pv_DeleteFile = self.get_parameter_value("DeleteFile", default_value="False")
 
         # Convert the File parameter value relative path to an absolute path. Expand for ${Property} syntax.
@@ -301,29 +325,59 @@ class UnzipFile(AbstractCommand):
             self.command_processor.expand_parameter_value(pv_OutputFolder, self)))
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.check_runtime_data(file_abs, output_folder_abs, pv_FileType):
-            # noinspection PyBroadException
-            try:
-                if pv_FileType.upper() == "ZIP":
-                    # If the file is a .zip file, extract the zip file.
-                    zip_util.unzip_all_files(file_abs, output_folder_abs)
+        if self.check_runtime_data(file_abs, pv_FileType):
+            # okToRun indicates if it is OK to run the command's main logic
+            okToRun = True
+            if not os.path.isdir(output_folder_abs):
+                # Output folder does not exist
+                self.logger.info("Output folder does not exist.")
+                # If requested, create the output folder.
+                IfFolderDoesNotExist_upper = pv_IfFolderDoesNotExist.upper()
+                if IfFolderDoesNotExist_upper == 'CREATE':
+                    folder_path = Path(output_folder_abs)
+                    folder_path.mkdir(parents=True)
+                elif IfFolderDoesNotExist_upper == 'WARN':
+                    self.warning_count += 1
+                    message = "Output folder ({}) does not exist.)".format(pv_OutputFolder)
+                    recommendation = "Make sure the folder exists before this command is run " \
+                                     "or use 'IfFolderDoesNotExist=Create'"
+                    self.logger.warning(message, exc_info=True)
+                    self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                   CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
+                    okToRun = False
+                elif IfFolderDoesNotExist_upper == 'FAIL':
+                    self.warning_count += 1
+                    message = "Output folder ({}) does not exist.)".format(pv_OutputFolder)
+                    recommendation = "Make sure the folder exists before this command is run " \
+                                     "or use 'IfFolderDoesNotExist=Create'"
+                    self.logger.warning(message, exc_info=True)
+                    self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                   CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                    okToRun = False
 
-                elif pv_FileType.upper() == "TAR":
-                    # If the file is a .tar file, extract the tar file.
-                    zip_util.untar_all_files(file_abs, output_folder_abs)
+            if okToRun:
+                # noinspection PyBroadException
+                try:
+                    if pv_FileType.upper() == "ZIP":
+                        # If the file is a .zip file, extract the zip file.
+                        zip_util.unzip_all_files(file_abs, output_folder_abs)
 
-                if string_util.str_to_bool(pv_DeleteFile):
-                    # If configured, remove the input compressed file.
-                    os.remove(file_abs)
+                    elif pv_FileType.upper() == "TAR":
+                        # If the file is a .tar file, extract the tar file.
+                        zip_util.untar_all_files(file_abs, output_folder_abs)
 
-            # Raise an exception if an unexpected error occurs during the process
-            except Exception:
-                self.warning_count += 1
-                message = "Unexpected error extracting the {} file ({}).".format(pv_FileType, pv_File)
-                recommendation = "Check the log file for details."
-                self.logger.warning(message, exc_info=True)
-                self.command_status.add_to_log(CommandPhaseType.RUN,
-                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                    if string_util.str_to_bool(pv_DeleteFile):
+                        # If configured, remove the input compressed file.
+                        os.remove(file_abs)
+
+                # Raise an exception if an unexpected error occurs during the process
+                except Exception:
+                    self.warning_count += 1
+                    message = "Unexpected error extracting the {} file ({}).".format(pv_FileType, pv_File)
+                    recommendation = "Check the log file for details."
+                    self.logger.warning(message, exc_info=True)
+                    self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                   CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

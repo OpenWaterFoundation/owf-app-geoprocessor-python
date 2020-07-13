@@ -17,7 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# The following is needed to allow type hinging -> GeoLayer, and requires Python 3.7+
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
 # See:  https://stackoverflow.com/questions/33533148/
 #         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
 from __future__ import annotations
@@ -265,6 +265,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayersFromFolder: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB: QtWidgets.QAction or None = None
+        self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromTileMapService: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromWebMapService: QtWidgets.QAction or None = None
 
@@ -343,16 +344,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Commands / General - File Handling
         self.Menu_Commands_General_FileHandling: QtWidgets.QMenu or None = None
+        self.Menu_Commands_General_FileHandling_WebGet: QtWidgets.QAction or None = None
+        self.Menu_Commands_General_FileHandling_CreateFolder: QtWidgets.QAction or None = None
         self.Menu_Commands_General_FileHandling_CopyFile: QtWidgets.QAction or None = None
         self.Menu_Commands_General_FileHandling_ListFiles: QtWidgets.QAction or None = None
         self.Menu_Commands_General_FileHandling_RemoveFile: QtWidgets.QAction or None = None
         self.Menu_Commands_General_FileHandling_UnzipFile: QtWidgets.QAction or None = None
-        self.Menu_Commands_General_FileHandling_WebGet: QtWidgets.QAction or None = None
 
         # Commands / General - Logging and Messaging
         self.Menu_Commands_General_LoggingMessaging: QtWidgets.QMenu or None = None
-        self.Menu_Commands_General_LoggingMessaging_Message: QtWidgets.QAction or None = None
         self.Menu_Commands_General_LoggingMessaging_StartLog: QtWidgets.QAction or None = None
+        self.Menu_Commands_General_LoggingMessaging_Message: QtWidgets.QAction or None = None
 
         # Commands / General - Running and Properties
         self.Menu_Commands_General_RunningProperties: QtWidgets.QMenu or None = None
@@ -368,6 +370,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_General_RunningProperties_WritePropertiesToFile: QtWidgets.QAction or None = None
         self.Menu_Commands_General_RunningProperties_Exit: QtWidgets.QAction or None = None
+        self.Menu_Commands_General_RunningProperties_QgisAlgorithmHelp: QtWidgets.QAction or None = None
 
         # Commands / General - Test Processing
         self.Menu_Commands_General_TestProcessing: QtWidgets.QMenu or None = None
@@ -1650,6 +1653,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayersFromFGDB()"))
 
+        # ReadGeoLayersFromGeoPackage
+        self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage.setObjectName(
+            qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromGeoPackage"))
+        self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage.setText(
+            "ReadGeoLayersFromGeoPackage()... <reads 1+ GeoLayer(s) from a GeoPackage file>")
+        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage)
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage.triggered.connect(
+            functools.partial(self.edit_new_command, "ReadGeoLayersFromGeoPackage()"))
+
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Fill GeoLayer Missing Data menu (disabled)
         # ------------------------------------------------------------------------------------------------------------
@@ -2197,6 +2212,34 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_FileHandling.setTitle("General - File Handling")
         self.Menu_Commands.addAction(self.Menu_Commands_General_FileHandling.menuAction())
 
+        # WebGet
+        self.Menu_Commands_General_FileHandling_WebGet = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_FileHandling_WebGet.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_FileHandling_WebGet"))
+        self.Menu_Commands_General_FileHandling_WebGet.setText(
+            "WebGet()... <download a file from URL>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_General_FileHandling_WebGet.triggered.connect(
+            functools.partial(self.edit_new_command, "WebGet()"))
+        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_WebGet)
+
+        self.Menu_Commands_General_FileHandling.addSeparator()
+
+        # CreateFolder
+        self.Menu_Commands_General_FileHandling_CreateFolder = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_FileHandling_CreateFolder.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_FileHandling_CreateFolder"))
+        self.Menu_Commands_General_FileHandling_CreateFolder.setText(
+            "CreateFolder()... <create a folder>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_General_FileHandling_CreateFolder.triggered.connect(
+            functools.partial(self.edit_new_command, "CreateFolder()"))
+        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_CreateFolder)
+
+        self.Menu_Commands_General_FileHandling.addSeparator()
+
         # CopyFile
         self.Menu_Commands_General_FileHandling_CopyFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_FileHandling_CopyFile.setObjectName(
@@ -2233,6 +2276,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "RemoveFile()"))
         self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_RemoveFile)
 
+        self.Menu_Commands_General_FileHandling.addSeparator()
+
         # UnzipFile
         self.Menu_Commands_General_FileHandling_UnzipFile = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_FileHandling_UnzipFile.setObjectName(
@@ -2245,18 +2290,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "UnzipFile()"))
         self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_UnzipFile)
 
-        # WebGet
-        self.Menu_Commands_General_FileHandling_WebGet = QtWidgets.QAction(main_window)
-        self.Menu_Commands_General_FileHandling_WebGet.setObjectName(
-            qt_util.from_utf8("Menu_Commands_General_FileHandling_WebGet"))
-        self.Menu_Commands_General_FileHandling_WebGet.setText(
-            "WebGet()... <download a file from URL>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.Menu_Commands_General_FileHandling_WebGet.triggered.connect(
-            functools.partial(self.edit_new_command, "WebGet()"))
-        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_WebGet)
-
         # ------------------------------------------------------------------------------------------------------------
         # Commands / General - Logging and Messaging menu
         # ------------------------------------------------------------------------------------------------------------
@@ -2265,18 +2298,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_LoggingMessaging"))
         self.Menu_Commands_General_LoggingMessaging.setTitle("General - Logging and Messaging")
         self.Menu_Commands.addAction(self.Menu_Commands_General_LoggingMessaging.menuAction())
-
-        # Message
-        self.Menu_Commands_General_LoggingMessaging_Message = QtWidgets.QAction(main_window)
-        self.Menu_Commands_General_LoggingMessaging_Message.setObjectName(
-            qt_util.from_utf8("Menu_Commands_General_LoggingMessaging_Message"))
-        self.Menu_Commands_General_LoggingMessaging_Message.setText(
-            "Message()... <print a message to the log file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.Menu_Commands_General_LoggingMessaging_Message.triggered.connect(
-            functools.partial(self.edit_new_command, "Message()"))
-        self.Menu_Commands_General_LoggingMessaging.addAction(self.Menu_Commands_General_LoggingMessaging_Message)
 
         # StartLog
         self.Menu_Commands_General_LoggingMessaging_StartLog = QtWidgets.QAction(main_window)
@@ -2289,6 +2310,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_LoggingMessaging_StartLog.triggered.connect(
             functools.partial(self.edit_new_command, "StartLog()"))
         self.Menu_Commands_General_LoggingMessaging.addAction(self.Menu_Commands_General_LoggingMessaging_StartLog)
+
+        # Message
+        self.Menu_Commands_General_LoggingMessaging_Message = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_LoggingMessaging_Message.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_LoggingMessaging_Message"))
+        self.Menu_Commands_General_LoggingMessaging_Message.setText(
+            "Message()... <print a message to the log file>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_General_LoggingMessaging_Message.triggered.connect(
+            functools.partial(self.edit_new_command, "Message()"))
+        self.Menu_Commands_General_LoggingMessaging.addAction(self.Menu_Commands_General_LoggingMessaging_Message)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / General - Running and Properties menu
@@ -2454,6 +2487,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_RunningProperties_Exit.triggered.connect(
             functools.partial(self.edit_new_command, "Exit()"))
         self.Menu_Commands_General_RunningProperties.addAction(self.Menu_Commands_General_RunningProperties_Exit)
+
+        self.Menu_Commands_General_RunningProperties.addSeparator()
+
+        # QgisAlgorithmHelp
+        self.Menu_Commands_General_RunningProperties_QgisAlgorithmHelp = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_RunningProperties_QgisAlgorithmHelp.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_RunningProperties_QgisAlgorithmHelp"))
+        self.Menu_Commands_General_RunningProperties_QgisAlgorithmHelp.setText(
+            "QgisAlgorithmHelp()... <print algorithm help>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_General_RunningProperties_QgisAlgorithmHelp.triggered.connect(
+            functools.partial(self.edit_new_command, "QgisAlgorithmHelp()"))
+        self.Menu_Commands_General_RunningProperties.addAction(
+            self.Menu_Commands_General_RunningProperties_QgisAlgorithmHelp)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / General - Test Processing menu
@@ -3821,12 +3869,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_Tables_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(table.id))
 
             # Retrieve the number of columns in the Table and set as the attribute for the Column Count column.
-            self.results_Tables_Table.setItem(new_row_index, 1,
-                                              QtWidgets.QTableWidgetItem(str(table.count(returnCol=True))))
+            self.results_Tables_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(table.count_columns())))
 
             # Retrieve the number of rows in the Table and set as the attribute for the Row Count column.
-            self.results_Tables_Table.setItem(new_row_index, 2,
-                                              QtWidgets.QTableWidgetItem(str(table.count(returnCol=False))))
+            self.results_Tables_Table.setItem(new_row_index, 2, QtWidgets.QTableWidgetItem(str(table.count_rows())))
 
         # Sort by Table ID
         # self.results_Tables_Table.sortByColumn(0, QtCore.Qt.AscendingOrder)

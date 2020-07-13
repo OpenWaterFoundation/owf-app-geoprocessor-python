@@ -25,6 +25,7 @@ import os
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
 from qgis.core import QgsGeometry, QgsMapLayer, QgsRasterLayer, QgsRectangle, QgsVectorFileWriter, QgsVectorLayer
 from qgis.core import QgsExpressionContext, QgsExpressionContextScope
+from qgis import processing
 from PyQt5 import QtWidgets
 
 from qgis.analysis import QgsNativeAlgorithms
@@ -971,8 +972,48 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs: str, feature_class
         raise IOError(message)
 
 
-def read_qgsvectorlayer_from_file(spatial_data_file_abs: str) -> QgsVectorLayer:
+def read_qgsvectorlayer_from_geopackage(geopackage_file_path_abs: str,
+                                        layer_name: str,
+                                        layer_description: str) -> QgsVectorLayer:
+    """
+    Read a layer from a GeoPackage file and returns a QGSVectorLayerObject.
 
+    Raises:
+        IOError if the GeoPackage layer is invalid.
+
+    Args:
+        geopackage_file_path_abs (str): the full path to a GeoPackage file
+        layer_name (str): the name of the layer to read (a sub-layer in the main layer)
+        layer_description (str): the layer description to assign
+
+    Returns:
+        A QGSVectorLayer object containing the layer.
+    """
+
+    # Instantiate the QGSVectorLayer object.
+    qgs_vector_layer_obj = QgsVectorLayer(str(geopackage_file_path_abs) + "|layername=" + layer_name,
+                                          layer_description, 'ogr')
+
+    # A QgsVectorLayer object is almost always created even if it is invalid.
+    # From
+    # `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
+    #   "It is important to check whether the layer has been loaded successfully. If it was not, an invalid
+    #   layer instance is returned."
+    # Check that the newly created QgsVectorLayer object is valid. If so, create a GeoLayer object within
+    # the geoprocessor and add the GeoLayer object to the geoprocessor's GeoLayers list.
+    if qgs_vector_layer_obj.isValid():
+        return qgs_vector_layer_obj
+
+    else:
+        # If the created QGSVectorLayer object is invalid, print a warning message and return None.
+        message = 'The QGSVectorLayer from GeoPackage file "{}" layer name "{}" is invalid.'.format(
+            geopackage_file_path_abs, layer_name)
+        logger = logging.getLogger(__name__)
+        logger.warning(message)
+        raise IOError(message)
+
+
+def read_qgsvectorlayer_from_file(spatial_data_file_abs: str) -> QgsVectorLayer:
     """
     Reads the full pathname of spatial data file and returns a QGSVectorLayer object.
 
@@ -989,10 +1030,10 @@ def read_qgsvectorlayer_from_file(spatial_data_file_abs: str) -> QgsVectorLayer:
     # Instantiate the QGSVectorLayer object.
     # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
     # to create a QGSVectorLayer object, the following parameters must be entered:
-    #   data_source (first argument): string representing the full path the the spatial data file
-    #   layer_name (second argument): string representing the layer name that will be used in the QGIS layer list widget
+    #   data_source (first argument): string full path the the spatial data file
+    #   layer_name (second argument): string layer name that will be used in the QGIS layer list widget
     #       -- in this function the layer name is defaulted to the spatial data filename (with extension)
-    #   provider_name (third argument): string representing the data provider (defaulted within this function to 'ogr')
+    #   provider_name (third argument): string indicating the data provider (defaulted within this function to 'ogr')
     qgs_vector_layer_obj = QgsVectorLayer(spatial_data_file_abs, os.path.basename(spatial_data_file_abs), 'ogr')
 
     # A QgsVectorLayer object is almost always created even if it is invalid.
@@ -1117,7 +1158,7 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_na
             qgsvectorlayer.commitChanges()
 
 
-def split_qgsvectorlayer_by_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name: str,
+def split_qgsvectorlayer_by_attribute(processor: Processing, qgsvectorlayer: QgsVectorLayer, attribute_name: str,
                                       output_qgsvectorlayers: [QgsVectorLayer]) -> None:
     """
     Split the QgsVectorLayer object into multiple vector layers based on an attribute's unique values.
@@ -1126,6 +1167,7 @@ def split_qgsvectorlayer_by_attribute(qgsvectorlayer: QgsVectorLayer, attribute_
     <https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer>
 
     Args:
+        processing (Processing): QGIS processor to use to run algorithm
         qgsvectorlayer (QgsVectorLayer): the QGSVectorLayer object
         attribute_name (str):  the name of the attribute that splits the qgsvectorlayer into multiple layers
         output_qgsvectorlayers (QgsVectorLayer): the QgsVectorLayer objects that are created by the split
@@ -1135,7 +1177,60 @@ def split_qgsvectorlayer_by_attribute(qgsvectorlayer: QgsVectorLayer, attribute_
     """
 
     # Split the QgsVectorLayer by the chosen attribute.  Output QgsVectorLayer names should be automatically generated??
-    processing.run('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
+    # QGIS 2?
+    #processing.run('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
+    processor.runAlgorithm('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
+
+
+def write_algorithm_help ( output_file_absolute: str, list_algorithms: bool, algorithm_ids: [str]) -> None:
+    """
+    Write QGIS algorithm list and or help to a file.
+
+    Returns:
+        None
+    """
+    logger = logging.getLogger(__name__)
+    fout = None
+    # noinspection PyBroadException
+    try:
+        # Open the output file.
+        fout = open(output_file_absolute, "w")
+        nl = os.linesep  # newline character for operating system
+        fout.write("QGIS Algorithm Information{}{}".format(nl, nl))
+        # If requested, list the algorithms
+        if list_algorithms:
+            fout.write("QGIS Algorithm List:{}{}".format(nl, nl))
+            # Loop through once to get the identifier length to format the columns
+            id_len_max = 0
+            for alg in QgsApplication.processingRegistry().algorithms():
+                id_len = len(alg.id())
+                if id_len > id_len_max:
+                    id_len_max = id_len
+            # Loop through again to output the list
+            id_format = "{0:<" + str(id_len_max) + "} {1:}{2:}"
+            fout.write(id_format.format("AlgorithmID", "Algorithm Name", nl))
+            for alg in QgsApplication.processingRegistry().algorithms():
+                fout.write(id_format.format(alg.id(), alg.displayName(), nl))
+
+        if len(algorithm_ids) > 0:
+            # List the specific algorithm help
+            fout.write("{}QGIS Algorithm Help{}".format(nl, nl))
+            for algorithm_id in algorithm_ids:
+                fout.write(nl)
+                # noinspection PyBroadException
+                try:
+                    # TODO smalers 2020-07-12 need to write to the output file
+                    fout.write("QGIS algorithm {} help was written to console window.{}{}".format(algorithm_id, nl, nl))
+                    processing.algorithmHelp(algorithm_id)
+                except Exception:
+                    logger.info("Error writing help for algorithm: {}".format(algorithm_id))
+
+    except Exception:
+        message = 'Error writing QGIS algorithm help to file "' + output_file_absolute + '.'
+        logger.warning(message, exc_info=True)
+    finally:
+        if fout is not None:
+            fout.close()
 
 
 def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer: QgsVectorLayer,

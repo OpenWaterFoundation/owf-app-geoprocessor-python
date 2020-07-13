@@ -16,6 +16,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
+import logging
 
 from qgis.core import QgsCoordinateReferenceSystem
 
@@ -220,6 +221,10 @@ class GeoMap(object):
         Raises:
             ValueError if the insert position is invalid.
         """
+        debug = True
+        logger = None
+        if debug:
+            logger = logging.getLogger(__name__)
 
         # Iterate over the existing GeoLayerViewGroups and if found, remove the previous instance.
         for existing_geolayerviewgroup in self.geolayerviewgroups:
@@ -237,6 +242,10 @@ class GeoMap(object):
                 if geolayerviewgroup.id == insert_before:
                     # Found the insert position
                     self.geolayerviewgroups.insert(insert_index, geolayerviewgroup)
+                    if debug:
+                        logger.info("Inserting GeoLayerViewGroup {} at position [{}].".format(
+                            geolayerviewgroup.id, insert_index))
+                    break
             if insert_index < 0:
                 raise ValueError("GeoLayerViewGroupID '" + insert_before + "' does not exist - can't insert '" +
                                  geolayerviewgroup.id + "'")
@@ -247,6 +256,10 @@ class GeoMap(object):
                 insert_index += 1
                 if geolayerviewgroup.id == insert_after:
                     self.geolayerviewgroups.insert((insert_index + 1), geolayerviewgroup)
+                    if debug:
+                        logger.info("Inserting GeoLayerViewGroup {} at position [{}].".format(
+                            geolayerviewgroup.id, (insert_index + 1)))
+                    break
             if insert_index < 0:
                 raise ValueError("GeoLayerViewGroupID '" + insert_after + "' does not exist - can't insert '" +
                                  geolayerviewgroup.id + "'")
@@ -257,15 +270,23 @@ class GeoMap(object):
                 if len(self.geolayerviewgroups) == 0:
                     # Nothing in the list so just append
                     self.geolayerviewgroups.append(geolayerviewgroup)
+                    if debug:
+                        logger.info("Inserting GeoLayerViewGroup {} at position [0].".format(geolayerviewgroup.id))
                 else:
                     # Insert at the front of the list
                     self.geolayerviewgroups.insert(0, geolayerviewgroup)
+                    if debug:
+                        logger.info("Inserting GeoLayerViewGroup {} at position [0].".format(geolayerviewgroup.id))
             elif insert_position_upper == 'BOTTOM':
                 # Insert at the end of the list
                 self.geolayerviewgroups.append(geolayerviewgroup)
+                if debug:
+                    logger.info("Inserting GeoLayerViewGroup {} at bottom.".format(geolayerviewgroup.id))
         else:
             # Insert at the end
             self.geolayerviewgroups.append(geolayerviewgroup)
+            if debug:
+                logger.info("Inserting GeoLayerViewGroup {} at end.".format(geolayerviewgroup.id))
 
     def free_geolayer(self, geolayer: GeoLayer) -> None:
         """

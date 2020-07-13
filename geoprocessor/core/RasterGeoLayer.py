@@ -81,7 +81,7 @@ class RasterGeoLayer(GeoLayer):
             input_path (str):
                 The pathname to the input spatial data file on the local computer,
                 consistent with a GeoProcessor read command before the path is expanded.
-                This is typically a relevant path but could be absolute (same as 'input_source_path_full').
+                This is typically a relative path but could be absolute (same as 'input_path_full').
                 If not specified, GeoLayer.SUMMARY_MEMORY ('MEMORY') is used, assuming the layer was created in memory.
             properties ({}):
                 A dictionary of user (non-built-in) properties that can be assigned to the layer.

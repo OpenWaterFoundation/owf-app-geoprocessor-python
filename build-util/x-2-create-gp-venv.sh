@@ -20,14 +20,14 @@ checkCygwinDevEnv()
 	cygwinRequiredPackages="gcc-core gcc-fortran python3-devel libffi-devel libpq-devel openssl-devel python3-pip python3-pyqt5 python3-sip"
 	echo "Checking that the Cygwin setup program installed:  $cygwinRequiredPackages"
 	for requiredPackage in $cygwinRequiredPackages; do
-		installedCount1=`cygcheck -c ${requiredPackage} | grep OK | wc -l`
+		installedCount1=$(cygcheck -c ${requiredPackage} | grep OK | wc -l)
 		if [ "$installedCount1" -ne "1" ]; then
 			${echo2} "${failColor}$requiredPackage does not appear to be installed as a Cygwin package.${endColor}"
 			${echo2} "${failColor}Check by running the following (OK is needed):  cygcheck -c $requiredPackage${endColor}"
 			${echo2} "${failColor}Install $requiredPackage using the Cygwin setup installer.${endColor}"
 			${echo2} "${failColor}If the status is Incomplete, reinstall the software package in the Cygwin setup program.${endColor}"
 			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#cygwin${endColor}"
-			cygwinMissingPackageCount=`expr $cygwinMissingPackageCount + 1`
+			cygwinMissingPackageCount=$(expr $cygwinMissingPackageCount + 1)
 		fi
 	done
 	# If any errors occurred exit here and fix
@@ -37,16 +37,20 @@ checkCygwinDevEnv()
 	fi
 
 	# Also check for pip installed packages in system Python
+	# - redirect to /dev/null because otherwise get a warning like:
+	#  DEPRECATION: The default format will switch to columns in the future.
+	#    You can use --format=(legacy|columns) (or define a format=(legacy|columns)
+	#    in your pip.conf under the [list] section) to disable this warning.
 	cygwinMissingPackageCount=0
 	cygwinRequiredPackages="pip virtualenv"
 	echo "Checking that system Python pip3 packages are installed:  $cygwinRequiredPackages"
 	for requiredPackage in $cygwinRequiredPackages; do
-		installedCount1=`pip3 list | grep $requiredPackage | wc -l`
+		installedCount1=$(pip3 list 2> /dev/null | grep $requiredPackage | wc -l)
 		if [ "$installedCount1" -ne "1" ]; then
 			${echo2} "${failColor}$requiredPackage does not appear to be installed as system pip3 package.${endColor}"
 			${echo2} "${failColor}Install $requiredPackage using: pip3 install ${requiredPackage}${endColor}"
 			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#cygwin${endColor}"
-			cygwinMissingPackageCount=`expr $cygwinMissingPackageCount + 1`
+			cygwinMissingPackageCount=$(expr $cygwinMissingPackageCount + 1)
 		fi
 	done
 	# If any errors occurred exit here and fix
@@ -67,12 +71,12 @@ checkLinuxDevEnv()
 	# - maybe need openssl or openssl-dev, but don't see the latter
 	linuxRequiredPackages="gcc gfortran python3-dev libffi-dev libpq-dev python3-pandas python3-pip python3-pyqt5 python3-sip"
 	for requiredPackage in $linuxRequiredPackages; do
-		missingCount1=`dpkg-query -l $requiredPackage | grep 'no packages' | wc -l`
+		missingCount1=$(dpkg-query -l $requiredPackage | grep 'no packages' | wc -l)
 		if [ "$missingCount1" -ne "0" ]; then
 			${echo2} "${failColor}$requiredPackage does not appear to be installed as an apt package.${endColor}"
 			${echo2} "${failColor}Install $requiredPackage using:  sudo apt-get install ${requiredPackage}${endColor}"
 			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#linux${endColor}"
-			linuxMissingPackageCount=`expr $linuxMissingPackageCount + 1`
+			linuxMissingPackageCount=$(expr $linuxMissingPackageCount + 1)
 		fi
 	done
 	# If any errors occurred exit here and fix
@@ -86,12 +90,12 @@ checkLinuxDevEnv()
 	linuxRequiredPackages="pip virtualenv"
 	echo "Checking that system Python pip3 packages are installed:  $linuxRequiredPackages"
 	for requiredPackage in $linuxRequiredPackages; do
-		installedCount1=`pip3 list | grep $requiredPackage | wc -l`
+		installedCount1=$(pip3 list | grep $requiredPackage | wc -l)
 		if [ "$installedCount1" -ne "1" ]; then
 			${echo2} "${failColor}$requiredPackage does not appear to be installed as system pip3 package.${endColor}"
 			${echo2} "${failColor}Install $requiredPackage using: pip3 install ${requiredPackage}${endColor}"
 			${echo2} "${failColor}See:  http://learn.openwaterfoundation.org/owf-app-geoprocessor-python-doc-dev/dev-env/dev-env/#linux${endColor}"
-			linuxMissingPackageCount=`expr $linuxMissingPackageCount + 1`
+			linuxMissingPackageCount=$(expr $linuxMissingPackageCount + 1)
 		fi
 	done
 	# If any errors occurred exit here and fix
@@ -110,7 +114,7 @@ checkOperatingSystem()
 		return
 	fi
 	operatingSystem="unknown"
-	os=`uname | tr [a-z] [A-Z]`
+	os=$(uname | tr [a-z] [A-Z])
 	case "${os}" in
 		CYGWIN*)
 			operatingSystem="cygwin"
@@ -184,13 +188,13 @@ checkQgisPythonVersion() {
 checkPythonConfig() {
 	# Make sure that python3 is found
 	#--------------------------------
-	output=`python3 -c 'print("python3 found")'`
+	output=$(python3 -c 'print("python3 found")')
 	if [ "$output" != "python3 found" ]; then
 		echo "python3 not found.  Make sure to install python3 in Cygwin.  Exiting."
 		exit 1
 	fi
 	# Make sure it is a Cygwin/Linux version
-	output=`which python3`
+	output=$(which python3)
 	if [ "$output" != "/usr/bin/python3" ]; then
 		echo "/usr/bin/python3 not found.  Make sure to install python3 in Cygwin.  Exiting."
 		exit 1
@@ -199,7 +203,7 @@ checkPythonConfig() {
 	fi
 	# Make sure that pip3 is found and is the right version
 	# -----------------------------------------------------
-	output=`which pip3`
+	output=$(which pip3)
 	if [ "$output" != "/usr/bin/pip3" ]; then
 		echo "/usr/bin/pip3 not found.  Make sure to run 'python3 -m ensurepip' as Administrator in Cygwin.  Exiting."
 		exit 1
@@ -208,7 +212,7 @@ checkPythonConfig() {
 	fi
 	# Make sure that virtualenv is found and is the right version
 	# -----------------------------------------------------------
-	output=`which virtualenv`
+	output=$(which virtualenv)
 	if [ "$output" != "/usr/bin/virtualenv" ]; then
 		echo "/usr/bin/virtualenv not found.  Make sure to run 'pip3 install virtualenv' as Administrator in Cygwin.  Exiting."
 		exit 1
@@ -225,7 +229,7 @@ checkVenvPythonConfig () {
 	# - see: https://stackoverflow.com/questions/10813538/shebang-line-limit-in-bash-and-linux-kernel
 	# - depends on scriptPath being set
 	pip3Script="${VIRTUAL_ENV}/bin/pip3"
-	lenFirstLine=`head -n1 "${pip3Script}" | wc -c`
+	lenFirstLine=$(head -n1 "${pip3Script}" | wc -c)
 	if [ "$lenFirstLine" -gt 127 ]; then
 		$echo2 "${failColor}Length ($lenFirstLine) of first line of ${pip3Script} is > 127 chars.  Exiting.${endColor}"
 		$echo2 "May need to shorten path of development environment such as use GP instead of GeoProcessor."
@@ -243,8 +247,8 @@ copyGeoProcessorPackageToVenv () {
 	if [ ${operatingSystem} = "cygwin" ] || [ ${operatingSystem} = "linux" ]; then
 		# Determine the specific site-packages destination folder to receive source geoprocessor folder
 		# - on Debian Linux will be something like:  venv-tmp/gptest-1.1.0-lin-venv/lib/python3.4
-		pythonLibWithVersion=`ls -1 ${virtualEnvFolderPath}/lib`
-		pythonLibWithVersion=`basename ${pythonLibWithVersion}`
+		pythonLibWithVersion=$(ls -1 ${virtualEnvFolderPath}/lib)
+		pythonLibWithVersion=$(basename ${pythonLibWithVersion})
 		sitepackagesFolder="${virtualEnvFolderPath}/lib/${pythonLibWithVersion}/site-packages"
 		if [ ! -d "${sitepackagesFolder}" ]; then
 			echo "Site packages folder ${sitepackagesFolder} does not exist.  Exiting."
@@ -347,8 +351,8 @@ createGptestVirtualenvCygwinAndLinux() {
 	checkVenvPythonConfig
 	# Install the GeoProcessor files created by the create-gp-installer.sh script.
 	# - should be something like lib/python3.6/site-packages
-	pythonLibWithVersion=`ls -1 ${virtualEnvFolderPath}/lib`
-	pythonLibWithVersion=`basename ${pythonLibWithVersion}`
+	pythonLibWithVersion=$(ls -1 ${virtualEnvFolderPath}/lib)
+	pythonLibWithVersion=$(basename ${pythonLibWithVersion})
 	sitepackagesFolder="${virtualEnvFolderPath}/lib/${pythonLibWithVersion}/site-packages"
 	if [ ! -d "${sitepackagesFolder}" ]; then
 		echo "Site packages folder does not exist:  ${sitepackagesFolder}"
@@ -407,7 +411,7 @@ createGptestVirtualenvCygwinAndLinux() {
 	if [ "$operatingSystem" = "cygwin" ]; then
 		# Manual copy of Cygwin-installed packages
 		# PyQt5
-		installedCount=`cygcheck -c python3-pyqt5 | grep OK | wc -l`
+		installedCount=$(cygcheck -c python3-pyqt5 | grep OK | wc -l)
 		if [ $installedCount -ne "1" ]; then
 			${echo} "${warnColor}PyQt5 does not appear to be installed as a Cygwin package.${endColor}"
 			${echo} "${warnColor}Install python3-pyqt5 from the Cygwin installer.${endColor}"
@@ -423,7 +427,7 @@ createGptestVirtualenvCygwinAndLinux() {
 			fi
 		fi
 		# SIP software
-		installedCount=`cygcheck -c python3-sip | grep OK | wc -l`
+		installedCount=$(cygcheck -c python3-sip | grep OK | wc -l)
 		if [ $installedCount -ne "1" ]; then
 			${echo2} "${warnColor}SIP does not appear to be installed as a Cygwin package.${endColor}"
 			${echo2} "${warnColor}Install python3-sip from the Cygwin installer.${endColor}"
@@ -477,7 +481,7 @@ createGptestVirtualenvCygwinAndLinux() {
 		# Debian uses dist-packages instead of site-packages and seems to install into
 		# /usr/lib/python3, not, for example /usr/lib/python3.4
 		# pandas and dependencies
-		installedCount=`dpkg-query -l python3-pandas | grep -v 'no packages' | wc -l`
+		installedCount=$(dpkg-query -l python3-pandas | grep -v 'no packages' | wc -l)
 		if [ $installedCount -eq "1" ]; then
 			${echo2} "${warnColor}Pandas does not appear to be installed as an apt-get package.${endColor}"
 			${echo2} "${warnColor}Install python3-pandas using:  sudo apt-get install python3-pandas.${endColor}"
@@ -516,7 +520,7 @@ createGptestVirtualenvCygwinAndLinux() {
 		fi
 		# PyQt5
 		# TODO smalers 2018-11-25 make the following work on Linux for apt-get installs
-		installedCount=`dpkg-query -l python3-pyqt5 | grep -v 'no packages' | wc -l`
+		installedCount=$(dpkg-query -l python3-pyqt5 | grep -v 'no packages' | wc -l)
 		if [ $installedCount -eq "1" ]; then
 			${echo2} "${warnColor}PyQt5 does not appear to be installed as an apt-get package.${endColor}"
 			${echo2} "${warnColor}Install python3-pyqt5 using:  sudo apt-get install python3-pyqt5.${endColor}"
@@ -531,7 +535,7 @@ createGptestVirtualenvCygwinAndLinux() {
 			fi
 		fi
 		# sip
-		installedCount=`dpkg-query -l python3-sip | grep -v 'no packages' | wc -l`
+		installedCount=$(dpkg-query -l python3-sip | grep -v 'no packages' | wc -l)
 		if [ $installedCount -eq "1" ]; then
 			${echo2} "${warnColor}SIP does not appear to be installed as a Linux package.${endColor}"
 			${echo2} "${warnColor}Install python3-sip using:  sudo apt-get install python3-sip.${endColor}"
@@ -570,7 +574,7 @@ createGptestVirtualenvCygwinAndLinux() {
 	cd ${virtualenvTmpFolder}
 	gptestTargzFile="gptest-${version}-${operatingSystemShort}-venv.tar.gz"
 	echo "Creating file to distribute virtual environment:  ${gptestTargzFile}"
-	virtualenvFolderBasename=`basename ${virtualEnvFolderPath}`
+	virtualenvFolderBasename=$(basename ${virtualEnvFolderPath})
 	tar -czvf ${gptestTargzFile} ${virtualenvFolderBasename}
 }
 
@@ -649,7 +653,7 @@ setupEcho() {
 	# Determine which echo to use, needs to support -e to output colored text
 	# - normally built-in shell echo is OK, but on Debian Linux dash is used, and it does not support -e
 	echo2='echo -e'
-	testEcho=`echo -e test`
+	testEcho=$(echo -e test)
 	if [ "${testEcho}" = '-e test' ]; then
 		# The -e option did not work as intended.
 		# -using the normal /bin/echo should work
@@ -695,7 +699,7 @@ setupEcho
 #------------------------------------------------------------------------------------------
 # Step 0. Setup.
 # Get the location where this script is located since it may have been run from any folder
-scriptFolder=`cd $(dirname "$0") && pwd`
+scriptFolder=$(cd $(dirname "$0") && pwd)
 
 # Parse the command line
 parseCommandLine "$@"
@@ -718,7 +722,7 @@ fi
 
 # Define top-level folders - everything is relative to this below to avoid confusion
 buildUtilFolder=${scriptFolder}
-repoFolder=`dirname ${buildUtilFolder}`
+repoFolder=$(dirname ${buildUtilFolder})
 buildTmpFolder="${buildUtilFolder}/build-tmp"
 # Name of the parent folder for virtual environments
 # - the following is apparently too long - sh-bang lines have limit of 127 characters
@@ -727,7 +731,7 @@ buildTmpFolder="${buildUtilFolder}/build-tmp"
 virtualenvTmpFolder="${buildUtilFolder}/venv-tmp"
 # Get the software version number
 versionFile="${repoFolder}/geoprocessor/app/version.py"
-version=`cat ${versionFile} | grep app_version -m 1 | cut -d '=' -f 2 | tr -d " " | tr -d '"'`
+version=$(cat ${versionFile} | grep app_version -m 1 | cut -d '=' -f 2 | tr -d " " | tr -d '"')
 
 # Echo information 
 echo "Project (main) folder is ${repoFolder}"

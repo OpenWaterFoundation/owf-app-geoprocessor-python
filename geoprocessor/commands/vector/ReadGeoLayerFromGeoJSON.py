@@ -220,7 +220,6 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_file_absolute: str, geolayer_id: str) -> bool:
-
         """
         Checks the following:
         * the InputFile (absolute) is a valid file
@@ -232,7 +231,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             geolayer_id: the ID of the output GeoLayer
 
         Returns:
-            run_read: Boolean. If TRUE, the read process should be run. If FALSE, the read process should not be run.
+            (bool) If True, the command should be run. If False, the command should not be run.
         """
 
         # Boolean to determine if the read process should be run. Set to true until an error occurs.
@@ -242,24 +241,24 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         if not os.path.isfile(input_file_absolute):
             run_read = False
             self.warning_count += 1
-            message = "The InputFile ({}) is not a valid file.".format(input_file_absolute)
+            message = "The InputFile ({}) does not exist.".format(input_file_absolute)
             recommendation = "Specify a valid file."
             self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # If the input spatial data file does not end in .geojson, raise a WARNING.
-        if not input_file_absolute.upper().endswith(".GEOJSON"):
-            self.warning_count += 1
-            message = 'The InputFile ({}) does not end with the .geojson extension.'.format(input_file_absolute)
-            recommendation = "No recommendation logged."
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                           CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
+        else:
+          # Also check the file extension.  If the input spatial data file does not end in .geojson, raise a WARNING.
+          if not input_file_absolute.upper().endswith(".GEOJSON"):
+              self.warning_count += 1
+              message = 'The InputFile ({}) does not end with the .geojson extension.'.format(input_file_absolute)
+              recommendation = "Specify a GeoJson file to read."
+              self.logger.warning(message)
+              self.command_status.add_to_log(CommandPhaseType.RUN,
+                                             CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
         # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # py_IfGeoLayerIDExists value
-        elif self.command_processor.get_geolayer(geolayer_id):
+        if self.command_processor.get_geolayer(geolayer_id):
             # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
@@ -338,8 +337,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         # noinspection PyPep8Naming
         pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
-        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property}
-        # syntax
+        # Convert the InputFile parameter value to an absolute path and expand for ${Property} syntax
         input_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_InputFile, self)))
@@ -357,7 +355,6 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.check_runtime_data(input_file_absolute, pv_GeoLayerID):
-
             # noinspection PyBroadException
             try:
                 # Create a QGSVectorLayer object with the GeoJSON InputFile.

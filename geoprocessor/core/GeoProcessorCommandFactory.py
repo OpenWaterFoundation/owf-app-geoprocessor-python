@@ -57,6 +57,7 @@ from geoprocessor.commands.running.RunCommands import RunCommands
 from geoprocessor.commands.running.RunGdalProgram import RunGdalProgram
 from geoprocessor.commands.running.RunOgrProgram import RunOgrProgram
 from geoprocessor.commands.running.RunProgram import RunProgram
+from geoprocessor.commands.running.QgisAlgorithmHelp import QgisAlgorithmHelp
 from geoprocessor.commands.running.SetProperty import SetProperty
 from geoprocessor.commands.running.SetPropertyFromGeoLayer import SetPropertyFromGeoLayer
 from geoprocessor.commands.running.WritePropertiesToFile import WritePropertiesToFile
@@ -77,6 +78,7 @@ from geoprocessor.commands.util.Comment import Comment
 from geoprocessor.commands.util.CommentBlockEnd import CommentBlockEnd
 from geoprocessor.commands.util.CommentBlockStart import CommentBlockStart
 from geoprocessor.commands.util.CopyFile import CopyFile
+from geoprocessor.commands.util.CreateFolder import CreateFolder
 from geoprocessor.commands.util.ListFiles import ListFiles
 from geoprocessor.commands.util.RemoveFile import RemoveFile
 from geoprocessor.commands.util.UnknownCommand import UnknownCommand
@@ -95,6 +97,7 @@ from geoprocessor.commands.vector.ReadGeoLayerFromDelimitedFile import ReadGeoLa
 from geoprocessor.commands.vector.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.commands.vector.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.vector.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
+from geoprocessor.commands.vector.ReadGeoLayersFromGeoPackage import ReadGeoLayersFromGeoPackage
 from geoprocessor.commands.vector.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
 from geoprocessor.commands.vector.RemoveGeoLayerAttributes import RemoveGeoLayerAttributes
 from geoprocessor.commands.vector.RenameGeoLayerAttribute import RenameGeoLayerAttribute
@@ -139,6 +142,7 @@ class GeoProcessorCommandFactory(object):
         "COPYGEOLAYER": CopyGeoLayer(),
         "COPYGEOMAP": CreateGeoMap(),
         "COPYGEOMAPPROJECT": CreateGeoMapProject(),
+        "CREATEFOLDER": CreateFolder(),
         "CREATEGEOLAYERFROMGEOMETRY": CreateGeoLayerFromGeometry(),
         "CREATERASTERGEOLAYER": CreateRasterGeoLayer(),
         "CREATEREGRESSIONTESTCOMMANDFILE": CreateRegressionTestCommandFile(),
@@ -153,10 +157,12 @@ class GeoProcessorCommandFactory(object):
         "MERGEGEOLAYERS": MergeGeoLayers(),
         "MESSAGE": Message(),
         "OPENDATASTORE": OpenDataStore(),
+        "QGISALGORITHMHELP": QgisAlgorithmHelp(),
         "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
+        "READGEOLAYERSFROMGEOPACKAGE": ReadGeoLayersFromGeoPackage(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
         "READRASTERGEOLAYERFROMFILE": ReadRasterGeoLayerFromFile(),
         "READRASTERGEOLAYERFROMTILEMAPSERVICE": ReadRasterGeoLayerFromTileMapService(),
@@ -283,6 +289,8 @@ class GeoProcessorCommandFactory(object):
             else:
                 # Constructing the following way always seems to work properly
                 # - Alphabetize the commands.
+
+                # A commands
                 if command_name_upper == "ADDGEOLAYERATTRIBUTE":
                     return AddGeoLayerAttribute()
                 elif command_name_upper == "ADDGEOLAYERVIEWGROUPTOGEOMAP":
@@ -291,8 +299,12 @@ class GeoProcessorCommandFactory(object):
                     return AddGeoLayerViewToGeoMap()
                 elif command_name_upper == "ADDGEOMAPTOGEOMAPPROJECT":
                     return AddGeoMapToGeoMapProject()
+
+                # B commands
                 elif command_name_upper == "BLANK":
                     return Blank()
+
+                # C commands
                 elif command_name_upper == "CLIPGEOLAYER":
                     return ClipGeoLayer()
                 # Comment, CommentBlockStart, and CommentBlockEnd are checked for above
@@ -305,6 +317,8 @@ class GeoProcessorCommandFactory(object):
                     return CopyFile()
                 elif command_name_upper == "COPYGEOLAYER":
                     return CopyGeoLayer()
+                elif command_name_upper == "CREATEFOLDER":
+                    return CreateFolder()
                 elif command_name_upper == "CREATEGEOLAYERFROMGEOMETRY":
                     return CreateGeoLayerFromGeometry()
                 elif command_name_upper == "CREATEGEOMAP":
@@ -315,28 +329,46 @@ class GeoProcessorCommandFactory(object):
                     return CreateRasterGeoLayer()
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
                     return CreateRegressionTestCommandFile()
+
+                # E commands
                 elif command_name_upper == "ENDFOR":
                     return EndFor()
                 elif command_name_upper == "ENDIF":
                     return EndIf()
                 elif command_name_upper == "EXIT":
                     return Exit()
+
+                # F commands
                 elif command_name_upper == "FOR":
                     return For()
                 elif command_name_upper == "FREEGEOLAYERS":
                     return FreeGeoLayers()
+
+                # I commands
                 elif command_name_upper == "IF":
                     return If()
                 elif command_name_upper == "INTERSECTGEOLAYER":
                     return IntersectGeoLayer()
+
+                # L commands
                 elif command_name_upper == "LISTFILES":
                     return ListFiles()
+
+                # M commands
                 elif command_name_upper == "MERGEGEOLAYERS":
                     return MergeGeoLayers()
                 elif command_name_upper == "MESSAGE":
                     return Message()
+
+                # O commands
                 elif command_name_upper == "OPENDATASTORE":
                     return OpenDataStore()
+
+                # Q commands
+                elif command_name_upper == "QGISALGORITHMHELP":
+                    return QgisAlgorithmHelp()
+
+                # R commands
                 elif command_name_upper == "READGEOLAYERFROMDELIMITEDFILE":
                     return ReadGeoLayerFromDelimitedFile()
                 elif command_name_upper == "READGEOLAYERFROMGEOJSON":
@@ -345,6 +377,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayerFromShapefile()
                 elif command_name_upper == "READGEOLAYERSFROMFGDB":
                     return ReadGeoLayersFromFGDB()
+                elif command_name_upper == "READGEOLAYERSFROMGEOPACKAGE":
+                    return ReadGeoLayersFromGeoPackage()
                 elif command_name_upper == "READGEOLAYERSFROMFOLDER":
                     return ReadGeoLayersFromFolder()
                 elif command_name_upper == "READRASTERGEOLAYERFROMFILE":
@@ -375,6 +409,8 @@ class GeoProcessorCommandFactory(object):
                     return RunProgram()
                 elif command_name_upper == "RUNSQL":
                     return RunSql()
+
+                # S commands
                 elif command_name_upper == "SETGEOLAYERCRS":
                     return SetGeoLayerCRS()
                 elif command_name_upper == "SETGEOLAYERPROPERTY":
@@ -399,8 +435,12 @@ class GeoProcessorCommandFactory(object):
                     return StartLog()
                 elif command_name_upper == "STARTREGRESSIONTESTRESULTSREPORT":
                     return StartRegressionTestResultsReport()
+
+                # U commands
                 elif command_name_upper == "UNZIPFILE":
                     return UnzipFile()
+
+                # W commands
                 elif command_name_upper == "WEBGET":
                     return WebGet()
                 elif command_name_upper == "WRITECOMMANDSUMMARYTOFILE":

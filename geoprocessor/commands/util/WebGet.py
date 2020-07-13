@@ -57,7 +57,9 @@ class WebGet(AbstractCommand):
         CommandParameterMetadata("URL", type("")),
         CommandParameterMetadata("OutputFile", type("")),
         CommandParameterMetadata("Username", type("")),
-        CommandParameterMetadata("Password", type(""))]
+        CommandParameterMetadata("Password", type("")),
+        CommandParameterMetadata("Timeout", int),
+        CommandParameterMetadata("ResponseCodeProperty", type(""))]
 
     # Command metadata for command editor display
     __command_metadata = dict()
@@ -93,6 +95,17 @@ class WebGet(AbstractCommand):
     __parameter_input_metadata['Password.Label'] = "Password"
     __parameter_input_metadata['Password.Tooltip'] = "Specify a valid password to access a private URL file."
     __parameter_input_metadata['Password.Required'] = False
+    # Timeout
+    __parameter_input_metadata['Timeout.Description'] = "response timeout (seconds)"
+    __parameter_input_metadata['Timeout.Label'] = "Timeout"
+    __parameter_input_metadata['Timeout.Tooltip'] = "Timeout to limit waiting for response."
+    __parameter_input_metadata['Timeout.Required'] = False
+    __parameter_input_metadata['Timeout.Value.Default'] = "120"
+    # ResponseCodeProperty
+    __parameter_input_metadata['ResponseCodeProperty.Description'] = "property name for response code"
+    __parameter_input_metadata['ResponseCodeProperty.Label'] = "Response code property"
+    __parameter_input_metadata['ResponseCodeProperty.Tooltip'] = "Property name for response code."
+    __parameter_input_metadata['ResponseCodeProperty.Required'] = False
 
     def __init__(self) -> None:
         """
@@ -140,6 +153,17 @@ class WebGet(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
+        # Check that the timeout is a number
+        # noinspection PyPep8Naming
+        pv_Timeout = self.get_parameter_value(parameter_name='Timeout', command_parameters=command_parameters)
+        if pv_Timeout is not None:
+            if not validator_util.validate_float(pv_Timeout, False, False):
+                message = "Timeout parameter value {} is not a number.".format(parameter_value)
+                recommendation = "Specify a number of seconds.".format(parameter)
+                warning_message += "\n" + message
+                self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
@@ -154,15 +178,15 @@ class WebGet(AbstractCommand):
 
     def check_runtime_data(self, output_file_abs: str) -> bool:
         """
-       Checks the following:
-       * the output folder is a valid folder
+        Checks the following:
+        * the output folder is a valid folder
 
-       Args:
-           output_file_abs: the full pathname to the output file
+        Args:
+            output_file_abs: the full pathname to the output file
 
-       Returns:
-           run_webget: Boolean. If TRUE, the webget process should be run. If FALSE, it should not be run.
-       """
+        Returns:
+            run_webget: Boolean. If TRUE, the webget process should be run. If FALSE, it should not be run.
+        """
 
         # Boolean to determine if the webget process should be run. Set to true until an error occurs.
         run_webget = True
@@ -239,6 +263,13 @@ class WebGet(AbstractCommand):
         pv_Username = self.get_parameter_value("Username", default_value=None)
         # noinspection PyPep8Naming
         pv_Password = self.get_parameter_value("Password", default_value=None)
+        # noinspection PyPep8Naming
+        pv_Timeout = self.get_parameter_value("Timeout", default_value=None)
+        timeout = None  # Default is no timeout
+        if pv_Timeout is not None:
+            timeout = float(WebGet.__parameter_input_metadata['Timeout.Value.Default'])
+        # noinspection PyPep8Naming
+        pv_ResponseCodeProperty = self.get_parameter_value("ResponseCodeProperty", default_value=0)
 
         # Convert the pv_URL parameter to expand for ${Property} syntax.
         url_abs = self.command_processor.expand_parameter_value(pv_URL, self)
@@ -267,52 +298,71 @@ class WebGet(AbstractCommand):
 
                 # Get the URL file and convert it into a request Response object
                 # Authentication Reference: http://docs.python-requests.org/en/master/user/authentication/
-                r = requests.get(url_abs, auth=HTTPBasicAuth(pv_Username, pv_Password), verify=False, stream=True)
+                if (pv_Username is not None) and (pv_Password is not None):
+                    r = requests.get(url_abs, auth=HTTPBasicAuth(pv_Username, pv_Password),
+                                     stream=True, timeout=timeout, verify=False)
+                else:
+                    r = requests.get(url_abs, stream=True, timeout=timeout, verify=False)
 
-                # Get the filename of the URL and the output file
-                url_filename = io_util.get_filename(url_abs)
-                output_filename = io_util.get_filename(output_file_absolute)
+                # Check the exit status
+                if r.status_code == 200:
+                    # Get the filename of the URL and the output file
+                    url_filename = io_util.get_filename(url_abs)
+                    output_filename = io_util.get_filename(output_file_absolute)
 
-                # Remove the output file if it already exists.
-                if os.path.exists(output_file_absolute):
-                    os.remove(output_file_absolute)
+                    # Remove the output file if it already exists.
+                    if os.path.exists(output_file_absolute):
+                        os.remove(output_file_absolute)
 
-                if zip_util.is_zip_file_request(r):
-                    # If the URL file is a zip file, process as a zip file.
+                    if zip_util.is_zip_file_request(r):
+                        # If the URL file is a zip file, process as a zip file.
 
-                    # Create an empty list to hold the files that were downloaded/extracted to the output folder.
-                    downloaded_files = []
+                        # Create an empty list to hold the files that were downloaded/extracted to the output folder.
+                        downloaded_files = []
 
-                    with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
-                        downloaded_zip_file.write(r.content)
-                    downloaded_files.append("{}.zip".format(url_filename))
+                        with open(os.path.join(output_folder, "{}.zip".format(url_filename)), "wb") as downloaded_zip_file:
+                            downloaded_zip_file.write(r.content)
+                        downloaded_files.append("{}.zip".format(url_filename))
 
-                    # Determine if the downloaded zip file(s) should be renamed. If the filename is %f then the
-                    # filenames of the downloaded products should be the same as the url filenames
-                    if not output_filename == '%f':
-                        self.__rename_files_in_a_folder(list_of_files=downloaded_files, folder_path=output_folder,
-                                                        new_filename=output_filename)
+                        # Determine if the downloaded zip file(s) should be renamed. If the filename is %f then the
+                        # filenames of the downloaded products should be the same as the url filenames
+                        if not output_filename == '%f':
+                            self.__rename_files_in_a_folder(list_of_files=downloaded_files, folder_path=output_folder,
+                                                            new_filename=output_filename)
 
-                    # TODO smalers 2020-05-10 evaluate how to tell processor output file - could be a lot of files
+                        # TODO smalers 2020-05-10 evaluate how to tell processor output file - could be a lot of files
+
+                    else:
+                        # Download the file to the output folder.
+                        with open(os.path.join(output_folder, os.path.basename(url_abs)), "wb") as downloaded_file:
+                            downloaded_file.write(r.content)
+
+                        # Determine if the downloaded file should be renamed. If the filename is %f then the filename
+                        # of the downloaded product should be the same as the url filename
+                        if not output_filename == '%f':
+                            self.__rename_files_in_a_folder(list_of_files=[os.path.basename(url_abs)],
+                                                            folder_path=output_folder,
+                                                            new_filename=output_filename)
+                            # Save the output file in the processor, used by the UI to list output files
+                            self.command_processor.add_output_file(output_file_absolute)
+
+                    if pv_ResponseCodeProperty is not None:
+                        # Set the processor property with the return code
+                        self.command_processor.set_property(pv_ResponseCodeProperty,r.status_code)
 
                 else:
-                    # Download the file to the output folder.
-                    with open(os.path.join(output_folder, os.path.basename(url_abs)), "wb") as downloaded_file:
-                        downloaded_file.write(r.content)
-
-                    # Determine if the downloaded file should be renamed. If the filename is %f then the filename
-                    # of the downloaded product should be the same as the url filename
-                    if not output_filename == '%f':
-                        self.__rename_files_in_a_folder(list_of_files=[os.path.basename(url_abs)],
-                                                        folder_path=output_folder,
-                                                        new_filename=output_filename)
-                        # Save the output file in the processor, used by the UI to list output files
-                        self.command_processor.add_output_file(output_file_absolute)
+                    self.warning_count += 1
+                    message = "Exit code {} ({}) returned downloading the file from: {}".format(
+                        r.status_code, r.reason, url_abs)
+                    recommendation = "Verify that the URL is correct."
+                    self.logger.warning(message, exc_info=True)
+                    self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
+                                                                                          message, recommendation))
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
-                message = "Unexpected error downloading file from URL {}.".format(url_abs)
+                message = "Unexpected error downloading file from URL {}.".format(r.status_code)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,

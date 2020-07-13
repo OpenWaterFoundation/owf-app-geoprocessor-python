@@ -17,6 +17,8 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+import typing
+
 
 class Table(object):
     """
@@ -31,15 +33,14 @@ class Table(object):
     function.
 
     There are a number of properties associated with each Table. The initialized properties stored within each Table
-     instance are the STATIC properties that will never change (identifier, df object, and source path). The DYNAMIC
-     properties (column names, number of table entries, etc.) are created when needed by accessing class functions.
+    instance are the STATIC properties that will never change (identifier, df object, and source path). The DYNAMIC
+    properties (column names, number of table entries, etc.) are created when needed by accessing class functions.
 
     Tables can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
     creates a new Table. When this occurs, the in-memory Table is assigned a table_id from within the command,
     the df is created from within the command and the source_path is set to 'MEMORY'or 'NONE'.
     """
-
-    def __init__(self, table_id, pandas_df, table_source_path, properties=None):
+    def __init__(self, table_id: str, pandas_df, table_source_path: str, properties:dict = None) -> None:
         """
         Initialize a new Table instance.
 
@@ -60,14 +61,14 @@ class Table(object):
 
         # "id" is a string that is the Table's reference ID. This ID is used to access the Table from the GeoProcessor
         # for manipulation.
-        self.id = table_id
+        self.id: str = table_id
 
         # "pandas_df" is a Pandas Data Frame object created by the pandas library. All manipulations are performed on
         # the Table's pandas data frame.
         self.df = pandas_df
 
         # "source_path" (str) is the full pathname to the original data file on the user's local computer
-        self.source_path = table_source_path
+        self.source_path: str = table_source_path
 
         # "int_null_value" is the value used to replace the null value within the integer columns, if applicable.
         # See ReadTableFromDataStore parameters IntNullHandleMethod  and IntNullValue for more information
@@ -94,43 +95,45 @@ class Table(object):
 
         return self.df.copy(deep=True)
 
-    def get_column_names(self):
+    def get_column_names(self) -> [str]:
         """
         Return a list of column names.
 
-        Return: A list of column names.
+        Returns: A list of column names.
         """
 
         # Return a list of the column names.
         return list(self.df)
 
-    def get_column_values_as_list(self, column_name):
+    def get_column_values_as_list(self, column_name) -> [typing.Any]:
         """
         Return all of the column values for a given column.
 
         Args:
             column_name (str): the name of the column of interest
 
-        Return: A list of the column values.
+        Returns: A list of the column values.
         """
 
         # Return a list of the column values for the given input column.
         return self.df[column_name].tolist()
 
-    def count(self, return_col=True):
+    def count_columns(self) -> int:
         """
-        Return either the number of columns within the table or the number of rows within the table.
+        Return either the number of columns for the table.
 
-        Args:
-            return_col: Boolean. If TRUE, returns column count. If FALSE, returns row count.
-
-        Return: The column or row count (int). Returns None if returnCol argument is invalid Boolean.
+        Returns:
+            The column count (int).
         """
-
         row, col = self.df.shape
-        if return_col:
-            return col
-        elif return_col is False:
-            return row
-        else:
-            return None
+        return col
+
+    def count_rows(self, return_col=True) -> int:
+        """
+        Return the number of rows for the table.
+
+        Returns:
+            The row count (int).
+        """
+        row, col = self.df.shape
+        return row

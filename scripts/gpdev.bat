@@ -60,8 +60,8 @@ echo GeoProcessor software is located in folder: %installFolder%
 
 rem The script version can be different from the GeoProcessor Python version
 rem - this version is just used to help track changes to this script
-set gpdevBatVersion=1.1.0
-set gpdevBatVersionDate=2020-03-30
+set gpdevBatVersion=1.2.0
+set gpdevBatVersionDate=2020-07-07
 
 rem Evaluate command options, using Windows-style options
 rem - have to check %1% and %2% because may be called from another file such as from gpuidev.bat using -ui
@@ -90,6 +90,19 @@ if "%3%"=="/printenv" (
 if "%1%"=="/o" goto runOsgeoQgis
 if "%2%"=="/o" goto runOsgeoQgis
 if "%3%"=="/o" goto runOsgeoQgis
+
+rem Run Python directly, useful to run "processing.alghelp()" and other functions. 
+rem - set up the environment as if running GeoProcessor but just run Python
+set runPython=no
+if "%1%"=="/python" (
+  set runPython=yes
+)
+if "%2%"=="/python" (
+   set runPython=yes
+)
+if "%3%"=="/python" (
+   set runPython=yes
+)
 
 if "%1%"=="/s" goto runStandaloneQgis
 if "%2%"=="/s" goto runStandaloneQgis
@@ -512,22 +525,31 @@ if "!doPrintEnv!"=="yes" (
 rem Run QGIS Python with the geoprocessor module found using PYTHONPATH set above.
 rem - The Python version is compatible with QGIS.
 rem - Pass command line arguments that were passed to this bat file.
-rem "%PYTHONHOME%\python" %*
 rem Use -v to see verbose list of modules that are loaded.
-echo.
-echo Running:  "%PYTHONHOME%\python" -m geoprocessor.app.gp %*
-echo If errors result due to missing packages,
-echo install those packages in the PyCharm venv and report to developers.
-echo Start-up may be slow if virus scanner needs to check.
-echo.
-"%PYTHONHOME%\python.exe" -m geoprocessor.app.gp %*
-rem "%PYTHONHOME%\python" -m geoprocessor.app.gp %*
+if "!runPython!"=="yes" (
+  rem Run Python with the GeoProcessor environment but not the GeoProcessor.
 
-rem Use the following for troubleshooting
-rem "%PYTHONHOME%\python" -m geoprocessor.app.printenv %*
+  rem Run the following to use the environment but be able to do imports, etc. to find modules
+  echo Running Python directly in GeoProcessor environment.
+  echo Use Python language syntax at the prompt.
+  echo.
+  rem "%PYTHONHOME%\python" -v %*
+  rem Don't pass command line options because Python tries to interpret.
+  "%PYTHONHOME%\python.exe"
+) else (
+  echo.
+  echo Running:  "%PYTHONHOME%\python" -m geoprocessor.app.gp %*
+  echo If errors result due to missing packages,
+  echo install those packages in the PyCharm venv and report to developers.
+  echo Start-up may be slow if virus scanner needs to check.
+  echo.
+  rem Run the full GeoProcessor.
+  "%PYTHONHOME%\python.exe" -m geoprocessor.app.gp %*
+  rem "%PYTHONHOME%\python" -m geoprocessor.app.gp %*
 
-rem Run the following to use the environment but be able to do imports, etc. to find modules
-rem "%PYTHONHOME%\python" -v
+  rem Use the following for troubleshooting
+  rem "%PYTHONHOME%\python" -m geoprocessor.app.printenv %*
+)
 
 rem Exit with the error level of the Python command
 echo Exiting gpdev.bat with exit code %ERRORLEVEL%
@@ -547,6 +569,7 @@ echo All command line options for the batch file are also passed to the GeoProce
 echo.
 echo /h         Print usage of this gpdev.bat batch file.
 echo /o         Use the OSGeo4W version of QGIS.
+echo /python    Run Python in the GeoProcessor environment.
 echo /printenv  Print the environment in addition to running the GeoProcessor.
 echo /s         Use the standalone version of QGIS - default rather than /o.
 echo /sN.N      Use the standalone version N.N of QGIS, for example 3.10

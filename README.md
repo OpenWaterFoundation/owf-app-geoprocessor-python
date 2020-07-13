@@ -9,7 +9,7 @@ See the following online user and developer documentation:
 
 * [OWF GeoProcessor](http://software.openwaterfoundation.org/geoprocessor/) - download page (with links to versioned software and documentation)
 * [Latest GeoProcessor user documentation](http://software.openwaterfoundation.org/geoprocessor/latest/doc-user/) - latest user documentation
-* [Latest GeoProcessor developer documentation)](http://software.openwaterfoundation.org/latest/doc-dev/) - latest developer documentation
+* [Latest GeoProcessor developer documentation)](http://software.openwaterfoundation.org/geoprocessor/latest/doc-dev/) - latest developer documentation
 
 The following sections provide a summary of the project repository and getting started:
 

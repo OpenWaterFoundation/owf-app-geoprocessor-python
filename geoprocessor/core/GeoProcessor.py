@@ -32,6 +32,7 @@ from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.If import If
 
 import geoprocessor.util.app_util as app_util
+import geoprocessor.util.os_util as os_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.command_util as command_util
 
@@ -120,8 +121,12 @@ class GeoProcessor(object):
         # Reading the command file should reset these properties.
         # TODO smalers 2017-12-30 need to handle "New command file" action when UI is implemented.
         cwd = os.getcwd()
+        # These will have C:\ on Windows and / on Linux.
+        # - will be reset to Python friendly version with all forward slashes when a command file is opened
         self.properties["InitialWorkingDir"] = os.path.dirname(cwd)
+        self.properties["InitialWorkingDirNative"] = os.path.dirname(cwd)
         self.properties["WorkingDir"] = os.path.dirname(cwd)
+        self.properties["WorkingDirNative"] = os.path.dirname(cwd)
 
         # TODO smalers 2017-12-30 May not need this - Python design improves on Java design
         # - remove once tested out
@@ -1032,6 +1037,15 @@ class GeoProcessor(object):
             self.properties["InitialWorkingDir"] = os.path.dirname(command_file_abs)
             self.properties["WorkingDir"] = os.path.dirname(command_file_abs)
 
+        # The command file is likely generalized such as /path on Linux and C:/path on Windows.
+        # Therefore, save a native version for code that needs it such as RunProgram when running a shell.
+        if os_util.is_windows_os():
+            self.properties["WorkingDirNative"] = self.properties["WorkingDir"].replace("/", "\\")
+            self.properties["InitialWorkingDirNative"] = self.properties["InitialWorkingDir"].replace("/", "\\")
+        else:
+            self.properties["WorkingDirNative"] = self.properties["WorkingDir"]
+            self.properties["InitialWorkingDirNative"] = self.properties["InitialWorkingDir"]
+
         # Create an instance of the GeoProcessorCommandFactory.
         command_factory = GeoProcessorCommandFactory()
 
@@ -1222,7 +1236,11 @@ class GeoProcessor(object):
         # Cannot iterate through a dictionary and remove items from dictionary.
         # Therefore convert the dictionary to a list and iterate on the list
         processor_property_names = list(self.properties.keys())
-        protected_property_names = ["InitialWorkingDir", "WorkingDir", "QGISVersion"]
+        protected_property_names = ["InitialWorkingDir",
+                                    "InitialWorkingDirNative",
+                                    "WorkingDir",
+                                    "WorkingDirNative",
+                                    "QGISVersion"]
         # Loop through properties and delete all except for protected properties
         for i_parameter in range(0, len(processor_property_names)):
             property_name = processor_property_names[i_parameter]

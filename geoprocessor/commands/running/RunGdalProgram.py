@@ -33,6 +33,7 @@ import geoprocessor.util.os_util as os_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validator_util
 
+import io
 import logging
 import os
 import shlex
@@ -50,17 +51,21 @@ class RunGdalProgram(AbstractCommand):
         CommandParameterMetadata("UseCommandShell", str),
         CommandParameterMetadata("IncludeParentEnvVars", str),
         CommandParameterMetadata("IncludeEnvVars", str),
+        CommandParameterMetadata("ExcludeEnvVars", str),
         CommandParameterMetadata("Timeout", int),
         CommandParameterMetadata("OutputFiles", str),
         CommandParameterMetadata("StdoutFile", str),
-        CommandParameterMetadata("StderrFile", str)
+        CommandParameterMetadata("StderrFile", str),
+        CommandParameterMetadata("ExitCodeProperty", str)
     ]
 
     # Command metadata for command editor display
     __command_metadata = dict()
     __command_metadata['Description'] = (
-        "Run a GDAL program to process a raster data file, given the program arguments.\n"
-        "For portable command files, specify the GDAL program to run using ${GdalBinDir} property or similar.\n"
+        "Run a GDAL program to process spatial data.\n"
+        "The full command line should be provided and other parameters control input and output.\n"
+        "For portable command files, specify the GDAL program to run using ${GdalBinDir} property or similar,"
+        " for example: ${GdalBinDir}/gdalinfo --formats\n"
         "If ${ is not found at the start of the command line, ${GdalBinDir} is automatically inserted.")
     __command_metadata['EditorType'] = "Simple"
 
@@ -163,16 +168,18 @@ class RunGdalProgram(AbstractCommand):
     __parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
     __parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
     __parameter_input_metadata['UseCommandShell.Tooltip'] = ""
-    __parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['UseCommandShell.Values'] = ["False", "True"]
     __parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
+    __parameter_input_metadata['UseCommandShell.Value.Default.ForEditor'] = ""
 
     # IncludeParentEnvVars
     __parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
     __parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
     __parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = (
         "Indicate whether the parent environment variables should be passed to the program run environment.")
-    __parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
+    __parameter_input_metadata['IncludeParentEnvVars.Values'] = ["True", "False"]
     __parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
+    __parameter_input_metadata['IncludeParentEnvVars.Value.Default.ForEditor'] = ""
 
     # IncludeEnvVars
     __parameter_input_metadata['IncludeEnvVars.Description'] = ""
@@ -198,13 +205,15 @@ class RunGdalProgram(AbstractCommand):
     __parameter_input_metadata['OutputFiles.Description'] = ""
     __parameter_input_metadata['OutputFiles.Label'] = "Output files"
     __parameter_input_metadata['OutputFiles.Tooltip'] = (
-        "Specify the output files to add to Results, separated by commas.  Can specify with ${Property}.")
+        "Specify the output files to add to Results, separated by commas, "
+        "necessary because command does not automatically determine from the command line. " +
+        "Can specify with ${Property}.")
 
     # StdoutFile
     __parameter_input_metadata['StdoutFile.Description'] = "standard output file"
     __parameter_input_metadata['StdoutFile.Label'] = "Standard output file"
     __parameter_input_metadata['StdoutFile.Tooltip'] = (
-        "Name of file for program standard output, or 'logfile' to write to the log file.  "
+        "Name of file for program standard output, DEVNULL to discard, or 'logfile' to write to the log file.  "
         "${Property} syntax is recognized.")
     __parameter_input_metadata['StdoutFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['StdoutFile.FileSelector.Title'] = "Select a file to write standard output"
@@ -213,20 +222,18 @@ class RunGdalProgram(AbstractCommand):
     __parameter_input_metadata['StderrFile.Description'] = "standard error file"
     __parameter_input_metadata['StderrFile.Label'] = "Standard error file"
     __parameter_input_metadata['StderrFile.Tooltip'] = (
-        "Name of file for program standard error, or 'logfile' to write to the log file.  "
+        "Name of file for program standard error, DEVNULL to discard, STDOUT to write to standard output, "
+        "or 'logfile' to write to the log file. "
         "${Property} syntax is recognized.")
     __parameter_input_metadata['StderrFile.Required'] = False
     __parameter_input_metadata['StderrFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['StderrFile.FileSelector.Title'] = "Select a file to write standard error"
 
-    # Choices for UseCommandShell, used to validate parameter and display in editor
-    __choices_UseCommandShell = ["False", "True"]
-
-    # Choices for IncludeParentEnvVars, used to validate parameter and display in editor
-    __choices_IncludeParentEnvVars = ["False", "True"]
-
-    # Choices for IncludeEnvVars, used to validate parameter and display in editor
-    __choices_IncludeEnvVars = ["False", "True"]
+    # ExitCodeProperty
+    __parameter_input_metadata['ExitCodeProperty.Description'] = "exit code property"
+    __parameter_input_metadata['ExitCodeProperty.Label'] = 'Exit code property'
+    __parameter_input_metadata['ExitCodeProperty.Default'] = ""
+    __parameter_input_metadata['ExitCodeProperty.Tooltip'] = "Property to set with exit code from GDAL program."
 
     def __init__(self) -> None:
         """
@@ -251,7 +258,7 @@ class RunGdalProgram(AbstractCommand):
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
         Returns:
-            None.
+            None
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -276,10 +283,11 @@ class RunGdalProgram(AbstractCommand):
         pv_IncludeParentEnvVars = self.get_parameter_value(parameter_name='IncludeParentEnvVars',
                                                            command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IncludeParentEnvVars,
-                                                      self.__choices_IncludeParentEnvVars, True, True):
+                                                      self.__parameter_input_metadata[
+                                                          'IncludeParentEnvVars.Values'], True, True):
             message = "IncludeParentEnvVars parameter is invalid."
             recommendation = "Specify the IncludeParentEnvVars parameter as blank or one of " + \
-                             str(self.__choices_IncludeParentEnvVars)
+                             str(self.__parameter_input_metadata['IncludeParentEnvVars.Values'])
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -290,10 +298,11 @@ class RunGdalProgram(AbstractCommand):
         pv_UseCommandShell = self.get_parameter_value(parameter_name='UseCommandShell',
                                                       command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_UseCommandShell,
-                                                      self.__choices_UseCommandShell, True, True):
+                                                      self.__parameter_input_metadata[
+                                                          'UseCommandShell.Values'], True, True):
             message = "UseCommandShell parameter is invalid."
             recommendation = "Specify the UseCommandShell parameter as blank or one of " + \
-                             str(self.__choices_UseCommandShell)
+                             str(self.__parameter_input_metadata['UseCommandShell.Values'])
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -377,7 +386,7 @@ class RunGdalProgram(AbstractCommand):
         Run the command.  Run the program, which can generate output files.
 
         Returns:
-            None.
+            None
 
         Raises:
                 ValueError: if a runtime input error occurs.
@@ -438,7 +447,7 @@ class RunGdalProgram(AbstractCommand):
             # Expand each output file
             ifile = -1
             for output_file in output_files_list:
-                ifile = ifile + 1
+                ifile += 1
                 output_files_list[ifile] = io_util.verify_path_for_os(
                     io_util.to_absolute_path(
                         self.command_processor.get_property('WorkingDir'),
@@ -472,6 +481,9 @@ class RunGdalProgram(AbstractCommand):
             # noinspection PyPep8Naming
             pv_StderrFile = None
 
+        # noinspection PyPep8Naming
+        pv_ExitCodeProperty = self.get_parameter_value('ExitCodeProperty')
+
         logger.info('Command line before expansion="' + pv_CommandLine + '"')
 
         # Runtime checks on input
@@ -483,7 +495,7 @@ class RunGdalProgram(AbstractCommand):
 
         # Expand the command line
         if not pv_CommandLine.startswith("${"):
-            # Make sure that the execable location has the full path
+            # Make sure that the executable location has the full path
             # noinspection PyPep8Naming
             pv_CommandLine = "${GdalBinDir}/" + pv_CommandLine
         command_line_expanded = self.command_processor.expand_parameter_value(pv_CommandLine, self)
@@ -494,6 +506,7 @@ class RunGdalProgram(AbstractCommand):
             raise CommandError(message)
 
         # Run the program as a subprocess
+
         # noinspection PyBroadException
         try:
             logger.info('Running command line "' + command_line_expanded + '"')
@@ -503,71 +516,66 @@ class RunGdalProgram(AbstractCommand):
             # print("env_dict=" + string_util.format_dict(env_dict))
             # TODO smalers 2018-12-16 evaluate using shlex.quote() to handle command string
             # TODO smalers 2018-12-16 handle standard input and output
-            use_run = False
+            use_run = True
             return_status = -1
             if use_run:
                 # Use subprocess.run(), available as of Python 3.5
                 # - shlex is used to parse command line string into arguments.
                 # - For the following logic, 'capture_output' is not used because output is immediately redirected
-                #   to the appropriate location.  'capture_output' is used ot retrieve output from
+                #   to the appropriate location. 'capture_output' is used to retrieve output from
                 #   subprocess.CompletedProcess.
                 args = shlex.split(command_line_expanded)
                 # By default the stdout and stderr are just output by the subprocess defaults.
                 # However, the output can be redirected to a file.
-                # If either stdout our stderr is to be captured, use the 'capture_output' parameter.
-                capture_output = None  # Do not capture output because stderr and stdout are being specified
                 stderr = None  # Default is don't capture stderr
                 stdout = None  # Default is don't capture stdout
-                stdout_file = None
-                stderr_file = None
 
                 # Handle stdout parameters
                 if pv_StdoutFile is not None:
-                    capture_output = True
-                    if pv_StdoutFile == 'logfile':
+                    if pv_StdoutFile.upper() == 'LOGFILE':
                         # Get the file number of the current log file
                         logfile_handler: logging.FileHandler = log_util.get_logfile_handler()
                         if logfile_handler is not None:
                             stdout = logfile_handler.stream.fileno()
-                    elif pv_StdoutFile == 'DEVNULL':
+                    elif pv_StdoutFile.upper() == 'DEVNULL':
                         # Special value that should be passed as is
                         # - will write standard output to /dev/null on Linux
-                        stdout = 'DEVNULL'
+                        stdout = subprocess.DEVNULL
                     else:
                         # Open the file to receive stdout output, perhaps the desired output of the program if it
                         # does not create its own output file
-                        stdout_file = open(stdout_file_full)
-                        stderr = stdout_file.fileno()
+                        stdout = open(stdout_file_full, 'w')
 
                 # Handle stderr parameters
                 if pv_StderrFile is not None:
-                    if pv_StderrFile == 'logfile':
+                    if pv_StderrFile.upper() == 'LOGFILE':
                         # Get the file number of the current log file
                         logfile_handler: logging.FileHandler = log_util.get_logfile_handler()
                         if logfile_handler is not None:
                             stderr = logfile_handler.stream.fileno()
-                    elif pv_StderrFile == 'DEVNULL' or pv_StderrFile == 'STDOUT':
+                    elif pv_StderrFile.upper() == 'DEVNULL':
                         # Special value that should be passed as is
                         # - will write standard output to /dev/null on Linux
-                        stderr = pv_StderrFile
+                        stderr = subprocess.DEVNULL
+                    elif pv_StdoutFile.upper() == 'STDOUT':
+                        # Combine stderr with stdout
+                        stderr = subprocess.STDOUT
                     else:
                         # Open the file to receive stderr output, for example to isolate errors to a file
-                        stderr_file = open(stderr_file_full)
-                        stderr = stderr_file.fileno()
+                        stderr = open(stderr_file_full, 'w')
                 # Now run the process
                 completed_process = subprocess.run(args, shell=use_command_shell, env=env_dict, timeout=timeout,
-                                                   capture_output=capture_output, stdout=stdout, stderr=stderr)
+                                                   stdout=stdout, stderr=stderr)
 
                 # Get the return information
-                # - note that capture_output=None above so stdout and stderr cannot be returned from CompletedProcess
                 return_status = completed_process.returncode
 
                 # Close any files that may have been opened
                 # - this does not close the log file, which should remain open for other logging messages
-                if stdout_file is not None:
-                    stdout_file.close()
-                if stderr_file is not None:
-                    stderr_file.close()
+                if stdout is not None and isinstance(stdout, io.IOBase):
+                    stdout.close()
+                if stdout is not None and isinstance(stderr, io.IOBase):
+                    stderr.close()
             else:
                 # Older logic that will be phased out if the above 'run()' logic works
                 # Use subprocess.Popen
@@ -578,6 +586,9 @@ class RunGdalProgram(AbstractCommand):
                 return_status = p.poll()
                 # Wait for the process to terminate since need it to be done before other commands do their work
 
+            if pv_ExitCodeProperty is not None and pv_ExitCodeProperty != "":
+                # Set the exit code property
+                self.command_processor.set_property(pv_ExitCodeProperty, return_status)
             if return_status == 0:
                 logger.info("Return status of " + str(return_status) + " running program.")
             else:

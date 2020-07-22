@@ -254,12 +254,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Select_Free_FreeGeoLayers: QtWidgets.QAction or None = None
 
         # Commands / Create GeoLayer menu
-        self.Menu_Commands_Create_GeoLayers: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Create_GeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Create_CopyGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Create_CreateGeoLayerFromGeometry: QtWidgets.QAction or None = None
 
         # Commands / Read GeoLayer
-        self.Menu_Commands_Read_GeoLayers: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Read_GeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile: QtWidgets.QAction or None = None
@@ -281,7 +281,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_SetContents_SetGeoLayerProperty: QtWidgets.QAction or None = None
 
         # Commands / Manipulate GeoLayer
-        self.Menu_Commands_Manipulate_GeoLayers: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Manipulate_GeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Manipulate_ClipGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_IntersectGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_MergeGeoLayers: QtWidgets.QAction or None = None
@@ -289,13 +289,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute: QtWidgets.QAction or None = None
 
         # Commands / Analyze GeoLayer
-        self.Menu_Commands_Analyze_GeoLayers: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Analyze_GeoLayer: QtWidgets.QMenu or None = None
 
         # Commands / Check GeoLayer
-        self.Menu_Commands_Check_GeoLayers: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Check_GeoLayer: QtWidgets.QMenu or None = None
 
         # Commands / Write GeoLayer
-        self.Menu_Commands_Write_GeoLayers: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Write_GeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Write_WriteGeoLayerToDelimitedFile: QtWidgets.QAction or None = None
         self.Menu_Commands_Write_WriteGeoLayerToGeoJSON: QtWidgets.QAction or None = None
         self.Menu_Commands_Write_WriteGeoLayerToKML: QtWidgets.QAction or None = None
@@ -384,14 +384,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Raster: QtWidgets.QMenu or None = None
 
         # Commands(Raster) / Create GeoLayer
-        self.Menu_Commands_Raster_Create_RasterGeoLayers: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Raster_Create_RasterGeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Raster_Create_CreateRasterGeoLayer: QtWidgets.QAction or None = None
+        self.Menu_Commands_Raster_Create_RasterizeGeoLayer: QtWidgets.QAction or None = None
 
         # Commands(Raster) / Read GeoLayer
-        self.Menu_Commands_Raster_Read_RasterGeoLayers: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Raster_Read_RasterGeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile: QtWidgets.QAction or None = None
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileService: QtWidgets.QAction or None = None
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService: QtWidgets.QAction or None = None
+
+        # Commands(Raster) / Write GeoLayer
+        self.Menu_Commands_Raster_Write_RasterGeoLayer: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Raster_Write_WriteRasterGeoLayerFromFile: QtWidgets.QAction or None = None
 
         # Commands(Table) menu
         self.Menu_Commands_Table: QtWidgets.QMenu or None = None
@@ -1554,10 +1559,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Create - GeoLayers menu
         # ------------------------------------------------------------------------------------------------------------
-        self.Menu_Commands_Create_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Create_GeoLayers.setObjectName(qt_util.from_utf8("Menu_Commands_Create_GeoLayers"))
-        self.Menu_Commands_Create_GeoLayers.setTitle("Create GeoLayer")
-        self.Menu_Commands.addAction(self.Menu_Commands_Create_GeoLayers.menuAction())
+        self.Menu_Commands_Create_GeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Create_GeoLayer.setObjectName(qt_util.from_utf8("Menu_Commands_Create_GeoLayer"))
+        self.Menu_Commands_Create_GeoLayer.setTitle("Create GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Create_GeoLayer.menuAction())
 
         # CopyGeoLayer
         self.Menu_Commands_Create_CopyGeoLayer = QtWidgets.QAction(main_window)
@@ -1565,7 +1570,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Create_CopyGeoLayer"))
         self.Menu_Commands_Create_CopyGeoLayer.setText(
             "CopyGeoLayer()... <copy a GeoLayer to a new GeoLayer>")
-        self.Menu_Commands_Create_GeoLayers.addAction(self.Menu_Commands_Create_CopyGeoLayer)
+        self.Menu_Commands_Create_GeoLayer.addAction(self.Menu_Commands_Create_CopyGeoLayer)
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Create_CopyGeoLayer.triggered.connect(
@@ -1581,15 +1586,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Create_CreateGeoLayerFromGeometry.triggered.connect(
             functools.partial(self.edit_new_command, "CreateGeoLayerFromGeometry()"))
-        self.Menu_Commands_Create_GeoLayers.addAction(self.Menu_Commands_Create_CreateGeoLayerFromGeometry)
+        self.Menu_Commands_Create_GeoLayer.addAction(self.Menu_Commands_Create_CreateGeoLayerFromGeometry)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Read - GeoLayers menu
         # ------------------------------------------------------------------------------------------------------------
-        self.Menu_Commands_Read_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Read_GeoLayers.setObjectName(qt_util.from_utf8("Menu_Commands_Read_GeoLayers"))
-        self.Menu_Commands_Read_GeoLayers.setTitle("Read GeoLayer")
-        self.Menu_Commands.addAction(self.Menu_Commands_Read_GeoLayers.menuAction())
+        self.Menu_Commands_Read_GeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Read_GeoLayer.setObjectName(qt_util.from_utf8("Menu_Commands_Read_GeoLayer"))
+        self.Menu_Commands_Read_GeoLayer.setTitle("Read GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Read_GeoLayer.menuAction())
 
         # ReadGeoLayerFromDelimitedFile
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile = QtWidgets.QAction(main_window)
@@ -1601,7 +1606,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromDelimitedFile()"))
-        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile)
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile)
 
         # ReadGeoLayersFromFolder
         self.Menu_Commands_Read_ReadGeoLayersFromFolder = QtWidgets.QAction(main_window)
@@ -1609,7 +1614,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromFolder"))
         self.Menu_Commands_Read_ReadGeoLayersFromFolder.setText(
             "ReadGeoLayersFromFolder()... <reads 1+ GeoLayer(s) from a local folder>")
-        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFolder)
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFolder)
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayersFromFolder.triggered.connect(
@@ -1621,7 +1626,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON"))
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setText(
             "ReadGeoLayerFromGeoJSON()... <reads a GeoLayer from a .geojson file>")
-        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON)
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON)
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
@@ -1633,13 +1638,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("GeoLayers_Read_ReadGeoLayerFromShapefile"))
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.setText(
             "ReadGeoLayerFromShapefile()... <reads a GeoLayer from a shapefile>")
-        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayerFromShapefile)
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromShapefile)
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromShapefile()"))
 
-        self.Menu_Commands_Read_GeoLayers.addSeparator()
+        self.Menu_Commands_Read_GeoLayer.addSeparator()
 
         # ReadGeoLayersFromFGDB
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB = QtWidgets.QAction(main_window)
@@ -1647,7 +1652,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromFGDB"))
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setText(
             "ReadGeoLayersFromFGDB()... <reads 1+ GeoLayer(s) from the feature classes of a file geodatabase>")
-        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFGDB)
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFGDB)
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.triggered.connect(
@@ -1659,7 +1664,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromGeoPackage"))
         self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage.setText(
             "ReadGeoLayersFromGeoPackage()... <reads 1+ GeoLayer(s) from a GeoPackage file>")
-        self.Menu_Commands_Read_GeoLayers.addAction(self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage)
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage)
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage.triggered.connect(
@@ -1680,7 +1685,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # ------------------------------------------------------------------------------------------------------------
         self.Menu_Commands_SetGeoLayer_Contents = QtWidgets.QMenu(self.Menu_Commands)
         self.Menu_Commands_SetGeoLayer_Contents.setObjectName(
-            qt_util.from_utf8("Menu_Commands_SetContents_GeoLayers"))
+            qt_util.from_utf8("Menu_Commands_SetContents_GeoLayer"))
         self.Menu_Commands_SetGeoLayer_Contents.setTitle("Set GeoLayer Contents")
         self.Menu_Commands.addAction(self.Menu_Commands_SetGeoLayer_Contents.menuAction())
 
@@ -1747,11 +1752,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Manipulate GeoLayer menu
         # ------------------------------------------------------------------------------------------------------------
-        self.Menu_Commands_Manipulate_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Manipulate_GeoLayers.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Manipulate_GeoLayers"))
-        self.Menu_Commands_Manipulate_GeoLayers.setTitle("Manipulate GeoLayer")
-        self.Menu_Commands.addAction(self.Menu_Commands_Manipulate_GeoLayers.menuAction())
+        self.Menu_Commands_Manipulate_GeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Manipulate_GeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Manipulate_GeoLayer"))
+        self.Menu_Commands_Manipulate_GeoLayer.setTitle("Manipulate GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Manipulate_GeoLayer.menuAction())
 
         # ClipGeoLayer
         self.Menu_Commands_Manipulate_ClipGeoLayer = QtWidgets.QAction(main_window)
@@ -1763,7 +1768,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_ClipGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "ClipGeoLayer()"))
-        self.Menu_Commands_Manipulate_GeoLayers.addAction(self.Menu_Commands_Manipulate_ClipGeoLayer)
+        self.Menu_Commands_Manipulate_GeoLayer.addAction(self.Menu_Commands_Manipulate_ClipGeoLayer)
 
         # IntersectGeoLayer
         self.Menu_Commands_Manipulate_IntersectGeoLayer = QtWidgets.QAction(main_window)
@@ -1775,7 +1780,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_IntersectGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "IntersectGeoLayer()"))
-        self.Menu_Commands_Manipulate_GeoLayers.addAction(
+        self.Menu_Commands_Manipulate_GeoLayer.addAction(
             self.Menu_Commands_Manipulate_IntersectGeoLayer)
 
         # MergeGeoLayers
@@ -1788,7 +1793,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_MergeGeoLayers.triggered.connect(
             functools.partial(self.edit_new_command, "MergeGeoLayers()"))
-        self.Menu_Commands_Manipulate_GeoLayers.addAction(self.Menu_Commands_Manipulate_MergeGeoLayers)
+        self.Menu_Commands_Manipulate_GeoLayer.addAction(self.Menu_Commands_Manipulate_MergeGeoLayers)
 
         # SimplifyGeoLayerGeometry
         self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry = QtWidgets.QAction(main_window)
@@ -1800,7 +1805,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry.triggered.connect(
             functools.partial(self.edit_new_command, "SimplifyGeoLayerGeometry()"))
-        self.Menu_Commands_Manipulate_GeoLayers.addAction(
+        self.Menu_Commands_Manipulate_GeoLayer.addAction(
             self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry)
 
         # SplitGeoLayerByAttribute
@@ -1813,37 +1818,37 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute.triggered.connect(
             functools.partial(self.edit_new_command, "SplitGeoLayerByAttribute()"))
-        self.Menu_Commands_Manipulate_GeoLayers.addAction(
+        self.Menu_Commands_Manipulate_GeoLayer.addAction(
             self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Analyze GeoLayer menu (disabled)
         # ------------------------------------------------------------------------------------------------------------
-        self.Menu_Commands_Analyze_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Analyze_GeoLayers.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Analyze_GeoLayers"))
-        self.Menu_Commands_Analyze_GeoLayers.setTitle("Analyze GeoLayer")
-        self.Menu_Commands_Analyze_GeoLayers.setEnabled(False)
-        self.Menu_Commands.addAction(self.Menu_Commands_Analyze_GeoLayers.menuAction())
+        self.Menu_Commands_Analyze_GeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Analyze_GeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Analyze_GeoLayer"))
+        self.Menu_Commands_Analyze_GeoLayer.setTitle("Analyze GeoLayer")
+        self.Menu_Commands_Analyze_GeoLayer.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_Analyze_GeoLayer.menuAction())
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Check GeoLayer menu (disabled)
         # ------------------------------------------------------------------------------------------------------------
-        self.Menu_Commands_Check_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Check_GeoLayers.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Check_GeoLayers"))
-        self.Menu_Commands_Check_GeoLayers.setTitle("Check GeoLayer")
-        self.Menu_Commands_Check_GeoLayers.setEnabled(False)
-        self.Menu_Commands.addAction(self.Menu_Commands_Check_GeoLayers.menuAction())
+        self.Menu_Commands_Check_GeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Check_GeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Check_GeoLayer"))
+        self.Menu_Commands_Check_GeoLayer.setTitle("Check GeoLayer")
+        self.Menu_Commands_Check_GeoLayer.setEnabled(False)
+        self.Menu_Commands.addAction(self.Menu_Commands_Check_GeoLayer.menuAction())
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Write GeoLayer menu
         # ------------------------------------------------------------------------------------------------------------
-        self.Menu_Commands_Write_GeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Write_GeoLayers.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Write_GeoLayers"))
-        self.Menu_Commands_Write_GeoLayers.setTitle("Write GeoLayer")
-        self.Menu_Commands.addAction(self.Menu_Commands_Write_GeoLayers.menuAction())
+        self.Menu_Commands_Write_GeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Write_GeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Write_GeoLayer"))
+        self.Menu_Commands_Write_GeoLayer.setTitle("Write GeoLayer")
+        self.Menu_Commands.addAction(self.Menu_Commands_Write_GeoLayer.menuAction())
 
         # WriteGeoLayerToDelimitedFile
         self.Menu_Commands_Write_WriteGeoLayerToDelimitedFile = QtWidgets.QAction(main_window)
@@ -1855,7 +1860,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Write_WriteGeoLayerToDelimitedFile.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerToDelimitedFile()"))
-        self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToDelimitedFile)
+        self.Menu_Commands_Write_GeoLayer.addAction(self.Menu_Commands_Write_WriteGeoLayerToDelimitedFile)
 
         # WriteGeoLayerToGeoJSON
         self.Menu_Commands_Write_WriteGeoLayerToGeoJSON = QtWidgets.QAction(main_window)
@@ -1867,7 +1872,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Write_WriteGeoLayerToGeoJSON.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerToGeoJSON()"))
-        self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToGeoJSON)
+        self.Menu_Commands_Write_GeoLayer.addAction(self.Menu_Commands_Write_WriteGeoLayerToGeoJSON)
 
         # WriteGeoLayerToKML
         self.Menu_Commands_Write_WriteGeoLayerToKML = QtWidgets.QAction(main_window)
@@ -1879,7 +1884,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Write_WriteGeoLayerToKML.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerToKML()"))
-        self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToKML)
+        self.Menu_Commands_Write_GeoLayer.addAction(self.Menu_Commands_Write_WriteGeoLayerToKML)
 
         # WriteGeoLayerToShapefile
         self.Menu_Commands_Write_WriteGeoLayerToShapefile = QtWidgets.QAction(main_window)
@@ -1891,7 +1896,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Write_WriteGeoLayerToShapefile.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerToShapefile()"))
-        self.Menu_Commands_Write_GeoLayers.addAction(self.Menu_Commands_Write_WriteGeoLayerToShapefile)
+        self.Menu_Commands_Write_GeoLayer.addAction(self.Menu_Commands_Write_WriteGeoLayerToShapefile)
 
         self.Menu_Commands.addSeparator()
 
@@ -2590,11 +2595,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Create - Raster GeoLayer menu
         # ------------------------------------------------------------------------------------------------------------
-        self.Menu_Commands_Raster_Create_RasterGeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Raster_Create_RasterGeoLayers.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Raster_Create_RasterGeoLayers"))
-        self.Menu_Commands_Raster_Create_RasterGeoLayers.setTitle("Create Raster GeoLayers")
-        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Create_RasterGeoLayers.menuAction())
+        self.Menu_Commands_Raster_Create_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Raster_Create_RasterGeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Create_RasterGeoLayer"))
+        self.Menu_Commands_Raster_Create_RasterGeoLayer.setTitle("Create Raster GeoLayer")
+        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Create_RasterGeoLayer.menuAction())
 
         # CreateRasterGeoLayer
         self.Menu_Commands_Raster_Create_CreateRasterGeoLayer = QtWidgets.QAction(main_window)
@@ -2606,17 +2611,30 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Create_CreateRasterGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "CreateRasterGeoLayer()"))
-        self.Menu_Commands_Raster_Create_RasterGeoLayers.addAction(
+        self.Menu_Commands_Raster_Create_RasterGeoLayer.addAction(
             self.Menu_Commands_Raster_Create_CreateRasterGeoLayer)
+
+        # RasterizeGeoLayer
+        self.Menu_Commands_Raster_Create_RasterizeGeoLayer = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Create_RasterizeGeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Create_RasterizeGeoLayer"))
+        self.Menu_Commands_Raster_Create_RasterizeGeoLayer.setText(
+            "RasterizeGeoLayer()... <Create a raster GeoLayer from a vector GeoLayer>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Raster_Create_RasterizeGeoLayer.triggered.connect(
+            functools.partial(self.edit_new_command, "RasterizeGeoLayer()"))
+        self.Menu_Commands_Raster_Create_RasterGeoLayer.addAction(
+            self.Menu_Commands_Raster_Create_RasterizeGeoLayer)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands / Read - Raster GeoLayer menu
         # ------------------------------------------------------------------------------------------------------------
-        self.Menu_Commands_Raster_Read_RasterGeoLayers = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Raster_Read_RasterGeoLayers.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Raster_Read_Raster_GeoLayers"))
-        self.Menu_Commands_Raster_Read_RasterGeoLayers.setTitle("Read Raster GeoLayers")
-        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Read_RasterGeoLayers.menuAction())
+        self.Menu_Commands_Raster_Read_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Raster_Read_RasterGeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Read_Raster_GeoLayer"))
+        self.Menu_Commands_Raster_Read_RasterGeoLayer.setTitle("Read Raster GeoLayer")
+        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Read_RasterGeoLayer.menuAction())
 
         # ReadRasterGeoLayerFromFile
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile = QtWidgets.QAction(main_window)
@@ -2628,10 +2646,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromFile()"))
-        self.Menu_Commands_Raster_Read_RasterGeoLayers.addAction(
+        self.Menu_Commands_Raster_Read_RasterGeoLayer.addAction(
             self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile)
 
-        self.Menu_Commands_Raster_Read_RasterGeoLayers.addSeparator()
+        self.Menu_Commands_Raster_Read_RasterGeoLayer.addSeparator()
 
         # ReadRasterGeoLayerFromTileMapService
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService = QtWidgets.QAction(main_window)
@@ -2643,7 +2661,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService.triggered.connect(
             functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromTileMapService()"))
-        self.Menu_Commands_Raster_Read_RasterGeoLayers.addAction(
+        self.Menu_Commands_Raster_Read_RasterGeoLayer.addAction(
             self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService)
 
         # ReadRasterGeoLayerFromWebMapService
@@ -2656,8 +2674,30 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService.triggered.connect(
             functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromWebMapService()"))
-        self.Menu_Commands_Raster_Read_RasterGeoLayers.addAction(
+        self.Menu_Commands_Raster_Read_RasterGeoLayer.addAction(
             self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService)
+
+        # ------------------------------------------------------------------------------------------------------------
+        # Commands / Write - Raster GeoLayer menu
+        # ------------------------------------------------------------------------------------------------------------
+        self.Menu_Commands_Raster_Write_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Raster_Write_RasterGeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Write_Raster_GeoLayer"))
+        self.Menu_Commands_Raster_Write_RasterGeoLayer.setTitle("Write Raster GeoLayer")
+        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Write_RasterGeoLayer.menuAction())
+
+        # WriteRasterGeoLayerToFile
+        self.Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile"))
+        self.Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile.setText(
+            "WriteRasterGeoLayerToFile()... <write a Raster GeoLayer to a file>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile.triggered.connect(
+            functools.partial(self.edit_new_command, "WriteRasterGeoLayerToFile()"))
+        self.Menu_Commands_Raster_Write_RasterGeoLayer.addAction(
+            self.Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile)
 
         # ============================================================================================================
         # Commands(Table) menu
@@ -4150,17 +4190,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 command_line += sys.argv[i]
 
             properties += ("GeoProcessor Application and Session Information:\n" +
-                           tab + "Program Name: " + program_name + " " + version + " " + version_date + "\n" +
-                           tab + "User Name: " + user_name + "\n" +
-                           tab + "Date: " + current_date + "\n" +
-                           tab + "Host: " + host + "\n" +
-                           tab + "Working Directory (from software start): " + working_dir_start + "\n" +
-                           tab + "Last Saved Command File:  " + self.saved_file + "\n" +
-                           tab + "Working Directory (from processor): " +
-                           self.gp.get_property('WorkingDir') + "\n" +
-                           tab + "Command: " + command_line + "\n" +
-                           tab + 'Program Home: ' + program_home + "\n" +
-                           tab + 'Program Resources Path: ' + program_resources_path + "\n" +
+                           tab + "Program Name: {} {} {}\n".format(program_name, version, version_date) +
+                           tab + "User Name: {}\n".format(user_name) +
+                           tab + "Date: {}\n".format(current_date) +
+                           tab + "Host: {}\n".format(host) +
+                           tab + "Working Directory (from software start): {}\n".format(working_dir_start) +
+                           tab + "Last Saved Command File: {}\n".format(self.saved_file) +
+                           tab + "Working Directory (from processor): {}\n".format(self.gp.get_property('WorkingDir')) +
+                           tab + "Command: {}\n".format(command_line) +
+                           tab + 'Program Home: {}\n'.format(program_home) +
+                           tab + 'Program Resources Path: {}\n'.format(program_resources_path) +
+                           tab + "Process ID: {}\n".format(os.getpid()) +
                            "\n")
 
             operating_system = platform.uname()[0] + " " + platform.uname()[2]
@@ -4176,16 +4216,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 architecture = "Code not implemented to check on operating system"
 
             properties += ("Operating System Information:\n" +
-                           tab + "Type: " + os_type + "\n" +
-                           tab + "Distribution: " + os_distro + "\n" +
-                           tab + "Name (platform.uname[0] and [2]): " + operating_system + "\n" +
-                           tab + "Version (platform.uname[3]): " + version + "\n")
+                           tab + "Type: {}\n".format(os_type) +
+                           tab + "Distribution: {}\n".format(os_distro) +
+                           tab + "Name (platform.uname[0] and [2]): {}\n".format(operating_system) +
+                           tab + "Version (platform.uname[3]): {}\n".format(version) )
             if is_windows:
-                properties += (tab + "System Architecture (os.environ['MSYSTEM_CARCH']): " + architecture + "\n")
+                properties += (tab + "System Architecture (os.environ['MSYSTEM_CARCH']): {}\n".format(architecture))
             else:
                 # Linux variant
                 # - TODO smalers 2018-12-31 need to standardize
-                properties += (tab + "System Architecture: " + architecture + "\n")
+                properties += (tab + "System Architecture: {}\n".format(architecture))
 
             properties += tab + "\n" + tab + "Environment Variables (os.environ):\n"
             for env_var in os.environ.keys():
@@ -4225,10 +4265,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 python_home = "not set"
 
             properties += ("Python Information:\n" +
-                           tab + 'Python Executable (sys.executable): ' + str(sys.executable) + "\n" +
-                           tab + 'Python Version (sys.version): ' + system_version + "\n" +
-                           tab + 'Python Bit Size: ' + str(8*struct.calcsize("P")) + "\n" +
-                           tab + 'PYTHONHOME Environment Variable: ' + python_home + "\n" +
+                           tab + 'Python Executable (sys.executable): {}\n'.format(sys.executable) +
+                           tab + 'Python Version (sys.version): {}\n'.format(system_version) +
+                           tab + 'Python Bit Size: {}\n'.format(8*struct.calcsize("P")) +
+                           tab + 'PYTHONHOME Environment Variable: {}\n'.format(python_home) +
                            tab + 'Python Path (sys.path), unsorted, which indicates import search order:\n' +
                            tab2 + system_path + "\n" +
                            tab + 'Python Path (sys.path), sorted, useful for troubleshooting:\n' +
@@ -4256,7 +4296,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # QGIS does not appear to be used at runtime so provide minimal information
                 properties += (
                             "QGIS Information:\n" +
-                            tab + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
+                            tab + "QGIS Installation Type: {}\n".format(qgis_install_type) +
                             tab + "The GeoProcessor testing framework is being used without QGIS dependencies.\n" +
                             "\n"
                 )
@@ -4264,37 +4304,36 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 qgis_root = ""
                 properties += (
                                "QGIS Information:\n" +
-                               tab + "QGIS Installation Type: " + str(qgis_install_type) + "\n" +
-                               tab + "QGIS Installation Folder: " + str(qgis_install_folder) + "\n" +
-                               tab + "QGIS Version: " + str(qgis_version) + "\n" +
+                               tab + "QGIS Installation Type: {}\n".format(qgis_install_type) +
+                               tab + "QGIS Installation Folder: {}\n".format(qgis_install_folder) +
+                               tab + "QGIS Version: {}\n".format(qgis_version) +
                                tab + "QGIS Environment Variables (set up by QGIS and GeoProcessor startup scripts):\n" +
-                               tab2 + "GDAL_DATA: " + str(os.environ.get('GDAL_DATA')) + "\n" +
-                               tab2 + "GDAL_DRIVER_PATH: " + str(os.environ.get('GDAL_DRIVER_PATH')) + "\n" +
-                               tab2 + "GDAL_FILENAME_IS_UTF8: " + str(os.environ.get('GDAL_FILENAME_IS_UTF8')) +
-                               "\n" +
-                               tab2 + "GEOTIFF_CSV: " + str(os.environ.get('GEOTIFF_CSV')) + "\n" +
-                               tab2 + "OSGEO4W_ROOT: " + str(os.environ.get('OSGEO4W_ROOT')) + "\n" +
-                               tab2 + "O4W_QT_BINARIES: " + str(os.environ.get('O4W_QT_BINARIES')) + "\n" +
-                               tab2 + "O4W_QT_DOC: " + str(os.environ.get('O4W_QT_DOC')) + "\n" +
-                               tab2 + "O4W_QT_HEADERS: " + str(os.environ.get('O4W_QT_HEADERS')) + "\n" +
-                               tab2 + "O4W_QT_LIBRARIES: " + str(os.environ.get('O4W_QT_LIBRARIES')) + "\n" +
-                               tab2 + "O4W_QT_PLUGINS: " + str(os.environ.get('O4W_QT_PLUGINS')) + "\n" +
-                               tab2 + "O4W_QT_PREFIX: " + str(os.environ.get('O4W_QT_PREFIX')) + "\n" +
-                               tab2 + "O4W_QT_TRANSLATIONS: " + str(os.environ.get('O4W_QT_TRANSLATION')) + "\n" +
-                               tab2 + "PYTHONHOME: " + str(os.environ.get('PYTHONHOME')) + "\n" +
-                               tab2 + "QGIS_PREFIX_PATH: " + str(os.environ.get('QGIS_PREFIX_PATH')) + "\n" +
-                               tab2 + "QT_PLUGIN_PATH: " + str(os.environ.get('QT_PLUGIN_PATH')) + "\n" +
-                               tab2 + "VSI_CACHE: " + str(os.environ.get('VSI_CACHE')) + "\n" +
-                               tab2 + "VSI_CACHE_SIZE: " + str(os.environ.get('VSI_CACHE_SIZE')) + "\n" +
+                               tab2 + "GDAL_DATA: {}\n".format(os.environ.get('GDAL_DATA')) +
+                               tab2 + "GDAL_DRIVER_PATH: {}\n".format(os.environ.get('GDAL_DRIVER_PATH')) +
+                               tab2 + "GDAL_FILENAME_IS_UTF8: {}\n".format(os.environ.get('GDAL_FILENAME_IS_UTF8')) +
+                               tab2 + "GEOTIFF_CSV: {}\n".format(os.environ.get('GEOTIFF_CSV')) +
+                               tab2 + "OSGEO4W_ROOT: {}\n".format(os.environ.get('OSGEO4W_ROOT')) +
+                               tab2 + "O4W_QT_BINARIES: {}\n".format(os.environ.get('O4W_QT_BINARIES')) +
+                               tab2 + "O4W_QT_DOC: {}\n".format(os.environ.get('O4W_QT_DOC')) +
+                               tab2 + "O4W_QT_HEADERS: {}\n".format(os.environ.get('O4W_QT_HEADERS')) +
+                               tab2 + "O4W_QT_LIBRARIES: {}\n".format(os.environ.get('O4W_QT_LIBRARIES')) +
+                               tab2 + "O4W_QT_PLUGINS: {}\n".format(os.environ.get('O4W_QT_PLUGINS')) +
+                               tab2 + "O4W_QT_PREFIX: {}\n".format(os.environ.get('O4W_QT_PREFIX')) +
+                               tab2 + "O4W_QT_TRANSLATIONS: {}\n".format(os.environ.get('O4W_QT_TRANSLATION')) +
+                               tab2 + "PYTHONHOME: {}\n".format(os.environ.get('PYTHONHOME')) +
+                               tab2 + "QGIS_PREFIX_PATH: {}\n".format(os.environ.get('QGIS_PREFIX_PATH')) +
+                               tab2 + "QT_PLUGIN_PATH: {}\n".format(os.environ.get('QT_PLUGIN_PATH')) +
+                               tab2 + "VSI_CACHE: {}\n".format(os.environ.get('VSI_CACHE')) +
+                               tab2 + "VSI_CACHE_SIZE: {}\n".format(os.environ.get('VSI_CACHE_SIZE')) +
                                "\n")
 
             # Add information for Qt
 
             properties += (
                  "Qt Information (used for user interface):\n" +
-                 tab + "Qt Version: " + QtCore.QT_VERSION_STR + "\n" +
-                 tab + "SIP Version: " + SIP_VERSION_STR + "\n" +
-                 tab + "PyQt Version: " + Qt.PYQT_VERSION_STR + "\n" +
+                 tab + "Qt Version: {}\n".format(QtCore.QT_VERSION_STR) +
+                 tab + "SIP Version: {}\n".format(SIP_VERSION_STR) +
+                 tab + "PyQt Version: {}\n".format(Qt.PYQT_VERSION_STR) +
                  "\n")
 
             # Create Software/System Information Dialog Box

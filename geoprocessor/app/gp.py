@@ -549,6 +549,10 @@ if __name__ == '__main__':
     setup_logging(app_session)
     logger_main = logging.getLogger(__name__)
 
+    # Do additional initialization after logging is configured.
+    # Remove left-over temporary files from previous session that could not be removed because they were locked.
+    app_session.remove_user_tmp_files()
+
     # Parse the command line parameters...
     # - The -h and --help arguments are automatically included so don't need to add below.
     # - The default action is "store" which will save a variable with the same name as the option.

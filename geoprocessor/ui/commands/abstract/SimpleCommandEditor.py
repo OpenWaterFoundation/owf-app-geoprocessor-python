@@ -156,33 +156,85 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 # - if a new command most values will not be set
                 # - if an existing command then need to make sure all previous data is handled
                 parameter_value = self.command.get_parameter_value(parameter_name)
+
+                # Determine if the parameter is required, which impacts how defaults are handled below.
+                # - TODO smalers 2020-07-17 actually, this may not be needed below so remove if not used
+                request_key = parameter_name + "." + "Required"
+                # Default is that all parameters are optional.
+                # noinspection PyPep8Naming
+                parameter_Required = False
+                try:
+                    # noinspection PyPep8Naming
+                    property_value = self.command.parameter_input_metadata[request_key]
+                    if property_value is not None:
+                        if isinstance(property_value, bool):
+                            # Property was defined as a boolean so use as is
+                            parameter_Required = property_value
+                        elif isinstance(property_value, str):
+                            if property_value.upper() == 'TRUE':
+                                parameter_Required = True
+                            elif property_value.upper() == 'FALSE':
+                                parameter_Required = False
+                except KeyError:
+                    # Default value is optional given that True is imposed as a special case
+                    # noinspection PyPep8Naming
+                    parameter_Required = False
+
                 if parameter_value is None:
                     # See if there is a default value that should be used for initial display.
-                    default_for_display = self.command.get_parameter_input_metadata_value(
-                        parameter_name + ".Value.DefaultForDisplay")
-                    if default_for_display is not None:
-                        parameter_value = default_for_display
+                    default_for_editor = self.command.get_parameter_input_metadata_value(
+                        # TODO smalers 2020-07-17 Old, remove when tested out...
+                        # parameter_name + ".Value.DefaultForDisplay")
+                        parameter_name + ".Value.Default.ForEditor")
+                    # NO - DON'T DO THIS because then many of the IfNotFound and other choices show a value,
+                    # rather than default blank.
+                    # if default_for_display is None:
+                    #     # Try getting from 'Value.Default'
+                    #     default_for_display = self.command.get_parameter_input_metadata_value(
+                    #         parameter_name + ".Value.Default")
+                    if default_for_editor is None:
+                        # TODO smalers 2020-07-17 Old, remove when tested out...
+                        # logger.warning("Parameter '{}' has no value for UI and 'Value.DefaultForDisplay' and"
+                        #                " 'Value.Default' are not set".format(parameter_name))
+                        logger.warning("Parameter '{}' has no initial value for UI and "
+                                       "'Value.Default.ForEditor' is not set.".format(parameter_name))
+                    else:
+                        # Use the default value to show a value in the UI, in particular to select a combobox item.
+                        parameter_value = default_for_editor
                 try:
                     # Get the UI input component for the parameter
                     parameter_ui = self.input_ui_components[parameter_name]
                     # Based on the UI component type, retrieve the parameter value
                     # - check the object type with isinstance
-                    # - use the class name for logging, should agree with object type
+                    # - use the class name 'ui_type' for logging, should agree with object type
                     ui_type = parameter_ui.__class__.__name__
                     # But try the isinstance
                     if isinstance(parameter_ui, QtWidgets.QLineEdit):
                         parameter_ui.setText(parameter_value)
                     elif isinstance(parameter_ui, QtWidgets.QComboBox):
-                        # TODO smalers 2019-01-19 does this aways return something?
-                        # - in Java combo boxes have text value and list value and
-                        index = parameter_ui.findText(parameter_value, QtCore.Qt.MatchFixedString)
-                        if index >= 0:
-                            parameter_ui.setCurrentIndex(index)
+                        if parameter_value is not None:
+                            # TODO smalers 2019-01-19 does this aways return something?
+                            # - in Java combo boxes have text value and list value and
+                            index = parameter_ui.findText(parameter_value, QtCore.Qt.MatchFixedString)
+                            if index >= 0:
+                                # The parameter value is in the combo box so select it.
+                                parameter_ui.setCurrentIndex(index)
+                            else:
+                                # The parameter value is not in the combo box.
+                                # - This may be that the value is None and the default value needs to be used,
+                                #   such as when initially creating the editor component (handled above).
+                                # - Or, a dynamic data list is shown, in which case the following warning may be valid.
+                                message = "Unable to set parameter '" + parameter_name +\
+                                          "' value to '" + str(parameter_value) + "' - specify a different value."
+                                logger.warning(message)
+                                qt_util.warning_message_box(message)
                         else:
-                            message = "Unable to set parameter '" + parameter_name +\
-                                      "' value to '" + str(parameter_value) + "' - specify a different value."
-                            logger.warning(message)
-                            qt_util.warning_message_box(message)
+                            # The parameter value is None, typically due to initial display of the editor so no
+                            # value has been provided.
+                            # The Default.ForEditor should have resulted in a value to select in the editor but did
+                            # not, which is typically due to Default.ForEditor not being defined.
+                            message = "Parameter '{}' value is None and no 'Value.Default.ForEditor' is defined." \
+                                "  This is a software code error.  Contact support.".format(parameter_name)
                     else:
                         # Should not happen
                         logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
@@ -339,8 +391,8 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     parameter_Enabled = input_metadata[request_key]
                 except KeyError:
                     # Default to a simple statement with parameter name.
-                    logger.warning(parameter_name + " does not have parameter_input_metadata value " + request_key +
-                                   ".  Defaulting to True.")
+                    logger.info(parameter_name + " does not have parameter_input_metadata value " + request_key +
+                                ".  Defaulting to True.")
                     # noinspection PyPep8Naming
                     parameter_Enabled = True
 
@@ -488,12 +540,19 @@ class SimpleCommandEditor(AbstractCommandEditor):
                 # - indicated by 'Values' metadata
                 # --------------------
                 # Get the input metadata here and pass to the code that creates the UI.
-                # - need Value.DefaultForDisplay, for example to display blank corresponding to Value.Default.
+                # - need Value.Default.ForEditor (old was Value.DefaultForDisplay),
+                #   for example to display blank that if used will
+                #   result in Value.Default being used when run.
                 # - need Values.Editable
-                request_key = parameter_name + "." + "Value.DefaultForDisplay"
-                parameter_ValueDefaultForDisplay = None
+                # TODO smalers 2020-07-17 Old, remove when tested out...
+                # request_key = parameter_name + "." + "Value.DefaultForDisplay"
+                # parameter_ValueDefaultForDisplay = None
+                request_key = parameter_name + "." + "Value.Default.ForEditor"
+                parameter_ValueDefaultForEditor = None
                 try:
-                    parameter_ValueDefaultForDisplay = input_metadata[request_key]
+                    # TODO smalers 2020-07-17 Old, remove when tested out...
+                    # parameter_ValueDefaultForDisplay = input_metadata[request_key]
+                    parameter_ValueDefaultForEditor = input_metadata[request_key]
                 except KeyError:
                     # Default value cannot be determined, even though often ""
                     # - handle in the combobox
@@ -509,7 +568,9 @@ class SimpleCommandEditor(AbstractCommandEditor):
                     # noinspection PyPep8Naming
                     parameter_ValuesEditable = False
                 self.setup_ui_parameter_combobox(parameter_name,
-                                                 parameter_ValueDefaultForDisplay,
+                                                 # TODO smalers 2020-07-17 Old, remove when tested out...
+                                                 # parameter_ValueDefaultForDisplay,
+                                                 parameter_ValueDefaultForEditor,
                                                  parameter_Tooltip,
                                                  parameter_Values,
                                                  parameter_ValuesEditable)

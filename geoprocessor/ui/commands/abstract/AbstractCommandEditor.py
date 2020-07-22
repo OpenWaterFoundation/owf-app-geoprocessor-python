@@ -573,7 +573,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
     # noinspection PyPep8Naming
     def setup_ui_parameter_combobox(self, parameter_name: str,
-                                    parameter_ValueDefaultForDisplay: str,
+                                    # TODO smalers 2020-07-14 remove when tested out
+                                    # parameter_ValueDefaultForDisplay: str,
+                                    parameter_ValueDefaultForEditor: str,
                                     parameter_Tooltip: str,
                                     parameter_Values: str,
                                     parameter_ValuesEditable: bool,
@@ -586,9 +588,10 @@ class AbstractCommandEditor(QtWidgets.QDialog):
 
         Args:
             parameter_name (str):  Parameter name, used for troubleshooting
-            parameter_ValueDefaultForDisplay (str):
+            parameter_ValueDefaultForEditor (str):
                 Display value corresponding to Value.Default, added to parameter choices.
-                For example, may want to display a blank in addition to valid choices.
+                For example, may want to display a blank in the editor in addition to valid choices,
+                but the blank indicates default and is not a valid value that will be used in the analysis.
             parameter_Tooltip (str):  Tooltip text.
             parameter_Values (str):  List of values for list, comma-delimited
             parameter_ValuesEditable (bool):  Whether the list of values is editable in the text field.
@@ -618,15 +621,31 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         if not parameter_Enabled:
             parameter_QComboBox.setEnabled(False)
         # Handle blank value at start of the list
-        # - a blank item is not automatically added but will be added if Value.DefaultForDisplay is ""
-        # - the Values list can also have a blank at the start
+        # - a blank item is not automatically added to the list of choices but will be added if
+        #   Value.Default.ForEditor (old Value.DefaultForDisplay) is "" and is not already in the Values list
+        # - the Values list can also have a blank at the start but only if it is a valid value
         # - considering the above, only add one blank at the beginning
         # Add a blank item so that there is not an initial response for the drop down
-        if parameter_ValueDefaultForDisplay is not None:
-            parameter_QComboBox.addItem(parameter_ValueDefaultForDisplay)
-        # Add values in the 'Values' list, but don't re-add Value.DefaultForDisplay
+        # TODO smalers 2020-07-17 remove when tests out
+        # if parameter_ValueDefaultForDisplay is not None:
+        #    parameter_QComboBox.addItem(parameter_ValueDefaultForDisplay)
+        if parameter_ValueDefaultForEditor is not None:
+            # Only add if not in the Values.
+            # - for example add a blank at the beginning but don't add a default selected value
+            found = False
+            for i, value in enumerate(parameter_Values):
+                if value == parameter_ValueDefaultForEditor:
+                    # Found the default value in the list so don't add it again
+                    found = True
+                    break
+            if not found:
+                parameter_QComboBox.addItem(parameter_ValueDefaultForEditor)
+        # Add values in the 'Values' list, but don't re-add Value.Default.ForEditor
+        # - to be sure, just loop through the list for each item to make sure it is not already in the list
         for i, value in enumerate(parameter_Values):
-            parameter_QComboBox.addItem(value)
+            if parameter_QComboBox.findText(value) < 0:
+                # Not found in the list so add it
+                parameter_QComboBox.addItem(value)
         # Add an event to refresh the command if anything changes
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
@@ -700,8 +719,8 @@ class AbstractCommandEditor(QtWidgets.QDialog):
                 # A description is provided for the default value so use in the description rather than Value.Default
                 default_description_max = 30  # length of Value.Default.Description before pointing to tooltip
                 if len(parameter_ValueDefaultDescription) > default_description_max:
-                    # Default value description is long so don't show in full description and put in the
-                    # input component tooltip
+                    # Default value description is too long so don't show in full description.
+                    # Indicate that the tooltip has the description.
                     logger.info("Value.Default.Description is longer than " + str(default_description_max) +
                                 " characters.  Not showing.")
                     parameter_desc += " (default=see tooltip)."
@@ -714,12 +733,13 @@ class AbstractCommandEditor(QtWidgets.QDialog):
                         # Should not happen
                         pass
                 else:
-                    # Default value is short so show in the full description
+                    # Default value is short enough so show in the full description.
                     parameter_desc += " (default=" + parameter_ValueDefaultDescription + ")."
             elif parameter_ValueDefault is not None and parameter_ValueDefault != "":
                 # A default value is provided so include in the description
                 if len(parameter_ValueDefault) > 15:
-                    # Default value is long so don't show in full description and put in the input component tooltip
+                    # Default value is too long so don't show in full description.
+                    # Indicate that the tooltip has the description.
                     parameter_desc += " (default=see tooltip)."
                     parameter_Tooltip += "\n(default=" + parameter_ValueDefault + ")."
                     # Update the tooltip for the input component

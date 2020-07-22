@@ -59,9 +59,9 @@ class QgisAlgorithmHelp(AbstractCommand):
     __parameter_input_metadata['ListAlgorithms.Description'] = "should algorithms be listed?"
     __parameter_input_metadata['ListAlgorithms.Label'] = "List algorithms?"
     __parameter_input_metadata['ListAlgorithms.Required'] = False
-    __parameter_input_metadata['ListAlgorithms.Values'] = [' ', 'False', 'True']
+    __parameter_input_metadata['ListAlgorithms.Values'] = ['', 'False', 'True']
     __parameter_input_metadata['ListAlgorithms.Value.Default'] = 'False'
-    __parameter_input_metadata['ListAlgorithms.Value.DefaultForDisplay'] = ''
+    __parameter_input_metadata['ListAlgorithms.Value.Default.ForEditor'] = ''
     __parameter_input_metadata['ListAlgorithms.Tooltip'] = \
         "Should the list of algorithms be printed?"
     # AlgorithmIDs
@@ -73,7 +73,7 @@ class QgisAlgorithmHelp(AbstractCommand):
     # OutputFile
     __parameter_input_metadata['OutputFile.Description'] = "output file to write"
     __parameter_input_metadata['OutputFile.Label'] = "Output file"
-    __parameter_input_metadata['OutputFile.Required'] = True
+    __parameter_input_metadata['OutputFile.Required'] = False
     __parameter_input_metadata['OutputFile.Tooltip'] = \
         "The output file (relative or absolute path).  ${Property} syntax is recognized."
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
@@ -154,10 +154,10 @@ class QgisAlgorithmHelp(AbstractCommand):
     def check_runtime_data(self, output_file_abs):
         """
         Checks the following:
-        * the output folder is a valid folder
+        * if specified, the output folder is a valid folder
 
         Args:
-            output_file_abs: the full pathname to the output file
+            output_file_abs: the full pathname to the output file, can be None
 
         Returns:
             Boolean. If TRUE, the GeoLayer should be written. If FALSE, at least one check failed and the GeoLayer
@@ -169,8 +169,9 @@ class QgisAlgorithmHelp(AbstractCommand):
         should_run_command = list()
 
         # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
-        should_run_command.append(validator_util.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
-                                                           output_file_abs, "FAIL"))
+        if output_file_abs is not None:
+            should_run_command.append(validator_util.run_check(self, "DoesFilePathHaveAValidFolder", "OutputFile",
+                                                               output_file_abs, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -208,9 +209,11 @@ class QgisAlgorithmHelp(AbstractCommand):
         pv_OutputFile = self.get_parameter_value('OutputFile')
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
-        output_file_absolute = io_util.verify_path_for_os(
-            io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_OutputFile, self)))
+        output_file_absolute = None
+        if pv_OutputFile is not None:
+            output_file_absolute = io_util.verify_path_for_os(
+                io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
+                                         self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         # noinspection PyBroadException
         try:

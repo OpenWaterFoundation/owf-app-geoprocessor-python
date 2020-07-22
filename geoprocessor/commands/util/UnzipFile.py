@@ -81,10 +81,13 @@ class UnzipFile(AbstractCommand):
     __parameter_input_metadata['FileType.Description'] = "input file format"
     __parameter_input_metadata['FileType.Label'] = "File type"
     __parameter_input_metadata['FileType.Tooltip'] = (
-        "The file format of the input File. The following file formats are currently accepted:\n\n"
-        "TAR: a .tar file.\n"
-        "ZIP: A .zip file.")
+        "The file format of the input file. The following file formats are currently accepted:\n\n"
+        "tar: a .tar file.\n"
+        "zip: A .zip file.")
+    __parameter_input_metadata['FileType.Values'] = ['tar', 'zip']
+    __parameter_input_metadata['FileType.Value.Default'] = 'zip'
     __parameter_input_metadata['FileType.Value.Default.Description'] = "from the File extension."
+    __parameter_input_metadata['FileType.Value.Default.ForEditor'] = ''
     # OutputFolder
     __parameter_input_metadata['OutputFolder.Description'] = "name of the destination folder"
     __parameter_input_metadata['OutputFolder.Label'] = "Output folder"
@@ -162,10 +165,10 @@ class UnzipFile(AbstractCommand):
         # noinspection PyPep8Naming
         pv_FileType = self.get_parameter_value(parameter_name="FileType", command_parameters=command_parameters)
 
-        acceptable_values = ["Zip", "Tar"]
+        acceptable_values = self.__parameter_input_metadata['FileType.Values']
 
         if not validator_util.validate_string_in_list(pv_FileType, acceptable_values, none_allowed=True,
-                                                      empty_string_allowed=False, ignore_case=True):
+                                                      empty_string_allowed=True, ignore_case=True):
             message = "FileType parameter value ({}) is not recognized.".format(pv_FileType)
             recommendation = "Specify one of the acceptable values ({}) for the" \
                              " FileType parameter.".format(acceptable_values)
@@ -182,7 +185,7 @@ class UnzipFile(AbstractCommand):
                                                       __parameter_input_metadata['IfFolderDoesNotExist.Values'],
                                                       True, True, False):
             message = "IfFolderDoesNotExist parameter value ({}) is not a recognized value.".format(
-            pv_IfFolderDoesNotExist)
+                pv_IfFolderDoesNotExist)
             recommendation = "Specify either 'Create', 'Warn', or 'Fail' for the IfFolderDoesNotExist parameter."
             warning_message += "\n" + message
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
@@ -326,8 +329,8 @@ class UnzipFile(AbstractCommand):
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.check_runtime_data(file_abs, pv_FileType):
-            # okToRun indicates if it is OK to run the command's main logic
-            okToRun = True
+            # ok_to_run indicates if it is OK to run the command's main logic
+            ok_to_run = True
             if not os.path.isdir(output_folder_abs):
                 # Output folder does not exist
                 self.logger.info("Output folder does not exist.")
@@ -344,7 +347,7 @@ class UnzipFile(AbstractCommand):
                     self.logger.warning(message, exc_info=True)
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
-                    okToRun = False
+                    ok_to_run = False
                 elif IfFolderDoesNotExist_upper == 'FAIL':
                     self.warning_count += 1
                     message = "Output folder ({}) does not exist.)".format(pv_OutputFolder)
@@ -353,9 +356,9 @@ class UnzipFile(AbstractCommand):
                     self.logger.warning(message, exc_info=True)
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-                    okToRun = False
+                    ok_to_run = False
 
-            if okToRun:
+            if ok_to_run:
                 # noinspection PyBroadException
                 try:
                     if pv_FileType.upper() == "ZIP":

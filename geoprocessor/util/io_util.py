@@ -33,6 +33,38 @@ from typing import TextIO
 from pathlib import Path
 
 
+# Folder in which files are saved that indicate temporary file to remove.
+# Each file in the folder contains the path to files that need to be removed.
+# The files are removed when GeoProcessor starts up.
+# The folder location should be set in the application.
+tmp_files_to_remove_folder = None
+
+
+def add_tmp_file_to_remove(tmp_file_path: str, comments: [str] = None) -> None:
+    """
+    Create a file in the application tmp-files-to-remove folder.
+    The file is typically a temporary file that cannot be removed for some reason because it is locked.
+    A file will be created in 'tmp_files_to_remove_folder' that contains the name of the tmp file to remove.
+    Then at startup, the application can remove the files.
+
+    Args:
+        tmp_file_path (str) - absolute path to the tmp file that needs to be removed
+        comments ([str]) - comments to add to the top of the file (will be prefixed by #)
+    """
+    if tmp_files_to_remove_folder is not None:
+        # Get the filename from the tmp file
+        tmp_file = Path(tmp_file_path)
+        # Create a new tracker filename
+        out_file = Path(tmp_files_to_remove_folder).joinpath(tmp_file.name)
+        fout = open(out_file, "w")
+        if comments is not None:
+            for comment in comments:
+                fout.write("# {}\n".format(comment))
+        # Save the original file as the first non-comment line in the path.
+        fout.write("{}".format(tmp_file_path))
+        fout.close()
+
+
 def expand_formatter(absolute_path: str, formatter: str) -> str or None:
     """
     Returns the appropriate value of a parsed absolute path given the user-defined formatter code. Many of times
@@ -375,6 +407,36 @@ def print_standard_file_header(ofp: TextIO, comment_line_prefix: str = '#', max_
         ofp.write(comment + nl)
     # Flush to the write to make sure it is visible, such as if written to a long-writing file
     ofp.flush()
+
+
+def read_file(path: str, comment: str = None, return_comments: bool = True) -> [str]:
+    """
+    Read a file and return as a list of strings with no newline characters.
+
+    Args:
+        path (str): Path to file to read.
+        comment: Comment line indicator (e.g., '#').
+        return_comments: Whether or not to return comment lines.
+
+    Returns:
+        [str]: list of strings read from the file, may be an empty list
+    """
+    with open(path) as fin:
+        lines = []
+        for line in fin:
+            is_comment = False
+            if comment is not None and (len(line) > 0) and (line[0] == comment):
+                # Is a comment
+                is_comment = True
+            if is_comment:
+                # Is a comment line
+                if return_comments:
+                    lines.append(line)
+            else:
+                # Not a comment line
+                lines.append(line)
+        fin.close()
+        return lines
 
 
 def to_absolute_path(parent_dir: str or Path, path: str or Path) -> str:

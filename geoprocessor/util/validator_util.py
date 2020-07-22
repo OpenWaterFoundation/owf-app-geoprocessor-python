@@ -254,7 +254,7 @@ def run_check(command, condition: str, parameter_name: str, parameter_value: str
     elif condition_upper == "ISGEOLAYERIDEXISTING":
         # Check whether the parameter value (GeoLayerID) is an existing GeoLayerID.
         if not command.command_processor.get_geolayer(parameter_value):
-            message = 'The {} ({}) is not a valid GeoLayer ID.'.format(parameter_name, parameter_value)
+            message = 'The {} ({}) is not a valid GeoLayer ID (was not matched).'.format(parameter_name, parameter_value)
             recommendation = 'Specify a valid GeoLayer ID.'
             is_valid = False
 

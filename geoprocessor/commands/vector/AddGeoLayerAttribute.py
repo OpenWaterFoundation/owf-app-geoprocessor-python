@@ -87,7 +87,9 @@ class AddGeoLayerAttribute(AbstractCommand):
     __parameter_input_metadata['AttributeType.Label'] = "Attribute type"
     __parameter_input_metadata['AttributeType.Required'] = True
     __parameter_input_metadata['AttributeType.Values'] = ['date', 'double', 'int', 'string']
-    __parameter_input_metadata['AttributeType.Value.DefaultForDisplay'] = ''
+    # TODO smalers 2020-07-14 remove when tested
+    # __parameter_input_metadata['AttributeType.Value.DefaultForDisplay'] = ''
+    __parameter_input_metadata['AttributeType.Value.Default.ForEditor'] = ''
     __parameter_input_metadata['AttributeType.Tooltip'] =\
         "The attribute data type. Must be one of the " \
         "following options: \nstring : The attribute values will be text. e.g. blue, Colorado, helicopter \n" \

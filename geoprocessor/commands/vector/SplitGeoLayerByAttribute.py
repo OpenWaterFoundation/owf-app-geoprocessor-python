@@ -74,7 +74,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
     __command_metadata['Description'] = \
         "Split an input GeoLayer into one or more new GeoLayers by unique attribute value.\n" \
         'For example, if the specified attribute name has unique values "a", "b", and "c", three layers will ' \
-        'be created.'
+        'be created.\n'  \
+        'The attribute values being processed can be filtered to limit the number of output layers.'
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata

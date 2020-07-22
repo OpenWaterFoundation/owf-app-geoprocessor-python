@@ -105,6 +105,7 @@ class GeoProcessor(object):
         # - alternatively, could use qgis.processing.processAlgorithm
         # - TODO smalers 2020-07-12 is there any real difference between the two?  Parameters seem similar.
         self.qgis_processor: Processing = qgis_util.initialize_qgis_processor()
+        #self.qgis_processing: processing = qgis_util.initialize_qgis_processing()
 
         # qgis version
         self.properties["QGISVersion"] = qgis_util.get_qgis_version_str()

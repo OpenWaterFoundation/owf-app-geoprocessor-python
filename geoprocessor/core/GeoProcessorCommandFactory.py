@@ -44,9 +44,11 @@ from geoprocessor.commands.map.SetGeoLayerViewSingleSymbol import SetGeoLayerVie
 from geoprocessor.commands.map.WriteGeoMapProjectToJSON import WriteGeoMapProjectToJSON
 
 from geoprocessor.commands.raster.CreateRasterGeoLayer import CreateRasterGeoLayer
+from geoprocessor.commands.raster.RasterizeGeoLayer import RasterizeGeoLayer
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromFile import ReadRasterGeoLayerFromFile
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromWebMapService import ReadRasterGeoLayerFromWebMapService
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromTileMapService import ReadRasterGeoLayerFromTileMapService
+from geoprocessor.commands.raster.WriteRasterGeoLayerToFile import WriteRasterGeoLayerToFile
 
 from geoprocessor.commands.running.EndFor import EndFor
 from geoprocessor.commands.running.EndIf import EndIf
@@ -158,6 +160,7 @@ class GeoProcessorCommandFactory(object):
         "MESSAGE": Message(),
         "OPENDATASTORE": OpenDataStore(),
         "QGISALGORITHMHELP": QgisAlgorithmHelp(),
+        "RASTERIZEGEOLAYER": RasterizeGeoLayer(),
         "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
@@ -198,6 +201,7 @@ class GeoProcessorCommandFactory(object):
         "WRITEGEOLAYERTOGEOJSON": WriteGeoLayerToGeoJSON(),
         "WRITEGEOLAYERTOKML": WriteGeoLayerToKML(),
         "WRITEGEOLAYERTOSHAPEFILE": WriteGeoLayerToShapefile(),
+        "WRITERASTERGEOLAYERTOFILE": WriteRasterGeoLayerToFile(),
         "WRITETABLETODELIMITEDFILE": WriteTableToDelimitedFile(),
         "WRITETABLETODATASTORE": WriteTableToDataStore(),
         "WRITETABLETOEXCEL": WriteTableToExcel(),
@@ -369,6 +373,8 @@ class GeoProcessorCommandFactory(object):
                     return QgisAlgorithmHelp()
 
                 # R commands
+                elif command_name_upper == "RASTERIZEGEOLAYER":
+                    return RasterizeGeoLayer()
                 elif command_name_upper == "READGEOLAYERFROMDELIMITEDFILE":
                     return ReadGeoLayerFromDelimitedFile()
                 elif command_name_upper == "READGEOLAYERFROMGEOJSON":
@@ -461,6 +467,8 @@ class GeoProcessorCommandFactory(object):
                     return WriteGeoMapProjectToJSON()
                 elif command_name_upper == "WRITEPROPERTIESTOFILE":
                     return WritePropertiesToFile()
+                elif command_name_upper == "WRITERASTERGEOLAYERTOFILE":
+                    return WriteRasterGeoLayerToFile()
                 elif command_name_upper == "WRITETABLETODELIMITEDFILE":
                     return WriteTableToDelimitedFile()
                 elif command_name_upper == "WRITETABLETODATASTORE":

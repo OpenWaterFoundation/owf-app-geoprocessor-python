@@ -55,8 +55,8 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Read a raster GeoLayer from a Tile Map Service (WMS).\n"\
-                                        "This layer is typically used for a background layer."
+    __command_metadata['Description'] = "Read a raster GeoLayer from a Tile Map Service (TMS).\n"\
+        "This layer is typically used for a background layer, such as when creating a map."
     __command_metadata['EditorType'] = "Simple"
 
     # Parameter Metadata

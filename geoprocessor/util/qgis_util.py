@@ -31,6 +31,7 @@ from PyQt5 import QtWidgets
 from qgis.analysis import QgsNativeAlgorithms
 
 import qgis.utils
+import sys
 
 from plugins.processing.core import Processing
 
@@ -729,6 +730,19 @@ def initialize_qgis(qt_stylesheet_file: str = None) -> QgsApplication:
     return qgs_app
 
 
+def initialize_qgis_processing() -> processing:
+    """
+    Initialize the QGIS processing environment (to call and run QGIS algorithms).
+
+    Returns:
+        The initialized qgis processing object.
+    """
+
+    pr = processing.processing
+    return pr
+
+
+# TODO smalers 2020-07-20 why did Emma/Justing use this instead of lowercase processing?
 def initialize_qgis_processor() -> Processing:
     """
     Initialize the QGIS processor environment (to call and run QGIS algorithms).
@@ -1186,6 +1200,11 @@ def write_algorithm_help ( output_file_absolute: str, list_algorithms: bool, alg
     """
     Write QGIS algorithm list and or help to a file.
 
+    Args:
+        output_file_absolute (str): Path to the output file.
+        list_algorithms (bool): Whether to list algorithms.
+        algorithm_ids ([str]): List of algorithms to print output.
+
     Returns:
         None
     """
@@ -1194,7 +1213,10 @@ def write_algorithm_help ( output_file_absolute: str, list_algorithms: bool, alg
     # noinspection PyBroadException
     try:
         # Open the output file.
-        fout = open(output_file_absolute, "w")
+        if output_file_absolute is None:
+            fout = sys.stdout
+        else:
+            fout = open(output_file_absolute, "w")
         nl = os.linesep  # newline character for operating system
         fout.write("QGIS Algorithm Information{}{}".format(nl, nl))
         # If requested, list the algorithms
@@ -1229,8 +1251,9 @@ def write_algorithm_help ( output_file_absolute: str, list_algorithms: bool, alg
         message = 'Error writing QGIS algorithm help to file "' + output_file_absolute + '.'
         logger.warning(message, exc_info=True)
     finally:
-        if fout is not None:
-            fout.close()
+        if output_file_absolute is not None:
+            if fout is not None:
+                fout.close()
 
 
 def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer: QgsVectorLayer,

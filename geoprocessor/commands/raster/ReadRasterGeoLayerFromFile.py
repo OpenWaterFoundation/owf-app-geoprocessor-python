@@ -56,6 +56,9 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type(""),
                                  parameter_description="GeoLayer identifier",
                                  editor_tooltip="GeoLayer identifier."),
+        CommandParameterMetadata("Name", type("")),
+        CommandParameterMetadata("Description", type("")),
+        CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""),
                                  parameter_description="Action if GeoLayer exists",
                                  default_value="Warn",
@@ -83,6 +86,24 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         "A GeoLayer identifier. Formatting characters and ${Property} syntax is recognized.")
     __parameter_input_metadata['GeoLayerID.Value.Default'] = (
         "The GeoJSON filename without the leading path and without the file extension.")
+    # Name
+    __parameter_input_metadata['Name.Description'] = "GeoLayer name"
+    __parameter_input_metadata['Name.Label'] = "Name"
+    __parameter_input_metadata['Name.Required'] = False
+    __parameter_input_metadata['Name.Tooltip'] = "The GeoLayer name, can use ${Property}."
+    __parameter_input_metadata['Name.Value.Default.Description'] = "GeoLayerID"
+    # Description
+    __parameter_input_metadata['Description.Description'] = "GeoLayer description"
+    __parameter_input_metadata['Description.Label'] = "Description"
+    __parameter_input_metadata['Description.Required'] = False
+    __parameter_input_metadata['Description.Tooltip'] = "The GeoLayer description, can use ${Property}."
+    __parameter_input_metadata['Description.Value.Default'] = ''
+    # Properties
+    __parameter_input_metadata['Properties.Description'] = "properties for the new GeoLayer"
+    __parameter_input_metadata['Properties.Label'] = "Properties"
+    __parameter_input_metadata['Properties.Required'] = False
+    __parameter_input_metadata['Properties.Tooltip'] = \
+        "Properties for the new GeoLayer using syntax:  property:value,property:'value'"
     # IfGeoLayerIDExists
     __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
@@ -260,10 +281,24 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         pv_InputFile = self.get_parameter_value("InputFile")
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
+        # noinspection PyPep8Naming
+        pv_Name = self.get_parameter_value("Name", default_value=pv_GeoLayerID)
+        # noinspection PyPep8Naming
+        pv_Description = \
+            self.get_parameter_value("Description",
+                                     default_value=self.parameter_input_metadata['Description.Value.Default'])
+        # noinspection PyPep8Naming
+        pv_Properties = self.get_parameter_value("Properties")
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+        # noinspection PyPep8Naming
+        pv_Name = self.command_processor.expand_parameter_value(pv_Name, self)
+        # noinspection PyPep8Naming
+        pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
+        # noinspection PyPep8Naming
+        pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property}
         # syntax
@@ -285,9 +320,16 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
                 # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
                 geolayer_obj = RasterGeoLayer(geolayer_id=pv_GeoLayerID,
+                                              name=pv_Name,
+                                              description=pv_Description,
                                               qgs_raster_layer=qgs_raster_layer,
                                               input_path_full=input_file_absolute,
                                               input_path=pv_InputFile)
+                # Set the properties
+                properties = command_util.parse_properties_from_parameter_string(pv_Properties)
+                # Set the properties as additional properties (don't just reset the properties dictionary)
+                geolayer_obj.set_properties(properties)
+
                 self.command_processor.add_geolayer(geolayer_obj)
 
             # Raise an exception if an unexpected error occurs during the process

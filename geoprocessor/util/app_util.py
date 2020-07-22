@@ -58,9 +58,12 @@ def get_qgis_install_folder() -> str or None:
         - None if QGIS is not installed.
     """
     if is_qgis_install_osgeo():
-        return os.environ.get('QGIS_PREFIX_PATH')
+        # TODO smalers 2020-07-20 the following may not work
+        # return os.environ.get('QGIS_PREFIX_PATH')
+        return os.environ.get('QGIS_INSTALL_HOME')
     elif is_qgis_install_standalone():
-        return os.environ.get('QGIS_PREFIX_PATH')
+        # return os.environ.get('QGIS_PREFIX_PATH')
+        return os.environ.get('QGIS_SA_INSTALL_HOME')
     else:
         # QGIS not installed
         return None

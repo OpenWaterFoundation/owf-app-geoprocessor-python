@@ -62,7 +62,9 @@ class SetProperty(AbstractCommand):
     __parameter_input_metadata['PropertyType.Label'] = "Property type"
     __parameter_input_metadata['PropertyType.Required'] = True
     __parameter_input_metadata['PropertyType.Values'] = ['bool', 'float', 'int', 'str']
-    __parameter_input_metadata['PropertyType.Value.DefaultForDisplay'] = 'str'
+    # TODO smalers 2020-07-14 remove when tested
+    # __parameter_input_metadata['PropertyType.Value.DefaultForDisplay'] = 'str'
+    __parameter_input_metadata['PropertyType.Value.Default.ForEditor'] = 'str'
     __parameter_input_metadata['PropertyType.Tooltip'] = \
         "The property type as bool, float, int, or str, will also be used for the type of values if multiple values."
     # PropertyValue

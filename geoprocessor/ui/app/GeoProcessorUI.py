@@ -4197,6 +4197,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                            tab + "Working Directory (from software start): {}\n".format(working_dir_start) +
                            tab + "Last Saved Command File: {}\n".format(self.saved_file) +
                            tab + "Working Directory (from processor): {}\n".format(self.gp.get_property('WorkingDir')) +
+                           tab + "Working Directory, native (from processor): {}\n".
+                           format(self.gp.get_property('WorkingDirNative')) +
                            tab + "Command: {}\n".format(command_line) +
                            tab + 'Program Home: {}\n'.format(program_home) +
                            tab + 'Program Resources Path: {}\n'.format(program_resources_path) +

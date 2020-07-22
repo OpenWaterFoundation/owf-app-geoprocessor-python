@@ -82,7 +82,8 @@ class RunOgrProgram(AbstractCommand):
     # Command metadata for command editor display
     __command_metadata = dict()
     __command_metadata['Description'] = (
-        "Run an OGR program to process spatial data.\n"
+        "Run an OGR program to process spatial data and wait until the program is finished before processing "
+        "additional commands.\n"
         "The full command line should be provided and other parameters control input and output.\n"
         "For portable command files, specify the OGR program to run using ${GdalBinDir} property or similar,"
         " for example: ${GdalBinDir}/ogrinfo --formats\n"
@@ -100,7 +101,7 @@ class RunOgrProgram(AbstractCommand):
     # CommandLine
     __parameter_input_metadata['CommandLine.Description'] = "command line"
     __parameter_input_metadata['CommandLine.Label'] = "Command line"
-    __parameter_input_metadata['CommandLine.Tooltip'] = "Full command line, separated by spaces."
+    __parameter_input_metadata['CommandLine.Tooltip'] = "Full command line, with parameters separated by spaces."
     __parameter_input_metadata['CommandLine.Required'] = True
 
     # UseCommandShell
@@ -440,7 +441,7 @@ class RunOgrProgram(AbstractCommand):
         command_line_expanded = self.command_processor.expand_parameter_value(pv_CommandLine, self)
 
         if warning_count > 0:
-            message = "There were " + str(warning_count) + " warnings about command parameters."
+            message = "There were {} warnings about command parameters.".format(warning_count)
             logger.warning(message)
             raise CommandError(message)
 
@@ -448,7 +449,7 @@ class RunOgrProgram(AbstractCommand):
 
         # noinspection PyBroadException
         try:
-            logger.info('Running command line "' + command_line_expanded + '"')
+            logger.info('Running command line: {}'.format(command_line_expanded))
             # Create the environment dictionary
             env_dict = RunOgrProgram.create_env_dict(include_parent_env_vars, include_env_vars_dict,
                                                      exclude_env_vars_list)
@@ -459,11 +460,16 @@ class RunOgrProgram(AbstractCommand):
             return_status = -1
             if use_run:
                 # Use subprocess.run(), available as of Python 3.5
-                # - shlex is used to parse command line string into arguments.
                 # - For the following logic, 'capture_output' is not used because output is immediately redirected
                 #   to the appropriate location. 'capture_output' is used to retrieve output from
                 #   subprocess.CompletedProcess.
-                args = shlex.split(command_line_expanded)
+                if use_command_shell:
+                    # Using a shell so pass as a single string so that >, <, | are handled by the shell
+                    args = command_line_expanded
+                else:
+                    # Have to split the command line arguments
+                    # - shlex is used to parse command line string into arguments.
+                    args = shlex.split(command_line_expanded)
                 # By default the stdout and stderr are just output by the subprocess defaults.
                 # However, the output can be redirected to a file.
                 stderr = None  # Default is don't capture stderr
@@ -529,11 +535,10 @@ class RunOgrProgram(AbstractCommand):
                 # Set the exit code property
                 self.command_processor.set_property(pv_ExitCodeProperty, return_status)
             if return_status == 0:
-                logger.info("Return status of " + str(return_status) + " running program.")
+                logger.info("Return status of {} running program.".format(return_status))
             else:
                 warning_count += 1
-                message = 'Nonzero return status (' + str(return_status) + ' running program "' + \
-                          command_line_expanded + '"'
+                message = 'Nonzero return status {} running program: {}'.format(return_status, command_line_expanded)
                 logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(
                     CommandPhaseType.RUN,
@@ -542,7 +547,7 @@ class RunOgrProgram(AbstractCommand):
 
         except Exception:
             warning_count += 1
-            message = 'Unexpected error running program "' + command_line_expanded + '"'
+            message = 'Unexpected error running program: {}'.format(command_line_expanded)
             logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
@@ -557,7 +562,7 @@ class RunOgrProgram(AbstractCommand):
                     self.command_processor.add_output_file(output_file)
 
         if warning_count > 0:
-            message = "There were " + str(warning_count) + " warnings processing the command."
+            message = "There were {} warnings processing the command.".format(warning_count)
             logger.warning(message)
             raise CommandError(message)
 

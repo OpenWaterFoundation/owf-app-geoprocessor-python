@@ -28,37 +28,44 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
+import geoprocessor.util.log_util as log_util
 import geoprocessor.util.os_util as os_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validator_util
 
+import io
 import logging
 import os
+import shlex
 import subprocess
 
 
 class RunProgram(AbstractCommand):
     """
-    The RunProgram command runs a command file.
+    The RunProgram command runs a command line program.
     """
 
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("CommandLine", type("")),
-        CommandParameterMetadata("UseCommandShell", type("")),
-        CommandParameterMetadata("IncludeParentEnvVars", type("")),
-        CommandParameterMetadata("IncludeEnvVars", type("")),
-        CommandParameterMetadata("IncludeEnvVarName1", type("")),  # Used for complex values difficult to parse
-        CommandParameterMetadata("IncludeEnvVarValue1", type("")),
-        CommandParameterMetadata("IncludeEnvVarName2", type("")),
-        CommandParameterMetadata("IncludeEnvVarValue2", type("")),
-        CommandParameterMetadata("IncludeEnvVarName3", type("")),
-        CommandParameterMetadata("IncludeEnvVarValue3", type("")),
-        CommandParameterMetadata("IncludeEnvVarName4", type("")),
-        CommandParameterMetadata("IncludeEnvVarValue4", type("")),
-        CommandParameterMetadata("IncludeEnvVarName5", type("")),
-        CommandParameterMetadata("IncludeEnvVarValue5", type("")),
-        CommandParameterMetadata("ExcludeEnvVars", type("")),
-        CommandParameterMetadata("OutputFiles", type(""))
+        CommandParameterMetadata("CommandLine", str),
+        CommandParameterMetadata("UseCommandShell", str),
+        CommandParameterMetadata("IncludeParentEnvVars", str),
+        CommandParameterMetadata("IncludeEnvVars", str),
+        CommandParameterMetadata("IncludeEnvVarName1", str),  # Used for complex values difficult to parse
+        CommandParameterMetadata("IncludeEnvVarValue1", str),
+        CommandParameterMetadata("IncludeEnvVarName2", str),
+        CommandParameterMetadata("IncludeEnvVarValue2", str),
+        CommandParameterMetadata("IncludeEnvVarName3", str),
+        CommandParameterMetadata("IncludeEnvVarValue3", str),
+        CommandParameterMetadata("IncludeEnvVarName4", str),
+        CommandParameterMetadata("IncludeEnvVarValue4", str),
+        CommandParameterMetadata("IncludeEnvVarName5", str),
+        CommandParameterMetadata("IncludeEnvVarValue5", str),
+        CommandParameterMetadata("ExcludeEnvVars", str),
+        CommandParameterMetadata("Timeout", str),
+        CommandParameterMetadata("OutputFiles", str),
+        CommandParameterMetadata("StdoutFile", str),
+        CommandParameterMetadata("StderrFile", str),
+        CommandParameterMetadata("ExitCodeProperty", str)
     ]
 
     # Command metadata for command editor display
@@ -73,93 +80,140 @@ class RunProgram(AbstractCommand):
     # CommandLine
     __parameter_input_metadata['CommandLine.Description'] = "command line with arguments"
     __parameter_input_metadata['CommandLine.Label'] = "Command to run"
-    __parameter_input_metadata['CommandLine.Tooltip'] = ""
+    __parameter_input_metadata['CommandLine.Tooltip'] = "Full command line, with parameters separated by spaces"
     __parameter_input_metadata['CommandLine.Required'] = True
+
     # UseCommandShell
     __parameter_input_metadata['UseCommandShell.Description'] = "use command shell"
     __parameter_input_metadata['UseCommandShell.Label'] = "Use command shell?"
-    __parameter_input_metadata['UseCommandShell.Tooltip'] = ""
-    __parameter_input_metadata['UseCommandShell.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['UseCommandShell.Tooltip'] =\
+        "Run the program in a command shell.  Use ${WorkingDirNative} for paths compatible with shell."
+    __parameter_input_metadata['UseCommandShell.Values'] = ["False", "True"]
     __parameter_input_metadata['UseCommandShell.Value.Default'] = "False"
+    __parameter_input_metadata['UseCommandShell.Value.Default.ForEditor'] = ""
+
     # IncludeParentEnvVars
     __parameter_input_metadata['IncludeParentEnvVars.Description'] = ""
     __parameter_input_metadata['IncludeParentEnvVars.Label'] = "Include parent environment variables"
     __parameter_input_metadata['IncludeParentEnvVars.Tooltip'] = (
         "Indicate whether the parent environment variables should be passed to the program run environment.")
-    __parameter_input_metadata['IncludeParentEnvVars.Values'] = ["", "True", "False"]
+    __parameter_input_metadata['IncludeParentEnvVars.Values'] = ["True", "False"]
     __parameter_input_metadata['IncludeParentEnvVars.Value.Default'] = "True"
+    __parameter_input_metadata['IncludeParentEnvVars.Value.Default.ForEditor'] = ""
+
     # IncludeEnvVars
     __parameter_input_metadata['IncludeEnvVars.Description'] = ""
     __parameter_input_metadata['IncludeEnvVars.Label'] = "Include environment variables"
     __parameter_input_metadata['IncludeEnvVars.Tooltip'] = (
         "Specify environment variables to be defined for the program run environment in format:"
         "VAR1=Value1,VAR2=Value2.")
+
     # IncludeEnvVarName1
     __parameter_input_metadata['IncludeEnvVarName1.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarName1.Label'] = 'Include environment variable name 1'
     __parameter_input_metadata['IncludeEnvVarName1.Tooltip'] = (
         "Specify the name of as single environment variable to be defined for the program run environment.")
+
     # IncludeEnvVarValue1
     __parameter_input_metadata['IncludeEnvVarValue1.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarValue1.Label'] = 'Include environment variable value 1'
     __parameter_input_metadata['IncludeEnvVarValue1.Tooltip'] = (
         "Specify the value of as single environment variable to be defined for the program run environment. ")
+
     # IncludeEnvVarName2
     __parameter_input_metadata['IncludeEnvVarName2.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarName2.Label'] = 'Include environment variable name 2'
     __parameter_input_metadata['IncludeEnvVarName2.Tooltip'] = (
         "Specify the name of as single environment variable to be defined for the program run environment. ")
+
     # IncludeEnvVarValue2
     __parameter_input_metadata['IncludeEnvVarValue2.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarValue2.Label'] = 'Include environment variable value 2'
     __parameter_input_metadata['IncludeEnvVarValue2.Tooltip'] = (
         "Specify the value of as single environment variable to be defined for the program run environment. ")
+
     # IncludeEnvVarName3
     __parameter_input_metadata['IncludeEnvVarName3.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarName3.Label'] = 'Include environment variable name 3'
     __parameter_input_metadata['IncludeEnvVarName3.Tooltip'] = (
         "Specify the name of as single environment variable to be defined for the program run environment. ")
+
     # IncludeEnvVarValue3
     __parameter_input_metadata['IncludeEnvVarValue3.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarValue3.Label'] = 'Include environment variable value 3'
     __parameter_input_metadata['IncludeEnvVarValue3.Tooltip'] = (
         "Specify the value of as single environment variable to be defined for the program run environment. ")
+
     # IncludeEnvVarName4
     __parameter_input_metadata['IncludeEnvVarName4.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarName4.Label'] = 'Include environment variable name 4'
     __parameter_input_metadata['IncludeEnvVarName4.Tooltip'] = (
         "Specify the name of as single environment variable to be defined for the program run environment. ")
+
     # IncludeEnvVarValue4
     __parameter_input_metadata['IncludeEnvVarValue4.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarValue4.Label'] = 'Include environment variable value 4'
     __parameter_input_metadata['IncludeEnvVarValue4.Tooltip'] = (
         "Specify the value of as single environment variable to be defined for the program run environment. ")
+
     # IncludeEnvVarName5
     __parameter_input_metadata['IncludeEnvVarName5.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarName5.Label'] = 'Include environment variable name 5'
     __parameter_input_metadata['IncludeEnvVarName5.Tooltip'] = (
         "Specify the name of as single environment variable to be defined for the program run environment. ")
+
     # IncludeEnvVarValue5
     __parameter_input_metadata['IncludeEnvVarValue5.Description'] = ""
     __parameter_input_metadata['IncludeEnvVarValue5.Label'] = 'Include environment variable value 5'
     __parameter_input_metadata['IncludeEnvVarValue5.Tooltip'] = (
         "Specify the value of as single environment variable to be defined for the program run environment. ")
+
     # ExcludeEnvVars
     __parameter_input_metadata['ExcludeEnvVars.Description'] = ""
     __parameter_input_metadata['ExcludeEnvVars.Label'] = 'Exclude environment variables'
     __parameter_input_metadata['ExcludeEnvVars.Tooltip'] = (
         "Specify environment variables to be removed from the program run environment, separated by commas.")
+
+    # Timeout
+    __parameter_input_metadata['Timeout.Description'] = ""
+    __parameter_input_metadata['Timeout.Label'] = 'Timeout (seconds)'
+    __parameter_input_metadata['Timeout.Default'] = "0"
+    __parameter_input_metadata['Timeout.Tooltip'] = (
+        "Timeout for process (seconds), after which the process will be killed.")
+
     # OutputFiles
     __parameter_input_metadata['OutputFiles.Description'] = ""
     __parameter_input_metadata['OutputFiles.Label'] = "Output files"
     __parameter_input_metadata['OutputFiles.Tooltip'] = (
-        "Specify the output files, separated by commas.  Can specify with ${Property}.")
+        "Specify the output files to add to Results, separated by commas, "
+        "necessary because command does not automatically determine from the command line. " +
+        "Can specify with ${Property}.")
 
-    # Choices for UseCommandShell, used to validate parameter and display in editor
-    __choices_UseCommandShell = ["False", "True"]
+    # StdoutFile
+    __parameter_input_metadata['StdoutFile.Description'] = "standard output file"
+    __parameter_input_metadata['StdoutFile.Label'] = "Standard output file"
+    __parameter_input_metadata['StdoutFile.Tooltip'] = (
+        "Name of file for program standard output, DEVNULL to discard, or 'logfile' to write to the log file.  "
+        "${Property} syntax is recognized.")
+    __parameter_input_metadata['StdoutFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['StdoutFile.FileSelector.Title'] = "Select a file to write standard output"
 
-    # Choices for IncludeParentEnvVars, used to validate parameter and display in editor
-    __choices_IncludeParentEnvVars = ["False", "True"]
+    # StderrFile
+    __parameter_input_metadata['StderrFile.Description'] = "standard error file"
+    __parameter_input_metadata['StderrFile.Label'] = "Standard error file"
+    __parameter_input_metadata['StderrFile.Tooltip'] = (
+        "Name of file for program standard error, DEVNULL to discard, STDOUT to write to standard output, "
+        "or 'logfile' to write to the log file. "
+        "${Property} syntax is recognized.")
+    __parameter_input_metadata['StderrFile.Required'] = False
+    __parameter_input_metadata['StderrFile.FileSelector.Type'] = "Write"
+    __parameter_input_metadata['StderrFile.FileSelector.Title'] = "Select a file to write standard error"
+
+    # ExitCodeProperty
+    __parameter_input_metadata['ExitCodeProperty.Description'] = "exit code property"
+    __parameter_input_metadata['ExitCodeProperty.Label'] = 'Exit code property'
+    __parameter_input_metadata['ExitCodeProperty.Default'] = ""
+    __parameter_input_metadata['ExitCodeProperty.Tooltip'] = "Property to set with exit code from GDAL program."
 
     def __init__(self) -> None:
         """
@@ -209,10 +263,11 @@ class RunProgram(AbstractCommand):
         pv_IncludeParentEnvVars = self.get_parameter_value(parameter_name='IncludeParentEnvVars',
                                                            command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_IncludeParentEnvVars,
-                                                      self.__choices_IncludeParentEnvVars, True, True):
+                                                      self.__parameter_input_metadata[
+                                                          'IncludeParentEnvVars.Values'], True, True):
             message = "IncludeParentEnvVars parameter is invalid."
             recommendation = "Specify the IncludeParentEnvVars parameter as blank or one of " + \
-                             str(self.__choices_IncludeParentEnvVars)
+                             str(self.__parameter_input_metadata['IncludeParentEnvVars.Values'])
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -222,11 +277,15 @@ class RunProgram(AbstractCommand):
         # noinspection PyPep8Naming
         pv_UseCommandShell = self.get_parameter_value(parameter_name='UseCommandShell',
                                                       command_parameters=command_parameters)
+        use_command_shell = False
+        if pv_UseCommandShell is not None and pv_UseCommandShell.upper() == "TRUE":
+            use_command_shell = True
         if not validator_util.validate_string_in_list(pv_UseCommandShell,
-                                                      self.__choices_UseCommandShell, True, True):
+                                                      self.__parameter_input_metadata[
+                                                          'UseCommandShell.Values'], True, True):
             message = "UseCommandShell parameter is invalid."
             recommendation = "Specify the UseCommandShell parameter as blank or one of " + \
-                             str(self.__choices_UseCommandShell)
+                             str(self.__parameter_input_metadata['UseCommandShell.Values'])
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -234,6 +293,43 @@ class RunProgram(AbstractCommand):
 
         # TODO smalers 2018-12-16 need to make sure IncludeEnvVars and ExcludeEnvVars are valid lists
         # - for now allow any string to be specified
+
+        # Make sure that if command line includes >, <, or | that the command shell is used.
+        pv_CommandLine = self.get_parameter_value(parameter_name='CommandLine',
+                                                  command_parameters=command_parameters)
+        try:
+            pv_CommandLine.index('>')
+            if not use_command_shell:
+                message = "Found > in command.  Must specify UseCommandShell=True"
+                recommendation = "Must specify UseCommandShell=True"
+                warning_message += "\n" + message
+                self.command_status.add_to_log(
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        except ValueError:
+            pass
+        try:
+            pv_CommandLine.index('<')
+            if not use_command_shell:
+                message = "Found < in command.  Must specify UseCommandShell=True"
+                recommendation = "Must specify UseCommandShell=True"
+                warning_message += "\n" + message
+                self.command_status.add_to_log(
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        except ValueError:
+            pass
+        try:
+            pv_CommandLine.index('|')
+            if not use_command_shell:
+                message = "Found | in command.  Must specify UseCommandShell=True"
+                recommendation = "Must specify UseCommandShell=True"
+                warning_message += "\n" + message
+                self.command_status.add_to_log(
+                    CommandPhaseType.INITIALIZATION,
+                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+        except ValueError:
+            pass
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty
@@ -310,7 +406,7 @@ class RunProgram(AbstractCommand):
         Run the command.  Run the program, which can generate output files.
 
         Returns:
-            None.
+            None
 
         Raises:
                 ValueError: if a runtime input error occurs.
@@ -327,12 +423,12 @@ class RunProgram(AbstractCommand):
         # noinspection PyPep8Naming
         pv_UseCommandShell = self.get_parameter_value('UseCommandShell')
         use_command_shell = False  # Default
-        if pv_UseCommandShell is not None and pv_UseCommandShell == 'True':
+        if pv_UseCommandShell is not None and pv_UseCommandShell.upper() == 'TRUE':
             use_command_shell = True
         # noinspection PyPep8Naming
         pv_IncludeParentEnvVars = self.get_parameter_value('IncludeParentEnvVars')
         include_parent_env_vars = True  # Default
-        if pv_IncludeParentEnvVars is not None and pv_IncludeParentEnvVars == 'False':
+        if pv_IncludeParentEnvVars is not None and pv_IncludeParentEnvVars.upper() == 'FALSE':
             include_parent_env_vars = False
         # noinspection PyPep8Naming
         pv_IncludeEnvVars = self.get_parameter_value('IncludeEnvVars')
@@ -398,6 +494,13 @@ class RunProgram(AbstractCommand):
             exclude_env_vars_list = string_util.delimited_string_to_list(pv_ExcludeEnvVars, trim=True)
 
         # noinspection PyPep8Naming
+        pv_Timeout = self.get_parameter_value('Timeout')
+        timeout = None  # handled by subprocess.run()
+        if pv_Timeout is not None and pv_Timeout != "":
+            # Have specified environment variables to exclude
+            timeout = int(pv_Timeout)
+
+        # noinspection PyPep8Naming
         pv_OutputFiles = self.get_parameter_value('OutputFiles')
         output_files_list = None
         if pv_OutputFiles is not None and pv_OutputFiles != "":
@@ -406,11 +509,42 @@ class RunProgram(AbstractCommand):
             # Expand each output file
             ifile = -1
             for output_file in output_files_list:
-                ifile = ifile + 1
+                ifile += 1
                 output_files_list[ifile] = io_util.verify_path_for_os(
                     io_util.to_absolute_path(
                         self.command_processor.get_property('WorkingDir'),
                         self.command_processor.expand_parameter_value(output_file, self)))
+
+        # noinspection PyPep8Naming
+        pv_StdoutFile = self.get_parameter_value('StdoutFile')
+        stdout_file_full = pv_StdoutFile
+        if pv_StdoutFile is not None and pv_StdoutFile != "":
+            # Have specified stdout file to use for stdout
+            stdout_file_full = io_util.verify_path_for_os(
+                io_util.to_absolute_path(
+                    self.command_processor.get_property('WorkingDir'),
+                    self.command_processor.expand_parameter_value(pv_StdoutFile, self)))
+        else:
+            # Make sure it is None if an empty string was specified
+            # noinspection PyPep8Naming
+            pv_StdoutFile = None
+
+        # noinspection PyPep8Naming
+        pv_StderrFile = self.get_parameter_value('StderrFile')
+        stderr_file_full = pv_StderrFile
+        if pv_StderrFile is not None and pv_StderrFile != "":
+            # Have specified stderr file to use for stdout
+            stderr_file_full = io_util.verify_path_for_os(
+                io_util.to_absolute_path(
+                    self.command_processor.get_property('WorkingDir'),
+                    self.command_processor.expand_parameter_value(pv_StderrFile, self)))
+        else:
+            # Make sure it is None if an empty string was specified
+            # noinspection PyPep8Naming
+            pv_StderrFile = None
+
+        # noinspection PyPep8Naming
+        pv_ExitCodeProperty = self.get_parameter_value('ExitCodeProperty')
 
         logger.info('Command line before expansion="' + pv_CommandLine + '"')
 
@@ -426,21 +560,101 @@ class RunProgram(AbstractCommand):
         # Run the program as a subprocess
         # noinspection PyBroadException
         try:
-            logger.info('Running command line "' + command_line_expanded + '"')
+            logger.info('Running command line: {}'.format(command_line_expanded))
             # Create the environment dictionary
             env_dict = RunProgram.create_env_dict(include_parent_env_vars, include_env_vars_dict, exclude_env_vars_list)
-            print("env_dict=" + string_util.format_dict(env_dict))
+            # print("env_dict=" + string_util.format_dict(env_dict))
             # TODO smalers 2018-12-16 evaluate using shlex.quote() to handle command string
             # TODO smalers 2018-12-16 handle standard input and output
-            p = subprocess.Popen(command_line_expanded, shell=use_command_shell, env=env_dict)
-            # Wait for the process to terminate since need it to be done before other commands do their work
-            # with the command output.
-            p.wait()
-            return_status = p.poll()
-            if return_status != 0:
+            use_run = True
+            return_status = -1
+            if use_run:
+                # Use subprocess.run(), available as of Python 3.5
+                # - For the following logic, 'capture_output' is not used because output is immediately redirected
+                #   to the appropriate location. 'capture_output' is used to retrieve output from
+                #   subprocess.CompletedProcess.
+                if use_command_shell:
+                    # Using a shell so pass as a single string so that >, <, | are handled by the shell
+                    args = command_line_expanded
+                else:
+                    # Have to split the command line arguments
+                    # - shlex is used to parse command line string into arguments.
+                    args = shlex.split(command_line_expanded)
+                # By default the stdout and stderr are just output by the subprocess defaults.
+                # However, the output can be redirected to a file.
+                stderr = None  # Default is don't capture stderr
+                stdout = None  # Default is don't capture stdout
+
+                # Handle stdout parameters
+                if pv_StdoutFile is not None:
+                    if pv_StdoutFile.upper() == 'LOGFILE':
+                        # Get the file number of the current log file
+                        logfile_handler: logging.FileHandler = log_util.get_logfile_handler()
+                        if logfile_handler is not None:
+                            stdout = logfile_handler.stream.fileno()
+                    elif pv_StdoutFile.upper() == 'DEVNULL':
+                        # Special value that should be passed as is
+                        # - will write standard output to /dev/null on Linux
+                        stdout = subprocess.DEVNULL
+                    else:
+                        # Open the file to receive stdout output, perhaps the desired output of the program if it
+                        # does not create its own output file
+                        stdout = open(stdout_file_full, 'w')
+
+                # Handle stderr parameters
+                if pv_StderrFile is not None:
+                    if pv_StderrFile.upper() == 'LOGFILE':
+                        # Get the file number of the current log file
+                        logfile_handler: logging.FileHandler = log_util.get_logfile_handler()
+                        if logfile_handler is not None:
+                            stderr = logfile_handler.stream.fileno()
+                    elif pv_StderrFile.upper() == 'DEVNULL':
+                        # Special value that should be passed as is
+                        # - will write standard output to /dev/null on Linux
+                        stderr = subprocess.DEVNULL
+                    elif pv_StdoutFile.upper() == 'STDOUT':
+                        # Combine stderr with stdout
+                        stderr = subprocess.STDOUT
+                    else:
+                        # Open the file to receive stderr output, for example to isolate errors to a file
+                        stderr = open(stderr_file_full, 'w')
+                # Now run the process
+                if use_command_shell:
+                    logger.info("Running command with command shell")
+                else:
+                    logger.info("Running command without command shell")
+                completed_process = subprocess.run(args, shell=use_command_shell, env=env_dict, timeout=timeout,
+                                                   stdout=stdout, stderr=stderr)
+                logger.info("Back from running command.")
+
+                # Get the return information
+                return_status = completed_process.returncode
+
+                # Close any files that may have been opened
+                # - this does not close the log file, which should remain open for other logging messages
+                if stdout is not None and isinstance(stdout, io.IOBase):
+                    stdout.close()
+                if stderr is not None and isinstance(stderr, io.IOBase):
+                    stderr.close()
+            else:
+                # Older logic that will be phased out if the above 'run()' logic works
+                # Use subprocess.Popen
+                p = subprocess.Popen(command_line_expanded, shell=use_command_shell, env=env_dict)
+                # Wait for the process to terminate since need it to be done before other commands do their work
+                # with the command output.
+                p.wait()
+                return_status = p.poll()
+                # Wait for the process to terminate since need it to be done before other commands do their work
+
+            if pv_ExitCodeProperty is not None and pv_ExitCodeProperty != "":
+                # Set the exit code property
+                self.command_processor.set_property(pv_ExitCodeProperty, return_status)
+            if return_status == 0:
+                logger.info("Return status of {} running program.".format(return_status))
+            else:
                 warning_count += 1
-                message = 'Nonzero return status running program "' + command_line_expanded + '"'
-                logger.warning(message, exc_info=True)
+                message = 'Nonzero return status {} running program: {}'.format(return_status, command_line_expanded)
+                logger.warning(message)
                 self.command_status.add_to_log(
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message,
@@ -448,7 +662,8 @@ class RunProgram(AbstractCommand):
 
         except Exception:
             warning_count += 1
-            message = 'Unexpected error running program "' + command_line_expanded + '"'
+            logger.warning(message, exc_info=True)
+            message = 'Unexpected error running program: {}'.format(command_line_expanded)
             logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
@@ -463,7 +678,7 @@ class RunProgram(AbstractCommand):
                     self.command_processor.add_output_file(output_file)
 
         if warning_count > 0:
-            message = "There were " + str(warning_count) + " warnings processing the command."
+            message = "There were {} warnings processing the command.".format(warning_count)
             logger.warning(message)
             raise CommandError(message)
 

@@ -31,7 +31,7 @@ import geoprocessor.util.io_util as io_util
 import geoprocessor.util.validator_util as validator_util
 
 import logging
-import os
+# import os
 
 
 class StartRegressionTestResultsReport(AbstractCommand):
@@ -126,7 +126,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
         # String runTime = "        "
         # runTime = StringUtil.formatString(runTimeMs,"%7d")
         delim = "|"
-        nl = os.linesep
+        # nl = os.linesep
+        nl = "\n"
         if cls.__regression_test_fp is None:
             # Regression test results report is not open
             logger.warning("Regression test report file is not open")
@@ -224,7 +225,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
             # logger.info("Regression report file is None")
             return
 
-        nl = os.linesep
+        # nl = os.linesep
+        nl = "\n"
         fp = cls.__regression_test_fp
         fp.write(
             "#----+-------+-------+------+----------+-----------+------------------" +
@@ -275,7 +277,8 @@ class StartRegressionTestResultsReport(AbstractCommand):
         StartRegressionTestResultsReport.__regression_test_fp = open(output_file, mode)
         fp = StartRegressionTestResultsReport.__regression_test_fp  # Local variable for class data
         io_util.print_standard_file_header(fp, comment_line_prefix="#", max_width=80)
-        nl = os.linesep
+        # nl = os.linesep
+        nl = "\n"
         fp.write("#" + nl)
         fp.write("# Command file regression test report from StartRegressionTestResultsReport() and RunCommands()" + nl)
         fp.write("#" + nl)
@@ -321,30 +324,29 @@ class StartRegressionTestResultsReport(AbstractCommand):
 
         # Runtime checks on input
 
-        # noinspection PyPep8Naming
-        pv_OutputFile_absolute = io_util.verify_path_for_os(
-            io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_OutputFile, self)))
-
         if warning_count > 0:
-            message = "There were " + str(warning_count) + " warnings about command parameters."
+            message = "There were {} warnings about command parameters.".format(warning_count)
             logger.warning(message)
             raise CommandError(message)
 
         # Open the regression test results file
 
+        output_file_absolute = pv_OutputFile
         # noinspection PyBroadException
         try:
             # noinspection PyPep8Naming
-            pv_OutputFile_absolute = io_util.verify_path_for_os(
+            output_file_absolute = io_util.verify_path_for_os(
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                          self.command_processor.expand_parameter_value(pv_OutputFile, self)))
-            self.__open_new_regression_test_report_file(pv_OutputFile_absolute, False)  # Do not append
-            logger.info('Opened regression test results report file "' + pv_OutputFile_absolute + '"')
+            self.__open_new_regression_test_report_file(output_file_absolute, False)  # Do not append
+            logger.info('Opened regression test results report file: {}'.format(output_file_absolute))
+
+            # Save the output file in the processor, used by the UI to list output files
+            self.command_processor.add_output_file(output_file_absolute)
 
         except Exception:
             warning_count += 1
-            message = 'Unexpected error opening file "' + pv_OutputFile_absolute + '"'
+            message = 'Unexpected error opening regression test results file: {}'.format(output_file_absolute)
             logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
@@ -352,7 +354,7 @@ class StartRegressionTestResultsReport(AbstractCommand):
                                  "See the log file for details."))
 
         if warning_count > 0:
-            message = "There were " + str(warning_count) + " warnings processing the command."
+            message = "There were {} warnings processing the command.".format(warning_count)
             logger.warning(message)
             raise CommandError(message)
 

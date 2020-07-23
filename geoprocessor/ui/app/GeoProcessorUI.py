@@ -148,7 +148,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_TabWidget: QtWidgets.QTabWidget or None = None
 
         # Results / GeoLayers
-        self.rightClickMenu_GeoLayers: QtWidgets.QMenu or None = None
+        self.rightClickMenu_Results_GeoLayers: QtWidgets.QMenu or None = None
         self.results_GeoLayers_Tab: QtWidgets.QWidget or None = None
         self.results_GeoLayers_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_GeoLayers_GroupBox: QtWidgets.QGroupBox or None = None
@@ -169,23 +169,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoMapProjects_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_GeoMapProjects_Table: QtWidgets.QTableWidget or None = None
 
-        # Map canvas components and actions
-        self.map_window: QtWidgets.QDialog or None = None
-        self.map_window_layout: QtWidgets.QVBoxLayout or None = None
-        self.map_toolbar: QtWidgets.QToolBar or None = None
-
-        self.toolPan: qgis.gui.QgsMapToolPan or None = None
-        self.toolZoomIn: qgis.gui.QgsMapToolZoom or None = None
-        self.toolZoomOut: qgis.gui.QgsMapToolZoom or None = None
-
-        self.actionZoomIn: QtWidgets.QAction or None = None
-        self.actionZoomOut: QtWidgets.QAction or None = None
-        self.actionPan: QtWidgets.QAction or None = None
-        self.map_window_widget: QtWidgets.QWidget or None = None
-
-        self.canvas: qgis.gui.QgsMapCanvas or None = None
-
         # Results / Output Files
+        self.rightClickMenu_Results_OutputFiles: QtWidgets.QMenu or None = None
         self.results_OutputFiles_Tab: QtWidgets.QWidget or None = None
         self.results_OutputFiles_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_OutputFiles_GroupBox: QtWidgets.QGroupBox or None = None
@@ -206,10 +191,26 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_Tables_Table: QtWidgets.QTableWidget or None = None
 
-        # Tables attribute table window
+        # Popup GeoLayers attribute table window
         self.attributes_window: QtWidgets.QDialog or None = None
         self.attributes_window_layout: QtWidgets.QVBoxLayout or None = None
         self.attributes_table: QtWidgets.QTableWidget or None = None
+
+        # Popup GeoLayers map window canvas components and actions
+        self.map_window: QtWidgets.QDialog or None = None
+        self.map_window_layout: QtWidgets.QVBoxLayout or None = None
+        self.map_toolbar: QtWidgets.QToolBar or None = None
+
+        self.toolPan: qgis.gui.QgsMapToolPan or None = None
+        self.toolZoomIn: qgis.gui.QgsMapToolZoom or None = None
+        self.toolZoomOut: qgis.gui.QgsMapToolZoom or None = None
+
+        self.actionZoomIn: QtWidgets.QAction or None = None
+        self.actionZoomOut: QtWidgets.QAction or None = None
+        self.actionPan: QtWidgets.QAction or None = None
+        self.map_window_widget: QtWidgets.QWidget or None = None
+
+        self.canvas: qgis.gui.QgsMapCanvas or None = None
 
         # Status area at bottom of main UI
         self.statusbar: QtWidgets.QStatusBar or None = None
@@ -2942,7 +2943,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         # Use the following because connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
-        self.results_GeoLayers_Table.customContextMenuRequested.connect(self.ui_action_geolayers_right_click)
+        self.results_GeoLayers_Table.customContextMenuRequested.connect(self.ui_action_results_geolayers_right_click)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_GeoLayers_Tab), "GeoLayers")
 
         # Results - GeoMaps tab
@@ -3058,6 +3059,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         if not single_column:
             self.results_OutputFiles_Table.horizontalHeaderItem(1).setText("File Type")
             self.results_OutputFiles_Table.horizontalHeaderItem(2).setText("Command Reference")
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        self.results_OutputFiles_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        # noinspection PyUnresolvedReferences
+        self.results_OutputFiles_Table.customContextMenuRequested.connect(
+            self.ui_action_results_outputfiles_right_click)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_OutputFiles_Tab), "Output Files")
 
         # Results - Properties tab
@@ -4075,42 +4081,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         qt_util.warning_message_box(message)
         return
 
-    def ui_action_geolayers_right_click(self, q_pos: int) -> None:
-        """
-        On right click display a tooltip on GeoLayer selected list item with options to
-        open a map window or get the GeoLayer attributes.
-
-        Args:
-            q_pos (int): Position of mouse when right clicking on a GeoLayer from
-                the output table.
-
-        Returns:
-            None
-        """
-
-        # Create the right click QMenu
-        self.rightClickMenu_GeoLayers = QtWidgets.QMenu()
-
-        # Add possible actions being Open Map or Attributes
-        menu_item_map_command = self.rightClickMenu_GeoLayers.addAction("Open Map")
-        menu_item_attributes = self.rightClickMenu_GeoLayers.addAction("Attributes")
-
-        # Connect actions to the tooltip options
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        menu_item_map_command.triggered.connect(self.ui_action_open_map_window)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        menu_item_attributes.triggered.connect(self.ui_action_open_attributes)
-
-        # Using the position of the mouse on right click decide where the tooltip should
-        # be displayed
-        parent_pos = self.results_GeoLayers_Table.mapToGlobal(QtCore.QPoint(0, 0))
-        self.rightClickMenu_GeoLayers.move(parent_pos + q_pos)
-
-        # Show the tooltip
-        self.rightClickMenu_GeoLayers.show()
-
     # TODO smalers 2018-07-24 need to make the dialog nicer, including live link to OWF website
     def ui_action_help_about(self) -> None:
         """
@@ -4434,7 +4404,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Set the title for the main window
         self.ui_set_main_window_title("commands not saved")
 
-    def ui_action_open_attributes(self) -> None:
+    def ui_action_results_geolayers_open_attributes(self) -> None:
         """
         Create an attributes window to be opened when user clicks on GeoLayers.
 
@@ -4591,7 +4561,30 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         logger.info("Model size after reading command file=" + str(self.gp_model.rowCount(QtCore.QModelIndex())))
         return True
 
-    def ui_action_open_map_window(self) -> None:
+    def ui_action_print_commands(self) -> None:
+        """
+        Print the command file.
+        This is currently not enabled other than to print a dialog.
+
+        Returns:
+            None
+        """
+        # Set the title for the main window
+        qt_util.info_message_box("Printing features have not yet been implemented.")
+
+    def ui_action_resize_software_system_information_text_box(self, event) -> None:
+        """
+        Resize the text box for the Software/System Information dialog window.
+
+        Args:
+            event: Resize Event
+
+        Returns:
+            None
+        """
+        self.sys_info_text_browser.resize(self.sys_info.width()-50, self.sys_info.height()-50)
+
+    def ui_action_results_geolayers_open_map_window(self) -> None:
         """
         Open a map window dialog box that displays the map layers from the selected GeoLayers.
 
@@ -4637,14 +4630,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             for row in selected_rows:
                 geolayer = self.gp.geolayers[row]
                 if geolayer.is_vector():
-                    logger.info("Appending vector layer \"" + geolayer.id + "\" [" + str(row) + "] for map ")
+                    logger.info("Appending vector layer \"{}\" [{}] for map ".format(geolayer.id, row))
                 elif geolayer.is_raster():
-                    logger.info("Appending raster layer \"" + geolayer.id + "\" [" + str(row) + "] for map ")
+                    logger.info("Appending raster layer \"{}\" [{}] for map ".format(geolayer.id, row))
                 selected_geolayers.append(geolayer.qgs_layer)
 
             # Get the extent for all the layers by calling qgis_util
-            logger.info("Have " + str(len(selected_geolayers)) + " selected layers")
-            extent = qgis_util.get_extent_from_geolayers(selected_geolayers)
+            logger.info("Have {} selected layers.".format(len(selected_geolayers)))
+            extent = qgis_util.get_extent_from_geolayers(selected_geolayers, buffer_fraction=.05)
             self.canvas.setExtent(extent)
             self.canvas.setLayers(selected_geolayers)
 
@@ -4690,28 +4683,114 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
-    def ui_action_print_commands(self) -> None:
+    def ui_action_results_geolayers_right_click(self, q_pos: int) -> None:
         """
-        Print the command file.
-        This is currently not enabled other than to print a dialog.
-
-        Returns:
-            None
-        """
-        # Set the title for the main window
-        qt_util.info_message_box("Printing features have not yet been implemented.")
-
-    def ui_action_resize_software_system_information_text_box(self, event) -> None:
-        """
-        Resize the text box for the Software/System Information dialog window.
+        On right click display a popup menu that allows viewing the layers in a map or view attributes.
+        Upon selecting an item in the map, a corresponding popup window will be displayed.
 
         Args:
-            event: Resize Event
+            q_pos (int): Position of mouse when right clicking on a GeoLayer from the output table.
 
         Returns:
             None
         """
-        self.sys_info_text_browser.resize(self.sys_info.width()-50, self.sys_info.height()-50)
+
+        # Create the right click QMenu
+        self.rightClickMenu_Results_GeoLayers = QtWidgets.QMenu()
+
+        # Add possible actions being Open Map or Attributes
+        menu_item_map_command = self.rightClickMenu_Results_GeoLayers.addAction("Open Map")
+        menu_item_attributes = self.rightClickMenu_Results_GeoLayers.addAction("Attributes")
+
+        # Connect actions to the tooltip options
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        menu_item_map_command.triggered.connect(self.ui_action_results_geolayers_open_map_window)
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        menu_item_attributes.triggered.connect(self.ui_action_results_geolayers_open_attributes)
+
+        # Using the position of the mouse on right click decide where the tooltip should
+        # be displayed
+        parent_pos = self.results_GeoLayers_Table.mapToGlobal(QtCore.QPoint(0, 0))
+        self.rightClickMenu_Results_GeoLayers.move(parent_pos + q_pos)
+
+        # Show the tooltip
+        self.rightClickMenu_Results_GeoLayers.show()
+
+    def ui_action_results_outputfiles_open_app(self, as_text: bool = False) -> None:
+        """
+        Open the output file by running the default application for the file extension.
+
+        Returns:
+            None
+        """
+        logger = logging.getLogger(__name__)
+
+        # noinspection PyBroadException
+        try:
+            # Get the first selected file
+            # - this retrieves selected indices
+            # selected_rows = self.results_GeoLayers_Table.selectedIndexes()
+            selected_rows = qt_util.get_table_rows_from_indexes(self.results_OutputFiles_Table.selectedIndexes())
+            for row in selected_rows:
+                # Get the output file
+                output_file_path = self.results_OutputFiles_Table.itemAt(row, 0).text()
+                logger.info("Output file item from table: {}".format(output_file_path))
+                os_util.run_default_app(output_file_path, as_text=as_text)
+                # Only show the first selected row
+                # - TODO smalers 2020-07-22 evaluate whether multiple files should be provided to one application
+                break
+
+        except Exception:
+            message = "Error opening output file {}.  The file extension may not be associated with a program. "\
+                "See the log file.".format(output_file_path)
+            logger.warning(message, exc_info=True)
+            qt_util.warning_message_box(message)
+
+    def ui_action_results_outputfiles_openastext_app(self) -> None:
+        """
+        Open the output file as text by running the default application for the file extension.
+
+        Returns:
+            None
+        """
+        self.ui_action_results_outputfiles_open_app(as_text=True)
+
+    def ui_action_results_outputfiles_right_click(self, q_pos: int) -> None:
+        """
+        On right click display a menu to view the output file.
+        Then start the appropriate application.
+
+        Args:
+            q_pos (int): Position of mouse when right clicking on a GeoLayer from
+                the output table.
+
+        Returns:
+            None
+        """
+
+        # Create the right click QMenu
+        self.rightClickMenu_Results_OutputFiles = QtWidgets.QMenu()
+
+        # Add possible actions
+        outputfiles_item_open = self.rightClickMenu_Results_OutputFiles.addAction("Open")
+        outputfiles_item_openastext = self.rightClickMenu_Results_OutputFiles.addAction("Open as text")
+
+        # Connect actions to the tooltip options
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        outputfiles_item_open.triggered.connect(self.ui_action_results_outputfiles_open_app)
+        # noinspection PyUnresolvedReferences
+        outputfiles_item_openastext.triggered.connect(self.ui_action_results_outputfiles_openastext_app)
+
+        # Using the position of the mouse on right click decide where the tooltip should
+        # be displayed
+        parent_pos = self.results_OutputFiles_Table.mapToGlobal(QtCore.QPoint(0, 0))
+        self.rightClickMenu_Results_OutputFiles.move(parent_pos + q_pos)
+
+        # Show the tooltip
+        self.rightClickMenu_Results_OutputFiles.show()
 
     def ui_action_save_commands(self) -> None:
         """

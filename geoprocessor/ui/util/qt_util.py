@@ -50,7 +50,8 @@ def from_utf8(s):
 
 def get_table_rows_from_indexes(indexes: [int]) -> [int]:
     """
-    Get the list of unique rows from a list of indexes, for exmaple, indexes selected in a table.
+    Get the list of unique rows from a list of indexes, for example, indexes selected in a table.
+
     Args:
         indexes: list of indexes from Qt table
 

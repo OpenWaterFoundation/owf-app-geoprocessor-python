@@ -324,15 +324,18 @@ def exit_qgis() -> None:
         qgs.exit()
 
 
-def get_extent_from_geolayers(selected_geolayers: [QgsMapLayer]) -> QgsRectangle:
+def get_extent_from_geolayers(selected_geolayers: [QgsMapLayer], buffer_fraction: float = None) -> QgsRectangle:
     """
     Return the maximum extent for a list of geolayers.
-    If a single point, add +1.0 in the coordinate direction.
+    If a single point, add +1.0 in each coordinate direction.
 
     Args:
-        selected_geolayers:
+        selected_geolayers ([QgsMapLayer]): list of map layers to display
+        buffer_fraction (float): buffer distance as a fraction (0 to 1.0) to add to the extent on each edge,
+            to ensure that symbols are not truncated
 
     Returns:
+        QgsRectangle for the extent
 
     """
     xmin = float("inf")
@@ -353,14 +356,26 @@ def get_extent_from_geolayers(selected_geolayers: [QgsMapLayer]) -> QgsRectangle
         if extent.yMaximum() > ymax:
             ymax = extent.yMaximum()
 
-    # Check if extent is single dimension
+    # Check if extent is a single point
     if xmin == xmax:
         xmin -= 1.0
         xmax += 1.0
+    else:
+        # Add buffer
+        if buffer_fraction is not None:
+            buffer_dist = abs(xmax - xmin)*buffer_fraction
+            xmin -= buffer_dist
+            xmax += buffer_dist
 
     if ymin == ymax:
         ymin -= 1.0
         ymax += 1.0
+    else:
+        # Add buffer
+        if buffer_fraction is not None:
+            buffer_dist = abs(ymax - ymin)*buffer_fraction
+            ymin -= buffer_dist
+            ymax += buffer_dist
 
     return qgis.core.QgsRectangle(xmin, ymin, xmax, ymax)
 

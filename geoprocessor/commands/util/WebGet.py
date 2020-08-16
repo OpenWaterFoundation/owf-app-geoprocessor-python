@@ -306,7 +306,7 @@ class WebGet(AbstractCommand):
 
                 # Check the exit status
                 if r.status_code == 200:
-                    # Get the filename of the URL and the output file
+                    # Success.  Get the filename of the URL and the output file.
                     url_filename = io_util.get_filename(url_abs)
                     output_filename = io_util.get_filename(output_file_absolute)
 
@@ -333,18 +333,20 @@ class WebGet(AbstractCommand):
                         # TODO smalers 2020-05-10 evaluate how to tell processor output file - could be a lot of files
 
                     else:
-                        # Download the file to the output folder.
-                        with open(os.path.join(output_folder, os.path.basename(url_abs)), "wb") as downloaded_file:
+                        # Not a zip file. Download the file to the output folder.
+                        #with open(os.path.join(output_folder, os.path.basename(url_abs)), "wb") as downloaded_file:
+                        with open(output_file_absolute, "wb") as downloaded_file:
                             downloaded_file.write(r.content)
 
                         # Determine if the downloaded file should be renamed. If the filename is %f then the filename
                         # of the downloaded product should be the same as the url filename
-                        if not output_filename == '%f':
+                        # TODO smalers 2020-07-28 not sure if this logic is correct, need to handle %f better?
+                        if output_filename == '%f':
                             self.__rename_files_in_a_folder(list_of_files=[os.path.basename(url_abs)],
                                                             folder_path=output_folder,
                                                             new_filename=output_filename)
                             # Save the output file in the processor, used by the UI to list output files
-                            self.command_processor.add_output_file(output_file_absolute)
+                        self.command_processor.add_output_file(output_file_absolute)
 
                     if pv_ResponseCodeProperty is not None:
                         # Set the processor property with the return code

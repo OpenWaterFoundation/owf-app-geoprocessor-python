@@ -365,6 +365,23 @@ def get_path(full_path: str) -> str:
     return os.path.dirname(full_path)
 
 
+def is_url(path: str) -> bool:
+    """
+    Determine whether a path is a URL, starting with 'http:' or 'https:'.
+
+    Args:
+        path (str): Path to evaluate.
+
+    Returns:
+        bool: True if a URL, False if not (a file).
+
+    """
+    if path.upper().startswith('HTTP:') or path.upper().startswith('HTTPS:'):
+        return True
+    else:
+        return False
+
+
 def print_standard_file_header(ofp: TextIO, comment_line_prefix: str = '#', max_width: int = 120,
                                properties: dict = None) -> None:
     """

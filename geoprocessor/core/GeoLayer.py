@@ -56,10 +56,15 @@ class GeoLayer(object):
     # - used with input_source* and output_source* values
     SOURCE_MEMORY = 'MEMORY'
 
+    # Indicates that the layer format is memory, rather than being read from a file.
+    # - used with input_format and output_format values
+    FORMAT_MEMORY = 'MEMORY'
+
     def __init__(self, geolayer_id: str,
                  name: str,
                  description: str = "",
                  qgs_layer: QgsMapLayer = None,
+                 input_format: str = FORMAT_MEMORY,
                  input_path_full: str = SOURCE_MEMORY,
                  input_path: str = SOURCE_MEMORY,
                  properties: dict = None) -> None:
@@ -77,6 +82,12 @@ class GeoLayer(object):
             qgs_layer (QgsVectorLayer or QgsRasterLayer instance via those class __init__() function):
                 Object created by the QGIS processor.
                 All GeoLayer spatial manipulations are performed on the GeoLayer's qgs_vector_layer.
+            input_format (str):
+                The format of the input spatial data file on the local computer, or URL to input,
+                consistent with a GeoProcessor read command before the path is expanded.
+                This is used when creating a GeoMapProject file, so that code such as InfoMapper that reads
+                the file knows whether a URL is for GeoJSON, WMS, WFS, etc.
+                If not specified, 'MEMORY' is used, assuming the layer was created in memory.
             input_path_full (str):
                 The full pathname to the input spatial data file on the local computer,
                 consistent with a GeoProcessor read command after the path is expanded.
@@ -106,6 +117,10 @@ class GeoLayer(object):
         # All spatial manipulations are performed on the GeoLayer's qgs_layer.
         self.qgs_layer = qgs_layer
 
+        # self.input_format (str) is the format of the input, corresponding to the file format or web service format.
+        # See the following:  https://gdal.org/drivers/vector/index.html
+        self.input_format = input_format
+
         # "input_path_full" (str) is the full pathname to the original spatial data file on the local computer:
         # - this is the expanded path using the working directory and command path
         self.input_path_full = input_path_full
@@ -115,16 +130,20 @@ class GeoLayer(object):
         # - it could also be the full path, which would be the same value as self.input__path_full
         self.input_path = input_path
 
+        # self.output_format (str) is the format of the output, corresponding to the file format or web service format.
+        # See the following:  https://gdal.org/drivers/vector/index.html
+        self.output_format = GeoLayer.FORMAT_MEMORY
+
         # "output_path_full" (str) is the full pathname to the output spatial data file on the local computer:
         # - this is the expanded path using the working directory and command path
         # - set by GeoProcessor write commands
         # - set to 'MEMORY' if the layer has not been written yet
-        self.output_path_full = 'MEMORY'
+        self.output_path_full = GeoLayer.SOURCE_MEMORY
 
         # "output_path" (str) is the relative pathname to the most recently written data file on the local computer:
         # - this is relative to the current working folder, typically just the filename or ../folder/filename
         # - it could also be the full path, which would be the same value as self.input_path_full
-        self.output_path = 'MEMORY'
+        self.output_path = GeoLayer.SOURCE_MEMORY
 
         # "qgs_id" (str) is the GeoLayer's id in the Qgs environment (this is automatically assigned by the QGIS
         # GeoProcessor when a GeoLayer is originally created)
@@ -316,30 +335,38 @@ class GeoLayer(object):
         else:
             # Return a dictionary with JSON objects
             # - this remaps the names to camelcase, which is is more consistent with JSON standards
-            # - sourcePath maps to the output file because what is written serves as the path
+            # - 'sourcePath' maps to the output file because what is written serves as the path
             # - if the layer was written, then the output source path will e set and can be used;
-            #   otherwise, use the input source path
+            #   otherwise, use the input source path, for example for WMS and WFS, and GeoJSON read from URL
+            # - similarly, 'sourceFormat' is the format of the source, by checking the written format or the
+            #   input format
             source_path = None
             if self.output_path is not None and self.output_path != GeoLayer.SOURCE_MEMORY:
                 source_path = self.output_path
+                source_format = self.output_format
             elif self.input_path is not None and self.input_path != GeoLayer.SOURCE_MEMORY:
                 source_path = self.input_path
+                source_format = self.input_format
             # Determine the layer type, to inform the application how to handle, especially for web services
             # - can't use isinstance() because this will result in a circular import dependency,
             #   therefore check the class name
-            layerType = None
+            layer_type = None
+            geometry_type = None
             layer_class = self.__class__.__name__
             if layer_class == 'VectorGeoLayer':
                 layer_type = 'Vector'
+                geometry_type = "WKT:{}".format(self.get_geometry())
             elif layer_class == 'RasterGeoLayer':
                 layer_type = 'Raster'
+                geometry_type = 'Raster'
             return {
                 "geoLayerId": self.id,
                 "name": self.name,
                 "description": self.description,
                 "crs": self.get_crs_code(),
-                "geometryType": ("WKT:" + self.get_geometry()),
+                "geometryType": geometry_type,
                 "layerType": layer_type,
+                "sourceFormat": source_format,
                 "sourcePath": source_path,
                 "properties": self.properties,
                 "history:": self.history

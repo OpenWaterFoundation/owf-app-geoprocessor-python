@@ -23,6 +23,7 @@
 from __future__ import annotations
 
 import geoprocessor.util.qgis_util as qgis_util
+from geoprocessor.core import VectorFormatType
 from geoprocessor.core.GeoLayer import GeoLayer
 from qgis.core import QgsVectorLayer
 import os
@@ -45,6 +46,7 @@ class VectorGeoLayer(GeoLayer):
                  name: str,
                  description: str = None,
                  qgs_vector_layer: QgsVectorLayer = None,
+                 input_format: str = GeoLayer.FORMAT_MEMORY,
                  input_path_full: str = GeoLayer.SOURCE_MEMORY,
                  input_path: str = GeoLayer.SOURCE_MEMORY,
                  properties: dict = None) -> None:
@@ -62,6 +64,12 @@ class VectorGeoLayer(GeoLayer):
             qgs_vector_layer (QgsVectorLayer):
                 Object created by the QGIS processor.
                 All GeoLayer spatial manipulations are performed on the GeoLayer's qgs_layer.
+            input_format (str):
+                The format of the input spatial data file on the local computer, or URL to input,
+                consistent with a GeoProcessor read command before the path is expanded.
+                This is used when creating a GeoMapProject file, so that code such as InfoMapper that reads
+                the file knows whether a URL is for GeoJSON, WMS, WFS, etc.
+                If not specified, 'MEMORY' is used, assuming the layer was created in memory.
             input_path_full (str):
                 The full pathname to the input spatial data file on the local computer,
                 consistent with a GeoProcessor read command after the path is expanded.
@@ -83,6 +91,7 @@ class VectorGeoLayer(GeoLayer):
                          name=name,
                          description=description,
                          qgs_layer=qgs_vector_layer,
+                         input_format=input_format,
                          input_path_full=input_path_full,
                          input_path=input_path,
                          properties=properties)

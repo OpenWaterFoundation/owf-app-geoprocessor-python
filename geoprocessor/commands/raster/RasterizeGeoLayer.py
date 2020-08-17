@@ -25,6 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core import RasterFormatType
 from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -95,10 +96,11 @@ class RasterizeGeoLayer(AbstractCommand):
     __parameter_input_metadata['RasterFormat.Description'] = "raster format"
     __parameter_input_metadata['RasterFormat.Label'] = "Raster format"
     __parameter_input_metadata['RasterFormat.Required'] = False
-    __parameter_input_metadata['RasterFormat.Tooltip'] = "Raster format for temporary output file."
-    __parameter_input_metadata['RasterFormat.Values'] = ['GeoTIFF']
+    __parameter_input_metadata['RasterFormat.Tooltip'] =\
+        "Raster format for temporary output file.  See:  https://gdal.org/drivers/raster/index.html"
+    __parameter_input_metadata['RasterFormat.Values'] = ['GTiff']
     # __parameter_input_metadata['RasterFormat.Values'] = ['GeoTIFF', 'JPEG', 'JPEG2000']
-    __parameter_input_metadata['RasterFormat.Value.Default'] = 'GeoTIFF'
+    __parameter_input_metadata['RasterFormat.Value.Default'] = 'GTiff'
     __parameter_input_metadata['RasterFormat.Value.Default.ForEditor'] = ''
     # CellValueType
     __parameter_input_metadata['CellValueType.Description'] = "cell value type"
@@ -495,10 +497,13 @@ class RasterizeGeoLayer(AbstractCommand):
 
                 if pv_NewGeoLayerID is not None and pv_NewGeoLayerID != "":
                     # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                    # - for now hard-code the input format
+                    input_format = RasterFormatType.GTiff
                     geolayer_obj = RasterGeoLayer(geolayer_id=pv_NewGeoLayerID,
                                                   name="test",
                                                   description="test",
                                                   qgs_raster_layer=qgs_raster_layer,
+                                                  input_format=input_format,
                                                   input_path_full=str(raster_output_file),
                                                   input_path=str(raster_output_file))
                     self.command_processor.add_geolayer(geolayer_obj)

@@ -25,6 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core import VectorFormatType
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -374,10 +375,13 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(input_file_absolute)
 
                 # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
+                # - specify the input_format to ensure that downstream code knows the format because the
+                #   path may not descriptive enough
                 new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
                                               name=pv_Name,
                                               description=pv_Description,
                                               qgs_vector_layer=qgs_vector_layer,
+                                              input_format=VectorFormatType.GeoJSON,
                                               input_path_full=input_file_absolute,
                                               input_path=pv_InputFile)
 

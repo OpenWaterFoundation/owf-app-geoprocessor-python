@@ -25,6 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core import VectorFormatType
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -88,7 +89,8 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "This command reads a GeoLayer from a delimited file."
+    __command_metadata['Description'] = "This command reads a GeoLayer from a delimited file.\n" \
+        "A common format is comma-separated-value, which is assumed by default."
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
@@ -474,6 +476,7 @@ class ReadGeoLayerFromDelimitedFile(AbstractCommand):
                                               qgs_vector_layer=qgs_vector_layer,
                                               name=pv_Name,
                                               description=pv_Description,
+                                              input_format=VectorFormatType.CSV,
                                               input_path_full=input_file_absolute,
                                               input_path=pv_InputFile)
 

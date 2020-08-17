@@ -25,6 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core import RasterFormatType
 from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -335,6 +336,7 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
                                               name=pv_GeoLayerID,
                                               description=pv_Description,
                                               qgs_raster_layer=qgs_raster_layer,
+                                              input_format=RasterFormatType.WMTS,
                                               input_path_full=pv_InputUrl,
                                               input_path=pv_InputUrl)
 

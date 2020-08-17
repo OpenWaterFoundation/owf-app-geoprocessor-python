@@ -18,6 +18,7 @@
 # ________________________________________________________________NoticeEnd___
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
+from geoprocessor.core import VectorFormatType
 
 from geoprocessor.core.CommandError import CommandError
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
@@ -515,6 +516,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                           qgs_vector_layer=qgs_vector_layer,
                                                           name=pv_Name,
                                                           description=pv_Description,
+                                                          input_format=VectorFormatType.FileGDB,
                                                           input_path_full=input_file_absolute,
                                                           input_path=pv_InputFolder)
                             self.command_processor.add_geolayer(geolayer_obj)

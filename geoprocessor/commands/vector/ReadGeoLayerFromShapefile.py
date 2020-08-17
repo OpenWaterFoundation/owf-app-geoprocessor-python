@@ -25,6 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core import VectorFormatType
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -361,6 +362,7 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
                                               qgs_vector_layer=qgs_vector_layer,
                                               name=pv_Name,
                                               description=pv_Description,
+                                              input_format=VectorFormatType.ESRIShapefile,
                                               input_path_full=input_file_absolute,
                                               input_path=pv_InputFile)
 

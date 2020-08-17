@@ -25,6 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core import RasterFormatType
 from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -318,11 +319,14 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
                 # Create a QGSRasterLayer object in raster format
                 qgs_raster_layer = qgis_util.read_qgsrasterlayer_from_file(input_file_absolute)
 
+                file_extension = io_util.get_extension(pv_InputFile)
+                input_format = RasterFormatType.get_format_from_extension(file_extension)
                 # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
                 geolayer_obj = RasterGeoLayer(geolayer_id=pv_GeoLayerID,
                                               name=pv_Name,
                                               description=pv_Description,
                                               qgs_raster_layer=qgs_raster_layer,
+                                              input_format=input_format,
                                               input_path_full=input_file_absolute,
                                               input_path=pv_InputFile)
                 # Set the properties

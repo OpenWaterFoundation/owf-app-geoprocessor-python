@@ -264,6 +264,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile: QtWidgets.QAction or None = None
+        self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayersFromFolder: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage: QtWidgets.QAction or None = None
@@ -1609,18 +1610,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "ReadGeoLayerFromDelimitedFile()"))
         self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile)
 
-        # ReadGeoLayersFromFolder
-        self.Menu_Commands_Read_ReadGeoLayersFromFolder = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setObjectName(
-            qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromFolder"))
-        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setText(
-            "ReadGeoLayersFromFolder()... <reads 1+ GeoLayer(s) from a local folder>")
-        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFolder)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.Menu_Commands_Read_ReadGeoLayersFromFolder.triggered.connect(
-            functools.partial(self.edit_new_command, "ReadGeoLayersFromFolder()"))
-
         # ReadGeoLayerFromGeoJSON
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setObjectName(
@@ -1633,7 +1622,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromGeoJSON()"))
 
-        # ReadGeoLayersFromShapefile
+        # ReadGeoLayerFromShapefile
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile = QtWidgets.QAction(main_window)
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.setObjectName(
             qt_util.from_utf8("GeoLayers_Read_ReadGeoLayerFromShapefile"))
@@ -1644,6 +1633,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromShapefile()"))
+
+        # ReadGeoLayerFromWebFeatureService
+        self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService.setObjectName(
+            qt_util.from_utf8("Menu_Commands_GeoLayer_Read_ReadGeoLayerFromWebFeatureService"))
+        self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService.setText(
+            "ReadGeoLayerFromWebFeatureService()... <read a GeoLayer from a Web Feature Service>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService.triggered.connect(
+            functools.partial(self.edit_new_command, "ReadGeoLayerFromWebFeatureService()"))
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService)
 
         self.Menu_Commands_Read_GeoLayer.addSeparator()
 
@@ -1658,6 +1659,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayersFromFGDB()"))
+
+        # ReadGeoLayersFromFolder
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setObjectName(
+            qt_util.from_utf8("GeoLayers_Read_ReadGeoLayersFromFolder"))
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.setText(
+            "ReadGeoLayersFromFolder()... <reads 1+ GeoLayer(s) from a local folder>")
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFolder)
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Read_ReadGeoLayersFromFolder.triggered.connect(
+            functools.partial(self.edit_new_command, "ReadGeoLayersFromFolder()"))
 
         # ReadGeoLayersFromGeoPackage
         self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage = QtWidgets.QAction(main_window)
@@ -2912,13 +2925,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("results_GeoLayers_GroupBox_VerticalLayout"))
         self.results_GeoLayers_Table = QtWidgets.QTableWidget(self.results_GeoLayers_GroupBox)
         self.results_GeoLayers_Table.setObjectName(qt_util.from_utf8("results_GeoLayers_Table"))
-        self.results_GeoLayers_Table.setColumnCount(5)
+        self.results_GeoLayers_Table.setColumnCount(7)
         self.results_GeoLayers_Table.setRowCount(0)
         self.results_GeoLayers_Table.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem())
         self.results_GeoLayers_Table.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem())
         self.results_GeoLayers_Table.setHorizontalHeaderItem(2, QtWidgets.QTableWidgetItem())
         self.results_GeoLayers_Table.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem())
         self.results_GeoLayers_Table.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem())
+        self.results_GeoLayers_Table.setHorizontalHeaderItem(5, QtWidgets.QTableWidgetItem())
+        self.results_GeoLayers_Table.setHorizontalHeaderItem(6, QtWidgets.QTableWidgetItem())
         self.results_GeoLayers_Table.horizontalHeader().setCascadingSectionResizes(False)
         self.results_GeoLayers_Table.horizontalHeader().setDefaultSectionSize(200)
         self.results_GeoLayers_Table.setSortingEnabled(True)
@@ -2939,6 +2954,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_Table.horizontalHeaderItem(3).setToolTip("Feature Count")
         self.results_GeoLayers_Table.horizontalHeaderItem(4).setText("Coordinate Reference System (CRS)")
         self.results_GeoLayers_Table.horizontalHeaderItem(4).setToolTip("Coordinate Reference System (CRS)")
+        self.results_GeoLayers_Table.horizontalHeaderItem(5).setText("Input Format")
+        self.results_GeoLayers_Table.horizontalHeaderItem(5).setToolTip("Input format (GDAL driver type)")
+        self.results_GeoLayers_Table.horizontalHeaderItem(6).setText("Input path")
+        self.results_GeoLayers_Table.horizontalHeaderItem(6).setToolTip("Path to input file/database/service")
         self.results_GeoLayers_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_GeoLayers_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         # Use the following because connect() is shown as unresolved reference in PyCharm
@@ -3711,8 +3730,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Geometry
             # - should not be null
             col += 1
-            self.results_GeoLayers_Table.setItem(new_row_index, col,
-                                                 QtWidgets.QTableWidgetItem(str(geolayer.get_geometry())))
+            geometry_type = None
+            if geolayer.get_geometry() is not None:
+                geometry_type = str(geolayer.get_geometry())
+            else:
+                geometry_type = "Unknown"
+            self.results_GeoLayers_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(geometry_type))
 
             # Feature Count
             if geolayer.is_vector():
@@ -3736,6 +3759,26 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             col += 1
             self.results_GeoLayers_Table.setItem(new_row_index, col,
                                                  QtWidgets.QTableWidgetItem(geolayer.get_crs_code()))
+
+            # Source Format
+            # - should not be null
+            col += 1
+            input_format = None
+            if geolayer.input_format is None:
+                input_format = "Unknown"
+            else:
+                input_format = geolayer.input_format
+            self.results_GeoLayers_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(input_format))
+
+            # Source Path
+            # - should not be null
+            col += 1
+            input_path = None
+            if geolayer.input_path is None:
+                input_path = ""
+            else:
+                input_path = geolayer.input_path
+            self.results_GeoLayers_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(input_path))
 
         self.results_GeoLayers_Table.resizeColumnsToContents()
         self.update_ui_status_results_geolayers()

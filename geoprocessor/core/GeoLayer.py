@@ -355,7 +355,7 @@ class GeoLayer(object):
             layer_class = self.__class__.__name__
             if layer_class == 'VectorGeoLayer':
                 layer_type = 'Vector'
-                geometry_type = "WKT:{}".format(self.get_geometry())
+                geometry_type = "WKT:{}".format(self.get_geometry('WKT'))
             elif layer_class == 'RasterGeoLayer':
                 layer_type = 'Raster'
                 geometry_type = 'Raster'

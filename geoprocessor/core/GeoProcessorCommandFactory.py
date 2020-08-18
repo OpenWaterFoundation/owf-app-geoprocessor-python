@@ -98,6 +98,7 @@ from geoprocessor.commands.vector.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.vector.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
 from geoprocessor.commands.vector.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
 from geoprocessor.commands.vector.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
+from geoprocessor.commands.vector.ReadGeoLayerFromWebFeatureService import ReadGeoLayerFromWebFeatureService
 from geoprocessor.commands.vector.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
 from geoprocessor.commands.vector.ReadGeoLayersFromGeoPackage import ReadGeoLayersFromGeoPackage
 from geoprocessor.commands.vector.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
@@ -164,6 +165,7 @@ class GeoProcessorCommandFactory(object):
         "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
+        "READGEOLAYERFROMWEBFEATURESERVICE": ReadGeoLayerFromWebFeatureService(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
         "READGEOLAYERSFROMGEOPACKAGE": ReadGeoLayersFromGeoPackage(),
         "READGEOLAYERSFROMFOLDER": ReadGeoLayersFromFolder(),
@@ -381,6 +383,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayerFromGeoJSON()
                 elif command_name_upper == "READGEOLAYERFROMSHAPEFILE":
                     return ReadGeoLayerFromShapefile()
+                elif command_name_upper == "READGEOLAYERFROMWEBFEATURESERVICE":
+                    return ReadGeoLayerFromWebFeatureService()
                 elif command_name_upper == "READGEOLAYERSFROMFGDB":
                     return ReadGeoLayersFromFGDB()
                 elif command_name_upper == "READGEOLAYERSFROMGEOPACKAGE":

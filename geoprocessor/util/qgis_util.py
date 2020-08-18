@@ -469,16 +469,32 @@ def get_geometrytype_qgis(qgsvectorlayer: QgsVectorLayer) -> str:
     Returns:
         Appropriate geometry in QGIS format (returns text, not enumerator).
     """
+    debug = False  # Use to troubleshoot
+    if debug:
+        logger = logging.getLogger(__name__)
 
     # The QGIS geometry type enumerator dictionary.
     enumerator_dic = {0: "Point",
                       1: "LineString",
                       2: "Polygon",
-                      3: "UnknownGeometry",
+                      3: "Unknown",
                       4: "NoGeometry"}
 
     # Return the QGIS geometry type (in text form) of the input QgsVectorLayer.
-    return enumerator_dic[qgsvectorlayer.geometryType()]
+    if qgsvectorlayer is None:
+        if debug:
+            logger.info("QgsLayer is None.  Can't determine geometry type.  Returning Unknown")
+        return 'Unknown'
+    else:
+        try:
+            geometry_type = enumerator_dic[qgsvectorlayer.geometryType()]
+            if debug:
+                logger.info("QgsLayer geometry type {} is {}".format(qgsvectorlayer.geometryType(), geometry_type))
+            return geometry_type
+        except KeyError:
+            if debug:
+                logger.info("QgsLayer geometry type is not recognized.  Returning Unknown.")
+            return 'Unknown'
 
 
 def get_geometrytype_qgis_from_wkt(wkt_string: str) -> str:
@@ -516,6 +532,7 @@ def get_geometrytype_wkb(qgsvectorlayer: QgsVectorLayer) -> str:
     """
     Returns the input QgsVectorLayer's geometry in WKB format (returns text, not enumerator).
     REF: https://qgis.org/api/1.8/classQGis.html
+    TODO smalers 2020-08-17 Not even sure if it makes sense to use this since text version is easier to work with.
 
     Args:
         qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
@@ -525,24 +542,65 @@ def get_geometrytype_wkb(qgsvectorlayer: QgsVectorLayer) -> str:
     """
 
     # The WKB geometry type enumerator dictionary.
-    enumerator_dic = {0: "WKBUnknown",
-                      1: "WKBPoint",
-                      2: "WKBLineString",
-                      3: "WKBPolygon",
-                      4: "WKBMultiPoint",
-                      5: "WKBMultiLineString",
-                      6: "WKBMultiPolygon",
-                      100: "WKBNoGeometry",
-                      0x80000001: "WKBPoint25D",
-                      0x80000002: "WKBLineString25D",
-                      0x80000003: "WKBPolygon25D",
-                      0x80000004: "WKBMultiPoint25D",
-                      0x80000005: "WKBMultiLineString25D",
-                      0x80000006: "WKBMultiPolygon25D",
-                      -2147483643: "WKBUnknown"}
+    enumerator_dic = {0: "Unknown",  # "WKBUnknown"
+                      1: "Point",  # "WKBPoint"
+                      2: "LineString",  # "WKBLineString"
+                      3: "Polygon",  # "WKBPolygon"
+                      4: "MultiPoint",  # "WKBMultiPoint"
+                      5: "MultiLineString",  # "WKBMultiLineString"
+                      6: "MultiPolygon",  # "WKBMultiPolygon"
+                      # Not sure what the following are used for
+                      100: "NoGeometry",  # "WKBNoGeometry"
+                      0x80000001: "Point25D",  # "WKBPoint25D"
+                      0x80000002: "LineString25D",  # "WKBLineString25D"
+                      0x80000003: "Polygon25D",  # "WKBPolygon25D"
+                      0x80000004: "MultiPoint25D",  # "WKBMultiPoint25D"
+                      0x80000005: "MultiLineString25D",  # "WKBMultiLineString25D"
+                      0x80000006: "MultiPolygoin25D",  # "WKBMultiPolygon25D"
+                      -2147483643: "Unknown"}  # "WKBUnknown"}
 
     # Return the WKB geometry type (in text form) of the input QgsVectorLayer.
     return enumerator_dic[qgsvectorlayer.wkbType()]
+
+
+def get_geometrytype_wkt(qgsvectorlayer: QgsVectorLayer) -> str:
+    """
+    Returns the input QgsVectorLayer's geometry in WKT format (returns text, not enumerator):
+    "Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPoint",
+    basd on the QGSVectorLayer wkbType().
+
+    Args:
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
+
+    Returns:
+        Appropriate geometry in WKT format (returns text, not enumerator).
+    """
+
+    # The WKB geometry type enumerator dictionary.
+    enumerator_dic = {0: "Unknown",
+                      1: "Point",
+                      2: "LineString",
+                      3: "Polygon",
+                      4: "MultiPoint",
+                      5: "MultiLineString",
+                      6: "MultiPolygon"}
+                      # 100: "WKBNoGeometry",
+                      # 0x80000001: "WKBPoint25D",
+                      # 0x80000002: "WKBLineString25D",
+                      # 0x80000003: "WKBPolygon25D",
+                      # 0x80000004: "WKBMultiPoint25D",
+                      # 0x80000005: "WKBMultiLineString25D",
+                      # 0x80000006: "WKBMultiPolygon25D",
+                      # -2147483643: "WKBUnknown"}
+
+    # Return the WKT geometry type (in text form) of the input QgsVectorLayer.
+    if qgsvectorlayer is None:
+        return "Unknown"
+    else:
+        try:
+            return enumerator_dic[qgsvectorlayer.wkbType()]
+        except KeyError:
+            return "Unknown"
 
 
 def get_qgis_version_developer(int_version: bool = True) -> str:

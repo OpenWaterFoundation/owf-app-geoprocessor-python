@@ -26,6 +26,8 @@ import geoprocessor.util.qgis_util as qgis_util
 from geoprocessor.core import VectorFormatType
 from geoprocessor.core.GeoLayer import GeoLayer
 from qgis.core import QgsVectorLayer
+
+import logging
 import os
 
 
@@ -151,7 +153,10 @@ class VectorGeoLayer(GeoLayer):
         """
 
         # "feature_count" (int) is the number of features within the GeoLayer. Return the feature_count variable.
-        return self.qgs_layer.featureCount()
+        if self.qgs_layer is None:
+            return 0
+        else:
+            return self.qgs_layer.featureCount()
 
     def get_geometry(self, geom_format: str = "QGIS") -> str:
         """
@@ -168,19 +173,20 @@ class VectorGeoLayer(GeoLayer):
         """
 
         # Check that the format is a valid format.
-        valid_geom_formats = ["QGIS", "WKB"]
+        valid_geom_formats = ["QGIS", "WKB", "WKT"]
         if geom_format.upper() in valid_geom_formats:
-
             # Return the geometry in QGIS format.
             if geom_format.upper() == "QGIS":
                 return qgis_util.get_geometrytype_qgis(self.qgs_layer)
-
-            # Otherwise return the geometry in WKB format
-            else:
+            elif geom_format.upper() == "WKB":
+                # Return the geometry in WKB format
                 return qgis_util.get_geometrytype_wkb(self.qgs_layer)
+            elif geom_format.upper() == "WKT":
+                # Use the WKT values, essentially the same as binary
+                return qgis_util.get_geometrytype_wkt(self.qgs_layer)
 
-        # The geometry is not a valid format. Raise ValueError
         else:
+            # The geometry is not a valid format. Raise ValueError
             raise ValueError("Geom_format ({}) is not a valid geometry format. Valid geometry formats are:"
                              " {}".format(geom_format, valid_geom_formats))
 

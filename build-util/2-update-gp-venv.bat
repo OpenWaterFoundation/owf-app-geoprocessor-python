@@ -29,7 +29,7 @@ set scriptFolder=%scriptFolder:~0,-1%
 
 rem Call the create batch file in UI mode.
 rem - use the full path because 'gp' may not be in the PATH
-echo Calling: 2-create-gp-venv.bat -u -z
+echo Calling: 2-create-gp-venv.bat -u --nozip
 call "%scriptFolder%\2-create-gp-venv.bat" -u --nozip
 
 rem Exit with the error level of the gp.bat command

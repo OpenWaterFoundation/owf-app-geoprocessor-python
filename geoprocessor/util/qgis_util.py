@@ -1013,10 +1013,11 @@ def read_qgsvectorlayer_from_excel_worksheet(excel_workbook_abs: str, worksheet_
         raise IOError(message)
 
 
-def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs: str, feature_class: str) -> QgsVectorLayer:
-
+def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs: str,
+                                           feature_class: str,
+                                           query: str = None) -> QgsVectorLayer:
     """
-    Reads a feature class in a file geodatabase and returns a QGSVectorLayerObject.
+    Reads a feature class in an Esri file geodatabase and returns a QGSVectorLayerObject.
 
     Raises:
         IOError if the geodatabase layer is invalid.
@@ -1024,6 +1025,7 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs: str, feature_class
     Args:
         file_gdb_path_abs (str): the full pathname to a file geodatabase
         feature_class (str): the name of the feature class to read
+        query (str): SQL query string to use for a subset of the full layer (applied after reading the full layer)
 
     Returns:
         A QGSVectorLayer object containing the data from the input feature class.
@@ -1048,6 +1050,11 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs: str, feature_class
     # Check that the newly created QgsVectorLayer object is valid. If so, create a GeoLayer object within
     # the geoprocessor and add the GeoLayer object to the geoprocessor's GeoLayers list.
     if qgs_vector_layer_obj.isValid():
+        # Subset the layer
+        if query is not None and query != '':
+            logger = logging.getLogger(__name__)
+            logger.info("Setting subset string to filter layer features: {}".format(query))
+            qgs_vector_layer_obj.setSubsetString(query)
         return qgs_vector_layer_obj
 
     # If the created QGSVectorLayer object is invalid, print a warning message and return None.

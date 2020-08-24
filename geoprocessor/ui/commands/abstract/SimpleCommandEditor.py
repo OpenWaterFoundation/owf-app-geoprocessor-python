@@ -573,7 +573,8 @@ class SimpleCommandEditor(AbstractCommandEditor):
                                                  parameter_ValueDefaultForEditor,
                                                  parameter_Tooltip,
                                                  parameter_Values,
-                                                 parameter_ValuesEditable)
+                                                 parameter_ValuesEditable,
+                                                 parameter_Enabled=parameter_Enabled)
             elif parameter_FileSelectorType is not None and parameter_FileSelectorType != "":
                 # --------------------
                 # File selector

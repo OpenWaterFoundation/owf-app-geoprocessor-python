@@ -76,11 +76,11 @@ class WriteGeoLayerToGeoJSON(AbstractCommand):
         ["GeoJSON file (*.geojson *.json)", "All files (*.*)"]
     # OutputCRS
     __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of output (always WGS84)"
+    __parameter_input_metadata['OutputCRS.Enabled'] = False  # Because default value is always used
     __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
     __parameter_input_metadata['OutputCRS.Tooltip'] = (
         "The coordinate reference system of the output GeoJSON, always EPSG:4326 (WGS84)." )
     __parameter_input_metadata['OutputCRS.Value.Default'] = "EPSG:4326" # WGS84
-    __parameter_input_metadata['OutputCRS.Enabled'] = False  # Because default value is always used
     # OutputPrecision
     __parameter_input_metadata['OutputPrecision.Description'] = "number of decimal points in output"
     __parameter_input_metadata['OutputPrecision.Label'] = "Output precision"

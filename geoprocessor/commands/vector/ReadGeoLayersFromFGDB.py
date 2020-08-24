@@ -82,6 +82,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         CommandParameterMetadata("InputFolder", type("")),
         CommandParameterMetadata("ReadOnlyOneFeatureClass", type("")),
         CommandParameterMetadata("FeatureClass", type("")),
+        CommandParameterMetadata("Query", type("")),
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("GeoLayerID_prefix", type("")),
         CommandParameterMetadata("Subset_Pattern", type("")),
@@ -103,7 +104,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     __parameter_input_metadata['InputFolder.Required'] = True
     __parameter_input_metadata['InputFolder.Tooltip'] = "The file geodatbase to read (must end in .gdb)."
     __parameter_input_metadata['InputFolder.FileSelector.Type'] = "Read"
-    __parameter_input_metadata['InputFolder.FileSelector.SelectFolder'] = "True"
+    __parameter_input_metadata['InputFolder.FileSelector.SelectFolder'] = True
     __parameter_input_metadata['InputFolder.FileSelector.Title'] = "Select the file geodatabase folder"
     # Filters only seem to work on files, not folders
     # __parameter_input_metadata['InputFolder.FileSelector.Filters'] = \
@@ -136,6 +137,12 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     __parameter_input_metadata['FeatureClass.Required'] = True
     __parameter_input_metadata['FeatureClass.Tooltip'] = \
         "The name of the feature class within the file geodatabase to read. ${Property} syntax is recognized."
+    # Query
+    __parameter_input_metadata['Query.Description'] = "SQL query to filter features"
+    __parameter_input_metadata['Query.Label'] = "SQL query"
+    __parameter_input_metadata['Query.Required'] = False
+    __parameter_input_metadata['Query.Tooltip'] = \
+        "SQL-like query to limit the number of features. ${Property} syntax is recognized."
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "output GeoLayer identifier"
     __parameter_input_metadata['GeoLayerID.Label'] = "GeoLayerID"
@@ -412,6 +419,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         # noinspection PyPep8Naming
         pv_FeatureClass = self.get_parameter_value("FeatureClass")
         # noinspection PyPep8Naming
+        pv_Query = self.get_parameter_value("Query")
+        # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value("Name")
         # noinspection PyPep8Naming
         pv_Description = \
@@ -453,20 +462,24 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
                         # Create a QgsVectorLayer object from the feature class.
                         qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_feature_class(sd_folder_abs,
-                                                                                            pv_FeatureClass)
+                                                                                            pv_FeatureClass,
+                                                                                            query=pv_Query)
 
                         # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                        # - TODO smalers 2020-08-23 is built in OpenFileGDB used by default in underlying
+                        #   QgsVectorLayer?
                         new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
                                                       qgs_vector_layer=qgs_vector_layer,
                                                       name=pv_Name,
                                                       description=pv_Description,
+                                                      input_format=VectorFormatType.OpenFileGDB,
                                                       input_path_full=input_folder_absolute,
                                                       input_path=pv_InputFolder)
 
-                        # Set the properties
-                        properties = command_util.parse_properties_from_parameter_string(pv_Properties)
                         # Set the properties as additional properties (don't just reset the properties dictionary)
+                        properties = command_util.parse_properties_from_parameter_string(pv_Properties)
                         new_geolayer.set_properties(properties)
+                        # Set the source type
 
                         self.command_processor.add_geolayer(new_geolayer)
 

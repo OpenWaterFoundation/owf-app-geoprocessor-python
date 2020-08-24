@@ -26,7 +26,7 @@ app_license = "GPL 3.0"
 # The following parts are used to create a full version:
 # - the strings are also used in build process scripts
 app_version_major = 1
-app_version_minor = 3
+app_version_minor = 4
 app_version_micro = 0
 app_version_mod = ""
 # Use 'str' for all because could be a number or not
@@ -34,4 +34,4 @@ if app_version_mod == "":
     app_version = "{}.{}.{}".format(app_version_major, app_version_minor, app_version_micro)
 else:
     app_version = "{}.{}.{}.{}".format(app_version_major, app_version_minor, app_version_micro, app_version_mod)
-app_version_date = "2020-08-17"
+app_version_date = "2020-08-23"

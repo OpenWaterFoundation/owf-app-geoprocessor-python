@@ -346,6 +346,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Commands / General - File Handling
         self.Menu_Commands_General_FileHandling: QtWidgets.QMenu or None = None
+        self.Menu_Commands_General_FileHandling_FTPGet: QtWidgets.QAction or None = None
         self.Menu_Commands_General_FileHandling_WebGet: QtWidgets.QAction or None = None
         self.Menu_Commands_General_FileHandling_CreateFolder: QtWidgets.QAction or None = None
         self.Menu_Commands_General_FileHandling_CopyFile: QtWidgets.QAction or None = None
@@ -2231,12 +2232,24 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_FileHandling.setTitle("General - File Handling")
         self.Menu_Commands.addAction(self.Menu_Commands_General_FileHandling.menuAction())
 
+        # FTPGet
+        self.Menu_Commands_General_FileHandling_FTPGet = QtWidgets.QAction(main_window)
+        self.Menu_Commands_General_FileHandling_FTPGet.setObjectName(
+            qt_util.from_utf8("Menu_Commands_General_FileHandling_FTPGet"))
+        self.Menu_Commands_General_FileHandling_FTPGet.setText(
+            "FTPGet()... <download 1+ files from an FTP site>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_General_FileHandling_FTPGet.triggered.connect(
+            functools.partial(self.edit_new_command, "FTPGet()"))
+        self.Menu_Commands_General_FileHandling.addAction(self.Menu_Commands_General_FileHandling_FTPGet)
+
         # WebGet
         self.Menu_Commands_General_FileHandling_WebGet = QtWidgets.QAction(main_window)
         self.Menu_Commands_General_FileHandling_WebGet.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_FileHandling_WebGet"))
         self.Menu_Commands_General_FileHandling_WebGet.setText(
-            "WebGet()... <download a file from URL>")
+            "WebGet()... <download a file from website using URL>")
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_FileHandling_WebGet.triggered.connect(

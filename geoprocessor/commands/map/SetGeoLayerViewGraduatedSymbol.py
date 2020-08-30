@@ -27,6 +27,7 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 
 from geoprocessor.core.GeoLayerGraduatedSymbol import GeoLayerGraduatedSymbol
+from geoprocessor.core.GeoMapProject import GeoMapProject
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
@@ -66,13 +67,15 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
     # GeoMapID
     __parameter_input_metadata['GeoMapID.Description'] = "GeoMap identifier"
     __parameter_input_metadata['GeoMapID.Label'] = "GeoMapID"
-    __parameter_input_metadata['GeoMapID.Required'] = True
+    __parameter_input_metadata['GeoMapID.Required'] = False
     __parameter_input_metadata['GeoMapID.Tooltip'] = "The GeoMap identifier, can use ${Property}."
+    __parameter_input_metadata['GeoMapID.Value.Default.Description'] = "last added GeoMap ID"
     # GeoLayerViewGroupID
     __parameter_input_metadata['GeoLayerViewGroupID.Description'] = "GeoLayerViewGroup identifier"
     __parameter_input_metadata['GeoLayerViewGroupID.Label'] = "GeoLayerViewGroupID"
-    __parameter_input_metadata['GeoLayerViewGroupID.Required'] = True
+    __parameter_input_metadata['GeoLayerViewGroupID.Required'] = False
     __parameter_input_metadata['GeoLayerViewGroupID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
+    __parameter_input_metadata['GeoLayerViewGroupID.Value.Default.Description'] = "last added GeoLayerViewGroup ID."
     # GeoLayerViewID
     __parameter_input_metadata['GeoLayerViewID.Description'] = "GeoLayerView identifier"
     __parameter_input_metadata['GeoLayerViewID.Label'] = "GeoLayerViewID"
@@ -203,25 +206,27 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             should_run_command.append(False)
         else:
+            # TODO smalers 2020-08-29 need to evaluate runtime checks
             # If the GeoLayerViewGroup ID is not an existing GeoLayerViewGroup ID, fail.
-            geolayerviewgroup = geomap.get_geolayerviewgroup(geolayerviewgroup_id)
-            if geolayerviewgroup is None:
-                message = "GeoLayerViewGroup for GeoLayerViewGroupID '{}' was not found.".format(geolayerviewgroup_id)
-                recommendation = "Check that the GeoLayerViewGroupID is valid."
-                self.logger.warning(message, exc_info=True)
-                self.command_status.add_to_log(CommandPhaseType.RUN,
-                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-                should_run_command.append(False)
-            else:
-                # If the GeoLayerView ID is not an existing GeoLayerView ID, fail.
-                geolayerview = geolayerviewgroup.get_geolayerview(geolayerview_id)
-                if geolayerview is None:
-                    message = "GeoLayerView for GeoLayerViewID '{}' was not found.".format(geolayerview_id)
-                    recommendation = "Check that the GeoLayerViewID is valid."
-                    self.logger.warning(message, exc_info=True)
-                    self.command_status.add_to_log(CommandPhaseType.RUN,
-                                                   CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-                    should_run_command.append(False)
+            # geolayerviewgroup = geomap.get_geolayerviewgroup(geolayerviewgroup_id)
+            # if geolayerviewgroup is None:
+            #     message = "GeoLayerViewGroup for GeoLayerViewGroupID '{}' was not found.".format(geolayerviewgroup_id)
+            #     recommendation = "Check that the GeoLayerViewGroupID is valid."
+            #     self.logger.warning(message, exc_info=True)
+            #     self.command_status.add_to_log(CommandPhaseType.RUN,
+            #                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+            #     should_run_command.append(False)
+            # else:
+            #     # If the GeoLayerView ID is not an existing GeoLayerView ID, fail.
+            #     geolayerview = geolayerviewgroup.get_geolayerview(geolayerview_id)
+            #     if geolayerview is None:
+            #         message = "GeoLayerView for GeoLayerViewID '{}' was not found.".format(geolayerview_id)
+            #         recommendation = "Check that the GeoLayerViewID is valid."
+            #         self.logger.warning(message, exc_info=True)
+            #         self.command_status.add_to_log(CommandPhaseType.RUN,
+            #                                        CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+            #         should_run_command.append(False)
+            pass
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -245,6 +250,21 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
         # Obtain the parameter values
         # noinspection PyPep8Naming
         pv_GeoMapID = self.get_parameter_value("GeoMapID")
+        if pv_GeoMapID is None or pv_GeoMapID == "":
+            # No map ID was specified so get the single map from the processor, complain if can't find
+            if len(self.command_processor.geomaps) == 0:
+                self.warning_count += 1
+                message = "No GeoMaps have been created.  Cannot determine default GeoMap."
+                recommendation = "Check that the GeoMapID is valid."
+                self.logger.warning(message, exc_info=True)
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+            else:
+                # Use the last added map
+                geomap_id = self.command_processor.last_geomap_added.id
+                self.logger.info('Using default map GeoMapID: {}'.format(geomap_id))
+        else:
+            geomap_id = pv_GeoMapID
         # noinspection PyPep8Naming
         pv_GeoLayerViewGroupID = self.get_parameter_value("GeoLayerViewGroupID")
         # noinspection PyPep8Naming
@@ -260,7 +280,7 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
-        pv_GeoMapID = self.command_processor.expand_parameter_value(pv_GeoMapID, self)
+        geomap_id = self.command_processor.expand_parameter_value(geomap_id, self)
         # noinspection PyPep8Naming
         pv_GeoLayerViewGroupID = self.command_processor.expand_parameter_value(pv_GeoLayerViewGroupID, self)
         # noinspection PyPep8Naming
@@ -276,28 +296,47 @@ class SetGeoLayerViewGraduatedSymbol(AbstractCommand):
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         # - TODO smalers 2020-03-18 not sure if the following is useful because need to handle checks granularly
-        if self.check_runtime_data(pv_GeoMapID, pv_GeoLayerViewGroupID, pv_GeoLayerViewID):
+        if self.check_runtime_data(geomap_id, pv_GeoLayerViewGroupID, pv_GeoLayerViewID):
             # noinspection PyBroadException
             try:
                 # Initialize so can check below
                 geolayerview = None
                 geolayerviewgroup = None
                 # Get the GeoMap
-                geomap = self.command_processor.get_geomap(pv_GeoMapID)
+                geomap = self.command_processor.get_geomap(geomap_id)
                 if geomap is None:
                     self.warning_count += 1
-                    message = "GeoMap for GeoMapID '{}' was not found.".format(pv_GeoMapID)
+                    message = "GeoMap for GeoMapID '{}' was not found.".format(geomap_id)
                     recommendation = "Check that the GeoMapID is valid."
                     self.logger.warning(message, exc_info=True)
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
                 else:
                     # Get the GeoLayerViewGroup
-                    geolayerviewgroup = geomap.get_geolayerviewgroup(pv_GeoLayerViewGroupID)
+                    if pv_GeoLayerViewGroupID is None or pv_GeoLayerViewGroupID == "":
+                        # No layer view ID was specified so get from the map, complain if can't find
+                        if len(geomap.geolayerviewgroups) == 0:
+                            self.warning_count += 1
+                            message = "No GeoLayerViewGroups have been created for the map. " \
+                                      "Cannot determine default GeoLayerViewGroup"
+                            recommendation = "Check that the GeoLayerViewGroupID is valid."
+                            self.logger.warning(message, exc_info=True)
+                            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                           CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                            recommendation))
+                        else:
+                            # Use the last added map
+                            geolayerviewgroup_id = self.command_processor.last_geolayerviewgroup_added.id
+                            self.logger.info('Using default GeoLayerViewGroupID: {}'.format(geolayerviewgroup_id))
+                    else:
+                        geolayerviewgroup_id = pv_GeoLayerViewGroupID
+
+                    geolayerviewgroup = geomap.get_geolayerviewgroup(geolayerviewgroup_id)
+
                     if geolayerviewgroup is None:
                         self.warning_count += 1
                         message = "GeoLayerViewGroup for GeoLayerViewGroup '{}' was not found.".format(
-                            pv_GeoLayerViewGroupID)
+                            geolayerviewgroup_id)
                         recommendation = "Check that the GeoLayerViewGroupID is valid."
                         self.logger.warning(message, exc_info=True)
                         self.command_status.add_to_log(CommandPhaseType.RUN,

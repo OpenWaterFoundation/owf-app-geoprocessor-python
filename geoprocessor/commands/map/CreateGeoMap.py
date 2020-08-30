@@ -293,6 +293,7 @@ class CreateGeoMap(AbstractCommand):
             try:
                 # TODO smalers 2020-03-09 need to decide if manage a list of QGIS maps or just GeoProcessor form
                 # Create a new GeoMap and add it to the GeoProcesor's geomaps list if the ID does not exist.
+                # - this will automatically add as the latest GeoMapProject
                 self.logger.debug("Creating map with ID: '" + str(pv_NewGeoMapID) + "' CRS='" + str(pv_CRS) + "'")
                 new_geomap = GeoMap(geomap_id=pv_NewGeoMapID, name=pv_Name, description=pv_Description, crs_code=pv_CRS,
                                     data_path=pv_DataPath)

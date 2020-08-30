@@ -316,6 +316,7 @@ class CreateGeoMapProject(AbstractCommand):
                                                  properties=properties)
 
                 # This will replace the existing if a matching identifier
+                # - this will automatically add as the latest GeoMapProject
                 self.command_processor.add_geomapproject(new_geomaproject)
 
             except Exception as e:

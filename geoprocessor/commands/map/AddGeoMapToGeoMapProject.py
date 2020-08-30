@@ -61,10 +61,11 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
     # Command Parameter Metadata
     __parameter_input_metadata = dict()
     # GeoMapProjectID
-    __parameter_input_metadata['GeoMapProject.Description'] = "GeoMapProject identifier"
-    __parameter_input_metadata['GeoMapProject.Label'] = "GeoMapProjectID"
-    __parameter_input_metadata['GeoMapProject.Required'] = True
-    __parameter_input_metadata['GeoMapProject.Tooltip'] = "The GeoMapProject identifier, can use ${Property}."
+    __parameter_input_metadata['GeoMapProjectID.Description'] = "GeoMapProject identifier"
+    __parameter_input_metadata['GeoMapProjectID.Label'] = "GeoMapProjectID"
+    __parameter_input_metadata['GeoMapProjectID.Required'] = False
+    __parameter_input_metadata['GeoMapProjectID.Tooltip'] = "The GeoMapProject identifier, can use ${Property}."
+    __parameter_input_metadata['GeoMapProjectID.Value.Default.Description'] = "last added GeoMapProject ID."
     # GeoMapID
     __parameter_input_metadata['GeoMapID.Description'] = "GeoMap identifier"
     __parameter_input_metadata['GeoMapID.Label'] = "GeoMapID"
@@ -235,6 +236,22 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
         # Obtain the parameter values
         # noinspection PyPep8Naming
         pv_GeoMapProjectID = self.get_parameter_value("GeoMapProjectID")
+        geomapproject_id = None
+        if pv_GeoMapProjectID is None or pv_GeoMapProjectID == "":
+            # No map project ID was specified so get the latest added map project from the processor
+            if len(self.command_processor.geomapprojects) == 0:
+                self.warning_count += 1
+                message = "No GeoMapProjects have been created.  Cannot determine default GeoMapProject."
+                recommendation = "Check that the GeoMapProjectID is valid."
+                self.logger.warning(message, exc_info=True)
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+            else:
+                # Use the last added
+                geomapproject_id = self.command_processor.last_geomapproject_added.id
+                self.logger.info('Using default map GeoMapProjectID: {}'.format(geomapproject_id))
+        else:
+            geomapproject_id = pv_GeoMapProjectID
         # noinspection PyPep8Naming
         pv_GeoMapID = self.get_parameter_value("GeoMapID")
         # noinspection PyPep8Naming
@@ -246,7 +263,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
-        pv_GeoMapProjectID = self.command_processor.expand_parameter_value(pv_GeoMapProjectID, self)
+        geomapproject_id = self.command_processor.expand_parameter_value(geomapproject_id, self)
         # noinspection PyPep8Naming
         pv_GeoMapID = self.command_processor.expand_parameter_value(pv_GeoMapID, self)
         # noinspection PyPep8Naming
@@ -255,14 +272,14 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
         pv_InsertAfter = self.command_processor.expand_parameter_value(pv_InsertAfter, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.check_runtime_data(pv_GeoMapProjectID, pv_GeoMapID, pv_InsertBefore, pv_InsertAfter):
+        if self.check_runtime_data(geomapproject_id, pv_GeoMapID, pv_InsertBefore, pv_InsertAfter):
             # noinspection PyBroadException
             try:
                 # Get the GeoMapProject
-                geomapproject = self.command_processor.get_geomapproject(pv_GeoMapProjectID)
+                geomapproject = self.command_processor.get_geomapproject(geomapproject_id)
                 if geomapproject is None:
                     self.warning_count += 1
-                    message = "GeoMapProject for GeoMapProjectID={} was not found.".format(pv_GeoMapProjectID)
+                    message = "GeoMapProject for GeoMapProjectID={} was not found.".format(geomapproject_id)
                     recommendation = "Check that the GeoMapProjectID is valid."
                     self.logger.warning(message, exc_info=True)
                     self.command_status.add_to_log(CommandPhaseType.RUN,
@@ -287,7 +304,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
                 # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
                 message = "Unexpected error adding GeoMap {} to GeoMapProject {}.".format(pv_GeoMapID,
-                                                                                          pv_GeoMapProjectID)
+                                                                                          geomapproject_id)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,

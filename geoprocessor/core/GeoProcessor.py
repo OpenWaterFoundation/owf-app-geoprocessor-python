@@ -56,6 +56,8 @@ class GeoProcessor(object):
     by executing a sequence of commands.
     """
 
+
+
     def __init__(self) -> None:
         """
         Construct/initialize a geoprocessor.
@@ -85,15 +87,54 @@ class GeoProcessor(object):
         # Property dictionary that holds all geoprocessor properties.
         self.properties: dict = {}
 
+        # Start map/project components =================================================================================
+        # - these data objects are the primary objects that GeoProcessor manages when creating maps
+        # - these objects are also displayed in Results in the UI
+        # - other map-related objects are stored in these main objects
+
         # GeoLayer list that holds all registered GeoLayer objects.
         # - can contain vector and raster layers
+        # - this array is updated when a layer is created or read with a command
         self.geolayers: [GeoLayer] = []
 
         # GeoMap list that holds all registered GeoMap objects.
+        # - this array is updated when a map is created with CreateGeoMap
         self.geomaps: [GeoMap] = []
 
         # GeoMap list that holds all registered GeoMapProject objects.
+        # - this array is updated when a project is created with CreateGeoMapProject
         self.geomapprojects: [GeoMapProject] = []
+
+        # End map/project components ===================================================================================
+
+        # Start tracking 'last' map objects added, to allow providing a default for commands ===========================
+        # - these need to be maintained in the GeoProcessor to allow commands to access
+
+        # Last GeoMapProject added with commands, used to help determine defaults in commands
+        # - used when determining the default map project
+        # - needed because the geomapprojects array may not reflect the order of commands
+        # - the CreateGeoMapProject command sets this
+        self.last_geomapproject_added = None
+
+        # Last GeoMap added
+        # - used when determining the default map
+        # - needed because the geomaps array may not reflect the order of commands
+        # - the CreateGeoMap command sets this
+        self.last_geomap_added = None
+
+        # Last GeoLayerViewGroup added
+        # - used when determining the default view group
+        # - needed because the geo layer view group array for a map may not reflect the order of commands
+        # - the AddGeoLayerViewGroupToGeoMap command sets this
+        self.last_geolayerviewgroup_added = None
+
+        # Last GeoLayerViewGroup added
+        # - used when determining the default view
+        # - needed because the geo layer view array for a map may not reflect the order of commands
+        # - the AddGeoLayerToGeoMap command sets this
+        self.last_geolayerview_added = None
+
+        # End tracking 'last' map tracking objects =====================================================================
 
         # Table list that holds all registered tables object.
         self.tables: list = []
@@ -274,6 +315,8 @@ class GeoProcessor(object):
         """
         Add a GeoMap object to the geomaps list. If a geomap already exists with the same GeoMap ID, the
         existing GeoMap will be replaced with the input GeoMap.
+        The GeoMap is saved as the last added, so it can be used as default for following commands that don't
+        specify a GeoMap ID.
 
         Args:
             geomap: instance of a GeoMap object
@@ -292,11 +335,16 @@ class GeoProcessor(object):
         # Add the input GeoMap to the geomaps list.
         self.geomaps.append(geomap)
 
+        # Save the last map added
+        self.last_geomap_added = geomap
+
     def add_geomapproject(self, geomapproject: GeoMapProject) -> None:
         """
         Add a GeoMapProject object to the geomapprojects list.
         If a geomapproject already exists with the same GeoMap ID, the
         existing GeoMapProject will be replaced with the input GeoMapProject.
+        The GeoMap is saved as the last added, so it can be used as default for following commands that don't
+        specify a GeoMap ID.
 
         Args:
             geomapproject: instance of a GeoMapProject object
@@ -314,6 +362,9 @@ class GeoProcessor(object):
 
         # Add the input GeoMap to the geomaps list.
         self.geomapprojects.append(geomapproject)
+
+        # Save the last project added
+        self.last_geomapproject_added = geomapproject
 
     def add_output_file(self, output_file_abs_path: str) -> None:
         """

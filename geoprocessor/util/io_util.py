@@ -333,6 +333,7 @@ def get_extension(full_path: str) -> str:
 def get_filename(full_path: str, remove_extension: bool = True) -> str:
     """
     Returns the filename of a full path (without the extension).
+    This works with file system path or URL.
 
     Args:
         full_path (str): the input full path
@@ -341,6 +342,13 @@ def get_filename(full_path: str, remove_extension: bool = True) -> str:
     Returns:
         The filename as a string.
     """
+
+    if is_url(full_path):
+        # Path is a URL, may include query parameters
+        question_pos = full_path.index('?')
+        if question_pos >= 0:
+            # URL includes query string so strip to the main part
+            full_path = full_path[0:question_pos]
 
     if remove_extension:
         # Remove the extension

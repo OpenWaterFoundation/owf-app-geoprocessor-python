@@ -275,14 +275,13 @@ class WebGet(AbstractCommand):
         url_abs = self.command_processor.expand_parameter_value(pv_URL, self)
 
         # Convert the OutputFile parameter value relative path to an absolute path. Expand for ${Property} syntax.
-        # If the OutputFile parameter is specified, continue.
         if pv_OutputFile:
             output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
                 self.command_processor.get_property('WorkingDir'),
                 self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
-        # If the OutputFile parameter is NOT specified, continue.
         else:
+            # Don't default the output filename if a URL
             # original_filename = io_util.get_filename(pv_URL) + io_util.get_extension(pv_URL)
             original_filename = io_util.get_filename(pv_URL)
             output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(

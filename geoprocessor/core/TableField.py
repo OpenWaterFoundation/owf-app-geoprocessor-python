@@ -1,211 +1,23 @@
-# Table - class to represent a table using general design
+# TableField - class to represent table field information
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
-# 
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-import pandas as pd
 import enum
-
-
-class Table(object):
-    """
-    The Table class holds tabular data objects (columns and rows). All Table objects contain a list of TableRecords
-    and a list of TableFields. The table data is stored twice - once in the TableRecords attribute list and again in
-    the TableFields attribute list.
-
-    The TableRecords attribute list holds a list of TableRecord objects. Each TableRecord object contains a list of
-    table items (data values). A TableRecord holds one row of the Table's data. The TableRecords attribute list
-    contains one TableRecord object for each row of the Table. Processing Table data by records is beneficial when
-    deleting and inserting data rows.
-
-    The TableFields attribute list holds a list of TableField objects. Each TableField object contains a list of table
-    items (data values). A TableField holds one column of the Table's data. The TableFields attribute list contains one
-    TableField object for each column of the Table. Processing Table data by fields is beneficial given faster
-    processing speed over the table record method.
-
-    The Table data can also be stored in a pandas DataFrame object in order to leverage the pandas library and
-    functionality. Processing Table data by pandas DataFrame is beneficial when attempting complicated analysis
-    processes. The pandas library is designed to accomplish intricate table analytics at a fast processing speed.
-
-    A list of registered Table instances are maintained by the GeoProcessor's self.tables property (type: list). The
-    GeoProcessor's commands retrieve in-memory Table instances from the GeoProcessor's self.tables property using the
-    GeoProcessor.get_table() function. New Table instances are added to teh GeoProcessor list using the add_table()
-    function.
-
-    There are a number of properties associated with each Table. The initialized properties stored within each Table
-    instance are the STATIC properties that will never change (identifier). The DYNAMIC properties (the TableFields
-    attribute list, the TableRecords attribute list, the record count, etc.) are created when needed by accessing
-    class functions.
-    """
-
-    def __init__(self, table_id) -> None:
-        """
-        Initialize the Table object.
-
-        Args:
-            table_id (str): String that is the Table's reference ID. This ID is used to access the Table from the
-            GeoProcessor for manipulation.
-        """
-
-        # "id" is a string that is the Table's reference ID. This ID is used to access the Table from the GeoProcessor
-        # for manipulation.
-        self.id: str = table_id
-
-        # "pandas_df" is a Pandas Data Frame object created by the pandas library. All manipulations are performed on
-        # the Table's pandas data frame.
-        self.pandas_df = None
-
-        # "table_fields" is a list that holds the Table's TableField objects. A TableField object represents one
-        # column of the Table.
-        self.table_fields = []
-
-        # "table_records" is a list that holds the Table's TableRecords objects. TableRecord object represents one
-        # row of the Table.
-        self.table_records = []
-
-    def add_table_field(self, table_field_obj):
-        """
-        Add a TableField object to the Table's "table_fields" attribute list.
-
-        Args:
-            The TableField object to add to the Table's "table_fields" attribute list.
-
-        Return: None
-        """
-
-        # Add the TableField object to the Table's "table_fields" attribute list.
-
-        self.table_fields.append(table_field_obj)
-
-    def add_table_record(self, table_record_obj):
-        """
-        Add a TableRecord object to the Table's "table_records" attribute list.
-
-        Args:
-            The TableRecord object to add to the Table's "table_records" attribute list.
-
-        Return: None
-        """
-
-        # Add the TableRecord object to the Table's "table_records" attribute list.
-        self.table_fields.append(table_record_obj)
-
-    def create_df(self):
-        """
-        Create/recreate a pandas DataFrame from the Table's fields.
-
-        Return: None
-        """
-
-        # Create an empty dictionary that will hold the Table columns and their corresponding values.
-        # KEY: name of the Table column
-        # VALUE: a list of the column values (one item for each Table record)
-        col_entries_dic = {}
-
-        # Iterate over the fields (columns) in the Table.
-        for table_field in self.table_fields:
-
-            # Assign the field name to the key and the field values to the value of the col_entries_dic dictionary.
-            col_entries_dic[table_field.name] = table_field.items
-
-            # Convert the dictionary of Table fields into a pandas DataFrame. Add the DataFrame to the Table attribute.
-            self.pandas_df = pd.DataFrame(data=col_entries_dic)
-
-    def print_df(self):
-        """
-        Print the Table's pandas DataFrame to the console.
-
-        Return: None
-        """
-
-        # Print the table title, the pandas DataFrame and a spacer to the console.
-        print("Pandas DataFrame for Table {}".format(self.id))
-        print(self.pandas_df)
-        print("\n---------------\n")
-
-    def print_fields(self):
-        """
-        Print the Table's TableFields to the console.
-
-        Return: None
-        """
-
-        # Print the table title, the table (by column) and a spacer to the console.
-        print("Fields (Columns) for Table {}".format(self.id))
-        for table_field in self.table_fields:
-            print(table_field.items)
-        print("\n---------------\n")
-
-    def print_records(self):
-        """
-        Print the Table's TableRecords to the console.
-
-        Return: None
-        """
-
-        # Print the table title, the table (by row) and a spacer to the console.
-        print("Records (Rows) for Table {}".format(self.id))
-        for table_record in self.table_records:
-            print(table_record.items)
-        print("\n---------------\n")
-
-    def return_column_index(self, column_name):
-
-        return self.return_fieldnames().index(column_name)
-
-    def return_fieldnames(self):
-
-        fieldnames = []
-        for table_field in self.table_fields:
-            fieldnames.append(table_field.name)
-
-        return fieldnames
-
-
-class TableRecord(object):
-    """
-    A TableRecord class is a building block object of a Table object. It represents a single row of a Table.
-    The TableRecord holds data for a Table row. Its core structure is the "items" attribute, a list of data values in
-    sequential order of the Table's column headers.
-    """
-
-    def __init__(self):
-        """
-        Initialize the TableRecord object.
-        """
-
-        # "items" is a list that holds the TableRecord's data values (can be different data types)
-        self.items = []
-
-        # "null_values" is a list of values from the original table that represent NULL values
-        self.null_values = None
-
-    def add_item(self, item):
-        """
-        Add a data value item to the TableRecord items attribute list.
-
-        Args:
-            item (any data type): a data value to add to the TableRecord's items attribute list
-
-        Return: None
-        """
-
-        # Add the data value item to the TableRecord's items attribute list.
-        self.items.append(item)
 
 
 class TableField(object):
@@ -215,7 +27,8 @@ class TableField(object):
     sequential order of the Table's row entries.
     """
 
-    def __init__(self, column_name):
+    def __init__(self, data_type: type, column_name: str, description: str = "", width: int = None,
+                 precision: int = None, units: str = ""):
         """
         Initialize the TableField object.
 
@@ -224,18 +37,40 @@ class TableField(object):
         """
 
         # "name" is a string that is the Table column's name.
-        self.name = column_name
+        self.name: str = column_name
+
+        # Description for field.
+        self.description: str = description
+
+        # Data units for field.
+        self.units: str = units
+
+        # Width of the field (maximum characters for strings or number width in characters, used when displaying data.
+        # A value of None means unlimited.
+        self.width: int = width
+
+        # Precision applied to numbers (e.g., 3 1in 11.3 formatting).
+        # A value of None means not used.
+        self.precision: int = precision
 
         # "items" is a list that holds the TableField's data values  (must be the same data type, Nones allowed)
-        self.items = []
+        # TODO smalers 2020-11-14 this design stored table data in columns - for now rely on record-based storage
+        # self.items = []
 
         # "data_type" is the Python data type class that represents the items in the TableField's items attribute list
-        self.data_type = None
+        # - bool
+        # - float
+        # - int
+        # - str
+        # - etc
+        self.data_type: type = data_type
 
         # "null_values" is a list of values from the original table that represent NULL values
-        self.null_values = []
+        # TODO smalers 2020-11-14 was this used with Pandas?  No need for this since Python supports None
+        #  for generic case and NaN for floating point numbers
+        # self.null_values = []
 
-    def __is_data_type(self, data_type_to_check):
+    def x__is_data_type(self, data_type_to_check):
         """
         Check if the items in the column are of the desired data type. Pass over None values. Only assess the column
          based off of the non-None values.
@@ -292,7 +127,7 @@ class TableField(object):
 
         return is_correct_type
 
-    def __convert_data_type(self, output_data_type):
+    def x__convert_data_type(self, output_data_type):
         """
         Comvert the items in the column (string) to the desired data type.
 
@@ -337,7 +172,7 @@ class TableField(object):
         # Overwrite the old column items with the converted column items.
         self.items = converted_list
 
-    def assign_data_type(self):
+    def x_assign_data_type(self):
         """
         Convert the column contents to the correct data type. By default, the logic attempts to determine the correct
         data type based upon the content items. Handles Boolean, integers, floats and strings. Need to figure out how
@@ -355,6 +190,7 @@ class TableField(object):
 
             # Enumerator of DataTypes
             # In specific order to make sure that the logic assumes the correct data type.
+            # TODO smalers 2020-11-14 currently using internal Python types
             class DataTypes(enum.Enum):
                 Boolean, Int, Float, Str = bool, int, float, str
 
@@ -371,7 +207,7 @@ class TableField(object):
                     self.data_type = data_type.value
                     break
 
-    def assign_nulls(self):
+    def x_assign_nulls(self):
         """
         Convert the value in a list that represent null values to a None value. This function requires that the
         data list items that match the specified null values are of the same data type.

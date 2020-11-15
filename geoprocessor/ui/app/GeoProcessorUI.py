@@ -190,6 +190,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_GroupBox: QtWidgets.QGroupBox or None = None
         self.results_Tables_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_Tables_Table: QtWidgets.QTableWidget or None = None
+        self.rightClickMenu_Results_Tables: QtWidgets.QMenu or None = None
 
         # Popup GeoLayers attribute table window
         self.attributes_window: QtWidgets.QDialog or None = None
@@ -200,6 +201,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.map_window: QtWidgets.QDialog or None = None
         self.map_window_layout: QtWidgets.QVBoxLayout or None = None
         self.map_toolbar: QtWidgets.QToolBar or None = None
+
+        # Popup Tables table window
+        self.table_window: QtWidgets.QDialog or None = None
+        self.table_window_layout: QtWidgets.QVBoxLayout or None = None
+        self.table_table: QtWidgets.QTableWidget or None = None
 
         self.toolPan: qgis.gui.QgsMapToolPan or None = None
         self.toolZoomIn: qgis.gui.QgsMapToolZoom or None = None
@@ -3175,9 +3181,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_Table.horizontalHeaderItem(1).setToolTip("Column Count")
         self.results_Tables_Table.horizontalHeaderItem(2).setText("Row Count")
         self.results_Tables_Table.horizontalHeaderItem(2).setToolTip("Row Count")
-        self.results_Tables_Table.horizontalHeaderItem(3).setText("Command Reference")
-        self.results_Tables_Table.horizontalHeaderItem(3).setToolTip("Command Reference")
+        self.results_Tables_Table.horizontalHeaderItem(3).setText("Description")
+        self.results_Tables_Table.horizontalHeaderItem(3).setToolTip("Description")
         self.results_Tables_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
+        self.results_Tables_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.results_Tables_Table.customContextMenuRequested.connect(self.ui_action_results_tables_right_click)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Tables_Tab), "Tables")
 
         # Add the Results tab to the vertical layout
@@ -3971,10 +3981,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_Tables_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(table.id))
 
             # Retrieve the number of columns in the Table and set as the attribute for the Column Count column.
-            self.results_Tables_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(table.count_columns())))
+            # TODO smalers 2020-11-14 is the following from Pandas?
+            #self.results_Tables_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(table.count_columns())))
+            self.results_Tables_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(
+                str(table.get_number_of_columns())))
 
             # Retrieve the number of rows in the Table and set as the attribute for the Row Count column.
-            self.results_Tables_Table.setItem(new_row_index, 2, QtWidgets.QTableWidgetItem(str(table.count_rows())))
+            # TODO smalers 2020-11-14 is the following from Pandas?
+            #self.results_Tables_Table.setItem(new_row_index, 2, QtWidgets.QTableWidgetItem(str(table.count_rows())))
+            self.results_Tables_Table.setItem(new_row_index, 2, QtWidgets.QTableWidgetItem(
+                str(table.get_number_of_rows())))
 
         # Sort by Table ID
         # self.results_Tables_Table.sortByColumn(0, QtCore.Qt.AscendingOrder)
@@ -4524,6 +4540,69 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
+    def ui_action_results_tables_view_table(self) -> None:
+        """
+        Create a window to view a table.
+
+        Returns:
+            None
+        """
+        logger = logging.getLogger(__name__)
+        # noinspection PyBroadException
+        try:
+            # Get the first selected table
+            selected_row = self.results_Tables_Table.selectedIndexes()[0].row()
+            logger.info("Selected table index = {}".format(selected_row))
+            selected_table = self.gp.tables[selected_row]
+
+            # Create table window dialog box
+            self.table_window = QtWidgets.QDialog()
+            self.table_window.resize(800, 500)
+            self.table_window.setWindowTitle("Table - {}".format(selected_table.id))
+            self.table_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
+            # Add icon
+            icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
+            self.table_window.setWindowIcon(QtGui.QIcon(icon_path))
+
+            # Create a vertical layout for the table view window
+            self.table_window_layout = QtWidgets.QVBoxLayout(self.table_window)
+            self.table_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
+            self.table_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
+
+            # Get GeoLayer from Table
+            selected_row_index = self.results_Tables_Table.currentRow()
+            # TODO smalers 2020-11-14 determine how to select table from results list
+            # selected_table = self.gp.geolayers[selected_row_index]
+            selected_rows = str(len(set(index.row() for index in self.results_Tables_Table.selectedIndexes())))
+
+            # Create a table for table
+            self.table_table = QtWidgets.QTableWidget()
+            self.table_window_layout.addWidget(self.table_table)
+            self.table_table.setColumnCount(selected_table.get_number_of_columns())
+            self.table_table.setRowCount(selected_table.get_number_of_rows())
+
+            # Set Column Headers
+            for i, table_field in enumerate(selected_table.table_fields):
+                item = QtWidgets.QTableWidgetItem()
+                self.table_table.setHorizontalHeaderItem(i, item)
+                self.table_table.horizontalHeaderItem(i).setText(table_field.name)
+
+            # Customize Header Row
+            self.table_table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
+
+            # Retrieve table add them to the table
+            for i, row in enumerate(selected_table.table_records):
+                for j, value in enumerate(row.values):
+                    item = QtWidgets.QTableWidgetItem("{}".format(value))
+                    item.setTextAlignment(QtCore.Qt.AlignCenter)
+                    self.table_table.setItem(i, j, item)
+
+            self.table_window.show()
+        except Exception:
+            message = "Error opening table window.  See the log file."
+            logger.warning(message, exc_info=True)
+            qt_util.warning_message_box(message)
+
     def ui_action_open_command_file(self, filename: str = "") -> bool or None:
         """
         Open a command file. Each line of the command file is a separate item in the Command_List QList Widget.
@@ -4847,6 +4926,37 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Show the tooltip
         self.rightClickMenu_Results_OutputFiles.show()
+
+    def ui_action_results_tables_right_click(self, q_pos: int) -> None:
+        """
+        On right click display a popup menu that allows viewing the table.
+        Upon selecting an item in the map, a corresponding popup window will be displayed.
+
+        Args:
+            q_pos (int): Position of mouse when right clicking on a GeoLayer from the output table.
+
+        Returns:
+            None
+        """
+
+        # Create the right click QMenu
+        self.rightClickMenu_Results_Tables = QtWidgets.QMenu()
+
+        # Add possible actions being Open Map or Attributes
+        menu_item_attributes = self.rightClickMenu_Results_Tables.addAction("View")
+
+        # Connect actions to the tooltip options
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        menu_item_attributes.triggered.connect(self.ui_action_results_tables_view_table)
+
+        # Using the position of the mouse on right click decide where the tooltip should
+        # be displayed
+        parent_pos = self.results_Tables_Tab.mapToGlobal(QtCore.QPoint(0, 0))
+        self.rightClickMenu_Results_Tables.move(parent_pos + q_pos)
+
+        # Show the tooltip
+        self.rightClickMenu_Results_Tables.show()
 
     def ui_action_save_commands(self) -> None:
         """
@@ -5412,7 +5522,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Count the total and selected number of rows within the Tables table. Update the label to reflect counts.
         row_num = str(self.results_Tables_Table.rowCount())
         selected_rows = str(len(set(index.row() for index in self.results_Tables_Table.selectedIndexes())))
-        self.results_Tables_GroupBox.setTitle("Tables ({} Tables, {} selected)".format(row_num, selected_rows))
+        if selected_rows != 1:
+            self.results_Tables_GroupBox.setTitle("Tables ({} Tables, {} selected)".format(row_num, selected_rows))
+        else:
+            self.results_Tables_GroupBox.setTitle("Tables ({} Table, {} selected)".format(row_num, selected_rows))
 
     # TODO smalers 2020-01-18 does not seem to be called by anything - this has been moved to CommandListWidget
     def x_delete_numbered_list_item(self, index: int) -> None:

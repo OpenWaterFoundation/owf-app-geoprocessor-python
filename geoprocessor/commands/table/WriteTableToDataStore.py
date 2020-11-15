@@ -26,7 +26,7 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.DataStore import DataStore
-from geoprocessor.core.Table import Table
+from geoprocessor.core.DataTable import DataTable
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.string_util as string_util
@@ -230,7 +230,7 @@ class WriteTableToDataStore(AbstractCommand):
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @staticmethod
-    def __get_table_cols_to_write(include_col_patterns: str, exclude_col_patterns: str, table: Table) -> [str]:
+    def __get_table_cols_to_write(include_col_patterns: str, exclude_col_patterns: str, table: DataTable) -> [str]:
         """
         The command allows for users to select a subset of the Table columns to write to the DataStore database. This
         function returns a list of Table columns configured to write data by the user inputs.
@@ -262,7 +262,7 @@ class WriteTableToDataStore(AbstractCommand):
         return table_cols_to_include
 
     @staticmethod
-    def __get_table_cols_to_exclude(include_col_patterns: str, exclude_col_patterns: str, table: Table) -> [str]:
+    def __get_table_cols_to_exclude(include_col_patterns: str, exclude_col_patterns: str, table: DataTable) -> [str]:
         """
         The command allows for users to select a subset of the Table columns to write to the DataStore database. This
         function returns a list of Table columns NOT configured to write data by the user inputs.

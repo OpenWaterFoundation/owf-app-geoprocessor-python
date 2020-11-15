@@ -17,6 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
+from geoprocessor.core.DataTable import DataTable
 from geoprocessor.core.GeoLayer import GeoLayer
 from geoprocessor.core.GeoMap import GeoMap
 from geoprocessor.core.GeoMapProject import GeoMapProject
@@ -55,8 +56,6 @@ class GeoProcessor(object):
     Overarching class that performs the work of the geoprocessing tool
     by executing a sequence of commands.
     """
-
-
 
     def __init__(self) -> None:
         """
@@ -137,7 +136,7 @@ class GeoProcessor(object):
         # End tracking 'last' map tracking objects =====================================================================
 
         # Table list that holds all registered tables object.
-        self.tables: list = []
+        self.tables: [DataTable] = []
 
         # List that holds the absolute paths to the output files.
         self.output_files: [str] = []
@@ -381,10 +380,10 @@ class GeoProcessor(object):
         if output_file_abs_path not in self.output_files:
             self.output_files.append(output_file_abs_path)
 
-    def add_table(self, table) -> None:
+    def add_table(self, table: DataTable) -> None:
         """
-        Add a Table object to the tables list. If a Table already exists with the same Table ID, the existing Table
-        will be overwritten with the input Table.
+        Add a DataTable object to the tables list. If a DataTable already exists with the same Table ID,
+        the existing DataTable will be overwritten with the input Table.
 
         Args:
             table: instance of a Table object
@@ -685,12 +684,12 @@ class GeoProcessor(object):
         """
         self.geomapprojects.remove(geomapproject)
 
-    def free_table(self, table) -> None:
+    def free_table(self, table: DataTable) -> None:
         """
-        Removes a Table object from the tables list.
+        Removes a DataTable object from the tables list.
 
         Args:
-            table (Table): instance of a Table object
+            table (DataTable): instance of a DataTable object
 
         Returns:
             None
@@ -848,9 +847,9 @@ class GeoProcessor(object):
                 # print('Property not found so throwing exception')
                 raise
 
-    def get_table(self, table_id: str):
+    def get_table(self, table_id: str) -> DataTable or None:
         """
-        Return the Table that has the requested ID.
+        Return the DataTable that has the requested ID.
 
         Args:
             table_id (str):  Table ID string.

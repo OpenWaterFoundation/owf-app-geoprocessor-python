@@ -26,9 +26,9 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.DataStore import DataStore
-from geoprocessor.core.Table import Table
-from geoprocessor.core.Table import TableField
-from geoprocessor.core.Table import TableRecord
+from geoprocessor.core.DataTable import DataTable
+from geoprocessor.core.TableField import TableField
+from geoprocessor.core.TableRecord import TableRecord
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -41,7 +41,7 @@ import sqlalchemy
 
 class ReadTableFromDataStore(AbstractCommand):
     """
-    Reads a Table from a DataStore object.
+    Reads a DataTable from a DataStore object.
 
     Command Parameters
     * DataStoreID (str, required): The id of a database datastore to read. ${Property} syntax is recognized.
@@ -326,7 +326,7 @@ class ReadTableFromDataStore(AbstractCommand):
 
     @staticmethod
     def __read_table_from_datastore(ds: DataStore, table_name: str, table_id: str, top: int, sql: str,
-                                    cols_to_include: [str], cols_to_exclude: [str]) -> Table:
+                                    cols_to_include: [str], cols_to_exclude: [str]) -> DataTable:
         """
         Creates a GeoProcessor table object from a DataStore table.
 
@@ -348,7 +348,7 @@ class ReadTableFromDataStore(AbstractCommand):
         """
 
         # Create a GeoProcessor Table object.
-        table = Table(table_id)
+        table = DataTable(table_id)
 
         # If a SQL statement has been specified, then continue.
         if sql:

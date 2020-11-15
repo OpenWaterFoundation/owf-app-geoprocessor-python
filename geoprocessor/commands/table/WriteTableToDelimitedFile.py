@@ -25,7 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
-from geoprocessor.core.Table import Table
+from geoprocessor.core.DataTable import DataTable
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -344,7 +344,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
             return True
 
     @ staticmethod
-    def __write_table_to_delimited_file(path: str, table_obj: Table, delimiter: str, cols_to_include_list: [str],
+    def __write_table_to_delimited_file(path: str, table_obj: DataTable, delimiter: str, cols_to_include_list: [str],
                                         cols_to_exclude_list: [str], include_header: bool, include_index: bool,
                                         sort_columns: [str], sorting_dic: dict, use_sq_brackets: bool,
                                         use_null_values: bool):

@@ -104,6 +104,7 @@ from geoprocessor.commands.vector.ReadGeoLayersFromFGDB import ReadGeoLayersFrom
 from geoprocessor.commands.vector.ReadGeoLayersFromGeoPackage import ReadGeoLayersFromGeoPackage
 from geoprocessor.commands.vector.ReadGeoLayersFromFolder import ReadGeoLayersFromFolder
 from geoprocessor.commands.vector.RemoveGeoLayerAttributes import RemoveGeoLayerAttributes
+from geoprocessor.commands.vector.RemoveGeoLayerFeatures import RemoveGeoLayerFeatures
 from geoprocessor.commands.vector.RenameGeoLayerAttribute import RenameGeoLayerAttribute
 from geoprocessor.commands.vector.SetGeoLayerCRS import SetGeoLayerCRS
 from geoprocessor.commands.vector.SetGeoLayerProperty import SetGeoLayerProperty
@@ -180,6 +181,7 @@ class GeoProcessorCommandFactory(object):
         "REMOVEFILE": RemoveFile(),
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
+        "REMOVEGEOLAYERFEATURES": RemoveGeoLayerFeatures(),
         "RUNCOMMANDS": RunCommands(),
         "RUNGDALPROGRAM": RunGdalProgram(),
         "RUNOGRPROGRAM": RunOgrProgram(),
@@ -411,6 +413,8 @@ class GeoProcessorCommandFactory(object):
                     return RemoveFile()
                 elif command_name_upper == "REMOVEGEOLAYERATTRIBUTES":
                     return RemoveGeoLayerAttributes()
+                elif command_name_upper == "REMOVEGEOLAYERFEATURES":
+                    return RemoveGeoLayerFeatures()
                 elif command_name_upper == "RENAMEGEOLAYERATTRIBUTE":
                     return RenameGeoLayerAttribute()
                 elif command_name_upper == "RUNCOMMANDS":

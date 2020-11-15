@@ -23,6 +23,8 @@ import pandas as pd
 from geoprocessor.core import TableField as TableField
 from geoprocessor.core import TableRecord as TableRecord
 
+from typing import Any
+
 
 class DataTable(object):
     """
@@ -108,6 +110,56 @@ class DataTable(object):
         # Add the TableRecord object to the Table's "table_records" list.
         self.table_records.append(table_record)
 
+    def get_field_data_type(self, index: int) -> int:
+        """
+        Return the field data type given an index.
+
+        Args:
+            index: Column index.
+
+        Returns:
+            The field data type given an index.
+        """
+        if len(self.table_fields) <= index:
+            raise IndexError("Table field index {} is not valid.".format(index))
+        else:
+            return self.table_fields[index].data_type
+
+    def get_field_index(self, field_name: str):
+        """
+        Return the field index (0+) corresponding to the field name.
+
+        Args:
+            field_name:
+
+        Returns:
+            Field index (0+) corresponding to the field name, or -1 if not found.
+        """
+        for i, table_field in enumerate(self.table_fields):
+            if table_field.name == field_name:
+                return i
+
+        return -1
+
+    def get_field_value(self, record_index: int, field_index: int) -> Any:
+        """
+        Return the value for a record and column.
+
+        Args:
+            record_index (int): record index
+            field_index (int): fienld index within the record
+
+        Returns:
+            Value for the record and column indices.
+        """
+        if len(self.table_records) <= record_index:
+            raise IndexError("Table record index {} is not valid.".format(record_index))
+        if len(self.table_fields) <= field_index:
+            raise IndexError("Table field index {} is not valid.".format(field_index))
+
+        table_record = self.table_records[record_index]
+        return table_record.get_field_value(field_index)
+
     def get_number_of_columns(self) -> int:
         """
         Return the number of columns.
@@ -125,6 +177,59 @@ class DataTable(object):
             Number of rows.
         """
         return len(self.table_records)
+
+    def get_records(self, columns: [str] or [int], column_values: [Any]) -> [TableRecord]:
+        """
+        Return records that match the values in specified columns.
+
+        Args:
+            columns ([str]): Column names to check.
+            column_values ([Any]): Values for columns to check.
+
+        Returns:
+            List of matching records, guaranteed to be non-None but may be empty.
+        """
+        records = []
+        if len(columns) == 0:
+            return records
+        elif isinstance(columns[0], str):
+            # Convert column names to column numbers and then call recursively
+            column_numbers = []
+            column_names = columns
+            for column_name in column_names:
+                column_numbers.append(self.get_field_index(column_name))
+            return self.get_records(column_numbers, column_values)
+        elif isinstance(columns[0], int):
+            # Don't need to convert column names to column numbers.
+            # Make sure that all the column numbers are >= 0.
+            column_numbers = columns
+            for icol in range(len(column_numbers)):
+                if column_numbers[icol] < 0:
+                    return records
+            for record in self.table_records:
+                match_count = 0
+                for icol, column_value in enumerate(column_values):
+                    column_contents = record.get_field_value(column_numbers[icol])
+                    if column_contents is None:
+                        # Only match if both are None
+                        if column_value is None:
+                            match_count += 1
+                    elif self.get_field_data_type(column_numbers[icol]) == str:
+                        # Do case-sensitive comparison
+                        # - TODO smalers 2020-11-14 evaluate whether to do case-insenstive comparision
+                        if column_value == column_contents:
+                            match_count += 1
+                    else:
+                        # Not a string so use == to compare
+                        if column_value == column_contents:
+                            match_count += 1
+                if match_count == len(column_values):
+                    # Have matched the requested number of column values so add record to the match list.
+                    records.append(record)
+
+            return records
+        else:
+            raise RuntimeError("column_names type is not str or int.")
 
     def x_create_df(self):
         """

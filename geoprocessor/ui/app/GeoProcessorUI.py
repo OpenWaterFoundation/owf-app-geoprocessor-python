@@ -42,6 +42,9 @@ import geoprocessor.util.os_util as os_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
 from geoprocessor.ui.app.CommandListWidget import CommandListWidget  # previously command_list_view
+from geoprocessor.ui.app.GeoLayerAttributesQDialog import GeoLayerAttributesQDialog
+from geoprocessor.ui.app.GeoLayerMapQDialog import GeoLayerMapQDialog
+from geoprocessor.ui.app.TableQDialog import TableQDialog
 # from geoprocessor.ui.core.GeoProcessorListModel import GeoProcessorListModel  # previously gp_list_model
 from geoprocessor.ui.core.GeoProcessorListModel import GeoProcessorListModel
 from geoprocessor.ui.util.CommandListBackup import CommandListBackup  # previously command_list_backup
@@ -142,6 +145,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # - apparently cannot make 'command_status_dialog' - must be a class member or goes out of scope in function?
         self.command_status_dialog: QtWidgets.QDialog or None = None
 
+        # Dialogs that must be global.
+        # - otherwise they go out of scope in function and are closed automatically and immediately after opening
+        # - use open_dialog() to open an instance and add to this list
+        # - TODO smalers 2020-11-15 need to add a close_dialog() function to remove from the list
+        self.dialogs: {QtWidgets.QDialog} = {}
+
         # Results area
         self.results_GroupBox: QtWidgets.QGroupBox or None = None
         self.results_VerticalLayout: QtWidgets.QVBoxLayout or None = None
@@ -191,32 +200,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_GroupBox_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_Tables_Table: QtWidgets.QTableWidget or None = None
         self.rightClickMenu_Results_Tables: QtWidgets.QMenu or None = None
-
-        # Popup GeoLayers attribute table window
-        self.attributes_window: QtWidgets.QDialog or None = None
-        self.attributes_window_layout: QtWidgets.QVBoxLayout or None = None
-        self.attributes_table: QtWidgets.QTableWidget or None = None
-
-        # Popup GeoLayers map window canvas components and actions
-        self.map_window: QtWidgets.QDialog or None = None
-        self.map_window_layout: QtWidgets.QVBoxLayout or None = None
-        self.map_toolbar: QtWidgets.QToolBar or None = None
-
-        # Popup Tables table window
-        self.table_window: QtWidgets.QDialog or None = None
-        self.table_window_layout: QtWidgets.QVBoxLayout or None = None
-        self.table_table: QtWidgets.QTableWidget or None = None
-
-        self.toolPan: qgis.gui.QgsMapToolPan or None = None
-        self.toolZoomIn: qgis.gui.QgsMapToolZoom or None = None
-        self.toolZoomOut: qgis.gui.QgsMapToolZoom or None = None
-
-        self.actionZoomIn: QtWidgets.QAction or None = None
-        self.actionZoomOut: QtWidgets.QAction or None = None
-        self.actionPan: QtWidgets.QAction or None = None
-        self.map_window_widget: QtWidgets.QWidget or None = None
-
-        self.canvas: qgis.gui.QgsMapCanvas or None = None
 
         # Status area at bottom of main UI
         self.statusbar: QtWidgets.QStatusBar or None = None
@@ -293,6 +276,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_ClipGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_IntersectGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_MergeGeoLayers: QtWidgets.QAction or None = None
+        self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute: QtWidgets.QAction or None = None
 
@@ -1168,6 +1152,30 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
+    def open_dialog(self, existing_dialog: QtWidgets.QDialog = None, id: str = None) -> QtWidgets.QDialog:
+        """
+        Open a new dialog.
+        This is used to ensure that data-viewing dialogs are set in global scope so that they don't automatically
+        close when the UI function returns.
+
+        Args:
+            existing_dialog (QtWidgets.QDialog): dialog that was already created - just add to the global list
+            id (str): dialog identifier
+
+        Returns:
+            The new dialog instance.
+        """
+        if existing_dialog is None:
+            # Create a new dialog
+            dialog = QtWidgets.QDialog()
+        else:
+            dialog = existing_dialog
+        if id is None:
+            # Default identifier is "dialogN" where N is the count of dialogs
+            id = "dialog{}".format((len(self.dialogs) + 1))
+        self.dialogs[id] = dialog
+        return dialog
+
     def paste_commands_from_clipboard(self) -> None:
         """
         Paste commands in the command list (used with copy and cut).
@@ -1815,6 +1823,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_MergeGeoLayers.triggered.connect(
             functools.partial(self.edit_new_command, "MergeGeoLayers()"))
         self.Menu_Commands_Manipulate_GeoLayer.addAction(self.Menu_Commands_Manipulate_MergeGeoLayers)
+
+        # RemoveGeoLayerFeatures
+        self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Manipulate_RemoveGeoLayerFeatures"))
+        self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures.setText(
+            "RemoveGeoLayerFeatures()... <remove GeoLayer features>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures.triggered.connect(
+            functools.partial(self.edit_new_command, "RemoveGeoLayerFeatures()"))
+        self.Menu_Commands_Manipulate_GeoLayer.addAction(self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures)
 
         # SimplifyGeoLayerGeometry
         self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry = QtWidgets.QAction(main_window)
@@ -4406,49 +4426,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
 
-    def ui_action_map_pan(self) -> None:
-        """
-        Set GeoLayers map dialog window to allow user to pan with the mouse events.
-
-        Returns:
-            None
-        """
-        self.canvas.setMapTool(self.toolPan)
-
-    def ui_action_map_resize(self, event) -> None:
-        """
-        Resize the GeoLayers map canvas when the dialog box is resized.
-
-        Args:
-            event: Resize event, necessary to add even though it is not being used in order
-                for it to be recognized as a slot to respond to the given signal from the event.
-
-        Returns:
-            None
-        """
-        if event is None:
-            # Use this to avoid warning about 'event' not being used
-            pass
-        self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())
-
-    def ui_action_map_zoom_in(self) -> None:
-        """
-        Set the GeoLayers map window to respond to mouse events as zooming in.
-
-        Returns:
-            None
-        """
-        self.canvas.setMapTool(self.toolZoomIn)
-
-    def ui_action_map_zoom_out(self) -> None:
-        """
-        Set the GeoLayers map window to respond to mouse events as zooming out.
-
-        Returns:
-            None
-        """
-        self.canvas.setMapTool(self.toolZoomOut)
-
     def ui_action_new_command_file(self) -> None:
         """
         Start a new command file by clearing the current commands list and unsetting the saved command file.
@@ -4486,55 +4463,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         logger = logging.getLogger(__name__)
         # noinspection PyBroadException
         try:
-            # Create attributes window dialog box
-            self.attributes_window = QtWidgets.QDialog()
-            self.attributes_window.resize(800, 500)
-            self.attributes_window.setWindowTitle("Attributes")
-            self.attributes_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-            # Add icon
-            icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-            self.attributes_window.setWindowIcon(QtGui.QIcon(icon_path))
-
-            # Create a vertical layout for the map window
-            self.attributes_window_layout = QtWidgets.QVBoxLayout(self.attributes_window)
-            self.attributes_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
-            self.attributes_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
-
             # Get GeoLayer from Table
             selected_row_index = self.results_GeoLayers_Table.currentRow()
             selected_geolayer = self.gp.geolayers[selected_row_index]
-            selected_vector_layer = selected_geolayer.qgs_layer
 
-            # Get features from vector layer
-            features = selected_vector_layer.getFeatures()
-            num_features = selected_vector_layer.featureCount()
-            # Get attribute field names
-            attribute_field_names = selected_geolayer.get_attribute_field_names()
-
-            # Create a table for attributes
-            self.attributes_table = QtWidgets.QTableWidget()
-            self.attributes_window_layout.addWidget(self.attributes_table)
-            self.attributes_table.setColumnCount(len(attribute_field_names))
-            self.attributes_table.setRowCount(num_features)
-
-            # Set Column Headers
-            for i, attribute_field in enumerate(attribute_field_names):
-                item = QtWidgets.QTableWidgetItem()
-                self.attributes_table.setHorizontalHeaderItem(i, item)
-                self.attributes_table.horizontalHeaderItem(i).setText(str(attribute_field))
-
-            # Customize Header Row
-            self.attributes_table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
-
-            # Retrieve attributes per feature and add them to the table
-            for i, feature in enumerate(features):
-                for j, attribute_field in enumerate(attribute_field_names):
-                    attribute = feature[attribute_field]
-                    item = QtWidgets.QTableWidgetItem(str(attribute))
-                    item.setTextAlignment(QtCore.Qt.AlignCenter)
-                    self.attributes_table.setItem(i, j, item)
-
-            self.attributes_window.show()
+            # Create attributes window dialog
+            self.open_dialog(existing_dialog=GeoLayerAttributesQDialog(selected_geolayer))
         except Exception:
             message = "Error opening attributes window.  See the log file."
             logger.warning(message, exc_info=True)
@@ -4551,53 +4485,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # noinspection PyBroadException
         try:
             # Get the first selected table
-            selected_row = self.results_Tables_Table.selectedIndexes()[0].row()
-            logger.info("Selected table index = {}".format(selected_row))
-            selected_table = self.gp.tables[selected_row]
+            selected_row_index = self.results_Tables_Table.selectedIndexes()[0].row()
+            logger.info("Selected table index = {}".format(selected_row_index))
+            selected_table = self.gp.tables[selected_row_index]
 
-            # Create table window dialog box
-            self.table_window = QtWidgets.QDialog()
-            self.table_window.resize(800, 500)
-            self.table_window.setWindowTitle("Table - {}".format(selected_table.id))
-            self.table_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-            # Add icon
-            icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-            self.table_window.setWindowIcon(QtGui.QIcon(icon_path))
-
-            # Create a vertical layout for the table view window
-            self.table_window_layout = QtWidgets.QVBoxLayout(self.table_window)
-            self.table_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
-            self.table_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
-
-            # Get GeoLayer from Table
-            selected_row_index = self.results_Tables_Table.currentRow()
-            # TODO smalers 2020-11-14 determine how to select table from results list
-            # selected_table = self.gp.geolayers[selected_row_index]
-            selected_rows = str(len(set(index.row() for index in self.results_Tables_Table.selectedIndexes())))
-
-            # Create a table for table
-            self.table_table = QtWidgets.QTableWidget()
-            self.table_window_layout.addWidget(self.table_table)
-            self.table_table.setColumnCount(selected_table.get_number_of_columns())
-            self.table_table.setRowCount(selected_table.get_number_of_rows())
-
-            # Set Column Headers
-            for i, table_field in enumerate(selected_table.table_fields):
-                item = QtWidgets.QTableWidgetItem()
-                self.table_table.setHorizontalHeaderItem(i, item)
-                self.table_table.horizontalHeaderItem(i).setText(table_field.name)
-
-            # Customize Header Row
-            self.table_table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
-
-            # Retrieve table add them to the table
-            for i, row in enumerate(selected_table.table_records):
-                for j, value in enumerate(row.values):
-                    item = QtWidgets.QTableWidgetItem("{}".format(value))
-                    item.setTextAlignment(QtCore.Qt.AlignCenter)
-                    self.table_table.setItem(i, j, item)
-
-            self.table_window.show()
+            # Create attributes window dialog
+            self.open_dialog(existing_dialog=TableQDialog(selected_table))
+            return
         except Exception:
             message = "Error opening table window.  See the log file."
             logger.warning(message, exc_info=True)
@@ -4730,33 +4624,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # noinspection PyBroadException
         try:
-            # Create map window dialog box
-            self.map_window = QtWidgets.QDialog()
-            self.map_window.resize(800, 500)
-            self.map_window.setWindowTitle("Map")
-            self.map_window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-            # Add icon
-            icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
-            self.map_window.setWindowIcon(QtGui.QIcon(icon_path))
-
-            # Create a vertical layout for the map window
-            self.map_window_layout = QtWidgets.QVBoxLayout(self.map_window)
-            self.map_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
-            self.map_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
-
-            # Add toolbar to map window
-            self.map_toolbar = QtWidgets.QToolBar()
-            self.map_window_layout.addWidget(self.map_toolbar)
-
-            # Create a widget for the canvas and add it to map_window in the map_window_layout
-            self.map_window_widget = QtWidgets.QWidget()
-            self.map_window_layout.addWidget(self.map_window_widget)
-            self.map_window_widget.setGeometry(QtCore.QRect(25, 20, 750, 450))
-            # Create canvas and add it to the previously widget
-            self.canvas = qgis.gui.QgsMapCanvas(self.map_window_widget)
-            self.canvas.setCanvasColor(QtCore.Qt.white)
-            self.canvas.resize(750, 400)
-
             # Retrieve QgsVectorLayers from selected geolayers
             # - this retrieves selected indices
             # selected_rows = self.results_GeoLayers_Table.selectedIndexes()
@@ -4770,49 +4637,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     logger.info("Appending raster layer \"{}\" [{}] for map ".format(geolayer.id, row))
                 selected_geolayers.append(geolayer.qgs_layer)
 
-            # Get the extent for all the layers by calling qgis_util
-            logger.info("Have {} selected layers.".format(len(selected_geolayers)))
-            extent = qgis_util.get_extent_from_geolayers(selected_geolayers, buffer_fraction=.05)
-            self.canvas.setExtent(extent)
-            self.canvas.setLayers(selected_geolayers)
-
-            # Add tools for map canvas
-            self.actionZoomIn = QtWidgets.QAction("Zoom in", self)
-            self.actionZoomIn.setToolTip("Zoom in by clicking on a location to center on.")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-            # noinspection PyUnresolvedReferences
-            self.actionZoomIn.triggered.connect(self.ui_action_map_zoom_in)
-            self.actionZoomIn.setCheckable(True)
-            self.map_toolbar.addAction(self.actionZoomIn)
-
-            self.actionZoomOut = QtWidgets.QAction("Zoom out", self)
-            self.actionZoomOut.setToolTip("Zoom out by clicking on a location to center on.")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-            # noinspection PyUnresolvedReferences
-            self.actionZoomOut.triggered.connect(self.ui_action_map_zoom_out)
-            self.actionZoomOut.setCheckable(True)
-            self.map_toolbar.addAction(self.actionZoomOut)
-
-            self.actionPan = QtWidgets.QAction("Pan", self)
-            self.actionPan.setToolTip("Use mouse to drag the viewing area.")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-            # noinspection PyUnresolvedReferences
-            self.actionPan.triggered.connect(self.ui_action_map_pan)
-            self.actionPan.setCheckable(True)
-            self.map_toolbar.addAction(self.actionPan)
-
-            # # Add tools to canvas
-            self.toolPan = qgis.gui.QgsMapToolPan(self.canvas)
-            self.toolPan.setAction(self.actionPan)
-            self.toolZoomIn = qgis.gui.QgsMapToolZoom(self.canvas, False)  # false = in
-            self.toolZoomIn.setAction(self.actionZoomIn)
-            self.toolZoomOut = qgis.gui.QgsMapToolZoom(self.canvas, True)  # true = out
-            self.toolZoomOut.setAction(self.actionZoomOut)
-
-            QtCore.QMetaObject.connectSlotsByName(self.map_window)
-            # Assign a resize event to resize map canvas when dialog window is resized
-            self.map_window_widget.resizeEvent = self.ui_action_map_resize
-            self.map_window.show()
+            # Create attributes window dialog
+            self.open_dialog(existing_dialog=GeoLayerMapQDialog(selected_geolayers))
+            return
         except Exception:
             message = "Error opening map window.  See the log file."
             logger.warning(message, exc_info=True)
@@ -5474,7 +5301,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Count the total and selected number of rows within the GeoMapProjets table. Update the label to reflect counts.
+        # Count the total and selected number of rows within the GeoMapProjets table.
+        # Update the label to reflect counts.
         row_num = str(self.results_GeoMapProjects_Table.rowCount())
         selected_rows = str(len(self.results_GeoMapProjects_Table.selectedIndexes()))
         self.results_GeoMapProjects_GroupBox.setTitle("GeoMapProjects ({} GeoMapProjects, {} selected)".format(

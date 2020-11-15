@@ -51,3 +51,20 @@ class TableRecord(object):
 
         # Add the data value item to the TableRecord's items attribute list.
         self.values.append(value)
+
+    def get_field_value(self, index: int) -> Any:
+        """
+        Return the contents of a record field.
+
+        Args:
+            index: Field index.
+
+        Returns:
+            Data value for the field index.
+        """
+        if index < 0:
+            raise IndexError("Table field index {} is not valid.".format(index))
+        if len(self.values) < index:
+            raise IndexError("Table field index {} is not valid (record has {} columns).".format(index,
+                                                                                                 len(self.values)))
+        return self.values[index]

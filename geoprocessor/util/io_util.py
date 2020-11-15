@@ -345,7 +345,7 @@ def get_filename(full_path: str, remove_extension: bool = True) -> str:
 
     if is_url(full_path):
         # Path is a URL, may include query parameters
-        question_pos = full_path.index('?')
+        question_pos = full_path.find('?')
         if question_pos >= 0:
             # URL includes query string so strip to the main part
             full_path = full_path[0:question_pos]

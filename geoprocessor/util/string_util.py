@@ -431,6 +431,56 @@ def key_value_pair_list_to_dictionary(key_value_list: [str]) -> dict:
     return dictionary
 
 
+def parse_integer_list(s: str or None) -> [int]:
+    """
+    Parse a list of integers from string containing comma-separated list of individual integers and ranges, for
+    example '1, 3-6, 17'.  The list will by default not be sorted.
+    This is useful for parsing command parameter values into an internal data representation.
+
+    Args:
+        s (str): string to parse
+
+    Returns:
+        List containing integer values, guaranteed to be non-None but may be empty.
+    """
+    integer_list = []
+    if s is None or len(s.strip()) == 0:
+        return integer_list
+
+    # First split the parts
+    parts = []
+    if s.find(",") < 0:
+        parts.append(s.strip())
+    else:
+        parts = s.split(",")
+        i = -1
+        for part in parts:
+            i += 1
+            parts[i] = part.strip()
+
+    # Loop through the parts:
+    # - if a single integer set it
+    # - if a range expand the range and set each value in the range to the parts
+    for part in parts:
+        if part.find("-") >= 0:
+            range_parts = part.split("-")
+            if len(range_parts) == 2:
+                # Further process the range
+                range_start = range_parts[0].trim()
+                range_end = range_parts[1].trim()
+                if is_int(range_start) and is_int(range_end):
+                    i_range_start = int(range_start)
+                    i_range_end = int(range_end)
+                    for i in range(i_range_start,(i_range_end + 1)):
+                        integer_list.append(i)
+        else:
+            if is_int(part):
+                integer_list.append(int(part))
+
+    # Return the integer list
+    return integer_list
+
+
 def pattern_count(s: str or None, pattern: Optional[str], patterns: Optional[List[str]] = None) -> int:
     """
     Count the number of unique (non-overlapping) instances of a pattern in a string.

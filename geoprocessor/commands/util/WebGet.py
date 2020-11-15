@@ -63,7 +63,8 @@ class WebGet(AbstractCommand):
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Download a file from a URL."
+    __command_metadata['Description'] = "Download a file from a URL." \
+                                        "HTTPS certification is not required."
     __command_metadata['EditorType'] = "Simple"
 
     __parameter_input_metadata = dict()
@@ -297,6 +298,9 @@ class WebGet(AbstractCommand):
 
                 # Get the URL file and convert it into a request Response object
                 # Authentication Reference: http://docs.python-requests.org/en/master/user/authentication/
+                # TODO smalers 2020-10-18 does this need the following?
+                #   https://urllib3.readthedocs.io/en/latest/user-guide.html#ssl
+                # Set 'verify=False' to disable SSL verification.
                 if (pv_Username is not None) and (pv_Password is not None):
                     r = requests.get(url_abs, auth=HTTPBasicAuth(pv_Username, pv_Password),
                                      stream=True, timeout=timeout, verify=False)
@@ -353,7 +357,7 @@ class WebGet(AbstractCommand):
 
                 else:
                     self.warning_count += 1
-                    message = "Exit code {} ({}) returned downloading the file from: {}".format(
+                    message = "Exit code {} ({}) returned downloading the file from URL: {}".format(
                         r.status_code, r.reason, url_abs)
                     recommendation = "Verify that the URL is correct."
                     self.logger.warning(message, exc_info=True)
@@ -363,17 +367,17 @@ class WebGet(AbstractCommand):
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
-                message = "Unexpected error downloading file from URL {}.".format(r.status_code)
+                message = "Unexpected error {} ({}) downloading file from URL: {}".format(
+                    r.status_code, r.reason, url_abs)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                       message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)
 
         # Set command status type as SUCCESS if there are no errors.
-        else:
-            self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)
+        self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

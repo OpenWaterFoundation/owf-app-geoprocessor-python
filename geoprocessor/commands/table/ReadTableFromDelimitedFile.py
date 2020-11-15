@@ -45,19 +45,32 @@ class ReadTableFromDelimitedFile(AbstractCommand):
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("InputFile", type("")),
-        CommandParameterMetadata("Delimiter", type("")),
-        CommandParameterMetadata("TableID", type("")),
-        CommandParameterMetadata("SkipLines", type("")),
-        CommandParameterMetadata("ColumnNames", type("")),
-        CommandParameterMetadata("FloatColumns", type("")),
-        CommandParameterMetadata("IntegerColumns", type("")),
-        CommandParameterMetadata("TextColumns", type("")),
-        CommandParameterMetadata("IfTableIDExists", type(""))]
+        CommandParameterMetadata("InputFile", str),
+        CommandParameterMetadata("Delimiter", str),
+        CommandParameterMetadata("TableID", str),
+        CommandParameterMetadata("SkipLines", str),
+        CommandParameterMetadata("ColumnNames", str),
+        CommandParameterMetadata("FloatColumns", str),
+        CommandParameterMetadata("IntegerColumns", str),
+        CommandParameterMetadata("TextColumns", str),
+        CommandParameterMetadata("Top", int),
+        CommandParameterMetadata("RowCountProperty", str),
+        CommandParameterMetadata("IfTableIDExists", str)]
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Read a table from a delimited file."
+    __command_metadata['Description'] = (
+        "Read a table from a delimited file.\n"
+        "Columns in the file should be delimited by commas (default) or other character.\n"
+        "An example data file is shown below (line and data row numbers are shown on the left for illustration):\n"
+        "  1     | # This is a comment\n"
+        "  2     | # This is another comment\n"
+        "  3     | # Column names are assumed to be the first non-comment line (next line).\n"
+        "  4     | Column1,Column2,\"Column3\",Column4\n"
+        "  5  1  | 1,1.0,1.5\n"
+        "  6  2  | 2,2.0,3.0\n"
+        "  7     | # Embedded comment will be skipped\n"
+        "  8  3  | 3,3.0,4.5\n")
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
@@ -87,7 +100,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
     __parameter_input_metadata['SkipLines.Description'] = "number(s) of lines to skip"
     __parameter_input_metadata['SkipLines.Label'] = "Skip lines"
     __parameter_input_metadata['SkipLines.Tooltip'] = (
-        "The lines to skip, whice would otherwise interfere with reading data. "\
+        "The lines to skip, whice would otherwise interfere with reading data. "
         "Individual rows and ranges can be specified (e.g., 1, 1-10).")
     # ColumnNames
     __parameter_input_metadata['ColumnNames.Description'] = "column names if not read from file"
@@ -109,6 +122,16 @@ class ReadTableFromDelimitedFile(AbstractCommand):
     __parameter_input_metadata['TextColumns.Label'] = "Text columns"
     __parameter_input_metadata['TextColumns.Tooltip'] = (
         "Column names, separated by commas, for columns that contain text.")
+    # Top
+    __parameter_input_metadata['Top.Description'] = "only read top N data rows"
+    __parameter_input_metadata['Top.Label'] = "Top N rows"
+    __parameter_input_metadata['Top.Tooltip'] = (
+        "Specify a maximum number of data rows to read, useful for inspecting a file.")
+    # RowCountProperty
+    __parameter_input_metadata['RowCountProperty.Description'] = "processor property to set as output table row count"
+    __parameter_input_metadata['RowCountProperty.Label'] = "Row count property"
+    __parameter_input_metadata['RowCountProperty.Tooltip'] = (
+        "Name of processor property to set to the number of data rows read.")
     # IfTableIDExists
     __parameter_input_metadata[
         'IfTableIDExists.Description'] = "action if TableID exists"
@@ -170,6 +193,17 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Check that optional parameter Top is an integer.
+        # noinspection PyPep8Naming
+        pv_Top = self.get_parameter_value(parameter_name="Top", command_parameters=command_parameters)
+        if not validator_util.validate_int(pv_Top, True, True):
+            message = "Top parameter value ({}) is not an integer.".format(pv_Top)
+            recommendation = "Specify as an integer 1+."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
         # Check that optional parameter IfTableIDExists is either `Replace`, `ReplaceAndWarn`, `Warn`, `Fail`, None.
         # noinspection PyPep8Naming
@@ -246,13 +280,13 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             return True
 
     @classmethod
-    def need_to_skip_line (cls, line: int, skip_lines: [int]) -> bool:
+    def need_to_skip_line(cls, line: int, skip_lines: [int]) -> bool:
         """
         Evaluate whether an input file line needs to be skipped.
 
         Args:
             line (int):  Line number 1+ being read.
-            skip_lines [int]:  Array of line numbers to skip.
+            skip_lines ([int]):  Array of line numbers to skip.
 
         Returns:
             bool indicating whether to skip the line.
@@ -273,6 +307,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                                        float_columns: [str] = None,
                                        integer_columns: [str] = None,
                                        text_columns: [str] = None,
+                                       top: int = None,
                                        skip_lines: [int] = None) -> DataTable:
         """
         Creates a GeoProcessor table object from a delimited file.
@@ -286,8 +321,9 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             delimiter (str): the delimiter character of the input file
             float_columns ([str]): list of column names for columns that contain floating point numbers
             integer_columns ([str]): list of column names for columns that contain integers
-            text_columns ([str]): list of column names for columns that contain text
             skip_lines ([int]): a list of line numbers to skip
+            text_columns ([str]): list of column names for columns that contain text
+            top (int): number of data rows to read
 
         Return:
             A GeoProcessor DataTable object.
@@ -307,7 +343,6 @@ class ReadTableFromDelimitedFile(AbstractCommand):
 
         line_count = 0
         parsed_lines = []
-        header_read = False
         comment_char = '#'
         num_columns = -1
         with open(path, 'r') as csvfile:
@@ -356,14 +391,15 @@ class ReadTableFromDelimitedFile(AbstractCommand):
 
         # Determine which row is the first data row.
         # - depends on whether column names where specified
-        first_data_row = 1
+        first_data_row = 1 # 0-index
         num_data_rows = len(parsed_lines) - 1
         if column_names is not None and (len(column_names) > 0):
             # Column names were specified since not in the file so process all rows as data.
             first_data_row = 0
             num_data_rows = len(parsed_lines)
 
-        for irow in range(first_data_row,len(parsed_lines)):
+        # Only process data rows (not column heading) so that data types are properly determined
+        for irow in range(first_data_row, len(parsed_lines)):
             row = parsed_lines[irow]
             icol = -1
             for cell in row:
@@ -382,15 +418,14 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 str_count[icol] += 1
 
         for icol in range(num_columns):
-            logger.info("Column [{}] data rows have {} bool".format(icol,bool_count[icol]))
-            logger.info("Column [{}] data rows have {} int".format(icol,int_count[icol]))
-            logger.info("Column [{}] data rows have {} float".format(icol,float_count[icol]))
-            logger.info("Column [{}] data rows have {} str".format(icol,str_count[icol]))
+            logger.info("Column [{}] data rows have {} bool".format(icol, bool_count[icol]))
+            logger.info("Column [{}] data rows have {} int".format(icol, int_count[icol]))
+            logger.info("Column [{}] data rows have {} float".format(icol, float_count[icol]))
+            logger.info("Column [{}] data rows have {} str".format(icol, str_count[icol]))
 
         # Create a table object with columns of the correct type
         table = DataTable(table_id)
         # Whether header row is in data rows and need to offset when processing data records
-        header_row_count = 0
         for icol in range(num_columns):
             # Data type is based on counts of types from inspection.
             # - use integer before float
@@ -410,11 +445,9 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                     column_name = column_names[icol]
                 else:
                     column_name = "Column{}".format((icol + 1))
-                header_row_count = 0
             else:
                 # Column names are taken from the first row of parsed data
                 column_name = parsed_lines[0][icol]
-                header_row_count = 1
 
             # If data types were specified via column names, override the data type.
             if float_columns is not None:
@@ -440,7 +473,13 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                                        precision=precision, units=units))
 
         # Populate the table with data by traversing the parsed data again and converting from strings to types.
-        for row in parsed_lines:
+        for irow, row in enumerate(parsed_lines):
+            # Skip header
+            if irow < first_data_row:
+                continue
+            # Break if only reading top rows
+            if top is not None and (irow == top):
+                break
             table_record = TableRecord()
             # Process each row in the table.
             for icol in range(len(row)):
@@ -511,6 +550,13 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # noinspection PyPep8Naming
         pv_TextColumns = self.get_parameter_value("TextColumns")
         text_columns = string_util.delimited_string_to_list(pv_TextColumns)
+        # noinspection PyPep8Naming
+        pv_Top = self.get_parameter_value("Top")
+        top = None
+        if pv_Top is not None and pv_Top != "":
+            top = int(pv_Top)
+        # noinspection PyPep8Naming
+        pv_RowCountProperty = self.get_parameter_value("RowCountProperty")
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         input_file_absolute = io_util.verify_path_for_os(
@@ -529,8 +575,9 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                                                                                   delimiter=pv_Delimiter,
                                                                                   float_columns=float_columns,
                                                                                   integer_columns=integer_columns,
+                                                                                  skip_lines=skip_lines,
                                                                                   text_columns=text_columns,
-                                                                                  skip_lines=skip_lines)
+                                                                                  top=top)
 
                 # Add the table to the GeoProcessor's Tables list.
                 self.command_processor.add_table(table)
@@ -544,6 +591,10 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                         self.command_status.add_to_log(CommandPhaseType.RUN,
                                                        CommandLogRecord(CommandStatusType.WARNING, problem,
                                                                         recommendation))
+
+                # Set the row count property in the processor if requested.
+                if pv_RowCountProperty is not None and (len(pv_RowCountProperty) > 0):
+                    self.command_processor.set_property(pv_RowCountProperty, table.get_number_of_rows())
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception:

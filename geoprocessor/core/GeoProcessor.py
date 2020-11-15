@@ -49,6 +49,7 @@ import platform
 # import sys
 import tempfile
 from time import gmtime, strftime
+from typing import Any
 
 
 class GeoProcessor(object):
@@ -1825,7 +1826,7 @@ class GeoProcessor(object):
             for key in property_dict:
                 self.properties[key] = property_dict[key]
 
-    def set_property(self, property_name: str, property_value: None) -> None:
+    def set_property(self, property_name: str, property_value: Any) -> None:
         """
         Set a geoprocessor property.
 

@@ -32,6 +32,7 @@ from qgis.analysis import QgsNativeAlgorithms
 
 import qgis.utils
 import sys
+from typing import Any
 
 from plugins.processing.core import Processing
 
@@ -94,13 +95,14 @@ def add_feature_to_qgsvectorlayer(qgsvectorlayer: QgsVectorLayer, qgsgeometry: Q
 
 def add_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name: str, attribute_type: str) -> None:
     """
-    Adds an attribute to a QgsVectorLayer object.
+    Add an attribute to a QgsVectorLayer object.
+    If the attribute does not exist, it is added.
+    If it exists, an exception is thrown.
 
     Args:
         qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object to be updated
-        attribute_name (str): the name of the attribute to add
-        attribute_type (str): the attribute field type. Can be int (integer), double (real number), string (text) or
-                              date.
+        attribute_name (str): the name of the attribute to set
+        attribute_type (str): the attribute field type: int (integer), double (real number), string (text) or date.
 
     Return:
         None.
@@ -108,31 +110,42 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name:
     Raises:
         ValueError:  If the input is an invalid attribute type or the attribute already exists.
     """
+    logger = logging.getLogger(__name__)
 
-    # Start the data provider for the input QgsVectorLayer.
+    # Start the data provider (QgsVectorDataProvider) for the input QgsVectorLayer.
     qgsvectorlayer_data = qgsvectorlayer.dataProvider()
 
     # Check that the attribute name is not already a name in the QgsVectorLayer.
     if attribute_name not in [attribute.name() for attribute in qgsvectorlayer_data.fields()]:
 
         # Add the attribute field to the GeoLater
+        added = False
         if attribute_type.upper() == "INT":
-            qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Int)])
+            status = qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Int)])
         elif attribute_type.upper() == "DOUBLE":
-            qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Double)])
+            status = qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Double)])
         elif attribute_type.upper() == "STRING":
-            qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.String)])
+            status = qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.String)])
         elif attribute_type.upper() == "DATE":
-            qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Date)])
+            status = qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Date)])
         else:
             valid_attribute_types = ["int", "double", "string", "date"]
-            message = "The attribute_type ({}) is not a valid attribute type. Valid attribute types " \
-                      "include: {}".format(attribute_type, valid_attribute_types)
-            logger = logging.getLogger(__name__)
+            message = "The attribute_type ({}) is not a valid attribute type. Valid attribute types are: {}".format(
+                attribute_type, valid_attribute_types)
             logger.warning(message)
             raise ValueError(message)
 
-        qgsvectorlayer.updateFields()
+        if status:
+            # Success.
+            # If here can update the layer fields
+            qgsvectorlayer.updateFields()
+            logger.info("Added attribute '{}' of type '{}'".format(attribute_name, attribute_type))
+        else:
+            # Error.
+            message = "Error adding attribute ({})".format(attribute_name)
+            logger.warning(message)
+            # TODO smalers 2020-11-16 need a more appropriate exception type.
+            raise ValueError(message)
 
     else:
         # Print a warning message if the input attribute name is already an existing attribute name.
@@ -855,36 +868,6 @@ def initialize_qgis_processor() -> Processing:
     return pr
 
 
-def populate_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name: str,
-                                      attribute_value: str or None) -> None:
-    """
-    Populates an attribute of a QgsVectorLayer with a single attribute value. If the attribute already has a value,
-    the value will be overwritten with the new input attribute value. All features will have the same attribute value.
-
-    Args:
-        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
-        attribute_name (str): the name of the attribute to populate
-        attribute_value (str): the string to populate as the attributes' values
-
-    Returns:
-        None
-    """
-
-    # Get the index of the attribute to populate.
-    attr_index = qgsvectorlayer.fields().lookupField(attribute_name)
-
-    # Create an attribute dictionary.
-    # Key: the index of the attribute to populate
-    # Value: the string to populate as the attribute's values
-    attr = {attr_index: attribute_value}
-
-    # Iterate over the features of the QgsVectorLayer
-    for feature in qgsvectorlayer.getFeatures():
-
-        # Rename/populate the features attribute with the desired input attribute value.
-        qgsvectorlayer.dataProvider().changeAttributeValues({feature.id(): attr})
-
-
 def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
     """
     Reads the full pathname of spatial data file and returns a QGSRasterLayer object.
@@ -1086,6 +1069,56 @@ def read_qgsvectorlayer_from_feature_class(file_gdb_path_abs: str,
         raise IOError(message)
 
 
+def read_qgsvectorlayer_from_file(spatial_data_file_abs: str, layer_name: str = None) -> QgsVectorLayer:
+    """
+    General function to read a QGSVectorLayer object using OGR drivers.
+    The OGR driver is determined from the filename extension.
+
+    Args:
+        spatial_data_file_abs (str): the full pathname to a spatial data file
+        layer_name (str):
+            layer name to read from the file, needed when the format supports multiple layer names.
+            It will be added after the data source using '|layername=...'.
+
+    Raises:
+        IOError if the geodatabase layer is invalid.
+
+    Returns:
+        A QGSVectorLayer object containing the data from the input spatial data file.
+    """
+
+    # Instantiate the QGSVectorLayer object.
+    # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
+    # to create a QGSVectorLayer object, the following parameters must be entered:
+    #   data_source (first argument): string full path the the spatial data file
+    #   layer_name (second argument): string layer name that will be used in the QGIS layer list widget
+    #       -- in this function the layer name is defaulted to the spatial data filename (with extension)
+    #   provider_name (third argument): string indicating the data provider (defaulted within this function to 'ogr')
+    if layer_name is None or layer_name == "":
+        # No layer name specified, just use the file path and extension to tell OGR what to read
+        qgs_vector_layer_obj = QgsVectorLayer(spatial_data_file_abs, os.path.basename(spatial_data_file_abs), 'ogr')
+    else:
+        # Layer name is requested
+        data_source = "{}|layername={}".format(spatial_data_file_abs, layer_name)
+        qgs_vector_layer_obj = QgsVectorLayer(data_source, os.path.basename(spatial_data_file_abs), 'ogr')
+
+    # A QgsVectorLayer object is almost always created even if it is invalid.
+    # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
+    #   "It is important to check whether the layer has been loaded successfully. If it was not, an invalid
+    #   layer instance is returned."
+    # Check that the newly created QgsVectorLayer object is valid. If so, create a GeoLayer object within the
+    # geoprocessor and add the GeoLayer object to the geoprocessor's GeoLayers list.
+    if qgs_vector_layer_obj.isValid():
+        return qgs_vector_layer_obj
+
+    # If the created QGSVectorLayer object is invalid, print a warning message and return None.
+    else:
+        message = 'The QGSVectorLayer for file "{}" is invalid.'.format(spatial_data_file_abs)
+        logger = logging.getLogger(__name__)
+        logger.warning(message)
+        raise IOError(message)
+
+
 def read_qgsvectorlayer_from_geopackage(geopackage_file_path_abs: str,
                                         layer_name: str,
                                         layer_description: str) -> QgsVectorLayer:
@@ -1122,46 +1155,6 @@ def read_qgsvectorlayer_from_geopackage(geopackage_file_path_abs: str,
         # If the created QGSVectorLayer object is invalid, print a warning message and return None.
         message = 'The QGSVectorLayer from GeoPackage file "{}" layer name "{}" is invalid.'.format(
             geopackage_file_path_abs, layer_name)
-        logger = logging.getLogger(__name__)
-        logger.warning(message)
-        raise IOError(message)
-
-
-def read_qgsvectorlayer_from_file(spatial_data_file_abs: str) -> QgsVectorLayer:
-    """
-    Reads the full pathname of spatial data file and returns a QGSVectorLayer object.
-
-    Args:
-        spatial_data_file_abs (str): the full pathname to a spatial data file
-
-    Raises:
-        IOError if the geodatabase layer is invalid.
-
-    Returns:
-        A QGSVectorLayer object containing the data from the input spatial data file.
-    """
-
-    # Instantiate the QGSVectorLayer object.
-    # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
-    # to create a QGSVectorLayer object, the following parameters must be entered:
-    #   data_source (first argument): string full path the the spatial data file
-    #   layer_name (second argument): string layer name that will be used in the QGIS layer list widget
-    #       -- in this function the layer name is defaulted to the spatial data filename (with extension)
-    #   provider_name (third argument): string indicating the data provider (defaulted within this function to 'ogr')
-    qgs_vector_layer_obj = QgsVectorLayer(spatial_data_file_abs, os.path.basename(spatial_data_file_abs), 'ogr')
-
-    # A QgsVectorLayer object is almost always created even if it is invalid.
-    # From `QGIS documentation <https://docs.qgis.org/2.14/en/docs/pyqgis_developer_cookbook/loadlayer.html>`_
-    #   "It is important to check whether the layer has been loaded successfully. If it was not, an invalid
-    #   layer instance is returned."
-    # Check that the newly created QgsVectorLayer object is valid. If so, create a GeoLayer object within the
-    # geoprocessor and add the GeoLayer object to the geoprocessor's GeoLayers list.
-    if qgs_vector_layer_obj.isValid():
-        return qgs_vector_layer_obj
-
-    # If the created QGSVectorLayer object is invalid, print a warning message and return None.
-    else:
-        message = 'The QGSVectorLayer for file "{}" is invalid.'.format(spatial_data_file_abs)
         logger = logging.getLogger(__name__)
         logger.warning(message)
         raise IOError(message)
@@ -1270,6 +1263,57 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_na
 
             # Commit the changes made to the qgsvectorlayer
             qgsvectorlayer.commitChanges()
+
+
+def set_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name: str,
+                                 attribute_value: str or None) -> int:
+    """
+    Set an attribute of a QgsVectorLayer with a single attribute value. If the attribute already has a value,
+    the value will be overwritten with the new input attribute value. All features will have the same attribute value.
+
+    Args:
+        qgsvectorlayer (QgsVectorLayer): a QgsVectorLayer object
+        attribute_name (str): the name of the attribute to set
+        attribute_value (str): the object to set as the attribute's value (will be set for each matched feature)
+
+    Returns:
+        The number of features that had the attribute set.
+    """
+
+    logger = logging.getLogger(__name__)
+    debug = False
+
+    # Get the index of the attribute to set.
+    # - fields() returns a QgsFields, which is a container for the list of QgsField
+    # - lookupField() returns an int position of the field
+    # - attribute_index is 0-reference
+    attribute_index = qgsvectorlayer.fields().lookupField(attribute_name)
+    if debug:
+        logger.info("Layer attribute '{}' is at index {}.".format(attribute_name, attribute_index))
+
+    if attribute_index >= 0:
+        # Create an attribute dictionary.
+        # Key: the index of the attribute to populate
+        # Value: the string to populate as the attribute's values
+        attribute = {attribute_index: attribute_value}
+
+        # Iterate over the features of the QgsVectorLayer
+        set_count = 0
+        # QgsVectorDataProvider
+        data_provider = qgsvectorlayer.dataProvider()
+        for feature in qgsvectorlayer.getFeatures():
+            # Set the feature's attribute with the attribute value.
+            status = data_provider.changeAttributeValues({feature.id(): attribute})
+            if status:
+                # Success
+                if debug:
+                    logger.info("Success setting feature ID {} attribute '{}' to {}".format(
+                        feature.id(), attribute_name, attribute_value))
+                set_count += 1
+            else:
+                logger.warning("Error setting feature attribute '{}' to {}".format(attribute_name, attribute_value))
+
+    return set_count
 
 
 def split_qgsvectorlayer_by_attribute(processor: Processing, qgsvectorlayer: QgsVectorLayer, attribute_name: str,

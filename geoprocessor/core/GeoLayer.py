@@ -341,6 +341,7 @@ class GeoLayer(object):
             # - similarly, 'sourceFormat' is the format of the source, by checking the written format or the
             #   input format
             source_path = None
+            source_format = None
             if self.output_path is not None and self.output_path != GeoLayer.SOURCE_MEMORY:
                 source_path = self.output_path
                 source_format = self.output_format

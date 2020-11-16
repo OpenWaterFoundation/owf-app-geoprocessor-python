@@ -206,9 +206,16 @@ class DataTable(object):
             for icol in range(len(column_numbers)):
                 if column_numbers[icol] < 0:
                     return records
+            # Loop through table records.
             for record in self.table_records:
                 match_count = 0
+                # Loop through columns of interest and try to match values in those columns:
+                # - column_contents - is what is in the table in that column
+                # - column_value - is the value being requested
                 for icol, column_value in enumerate(column_values):
+                    # In some cases below, create a string version of the column value for comparisons.
+                    # - TODO smalers 2020-11-15 does this do bad things for large floating point numbers
+                    #   such as use scientific notation?
                     column_contents = record.get_field_value(column_numbers[icol])
                     if column_contents is None:
                         # Only match if both are None
@@ -216,11 +223,18 @@ class DataTable(object):
                             match_count += 1
                     elif self.get_field_data_type(column_numbers[icol]) == str:
                         # Do case-sensitive comparison
-                        # - TODO smalers 2020-11-14 evaluate whether to do case-insenstive comparision
-                        if column_value == column_contents:
-                            match_count += 1
+                        # - TODO smalers 2020-11-14 evaluate whether to do case-insensitive comparision
+                        if isinstance(column_value,str):
+                            if column_value == column_contents:
+                                match_count += 1
+                        else:
+                            # Convert the value to string
+                            column_value_str = "{}".format(column_value)
+                            if column_value_str == column_contents:
+                                match_count += 1
                     else:
                         # Not a string so use == to compare
+                        # - works well for int and bool but flaating point may have roundoff
                         if column_value == column_contents:
                             match_count += 1
                 if match_count == len(column_values):

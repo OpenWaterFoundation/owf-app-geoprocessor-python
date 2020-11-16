@@ -252,6 +252,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_GeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON: QtWidgets.QAction or None = None
+        self.Menu_Commands_Read_ReadGeoLayerFromKML: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService: QtWidgets.QAction or None = None
         self.Menu_Commands_Read_ReadGeoLayersFromFolder: QtWidgets.QAction or None = None
@@ -266,6 +267,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Commands / Set GeoLayer
         self.Menu_Commands_SetGeoLayer_Contents: QtWidgets.QMenu or None = None
         self.Menu_Commands_SetContents_AddGeoLayerAttribute: QtWidgets.QAction or None = None
+        self.Menu_Commands_SetContents_SetGeoLayerAttribute: QtWidgets.QAction or None = None
         self.Menu_Commands_SetContents_RemoveGeoLayerAttributes: QtWidgets.QAction or None = None
         self.Menu_Commands_SetContents_RenameGeoLayerAttribute: QtWidgets.QAction or None = None
         self.Menu_Commands_SetContents_SetGeoLayerCRS: QtWidgets.QAction or None = None
@@ -1630,12 +1632,24 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setObjectName(
             qt_util.from_utf8("Menu_Commands_GeoLayers_Read_ReadGeoLayerFromGeoJSON"))
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setText(
-            "ReadGeoLayerFromGeoJSON()... <reads a GeoLayer from a .geojson file>")
+            "ReadGeoLayerFromGeoJSON()... <reads a GeoLayer from a .geojson file or URL>")
         self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON)
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromGeoJSON()"))
+
+        # ReadGeoLayerFromKML
+        self.Menu_Commands_Read_ReadGeoLayerFromKML = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Read_ReadGeoLayerFromKML.setObjectName(
+            qt_util.from_utf8("Menu_Commands_GeoLayers_Read_ReadGeoLayerFromKML"))
+        self.Menu_Commands_Read_ReadGeoLayerFromKML.setText(
+            "ReadGeoLayerFromKML()... <reads a KML from a .kml file or URL>")
+        self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromKML)
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Read_ReadGeoLayerFromKML.triggered.connect(
+            functools.partial(self.edit_new_command, "ReadGeoLayerFromKML()"))
 
         # ReadGeoLayerFromShapefile
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile = QtWidgets.QAction(main_window)
@@ -1730,6 +1744,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "AddGeoLayerAttribute()"))
         self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_AddGeoLayerAttribute)
 
+        # SetGeoLayerAttribute
+        self.Menu_Commands_SetContents_SetGeoLayerAttribute = QtWidgets.QAction(main_window)
+        self.Menu_Commands_SetContents_SetGeoLayerAttribute.setObjectName(
+            qt_util.from_utf8("Menu_Commands_SetContents_SetGeoLayerAttribute"))
+        self.Menu_Commands_SetContents_SetGeoLayerAttribute.setText(
+            "SetGeoLayerAttribute()... <set an attribute for a GeoLayer>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_SetContents_SetGeoLayerAttribute.triggered.connect(
+            functools.partial(self.edit_new_command, "SetGeoLayerAttribute()"))
+        self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_SetGeoLayerAttribute)
+
         # RemoveGeoLayerAttributes
         self.Menu_Commands_SetContents_RemoveGeoLayerAttributes = QtWidgets.QAction(main_window)
         self.Menu_Commands_SetContents_RemoveGeoLayerAttributes.setObjectName(
@@ -1754,6 +1780,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "RenameGeoLayerAttribute()"))
         self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_RenameGeoLayerAttribute)
 
+        self.Menu_Commands_SetGeoLayer_Contents.addSeparator()
+
         # SetGeoLayerCRS
         self.Menu_Commands_SetContents_SetGeoLayerCRS = QtWidgets.QAction(main_window)
         self.Menu_Commands_SetContents_SetGeoLayerCRS.setObjectName(
@@ -1765,6 +1793,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_SetContents_SetGeoLayerCRS.triggered.connect(
             functools.partial(self.edit_new_command, "SetGeoLayerCRS()"))
         self.Menu_Commands_SetGeoLayer_Contents.addAction(self.Menu_Commands_SetContents_SetGeoLayerCRS)
+
+        self.Menu_Commands_SetGeoLayer_Contents.addSeparator()
 
         # SetGeoLayerProperty
         self.Menu_Commands_SetContents_SetGeoLayerProperty = QtWidgets.QAction(main_window)

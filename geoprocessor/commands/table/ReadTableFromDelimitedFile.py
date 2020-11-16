@@ -330,6 +330,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         """
 
         logger = logging.getLogger(__name__)
+        debug = False
 
         # Read lines from the CSV file using the Python 'csv' module:
         # - skip_lines is checked to see if any lines need to be skipped
@@ -391,7 +392,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
 
         # Determine which row is the first data row.
         # - depends on whether column names where specified
-        first_data_row = 1 # 0-index
+        first_data_row = 1  # 0-index
         num_data_rows = len(parsed_lines) - 1
         if column_names is not None and (len(column_names) > 0):
             # Column names were specified since not in the file so process all rows as data.
@@ -416,12 +417,6 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                     float_count[icol] += 1
                 # Always count as string
                 str_count[icol] += 1
-
-        for icol in range(num_columns):
-            logger.info("Column [{}] data rows have {} bool".format(icol, bool_count[icol]))
-            logger.info("Column [{}] data rows have {} int".format(icol, int_count[icol]))
-            logger.info("Column [{}] data rows have {} float".format(icol, float_count[icol]))
-            logger.info("Column [{}] data rows have {} str".format(icol, str_count[icol]))
 
         # Create a table object with columns of the correct type
         table = DataTable(table_id)
@@ -452,15 +447,15 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             # If data types were specified via column names, override the data type.
             if float_columns is not None:
                 for float_column in float_columns:
-                    if float_column.equals(column_name):
+                    if float_column == column_name:
                         data_type = float
             if integer_columns is not None:
-                for integer_column in float_columns:
-                    if integer_column.equals(column_name):
+                for integer_column in integer_columns:
+                    if integer_column == column_name:
                         data_type = int
             if text_columns is not None:
-                for text_column in float_columns:
-                    if text_column.equals(column_name):
+                for text_column in text_columns:
+                    if text_column == column_name:
                         data_type = str
 
             # Default is to set the description the same as the name
@@ -472,8 +467,21 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             table.add_field(TableField(data_type, column_name, description=description, width=width,
                                        precision=precision, units=units))
 
+        # Log information so can check auto-typing
+        for icol in range(num_columns):
+            logger.info("Column [{}] '{}' data rows have {} bool, type is {}".format(
+                icol, table.table_fields[icol].name, bool_count[icol], table.table_fields[icol].data_type))
+            logger.info("Column [{}] '{}' data rows have {} float, type is {}".format(
+                icol, table.table_fields[icol].name, float_count[icol], table.table_fields[icol].data_type))
+            logger.info("Column [{}] '{}' data rows have {} int, type is {}".format(
+                icol, table.table_fields[icol].name, int_count[icol], table.table_fields[icol].data_type))
+            logger.info("Column [{}] '{}' data rows have {} str, type is {}".format(
+                icol, table.table_fields[icol].name, str_count[icol], table.table_fields[icol].data_type))
+
         # Populate the table with data by traversing the parsed data again and converting from strings to types.
         for irow, row in enumerate(parsed_lines):
+            if debug:
+                logger.info("Processing row [{}].".format(irow))
             # Skip header
             if irow < first_data_row:
                 continue
@@ -482,33 +490,48 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 break
             table_record = TableRecord()
             # Process each row in the table.
-            for icol in range(len(row)):
-                cell = row[icol]
-                cell_len = len(cell)
-                table_field_data_type = table.table_fields[icol].data_type
-                # Process each item in the row and add to the record.
-                # First convert to the column type.
-                if table_field_data_type == int:
-                    if cell_len == 0:
-                        value = None
+            for icol, cell in enumerate(row):
+                # Default value so scope is outside of try block
+                value = None
+                # noinspection PyBroadException
+                try:
+                    # Strip off surrounding whitespace
+                    cell = cell.strip()
+                    # Length is needed to check for msising for numbers (strings are allowed to be zero-length)
+                    cell_len = len(cell)
+                    table_field_data_type = table.table_fields[icol].data_type
+                    # Process each item in the row and add to the record.
+                    # First convert to the column type.
+                    if table_field_data_type == int:
+                        if cell_len == 0:
+                            value = None
+                        else:
+                            value = int(cell)
+                    elif table_field_data_type == float:
+                        if cell_len == 0:
+                            value = None
+                        else:
+                            # The following will handle parsing 'NaN' in any case.
+                            value = float(cell)
+                    elif table_field_data_type == bool:
+                        if cell_len == 0:
+                            value = None
+                        else:
+                            value = bool(cell)
                     else:
+                        # Treat as a string
                         value = "{}".format(cell)
-                elif table_field_data_type == float:
-                    if cell_len == 0:
-                        value = None
-                    else:
-                        # The following will handle parsing 'NaN' in any case.
-                        value = float(cell)
-                elif table_field_data_type == bool:
-                    if cell_len == 0:
-                        value = None
-                    else:
-                        value = int(cell)
-                else:
-                    # Treat as a string
-                    value = "{}".format(cell)
-                # Add the value to the table record.
-                table_record.add_field_value(value)
+                    # Add the value to the table record.
+                except Exception:
+                    # Likely a conversion error.
+                    # - add a None for the value
+                    logger.warning("Error converting parsed value '{}' to set in table".format(cell), exc_info=True)
+                    value = None
+                finally:
+                    # Always add the value even if error, so the table memory is consistent.
+                    if debug:
+                        logger.info("  Processing cell [{}] value '{}'.".format(icol, value))
+                    table_record.add_field_value(value)
 
             # Add the record to the table
             table.add_record(table_record)

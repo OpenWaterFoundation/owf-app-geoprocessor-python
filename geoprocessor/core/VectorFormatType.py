@@ -26,6 +26,7 @@ CSV = 'CSV'  # Comma separated value
 ESRIShapefile = 'ESRIShapefile'  # Esri shapefile
 FileGDB = 'FileGDB'  # Esri file geodatabase
 GeoJSON = 'GeoJSON'  # GeoJSON
+KML = 'KML'  # KML
 OpenFileGDB = 'OpenFileGDB'  # Esri file geodatabase, read-only, built-in, no third party libraries, better than FileGDB
 WFS = 'WFS'  # OGC web feature service
 
@@ -35,6 +36,7 @@ vector_formats = [
     ESRIShapefile,
     FileGDB,
     GeoJSON,
+    KML,
     OpenFileGDB,
     WFS
 ]

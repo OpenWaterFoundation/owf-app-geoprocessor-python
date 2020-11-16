@@ -29,6 +29,7 @@ from qgis.core import QgsVectorLayer
 
 import logging
 import os
+from typing import Any
 
 
 class VectorGeoLayer(GeoLayer):
@@ -208,21 +209,21 @@ class VectorGeoLayer(GeoLayer):
         """
         return True
 
-    # TODO egiles 2018-01-29 Add sophistication to this function.
-    def populate_attribute(self, attribute_name: str, attribute_value: object) -> None:
+    # TODO smalers 2020-11-16 need to add way to match records, similar to TSTool table commands.
+    def set_attribute(self, attribute_name: str, attribute_value: Any) -> int:
         """
-        Populates the attribute of all features with a common attribute value (string value).
+        Set the attribute of all features with a common attribute value.
 
         Args:
             attribute_name: the name of the attribute to populate.
-            attribute_value: the string to populate as the attributes' values
+            attribute_value: the string to populate as the attribute's value
 
         Returns:
-            None
+            Number of features for which the attribute was set.
         """
 
         # Run processing in the qgis utility function.
-        qgis_util.populate_qgsvectorlayer_attribute(self.qgs_layer, attribute_name, attribute_value)
+        return qgis_util.set_qgsvectorlayer_attribute(self.qgs_layer, attribute_name, attribute_value)
 
     def remove_attribute(self, attribute_name: str) -> None:
         """

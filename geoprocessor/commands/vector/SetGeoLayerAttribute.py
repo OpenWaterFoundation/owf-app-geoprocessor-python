@@ -1,4 +1,4 @@
-# AddGeoLayerAttribute - command to add attributes to a GeoLayer
+# SetGeoLayerAttribute - command to set GeoLayer attribute value
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -32,9 +32,9 @@ import geoprocessor.util.validator_util as validator_util
 import logging
 
 
-class AddGeoLayerAttribute(AbstractCommand):
+class SetGeoLayerAttribute(AbstractCommand):
     """
-    Add an attribute to a GeoLayer.
+    Set an GeoLayer attribute.
 
     * This command adds a single attribute to a single GeoLayer.
     * The attribute name is specified.
@@ -49,25 +49,22 @@ class AddGeoLayerAttribute(AbstractCommand):
     * GeoLayerID (str, required): the ID of the input GeoLayer, the layer to add the attribute
     * AttributeName (str, required): the name of the attribute to add. Must be a unique attribute name to the GeoLayer.
         If working with Esri Shapefiles, it is highly recommended that the string is 10 characters or less.
-    * AttributeType (str, required): the attribute's data type. Options include 'string', 'date', 'int' and 'double'.
-        Read the user documentation or the docstring for a more detailed parameter description.
-    * InitialValue (str, optional): a string value used to populate the added attribute for each feature. All
+    * AttributeValue (str, optional): a string value used to populate the added attribute for each feature. All
         features will have the same attribute value. This parameter is used mainly for testing. If not specified,
         the attribute values are set to NULL.
     """
 
     # Define command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("GeoLayerID", type("")),
-        CommandParameterMetadata("AttributeName", type("")),
-        CommandParameterMetadata("AttributeType", type("")),
-        CommandParameterMetadata("InitialValue", type(""))]
+        CommandParameterMetadata("GeoLayerID", str),
+        CommandParameterMetadata("AttributeName", str),
+        CommandParameterMetadata("AttributeValue", str)]
 
     # Command metadata for command editor display
     __command_metadata = dict()
     __command_metadata["Description"] = (
-        "Add a single attribute to a single GeoLayer.\n"
-        "Every feature in the layer will have the attribute value set to the initial value."
+        "Set a GeoLayer attribute value for matching features.\n"
+        "THIS COMMAND IS UNDER DEVELOPMENT. DO NOT USE."
     )
     __command_metadata["EditorType"] = "Simple"
 
@@ -85,24 +82,10 @@ class AddGeoLayerAttribute(AbstractCommand):
     __parameter_input_metadata['AttributeName.Required'] = True
     __parameter_input_metadata['AttributeName.Tooltip'] = \
         "The attribute name. Highly recommended to be 10 or less characters. Case-specific."
-    # AttributeType
-    __parameter_input_metadata['AttributeType.Description'] = "the attribute data type"
-    __parameter_input_metadata['AttributeType.Label'] = "Attribute type"
-    __parameter_input_metadata['AttributeType.Required'] = True
-    __parameter_input_metadata['AttributeType.Values'] = ['date', 'double', 'int', 'string']
-    # TODO smalers 2020-07-14 remove when tested
-    # __parameter_input_metadata['AttributeType.Value.DefaultForDisplay'] = ''
-    __parameter_input_metadata['AttributeType.Value.Default.ForEditor'] = ''
-    __parameter_input_metadata['AttributeType.Tooltip'] =\
-        "The attribute data type. Must be one of the " \
-        "following options: \nstring : The attribute values will be text. e.g. blue, Colorado, helicopter \n" \
-        "int: The attribute values will be integers. e.g. 100, 0, -54 \n" \
-        "double : The attribute values will be real numbers. e.g.100.01, 0.00089, -54.0 \n" \
-        "date : The attribute values will be date values. e.g. YYYY-MM-DD format is recommended. "
-    # InitialValue
-    __parameter_input_metadata['InitialValue.Description'] = "attribute value"
-    __parameter_input_metadata['InitialValue.Label'] = "Attribute value"
-    __parameter_input_metadata['InitialValue.Tooltip'] =\
+    # AttributeValue
+    __parameter_input_metadata['AttributeValue.Description'] = "attribute value"
+    __parameter_input_metadata['AttributeValue.Label'] = "Attribute value"
+    __parameter_input_metadata['AttributeValue.Tooltip'] =\
         "Attribute value. ${Property} syntax is recognized. \n" \
         "All features are populated with the same value. This parameter is designed to aid in command testing. "
 
@@ -113,7 +96,7 @@ class AddGeoLayerAttribute(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "AddGeoLayerAttribute"
+        self.command_name = "SetGeoLayerAttribute"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -152,21 +135,6 @@ class AddGeoLayerAttribute(AbstractCommand):
                 warning_message += "\n" + message
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # Check that parameter AttributeType is either 'string', 'date', 'int' and 'double'.
-        # noinspection PyPep8Naming
-        pv_AttributeType = self.get_parameter_value(parameter_name="AttributeType",
-                                                    command_parameters=command_parameters)
-
-        acceptable_values = ["string", "date", "int", "double"]
-        if not validator_util.validate_string_in_list(pv_AttributeType, acceptable_values, ignore_case=True):
-            message = "AttributeType parameter value ({}) is not recognized.".format(pv_AttributeType)
-            recommendation = "Specify one of the acceptable values ({}) for the AttributeType parameter.".format(
-                acceptable_values)
-            warning_message += "\n" + message
-            self.command_status.add_to_log(
-                CommandPhaseType.INITIALIZATION,
-                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
         # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
@@ -231,18 +199,16 @@ class AddGeoLayerAttribute(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
             # If the input attribute name is longer than 10 characters, raise a WARNING.
-            # - TODO smalers 2020-11-16 this should not be an issue other than writing shapefiles so add the
-            #   check and warning to WriteGeoLayerToShapefile command.
-            # if len(attribute_name) > 10:
-            #
-            #    self.warning_count += 1
-            #    message = 'The attribute name ({}) is longer than 10 characters. Esri Shapefiles require the' \
-            #              ' attribute names to be 10 or less characters.'.format(attribute_name)
-            #    recommendation = 'If this GeoLayer will be written in shapefile format, change the attribute name to' \
-            #                     ' only include 10 or less characters.'
-            #    self.logger.warning(message)
-            #    self.command_status.add_to_log(CommandPhaseType.RUN,
-            #                                   CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
+            if len(attribute_name) > 10:
+
+                self.warning_count += 1
+                message = 'The attribute name ({}) is longer than 10 characters. Esri Shapefiles require the' \
+                          ' attribute names to be 10 or less characters.'.format(attribute_name)
+                recommendation = 'If this GeoLayer will be written in shapefile format, change the attribute name to' \
+                                 ' only include 10 or less characters.'
+                self.logger.warning(message)
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
         # Return the Boolean to determine if the attribute should be added. If TRUE, all checks passed. If FALSE,
         # one or many checks failed.
@@ -267,9 +233,7 @@ class AddGeoLayerAttribute(AbstractCommand):
         # noinspection PyPep8Naming
         pv_AttributeName = self.get_parameter_value("AttributeName")
         # noinspection PyPep8Naming
-        pv_AttributeType = self.get_parameter_value("AttributeType")
-        # noinspection PyPep8Naming
-        pv_InitialValue = self.get_parameter_value("InitialValue", default_value=None)
+        pv_AttributeValue = self.get_parameter_value("AttributeValue", default_value=None)
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
@@ -284,20 +248,14 @@ class AddGeoLayerAttribute(AbstractCommand):
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
                 # Add the attribute to the GeoLayer.
-                # - will throw an exception if it can't be added
-                input_geolayer.add_attribute(pv_AttributeName, pv_AttributeType)
+                # input_geolayer.set_attribute(pv_AttributeName)
 
-                # If the InitialValue parameter has been set, populate the added attribute with the given value.
+                # If the AttributeValue parameter has been set, populate the added attribute with the given value.
                 # Expand for ${Property} syntax.
-                if pv_InitialValue is not None:
-                    # Set to the initial value
-                    # noinspection PyPep8Naming
-                    pv_InitialValue = self.command_processor.expand_parameter_value(pv_InitialValue, self)
-                    self.logger.info("Setting layer attribute '{}' to value '{}'".format(
-                        pv_AttributeName, pv_InitialValue))
-                    set_count = input_geolayer.set_attribute(pv_AttributeName, pv_InitialValue)
-                    self.logger.info("Set layer attribute '{}' to value '{}' for {} features".format(
-                        pv_AttributeName, pv_InitialValue, set_count))
+                # noinspection PyPep8Naming
+                pv_AttributeValue = self.command_processor.expand_parameter_value(pv_AttributeValue, self)
+                if pv_AttributeValue:
+                    input_geolayer.populate_attribute(pv_AttributeName, pv_AttributeValue)
 
             # Raise an exception if an unexpected error occurs during the process
             except Exception:

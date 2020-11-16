@@ -98,6 +98,7 @@ from geoprocessor.commands.vector.IntersectGeoLayer import IntersectGeoLayer
 from geoprocessor.commands.vector.MergeGeoLayers import MergeGeoLayers
 from geoprocessor.commands.vector.ReadGeoLayerFromDelimitedFile import ReadGeoLayerFromDelimitedFile
 from geoprocessor.commands.vector.ReadGeoLayerFromGeoJSON import ReadGeoLayerFromGeoJSON
+from geoprocessor.commands.vector.ReadGeoLayerFromKML import ReadGeoLayerFromKML
 from geoprocessor.commands.vector.ReadGeoLayerFromShapefile import ReadGeoLayerFromShapefile
 from geoprocessor.commands.vector.ReadGeoLayerFromWebFeatureService import ReadGeoLayerFromWebFeatureService
 from geoprocessor.commands.vector.ReadGeoLayersFromFGDB import ReadGeoLayersFromFGDB
@@ -106,6 +107,7 @@ from geoprocessor.commands.vector.ReadGeoLayersFromFolder import ReadGeoLayersFr
 from geoprocessor.commands.vector.RemoveGeoLayerAttributes import RemoveGeoLayerAttributes
 from geoprocessor.commands.vector.RemoveGeoLayerFeatures import RemoveGeoLayerFeatures
 from geoprocessor.commands.vector.RenameGeoLayerAttribute import RenameGeoLayerAttribute
+from geoprocessor.commands.vector.SetGeoLayerAttribute import SetGeoLayerAttribute
 from geoprocessor.commands.vector.SetGeoLayerCRS import SetGeoLayerCRS
 from geoprocessor.commands.vector.SetGeoLayerProperty import SetGeoLayerProperty
 from geoprocessor.commands.vector.SimplifyGeoLayerGeometry import SimplifyGeoLayerGeometry
@@ -167,6 +169,7 @@ class GeoProcessorCommandFactory(object):
         "RASTERIZEGEOLAYER": RasterizeGeoLayer(),
         "READGEOLAYERFROMDELIMITEDFILE": ReadGeoLayerFromDelimitedFile(),
         "READGEOLAYERFROMGEOJSON": ReadGeoLayerFromGeoJSON(),
+        "READGEOLAYERFROMKML": ReadGeoLayerFromKML(),
         "READGEOLAYERFROMSHAPEFILE": ReadGeoLayerFromShapefile(),
         "READGEOLAYERFROMWEBFEATURESERVICE": ReadGeoLayerFromWebFeatureService(),
         "READGEOLAYERSFROMFGDB": ReadGeoLayersFromFGDB(),
@@ -187,6 +190,7 @@ class GeoProcessorCommandFactory(object):
         "RUNOGRPROGRAM": RunOgrProgram(),
         "RUNPROGRAM": RunProgram(),
         "RUNSQL": RunSql(),
+        "SETGEOLAYERATTRIBUTE": SetGeoLayerAttribute(),
         "SETGEOLAYERCRS": SetGeoLayerCRS(),
         "SETGEOLAYERPROPERTY": SetGeoLayerProperty(),
         "SETGEOLAYERVIEWCATEGORIZEDSYMBOL": SetGeoLayerViewCategorizedSymbol(),
@@ -387,6 +391,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadGeoLayerFromDelimitedFile()
                 elif command_name_upper == "READGEOLAYERFROMGEOJSON":
                     return ReadGeoLayerFromGeoJSON()
+                elif command_name_upper == "READGEOLAYERFROMKML":
+                    return ReadGeoLayerFromKML()
                 elif command_name_upper == "READGEOLAYERFROMSHAPEFILE":
                     return ReadGeoLayerFromShapefile()
                 elif command_name_upper == "READGEOLAYERFROMWEBFEATURESERVICE":
@@ -429,6 +435,8 @@ class GeoProcessorCommandFactory(object):
                     return RunSql()
 
                 # S commands
+                elif command_name_upper == "SETGEOLAYERATTRIBUTE":
+                    return SetGeoLayerAttribute()
                 elif command_name_upper == "SETGEOLAYERCRS":
                     return SetGeoLayerCRS()
                 elif command_name_upper == "SETGEOLAYERPROPERTY":

@@ -19,8 +19,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from geoprocessor.core.VectorGeoLayer import GeoLayer
-from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
+from geoprocessor.core.GeoLayer import GeoLayer
 
 import geoprocessor.ui.util.qt_util as qt_util
 import geoprocessor.util.app_util as app_util

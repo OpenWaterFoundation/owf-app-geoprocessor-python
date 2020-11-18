@@ -120,7 +120,7 @@ class WriteGeoLayerToDelimitedFile(AbstractCommand):
         "This type of geometry can represent 2D and 3D POINTS, LINES or POLYGONS. \n"
         "XY: The geometry is stored in two columns as X and Y coordinates. "
         "This type of geometry can only represent 2D POINTS. The X column is before the Y column.\n"
-        "YX: The geometry is stored in two columns as X and Y coordinates. "
+        "YX: The geometry is stored in two columns as Y and X coordinates. "
         "This type of geometry can only represent 2D POINTS. The Y column is before the X column.\n"
         "XYZ: The geometry is stored in three columns as X, Y, and Z coordinates. "
         "This type of geometry can only represent 3D POINTS.")

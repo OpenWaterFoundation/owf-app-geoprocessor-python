@@ -91,6 +91,7 @@ from geoprocessor.commands.util.WriteCommandSummaryToFile import WriteCommandSum
 
 from geoprocessor.commands.vector.AddGeoLayerAttribute import AddGeoLayerAttribute
 from geoprocessor.commands.vector.ClipGeoLayer import ClipGeoLayer
+from geoprocessor.commands.vector.ConvertGeoLayerGeometry import ConvertGeoLayerGeometry
 from geoprocessor.commands.vector.CopyGeoLayer import CopyGeoLayer
 from geoprocessor.commands.vector.CreateGeoLayerFromGeometry import CreateGeoLayerFromGeometry
 from geoprocessor.commands.vector.FreeGeoLayers import FreeGeoLayers
@@ -145,6 +146,7 @@ class GeoProcessorCommandFactory(object):
         "COMMENTBLOCKEND": CommentBlockEnd(),
         "COMMENTBLOCKSTART": CommentBlockStart(),
         "COMPAREFILES": CompareFiles(),
+        "CONVERTGEOLAYERGEOMETRY": ConvertGeoLayerGeometry(),
         "COPYFILE": CopyFile(),
         "COPYGEOLAYER": CopyGeoLayer(),
         "COPYGEOMAP": CreateGeoMap(),
@@ -327,6 +329,8 @@ class GeoProcessorCommandFactory(object):
                     return CloseDataStore()
                 elif command_name_upper == "COMPAREFILES":
                     return CompareFiles()
+                elif command_name_upper == "CONVERTGEOLAYERGEOMETRY":
+                    return ConvertGeoLayerGeometry()
                 elif command_name_upper == "COPYFILE":
                     return CopyFile()
                 elif command_name_upper == "COPYGEOLAYER":

@@ -45,8 +45,8 @@ from PyQt5 import QtCore
 
 """
 This module contains functions that perform spatial data processing using QGIS library functions.
-The code in this file should NOT have knowledge about the GeoProcessor, to allow updates to QGIS and also to
-allow implementing a similar ArcGIS Pro version of these functions.
+The code in this file should NOT have knowledge about the GeoProcessor or objects such as GeoLayer and VectorGeoLayer,
+which allows updates to QGIS and also to allow implementing a similar ArcGIS Pro version of these functions.
 """
 
 # TODO smalers 2018-01-28 Evaluate whether to make this private via Pythonic underscore naming
@@ -634,6 +634,42 @@ def get_geometrytype_wkt(qgsvectorlayer: QgsVectorLayer) -> str:
             return get_geometrytype_qgis(qgsvectorlayer)
         except KeyError:
             return "Unknown"
+
+
+def get_layer_feature_count(qgsvectorlayer: QgsVectorLayer) -> int:
+    """
+    Return the number of features in a layer, needed because QgsVectorLayer.getFeatures() does not implement
+    has len() function.
+
+    Args:
+        qgsvectorlayer: QgsVectorLayer to process.
+
+    Returns:
+        Number of features in the layer, always zero or more.
+    """
+    feature_count = qgsvectorlayer.featureCount()
+    if feature_count == -1:
+        # Could be a valid error or something more subtle so count the features.
+        # See:  https://gis.stackexchange.com/questions/29500/getting-feature-count-of-qgsvectorlayer-using-pyqgis
+        feature_count = 0
+        for feature in qgsvectorlayer.getFeatures():
+            feature_count += 1
+    return feature_count
+
+
+def get_layer_features(qgsvectorlayer: QgsVectorLayer) -> [QgsFeature]:
+    """
+    Return a list of features from a layer, needed because QgsVectorLayer.getFeatures() does not return a list
+    that is iterable or has len() function.
+
+    Args:
+        qgsvectorlayer: QgsVectorLayer to process.
+
+    Returns:
+        [QgsFeature] list containing a list of features in the layer.
+    """
+    features = [feature for feature in qgsvectorlayer.getFeatures()]
+    return features
 
 
 def get_qgis_version_developer(int_version: bool = True) -> str:

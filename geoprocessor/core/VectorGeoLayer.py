@@ -23,11 +23,9 @@
 from __future__ import annotations
 
 import geoprocessor.util.qgis_util as qgis_util
-from geoprocessor.core import VectorFormatType
 from geoprocessor.core.GeoLayer import GeoLayer
 from qgis.core import QgsVectorLayer
 
-import logging
 import os
 from typing import Any
 

@@ -856,6 +856,77 @@ def initialize_qgis_processor() -> Processing:
     return pr
 
 
+def log_raster_metadata(qgs_raster_layer: QgsRasterLayer, logger: logging.Logger = None) -> None:
+    """
+    Log raster metadata, useful for troubleshooting.
+
+    Args:
+        qgs_raster_layer:  Raster layer to process.
+        logger:  Logger to use for output.  If not specified a new logger will be created.
+
+    Returns:
+        None
+    """
+
+    if logger is None:
+        # Create a logger to use
+        logger = logging.getLogger(__name__)
+
+    logger.info("Raster size = {} columns x {} rows, {} bands".format(qgs_raster_layer.width(),
+                                                                      qgs_raster_layer.height(),
+                                                                      qgs_raster_layer.bandCount()))
+    logger.info("Raster units per pixel x  = {} y  = {}".format(qgs_raster_layer.rasterUnitsPerPixelX(),
+                                                                qgs_raster_layer.rasterUnitsPerPixelY()))
+    raster_type = qgs_raster_layer.rasterType()
+    if raster_type == 1:
+        logger.info("Raster type = {} (Palette)".format(raster_type))
+    elif raster_type == 2:
+        logger.info("Raster type = {} (MultiBand)".format(raster_type))
+    else:
+        logger.info("Raster type = {} (unknown)".format(raster_type))
+
+    raster_data_provider = qgs_raster_layer.dataProvider()
+    # Data types from:  https://docs.qgis.org/3.16/en/docs/user_manual/processing_algs/gdal/rasterprojections.html
+    #    #warp-reproject
+    data_types = {
+        0: "Unknown",
+        1: "Byte",
+        2: "Int16",
+        3: "UInt16",
+        4: "UInt32",
+        5: "Int32",
+        6: "Float32",
+        7: "Float64",
+        8: "CInt16",
+        9: "CInt32",
+        10: "CFloat32",
+        11: "CFloat64"
+    }
+    for iband in range(1, (qgs_raster_layer.bandCount() + 1)):
+        logger.info("Band: {}".format(qgs_raster_layer.bandName(iband)))
+        stats = qgs_raster_layer.dataProvider().bandStatistics(iband, QgsRasterBandStats.All)
+        logger.info("  Data type = {} {}".format(raster_data_provider.dataType(iband),
+                                                 data_types[raster_data_provider.dataType(iband)]))
+        logger.info("  User nodata values = {}".format(raster_data_provider.userNoDataValues(iband)))
+        logger.info("  Source data type = {} {}".format(raster_data_provider.sourceDataType(iband),
+                                                        data_types[raster_data_provider.sourceDataType(iband)]))
+        logger.info("  Source has nodata value = {}".format(raster_data_provider.sourceHasNoDataValue(iband)))
+        if raster_data_provider.sourceHasNoDataValue(iband):
+            logger.info("  Source nodata value = {}".format(raster_data_provider.sourceNoDataValue(iband)))
+        logger.info("  Minimum = {}".format(stats.minimumValue))
+        logger.info("  Maximum = {}".format(stats.maximumValue))
+        logger.info("  Mean = {}".format(stats.mean))
+        logger.info("  Range = {}".format(stats.range))
+        logger.info("  StdDev = {}".format(stats.stdDev))
+        # logger.info("  Sum = {}".format(stats.sum))
+        # logger.info("  SumOfSquares = {}".format(stats.sumOfSquares))
+
+    logger.info("Data provider:")
+    logger.info("  Extent: {}".format(raster_data_provider.extent()))
+    logger.info("  DPI: {}".format(raster_data_provider.dpi()))
+    logger.info("  Has pyramids: {}".format(raster_data_provider.hasPyramids()))
+
+
 def parse_qgs_crs(crs_code: str) -> QgsCoordinateReferenceSystem or None:
     """
     Checks if the crs_code create a valid and usable QgsCoordinateReferenceSystem object. If so, return
@@ -927,35 +998,15 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
     base_name = file_info.baseName()
 
     # Create the QgsRasterLayer object.
-    qgs_raster_layer_obj = QgsRasterLayer(path, base_name)
+    qgs_raster_layer = QgsRasterLayer(path, base_name)
 
     # Return the QgsRasterLayer if it is valid.
-    if qgs_raster_layer_obj.isValid():
-        # Log some information.
-        logger.info("Raster size = {} columns x {} rows, {} bands".format(qgs_raster_layer_obj.width(),
-                                                                          qgs_raster_layer_obj.height(),
-                                                                          qgs_raster_layer_obj.bandCount()))
-        logger.info("Raster units per pixel x  = {} y  = {}".format(qgs_raster_layer_obj.rasterUnitsPerPixelX(),
-                                                                    qgs_raster_layer_obj.rasterUnitsPerPixelY()))
-        raster_type = qgs_raster_layer_obj.rasterType()
-        if raster_type == 1:
-            logger.info("Raster type = {} (Palette)".format(raster_type))
-        elif raster_type == 2:
-            logger.info("Raster type = {} (MultiBand)".format(raster_type))
-        else:
-            logger.info("Raster type = {} (unknown)".format(raster_type))
-
-        for iband in range(1,(qgs_raster_layer_obj.bandCount() + 1)):
-            logger.info("Band: {}".format(qgs_raster_layer_obj.bandName(iband)))
-            stats = qgs_raster_layer_obj.dataProvider().bandStatistics(iband, QgsRasterBandStats.All)
-            logger.info("  Minimum = {}".format(stats.minimumValue))
-            logger.info("  Maximum = {}".format(stats.maximumValue))
-            logger.info("  Mean = {}".format(stats.mean))
-            logger.info("  Range = {}".format(stats.range))
-            logger.info("  StdDev = {}".format(stats.stdDev))
-            # logger.info("  Sum = {}".format(stats.sum))
-            # logger.info("  SumOfSquares = {}".format(stats.sumOfSquares))
-        return qgs_raster_layer_obj
+    if qgs_raster_layer.isValid():
+        # Log raster information for troubleshooting
+        logger.info("Raster layer metadata after reading from file:")
+        log_raster_metadata(qgs_raster_layer, logger=logger)
+        # Return the layer that was read
+        return qgs_raster_layer
 
     else:
         # If the created QGSRasterLayer object is invalid, print a warning message and return None.

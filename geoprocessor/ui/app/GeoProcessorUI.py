@@ -379,18 +379,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Commands(Raster) menu
         self.Menu_Commands_Raster: QtWidgets.QMenu or None = None
 
-        # Commands(Raster) / Create GeoLayer
+        # Commands(Raster) / Create Raster GeoLayer
         self.Menu_Commands_Raster_Create_RasterGeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Raster_Create_CreateRasterGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Raster_Create_RasterizeGeoLayer: QtWidgets.QAction or None = None
 
-        # Commands(Raster) / Read GeoLayer
+        # Commands(Raster) / Read Raster GeoLayer
         self.Menu_Commands_Raster_Read_RasterGeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile: QtWidgets.QAction or None = None
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileService: QtWidgets.QAction or None = None
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService: QtWidgets.QAction or None = None
 
-        # Commands(Raster) / Write GeoLayer
+        # Commands(Raster) / Manipulate Raster GeoLayer
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS: QtWidgets.QAction or None = None
+
+        # Commands(Raster) / Write Raster GeoLayer
         self.Menu_Commands_Raster_Write_RasterGeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Raster_Write_WriteRasterGeoLayerFromFile: QtWidgets.QAction or None = None
 
@@ -2689,7 +2693,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.menubar.addAction(self.Menu_Commands_Raster.menuAction())
 
         # ------------------------------------------------------------------------------------------------------------
-        # Commands / Create - Raster GeoLayer menu
+        # Commands / Create Raster GeoLayer menu
         # ------------------------------------------------------------------------------------------------------------
         self.Menu_Commands_Raster_Create_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
         self.Menu_Commands_Raster_Create_RasterGeoLayer.setObjectName(
@@ -2724,7 +2728,30 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.Menu_Commands_Raster_Create_RasterizeGeoLayer)
 
         # ------------------------------------------------------------------------------------------------------------
-        # Commands / Read - Raster GeoLayer menu
+        # Commands (Raster) / Manipulate Raster GeoLayer menu
+        # ------------------------------------------------------------------------------------------------------------
+
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_Raster_GeoLayer"))
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.setTitle("Manipulate Raster GeoLayer")
+        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.menuAction())
+
+        # ChangeRasterGeoLayerCRS
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS"))
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setText(
+            "ChangeRasterGeoLayerCRS()... <change a Raster GeoLayer CRS>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.triggered.connect(
+            functools.partial(self.edit_new_command, "ChangeRasterGeoLayerCRS()"))
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.addAction(
+            self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS)
+
+        # ------------------------------------------------------------------------------------------------------------
+        # Commands (Raster) / Read Raster GeoLayer menu
         # ------------------------------------------------------------------------------------------------------------
         self.Menu_Commands_Raster_Read_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
         self.Menu_Commands_Raster_Read_RasterGeoLayer.setObjectName(
@@ -2774,8 +2801,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService)
 
         # ------------------------------------------------------------------------------------------------------------
-        # Commands / Write - Raster GeoLayer menu
+        # Commands (Raster) / Write Raster GeoLayer menu
         # ------------------------------------------------------------------------------------------------------------
+
         self.Menu_Commands_Raster_Write_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
         self.Menu_Commands_Raster_Write_RasterGeoLayer.setObjectName(
             qt_util.from_utf8("Menu_Commands_Raster_Write_Raster_GeoLayer"))

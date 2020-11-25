@@ -239,17 +239,29 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                                                                             recommendation))
                     else:
                         # Default to outputting the same CRS as the input layer
-                        # crs_transform = QgsCoordinateTransformContext()
                         crs = qgs_raster_layer.crs()
+                    # crs_string should not be needed
+                    crs_string = ""
+                    #crs_transform = QgsCoordinateTransformContext(qgs_raster_layer.crs(), crs, crs_string)
+                    crs_transform = QgsCoordinateTransformContext()
                     # pipe = None
+                    # Set the create options so output is compressed
+                    options = [
+                        #"EXTRA": '-co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=LZW'
+                        #"OPTIONS": 'TILED=YES,COPY_SRC_OVERVIEWS=YES,COMPRESS=LZW'
+                        #"TILED=YES",
+                        #"COPY_SRC_OVERVIEWS=YES",
+                        "COMPRESS=LZW"
+                    ]
+                    file_writer.setCreateOptions(options)
                     file_writer.writeRaster(
                         pipe,
                         provider.xSize(),
                         provider.ySize(),
                         provider.extent(),
-                        crs
+                        crs,
                         # qgs_raster_layer.crs(),
-                        # crs_transform
+                        crs_transform  # seems to be redundant with crs - is QGIS migrating design?
                     )
 
             except Exception:

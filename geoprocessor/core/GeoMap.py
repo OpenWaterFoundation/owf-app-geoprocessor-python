@@ -71,7 +71,7 @@ class GeoMap(object):
 
         # Coordinate Reference System (CRS) for the map
         # - this will be set to None if CRS is not found
-        self.crs: QgsCoordinateReferenceSystem or None = qgis_util.get_qgscoordinatereferencesystem_obj(crs_code)
+        self.crs: QgsCoordinateReferenceSystem or None = qgis_util.parse_qgs_crs(crs_code)
 
         # Data path for the GeoMap, folders or URL path to look for data.
         # - geolayer file name will be relative to this, if not specified as absolute path

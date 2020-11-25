@@ -196,26 +196,29 @@ class CopyFile(AbstractCommand):
 
         # noinspection PyBroadException
         try:
-            input_count = 2
-            if not os.path.exists(pv_SourceFile_absolute):
+            # Need both the input file and output folder to exist to complete the copy
+            input_count = 0
+            if os.path.exists(pv_SourceFile_absolute):
+                input_count += 1
+            else:
                 warning_count += 1
-                message = 'The source file does not exist: "' + pv_SourceFile_absolute + '"'
+                message = "The source file does not exist: {}".format(pv_SourceFile_absolute)
                 self.command_status.add_to_log(
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message,
                                      "Verify that the source exists at the time the command is run."))
                 logger.warning(message)
-                input_count -= 1
 
             destination_folder = os.path.dirname(pv_DestinationFile_absolute)
-            if not os.path.exists(destination_folder):
+            if os.path.exists(destination_folder):
+                input_count += 1
+            else:
                 warning_count += 1
-                message = 'The destination folder does not exist: "' + destination_folder + '"'
+                message = "The destination folder does not exist: {}".format(destination_folder)
                 self.command_status.add_to_log(
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message,
                                      "Verify that the destination folder exists at the time the command is run."))
-                input_count -= 1
 
             if input_count == 2:
                 # Try to do the copy
@@ -224,8 +227,8 @@ class CopyFile(AbstractCommand):
 
         except Exception:
             warning_count += 1
-            message = 'Unexpected error copying file "' + pv_SourceFile_absolute + '" to "' + \
-                      pv_DestinationFile_absolute + '"'
+            message = "Unexpected error copying file '{}' to '{}'".format(pv_SourceFile_absolute,
+                                                                          pv_DestinationFile_absolute)
             logger.warning(message, exc_info=True)
             self.command_status.add_to_log(
                 CommandPhaseType.RUN,
@@ -233,7 +236,7 @@ class CopyFile(AbstractCommand):
                                  "See the log file for details."))
 
         if warning_count > 0:
-            message = "There were " + str(warning_count) + " warnings processing the command."
+            message = "There were {} warnings processing the command.".format(warning_count)
             raise CommandError(message)
 
         self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)

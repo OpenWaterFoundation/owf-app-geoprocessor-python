@@ -140,7 +140,7 @@ def run_check(command, condition: str, parameter_name: str, parameter_value: str
 
     elif condition_upper == "ISCRSCODEVALID":
         # Check whether the parameter value (crs code)is a valid CRS code usable in the QGIS environment.
-        if qgis_util.get_qgscoordinatereferencesystem_obj(parameter_value) is None:
+        if qgis_util.parse_qgs_crs(parameter_value) is None:
             message = 'The {} ({}) is not a valid CRS code.'.format(parameter_name, parameter_value)
             recommendation =\
                 'Specify a valid CRS code (EPSG codes are an approved format).  See:  https://spatialreference.org/'
@@ -381,7 +381,7 @@ def run_check(command, condition: str, parameter_name: str, parameter_value: str
 
     elif condition_upper == "ISQGSEXPRESSIONVALID":
         # Check whether the input string is a valid QGSExpression.
-        if qgis_util.get_qgsexpression_obj(parameter_value) is None:
+        if qgis_util.parse_qgs_expression(parameter_value) is None:
             message = "{} ({}) is not a valid QgsExpression.".format(parameter_name, parameter_value)
             recommendation = "Specify a valid QgsExpression for {}.".format(parameter_name)
             is_valid = False

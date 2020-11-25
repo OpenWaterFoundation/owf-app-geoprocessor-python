@@ -23,6 +23,7 @@ import logging
 import os
 
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
+from qgis.core import QgsRasterBandStats
 from qgis.core import QgsGeometry, QgsMapLayer, QgsRasterLayer, QgsRectangle, QgsVectorFileWriter, QgsVectorLayer
 from qgis.core import QgsExpressionContext, QgsExpressionContextScope
 from qgis import processing
@@ -297,7 +298,7 @@ def deepcopy_qqsvectorlayer(qgsvectorlayer: QgsVectorLayer) -> QgsVectorLayer:
     # Get the geometry of the input QgsVectorLayer (qgis format).
     qgis_geometry = get_geometrytype_qgis(qgsvectorlayer)
 
-    # Get the coordinate reference system of teh input QgsVectorLayer (string epsg code).
+    # Get the coordinate reference system of the input QgsVectorLayer (string epsg code).
     crs = qgsvectorlayer.crs().authid()
 
     # Get the now_id: a string of numbers representing the current date and time. This is used to uniquely define the
@@ -752,55 +753,6 @@ def get_qgis_version_str() -> str:
     return qgis.utils.Qgis.QGIS_VERSION
 
 
-def get_qgscoordinatereferencesystem_obj(crs_code: str) -> QgsCoordinateReferenceSystem or None:
-    """
-    Checks if the crs_code create a valid and usable QgsCoordinateReferenceSystem object. If so, return
-    the QgsCoordinateReferenceSystem object. If not, return None.
-    See: https://qgis.org/pyqgis/master/core/QgsCoordinateReferenceSystem.html
-
-    Args:
-        crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
-
-    Returns:
-        The QgsCoordinateReferenceSystem object. If not valid, returns None.
-    """
-
-    # logger = logging.getLogger(__name__)
-    # logger.debug("Getting CRS for '" + crs_code + "'")
-    if QgsCoordinateReferenceSystem(crs_code).isValid():
-        # Check if the crs_code is valid. If so, return the QgsCoordinateReferenceSystem object.
-        # logger.debug("CRS is valid.")
-        return QgsCoordinateReferenceSystem(crs_code)
-    else:
-        # Not valid, return None.
-        # logger.debug("CRS is not valid.")
-        return None
-
-
-def get_qgsexpression_obj(expression_as_string: str) -> QgsExpression or None:
-    """
-    Checks if the expression_as_string creates a valid and usable QgsExpression object. If so, return
-    the QgsExpression object. If not, return None.
-    REF: https://qgis.org/api/2.18/classQgsExpression.html#a16dd130caadca19158673b8a8c1ea251
-
-    Args:
-        expression_as_string (str): a string representing a QgsExpression
-        See https://docs.qgis.org/2.8/en/docs/user_manual/working_with_vector/expression.html
-
-    Returns:
-        - QgsExpression object, if valid.
-        - None if not valid.
-  """
-
-    # Check if the expression_as_string is valid. If so, return the QgsExpression object.
-    if QgsExpression(expression_as_string).isValid():
-        return QgsExpression(expression_as_string)
-
-    # If not, return None.
-    else:
-        return None
-
-
 def initialize_qgis(qt_stylesheet_file: str = None) -> QgsApplication:
     """
     Initialize the QGIS environment.  This typically needs to be done only once when the application starts.
@@ -904,6 +856,55 @@ def initialize_qgis_processor() -> Processing:
     return pr
 
 
+def parse_qgs_crs(crs_code: str) -> QgsCoordinateReferenceSystem or None:
+    """
+    Checks if the crs_code create a valid and usable QgsCoordinateReferenceSystem object. If so, return
+    the QgsCoordinateReferenceSystem object. If not, return None.
+    See: https://qgis.org/pyqgis/master/core/QgsCoordinateReferenceSystem.html
+
+    Args:
+        crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
+
+    Returns:
+        The QgsCoordinateReferenceSystem object. If not valid, returns None.
+    """
+
+    # logger = logging.getLogger(__name__)
+    # logger.debug("Getting CRS for '" + crs_code + "'")
+    if QgsCoordinateReferenceSystem(crs_code).isValid():
+        # Check if the crs_code is valid. If so, return the QgsCoordinateReferenceSystem object.
+        # logger.debug("CRS is valid.")
+        return QgsCoordinateReferenceSystem(crs_code)
+    else:
+        # Not valid, return None.
+        # logger.debug("CRS is not valid.")
+        return None
+
+
+def parse_qgs_expression(expression_as_string: str) -> QgsExpression or None:
+    """
+    Checks if the expression_as_string creates a valid and usable QgsExpression object. If so, return
+    the QgsExpression object. If not, return None.
+    REF: https://qgis.org/api/2.18/classQgsExpression.html#a16dd130caadca19158673b8a8c1ea251
+
+    Args:
+        expression_as_string (str): a string representing a QgsExpression
+        See https://docs.qgis.org/2.8/en/docs/user_manual/working_with_vector/expression.html
+
+    Returns:
+        - QgsExpression object, if valid.
+        - None if not valid.
+  """
+
+    # Check if the expression_as_string is valid. If so, return the QgsExpression object.
+    if QgsExpression(expression_as_string).isValid():
+        return QgsExpression(expression_as_string)
+
+    # If not, return None.
+    else:
+        return None
+
+
 def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
     """
     Reads the full pathname of spatial data file and returns a QGSRasterLayer object.
@@ -918,6 +919,8 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
         A QGSRasterLayer object containing the data from the input spatial data file.
     """
 
+    logger = logging.getLogger(__name__)
+
     # Get the filename and basename of the input raster file.
     file_info = QFileInfo(spatial_data_file_abs)
     path = file_info.filePath()
@@ -928,12 +931,35 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
 
     # Return the QgsRasterLayer if it is valid.
     if qgs_raster_layer_obj.isValid():
+        # Log some information.
+        logger.info("Raster size = {} columns x {} rows, {} bands".format(qgs_raster_layer_obj.width(),
+                                                                          qgs_raster_layer_obj.height(),
+                                                                          qgs_raster_layer_obj.bandCount()))
+        logger.info("Raster units per pixel x  = {} y  = {}".format(qgs_raster_layer_obj.rasterUnitsPerPixelX(),
+                                                                    qgs_raster_layer_obj.rasterUnitsPerPixelY()))
+        raster_type = qgs_raster_layer_obj.rasterType()
+        if raster_type == 1:
+            logger.info("Raster type = {} (Palette)".format(raster_type))
+        elif raster_type == 2:
+            logger.info("Raster type = {} (MultiBand)".format(raster_type))
+        else:
+            logger.info("Raster type = {} (unknown)".format(raster_type))
+
+        for iband in range(1,(qgs_raster_layer_obj.bandCount() + 1)):
+            logger.info("Band: {}".format(qgs_raster_layer_obj.bandName(iband)))
+            stats = qgs_raster_layer_obj.dataProvider().bandStatistics(iband, QgsRasterBandStats.All)
+            logger.info("  Minimum = {}".format(stats.minimumValue))
+            logger.info("  Maximum = {}".format(stats.maximumValue))
+            logger.info("  Mean = {}".format(stats.mean))
+            logger.info("  Range = {}".format(stats.range))
+            logger.info("  StdDev = {}".format(stats.stdDev))
+            # logger.info("  Sum = {}".format(stats.sum))
+            # logger.info("  SumOfSquares = {}".format(stats.sumOfSquares))
         return qgs_raster_layer_obj
 
-    # If the created QGSRasterLayer object is invalid, print a warning message and return None.
     else:
+        # If the created QGSRasterLayer object is invalid, print a warning message and return None.
         message = 'The QGSRasterLayer for file "{}" is invalid.'.format(spatial_data_file_abs)
-        logger = logging.getLogger(__name__)
         logger.warning(message)
         raise IOError(message)
 

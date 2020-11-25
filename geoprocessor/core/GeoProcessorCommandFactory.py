@@ -43,6 +43,7 @@ from geoprocessor.commands.map.SetGeoLayerViewSingleSymbol import SetGeoLayerVie
 # from geoprocessor.commands.map.WriteGeoMapToJSON import WriteGeoMapToJSON
 from geoprocessor.commands.map.WriteGeoMapProjectToJSON import WriteGeoMapProjectToJSON
 
+from geoprocessor.commands.raster.ChangeRasterGeoLayerCRS import ChangeRasterGeoLayerCRS
 from geoprocessor.commands.raster.CreateRasterGeoLayer import CreateRasterGeoLayer
 from geoprocessor.commands.raster.RasterizeGeoLayer import RasterizeGeoLayer
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromFile import ReadRasterGeoLayerFromFile
@@ -141,6 +142,7 @@ class GeoProcessorCommandFactory(object):
         "ADDGEOMAPTOGEOMAPPROJECT": AddGeoMapToGeoMapProject(),
         "BLANK": Blank(),  # Actually has no name, is whitespace only
         "CHANGEGEOLAYERGEOMETRY": ChangeGeoLayerGeometry(),
+        "CHANGERASTERGEOLAYERCRS": ChangeRasterGeoLayerCRS(),
         "CLIPGEOLAYER": ClipGeoLayer(),
         "CLOSEDATASTORE": CloseDataStore(),
         "COMMENT": Comment(),
@@ -323,6 +325,8 @@ class GeoProcessorCommandFactory(object):
                 # C commands
                 elif command_name_upper == "CHANGEGEOLAYERGEOMETRY":
                     return ChangeGeoLayerGeometry()
+                elif command_name_upper == "CHANGERASTERGEOLAYERCRS":
+                    return ChangeRasterGeoLayerCRS()
                 elif command_name_upper == "CLIPGEOLAYER":
                     return ClipGeoLayer()
                 # Comment, CommentBlockStart, and CommentBlockEnd are checked for above

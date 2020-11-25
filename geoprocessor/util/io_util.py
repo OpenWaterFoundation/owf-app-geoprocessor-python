@@ -464,6 +464,43 @@ def read_file(path: str, comment: str = None, return_comments: bool = True) -> [
         return lines
 
 
+def remove_tmp_file(tmp_file_path: str or Path, tmp_file_comments: [str] = None) -> int:
+    """
+    Remove a temporary file.
+    If the file exists and cannot be removed it is probably locked.
+    In this case, add to the internal list of temporary files and remove when the application exits or starts,
+    via global shutdown and startup process.
+
+    Args:
+        tmp_file_path:  Path to the temporary file.
+
+    Returns:
+        0 if successful removing, 1 if failure removing (queued for removal later), -1 if file does not exist
+    """
+    logger = logging.getLogger(__name__)
+
+    if isinstance(tmp_file_path, str):
+        # Path is a string so convert to Path
+        tmp_file_path = Path(str)
+    if tmp_file_path.exists():
+        # noinspection PyBroadException
+        try:
+            tmp_file_path.unlink()
+            logger.info("Removed temporary file: {}".format(tmp_file_path))
+            return 0
+        except Exception:
+            message = "Error removing temporary file: {}).".format(tmp_file_path)
+            logger.warning(message, exc_info=True)
+            logger.warning("Will attempt to remove the next time GeoProcessor starts.")
+            if tmp_file_comments is None:
+                tmp_file_comments = ["temporary file created during processing"]
+            add_tmp_file_to_remove(tmp_file_path, tmp_file_comments)
+            return 1
+    else:
+        # File does not exist, cannot remove
+        return -1
+
+
 def to_absolute_path(parent_dir: str or Path, path: str or Path) -> str:
     """
     Convert an absolute "parent_dir" and path to an absolute path.

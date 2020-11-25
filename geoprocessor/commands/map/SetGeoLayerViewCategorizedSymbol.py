@@ -123,14 +123,15 @@ class SetGeoLayerViewCategorizedSymbol(AbstractCommand):
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
-    def check_command_parameters(self, command_parameters: dict) -> None:
+    def check_command_parameters(self, command_parameters: dict = None) -> bool:
         """
         Check the command parameters for validity.
 
         Args:
             command_parameters: the dictionary of command parameters to check (key:string_value)
 
-        Returns: None.
+        Returns:
+            True if checks pass, False if there were issues.
 
         Raises:
             ValueError if any parameters are invalid or do not have a valid value.
@@ -138,6 +139,10 @@ class SetGeoLayerViewCategorizedSymbol(AbstractCommand):
         """
 
         warning_message = ""
+
+        if command_parameters is None:
+            # Check the parameters in the class, typical for runtime
+            command_parameters = self.command_parameters
 
         # Check that required parameters are non-empty, non-None strings.
         required_parameters = command_util.get_required_parameter_names(self)

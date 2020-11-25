@@ -30,6 +30,7 @@ from geoprocessor.core.CommandStatusType import CommandStatusType
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
+import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validator_util as validator_util
 
 import logging
@@ -42,12 +43,9 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
 
     # Define the command parameters.
     __command_parameter_metadata = [
-        CommandParameterMetadata("GeoLayerID", type(""),
-                                 parameter_description="GeoLayer identifier",
-                                 editor_tooltip="GeoLayer identifier."),
-        CommandParameterMetadata("OutputFile", type(""),
-                                 parameter_description="Path to file",
-                                 editor_tooltip="Path to raster file to read, can use ${Property}.")]
+        CommandParameterMetadata("GeoLayerID", str),
+        CommandParameterMetadata("OutputFile", str),
+        CommandParameterMetadata("OutputCRS", str)]
 
     # Command metadata for command editor display
     __command_metadata = dict()
@@ -70,6 +68,14 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
         "${Property} syntax is recognized."
     __parameter_input_metadata['OutputFile.Required'] = True
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
+    # OutputCRS
+    __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of the raster"
+    __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
+    __parameter_input_metadata['OutputCRS.Tooltip'] = (
+        "The coordinate reference system of the output raster file. EPSG or ESRI code format required "
+        "(e.g. EPSG:4326, EPSG:26913, ESRI:102003).\n"
+        "If the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected "
+        "to the new CRS.")
 
     def __init__(self) -> None:
         """
@@ -179,10 +185,14 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID", default_value='%f')
         # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value("OutputFile")
+        # noinspection PyPep8Naming
+        pv_OutputCRS = self.get_parameter_value("OutputCRS")
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
+        # noinspection PyPep8Naming
+        pv_OutputCRS = self.command_processor.expand_parameter_value(pv_OutputCRS, self)
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = io_util.verify_path_for_os(
@@ -211,19 +221,35 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
                 else:
-                    # Default to outputting the same CRS
-                    # crs_transform = QgsCoordinateTransformContext(qgs_raster_layer.crs(), qgs_raster_layer.crs())
+                    # Handle output CRS.
                     # TODO smalers 2020-07-17 not sure how to handle the transfer
                     # - how does it differ from the CRS function parameter?
-                    crs_transform = QgsCoordinateTransformContext()
-                    # QgsProject.instance())
+                    if pv_OutputCRS is not None and pv_OutputCRS != "":
+                        crs = qgis_util.parse_qgs_crs(pv_OutputCRS)
+                        if crs is None:
+                            # Default the layer CRS and generate an error
+                            crs = qgs_raster_layer.crs()
+                            self.warning_count += 1
+                            message = "Requested output CRS {} is invalid, keeping the original CRS {}.".format(
+                                pv_OutputCRS, crs)
+                            recommendation = "Confirm that the output CRS is valid."
+                            self.logger.warning(message, exc_info=True)
+                            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                           CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                            recommendation))
+                    else:
+                        # Default to outputting the same CRS as the input layer
+                        # crs_transform = QgsCoordinateTransformContext()
+                        crs = qgs_raster_layer.crs()
+                    # pipe = None
                     file_writer.writeRaster(
                         pipe,
                         provider.xSize(),
                         provider.ySize(),
                         provider.extent(),
-                        qgs_raster_layer.crs(),
-                        crs_transform
+                        crs
+                        # qgs_raster_layer.crs(),
+                        # crs_transform
                     )
 
             except Exception:

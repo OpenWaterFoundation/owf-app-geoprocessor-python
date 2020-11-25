@@ -1,4 +1,4 @@
-# ChangeGeoLayerGeometry - command to convert a GeoLayer's geometry to new geometry
+# ChangeGeoLayerGeometry - command to change a GeoLayer's geometry to new geometry
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -35,9 +35,9 @@ import geoprocessor.util.qgis_util as qgis_util
 import logging
 
 
-class ConvertGeoLayerGeometry(AbstractCommand):
+class ChangeGeoLayerGeometry(AbstractCommand):
     """
-    Convert a VectorGeoLayer's geometry to a new geometry.
+    Change a VectorGeoLayer's geometry to a new geometry.
     """
 
     # Define the command parameters.
@@ -51,7 +51,7 @@ class ConvertGeoLayerGeometry(AbstractCommand):
     # Command metadata for command editor display
     __command_metadata = dict()
     __command_metadata['Description'] = (
-        "Convert a GeoLayer's geometry to new geometry and create a new layer.\n"
+        "Change a GeoLayer's geometry to new geometry and create a new layer.\n"
         "For example, change line (polyline) layer to polygon layer."
     )
     __command_metadata['EditorType'] = "Simple"
@@ -121,7 +121,7 @@ class ConvertGeoLayerGeometry(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "ConvertGeoLayerGeometry"
+        self.command_name = "ChangeGeoLayerGeometry"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -291,12 +291,12 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                 if input_geometry_upper == "POINT":
                     # Input geometry is point
                     if output_geometry_upper == "LINESTRING":
-                        # Convert points to lines
+                        # Change points to lines
                         algorithm = "qgis:pointstopath"
                         # algorithm_parameters = {'INPUT': input_file, 'ORDER_FIELD': 'fid', OUTPUT: output_file}
 
                         self.warning_count += 1
-                        message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                        message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
                         recommendation = "Software needs to be updated."
                         self.logger.warning(message, exc_info=True)
@@ -304,9 +304,9 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                     elif output_geometry_upper == "POLYGON":
-                        # Convert points to polygons - is this possible?
+                        # Change points to polygons - is this possible?
                         self.warning_count += 1
-                        message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                        message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
                         recommendation = "Software needs to be updated."
                         self.logger.warning(message, exc_info=True)
@@ -316,7 +316,7 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                     else:
                         # Unhandled
                         self.warning_count += 1
-                        message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                        message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
                         recommendation = "Software needs to be updated."
                         self.logger.warning(message, exc_info=True)
@@ -326,12 +326,12 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                 elif input_geometry_upper == "LINESTRING":
                     # Input geometry is line
                     if output_geometry_upper == "POINT":
-                        # Convert lines to point
+                        # Change lines to point
                         algorithm = "saga:convertlinestopoints"
                         # algorithm_parameters = {"LINES":input_file, "POINTS": output_file}
 
                         self.warning_count += 1
-                        message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                        message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geolayer, pv_OutputGeometry)
                         recommendation = "Software needs to be updated."
                         self.logger.warning(message, exc_info=True)
@@ -339,7 +339,7 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                     elif output_geometry_upper == "POLYGON":
-                        # Convert lines to polygons
+                        # Change lines to polygons
                         # - a simple example using polygonize did not work so need more evaluation
                         alg_to_use = 1
                         if alg_to_use == 1:
@@ -363,7 +363,7 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                     else:
                         # Unhandled
                         self.warning_count += 1
-                        message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                        message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
                         recommendation = "Software needs to be updated."
                         self.logger.warning(message, exc_info=True)
@@ -373,10 +373,10 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                 elif input_geometry_upper == "POLYGON":
                     # Input geometry is polygon
                     if output_geometry_upper == "POINT":
-                        # Convert polygons to points
+                        # Change polygons to points
 
                         self.warning_count += 1
-                        message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                        message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
                         recommendation = "Software needs to be updated."
                         self.logger.warning(message, exc_info=True)
@@ -384,10 +384,10 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                     elif output_geometry_upper == "LINESTRING":
-                        # Convert polygons to lines
+                        # Change polygons to lines
 
                         self.warning_count += 1
-                        message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                        message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
                         recommendation = "Software needs to be updated."
                         self.logger.warning(message, exc_info=True)
@@ -397,7 +397,7 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                     else:
                         # Unhandled
                         self.warning_count += 1
-                        message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                        message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
                         recommendation = "Software needs to be updated."
                         self.logger.warning(message, exc_info=True)
@@ -407,7 +407,7 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                 else:
                     # Not handled
                     self.warning_count += 1
-                    message = "Converting GeoLayer {} from {} geometry to {} geometry is not supported.".format(
+                    message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                         pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
                     recommendation = "Software needs to be updated."
                     self.logger.warning(message, exc_info=True)
@@ -420,7 +420,7 @@ class ConvertGeoLayerGeometry(AbstractCommand):
                     # This should result in output GeoLayer file written to the OUTPUT directory.
                     # TODO smalers 2020-11-17 evaluate:
                     #  feedback=self)
-                    logger.info("Converting '{}' layer geometry using algorithm '{}' and parameters '{}'".format(
+                    logger.info("Changing '{}' layer geometry using algorithm '{}' and parameters '{}'".format(
                         pv_InputGeoLayerID, algorithm, algorithm_parameters))
                     converted_output = self.command_processor.qgis_processor.runAlgorithm(algorithm,
                                                                                           algorithm_parameters)

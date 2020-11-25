@@ -39,32 +39,18 @@ import logging
 
 class WriteGeoLayerToShapefile(AbstractCommand):
     """
-    Writes a GeoLayer to a spatial data file in Shapefile format.
+    Write a GeoLayer to a spatial data file in shapefile format.
 
     This command writes a GeoLayer registered within the geoprocessor to a spatial date file in Shapefile format (a
-    suite of multiple files). The Shapefile spatial data files can then be viewed within a GIS, moved within folders on
-    the local computer, packaged for delivery, etc.
-
-    Registered GeoLayers are stored as GeoLayer objects within the geoprocessor's GeoLayers list. Each GeoLayer has one
-    feature type (point, line, polygon, etc.) and other data (an identifier, a coordinate reference system, etc). This
-    function only writes one single GeoLayer to a single spatial data file in Shapefile format.
-
-    Command Parameters
-    * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in Shapefile
-        format
-    * OutputFile (str, required): the relative pathname of the output spatial data file.
-    * OutputCRS (str, EPSG code, optional): the coordinate reference system that the output spatial data file will be
-        projected. By default, the output spatial data file will be projected to the GeoLayer's current CRS.
-    * ZipOutput (boolean, optional): If TRUE, the shapefile files will be zipped. If FALSE, they will not be zipped.
-        Default: False.
+    group of multiple files).
     """
 
     # Define the command parameters/
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("GeoLayerID", type("")),
-        CommandParameterMetadata("OutputFile", type("")),
-        CommandParameterMetadata("OutputCRS", type("")),
-        CommandParameterMetadata("ZipOutput", type(True))]
+        CommandParameterMetadata("GeoLayerID", str),
+        CommandParameterMetadata("OutputFile", str),
+        CommandParameterMetadata("OutputCRS", str),
+        CommandParameterMetadata("ZipOutput", bool)]
 
     # Command metadata for command editor display
     __command_metadata = dict()

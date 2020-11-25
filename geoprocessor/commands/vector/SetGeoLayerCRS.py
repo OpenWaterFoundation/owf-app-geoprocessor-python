@@ -163,7 +163,7 @@ class SetGeoLayerCRS(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        if qgis_util.get_qgscoordinatereferencesystem_obj(crs_code) is None:
+        if qgis_util.parse_qgs_crs(crs_code) is None:
             # If the input CRS code is not a valid code, FAILURE.
             set_crs = False
             self.warning_count += 1

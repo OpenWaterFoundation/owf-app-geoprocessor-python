@@ -310,7 +310,7 @@ class CopyGeoLayer(AbstractCommand):
                 # If the features are configured to be removed, continue.
                 if pv_IncludeFeaturesIf:
                     # Get the QGSExpression object.
-                    exp = qgis_util.get_qgsexpression_obj(pv_IncludeFeaturesIf)
+                    exp = qgis_util.parse_qgs_expression(pv_IncludeFeaturesIf)
 
                     # Get a list of Qgs Feature objects that do not match the IncludeFeaturesIf parameter criteria.
                     non_matching_features = qgis_util.get_features_not_matching_expression(

@@ -90,8 +90,8 @@ from geoprocessor.commands.util.WebGet import WebGet
 from geoprocessor.commands.util.WriteCommandSummaryToFile import WriteCommandSummaryToFile
 
 from geoprocessor.commands.vector.AddGeoLayerAttribute import AddGeoLayerAttribute
+from geoprocessor.commands.vector.ChangeGeoLayerGeometry import ChangeGeoLayerGeometry
 from geoprocessor.commands.vector.ClipGeoLayer import ClipGeoLayer
-from geoprocessor.commands.vector.ConvertGeoLayerGeometry import ConvertGeoLayerGeometry
 from geoprocessor.commands.vector.CopyGeoLayer import CopyGeoLayer
 from geoprocessor.commands.vector.CreateGeoLayerFromGeometry import CreateGeoLayerFromGeometry
 from geoprocessor.commands.vector.FreeGeoLayers import FreeGeoLayers
@@ -140,13 +140,13 @@ class GeoProcessorCommandFactory(object):
         "ADDGEOLAYERVIEWTOGEOMAP": AddGeoLayerViewToGeoMap(),
         "ADDGEOMAPTOGEOMAPPROJECT": AddGeoMapToGeoMapProject(),
         "BLANK": Blank(),  # Actually has no name, is whitespace only
+        "CHANGEGEOLAYERGEOMETRY": ChangeGeoLayerGeometry(),
         "CLIPGEOLAYER": ClipGeoLayer(),
         "CLOSEDATASTORE": CloseDataStore(),
         "COMMENT": Comment(),
         "COMMENTBLOCKEND": CommentBlockEnd(),
         "COMMENTBLOCKSTART": CommentBlockStart(),
         "COMPAREFILES": CompareFiles(),
-        "CONVERTGEOLAYERGEOMETRY": ConvertGeoLayerGeometry(),
         "COPYFILE": CopyFile(),
         "COPYGEOLAYER": CopyGeoLayer(),
         "COPYGEOMAP": CreateGeoMap(),
@@ -321,6 +321,8 @@ class GeoProcessorCommandFactory(object):
                     return Blank()
 
                 # C commands
+                elif command_name_upper == "CHANGEGEOLAYERGEOMETRY":
+                    return ChangeGeoLayerGeometry()
                 elif command_name_upper == "CLIPGEOLAYER":
                     return ClipGeoLayer()
                 # Comment, CommentBlockStart, and CommentBlockEnd are checked for above
@@ -329,8 +331,6 @@ class GeoProcessorCommandFactory(object):
                     return CloseDataStore()
                 elif command_name_upper == "COMPAREFILES":
                     return CompareFiles()
-                elif command_name_upper == "CONVERTGEOLAYERGEOMETRY":
-                    return ConvertGeoLayerGeometry()
                 elif command_name_upper == "COPYFILE":
                     return CopyFile()
                 elif command_name_upper == "COPYGEOLAYER":

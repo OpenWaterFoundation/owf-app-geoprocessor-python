@@ -275,8 +275,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # Commands / Manipulate GeoLayer
         self.Menu_Commands_Manipulate_GeoLayer: QtWidgets.QMenu or None = None
+        self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_ClipGeoLayer: QtWidgets.QAction or None = None
-        self.Menu_Commands_Manipulate_ConvertGeoLayerGeometry: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_IntersectGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_MergeGeoLayers: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures: QtWidgets.QAction or None = None
@@ -1818,6 +1818,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_GeoLayer.setTitle("Manipulate GeoLayer")
         self.Menu_Commands.addAction(self.Menu_Commands_Manipulate_GeoLayer.menuAction())
 
+        # ChangeGeoLayerGeometry
+        self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Manipulate_ChangeGeoLayerGeometry"))
+        self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry.setText(
+            "ChangeGeoLayerGeometry()... <change a GeoLayer to new geometry>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry.triggered.connect(
+            functools.partial(self.edit_new_command, "ChangeGeoLayerGeometry()"))
+        self.Menu_Commands_Manipulate_GeoLayer.addAction(self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry)
+
         # ClipGeoLayer
         self.Menu_Commands_Manipulate_ClipGeoLayer = QtWidgets.QAction(main_window)
         self.Menu_Commands_Manipulate_ClipGeoLayer.setObjectName(
@@ -1829,18 +1841,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_ClipGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "ClipGeoLayer()"))
         self.Menu_Commands_Manipulate_GeoLayer.addAction(self.Menu_Commands_Manipulate_ClipGeoLayer)
-
-        # ConvertGeoLayerGeometry
-        self.Menu_Commands_Manipulate_ConvertGeoLayerGeometry = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Manipulate_ConvertGeoLayerGeometry.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Manipulate_ConvertGeoLayerGeometry"))
-        self.Menu_Commands_Manipulate_ConvertGeoLayerGeometry.setText(
-            "ConvertGeoLayerGeometry()... <convert a GeoLayer to new geometry>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.Menu_Commands_Manipulate_ConvertGeoLayerGeometry.triggered.connect(
-            functools.partial(self.edit_new_command, "ConvertGeoLayerGeometry()"))
-        self.Menu_Commands_Manipulate_GeoLayer.addAction(self.Menu_Commands_Manipulate_ConvertGeoLayerGeometry)
 
         # IntersectGeoLayer
         self.Menu_Commands_Manipulate_IntersectGeoLayer = QtWidgets.QAction(main_window)

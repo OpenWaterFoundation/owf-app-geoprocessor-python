@@ -4021,9 +4021,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 output_file_ext = io_util.get_extension(output_file)
 
                 # A dictionary that relates common file extensions to the appropriate file name
-                extension_dictionary = {'.xlsx': 'Microsoft Excel Open XML Format Spreadsheet',
-                                        '.geojson': 'GeoJSON',
-                                        '.xls': 'Microsoft Excel 97-2003 Worksheet'}
+                extension_dictionary = {'xlsx': 'Microsoft Excel Open XML Format Spreadsheet',
+                                        'geojson': 'GeoJSON',
+                                        'xls': 'Microsoft Excel 97-2003 Worksheet'}
 
                 # Retrieve the output file type and set as the attribute for the File Type column.
                 if output_file_ext in extension_dictionary.keys():

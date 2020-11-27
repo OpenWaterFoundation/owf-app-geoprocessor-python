@@ -165,7 +165,7 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
 
         # TODO egiles 2018-04-25 Currently this function does not work. Need to fix.
         # Write the table to an existing excel file in XLS format.
-        if io_util.get_extension(excel_workbook_path).upper() == ".XLS":
+        if io_util.get_extension(excel_workbook_path).upper() == "XLS":
 
             # Set the writer object.
             writer = pd.ExcelWriter(excel_workbook_path, engine='xlwt')

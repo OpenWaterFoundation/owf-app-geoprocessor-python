@@ -339,18 +339,24 @@ def get_col_names_from_delimited_file(delimited_file_abs: str, delimiter: str) -
         return None
 
 
-def get_extension(full_path: str) -> str:
+def get_extension(full_path: str, include_period: bool = False) -> str:
     """
-    Returns the extension of a full path without leading period.
+    Returns the file extension of a full file path.
 
     Args:
         full_path (str): the input full path
+        include_period (bool): whether to include the period before the extension (default is False)
 
     Returns: The extension as a string.
     """
 
     filename, extension = os.path.splitext(os.path.basename(full_path))
-    return extension
+    if include_period:
+        # Include the period, for example ".tif"
+        return extension
+    else:
+        # Do not include the period, for example "tif"
+        return extension[1:]
 
 
 def get_filename(full_path: str, remove_extension: bool = True) -> str:

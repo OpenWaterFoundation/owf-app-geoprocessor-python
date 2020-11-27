@@ -273,7 +273,7 @@ class UnzipFile(AbstractCommand):
         # A dictionary of compatible file extensions and their corresponding FileType.
         # key: Uppercase file extension.
         # value: Uppercase file type.
-        dic = {".TAR": "TAR", ".ZIP": "ZIP"}
+        dic = {"TAR": "TAR", "ZIP": "ZIP"}
 
         # Iterate over the dictionary and return the FileType that corresponds to the the input file's extension.
         for ext, file_type in dic.items():

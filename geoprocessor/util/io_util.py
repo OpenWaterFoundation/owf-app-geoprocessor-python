@@ -22,13 +22,14 @@ import geoprocessor.util.string_util as string_util
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.os_util as os_util
 
-import datetime
+from datetime import datetime
 import getpass
 import logging
 import os
 import platform
 import re
 import sys
+import tempfile
 from typing import TextIO
 from pathlib import Path
 
@@ -63,6 +64,28 @@ def add_tmp_file_to_remove(tmp_file_path: str, comments: [str] = None) -> None:
         # Save the original file as the first non-comment line in the path.
         fout.write("{}".format(tmp_file_path))
         fout.close()
+
+
+def create_tmp_filename(appname: str, algname: str, ext: str) -> str:
+    """
+    Create a temporary filename for the temporary folder for the user and operating system.
+    The filename hs the format:  appname-PID-algname-YYYY-MM-DD-hh-mm-ss-ms.ext
+    Args:
+        appname (str):  Application name, e.g., 'gp'.
+        algname (str):  Algorithm name, e.g., 'somealg'.
+        ext (str): File extension.
+
+    Returns:
+        Temporary filename that is unique and can be used as an output file for processing.
+
+    """
+    now = datetime.today()
+    nowstring = '{:04d}-{:02d}-{:02d}-{:02d}-{:02d}-{:02d}.{}'.format(now.year, now.month, now.day,
+                                                                      now.hour, now.minute,
+                                                                      now.second, now.microsecond)
+    tmp_filename = Path(tempfile.gettempdir()).joinpath('gp-{}-warpreproject-{}.{}'.format(
+                        os.getpid(), nowstring, ext))
+    return tmp_filename
 
 
 def expand_formatter(absolute_path: str, formatter: str) -> str or None:
@@ -318,7 +341,7 @@ def get_col_names_from_delimited_file(delimited_file_abs: str, delimiter: str) -
 
 def get_extension(full_path: str) -> str:
     """
-    Returns the extension of a full path.
+    Returns the extension of a full path without leading period.
 
     Args:
         full_path (str): the input full path
@@ -464,7 +487,7 @@ def read_file(path: str, comment: str = None, return_comments: bool = True) -> [
         return lines
 
 
-def remove_tmp_file(tmp_file_path: str or Path, tmp_file_comments: [str] = None) -> int:
+def remove_tmp_file(tmp_file_path: str or Path, tmp_file_comments: [str] = None, silent: bool = True) -> int:
     """
     Remove a temporary file.
     If the file exists and cannot be removed it is probably locked.
@@ -473,6 +496,8 @@ def remove_tmp_file(tmp_file_path: str or Path, tmp_file_comments: [str] = None)
 
     Args:
         tmp_file_path:  Path to the temporary file.
+        tmp_file_comments ([str]): Comments to add to the temporary file to help know its origin.
+        silent (bool): whether to print warnings when unable to delete the temporary file.
 
     Returns:
         0 if successful removing, 1 if failure removing (queued for removal later), -1 if file does not exist
@@ -486,12 +511,14 @@ def remove_tmp_file(tmp_file_path: str or Path, tmp_file_comments: [str] = None)
         # noinspection PyBroadException
         try:
             tmp_file_path.unlink()
-            logger.info("Removed temporary file: {}".format(tmp_file_path))
+            if not silent:
+                logger.info("Removed temporary file: {}".format(tmp_file_path))
             return 0
         except Exception:
-            message = "Error removing temporary file: {}).".format(tmp_file_path)
-            logger.warning(message, exc_info=True)
-            logger.warning("Will attempt to remove the next time GeoProcessor starts.")
+            if not silent:
+                message = "Error removing temporary file: {}).".format(tmp_file_path)
+                logger.warning(message, exc_info=True)
+                logger.warning("Will attempt to remove the next time GeoProcessor starts.")
             if tmp_file_comments is None:
                 tmp_file_comments = ["temporary file created during processing"]
             add_tmp_file_to_remove(tmp_file_path, tmp_file_comments)

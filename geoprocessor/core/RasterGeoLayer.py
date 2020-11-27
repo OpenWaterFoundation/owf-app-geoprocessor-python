@@ -156,6 +156,18 @@ class RasterGeoLayer(GeoLayer):
         # See the VectorGeoLayer class for similar functionality that is more extensive, given vector layer design.
         return "raster"
 
+    def get_num_bands(self) -> int:
+        """
+        Get the number of bands for this RasterGeoLayer.
+
+        Returns:
+            Number of bands for the raster geolayer or 0 if the layer is None.
+        """
+        if self.qgs_layer is None:
+            return 0
+        else:
+            return self.qgs_layer.bandCount()
+
     def get_num_cells(self) -> int:
         """
         Get the number of cells for the RasterGeoLayer, which is the number of rows multiplied by the number of columns.

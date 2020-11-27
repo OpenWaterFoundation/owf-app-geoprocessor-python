@@ -21,8 +21,30 @@
 This module provides utilities for manipulating strings.
 """
 
+import logging
 import re
 from typing import Optional, List
+
+
+def delimited_string_to_int_list(delimited_string: str, delimiter: str = ",") -> [str]:
+    """
+    Parse a delimited string into a list of numbers.
+
+    Args:
+        delimited_string (str): Delimited string.
+        delimiter (str): Delimiter for the items in the string.
+
+    Returns:
+        List of integers, guaranteed to be non-None but may be empty
+    """
+    # Parse into string list
+    string_list = delimited_string_to_list(delimited_string, delimiter)
+    # Convert each string into an integer
+    int_list = []
+    if string_list is not None:
+        for s in string_list:
+            int_list.append(int(s))
+        return int_list
 
 
 # TODO smalers 2018-01-20 need to evaluate how many complexities to handle, similar to TSTool Java code
@@ -55,6 +77,7 @@ def delimited_string_to_list(delimited_string: str, delimiter: str = ",", trim: 
     if delimited_string is None:
         return None
     else:
+        # The following works if even only a single item in the list
         parts = delimited_string.split(delimiter)
     if trim:
         for i in range(0, len(parts)):

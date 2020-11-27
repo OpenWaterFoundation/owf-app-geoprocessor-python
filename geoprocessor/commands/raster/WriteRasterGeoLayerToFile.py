@@ -245,14 +245,21 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                     #crs_transform = QgsCoordinateTransformContext(qgs_raster_layer.crs(), crs, crs_string)
                     crs_transform = QgsCoordinateTransformContext()
                     # pipe = None
-                    # Set the create options so output is compressed
-                    options = [
-                        #"EXTRA": '-co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=LZW'
-                        #"OPTIONS": 'TILED=YES,COPY_SRC_OVERVIEWS=YES,COMPRESS=LZW'
-                        #"TILED=YES",
-                        #"COPY_SRC_OVERVIEWS=YES",
-                        "COMPRESS=LZW"
-                    ]
+                    output_file_ext = io_util.get_extension(output_file_absolute)
+                    # Get specific output options.
+                    options = []
+                    self.logger.info("Output file extension is '{}'".format(output_file_ext))
+                    if output_file_ext.upper() == '.TIF':
+                        self.logger.info("Using TIF compression and tiles for output file.")
+                        # Set the create options so output is compressed and optimized for the web.
+                        # See cloud optimized GeoTIFF:  https://trac.osgeo.org/gdal/wiki/CloudOptimizedGeoTIFF
+                        options = [
+                            #"EXTRA": '-co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=LZW'
+                            #"OPTIONS": 'TILED=YES,COPY_SRC_OVERVIEWS=YES,COMPRESS=LZW'
+                            "TILED=YES",
+                            "COPY_SRC_OVERVIEWS=YES",
+                            "COMPRESS=LZW"
+                        ]
                     file_writer.setCreateOptions(options)
                     file_writer.writeRaster(
                         pipe,

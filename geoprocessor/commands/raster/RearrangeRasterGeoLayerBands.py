@@ -1,4 +1,4 @@
-# ChangeRasterGeoLayerCRS - command to change raster GeoLayer coordinate reference system (CRS)
+# RearrangeRasterGeoLayerBands - command to rearrange raster GeoLayer bands
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
 # Copyright (C) 2017-2020 Open Water Foundation
@@ -31,26 +31,27 @@ from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validator_util
 
 import logging
 
 
-class ChangeRasterGeoLayerCRS(AbstractCommand):
+class RearrangeRasterGeoLayerBands(AbstractCommand):
     """
-    Change a raster GeoLayer's coordinate reference system (CRS)
+    Rearrange a raster GeoLayer's bands, including option to omit bands.
     """
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", str),
-        CommandParameterMetadata("CRS", str),
+        CommandParameterMetadata("Bands", str),
         CommandParameterMetadata("OutputGeoLayerID", str)]
 
     # Command metadata for command editor display
     __command_metadata = dict()
     __command_metadata['Description'] = (
-        "Change the coordinate reference system (CRS) of a raster GeoLayer.\n"
+        "Rearrange the bands of a raster GeoLayer, including changing the order and the band to include.\n"
         "The layer can be updated or a new layer created."
     )
     __command_metadata['EditorType'] = "Simple"
@@ -63,12 +64,10 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
     __parameter_input_metadata['GeoLayerID.Required'] = True
     __parameter_input_metadata['GeoLayerID.Tooltip'] = "The ID of the GeoLayer."
     # CRS
-    __parameter_input_metadata['CRS.Description'] = "coordinate references system"
-    __parameter_input_metadata['CRS.Label'] = "CRS"
-    __parameter_input_metadata['CRS.Required'] = True
-    __parameter_input_metadata['CRS.Tooltip'] = (
-        "The coordinate reference system of the GeoLayer. "
-        "EPSG or ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+    __parameter_input_metadata['Bands.Description'] = "bands"
+    __parameter_input_metadata['Bands.Label'] = "Bands"
+    __parameter_input_metadata['Bands.Required'] = True
+    __parameter_input_metadata['Bands.Tooltip'] = "List of band numbers, separated by commas "
     # OutputGeoLayerID
     __parameter_input_metadata['OutputGeoLayerID.Description'] = "the output GeoLayerID"
     __parameter_input_metadata['OutputGeoLayerID.Label'] = "Output GeoLayerID"
@@ -82,7 +81,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
 
         # AbstractCommand data
         super().__init__()
-        self.command_name = "ChangeRasterGeoLayerCRS"
+        self.command_name = "RearrangeRasterGeoLayerBands"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         # Command metadata for command editor display
@@ -133,31 +132,27 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_runtime_data(self, geolayer_id: str, crs_code: str) -> bool:
+    def check_runtime_data(self, geolayer_id: str, bands: [int]) -> bool:
         """
         Checks the following:
          * The ID of the input GeoLayer is an actual GeoLayer (if not, log an error message & do not continue.)
-         * The CRS is a valid coordinate reference system code.
-         * The CRS is difference than the GeoLayer's CRS.
+         * The input geolayer includes the requested band numbers
 
         Args:
             geolayer_id (str): the ID of the GeoLayer to add the new attribute
-            crs_code (str): the CRS to set for the GeoLayer (EPSG or ESRI code)
+            bands ([int]): list of bands, each value 1+
 
         Returns:
-            set_crs: Boolean. If TRUE, the CRS should be set. If FALSE, a check has failed & the CRS should not be set.
+            run_ok: Boolean. If TRUE, OK to run. If FALSE, command should not be run.
         """
 
         # Boolean to determine if the CRS should be set. Set to TRUE until one or many checks fail.
-        set_crs = True
+        run_ok = True
 
-        # Boolean to determine if the input GeoLayer id is a valid GeoLayer ID. Set to TRUE until proved False.
-        input_geolayer_exists = True
-
-        if self.command_processor.get_geolayer(geolayer_id) is None:
+        input_geolayer = self.command_processor.get_geolayer(geolayer_id)
+        if geolayer_id is None:
             # If the input GeoLayer does not exist, FAILURE.
-            set_crs = False
-            input_geolayer_exists = False
+            run_ok = False
             self.warning_count += 1
             message = 'The input GeoLayer ID ({}) does not exist.'.format(geolayer_id)
             recommendation = 'Specify a valid GeoLayerID.'
@@ -165,31 +160,22 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.RUN,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        if qgis_util.parse_qgs_crs(crs_code) is None:
-            # If the input CRS code is not a valid code, FAILURE.
-            set_crs = False
-            self.warning_count += 1
-            message = 'The input CRS ({}) is not a valid CRS code.'.format(crs_code)
-            recommendation = 'Specify a valid CRS code (EPSG codes are an approved format).'
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
-
-        # If the input CRS code is that same as the GeoLayer's current CRS, raise a WARNING.
-        if input_geolayer_exists and self.command_processor.get_geolayer(geolayer_id).get_crs_code():
-            if crs_code.upper() == self.command_processor.get_geolayer(geolayer_id).get_crs_code().upper():
-                set_crs = False
-                self.warning_count += 1
-                message = 'The input GeoLayer ({}) already is projected to the input' \
-                          ' CRS ({}).'.format(geolayer_id, crs_code)
-                recommendation = 'The SetGeoLayerCRS command will not run. Specify a different CRS code.'
-                self.logger.warning(message)
-                self.command_status.add_to_log(CommandPhaseType.RUN,
-                                               CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
+        else:
+            # Make sure that the bands are provided as a comma-separated list of integers
+            for band in bands:
+                if (band < 1) or (band > input_geolayer.get_num_bands()):
+                    run_ok = False
+                    self.warning_count += 1
+                    message = 'The input GeoLayer ({}) does not have band {}.  Cannot rearrange band.'.format(
+                        geolayer_id, band)
+                    recommendation = 'Specify a band 1 to {}.'.format(input_geolayer.get_num_bands())
+                    self.logger.warning(message)
+                    self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                   CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
         # Return the Boolean to determine if the crs should be set. If TRUE, all checks passed. If FALSE, one or many
         # checks failed.
-        return set_crs
+        return run_ok
 
     def run_command(self) -> None:
         """
@@ -208,7 +194,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         # noinspection PyPep8Naming
-        pv_CRS = self.get_parameter_value("CRS")
+        pv_Bands = self.get_parameter_value("Bands")
         # noinspection PyPep8Naming
         pv_OutputGeoLayerID = self.get_parameter_value("OutputGeoLayerID")
 
@@ -216,99 +202,85 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.command_processor.expand_parameter_value(pv_GeoLayerID, self)
         # noinspection PyPep8Naming
+        pv_Bands = self.command_processor.expand_parameter_value(pv_Bands, self)
+        # noinspection PyPep8Naming
         pv_OutputGeoLayerID = self.command_processor.expand_parameter_value(pv_OutputGeoLayerID, self)
 
+        bands = []
+        if (pv_Bands is not None) and (pv_Bands != ''):
+            bands = string_util.delimited_string_to_int_list(pv_Bands, ",")
+
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.check_runtime_data(pv_GeoLayerID, pv_CRS):
+        if self.check_runtime_data(pv_GeoLayerID, bands):
             # Run the process.
             # noinspection PyBroadException
             try:
                 # Get the input GeoLayer.
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                # Check if the input GeoLayer has an existing CRS.
-                if input_geolayer.get_crs_code():
-                    # Reproject the GeoLayer.
-                    # - output is to a temporary file so have to read it
+                # Rearrange the layer bands.
+                # - output is to a temporary file so have to read it
 
-                    # Get the temporary folder based on TemporaryFolder parameter
-                    # - for now use the system temporary folder
-                    output_ext = "tif"
-                    raster_output_file = io_util.create_tmp_filename('gp', 'warpreproject', output_ext)
-                    self.logger.info("Temporary file is: {}".format(raster_output_file))
+                # Get the temporary folder based on TemporaryFolder parameter
+                # - for now use the system temporary folder
+                output_ext = "tif"
+                raster_output_file = io_util.create_tmp_filename('gp', 'rearrange_bands', output_ext)
+                self.logger.info("Temporary file is: {}".format(raster_output_file))
 
-                    # See:
-                    # https://docs.qgis.org/latest/en/docs/user_manual/processing_algs/gdal/rasterprojections.html
-                    #    #warp-reproject
-                    # GeoTIF OPTIONS:
-                    # https://gdal.org/drivers/raster/gtiff.html#raster-gtiff
-                    #
-                    # See cloud optimized GeoTIFF:  https://trac.osgeo.org/gdal/wiki/CloudOptimizedGeoTIFF
-                    # TODO smlers 2020-11-25 don't know how to pass the options
-                    options = [
-                        "TILED=YES",
-                        "COPY_SRC_OVERVIEWS=YES",
-                        "COMPRESS=LZW"
-                    ]
-                    # The following parameters are for GeoTIFF
-                    alg_parameters = {
-                        # Generic parameters regardless of output format.
-                        "INPUT": input_geolayer.qgs_layer,
-                        "TARGET_CRS": pv_CRS,
-                        "OUTPUT": str(raster_output_file),
-                        # The following are for GeoTIFF
-                        # "OPTIONS": 'TILED=YES,COPY_SRC_OVERVIEWS=YES,COMPRESS=LZW',
-                        # "OPTIONS": options,
-                        # "EXTRA": '-co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=LZW',
-                        # "EXTRA": '-co COMPRESS=LZW',
-                        "TILED": "YES",
-                        "COPY_SRC_OVERVIEWS": "YES",
-                        "COMPRESS": "LZW"
-                    }
-                    alg_output = self.command_processor.qgis_processor.runAlgorithm("gdal:warpreproject",
-                                                                                    alg_parameters)
-                    # Output is a dictionary
-                    self.logger.info("Algorithm output: {}".format(alg_output))
+                # See:
+                #   https://docs.qgis.org/3.16/en/docs/user_manual/processing_algs/gdal/rasterconversion.html
+                #      #rearrange-bands
+                # GeoTIF OPTIONS:
+                # https://gdal.org/drivers/raster/gtiff.html#raster-gtiff
+                #
+                # See cloud optimized GeoTIFF:  https://trac.osgeo.org/gdal/wiki/CloudOptimizedGeoTIFF
 
-                    # Create a new QgsRasterLayer from the temporary file.
-                    # - output file name should be the same as specified but get from results to confirm
-                    reprojected_layer = qgis_util.read_qgsrasterlayer_from_file(alg_output['OUTPUT'])
-                    self.logger.info("Layer metadata after changing CRS:")
-                    qgis_util.log_raster_metadata(reprojected_layer, logger=self.logger)
+                # The following parameters are for GeoTIFF
+                alg_parameters = {
+                    # Generic parameters regardless of output format.
+                    "INPUT": input_geolayer.qgs_layer,
+                    "BANDS": bands,
+                    "OUTPUT": str(raster_output_file),
+                    # The following are for GeoTIFF
+                    "TILED": "YES",
+                    "COPY_SRC_OVERVIEWS": "YES",
+                    "COMPRESS": "LZW"
+                }
+                alg_output = self.command_processor.qgis_processor.runAlgorithm("gdal:rearrange_bands",
+                                                                                alg_parameters)
+                # Output is a dictionary
+                self.logger.info("Algorithm output: {}".format(alg_output))
 
-                    if (pv_OutputGeoLayerID is not None) and (pv_OutputGeoLayerID != ''):
-                        # Use the new GeoLayerID
-                        new_geolayer_id = pv_OutputGeoLayerID
-                    else:
-                        # Use the existing GeoLayerID
-                        new_geolayer_id = pv_GeoLayerID
+                # Create a new QgsRasterLayer from the temporary file.
+                # - output file name should be the same as specified but get from results to confirm
+                rearranged_layer = qgis_util.read_qgsrasterlayer_from_file(alg_output['OUTPUT'])
+                self.logger.info("Layer metadata after rearranging bands:")
+                qgis_util.log_raster_metadata(rearranged_layer, logger=self.logger)
 
-                    # Create a new GeoLayer from the temporary file and add it to the GeoProcessor's geolayers list.
-                    new_geolayer = RasterGeoLayer(geolayer_id=new_geolayer_id,
-                                                  qgs_raster_layer=reprojected_layer,
-                                                  name=input_geolayer.name,
-                                                  description=input_geolayer.description,
-                                                  input_path_full=GeoLayer.SOURCE_MEMORY,
-                                                  input_path=GeoLayer.SOURCE_MEMORY)
-
-                    self.command_processor.add_geolayer(new_geolayer)
-
-                    # Remove the temporary file to optimize disk space use.
-                    io_util.remove_tmp_file(raster_output_file)
-
+                if (pv_OutputGeoLayerID is not None) and (pv_OutputGeoLayerID != ''):
+                    # Use the new GeoLayerID
+                    new_geolayer_id = pv_OutputGeoLayerID
                 else:
-                    # Input layer must have CRS defined in order to change the CRS
-                    self.warning_count += 1
-                    message = "Input layer {} does not have CRS - cannot change".format(pv_GeoLayerID)
-                    recommendation = "Set the layer CRS when reading or creating."
-                    self.logger.warning(message, exc_info=True)
-                    self.command_status.add_to_log(CommandPhaseType.RUN,
-                                                   CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                    # Use the existing GeoLayerID
+                    new_geolayer_id = pv_GeoLayerID
+
+                # Create a new GeoLayer from the temporary file and add it to the GeoProcessor's geolayers list.
+                new_geolayer = RasterGeoLayer(geolayer_id=new_geolayer_id,
+                                              qgs_raster_layer=rearranged_layer,
+                                              name=input_geolayer.name,
+                                              description=input_geolayer.description,
+                                              input_path_full=GeoLayer.SOURCE_MEMORY,
+                                              input_path=GeoLayer.SOURCE_MEMORY)
+
+                self.command_processor.add_geolayer(new_geolayer)
+
+                # Remove the temporary file to optimize disk space use.
+                io_util.remove_tmp_file(raster_output_file)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
-                message = "Unexpected error changing GeoLayer {} CRS to {}".format(pv_GeoLayerID, pv_CRS)
+                message = "Unexpected error rearranging GeoLayer {} bands to {}".format(pv_GeoLayerID, pv_Bands)
                 recommendation = "Check the log file for details."
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,

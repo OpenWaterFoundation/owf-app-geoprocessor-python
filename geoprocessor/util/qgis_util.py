@@ -878,10 +878,15 @@ def log_raster_metadata(qgs_raster_layer: QgsRasterLayer, logger: logging.Logger
     logger.info("Raster units per pixel x  = {} y  = {}".format(qgs_raster_layer.rasterUnitsPerPixelX(),
                                                                 qgs_raster_layer.rasterUnitsPerPixelY()))
     raster_type = qgs_raster_layer.rasterType()
-    if raster_type == 1:
+    # See:  https://github.com/qgis/QGIS/blob/master/src/core/raster/qgsrasterlayer.h
+    if raster_type == 0:
+        logger.info("Raster type = {} (Gray or undefined)".format(raster_type))
+    elif raster_type == 1:
         logger.info("Raster type = {} (Palette)".format(raster_type))
     elif raster_type == 2:
         logger.info("Raster type = {} (MultiBand)".format(raster_type))
+    elif raster_type == 3:
+        logger.info("Raster type = {} (ColorLayer)".format(raster_type))
     else:
         logger.info("Raster type = {} (unknown)".format(raster_type))
 

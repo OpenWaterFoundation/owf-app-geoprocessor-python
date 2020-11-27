@@ -46,6 +46,7 @@ from geoprocessor.commands.map.WriteGeoMapProjectToJSON import WriteGeoMapProjec
 from geoprocessor.commands.raster.ChangeRasterGeoLayerCRS import ChangeRasterGeoLayerCRS
 from geoprocessor.commands.raster.CreateRasterGeoLayer import CreateRasterGeoLayer
 from geoprocessor.commands.raster.RasterizeGeoLayer import RasterizeGeoLayer
+from geoprocessor.commands.raster.RearrangeRasterGeoLayerBands import RearrangeRasterGeoLayerBands
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromFile import ReadRasterGeoLayerFromFile
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromWebMapService import ReadRasterGeoLayerFromWebMapService
 from geoprocessor.commands.raster.ReadRasterGeoLayerFromTileMapService import ReadRasterGeoLayerFromTileMapService
@@ -185,6 +186,7 @@ class GeoProcessorCommandFactory(object):
         "READTABLEFROMDATASTORE": ReadTableFromDataStore(),
         "READTABLEFROMDELIMITEDFILE": ReadTableFromDelimitedFile(),
         "READTABLEFROMEXCEL": ReadTableFromExcel(),
+        "REARRANGERASTERGEOLAYERBANDS": RearrangeRasterGeoLayerBands(),
         "REMOVEFILE": RemoveFile(),
         "REMOVEGEOLAYERATTRIBUTES": RemoveGeoLayerAttributes(),
         "RENAMEGEOLAYERATTRIBUTE": RenameGeoLayerAttribute(),
@@ -423,6 +425,8 @@ class GeoProcessorCommandFactory(object):
                     return ReadTableFromDelimitedFile()
                 elif command_name_upper == "READTABLEFROMEXCEL":
                     return ReadTableFromExcel()
+                elif command_name_upper == "REARRANGERASTERGEOLAYERBANDS":
+                    return RearrangeRasterGeoLayerBands()
                 elif command_name_upper == "REMOVEFILE":
                     return RemoveFile()
                 elif command_name_upper == "REMOVEGEOLAYERATTRIBUTES":

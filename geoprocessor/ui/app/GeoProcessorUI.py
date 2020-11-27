@@ -393,6 +393,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Commands(Raster) / Manipulate Raster GeoLayer
         self.Menu_Commands_Raster_Manipulate_RasterGeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS: QtWidgets.QAction or None = None
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands: QtWidgets.QAction or None = None
 
         # Commands(Raster) / Write Raster GeoLayer
         self.Menu_Commands_Raster_Write_RasterGeoLayer: QtWidgets.QMenu or None = None
@@ -2742,13 +2743,26 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setObjectName(
             qt_util.from_utf8("Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS"))
         self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setText(
-            "ChangeRasterGeoLayerCRS()... <change a Raster GeoLayer CRS>")
+            "ChangeRasterGeoLayerCRS()... <change a raster GeoLayer CRS>")
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.triggered.connect(
             functools.partial(self.edit_new_command, "ChangeRasterGeoLayerCRS()"))
         self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.addAction(
             self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS)
+
+        # RearrangeRasterGeoLayerBands
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands"))
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.setText(
+            "RearrangeRasterGeoLayerBands()... <rearrange a raster GeoLayer's bands>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.triggered.connect(
+            functools.partial(self.edit_new_command, "RearrangeRasterGeoLayerBands()"))
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.addAction(
+            self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands (Raster) / Read Raster GeoLayer menu

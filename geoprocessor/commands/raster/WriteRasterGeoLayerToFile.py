@@ -248,8 +248,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                     output_file_ext = io_util.get_extension(output_file_absolute)
                     # Get specific output options.
                     options = []
-                    self.logger.info("Output file extension is '{}'".format(output_file_ext))
-                    if output_file_ext.upper() == '.TIF':
+                    if output_file_ext.upper() == 'TIF':
                         self.logger.info("Using TIF compression and tiles for output file.")
                         # Set the create options so output is compressed and optimized for the web.
                         # See cloud optimized GeoTIFF:  https://trac.osgeo.org/gdal/wiki/CloudOptimizedGeoTIFF

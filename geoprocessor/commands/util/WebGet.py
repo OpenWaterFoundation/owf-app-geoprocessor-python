@@ -239,7 +239,7 @@ class WebGet(AbstractCommand):
 
             # Create the full path of the renamed file. If an extension was included in the original filename, then that
             # same extension is included in the new filename.
-            new_path = os.path.join(folder_path, "{}{}".format(new_filename, existing_extension))
+            new_path = os.path.join(folder_path, "{}.{}".format(new_filename, existing_extension))
             os.rename(existing_path, new_path)
 
     def run_command(self) -> None:
@@ -283,7 +283,7 @@ class WebGet(AbstractCommand):
 
         else:
             # Don't default the output filename if a URL
-            # original_filename = io_util.get_filename(pv_URL) + io_util.get_extension(pv_URL)
+            # original_filename = io_util.get_filename(pv_URL) + "." + io_util.get_extension(pv_URL)
             original_filename = io_util.get_filename(pv_URL)
             output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
                 self.command_processor.get_property('WorkingDir'),

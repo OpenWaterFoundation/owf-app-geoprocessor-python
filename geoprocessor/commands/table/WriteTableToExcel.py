@@ -212,7 +212,7 @@ class WriteTableToExcel(AbstractCommand):
         # Continue if the output file is an existing file.
         if os.path.exists(output_folder_abs):
 
-            if io_util.get_extension(output_file_abs).upper() == ".XLS":
+            if io_util.get_extension(output_file_abs).upper() == "XLS":
 
                 message = 'At the current time, a Table object cannot be appended to or overwrite an existing Excel ' \
                           'file in XLS format.'

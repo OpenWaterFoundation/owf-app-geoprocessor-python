@@ -37,9 +37,10 @@ raster_formats = [
 def get_format_from_extension(ext: str):
     """
     Determine a format from file extension.
+    Only TIF nd TIFF are currently supported.
 
     Args:
-        ext (str): file extension
+        ext (str): file extension (e.g., "tif")
 
     Returns:
         (str) format from the extension or None if cannot be determined.

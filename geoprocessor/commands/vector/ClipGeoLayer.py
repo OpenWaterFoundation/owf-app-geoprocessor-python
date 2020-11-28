@@ -26,11 +26,12 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
-# import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.qgis_util as qgis_util
 
 import logging
 import os
@@ -326,10 +327,17 @@ class ClipGeoLayer(AbstractCommand):
 
                 # Perform the QGIS clip function. Refer to the reference below for parameter descriptions.
                 # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_overlay_tools/clip.html
-                alg_parameters = {"INPUT": input_geolayer.qgs_layer,
-                                  "OVERLAY": clipping_geolayer.qgs_layer,
-                                  "OUTPUT": "memory:"}
-                clipped_output = self.command_processor.qgis_processor.runAlgorithm("native:clip", alg_parameters)
+                alg_parameters = {
+                    "INPUT": input_geolayer.qgs_layer,
+                    "OVERLAY": clipping_geolayer.qgs_layer,
+                    "OUTPUT": "memory:"
+                }
+                feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                clipped_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                          algorithm="native:clip",
+                                                          algorithm_parameters=alg_parameters,
+                                                          feedback_handler=feedback_handler)
+                self.warning_count += feedback_handler.get_warning_count()
 
                 # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
 

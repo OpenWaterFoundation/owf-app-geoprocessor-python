@@ -342,6 +342,8 @@ def get_col_names_from_delimited_file(delimited_file_abs: str, delimiter: str) -
 def get_extension(full_path: str, include_period: bool = False) -> str:
     """
     Returns the file extension of a full file path.
+    By default the extension is returned without the leading period.
+    If a path has multiple extensions (e.g., "file.ext1.ext2"), only the last extension is returned.
 
     Args:
         full_path (str): the input full path

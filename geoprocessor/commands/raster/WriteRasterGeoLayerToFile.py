@@ -27,6 +27,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.io_util as io_util
@@ -198,6 +199,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
+        output_file_ext = io_util.get_extension(output_file_absolute)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.check_runtime_data(output_file_absolute, pv_GeoLayerID):
@@ -206,69 +208,123 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                 # Get the GeoLayer
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                # Write the raster layer to a file
-                # See:  https://python.hotexamples.com/examples/qgis.core/QgsRasterFileWriter/
-                #             writeRaster/python-qgsrasterfilewriter-writeraster-method-examples.html
-                file_writer = QgsRasterFileWriter(output_file_absolute)
-                pipe = QgsRasterPipe()
-                qgs_raster_layer = geolayer.qgs_layer
-                provider = qgs_raster_layer.dataProvider()
-                if not pipe.set(provider.clone()):
-                    self.warning_count += 1
-                    message = "Error setting pipe for raster output."
-                    recommendation = "Check the log file for details."
-                    self.logger.warning(message, exc_info=True)
-                    self.command_status.add_to_log(CommandPhaseType.RUN,
-                                                   CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                # Handle output CRS.
+                # TODO smalers 2020-07-17 not sure how to handle the transfer
+                # - how does it differ from the CRS function parameter?
+                if pv_OutputCRS is not None and pv_OutputCRS != "":
+                    crs = qgis_util.parse_qgs_crs(pv_OutputCRS)
+                    if crs is None:
+                        # Default the layer CRS and generate an error
+                        crs = geolayer.qgs_layer.crs()
+                        self.warning_count += 1
+                        message = "Requested output CRS {} is invalid, keeping the original CRS {}.".format(
+                            pv_OutputCRS, crs)
+                        recommendation = "Confirm that the output CRS is valid."
+                        self.logger.warning(message, exc_info=True)
+                        self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                       CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                        recommendation))
                 else:
-                    # Handle output CRS.
-                    # TODO smalers 2020-07-17 not sure how to handle the transfer
-                    # - how does it differ from the CRS function parameter?
-                    if pv_OutputCRS is not None and pv_OutputCRS != "":
-                        crs = qgis_util.parse_qgs_crs(pv_OutputCRS)
-                        if crs is None:
-                            # Default the layer CRS and generate an error
-                            crs = qgs_raster_layer.crs()
-                            self.warning_count += 1
-                            message = "Requested output CRS {} is invalid, keeping the original CRS {}.".format(
-                                pv_OutputCRS, crs)
-                            recommendation = "Confirm that the output CRS is valid."
-                            self.logger.warning(message, exc_info=True)
-                            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                                           CommandLogRecord(CommandStatusType.FAILURE, message,
-                                                                            recommendation))
-                    else:
-                        # Default to outputting the same CRS as the input layer
-                        crs = qgs_raster_layer.crs()
-                    # crs_string should not be needed
-                    crs_string = ""
-                    #crs_transform = QgsCoordinateTransformContext(qgs_raster_layer.crs(), crs, crs_string)
-                    crs_transform = QgsCoordinateTransformContext()
-                    # pipe = None
-                    output_file_ext = io_util.get_extension(output_file_absolute)
-                    # Get specific output options.
-                    options = []
+                    # Default to outputting the same CRS as the input layer
+                    crs = geolayer.qgs_layer.crs()
+
+                use_gdal_translate = True
+                if use_gdal_translate:
+                    # Use GDAL translate algorithm because it accepts any output format.
+                    self.logger.info("Using GDAL 'translate' to write raster.")
+
+                    # The following parameters are for GeoTIFF
+                    alg_parameters = {
+                        # Generic parameters regardless of output format.
+                        "INPUT": geolayer.qgs_layer,
+                        "OUTPUT": str(output_file_absolute),
+                        "TARGET_CRS": crs.geographicCrsAuthId()
+                        # NODATA
+                    }
+                    self.logger.info("Target CRS is {}".format(crs.geographicCrsAuthId()))
+
+                    # Set specific output options that have been found to be useful.
                     if output_file_ext.upper() == 'TIF':
                         self.logger.info("Using TIF compression and tiles for output file.")
                         # Set the create options so output is compressed and optimized for the web.
                         # See cloud optimized GeoTIFF:  https://trac.osgeo.org/gdal/wiki/CloudOptimizedGeoTIFF
-                        options = [
-                            #"EXTRA": '-co TILED=YES -co COPY_SRC_OVERVIEWS=YES -co COMPRESS=LZW'
-                            #"OPTIONS": 'TILED=YES,COPY_SRC_OVERVIEWS=YES,COMPRESS=LZW'
-                            "TILED=YES",
-                            "COPY_SRC_OVERVIEWS=YES",
-                            "COMPRESS=LZW"
-                        ]
-                    file_writer.setCreateOptions(options)
-                    file_writer.writeRaster(
-                        pipe,
-                        provider.xSize(),
-                        provider.ySize(),
-                        provider.extent(),
-                        crs,
-                        # qgs_raster_layer.crs(),
-                        crs_transform  # seems to be redundant with crs - is QGIS migrating design?
-                    )
+                        alg_parameters["OPTIONS"] = "TILED=YES|COPY_SRC_OVERVIEWS=YES|COMPRESS=LZW"
+
+                    self.logger.info("Algorithm parameters: {}".format(alg_parameters))
+                    feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                    alg_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                          algorithm="gdal:translate",
+                                                          algorithm_parameters=alg_parameters,
+                                                          feedback_handler=feedback_handler)
+                    self.warning_count += feedback_handler.get_warning_count()
+                    self.logger.info("Algorithm OUTPUT={}".format(alg_output['OUTPUT']))
+                else:
+                    # TODO smalers 2020-11-27 This is more work so remove when the above tests out.
+                    # Write using the QgsRasterFileWriter associated with the layer.
+                    # This seems to only allow writing the same format as was originally read?
+                    # TODO smalers 2020-11-27 what will happen if the original raster is not TIF?
+                    self.logger.info("Using built-in writeRaster to write TIF raster.")
+
+                    # Write the raster layer to a file
+                    # See:  https://python.hotexamples.com/examples/qgis.core/QgsRasterFileWriter/
+                    #             writeRaster/python-qgsrasterfilewriter-writeraster-method-examples.html
+                    file_writer = QgsRasterFileWriter(output_file_absolute)
+                    pipe = QgsRasterPipe()
+                    qgs_raster_layer = geolayer.qgs_layer
+                    provider = qgs_raster_layer.dataProvider()
+                    if not pipe.set(provider.clone()):
+                        self.warning_count += 1
+                        message = "Error setting pipe for raster output."
+                        recommendation = "Check the log file for details."
+                        self.logger.warning(message, exc_info=True)
+                        self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                       CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                        recommendation))
+                    else:
+                        # Handle output CRS.
+                        # TODO smalers 2020-07-17 not sure how to handle the transfer
+                        # - how does it differ from the CRS function parameter?
+                        if pv_OutputCRS is not None and pv_OutputCRS != "":
+                            crs = qgis_util.parse_qgs_crs(pv_OutputCRS)
+                            if crs is None:
+                                # Default the layer CRS and generate an error
+                                crs = qgs_raster_layer.crs()
+                                self.warning_count += 1
+                                message = "Requested output CRS {} is invalid, keeping the original CRS {}.".format(
+                                    pv_OutputCRS, crs)
+                                recommendation = "Confirm that the output CRS is valid."
+                                self.logger.warning(message, exc_info=True)
+                                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                               CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                                recommendation))
+                        else:
+                            # Default to outputting the same CRS as the input layer
+                            crs = qgs_raster_layer.crs()
+                        # crs_transform = QgsCoordinateTransformContext(qgs_raster_layer.crs(), crs, crs_string)
+                        crs_transform = QgsCoordinateTransformContext()
+                        # pipe = None
+                        # Get specific output options.
+                        options = []
+                        if output_file_ext.upper() == 'TIF':
+                            self.logger.info("Using TIF compression and tiles for output file.")
+                            # Set the create options so output is compressed and optimized for the web.
+                            # See cloud optimized GeoTIFF:  https://trac.osgeo.org/gdal/wiki/CloudOptimizedGeoTIFF
+                            options = [
+                                "TILED=YES",
+                                "COPY_SRC_OVERVIEWS=YES",
+                                "COMPRESS=LZW"
+                            ]
+                        # Not sure why the following is needed when output file has an extension.
+                        file_writer.setCreateOptions(options)
+                        file_writer.writeRaster(
+                            pipe,
+                            provider.xSize(),
+                            provider.ySize(),
+                            provider.extent(),
+                            crs,
+                            # qgs_raster_layer.crs(),
+                            crs_transform  # seems to be redundant with crs - is QGIS migrating design?
+                        )
 
             except Exception:
                 self.warning_count += 1

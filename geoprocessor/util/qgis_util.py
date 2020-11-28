@@ -21,6 +21,7 @@ from datetime import datetime
 
 import logging
 import os
+import numpy
 
 from qgis.core import QgsApplication, QgsCoordinateReferenceSystem, QgsExpression, QgsFeature, QgsField
 from qgis.core import QgsRasterBandStats
@@ -29,15 +30,20 @@ from qgis.core import QgsExpressionContext, QgsExpressionContextScope
 from qgis import processing
 from PyQt5 import QtWidgets
 
+import gdal
+import osr
+
+from plugins.processing.core.Processing import Processing
 from qgis.analysis import QgsNativeAlgorithms
 
+from pathlib import Path
 import qgis.utils
 import sys
 from typing import Any
 
-from plugins.processing.core import Processing
 
 import geoprocessor.util.app_util as app_util
+import geoprocessor.util.io_util as io_util
 import geoprocessor.util.os_util as os_util
 import geoprocessor.util.string_util as string_util
 
@@ -59,7 +65,7 @@ qgs = None
 # manually updated as the GeoProcessor is developed with newer versions of QGIS. If updated accurately, GitHub will
 # memorialize the developer QGIS version used at any time within the history of the GeoProcessor. Must be a string.
 # Must be in the following format: "[major release].[minor release].[bug fix release]". Do not pad numbers.
-dev_qgis_version = "3.4.3"
+dev_qgis_version = "3.10"
 
 # The QgsApplication instance opened with initialize_qgis(), used to simplify application management
 qgs_app = None
@@ -106,7 +112,7 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name:
         attribute_type (str): the attribute field type: int (integer), double (real number), string (text) or date.
 
     Return:
-        None.
+        None
 
     Raises:
         ValueError:  If the input is an invalid attribute type or the attribute already exists.
@@ -120,7 +126,6 @@ def add_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name:
     if attribute_name not in [attribute.name() for attribute in qgsvectorlayer_data.fields()]:
 
         # Add the attribute field to the GeoLater
-        added = False
         if attribute_type.upper() == "INT":
             status = qgsvectorlayer_data.addAttributes([QgsField(attribute_name, QVariant.Int)])
         elif attribute_type.upper() == "DOUBLE":
@@ -173,6 +178,7 @@ def create_qgsgeometry(geometry_format: str, geometry_input_as_string: str) -> Q
         - None if the geometry is invalid.
     """
     debug = False
+    logger = None
     if debug:
         logger = logging.getLogger(__name__)
     if geometry_format.upper() == "WKT":
@@ -205,14 +211,27 @@ def create_qgsgeometry(geometry_format: str, geometry_input_as_string: str) -> Q
         return None
 
 
-def create_qgsrasterlayer(geometry: str, crs_code: str, layer_name: str) -> QgsVectorLayer:
+def create_qgsrasterlayer(
+    crs: str = "EPSG:4326", layer_name: str = "",
+    num_rows: int = 1, num_columns: int = 1, num_bands: int = 1,
+    origin_x: float = 0.0, origin_y: float = 0.0, pixel_width: float = 1.0, pixel_height: float = 1.0,
+    data_type: str = "Int32", initial_value: int or float = None) -> QgsRasterLayer:
     """
-    Creates a new QgsRasterLayer from scratch (in memory QgsRasterLayer object).
+    Create a new QgsRasterLayer (in memory QgsRasterLayer object) using provided initial data values.
+    This is useful for creating test data or initializing a blank raster.
 
     Args:
-        geometry (str): the geometry type of the new QgsVectorLayer. Can be `Point`, `Polygon` or `LineString`
-        crs_code (str): a coordinate reference system code (EpsgCrsId, WKT or Proj4 codes).
+        crs (str): a coordinate reference system code (e.g., "EPSG:4326")
         layer_name (str): the name of the new QgsVectorLayer (this is not the GeoLayer ID)
+        num_rows (int): number of rows
+        num_columns (int): number of columns
+        num_bands (int): number of bands
+        origin_x (float): raster origin X in coordinate reference system units
+        origin_y (float): raster origin Y in coordinate reference system units
+        pixel_width (float): pixel width in coordinate reference system units
+        pixel_height (float): pixel height in coordinate reference system units
+        data_type (str): band data type ('Byte', 'Float32', 'Float64', 'Int16', 'Int32', 'UInt16', 'UInt32')
+        initial_value (int or float): initial value for the raster
 
     Raises:
         ValueError if the input to create the layer is invalid.
@@ -222,22 +241,79 @@ def create_qgsrasterlayer(geometry: str, crs_code: str, layer_name: str) -> QgsV
         - None if input is not valid
     """
 
-    # Create the QgsRasterLayer object with the geometry, the CRS and the layer name information.
-    # See, for example:  https://qgis.org/pyqgis/3.10/core/QgsRasterLayer.html#qgis.core.QgsRasterLayer
-    # uri = "point?crs=epsg:4326&field=id:integer"
-    # layer_name
-    uri = "{}?crs={}".format(geometry, crs_code)
-    options = "memory"
-    # #layer = QgsRasterLayer(uri, layer_name, "memory")
-    # layer = QgsRasterLayer(path_to_file, layer_name)
+    logger = logging.getLogger(__name__)
 
-    # If the QgsRasterLayer object is valid, return it.
+    # Create a layer given initial data.
+    gdal_data_types = {
+        'byte': gdal.GDT_Byte,
+        'float32': gdal.GDT_Float32,
+        'float64': gdal.GDT_Float64,
+        'int16': gdal.GDT_Int16,
+        'int32': gdal.GDT_Int32,
+        'uint16': gdal.GDT_UInt16,
+        'uint32': gdal.GDT_UInt32,
+        'unknown': gdal.GDT_Unknown
+    }
+
+    # Create a temporary filename used to initialize the layer
+    tmp_filename = io_util.create_tmp_filename('gp', 'createraster', 'tif')
+
+    # Create a data array
+    # - rows are the normal axes:
+    #     rowN
+    #     ...
+    #     row0
+    # - for TIF need to reverse the rows because Y axis is from top
+    array = None
+    band_data_type = gdal_data_types[data_type.lower()]
+    # Initial value is expected to be of the correct type.
+    # - if None, let the GDAL default be used
+    if initial_value is not None:
+        array = numpy.array([[initial_value]*num_columns for i in range(0, num_rows)])
+        array = array[::-1]
+
+    # Create the initial raster
+    # See:  https://gdal.org/tutorials/raster_api_tut.html
+    # Also:  "Create raster from an array" in https://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html
+    driver = gdal.GetDriverByName("GTiff")
+    raster = driver.Create(str(tmp_filename), num_columns, num_rows, num_bands, band_data_type)
+    # Set the raster coordinate system information
+    raster.SetGeoTransform([origin_x, pixel_width, 0, origin_y, 0, pixel_height])
+    srs = osr.SpatialReference()
+    # Get the CRS number from string like EPSG:4326
+    pos = crs.find(":")
+    crs_epsg_number = int(crs[(pos+1):])
+    logger.info("CRS integer: {}".format(crs_epsg_number))
+    srs.ImportFromEPSG(crs_epsg_number)
+    logger.info("Setting projection to WKT: {}".format(srs.ExportToWkt()))
+    raster.SetProjection(srs.ExportToWkt())
+    # Initialize the band data.
+    # - bands are numbered 1+
+    for iband in range(1, (num_bands + 1)):
+        if array is not None:
+            band = raster.GetRasterBand(iband)
+            band.WriteArray(array)
+            band.FlushCache()
+
+    # GDAL docs say to do the following to close the dataset
+    raster = None
+
+    # TODO smalers 2020-11-26 how is the TIF file closed?
+
+    # Read in the temporary TIF file created by GDAL code into QGIS object.
+    layer = read_qgsrasterlayer_from_file(tmp_filename)
+
     if layer.isValid():
+        # QgsRasterLayer object is valid so return it.
+        # -first remove the original layer since a temporary file
+        io_util.remove_tmp_file(tmp_filename)
+
         return layer
     else:
         message = 'Error creating raster layer "' + str(layer_name) + '"'
-        logger = logging.getLogger(__name__)
         logger.warning(message)
+        # Remove the original layer since a temporary file
+        io_util.remove_tmp_file(tmp_filename)
         raise ValueError(message)
 
 
@@ -484,6 +560,7 @@ def get_geometrytype_qgis(qgsvectorlayer: QgsVectorLayer) -> str:
         Appropriate geometry in QGIS format (returns text, not enumerator).
     """
     debug = False  # Use to troubleshoot
+    logger = None
     if debug:
         logger = logging.getLogger(__name__)
 
@@ -836,7 +913,7 @@ def initialize_qgis_processing() -> processing:
     return pr
 
 
-# TODO smalers 2020-07-20 why did Emma/Justing use this instead of lowercase processing?
+# TODO smalers 2020-07-20 why did Emma/Justin use this instead of lowercase processing?
 def initialize_qgis_processor() -> Processing:
     """
     Initialize the QGIS processor environment (to call and run QGIS algorithms).
@@ -845,7 +922,8 @@ def initialize_qgis_processor() -> Processing:
         The initialized qgis processor object.
     """
 
-    pr = Processing.Processing()
+    # pr = Processing.Processing()
+    pr = Processing()
     pr.initialize()
 
     # Allows the GeoProcessor to use the native algorithms
@@ -981,7 +1059,7 @@ def parse_qgs_expression(expression_as_string: str) -> QgsExpression or None:
         return None
 
 
-def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
+def read_qgsrasterlayer_from_file(spatial_data_file_abs: str or Path) -> QgsRasterLayer:
     """
     Reads the full pathname of spatial data file and returns a QGSRasterLayer object.
 
@@ -994,6 +1072,8 @@ def read_qgsrasterlayer_from_file(spatial_data_file_abs: str) -> QgsRasterLayer:
     Returns:
         A QGSRasterLayer object containing the data from the input spatial data file.
     """
+    if isinstance(spatial_data_file_abs, Path):
+        spatial_data_file_abs = str(spatial_data_file_abs)
 
     logger = logging.getLogger(__name__)
 
@@ -1383,6 +1463,42 @@ def rename_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_na
             qgsvectorlayer.commitChanges()
 
 
+def run_processing(processor: Processing or None, algorithm: str, algorithm_parameters: {},
+                   on_finish = None, feedback_handler = None, context = None) -> {}:
+    """
+    Run the QGIS processing algorithm.
+
+    Args:
+        processor (Processing): processing object to run the algorithm.
+            1) 'Processing' instance provides some useful handler code.
+                Pass in as the GeoProcessor.qgis_processor instance.
+            2) If None, the 'qgis.core.processing' module is used, which closely matches QGIS examples but,
+               does not provide error handling.
+        algorithm (str):  Algorithm to run, for example:  'gdal:translate'
+        algorithm_parameters ({}): Dictionary of input parameters.
+        on_finish: object that handles finish as per Processor (TODO smalers 2020-11-27 need to figure out)
+        feedback_handler: object that handles feedback as per Processor (needed to handle errors)
+        context: object that handles context as per Processor (TODO smalers 2020-11-27 need to figure out)
+
+    Returns:
+        Dictionary of output from the algorithm.
+    """
+    logger = logging.getLogger(__name__)
+    if processor is None:
+        # Simple processing as per the console
+        # See: https://docs.qgis.org/latest/en/docs/user_manual/processing/console.html
+        # The following returns output dictionary but does not provide error handling.
+        # - imported as qgis.processing
+        return processing.run(algorithm, algorithm_parameters)
+    elif isinstance(processor, Processing):
+        # Use the Processing object, which provides feedback and error-handling.
+        # See source:  https://github.com/qgis/QGIS/blob/master/python/plugins/processing/core/Processing.py
+        return processor.runAlgorithm(algorithm, algorithm_parameters, onFinish=on_finish,
+                                      feedback=feedback_handler, context=context)
+    else:
+        raise RuntimeError("Cannot run algorithm.  Was expecting Processing instance or None.")
+
+
 def set_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name: str,
                                  attribute_value: str or None) -> int:
     """
@@ -1409,6 +1525,7 @@ def set_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name:
     if debug:
         logger.info("Layer attribute '{}' is at index {}.".format(attribute_name, attribute_index))
 
+    set_count = 0
     if attribute_index >= 0:
         # Create an attribute dictionary.
         # Key: the index of the attribute to populate
@@ -1416,7 +1533,6 @@ def set_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name:
         attribute = {attribute_index: attribute_value}
 
         # Iterate over the features of the QgsVectorLayer
-        set_count = 0
         # QgsVectorDataProvider
         data_provider = qgsvectorlayer.dataProvider()
         for feature in qgsvectorlayer.getFeatures():
@@ -1437,13 +1553,15 @@ def set_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name:
 def split_qgsvectorlayer_by_attribute(processor: Processing, qgsvectorlayer: QgsVectorLayer, attribute_name: str,
                                       output_qgsvectorlayers: [QgsVectorLayer]) -> None:
     """
+    TODO smalers 2020-11-27 phase this out.
+
     Split the QgsVectorLayer object into multiple vector layers based on an attribute's unique values.
 
     REF: QGIS User Manual
     <https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer>
 
     Args:
-        processing (Processing): QGIS processor to use to run algorithm
+        processor (Processing): QGIS processor to use to run algorithm
         qgsvectorlayer (QgsVectorLayer): the QGSVectorLayer object
         attribute_name (str):  the name of the attribute that splits the qgsvectorlayer into multiple layers
         output_qgsvectorlayers (QgsVectorLayer): the QgsVectorLayer objects that are created by the split
@@ -1455,35 +1573,52 @@ def split_qgsvectorlayer_by_attribute(processor: Processing, qgsvectorlayer: Qgs
     # Split the QgsVectorLayer by the chosen attribute.  Output QgsVectorLayer names should be automatically generated??
     # QGIS 2?
     #processing.run('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
-    processor.runAlgorithm('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
+    #processor.runAlgorithm('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
 
 
-def write_algorithm_help ( output_file_absolute: str, list_algorithms: bool, algorithm_ids: [str]) -> None:
+def write_algorithm_help(output_file: str = None, list_algorithms: bool = False,
+                         algorithm_ids: [str] = None) -> [str]:
     """
-    Write QGIS algorithm list and or help to a file.
+    Write QGIS algorithm help.  Can list algorithms and/or write help to a file.
+    Can output to an info message box.
 
     Args:
-        output_file_absolute (str): Path to the output file.
+        output_file (str): Path to the output file.  If None, a temporary file will be used.
+        If 'stdout', then standard output will be used, but in this case output won't be captured in the output
+        that is returned.
         list_algorithms (bool): Whether to list algorithms.
         algorithm_ids ([str]): List of algorithms to print output.
+        show_help (bool): Whether to show help in a UI dialog.
 
     Returns:
-        None
+        List of the lines of output, to allow displaying in a UI, etc.
     """
     logger = logging.getLogger(__name__)
     fout = None
+    do_output_file = False
+    do_tmp_file = False
+    output_list = []
     # noinspection PyBroadException
     try:
         # Open the output file.
-        if output_file_absolute is None:
+        # - use a temporary file if necessary because writing to sys.stdout does not allow capturing output to return
+        if output_file is None:
+            output_file = io_util.create_tmp_filename('gp', 'qgisalgorithmhelp', 'txt')
+            fout = open(output_file, "w")
+            do_output_file = True
+            do_tmp_file = True
+        elif output_file.upper() == 'STDOUT':
             fout = sys.stdout
         else:
-            fout = open(output_file_absolute, "w")
+            fout = open(output_file, "w")
+            do_output_file = True
         nl = os.linesep  # newline character for operating system
         fout.write("QGIS Algorithm Information{}{}".format(nl, nl))
         # If requested, list the algorithms
         if list_algorithms:
-            fout.write("QGIS Algorithm List:{}{}".format(nl, nl))
+            output_line = "QGIS Algorithm List:{}{}".format(nl, nl)
+            fout.write(output_line)
+            output_list.append(output_line)
             # Loop through once to get the identifier length to format the columns
             id_len_max = 0
             for alg in QgsApplication.processingRegistry().algorithms():
@@ -1492,30 +1627,54 @@ def write_algorithm_help ( output_file_absolute: str, list_algorithms: bool, alg
                     id_len_max = id_len
             # Loop through again to output the list
             id_format = "{0:<" + str(id_len_max) + "} {1:}{2:}"
-            fout.write(id_format.format("AlgorithmID", "Algorithm Name", nl))
+            output_line = id_format.format("AlgorithmID", "Algorithm Name", nl)
+            fout.write(output_line)
+            output_list.append(output_line)
             for alg in QgsApplication.processingRegistry().algorithms():
-                fout.write(id_format.format(alg.id(), alg.displayName(), nl))
+                output_line = id_format.format(alg.id(), alg.displayName(), nl)
+                fout.write(output_line)
+                output_list.append(output_line)
 
         if len(algorithm_ids) > 0:
             # List the specific algorithm help
-            fout.write("{}QGIS Algorithm Help{}".format(nl, nl))
+            output_line = "{}QGIS Algorithm Help{}".format(nl, nl)
+            fout.write(output_line)
+            output_list.append(output_line)
             for algorithm_id in algorithm_ids:
-                fout.write(nl)
+                output_line = nl
+                fout.write(output_line)
+                output_list.append(output_line)
                 # noinspection PyBroadException
                 try:
                     # TODO smalers 2020-07-12 need to write to the output file
-                    fout.write("QGIS algorithm {} help was written to console window.{}{}".format(algorithm_id, nl, nl))
+                    # - unfortunately this is a major issue and prevents being able easily display output in the UI
+                    output_line = "QGIS algorithm {} help was written to console window.{}{}".format(
+                        algorithm_id, nl, nl)
+                    fout.write(output_line)
                     processing.algorithmHelp(algorithm_id)
+
+                    # Read the output file and save to the output list.
+                    if do_output_file:
+                        output_list.extend(io_util.read_file(output_file))
                 except Exception:
-                    logger.info("Error writing help for algorithm: {}".format(algorithm_id))
+                    message = "Error writing help for algorithm: {}".format(algorithm_id)
+                    logger.info(message)
+                    output_list.append(message)
 
     except Exception:
-        message = 'Error writing QGIS algorithm help to file "' + output_file_absolute + '.'
+        message = "Error writing QGIS algorithm help to file '{}'".format(output_file)
         logger.warning(message, exc_info=True)
     finally:
-        if output_file_absolute is not None:
+        if do_output_file is not None:
             if fout is not None:
                 fout.close()
+
+    # Remove the temporary file.
+    if do_tmp_file:
+        # Remove the temporary file.
+        io_util.remove_tmp_file(output_file)
+
+    return output_list
 
 
 def write_qgsvectorlayer_to_delimited_file(qgsvectorlayer: QgsVectorLayer,

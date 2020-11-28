@@ -26,6 +26,7 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -422,8 +423,12 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                     #  feedback=self)
                     logger.info("Changing '{}' layer geometry using algorithm '{}' and parameters '{}'".format(
                         pv_InputGeoLayerID, algorithm, algorithm_parameters))
-                    converted_output = self.command_processor.qgis_processor.runAlgorithm(algorithm,
-                                                                                          algorithm_parameters)
+                    feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                    converted_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                                algorithm=algorithm,
+                                                                algorithm_parameters=algorithm_parameters,
+                                                                feedback_handler=feedback_handler)
+                    self.warning_count += feedback_handler.get_warning_count()
                     output_qgs_layer = converted_output['OUTPUT']
 
                     # noinspection PyBroadException
@@ -488,30 +493,3 @@ class ChangeGeoLayerGeometry(AbstractCommand):
         else:
             # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)
-
-    # ==================================================================================================================
-    # The following methods are required by the feedback parameter passed to Processing.runAlgorithm
-    # - TODO smalers 2020-07-12 figure out how to use in the UI
-    # ==================================================================================================================
-
-    # noinspection PyPep8Naming
-    def isCanceled(self):
-        """
-        Indicate if the algorithm has been canceled.
-        Given that the UI is not integrated
-
-        Returns:
-        """
-        return False
-
-    # noinspection PyPep8Naming
-    def pushInfo(self):
-        pass
-
-    # noinspection PyPep8Naming
-    def reportError(self):
-        pass
-
-    # noinspection PyPep8Naming
-    def setProgress(self, progress: int):
-        pass

@@ -31,6 +31,7 @@ import geoprocessor.util.io_util as io_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validator_util
+import geoprocessor.ui.util.qt_util as qt_util
 
 import logging
 
@@ -43,14 +44,18 @@ class QgisAlgorithmHelp(AbstractCommand):
     """
 
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("ListAlgorithms", type("")),
-        CommandParameterMetadata("AlgorithmIDs", type("")),
-        CommandParameterMetadata("OutputFile", type(""))
+        CommandParameterMetadata("ListAlgorithms", str),
+        CommandParameterMetadata("AlgorithmIDs", str),
+        CommandParameterMetadata("OutputFile", str),
+        CommandParameterMetadata("ShowHelp", str)
     ]
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Print QGIS algorithm help."
+    __command_metadata['Description'] = (
+        "Print QGIS algorithm help.\n"
+        "Currently can only print to standard output (console window), not to output file."
+    )
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
@@ -71,15 +76,22 @@ class QgisAlgorithmHelp(AbstractCommand):
     __parameter_input_metadata['AlgorithmIDs.Tooltip'] = \
         "List of comma-separated algorithm identifiers, from the algorithm list (e.g., 'gdal:aspect')."
     # OutputFile
-    __parameter_input_metadata['OutputFile.Description'] = "output file to write"
-    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Description'] = "output file to write (IGNORED)"
+    __parameter_input_metadata['OutputFile.Label'] = "Output file (IGNORED)"
     __parameter_input_metadata['OutputFile.Required'] = False
     __parameter_input_metadata['OutputFile.Tooltip'] = \
-        "The output file (relative or absolute path).  ${Property} syntax is recognized."
+        "The output file (relative or absolute path).  ${Property} syntax is recognized.  CURRENTLY NOT ENABLED."
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     __parameter_input_metadata['OutputFile.FileSelector.Title'] = "Select output file to write"
     __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
         ["Text file (*.txt)", "All files (*.*)"]
+    # ShowHelp
+    __parameter_input_metadata['ShowHelp.Description'] = "show help in a window?"
+    __parameter_input_metadata['ShowHelp.Label'] = "Show help?"
+    __parameter_input_metadata['ShowHelp.Tooltip'] = \
+        "Show the algorithm help in a user interface (UI) window?  Currently limited because can't capture output."
+    __parameter_input_metadata['ShowHelp.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['ShowHelp.Value.Default'] = "True"
 
     def __init__(self) -> None:
         """
@@ -131,6 +143,17 @@ class QgisAlgorithmHelp(AbstractCommand):
         if not validator_util.validate_bool(pv_ListAlgorithms, True, False):
             message = "ListAlgorithms is not a valid boolean value."
             recommendation = "Specify a valid boolean value for the ListAlgorithms parameter."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Check that optional IfGeoLayerIDExists param is either `Replace`, `Warn`, `Fail`, `ReplaceAndWarn` or None.
+        # noinspection PyPep8Naming
+        pv_ShowHelp = self.get_parameter_value(parameter_name="ShowHelp", command_parameters=command_parameters)
+        if not validator_util.validate_bool(pv_ShowHelp, True, False):
+            message = "ShowHelp is not a valid boolean value."
+            recommendation = "Specify a valid boolean value for the ShowHelp parameter."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -207,6 +230,12 @@ class QgisAlgorithmHelp(AbstractCommand):
                 algorithm_ids[i] = algorithm_ids[i].strip()
         # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
+        # noinspection PyPep8Naming
+        pv_ShowHelp = self.get_parameter_value('ShowHelp')
+        show_help = True  # Default
+        if pv_ShowHelp is not None and string_util.is_bool(pv_ShowHelp):
+            if pv_ShowHelp.upper() == 'FALSE':
+                show_help = False
 
         # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
         output_file_absolute = None
@@ -219,7 +248,12 @@ class QgisAlgorithmHelp(AbstractCommand):
         try:
             # Run the checks on the parameter values. Only continue if the checks passed.
             if self.check_runtime_data(output_file_absolute):
-                qgis_util.write_algorithm_help(output_file_absolute, list_algorithms, algorithm_ids)
+                output_list = qgis_util.write_algorithm_help(output_file=output_file_absolute,
+                                                             list_algorithms=list_algorithms,
+                                                             algorithm_ids=algorithm_ids)
+
+                if show_help:
+                    qt_util.info_message_box(output_list, title="QGIS Algorithm Help")
 
             # Save the output file in the processor, used by the UI to list output files
             self.command_processor.add_output_file(output_file_absolute)

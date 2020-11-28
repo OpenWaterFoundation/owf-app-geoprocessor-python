@@ -26,6 +26,7 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -213,6 +214,8 @@ class RearrangeRasterGeoLayerBands(AbstractCommand):
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.check_runtime_data(pv_GeoLayerID, bands):
             # Run the process.
+
+            raster_output_file = None
             # noinspection PyBroadException
             try:
                 # Get the input GeoLayer.
@@ -242,12 +245,14 @@ class RearrangeRasterGeoLayerBands(AbstractCommand):
                     "BANDS": bands,
                     "OUTPUT": str(raster_output_file),
                     # The following are for GeoTIFF
-                    "TILED": "YES",
-                    "COPY_SRC_OVERVIEWS": "YES",
-                    "COMPRESS": "LZW"
+                    "OPTIONS": "TILED=YES|COPY_SRC_OVERVIEWS=YES|COMPRESS=LZW",
                 }
-                alg_output = self.command_processor.qgis_processor.runAlgorithm("gdal:rearrange_bands",
-                                                                                alg_parameters)
+                feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                alg_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                      algorithm="gdal:rearrange_bands",
+                                                      algorithm_parameters=alg_parameters,
+                                                      feedback_handler=feedback_handler)
+                self.warning_count += feedback_handler.get_warning_count()
                 # Output is a dictionary
                 self.logger.info("Algorithm output: {}".format(alg_output))
 
@@ -274,9 +279,6 @@ class RearrangeRasterGeoLayerBands(AbstractCommand):
 
                 self.command_processor.add_geolayer(new_geolayer)
 
-                # Remove the temporary file to optimize disk space use.
-                io_util.remove_tmp_file(raster_output_file)
-
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process
                 self.warning_count += 1
@@ -285,6 +287,10 @@ class RearrangeRasterGeoLayerBands(AbstractCommand):
                 self.logger.warning(message, exc_info=True)
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+            finally:
+                # Remove the temporary file to optimize disk space use.
+                if raster_output_file is not None:
+                    io_util.remove_tmp_file(raster_output_file)
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

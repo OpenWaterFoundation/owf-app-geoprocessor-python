@@ -428,6 +428,31 @@ def is_int(s: str) -> bool:
         return False
 
 
+def list_to_string(str_list: [str], add_nl: bool = False, nl: str = None) -> str:
+    """
+    Convert a list of strings to a single string.
+    The separate strings should include trailing newline(s) ('\n') or specify add_nl parameter.
+
+    Args:
+        str_list ([str]): list of str to process into a single string.
+        add_nl (bool):  whether to add newline character at the end of each string in the list.
+        nl (str): newline character(s) to use at the end of strings if add_nl=True.
+
+    Returns:
+        String that contains the strings from the list.
+    """
+    logger = logging.getLogger(__name__)
+    output_str = ""
+    if nl is None:
+        nl = '\n'
+    for s in str_list:
+        if add_nl:
+            output_str = output_str + s + nl
+        else:
+            output_str = output_str + s
+    return output_str
+
+
 def key_value_pair_list_to_dictionary(key_value_list: [str]) -> dict:
     """
     Convert a list of key=value strings to dictionary with corresponding keys and values.

@@ -23,6 +23,7 @@ from typing import Optional
 from PyQt5 import QtGui, QtWidgets
 
 import geoprocessor.util.app_util as app_util
+import geoprocessor.util.string_util as string_util
 
 
 def from_utf8(s):
@@ -74,12 +75,12 @@ def get_table_rows_from_indexes(indexes: [int]) -> [int]:
     return rows
 
 
-def info_message_box(message: str, app_name: str = None, title: str = "Information") -> int:
+def info_message_box(message: str or [str], app_name: str = None, title: str = "Information") -> int:
     """
     Display an information message dialog.
 
     Args:
-        message (str): Message string.
+        message (str or [str]): Message string.
         app_name (str): Application name to use in dialog title
             (default if None is to get from app_util.get_property("ProgramName")
         title (str): Title for dialog.
@@ -93,6 +94,9 @@ def info_message_box(message: str, app_name: str = None, title: str = "Informati
     if app_name is not None:
         # Use the application name in the title
         title = app_name + " - " + title
+    if isinstance(message, list):
+        # Convert the list to a string
+        message = string_util.list_to_string(message)
     message_box = new_message_box(QtWidgets.QMessageBox.Information, QtWidgets.QMessageBox.Ok, message, title)
     return message_box
 

@@ -26,9 +26,11 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
+import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validator_util
 
@@ -450,14 +452,15 @@ class MergeGeoLayers(AbstractCommand):
 
                 # Run the checks on the parameter values. Only continue if the checks passed.
                 if self.check_runtime_data(list_of_geolayer_ids, pv_OutputGeoLayerID):
-                    # A list to hold the GeoLayer IDs of the copied GeoLayers. Copied GeoLayers are only required for this
-                    # command. They will be removed from the GeoProcessor (to save processing space and speed) after the
+                    # A list to hold the GeoLayer IDs of the copied GeoLayers.
+                    # Copied GeoLayers are only required for this # command.
+                    # They will be removed from the GeoProcessor (to save processing space and speed) after the
                     # processing has been completed. This list will be used to remove the copied GeoLayers.
                     copied_geolayer_ids = []
 
                     # A list to hold the full pathname of the copied GeoLayers (written to disk). The
-                    # qgis:mergevectorlayers requires that the QGSVectorLayer objects are not in memory. This list will be
-                    # used as an input to the qgis:mergevectorlayers algorithm.
+                    # qgis:mergevectorlayers requires that the QGSVectorLayer objects are not in memory.
+                    # This list will be used as an input to the qgis:mergevectorlayers algorithm.
                     copied_geolayer_sourcepath = []
 
                 first_geolayer = self.command_processor.get_geolayer(list_of_geolayer_ids[0])
@@ -501,11 +504,17 @@ class MergeGeoLayers(AbstractCommand):
                 # Merge all of the copied GeoLayers (the GeoLayers with the new attribute names).
                 # Using QGIS algorithm but can also use saga:mergelayers algorithm.
                 # saga:mergelayers documentation at http://www.saga-gis.org/saga_tool_doc/2.3.0/shapes_tools_2.html
-                alg_parameters = {"LAYERS": copied_geolayer_sourcepath,
-                                  "CRS": first_crs,
-                                  "OUTPUT": "memory:"}
-                merged_output = self.command_processor.qgis_processor.runAlgorithm("qgis:mergevectorlayers",
-                                                                                   alg_parameters)
+                alg_parameters = {
+                    "LAYERS": copied_geolayer_sourcepath,
+                    "CRS": first_crs,
+                    "OUTPUT": "memory:"
+                }
+                feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                merged_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                         algorithm="qgis:mergevectorlayers",
+                                                         algorithm_parameters=alg_parameters,
+                                                         feedback_handler=feedback_handler)
+                self.warning_count += feedback_handler.get_warning_count()
 
                 # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
                 # in QGIS3, merged_output["OUTPUT"] returns the returns the QGS vector layer object
@@ -527,13 +536,13 @@ class MergeGeoLayers(AbstractCommand):
 
         except Exception:
             # Raise an exception if an unexpected error occurs during the process
-               self.warning_count += 1
-               message = "Unexpected error merging the following GeoLayers {}.".format(pv_GeoLayerIDs)
-               recommendation = "Check the log file for details."
-               self.logger.warning(message, exc_info=True)
-               self.command_status.add_to_log(CommandPhaseType.RUN,
-                                              CommandLogRecord(CommandStatusType.FAILURE, message,
-                                                               recommendation))
+            self.warning_count += 1
+            message = "Unexpected error merging the following GeoLayers {}.".format(pv_GeoLayerIDs)
+            recommendation = "Check the log file for details."
+            self.logger.warning(message, exc_info=True)
+            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                            recommendation))
 
         # Determine success of command processing. Raise Runtime Error if any errors occurred
         if self.warning_count > 0:

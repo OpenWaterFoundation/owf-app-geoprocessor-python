@@ -25,6 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 # from processing.core.Processing import Processing
 from qgis.core import QgsVectorLayer
@@ -32,7 +33,7 @@ from qgis.core import QgsVectorLayer
 # import glob
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.validator_util as validator_util
-# import geoprocessor.util.qgis_util as qgis_util
+import geoprocessor.util.qgis_util as qgis_util
 import logging
 import tempfile
 
@@ -422,9 +423,12 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # This should result in separate GeoLayer files written to the OUTPUT directory.
                 # Unfortunately, there is no way to limit which attributes are processed until after the split occurs,
                 # so additional work will be done and unneeded files will be created.
-                split_output = self.command_processor.qgis_processor.runAlgorithm("qgis:splitvectorlayer",
-                                                                                  alg_parameters)
-                                                                                  # feedback=self)
+                feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                split_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                        algorithm="qgis:splitvectorlayer",
+                                                        algorithm_parameters=alg_parameters,
+                                                        feedback_handler=feedback_handler)
+                self.warning_count += feedback_handler.get_warning_count()
 
                 # Get the list of features from the input GeoLayer. This returns all attributes for each feature listed.
                 # - this is used to determine the attribute values used below to create layers
@@ -553,26 +557,3 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         else:
             # Set command status type as SUCCESS if there are no errors.
             self.command_status.refresh_phase_severity(CommandPhaseType.RUN, CommandStatusType.SUCCESS)
-
-    # ==================================================================================================================
-    # The following methods are required by the feedback parameter passed to Processing.runAlgorithm
-    # - TODO smalers 2020-07-12 figure out how to use in the UI
-    # ==================================================================================================================
-
-    def isCanceled ():
-        """
-        Indicate if the algorithm has been canceled.
-        Given that the UI is not integrated
-
-        Returns:
-        """
-        return False
-
-    def pushInfo ():
-        pass
-
-    def reportError ():
-        pass
-
-    def setProgress ( progress: int ):
-        pass

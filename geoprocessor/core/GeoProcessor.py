@@ -145,7 +145,7 @@ class GeoProcessor(object):
         # Holds the initialized QGIS processor, to run processing algorithms.
         # - this uses plugins.processing.core.Processing.runAlgorithm
         # - alternatively, could use qgis.processing.processAlgorithm
-        # - TODO smalers 2020-07-12 is there any real difference between the two?  Parameters seem similar.
+        # - the Processing class provides handling of errors whereas qgis.processing is simple function call
         self.qgis_processor: Processing = qgis_util.initialize_qgis_processor()
         #self.qgis_processing: processing = qgis_util.initialize_qgis_processing()
 

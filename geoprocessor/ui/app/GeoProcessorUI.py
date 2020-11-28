@@ -421,6 +421,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Help_About: QtWidgets.QAction or None = None
         self.Menu_Help_SoftwareSystemInformation: QtWidgets.QAction or None = None
         self.Menu_Help_ViewDocumentation: QtWidgets.QAction or None = None
+        self.Menu_Help_QGISAlgorithmHelp: QtWidgets.QAction or None = None
 
         self.sys_info: QtWidgets.QDialog or None = None
         self.sys_info_text_browser: QtWidgets.QTextBrowser or None = None
@@ -3005,11 +3006,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = icon_path + "/images/baseline_school_black_18dp.png"
         self.Menu_Help_ViewDocumentation.setIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
         self.Menu_Help.addAction(self.Menu_Help_ViewDocumentation)
-
-        # Connect the Help > View Documentation menu tab.
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         self.Menu_Help_ViewDocumentation.triggered.connect(self.ui_action_view_documentation)
+
+        # Help / QGIS Algorithm Help menu
+        self.Menu_Help_QGISAlgorithmHelp = QtWidgets.QAction(main_window)
+        self.Menu_Help_QGISAlgorithmHelp.setObjectName(qt_util.from_utf8("Menu_Help_QGISAlgorithmHelp"))
+        self.Menu_Help_QGISAlgorithmHelp.setText("QGIS Algorithm Help")
+        self.Menu_Help.addAction(self.Menu_Help_QGISAlgorithmHelp)
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Help_QGISAlgorithmHelp.triggered.connect(self.ui_action_help_qgis_algorithm_help)
+
         # Add Help menu to menubar
         self.menubar.addAction(self.Menu_Help.menuAction())
 
@@ -4289,6 +4298,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger = logging.getLogger(__name__)
             message = "Problem showing Help About"
             logger.warning(message, exc_info=True)
+
+    def ui_action_help_qgis_algorithm_help(self) -> None:
+        """
+        Display information about how to generate QGIS algorithm help.
+
+        Returns:
+            None
+        """
+        message = "Use the Commands / Running and Properties / QgisAlgorithmHelp command to print QGIS algorithm help."
+        qt_util.info_message_box(message, title="QGIS Algorithm Help")
 
     def ui_action_help_software_system_information(self) -> None:
         """

@@ -26,6 +26,7 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -561,11 +562,17 @@ class IntersectGeoLayer(AbstractCommand):
                     # Perform the QGIS intersection function. Refer to the reference below for parameter descriptions.
                     # REF: https://docs.qgis.org/2.18/en/docs/user_manual/processing_algs/qgis/
                     # vector_overlay_tools.html#intersection
-                    alg_parameters = {"INPUT": input_geolayer.qgs_layer,
-                                      "OVERLAY": intersect_geolayer_copy.qgs_layer,
-                                      "OUTPUT": "memory:"}
-                    intersected_output = self.command_processor.qgis_processor.runAlgorithm("qgis:intersection",
-                                                                                            alg_parameters)
+                    alg_parameters = {
+                        "INPUT": input_geolayer.qgs_layer,
+                        "OVERLAY": intersect_geolayer_copy.qgs_layer,
+                        "OUTPUT": "memory:"
+                    }
+                    feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                    intersected_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                                  algorithm="qgis:intersection",
+                                                                  algorithm_parameters=alg_parameters,
+                                                                  feedback_handler=feedback_handler)
+                    self.warning_count += feedback_handler.get_warning_count()
 
                     # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
                     # in QGIS3, intersected_output["OUTPUT"] returns the returns the QGS vector layer object

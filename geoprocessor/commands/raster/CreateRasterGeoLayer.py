@@ -30,41 +30,42 @@ from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
 import geoprocessor.util.command_util as command_util
 import geoprocessor.util.qgis_util as qgis_util
-import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validator_util
+
+import gdal
 
 import logging
 
 
-# TODO smalers 2020-03-21 this command needs to be implemented
 class CreateRasterGeoLayer(AbstractCommand):
-
     """
     Creates a new raster GeoLayer.
-
-    Command Parameters
-    * NewGeoLayerID (str, required): The ID of the new GeoLayer.
-    * GeometryFormat (str, required): The format of the input geometry. Can be `BoundingBox`, `WKT` or `WKB`. Refer
-        to user documentation for descriptions of each geometry format.
-    * GeometryData (str, required): The geometry data in the format specified by the GeometryFormat parameter.
-    * CRS (str, required): The coordinate reference system of the new GeoLayer. The units of the GeometryData must
-        match the units of the CRS.
-    * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the NewGeoLayerID
-        already exists within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
-        (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("NewGeoLayerID", type("")),
-        CommandParameterMetadata("GeometryFormat", type(str)),
-        CommandParameterMetadata("GeometryData", type(str)),
-        CommandParameterMetadata("CRS", type(str)),
-        CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
+        CommandParameterMetadata("NewGeoLayerID", str),
+        CommandParameterMetadata("DataType", str),
+        CommandParameterMetadata("CRS", str),
+        CommandParameterMetadata("NumRows", str),
+        CommandParameterMetadata("NumColumns", str),
+        CommandParameterMetadata("NumBands", str),
+        CommandParameterMetadata("OriginX", float),
+        CommandParameterMetadata("OriginY", float),
+        CommandParameterMetadata("PixelWidth", float),
+        CommandParameterMetadata("PixelHeight", float),
+        CommandParameterMetadata("InitialValue", str),
+        # TODO smalers 2020-11-26 How to set?
+        # CommandParameterMetadata("NoDataValue", str),
+        CommandParameterMetadata("IfGeoLayerIDExists", str)]
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Create a new raster GeoLayer."
+    __command_metadata['Description'] = (
+        "Create a new raster GeoLayer, using TIF driver.\n"
+        "A temporary file will be created and will be read into memory.\n"
+        "Once created, the layer can be processed with other commands."
+    )
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
@@ -74,6 +75,11 @@ class CreateRasterGeoLayer(AbstractCommand):
     __parameter_input_metadata['NewGeoLayerID.Label'] = "New GeoLayerID"
     __parameter_input_metadata['NewGeoLayerID.Required'] = True
     __parameter_input_metadata['NewGeoLayerID.Tooltip'] = "The ID of the new GeoLayer."
+    # NumBands
+    __parameter_input_metadata['NumBands.Description'] = "number of bands"
+    __parameter_input_metadata['NumBands.Label'] = "Number of bands"
+    __parameter_input_metadata['NumBands.Required'] = True
+    __parameter_input_metadata['NumBands.Tooltip'] = "Number of bands in the raster layer."
     # NumColumns
     __parameter_input_metadata['NumColumns.Description'] = "number of columns"
     __parameter_input_metadata['NumColumns.Label'] = "Number of columns"
@@ -84,6 +90,12 @@ class CreateRasterGeoLayer(AbstractCommand):
     __parameter_input_metadata['NumRows.Label'] = "Number of rows"
     __parameter_input_metadata['NumRows.Required'] = True
     __parameter_input_metadata['NumRows.Tooltip'] = "Number of rows in the raster layer."
+    # DataType
+    __parameter_input_metadata['DataType.Description'] = "cell data type for each band (see tooltip)"
+    __parameter_input_metadata['DataType.Label'] = "Data type for bands"
+    __parameter_input_metadata['DataType.Required'] = True
+    __parameter_input_metadata['DataType.Tooltip'] = "The data type for each band, separated by commas " \
+                                                     "(Byte, Int16, Int32, Float32, Float64, UInt16, UInt32)."
     # CRS
     __parameter_input_metadata['CRS.Description'] = "coordinate references system of the new GeoLayer"
     __parameter_input_metadata['CRS.Label'] = "CRS"
@@ -91,6 +103,26 @@ class CreateRasterGeoLayer(AbstractCommand):
     __parameter_input_metadata['CRS.Tooltip'] = (
         "The coordinate reference system of the new GeoLayer. EPSG or "
         "ESRI code format required (e.g. EPSG:4326, EPSG:26913, ESRI:102003).")
+    # OriginX
+    __parameter_input_metadata['OriginX.Description'] = "origin x-coordinate"
+    __parameter_input_metadata['OriginX.Label'] = "Origin X"
+    __parameter_input_metadata['OriginX.Required'] = True
+    __parameter_input_metadata['OriginX.Tooltip'] = "Origin x-coordinate, in units of the coordinate reference system."
+    # OriginY
+    __parameter_input_metadata['OriginY.Description'] = "origin y-coordinate"
+    __parameter_input_metadata['OriginY.Label'] = "Origin Y"
+    __parameter_input_metadata['OriginY.Required'] = True
+    __parameter_input_metadata['OriginY.Tooltip'] = "Origin y-coordinate, in units of the coordinate reference system."
+    # PixelWidth
+    __parameter_input_metadata['PixelWidth.Description'] = "pixel width"
+    __parameter_input_metadata['PixelWidth.Label'] = "Pixel width"
+    __parameter_input_metadata['PixelWidth.Required'] = True
+    __parameter_input_metadata['PixelWidth.Tooltip'] = "Pixel width, in units of the coordinate reference system."
+    # PixelHeight
+    __parameter_input_metadata['PixelHeight.Description'] = "pixel height"
+    __parameter_input_metadata['PixelHeight.Label'] = "Pixel height"
+    __parameter_input_metadata['PixelHeight.Required'] = True
+    __parameter_input_metadata['PixelHeight.Tooltip'] = "Pixel height, in units of the coordinate reference system."
     # IfGeoLayerIDExists
     __parameter_input_metadata['IfGeoLayerIDExists.Description'] = "action if output exists"
     __parameter_input_metadata['IfGeoLayerIDExists.Label'] = "If GeoLayerID exists"
@@ -99,8 +131,8 @@ class CreateRasterGeoLayer(AbstractCommand):
         "Replace: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
         "No warning is logged.\n"
         "ReplaceAndWarn: The existing GeoLayer within the GeoProcessor is overwritten with the new GeoLayer. "
-        "A warning is logged. \n"
-        "Warn: The new GeoLayer is not created. A warning is logged. \n"
+        "A warning is logged.\n"
+        "Warn: The new GeoLayer is not created. A warning is logged.\n"
         "Fail: The new GeoLayer is not created. A fail message is logged.")
     __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
     __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
@@ -154,16 +186,51 @@ class CreateRasterGeoLayer(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that GeometryFormat parameter is either `BoundingBox`, `WKT` or `WKB`.
+        # Check that OriginX parameter is a float
         # noinspection PyPep8Naming
-        pv_GeometryFormat = self.get_parameter_value(parameter_name="GeometryFormat",
-                                                     command_parameters=command_parameters)
-        acceptable_values = ["BoundingBox", "WKT", "WKB"]
-        if not validator_util.validate_string_in_list(pv_GeometryFormat, acceptable_values, none_allowed=False,
-                                                      empty_string_allowed=False, ignore_case=True):
-            message = "GeometryFormat parameter value ({}) is not recognized.".format(pv_GeometryFormat)
-            recommendation = "Specify one of the acceptable values ({}) for the GeometryFormat parameter.".format(
-                acceptable_values)
+        pv_OriginX = self.get_parameter_value(parameter_name="OriginX",
+                                              command_parameters=command_parameters)
+        if not validator_util.validate_float(pv_OriginX, none_allowed=False, empty_string_allowed=False,
+                                             zero_allowed=False):
+            message = "OriginX parameter value ({}) is invalid.".format(pv_OriginX)
+            recommendation = "Specify a number."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Check that OriginY parameter is a float and not 0 (zero causes CRS issue?)
+        # noinspection PyPep8Naming
+        pv_OriginY = self.get_parameter_value(parameter_name="OriginY",
+                                              command_parameters=command_parameters)
+        if not validator_util.validate_float(pv_OriginY, none_allowed=False, empty_string_allowed=False,
+                                             zero_allowed=False):
+            message = "OriginX parameter value ({}) is invalid.".format(pv_OriginY)
+            recommendation = "Specify a number."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Check that PixelWidth parameter is a float (zero causes CRS issue?)
+        # noinspection PyPep8Naming
+        pv_PixelWidth = self.get_parameter_value(parameter_name="PixelWidth",
+                                                 command_parameters=command_parameters)
+        if not validator_util.validate_float(pv_PixelWidth, none_allowed=False, empty_string_allowed=False):
+            message = "PixelWidth parameter value ({}) is invalid.".format(pv_PixelWidth)
+            recommendation = "Specify a number."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(
+                CommandPhaseType.INITIALIZATION,
+                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Check that PixelHeight parameter is a float
+        # noinspection PyPep8Naming
+        pv_PixelHeight = self.get_parameter_value(parameter_name="PixelHeight",
+                                                  command_parameters=command_parameters)
+        if not validator_util.validate_float(pv_PixelHeight, none_allowed=False, empty_string_allowed=False):
+            message = "PixelHeight parameter value ({}) is invalid.".format(pv_PixelHeight)
+            recommendation = "Specify a number."
             warning_message += "\n" + message
             self.command_status.add_to_log(
                 CommandPhaseType.INITIALIZATION,
@@ -196,7 +263,7 @@ class CreateRasterGeoLayer(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_runtime_data(self, geolayer_id: str, crs: str, geometry_format: str, geometry_data: str) -> bool:
+    def check_runtime_data(self, geolayer_id: str, crs: str) -> bool:
         """
         Checks the following:
         * the CRS is a valid CRS
@@ -206,8 +273,6 @@ class CreateRasterGeoLayer(AbstractCommand):
         Args:
             geolayer_id: the id of the GeoLayer to be created
             crs: the crs code of the GeoLayer to be created
-            geometry_format: the format that the geometry data is delivered
-            geometry_data: the geometry data (as a string)
 
         Returns:
              Boolean. If TRUE, the GeoLayer should be simplified If FALSE, at least one check failed and the GeoLayer
@@ -225,13 +290,6 @@ class CreateRasterGeoLayer(AbstractCommand):
         # (depends on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "NewGeoLayerID",
                                                            geolayer_id, None))
-
-        # If the GeometryFormat is BoundingBox, continue with the checks.
-        if geometry_format.upper() == "BOUNDINGBOX":
-
-            # If the GeometryData string does not contain 4 items when converted to a list, raise a FAILURE.
-            should_run_command.append(validator_util.run_check(self, "IsListLengthCorrect", "GeometryData",
-                                                               geometry_data, "FAIL", other_values=[",", 4]))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -257,67 +315,59 @@ class CreateRasterGeoLayer(AbstractCommand):
         # noinspection PyPep8Naming
         pv_NewGeoLayerID = self.get_parameter_value("NewGeoLayerID")
         # noinspection PyPep8Naming
-        pv_GeometryFormat = self.get_parameter_value("GeometryFormat").upper()
-        # noinspection PyPep8Naming
-        pv_GeometryData = self.get_parameter_value("GeometryData")
+        pv_DataType = self.get_parameter_value("DataType")
         # noinspection PyPep8Naming
         pv_CRS = self.get_parameter_value("CRS")
+        # noinspection PyPep8Naming
+        pv_NumRows = self.get_parameter_value("NumRows")
+        num_rows = int(pv_NumRows)
+        # noinspection PyPep8Naming
+        pv_NumColumns = self.get_parameter_value("NumColumns")
+        num_columns = int(pv_NumColumns)
+        # noinspection PyPep8Naming
+        pv_NumBands = self.get_parameter_value("NumBands")
+        num_bands = int(pv_NumBands)
+        # noinspection PyPep8Naming
+        pv_OriginX = self.get_parameter_value("OriginX")
+        origin_x = float(pv_OriginX)
+        # noinspection PyPep8Naming
+        pv_OriginY = self.get_parameter_value("OriginY")
+        origin_y = float(pv_OriginY)
+        # noinspection PyPep8Naming
+        pv_PixelWidth = self.get_parameter_value("PixelWidth")
+        pixel_width = float(pv_PixelWidth)
+        # noinspection PyPep8Naming
+        pv_PixelHeight = self.get_parameter_value("PixelHeight")
+        pixel_height = float(pv_PixelHeight)
+        # noinspection PyPep8Naming
+        pv_InitialValue = self.get_parameter_value("InitialValue")
+        initial_value = None
+        if pv_InitialValue is not None and pv_InitialValue != '':
+            if pv_DataType.upper().find('Int') or pv_DataType.upper() == 'BYTE':
+                initial_value = int(pv_InitialValue)
+            else:
+                initial_value = float(pv_InitialValue)
 
-        if self.check_runtime_data(pv_NewGeoLayerID, pv_CRS, pv_GeometryFormat, pv_GeometryData):
+        if self.check_runtime_data(pv_NewGeoLayerID, pv_CRS):
             # noinspection PyBroadException
             try:
-                layer = None
-                qgs_geometry = None
-                if pv_GeometryFormat == "BOUNDINGBOX":
-                    # Convert the geometry input from a string to a list of strings.
-                    # Items are in the following order:
-                    #   1. Left (West) bound coordinate
-                    #   2. Bottom (South) bound coordinate
-                    #   3. Right (East) bound coordinate
-                    #   4. Top (North) bound coordinate
-                    nswe_extents = string_util.delimited_string_to_list(pv_GeometryData)
-                    nw = "{} {}".format(nswe_extents[0], nswe_extents[3])
-                    ne = "{} {}".format(nswe_extents[2], nswe_extents[3])
-                    se = "{} {}".format(nswe_extents[2], nswe_extents[1])
-                    sw = "{} {}".format(nswe_extents[0], nswe_extents[1])
-                    wkt_conversion = "POLYGON(({}, {}, {}, {}))".format(nw, ne, se, sw)
-
-                    # Create the QgsVectorLayer. BoundingBox will always create a POLYGON layer.
-                    layer = qgis_util.create_qgsvectorlayer("Polygon", pv_CRS, "layer")
-
-                    # Create the QgsGeometry object for the bounding box geometry.
-                    qgs_geometry = qgis_util.create_qgsgeometry("WKT", wkt_conversion)
-
-                elif pv_GeometryFormat == "WKT":
-                    # Get the equivalent QGS geometry type to the input WKT geometry.
-                    # Ex: MultiLineString is converted to LineString.
-                    qgsvectorlayer_geom_type = qgis_util.get_geometrytype_qgis_from_wkt(pv_GeometryData)
-
-                    # Create the QgsVectorLayer. The geometry type will be determined from the WKT specifications.
-                    layer = qgis_util.create_qgsvectorlayer(qgsvectorlayer_geom_type, pv_CRS, "layer")
-
-                    # Create the QgsGeometry object for the Well-Known Text geometry.
-                    qgs_geometry = qgis_util.create_qgsgeometry("WKT", pv_GeometryData)
-
-                elif pv_GeometryFormat == "WKB":
-                    # Create the QgsGeometry object for the Well-Known Binary geometry.
-                    qgs_geometry = qgis_util.create_qgsgeometry("WKB", pv_GeometryData)
-
-                    # Get the equivalent Well-Known Text for the geometry.
-                    qgs_geometry_as_wkt = qgs_geometry.exportToWkt()
-
-                    # Get the equivalent QGS geometry type to the input WKT geometry.
-                    # Ex: MultiLineString is converted to LineString.
-                    qgsvectorlayer_geom_type = qgis_util.get_geometrytype_qgis_from_wkt(qgs_geometry_as_wkt)
-
-                    # Create the QgsVectorLayer. The geometry type will be determined from the WKB specifications.
-                    layer = qgis_util.create_qgsvectorlayer(qgsvectorlayer_geom_type, pv_CRS, "layer")
-
-                # Add the feature (with the appropriate geometry) to the Qgs Vector Layer.
-                qgis_util.add_feature_to_qgsvectorlayer(layer, qgs_geometry)
+                # Create the QgsVectorLayer.
+                layer = qgis_util.create_qgsrasterlayer(
+                    crs=pv_CRS,
+                    num_rows=num_rows,
+                    num_columns=num_columns,
+                    num_bands=num_bands,
+                    origin_x=origin_x,
+                    origin_y=origin_y,
+                    pixel_width=pixel_width,
+                    pixel_height=pixel_height,
+                    data_type=pv_DataType,
+                    initial_value=initial_value)
 
                 # Create a new GeoLayer with the QgsVectorLayer and add it to the GeoProcesor's geolayers list.
+                # - treat as if memory since a temporary file is used but not expected to be used later
                 new_geolayer = RasterGeoLayer(geolayer_id=pv_NewGeoLayerID,
+                                              name=pv_NewGeoLayerID,
                                               qgs_raster_layer=layer,
                                               input_path_full=GeoLayer.SOURCE_MEMORY,
                                               input_path=GeoLayer.SOURCE_MEMORY)

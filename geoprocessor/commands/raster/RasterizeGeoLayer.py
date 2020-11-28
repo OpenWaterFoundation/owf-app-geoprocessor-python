@@ -25,6 +25,7 @@ from geoprocessor.core.CommandParameterError import CommandParameterError
 from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core import RasterFormatType
 from geoprocessor.core.RasterGeoLayer import RasterGeoLayer
 
@@ -468,27 +469,18 @@ class RasterizeGeoLayer(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.WARNING, message,
                                                                         recommendation))
 
-                # Call runAlgorithm with the parameter "gdal:rasterize" and pass in the parameters defined above.
                 self.logger.info('Algorithm parameters: {}'.format(alg_parameters))
-                # TODO smalers 2020-07-20 does not seem to be any difference between class or module.
+                # Call runAlgorithm with the parameter "gdal:rasterize" and pass in the parameters defined above.
                 # - files ares still not unlinked
                 # - aux.xml file seems to be delayed writing, even requiring GeoProcessor to exit?
                 # - See:  https://gis.stackexchange.com/questions/136366/
                 #           turn-off-the-setting-of-qgis-to-produce-xml-when-closing
-                do_processing_class = True
-                if do_processing_class:
-                    # 'Processing' class
-                    alg_output = self.command_processor.qgis_processor.runAlgorithm("gdal:rasterize",
-                                                                                    alg_parameters
-                                                                                    # feedback=self
-                                                                                    )
-                else:
-                    # Lowercase 'processing'
-                    alg_output = processing.run("gdal:rasterize",
-                                                alg_parameters
-                                                # feedback=self)
-                                                )
-
+                feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                alg_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                      algorithm="gdal:rasterize",
+                                                      algorithm_paramters=alg_parameters,
+                                                      feedback_handler=feedback_handler)
+                self.warning_count += feedback_handler.get_warning_count()
                 # Output is a dictionary
                 self.logger.info("Algorithm output: {}".format(alg_output))
 

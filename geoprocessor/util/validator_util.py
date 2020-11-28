@@ -536,7 +536,10 @@ def validate_bool(bool_value: bool or str, none_allowed: bool, empty_string_allo
     return True
 
 
-def validate_float(float_value: float or str, none_allowed: bool, empty_string_allowed: bool) -> bool:
+def validate_float(float_value: float or str,
+                   none_allowed: bool = False,
+                   empty_string_allowed: bool = False,
+                   zero_allowed: bool = True) -> bool:
     """
     Validate that a floating point value is valid.
 
@@ -544,6 +547,7 @@ def validate_float(float_value: float or str, none_allowed: bool, empty_string_a
         float_value: Floating point value to check, can be string or floating point (float) type.
         none_allowed: If the value is None, OK.
         empty_string_allowed: If the value is an empty string, OK.
+        zero_allowed: If a zero is allowed, OK.
 
     Returns:
         True if float value is valid, False if invalid.
@@ -562,7 +566,12 @@ def validate_float(float_value: float or str, none_allowed: bool, empty_string_a
                 return False
         # Reassign the value as a float to check
         try:
-            float(float_value)
+            f = float(float_value)
+            # Check for zero
+            if not zero_allowed:
+                if f == 0.0:
+                    # Zero is not allowed
+                    return False
         except ValueError:
             return False
     else:
@@ -571,7 +580,10 @@ def validate_float(float_value: float or str, none_allowed: bool, empty_string_a
     return True
 
 
-def validate_int(int_value: str or int, none_allowed: bool, empty_string_allowed: bool) -> bool:
+def validate_int(int_value: str or int,
+                 none_allowed: bool,
+                 empty_string_allowed: bool,
+                 zero_allowed: bool = True) -> bool:
     """
     Validate that an integer value is valid.
 
@@ -579,6 +591,7 @@ def validate_int(int_value: str or int, none_allowed: bool, empty_string_allowed
         int_value: Integer value to check, can be string or integer (int) type.
         none_allowed: If the value is None, OK.
         empty_string_allowed: If the value is an empty string, OK.
+        zero_allowed: If a zero is allowed, OK.
 
     Returns:
         True if integer value is valid, False if invalid.
@@ -597,7 +610,12 @@ def validate_int(int_value: str or int, none_allowed: bool, empty_string_allowed
                 return False
         # Reassign the value as an integer to check
         try:
-            int(int_value)
+            i = int(int_value)
+            # Check for zero
+            if not zero_allowed:
+                if i == 0:
+                    # Zero is not allowed
+                    return False
         except ValueError:
             return False
     else:

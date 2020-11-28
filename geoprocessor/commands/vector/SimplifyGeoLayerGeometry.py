@@ -26,9 +26,11 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
+import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.validator_util as validator_util
 
 import logging
@@ -227,6 +229,7 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
 
         Args:
             geolayer_id: the ID of the GeoLayer to be simplified
+            simplified_geolayer_id: the ID of the simplified GeoLayer
 
         Returns:
              Boolean. If TRUE, the GeoLayer should be simplified If FALSE, at least one check failed and the GeoLayer
@@ -320,12 +323,18 @@ class SimplifyGeoLayerGeometry(AbstractCommand):
                     # Perform the QGIS simplify geometries function. Refer to the REF below for parameter descriptions.
                     # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/
                     #       vector_geometry_tools/simplifygeometries.html
-                    alg_parameters = {"INPUT": geolayer.qgs_layer,
-                                      "METHOD": 0,
-                                      "TOLERANCE": tolerance_float,
-                                      "OUTPUT": "memory:"}
-                    simple_output = self.command_processor.qgis_processor.runAlgorithm("native:simplifygeometries",
-                                                                                       alg_parameters)
+                    alg_parameters = {
+                        "INPUT": geolayer.qgs_layer,
+                        "METHOD": 0,
+                        "TOLERANCE": tolerance_float,
+                        "OUTPUT": "memory:"
+                    }
+                    feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                    simple_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                             algorithm="native:simplifygeometries",
+                                                             algorithm_parameters=alg_parameters,
+                                                             feedback_handler=feedback_handler)
+                    self.warning_count += feedback_handler.get_warning_count()
 
                     # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
                     # in QGIS3, simple_output["OUTPUT"] returns the returns the QGS vector layer object

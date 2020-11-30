@@ -50,7 +50,11 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
 
     # Command metadata for command editor display
     __command_metadata = dict()
-    __command_metadata['Description'] = "Write a raster GeoLayer to a file."
+    __command_metadata['Description'] = (
+        "Write a raster GeoLayer to a file.\n"
+        "The raster file format is determined from the file extension.\n"
+        "The coordinate reference system (CRS) can optionally be changed for the output.\n"
+    )
     __command_metadata['EditorType'] = "Simple"
 
     # Parameter Metadata
@@ -70,13 +74,14 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
     __parameter_input_metadata['OutputFile.Required'] = True
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
     # OutputCRS
-    __parameter_input_metadata['OutputCRS.Description'] = "coordinate reference system of the raster"
+    __parameter_input_metadata['OutputCRS.Description'] = "CRS of the output raster"
     __parameter_input_metadata['OutputCRS.Label'] = "Output CRS"
     __parameter_input_metadata['OutputCRS.Tooltip'] = (
         "The coordinate reference system of the output raster file. EPSG or ESRI code format required "
         "(e.g. EPSG:4326, EPSG:26913, ESRI:102003).\n"
         "If the output CRS is different than the CRS of the GeoLayer, the output GeoJSON is reprojected "
         "to the new CRS.")
+    __parameter_input_metadata['OutputCRS.Value.Default'] = "CRS from input"
 
     def __init__(self) -> None:
         """
@@ -231,7 +236,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                 use_gdal_translate = True
                 if use_gdal_translate:
                     # Use GDAL translate algorithm because it accepts any output format.
-                    self.logger.info("Using GDAL 'translate' to write raster.")
+                    self.logger.info("Using GDAL 'translate' to change format and/or CRS and write raster.")
 
                     # The following parameters are for GeoTIFF
                     alg_parameters = {
@@ -241,6 +246,10 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                         "TARGET_CRS": crs.geographicCrsAuthId()
                         # NODATA
                     }
+
+                    self.logger.info("Raster layer metadata before running 'translate':")
+                    qgis_util.log_raster_metadata(geolayer.qgs_layer, logger=self.logger)
+
                     self.logger.info("Target CRS is {}".format(crs.geographicCrsAuthId()))
 
                     # Set specific output options that have been found to be useful.
@@ -258,6 +267,9 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                                                           feedback_handler=feedback_handler)
                     self.warning_count += feedback_handler.get_warning_count()
                     self.logger.info("Algorithm OUTPUT={}".format(alg_output['OUTPUT']))
+
+                    self.logger.info("Raster layer metadata after running 'translate' and writing to file:")
+                    qgis_util.log_raster_metadata(geolayer.qgs_layer, logger=self.logger)
                 else:
                     # TODO smalers 2020-11-27 This is more work so remove when the above tests out.
                     # Write using the QgsRasterFileWriter associated with the layer.

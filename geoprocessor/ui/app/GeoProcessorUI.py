@@ -2730,42 +2730,6 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.Menu_Commands_Raster_Create_RasterizeGeoLayer)
 
         # ------------------------------------------------------------------------------------------------------------
-        # Commands (Raster) / Manipulate Raster GeoLayer menu
-        # ------------------------------------------------------------------------------------------------------------
-
-        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
-        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_Raster_GeoLayer"))
-        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.setTitle("Manipulate Raster GeoLayer")
-        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.menuAction())
-
-        # ChangeRasterGeoLayerCRS
-        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS"))
-        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setText(
-            "ChangeRasterGeoLayerCRS()... <change a raster GeoLayer CRS>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.triggered.connect(
-            functools.partial(self.edit_new_command, "ChangeRasterGeoLayerCRS()"))
-        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.addAction(
-            self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS)
-
-        # RearrangeRasterGeoLayerBands
-        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands = QtWidgets.QAction(main_window)
-        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.setObjectName(
-            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands"))
-        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.setText(
-            "RearrangeRasterGeoLayerBands()... <rearrange a raster GeoLayer's bands>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
-        # noinspection PyUnresolvedReferences
-        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.triggered.connect(
-            functools.partial(self.edit_new_command, "RearrangeRasterGeoLayerBands()"))
-        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.addAction(
-            self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands)
-
-        # ------------------------------------------------------------------------------------------------------------
         # Commands (Raster) / Read Raster GeoLayer menu
         # ------------------------------------------------------------------------------------------------------------
         self.Menu_Commands_Raster_Read_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
@@ -2814,6 +2778,42 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromWebMapService()"))
         self.Menu_Commands_Raster_Read_RasterGeoLayer.addAction(
             self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService)
+
+        # ------------------------------------------------------------------------------------------------------------
+        # Commands (Raster) / Manipulate Raster GeoLayer menu
+        # ------------------------------------------------------------------------------------------------------------
+
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer = QtWidgets.QMenu(self.Menu_Commands)
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_Raster_GeoLayer"))
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.setTitle("Manipulate Raster GeoLayer")
+        self.Menu_Commands_Raster.addAction(self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.menuAction())
+
+        # ChangeRasterGeoLayerCRS
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS"))
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setText(
+            "ChangeRasterGeoLayerCRS()... <change a raster GeoLayer CRS>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.triggered.connect(
+            functools.partial(self.edit_new_command, "ChangeRasterGeoLayerCRS()"))
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.addAction(
+            self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS)
+
+        # RearrangeRasterGeoLayerBands
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.setObjectName(
+            qt_util.from_utf8("Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands"))
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.setText(
+            "RearrangeRasterGeoLayerBands()... <rearrange a raster GeoLayer's bands>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.triggered.connect(
+            functools.partial(self.edit_new_command, "RearrangeRasterGeoLayerBands()"))
+        self.Menu_Commands_Raster_Manipulate_RasterGeoLayer.addAction(
+            self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands)
 
         # ------------------------------------------------------------------------------------------------------------
         # Commands (Raster) / Write Raster GeoLayer menu

@@ -34,4 +34,4 @@ if app_version_mod == "":
     app_version = "{}.{}.{}".format(app_version_major, app_version_minor, app_version_micro)
 else:
     app_version = "{}.{}.{}.{}".format(app_version_major, app_version_minor, app_version_micro, app_version_mod)
-app_version_date = "2020-11-18"
+app_version_date = "2020-11-28"

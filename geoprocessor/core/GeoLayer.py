@@ -210,6 +210,7 @@ class GeoLayer(object):
     def get_crs(self) -> QgsCoordinateReferenceSystem:
         """
         Returns the coordinate reference system EPSG object.
+        Use get_crs_code() to get the string code (e.g., "EPSG:4326").
         """
 
         # "crs" (str) is the GeoLayer's coordinate reference system in
@@ -218,10 +219,10 @@ class GeoLayer(object):
 
     def get_crs_code(self) -> str or None:
         """
-        Returns the coordinate reference system EPSG code of a GeoLayer.
+        Returns the coordinate reference system EPSG code of a GeoLayer, for example "EPSG:4326".
         """
 
-        # "crs" (str) is the GeoLayer's coordinate reference system in
+        # "crs" (str) is the GeoLayer's coordinate reference system
         # <EPSG format 'http://spatialreference.org/ref/epsg/'>_.
         if self.qgs_layer is None:
             return None

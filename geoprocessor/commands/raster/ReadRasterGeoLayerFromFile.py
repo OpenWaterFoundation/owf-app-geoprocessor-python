@@ -51,19 +51,22 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
     # Define the command parameters.
     __command_parameter_metadata = [
-        CommandParameterMetadata("InputFile", type(""),
+        CommandParameterMetadata("InputFile", str,
                                  parameter_description="Path to file",
                                  editor_tooltip="Path to raster file to read, can use ${Property}."),
-        CommandParameterMetadata("GeoLayerID", type(""),
+        CommandParameterMetadata("GeoLayerID", str,
                                  parameter_description="GeoLayer identifier",
                                  editor_tooltip="GeoLayer identifier."),
-        CommandParameterMetadata("Name", type("")),
-        CommandParameterMetadata("Description", type("")),
-        CommandParameterMetadata("Properties", type("")),
-        CommandParameterMetadata("IfGeoLayerIDExists", type(""),
+        CommandParameterMetadata("Name", str),
+        CommandParameterMetadata("Description", str),
+        CommandParameterMetadata("Properties", str),
+        CommandParameterMetadata("IfGeoLayerIDExists", str,
                                  parameter_description="Action if GeoLayer exists",
                                  default_value="Warn",
-                                 editor_tooltip="Action if GeoLayer exists.")]
+                                 editor_tooltip="Action if GeoLayer exists.")  # ,
+        # TODO smalers 2020-11-29 it would be good to be able to turn on debugging for drivers
+        # CommandParameterMetadata("Debug", str)
+    ]
 
     # Command metadata for command editor display
     __command_metadata = dict()
@@ -118,6 +121,12 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         "Fail : The new GeoLayer is not created. A fail message is logged.")
     __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
     __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
+    # Debug
+    __parameter_input_metadata['Debug.Description'] = "whether to turn on debug messages"
+    __parameter_input_metadata['Debug.Label'] = "Debug?"
+    __parameter_input_metadata['Debug.Tooltip'] = "Whether to turn on debug messages."
+    __parameter_input_metadata['Debug.Values'] = ["", "False", "True"]
+    __parameter_input_metadata['Debug.Value.Default'] = "False"
 
     # Choices for IfGeoLayerIDExists, used to validate parameter and display in editor
     __choices_IfGeoLayerIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
@@ -290,6 +299,11 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
                                      default_value=self.parameter_input_metadata['Description.Value.Default'])
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value("Properties")
+        # noinspection PyPep8Naming
+        # pv_Debug = self.get_parameter_value("Debug", default_value='False')
+        # debug = False
+        # if pv_Debug is not None and (pv_Debug.upper() == 'True'):
+        #    debug = True
 
         # Expand for ${Property} syntax.
         # noinspection PyPep8Naming
@@ -317,6 +331,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
             # noinspection PyBroadException
             try:
                 # Create a QGSRasterLayer object in raster format
+                # qgs_raster_layer = qgis_util.read_qgsrasterlayer_from_file(input_file_absolute, debug = debug)
                 qgs_raster_layer = qgis_util.read_qgsrasterlayer_from_file(input_file_absolute)
 
                 file_extension = io_util.get_extension(pv_InputFile)

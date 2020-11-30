@@ -109,7 +109,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         "Column names, separated by commas, if not read from the file")
     # FloatColumns
     __parameter_input_metadata['FloatColumns.Description'] = "columns that floating point numbers, separated by commas"
-    __parameter_input_metadata['FloatColumns.Label'] = "Text columns"
+    __parameter_input_metadata['FloatColumns.Label'] = "Float columns"
     __parameter_input_metadata['FloatColumns.Tooltip'] = (
         "Column names, separated by commas, for columns that contain floating point numbers.")
     # IntegerColumns

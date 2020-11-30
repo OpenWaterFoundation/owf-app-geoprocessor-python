@@ -26,6 +26,7 @@ from geoprocessor.core.CommandParameterMetadata import CommandParameterMetadata
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType
 from geoprocessor.core.GeoLayer import GeoLayer
+from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorithmProcessingFeedbackHandler
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
@@ -223,11 +224,17 @@ class SetGeoLayerCRS(AbstractCommand):
                 # Check if the input GeoLayer already has an assigned CRS.
                 if input_geolayer.get_crs_code():
                     # Reproject the GeoLayer.
-                    alg_parameters = {"INPUT": input_geolayer.qgs_layer,
-                                      "TARGET_CRS": pv_CRS,
-                                      "OUTPUT": "memory:"}
-                    reprojected = self.command_processor.qgis_processor.runAlgorithm("native:reprojectlayer",
-                                                                                     alg_parameters)
+                    alg_parameters = {
+                        "INPUT": input_geolayer.qgs_layer,
+                        "TARGET_CRS": pv_CRS,
+                        "OUTPUT": "memory:"
+                    }
+                    feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                    reprojected_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                                  algorithm="qgis:reprojectlayer",
+                                                                  algorithm_parameters=alg_parameters,
+                                                                  feedback_handler=feedback_handler)
+                    self.warning_count += feedback_handler.get_warning_count()
 
                     # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
 
@@ -239,7 +246,7 @@ class SetGeoLayerCRS(AbstractCommand):
                     # In QGIS 3 the reprojected["OUTPUT"] returns the QGS vector layer object
                     # - use the same name and description as the original
                     new_geolayer = VectorGeoLayer(geolayer_id=input_geolayer.id,
-                                                  qgs_vector_layer=reprojected["OUTPUT"],
+                                                  qgs_vector_layer=reprojected_output["OUTPUT"],
                                                   name=input_geolayer.name,
                                                   description=input_geolayer.description,
                                                   input_path_full=GeoLayer.SOURCE_MEMORY,
@@ -247,9 +254,16 @@ class SetGeoLayerCRS(AbstractCommand):
                     self.command_processor.add_geolayer(new_geolayer)
 
                 else:
-                    alg_parameters = {"INPUT": input_geolayer.qgs_vector_layer,
-                                      "CRS": pv_CRS}
-                    self.command_processor.qgis_processor.runAlgorithm("qgis:definecurrentprojection", alg_parameters)
+                    alg_parameters = {
+                        "INPUT": input_geolayer.qgs_vector_layer,
+                        "CRS": pv_CRS
+                    }
+                    feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                    reprojected_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
+                                                                  algorithm="qgis:definecurrentprojection",
+                                                                  algorithm_parameters=alg_parameters,
+                                                                  feedback_handler=feedback_handler)
+                    self.warning_count += feedback_handler.get_warning_count()
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process

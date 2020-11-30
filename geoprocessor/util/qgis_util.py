@@ -950,26 +950,39 @@ def log_raster_metadata(qgs_raster_layer: QgsRasterLayer, logger: logging.Logger
         # Create a logger to use
         logger = logging.getLogger(__name__)
 
-    logger.info("Raster size = {} columns x {} rows, {} bands".format(qgs_raster_layer.width(),
-                                                                      qgs_raster_layer.height(),
-                                                                      qgs_raster_layer.bandCount()))
-    logger.info("Raster units per pixel x  = {} y  = {}".format(qgs_raster_layer.rasterUnitsPerPixelX(),
-                                                                qgs_raster_layer.rasterUnitsPerPixelY()))
+    logger.info("Raster properties:")
+    logger.info("  CRS = {}".format(qgs_raster_layer.crs().authid()))
+    logger.info("  Raster size = {} columns x {} rows, {} bands".format(qgs_raster_layer.width(),
+                                                                        qgs_raster_layer.height(),
+                                                                        qgs_raster_layer.bandCount()))
+    logger.info("  Raster units per pixel x  = {} y  = {}".format(qgs_raster_layer.rasterUnitsPerPixelX(),
+                                                                  qgs_raster_layer.rasterUnitsPerPixelY()))
     raster_type = qgs_raster_layer.rasterType()
     # See:  https://github.com/qgis/QGIS/blob/master/src/core/raster/qgsrasterlayer.h
     if raster_type == 0:
-        logger.info("Raster type = {} (Gray or undefined)".format(raster_type))
+        logger.info("  Raster type = {} (Gray or undefined)".format(raster_type))
     elif raster_type == 1:
-        logger.info("Raster type = {} (Palette)".format(raster_type))
+        logger.info("  Raster type = {} (Palette)".format(raster_type))
     elif raster_type == 2:
-        logger.info("Raster type = {} (MultiBand)".format(raster_type))
+        logger.info("  Raster type = {} (MultiBand)".format(raster_type))
     elif raster_type == 3:
-        logger.info("Raster type = {} (ColorLayer)".format(raster_type))
+        logger.info("  Raster type = {} (ColorLayer)".format(raster_type))
     else:
-        logger.info("Raster type = {} (unknown)".format(raster_type))
+        logger.info("  Raster type = {} (unknown)".format(raster_type))
 
+    # Get the raster data provider QgsRasterLayerProvider
     raster_data_provider = qgs_raster_layer.dataProvider()
-    # Data types from:  https://docs.qgis.org/3.16/en/docs/user_manual/processing_algs/gdal/rasterprojections.html
+    logger.info("  Data provider:")
+    logger.info("    Raster provider type = {}".format(qgs_raster_layer.providerType()))
+    logger.info("    Extent: {}".format(raster_data_provider.extent()))
+    logger.info("    DPI: {}".format(raster_data_provider.dpi()))
+    logger.info("    Has pyramids: {}".format(raster_data_provider.hasPyramids()))
+    logger.info("    Is editable: {}".format(raster_data_provider.isEditable()))
+    logger.info("    Last error: {}".format(raster_data_provider.lastError()))
+    logger.info("    Last error format: {}".format(raster_data_provider.lastErrorFormat()))
+    logger.info("    Last error caption: {}".format(raster_data_provider.lastErrorTitle()))
+
+    # Data types from:  https://docs.qgis.org/latest/en/docs/user_manual/processing_algs/gdal/rasterprojections.html
     #    #warp-reproject
     data_types = {
         0: "Unknown",
@@ -986,28 +999,27 @@ def log_raster_metadata(qgs_raster_layer: QgsRasterLayer, logger: logging.Logger
         11: "CFloat64"
     }
     for iband in range(1, (qgs_raster_layer.bandCount() + 1)):
-        logger.info("Band: {}".format(qgs_raster_layer.bandName(iband)))
+        logger.info("  Band: {}".format(qgs_raster_layer.bandName(iband)))
         stats = qgs_raster_layer.dataProvider().bandStatistics(iband, QgsRasterBandStats.All)
-        logger.info("  Data type = {} {}".format(raster_data_provider.dataType(iband),
-                                                 data_types[raster_data_provider.dataType(iband)]))
-        logger.info("  User nodata values = {}".format(raster_data_provider.userNoDataValues(iband)))
-        logger.info("  Source data type = {} {}".format(raster_data_provider.sourceDataType(iband),
-                                                        data_types[raster_data_provider.sourceDataType(iband)]))
-        logger.info("  Source has nodata value = {}".format(raster_data_provider.sourceHasNoDataValue(iband)))
+        logger.info("    Data type = {} {}".format(raster_data_provider.dataType(iband),
+                                                   data_types[raster_data_provider.dataType(iband)]))
+        logger.info("    Source data type = {} {}".format(raster_data_provider.sourceDataType(iband),
+                                                          data_types[raster_data_provider.sourceDataType(iband)]))
+        logger.info("    Band offset = {}".format(raster_data_provider.bandOffset(iband)))
+        logger.info("    Band scale = {}".format(raster_data_provider.bandScale(iband)))
+        logger.info("    No data:")
+        logger.info("      User nodata values = {}".format(raster_data_provider.userNoDataValues(iband)))
+        logger.info("      Source has nodata value = {}".format(raster_data_provider.sourceHasNoDataValue(iband)))
         if raster_data_provider.sourceHasNoDataValue(iband):
-            logger.info("  Source nodata value = {}".format(raster_data_provider.sourceNoDataValue(iband)))
-        logger.info("  Minimum = {}".format(stats.minimumValue))
-        logger.info("  Maximum = {}".format(stats.maximumValue))
-        logger.info("  Mean = {}".format(stats.mean))
-        logger.info("  Range = {}".format(stats.range))
-        logger.info("  StdDev = {}".format(stats.stdDev))
-        # logger.info("  Sum = {}".format(stats.sum))
-        # logger.info("  SumOfSquares = {}".format(stats.sumOfSquares))
-
-    logger.info("Data provider:")
-    logger.info("  Extent: {}".format(raster_data_provider.extent()))
-    logger.info("  DPI: {}".format(raster_data_provider.dpi()))
-    logger.info("  Has pyramids: {}".format(raster_data_provider.hasPyramids()))
+            logger.info("      Source nodata value = {}".format(raster_data_provider.sourceNoDataValue(iband)))
+        logger.info("    Statistics:")
+        logger.info("      Minimum = {}".format(stats.minimumValue))
+        logger.info("      Maximum = {}".format(stats.maximumValue))
+        logger.info("      Mean = {}".format(stats.mean))
+        logger.info("      Range = {}".format(stats.range))
+        logger.info("      StdDev = {}".format(stats.stdDev))
+        # logger.info("      Sum = {}".format(stats.sum))
+        # logger.info("      SumOfSquares = {}".format(stats.sumOfSquares))
 
 
 def parse_qgs_crs(crs_code: str) -> QgsCoordinateReferenceSystem or None:
@@ -1548,32 +1560,6 @@ def set_qgsvectorlayer_attribute(qgsvectorlayer: QgsVectorLayer, attribute_name:
                 logger.warning("Error setting feature attribute '{}' to {}".format(attribute_name, attribute_value))
 
     return set_count
-
-
-def split_qgsvectorlayer_by_attribute(processor: Processing, qgsvectorlayer: QgsVectorLayer, attribute_name: str,
-                                      output_qgsvectorlayers: [QgsVectorLayer]) -> None:
-    """
-    TODO smalers 2020-11-27 phase this out.
-
-    Split the QgsVectorLayer object into multiple vector layers based on an attribute's unique values.
-
-    REF: QGIS User Manual
-    <https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer>
-
-    Args:
-        processor (Processing): QGIS processor to use to run algorithm
-        qgsvectorlayer (QgsVectorLayer): the QGSVectorLayer object
-        attribute_name (str):  the name of the attribute that splits the qgsvectorlayer into multiple layers
-        output_qgsvectorlayers (QgsVectorLayer): the QgsVectorLayer objects that are created by the split
-
-    Returns:
-        [QgsVectorLayers]  The number of layers is based on the number of unique values of the selected attribute.
-    """
-
-    # Split the QgsVectorLayer by the chosen attribute.  Output QgsVectorLayer names should be automatically generated??
-    # QGIS 2?
-    #processing.run('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
-    #processor.runAlgorithm('qgis:splitvectorlayer', qgsvectorlayer, attribute_name, output_qgsvectorlayers)
 
 
 def write_algorithm_help(output_file: str = None, list_algorithms: bool = False,

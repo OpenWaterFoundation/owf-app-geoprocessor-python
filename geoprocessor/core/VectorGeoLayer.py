@@ -207,22 +207,6 @@ class VectorGeoLayer(GeoLayer):
         """
         return True
 
-    # TODO smalers 2020-11-16 need to add way to match records, similar to TSTool table commands.
-    def set_attribute(self, attribute_name: str, attribute_value: Any) -> int:
-        """
-        Set the attribute of all features with a common attribute value.
-
-        Args:
-            attribute_name: the name of the attribute to populate.
-            attribute_value: the string to populate as the attribute's value
-
-        Returns:
-            Number of features for which the attribute was set.
-        """
-
-        # Run processing in the qgis utility function.
-        return qgis_util.set_qgsvectorlayer_attribute(self.qgs_layer, attribute_name, attribute_value)
-
     def remove_attribute(self, attribute_name: str) -> None:
         """
         Removes an attribute of the GeoLayer.
@@ -268,6 +252,22 @@ class VectorGeoLayer(GeoLayer):
 
         # Run processing in the qgis utility function.
         qgis_util.rename_qgsvectorlayer_attribute(self.qgs_layer, attribute_name, new_attribute_name)
+
+    # TODO smalers 2020-11-16 need to add way to match records, similar to TSTool table commands.
+    def set_attribute(self, attribute_name: str, attribute_value: Any) -> int:
+        """
+        Set the attribute of all features with a common attribute value.
+
+        Args:
+            attribute_name: the name of the attribute to populate.
+            attribute_value: the string to populate as the attribute's value
+
+        Returns:
+            Number of features for which the attribute was set.
+        """
+
+        # Run processing in the qgis utility function.
+        return qgis_util.set_qgsvectorlayer_attribute(self.qgs_layer, attribute_name, attribute_value)
 
     def split_by_attribute(self, attribute_name: str, output_qgsvectorlayers: str) -> None:
         """

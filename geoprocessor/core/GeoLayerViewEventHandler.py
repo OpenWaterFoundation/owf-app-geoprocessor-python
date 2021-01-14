@@ -18,6 +18,13 @@
 # ________________________________________________________________NoticeEnd___
 
 
+import json
+import logging
+
+import geoprocessor.util.io_util as io_util
+from pathlib import Path
+
+
 class GeoLayerViewEventHandler(object):
     """
     The GeoLayerViewEventHandler class represents a handler for UI event that should be implemented to
@@ -39,21 +46,93 @@ class GeoLayerViewEventHandler(object):
             properties (dict): Properties for the event handler.
         """
         # Name for the event
-        self.name = name
+        self.name: str = name
 
         # Description for the event
-        self.description = description
+        self.description: str = description
 
-        # Event type
-        self.event_type = event_type
+        # Event type, currently a string, may change to enumeration
+        self.event_type: str = event_type
+
+        # Whether the event has a visualization
+        # - this is determined by examining the event configuration file and finding at least one click event action
+        self.has_visualization: bool or None = None
 
         # Properties for the event
+        self.properties: {} = None
         if properties is None:
             # Initialize an empty dictionary
             self.properties = {}
         else:
             # Use the dictionary that was passed in
             self.properties = properties
+
+    def determine_has_visualization(self, map_config_path):
+        """
+        Determine whether there are any visualizations enabled for click events.
+        This requires reading the event configuration data file and checking for non-empty action list.
+
+        Args:
+            map_config_path (str): path to the map configuration file, needed if the event configuration
+                path is relative
+
+        Returns:
+            True if any click event handlers for the layer contain visualizations, False if not.
+        """
+        logger = logging.getLogger(__name__)
+
+        # Default to false.
+        self.has_visualization = False
+
+        if self.event_type.upper() != 'CLICK':
+            # Not a click event so no visualization.
+            logger.info("Event handler type ({}) is not 'Click' - not checking for visualizations.".format(
+                self.event_type))
+            return self.has_visualization
+        else:
+            logger.info("Event handler type ({}) is 'Click' - checking for visualization actions.".format(
+                self.event_type))
+
+        try:
+            event_config_path = self.properties['eventConfigPath']
+        except KeyError:
+            # Property is not found
+            # - no visualization
+            logger.info("Event handler has no 'eventConfigPath' property - not checking for visualizations.")
+            self.has_visualization = False
+            return
+
+        # Get the absolute path for the configuration file.
+        # - if relative, it is relative to the map configuration file.
+        map_config_folder = Path(map_config_path).parent
+        event_config_path_full = io_util.to_absolute_path(map_config_folder, event_config_path)
+        logger.info("Event handler configuration file full path is: {}".format(event_config_path_full))
+        # TODO smalers 2020 evaluate whether to handle exception and throw
+        # logger.info("Event configuration file '{}' is not readable.".format(event_config_path_full))
+        # Read the JSON file into an object.
+        event_config_path_full2 = Path(event_config_path_full)
+        if event_config_path_full2.exists():
+            with open(event_config_path_full) as f:
+                json_data = json.load(f)
+        else:
+            message = "Event configuration file does not exist: {}.".format(event_config_path_full)
+            logger.warning(message)
+            raise FileNotFoundError(message)
+
+        # Use the data to determine whether a visualization is enabled as an action.
+        try:
+            actions = json_data['actions']
+            # Currently any actions are assumed to indicate a visualization.
+            if len(actions) > 0:
+                logger.info("Detected event actions for layer.")
+                self.has_visualization = True
+        except KeyError:
+            # No actions in the file
+            logger.info("No event actions are configured for layer.")
+            self.has_visualization = False
+
+        # Return the final determined value.
+        return self.has_visualization
 
     def to_json(self):
         """
@@ -63,5 +142,6 @@ class GeoLayerViewEventHandler(object):
             "eventType": self.event_type,
             "name": self.name,
             "description": self.description,
+            "hasVisualization": self.has_visualization,
             "properties": self.properties
         }

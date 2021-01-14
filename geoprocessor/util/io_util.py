@@ -554,6 +554,7 @@ def to_absolute_path(parent_dir: str or Path, path: str or Path) -> str:
         The absolute path given the provided input path parts.
     """
     debug = False
+    # debug = True
     logger = None
     if debug:
         logger = logging.getLogger(__name__)
@@ -563,15 +564,15 @@ def to_absolute_path(parent_dir: str or Path, path: str or Path) -> str:
 
     # The logic below operates on str so convert Path input to str if necessary.
     if isinstance(parent_dir, Path):
-        parent_dir = str(parent_dir.absolute)
+        parent_dir = str(parent_dir.absolute())
     if isinstance(path, Path):
         if path.is_absolute():
-            path = str(path.absolute)
+            path = str(path.absolute())
         else:
             parent_dir = str(parent_dir)
 
     if debug:
-        logger.debug("after converstion to str: path='" + str(parent_dir) + "' path='" + str(path) + "'")
+        logger.debug("after conversion to str: parent_dir='{}' path='{}'".format(parent_dir, path))
 
     if os.path.isabs(path):
         # No need to do anything since an absolute path so return the path without modification

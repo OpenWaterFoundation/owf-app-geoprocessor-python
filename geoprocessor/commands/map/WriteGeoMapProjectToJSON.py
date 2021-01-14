@@ -239,18 +239,55 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
                     self.logger.warning(message, exc_info=True)
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                else:
+                    # Ensure that visualizations are detected in the map property.
+                    # - need to handle here because event handler does not know map project file for relative path
+                    #   until here
 
-                # Create the JSON string to write
-                # - the GeoMapProjectCustomJsonEncoder.default() function handles encoding types that cannot otherwise
-                #   be serialized, for example PyQGIS types
-                json_string = json.dumps(geomapproject, indent=indent, cls=GeoMapCustomJsonEncoder)
+                    for geomap in geomapproject.geomaps:
+                        for geolayerviewgroup in geomap.geolayerviewgroups:
+                            for geolayerview in geolayerviewgroup.geolayerviews:
+                                layer_view_has_visualization = False
+                                try:
+                                    has_visualization_property = geolayerview.properties['hasVisualization']
+                                    if has_visualization_property.upper() == 'TRUE':
+                                        layer_view_has_visualization = True
+                                except KeyError:
+                                    # OK, just means that the property was not found
+                                    layer_view_has_visualization = False
+                                for event_handler in geolayerview.event_handlers:
+                                    try:
+                                        # Check the event handler for visualization.
+                                        # - the event handler configuration files are relative to the map configuration
+                                        #   folder
+                                        # - if GeoLayerView has property hasVisualization='true', set any
+                                        #   click event handler 'hasVisualization=True', necessary because sometimes
+                                        #   visualizations are via third-party website via a URL and there is no other
+                                        #   way to know (because can't assume that every URL has data visualization)
+                                        event_handler.determine_has_visualization(output_file_absolute)
+                                        if layer_view_has_visualization and\
+                                                (event_handler.event_type.upper() == 'CLICK'):
+                                            event_handler.has_visualization = layer_view_has_visualization
+                                    except Exception as e:
+                                        message = "Error checking event handler for GeoLayerView {} ({}).".format(
+                                            geolayerview.name, e)
+                                        recommendation = "Check the log file."
+                                        self.logger.warning(message, exc_info=True)
+                                        self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                                       CommandLogRecord(CommandStatusType.WARNING,
+                                                                                        message, recommendation))
 
-                # Write the JSON string
-                with open(output_file_absolute, 'w') as file:
-                    file.write(json_string)
+                    # Create the JSON string to write
+                    # - the GeoMapProjectCustomJsonEncoder.default() function handles encoding types that cannot
+                    #   otherwise be serialized, for example PyQGIS types
+                    json_string = json.dumps(geomapproject, indent=indent, cls=GeoMapCustomJsonEncoder)
 
-                # Save the output file in the processor
-                self.command_processor.add_output_file(output_file_absolute)
+                    # Write the JSON string
+                    with open(output_file_absolute, 'w') as file:
+                        file.write(json_string)
+
+                    # Save the output file in the processor
+                    self.command_processor.add_output_file(output_file_absolute)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process

@@ -60,20 +60,23 @@ class ListFiles(AbstractCommand):
 
     # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
-        CommandParameterMetadata("Folder", type("")),
-        CommandParameterMetadata("URL", type("")),
-        CommandParameterMetadata("IncludePatterns", type("")),
-        CommandParameterMetadata("ExcludePatterns", type("")),
-        CommandParameterMetadata("ListFiles", type("")),
-        CommandParameterMetadata("ListFolders", type("")),
-        CommandParameterMetadata("ListProperty", type("")),
-        CommandParameterMetadata("IfPropertyExists", type(""))]
+        CommandParameterMetadata("Folder", str),
+        CommandParameterMetadata("URL", str),
+        CommandParameterMetadata("IncludePatterns", str),
+        CommandParameterMetadata("ExcludePatterns", str),
+        CommandParameterMetadata("ListFiles", bool),
+        CommandParameterMetadata("ListFolders", bool),
+        CommandParameterMetadata("ListCount", int),
+        CommandParameterMetadata("ListProperty", str),
+        CommandParameterMetadata("ListProperty1", str),
+        CommandParameterMetadata("IfPropertyExists", str)]
 
     # Command metadata for command editor display
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Lists the files and/or folders within a folder or a URL.\n"
-        "This is useful for iterating over files and folders.")
+        "This is useful for iterating over files and folders.\n"
+        "The files are sorted in alphabetical order using lowercase strings.")
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata
@@ -81,7 +84,6 @@ class ListFiles(AbstractCommand):
     # Folder
     __parameter_input_metadata['Folder.Description'] = "path of the folder"
     __parameter_input_metadata['Folder.Label'] = "Folder"
-    # TODO @jurentie 01/24/2019 do I add required or not?
     __parameter_input_metadata['Folder.Tooltip'] = "The path of the folder of interest (relative or absolute)."
     __parameter_input_metadata['Folder.Value.Default'] = \
         "Required if 'URL' parameter is not specified."
@@ -91,15 +93,26 @@ class ListFiles(AbstractCommand):
     # URL
     __parameter_input_metadata['URL.Description'] = "the URL of interest"
     __parameter_input_metadata['URL.Label'] = "URL"
-    # TODO @jurentie 01/24/2019 do I add required or not?
     __parameter_input_metadata['URL.Tooltip'] = "The URL of interest."
     __parameter_input_metadata['URL.Value.Default'] = "Required if Folder parameter is not specified."
-    # TODO @jurnetie 01/24/2019 FileSelector?
+    # TODO @jurentie 01/24/2019 FileSelector?
     # ListProperty
     __parameter_input_metadata['ListProperty.Description'] = "a property name to hold the output list"
     __parameter_input_metadata['ListProperty.Label'] = "List property"
-    __parameter_input_metadata['ListProperty.Required'] = True
-    __parameter_input_metadata['ListProperty.Tooltip'] = "A property name to hold the output list."
+    __parameter_input_metadata['ListProperty.Required'] = False
+    __parameter_input_metadata['ListProperty.Tooltip'] = "Property name to hold the output list."
+    # ListProperty1
+    __parameter_input_metadata['ListProperty1.Description'] = "a property name to hold the output when a single value"
+    __parameter_input_metadata['ListProperty1.Label'] = "List property (1 value)"
+    __parameter_input_metadata['ListProperty1.Required'] = False
+    __parameter_input_metadata['ListProperty1.Tooltip'] =\
+        "Property name to hold the output when a single value. Use ListCount to restrict list to 1 value."
+    # ListCount
+    __parameter_input_metadata['ListCount.Description'] = "count of files to output"
+    __parameter_input_metadata['ListCount.Label'] = "List count"
+    __parameter_input_metadata['ListCount.Required'] = False
+    __parameter_input_metadata['ListCount.Tooltip'] = "Indicate number of files to output, positive for start of list,"\
+                                                      " negative for end of list."
     # IncludePatterns
     __parameter_input_metadata['IncludePatterns.Description'] = "a list that filters which items to include"
     __parameter_input_metadata['IncludePatterns.Label'] = "Include patterns"
@@ -233,13 +246,31 @@ class ListFiles(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that parameter ListProperty is a non-empty, non-None string.
+        # Check that parameter ListCount is an integer if specified
+        # - allow blank and None
+        # noinspection PyPep8Naming
+        pv_ListCount = self.get_parameter_value(parameter_name='ListCount', command_parameters=command_parameters)
+
+        if not validator_util.validate_int(pv_ListCount, True, True):
+            message = "ListCount parameter is not an integer."
+            recommendation = "Specify the ListCount as an integer."
+            warning_message += "\n" + message
+            self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
+                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+
+        # Check that parameter ListProperty or ListProperty1 is a non-empty, non-None string.
         # noinspection PyPep8Naming
         pv_ListProperty = self.get_parameter_value(parameter_name='ListProperty', command_parameters=command_parameters)
+        # noinspection PyPep8Naming
+        pv_ListProperty1 = self.get_parameter_value(parameter_name='ListProperty1',
+                                                    command_parameters=command_parameters)
 
-        if not validator_util.validate_string(pv_ListProperty, False, False):
-            message = "ListProperty parameter has no value."
-            recommendation = "Specify the ListProperty parameter."
+        validate1 = validator_util.validate_string(pv_ListProperty, False, False)
+        validate2 = validator_util.validate_string(pv_ListProperty1, False, False)
+        if not validate1 and not validate2:
+            # Neither were specified.
+            message = "ListProperty and ListProperty1 parameters have no value."
+            recommendation = "Specify the ListProperty and/or ListProperty1 parameter."
             warning_message += "\n" + message
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
@@ -274,7 +305,7 @@ class ListFiles(AbstractCommand):
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, folder_abs: str, url_abs: str, list_files_bool: bool, list_dirs_bool: bool,
-                           list_property: str) -> bool:
+                           list_property: str, list_property1: str, if_property_exists: bool) -> bool:
         """
         Checks the following:
         * the URL/Folder is valid.
@@ -287,6 +318,8 @@ class ListFiles(AbstractCommand):
             list_files_bool (Boolean): set to True if the files within the folder/url are to be listed.
             list_dirs_bool (Boolean): set to True if the folders within the folder/url are to be listed.
             list_property (str): the name of the property to hold the output list of strings
+            list_property1 (str): the name of the property for one value
+            if_property_exists (bool): indicate how to handle if requested property exists
 
         Returns:
             Boolean. If TRUE, the GeoLayer should be clipped. If FALSE, at least one check failed and the GeoLayer
@@ -314,10 +347,13 @@ class ListFiles(AbstractCommand):
                                                                                   message, recommendation))
             should_run_command.append(True)
 
-        # If the ListProperty is the same as an already-existing Property, raise a WARNING or FAILURE (depends
-        # on the value of the IfPropertyExists parameter.)
-        should_run_command.append(validator_util.run_check(self, "IsPropertyUnique", "ListProperty", list_property,
-                                                           None))
+        # If the ListProperty or ListProperty1 is the same as an already-existing Property,
+        # raise a WARNING or FAILURE (depends on the value of the IfPropertyExists parameter.)
+        if if_property_exists is not None and if_property_exists:
+            should_run_command.append(validator_util.run_check(self, "IsPropertyUnique", "ListProperty", list_property,
+                                                               None))
+            should_run_command.append(validator_util.run_check(self, "IsPropertyUnique", "ListProperty1",
+                                                               list_property1, None))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -327,7 +363,7 @@ class ListFiles(AbstractCommand):
 
     @staticmethod
     def scrape_html(url: str, read_files: bool, read_dirs: bool,
-                    include_list: [str] = None, exclude_list: [str] = None) -> [str]:
+                    include_list: [str] = None, exclude_list: [str] = None, include_count: int = None) -> [str]:
         """
         Reads a URL and outputs a list of links within the URL's source. The list of links can be filtered be the
         following options:
@@ -348,6 +384,8 @@ class ListFiles(AbstractCommand):
                 patterns listed in this list will be excluded in the returned list. Default: None (No links excluded.)
                 The exclude_list is assigned [''] inside of the string_util.filter_list_of_strings function if set to
                 None.
+            include_count (int): Maximum number of list values to return.  If positive, the number is for the start
+                of the list.  If negative, the number is for the end of the list.
 
         Return:
             A list of links within the URL source page that match the configured settings.
@@ -428,7 +466,8 @@ class ListFiles(AbstractCommand):
                 link_list.remove(link)
 
         # Filter the list of links with regards to the include_list and exclude_list parameters.
-        link_list_filtered = string_util.filter_list_of_strings(link_list, include_list, exclude_list)
+        link_list_filtered = string_util.filter_list_of_strings(link_list, include_list, exclude_list,
+                                                                include_count=include_count)
 
         # Return the list of filtered and available links within the input URL.
         return [url + link_name for link_name in link_list_filtered]
@@ -447,11 +486,20 @@ class ListFiles(AbstractCommand):
         # noinspection PyPep8Naming
         pv_ListFolders = self.get_parameter_value("ListFolders", default_value="True")
         # noinspection PyPep8Naming
+        pv_ListCount = self.get_parameter_value("ListCount")
+        # noinspection PyPep8Naming
         pv_ListProperty = self.get_parameter_value("ListProperty")
+        # noinspection PyPep8Naming
+        pv_ListProperty1 = self.get_parameter_value("ListProperty1")
         # noinspection PyPep8Naming
         pv_IncludePatterns = self.get_parameter_value("IncludePatterns", default_value="*")
         # noinspection PyPep8Naming
         pv_ExcludePatterns = self.get_parameter_value("ExcludePatterns", default_value="''")
+        # noinspection PyPep8Naming
+        pv_IfPropertyExists = self.get_parameter_value("IfPropertyExists", default_value="Replace")
+        if_property_exists_upper = 'REPLACE'  # Default.
+        if pv_IfPropertyExists is not None and (len(pv_IfPropertyExists) > 0):
+            if_property_exists_upper = pv_IfPropertyExists.upper()
 
         # Convert the IncludeAttributes and ExcludeAttributes to lists.
         to_include = string_util.delimited_string_to_list(pv_IncludePatterns)
@@ -460,6 +508,11 @@ class ListFiles(AbstractCommand):
         # Convert the pv_ListFiles and pv_ListFolders to Boolean values.
         list_files_bool = string_util.str_to_bool(pv_ListFiles)
         list_dirs_bool = string_util.str_to_bool(pv_ListFolders)
+
+        # Convert pv_ListCount to an int
+        list_count = None
+        if pv_ListCount is not None and (len(pv_ListCount) > 0):
+            list_count = int(pv_ListCount)
 
         # Set the absolute paths for the Folder and the URL to None until proven to exist within the command process.
         folder_abs = None
@@ -480,7 +533,8 @@ class ListFiles(AbstractCommand):
             url_abs = self.command_processor.expand_parameter_value(pv_URL, self)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.check_runtime_data(folder_abs, url_abs, list_files_bool, list_dirs_bool, pv_ListProperty):
+        if self.check_runtime_data(folder_abs, url_abs, list_files_bool, list_dirs_bool, pv_ListProperty,
+                                   pv_ListProperty1, pv_IfPropertyExists):
 
             # noinspection PyBroadException
             try:
@@ -497,46 +551,103 @@ class ListFiles(AbstractCommand):
                     if list_files_bool and list_dirs_bool:
 
                         # Filter the list of files and folders with regards to the IncludePatterns and ExcludePatterns.
-                        output_filtered = string_util.filter_list_of_strings(files + dirs, to_include, to_exclude)
+                        output_filtered = string_util.filter_list_of_strings(files + dirs, to_include, to_exclude,
+                                                                             include_count=list_count)
 
                     # If configured to list files, continue.
                     elif list_files_bool:
 
                         # Filter the list of files with regards to the IIncludePatterns and ExcludePatterns.
-                        output_filtered = string_util.filter_list_of_strings(files, to_include, to_exclude)
+                        output_filtered = string_util.filter_list_of_strings(files, to_include, to_exclude,
+                                                                             include_count=list_count)
 
                     # If configured to list folders, continue.
                     elif list_dirs_bool:
 
                         # Filter the list of folders with regards to the IIncludePatterns and ExcludePatterns.
-                        output_filtered = string_util.filter_list_of_strings(dirs, to_include, to_exclude)
+                        output_filtered = string_util.filter_list_of_strings(dirs, to_include, to_exclude,
+                                                                             include_count=list_count)
 
                     else:
                         output_filtered = []
 
-                    # Add the filtered list to the desired ListProperty. Sort the list alphabetically
-                    self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
-
                 # If the input is a url.
-                if pv_URL:
+                elif pv_URL:
 
                     # If configured to list files and folders, continue.
                     if list_files_bool and list_dirs_bool:
-                        output_filtered = self.scrape_html(url_abs, True, True, to_include, to_exclude)
+                        output_filtered = self.scrape_html(url_abs, True, True, to_include, to_exclude,
+                                                           include_count=list_count)
 
                     # If configured to list files, continue.
                     elif list_files_bool:
-                        output_filtered = self.scrape_html(url_abs, True, False, to_include, to_exclude)
+                        output_filtered = self.scrape_html(url_abs, True, False, to_include, to_exclude,
+                                                           include_count=list_count)
 
                     # If configured to list folders, continue.
                     elif list_dirs_bool:
-                        output_filtered = self.scrape_html(url_abs, False, True, to_include, to_exclude)
+                        output_filtered = self.scrape_html(url_abs, False, True, to_include, to_exclude,
+                                                           include_count=list_count)
 
                     else:
                         output_filtered = None
 
-                    # Add the filtered list to the desired ListProperty.
-                    self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
+                # Add the filtered list to the desired ListProperty.
+                if pv_ListProperty is not None and (len(pv_ListProperty) > 0):
+                    existing_property = self.command_processor.get_property(pv_ListProperty)
+                    if (if_property_exists_upper == 'REPLACE') or (if_property_exists_upper == 'REPLACEANDWARN'):
+                        # Set the property value.
+                        # self.logger.info("Setting property {} to {}".format,pv_ListProperty, output_filtered)
+                        self.command_processor.set_property(pv_ListProperty, sorted(output_filtered, key=str.lower))
+                        if existing_property is not None and (if_property_exists_upper == 'REPLACEANDWARN'):
+                            self.warning_count += 1
+                            message = "Set property '{}' and warning.".format(pv_ListProperty)
+                            recommendation = "Confirm that property should be set."
+                            self.logger.warning(message)
+                            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                           CommandLogRecord(CommandStatusType.WARN, message,
+                                                                            recommendation))
+                    elif (if_property_exists_upper == 'WARN') or (if_property_exists_upper == 'FAIL'):
+                        self.warning_count += 1
+                        message = "Not resetting existing property '{}'.".format(pv_ListProperty)
+                        recommendation = "Confirm that property should be set."
+                        self.logger.warning(message)
+                        if if_property_exists_upper == 'WARN':
+                            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                           CommandLogRecord(CommandStatusType.WARNING, message,
+                                                                            recommendation))
+                        elif if_property_exists_upper == 'FAIL':
+                            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                           CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                            recommendation))
+
+                if pv_ListProperty1 is not None and (len(pv_ListProperty1) > 0):
+                    existing_property = self.command_processor.get_property(pv_ListProperty1)
+                    if (if_property_exists_upper == 'REPLACE') or (if_property_exists_upper == 'REPLACEANDWARN'):
+                        # Set the property value.
+                        # self.logger.info("Setting property {} to {}".format,pv_ListProperty, output_filtered[0])
+                        self.command_processor.set_property(pv_ListProperty1, output_filtered[0])
+                        if existing_property is not None and (if_property_exists_upper == 'REPLACEANDWARN'):
+                            self.warning_count += 1
+                            message = "Set property '{}' and warning.".format(pv_ListProperty1)
+                            recommendation = "Confirm that property should be set."
+                            self.logger.warning(message)
+                            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                           CommandLogRecord(CommandStatusType.WARN, message,
+                                                                            recommendation))
+                    elif (if_property_exists_upper == 'WARN') or (if_property_exists_upper == 'FAIL'):
+                        self.warning_count += 1
+                        message = "Not resetting existing property '{}'.".format(pv_ListProperty)
+                        recommendation = "Confirm that property should be set."
+                        self.logger.warning(message)
+                        if if_property_exists_upper == 'WARN':
+                            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                           CommandLogRecord(CommandStatusType.WARNING, message,
+                                                                            recommendation))
+                        elif if_property_exists_upper == 'FAIL':
+                            self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                           CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                            recommendation))
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process

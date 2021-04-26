@@ -346,6 +346,8 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
 
         # Convert the InputFile parameter value to an absolute path and expand for ${Property} syntax
         input_is_url = False
+        # noinspection PyPep8Naming
+        pv_InputFile = self.command_processor.expand_parameter_value(pv_InputFile, self)
         if io_util.is_url(pv_InputFile):
             # Input is a URL
             input_file_absolute = pv_InputFile
@@ -353,8 +355,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         else:
             # Input is a local file
             input_file_absolute = io_util.verify_path_for_os(
-                io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                         self.command_processor.expand_parameter_value(pv_InputFile, self)))
+                io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),pv_InputFile))
 
         if pv_Name is None:
             # Default is input file name without extension

@@ -339,11 +339,11 @@ class ReadGeoLayerFromShapefile(AbstractCommand):
         # noinspection PyPep8Naming
         pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
-        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property}
-        # syntax
+        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
+        # noinspection PyPep8Naming
+        pv_InputFile = self.command_processor.expand_parameter_value(pv_InputFile, self)
         input_file_absolute = io_util.verify_path_for_os(
-            io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_InputFile, self)))
+            io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'), pv_InputFile))
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
         if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:

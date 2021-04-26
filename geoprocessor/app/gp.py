@@ -327,7 +327,7 @@ def run_batch(command_file, runtime_properties: dict) -> None:
 
     logger.info("GeoProcessor properties after running:")
     for property_name, property_value in runner.get_processor().properties.items():
-        logger.info(property_name + " = " + str(property_value))
+        logger.info("{} = {}".format(property_name, property_value))
     print("See log file for more information.")
 
 

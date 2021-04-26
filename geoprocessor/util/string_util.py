@@ -208,8 +208,10 @@ def delimited_string_to_dictionary_list_value(delimited_string: str, entry_delim
         return dictionary
 
 
+# TODO smalers 2021-04-25 this logic is confusing, expeecially the returned list.  Need to review.
 def filter_list_of_strings(input_list: [str], include_glob_patterns: [str] = None,
-                           exclude_glob_patterns: [str] = None, return_inclusions: bool = True):
+                           exclude_glob_patterns: [str] = None, return_inclusions: bool = True,
+                           include_count: int = None):
     """
     Filters a list of strings by glob patterns.
 
@@ -219,8 +221,10 @@ def filter_list_of_strings(input_list: [str], include_glob_patterns: [str] = Non
             are to be included. Default is ['*']. All items from the input_list are included.
         exclude_glob_patterns (list): a list of glob-style patterns corresponding to the items in the input_list that
             are to be excluded. Default is ['']. No items from the input_list are excluded.
-        return_inclusions (bool) Default is TRUE. If TRUE, a list of the items that should be included are returned. If
-            FALSE, a list of the items that should be excluded are returned.
+        return_inclusions (bool): Default is TRUE. If TRUE, a list of the items that should be included are returned.
+            If FALSE, a list of the items that should be excluded are returned.
+        include_count (int): Maximum number of list values to return.  If positive, the number is for the start
+            of the list.  If negative, the number is for the end of the list.
 
     Return:
         A filtered list of strings. Results are based off of return_inclusions boolean.
@@ -273,10 +277,36 @@ def filter_list_of_strings(input_list: [str], include_glob_patterns: [str] = Non
     # The final exclusion list - holds all items that should not be included after processing the patterns.
     exclude_list_final = [i for i in input_list if i not in include_list_final]
 
+    # Sort the lists to return.
+    include_list_final = sorted(include_list_final, key=str.lower)
+    exclude_list_final = sorted(exclude_list_final, key=str.lower)
+
     # Return the appropriate list based off of the return_inclusions boolean.
     if return_inclusions:
+        if include_count is not None:
+            # Truncate the list to the requested number at front or back.
+            if include_count > 0:
+                # Truncate the returned list.
+                if len(include_list_final) > include_count:
+                    include_list_final = include_list_final[0:include_count]
+            elif include_count < 0:
+                # Return items at the end
+                include_count = abs(include_count)
+                if len(include_list_final) > include_count:
+                    include_list_final = include_list_final[(len(include_list_final) - include_count):]
         return include_list_final
     else:
+        if include_count is not None:
+            # Truncate the list to the requested number at front or back.
+            if include_count > 0:
+                # Truncate the returned list.
+                if len(exclude_list_final) > include_count:
+                    exclude_list_final = exclude_list_final[0:include_count]
+            elif include_count < 0:
+                # Return items at the end
+                include_count = abs(include_count)
+                if len(exclude_list_final) > include_count:
+                    exclude_list_final = exclude_list_final[(len(exclude_list_final) - include_count):]
         return exclude_list_final
 
 

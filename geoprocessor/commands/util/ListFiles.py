@@ -76,7 +76,7 @@ class ListFiles(AbstractCommand):
     __command_metadata['Description'] = (
         "Lists the files and/or folders within a folder or a URL.\n"
         "This is useful for iterating over files and folders.\n"
-        "The files are sorted in alphabetical order using lowercase strings.")
+        "The files and folders are sorted in alphabetical order using lowercase strings.")
     __command_metadata['EditorType'] = "Simple"
 
     # Command Parameter Metadata

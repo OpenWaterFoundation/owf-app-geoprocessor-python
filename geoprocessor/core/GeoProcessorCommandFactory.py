@@ -96,6 +96,7 @@ from geoprocessor.commands.vector.ChangeGeoLayerGeometry import ChangeGeoLayerGe
 from geoprocessor.commands.vector.ClipGeoLayer import ClipGeoLayer
 from geoprocessor.commands.vector.CopyGeoLayer import CopyGeoLayer
 from geoprocessor.commands.vector.CreateGeoLayerFromGeometry import CreateGeoLayerFromGeometry
+from geoprocessor.commands.vector.FixGeoLayer import FixGeoLayer
 from geoprocessor.commands.vector.FreeGeoLayers import FreeGeoLayers
 from geoprocessor.commands.vector.IntersectGeoLayer import IntersectGeoLayer
 from geoprocessor.commands.vector.MergeGeoLayers import MergeGeoLayers
@@ -161,6 +162,7 @@ class GeoProcessorCommandFactory(object):
         "ENDFOR": EndFor(),
         "ENDIF": EndIf(),
         "EXIT": Exit(),
+        "FIXGEOLAYER": FixGeoLayer(),
         "FOR": For(),
         "FREEGEOLAYERS": FreeGeoLayers(),
         "FTPGET": FTPGet(),
@@ -363,6 +365,8 @@ class GeoProcessorCommandFactory(object):
                     return Exit()
 
                 # F commands
+                elif command_name_upper == "FIXGEOLAYER":
+                    return FixGeoLayer()
                 elif command_name_upper == "FOR":
                     return For()
                 elif command_name_upper == "FREEGEOLAYERS":

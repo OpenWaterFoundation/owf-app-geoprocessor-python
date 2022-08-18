@@ -204,7 +204,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
             # Refresh the phase severity
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
-    def check_runtime_data(self, input_file_abs: str, geolayer_id: str) -> bool:
+    def check_runtime_data(self, input_file_abs: str, input_is_url: bool, geolayer_id: str) -> bool:
         """
         Checks the following:
         * the input file (absolute) is a valid file
@@ -212,6 +212,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
         Args:
             input_file_abs: the full pathname to the input spatial data file
+            input_is_url: whether the input file is a URL
             geolayer_id: the ID of the output GeoLayer
 
         Returns:
@@ -221,20 +222,24 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
         # Boolean to determine if the read process should be run. Set to true until an error occurs.
         run_read = True
 
-        # If the input spatial data file is not a valid file path, raise a FAILURE.
-        if not os.path.isfile(input_file_abs):
+        if input_is_url:
+            # No checks because would be a performance hit to download a large file
+            pass
+        else:
+            # If the input spatial data file is not a valid file path, raise a FAILURE.
+            if not os.path.isfile(input_file_abs):
 
-            run_read = False
-            self.warning_count += 1
-            message = "The InputFile ({}) is not a valid file.".format(input_file_abs)
-            recommendation = "Specify a valid file."
-            self.logger.warning(message)
-            self.command_status.add_to_log(CommandPhaseType.RUN,
-                                           CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
+                run_read = False
+                self.warning_count += 1
+                message = "The InputFile ({}) is not a valid file.".format(input_file_abs)
+                recommendation = "Specify a valid file."
+                self.logger.warning(message)
+                self.command_status.add_to_log(CommandPhaseType.RUN,
+                                               CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
         # pv_IfGeoLayerIDExists value.
-        elif self.command_processor.get_geolayer(geolayer_id):
+        if self.command_processor.get_geolayer(geolayer_id):
             # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
             pv_IfGeoLayerIDExists = self.get_parameter_value("IfGeoLayerIDExists", default_value="Replace")
@@ -317,9 +322,15 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
 
         # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property}
         # syntax
-        input_file_absolute = io_util.verify_path_for_os(
-            io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
-                                     self.command_processor.expand_parameter_value(pv_InputFile, self)))
+        input_is_url = False
+        if io_util.is_url(pv_InputFile):
+            # Input is a URL
+            input_file_absolute = pv_InputFile
+            input_is_url = True
+        else:
+            input_file_absolute = io_util.verify_path_for_os(
+                io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
+                                         self.command_processor.expand_parameter_value(pv_InputFile, self)))
 
         # If the pv_GeoLayerID is a valid %-formatter, assign the pv_GeoLayerID the corresponding value.
         if pv_GeoLayerID in ['%f', '%F', '%E', '%P', '%p']:
@@ -327,7 +338,7 @@ class ReadRasterGeoLayerFromFile(AbstractCommand):
             pv_GeoLayerID = io_util.expand_formatter(input_file_absolute, pv_GeoLayerID)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
-        if self.check_runtime_data(input_file_absolute, pv_GeoLayerID):
+        if self.check_runtime_data(input_file_absolute, input_is_url, pv_GeoLayerID):
             # noinspection PyBroadException
             try:
                 # Create a QGSRasterLayer object in raster format

@@ -277,6 +277,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_GeoLayer: QtWidgets.QMenu or None = None
         self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_ClipGeoLayer: QtWidgets.QAction or None = None
+        self.Menu_Commands_Manipulate_FixGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_IntersectGeoLayer: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_MergeGeoLayers: QtWidgets.QAction or None = None
         self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures: QtWidgets.QAction or None = None
@@ -1847,6 +1848,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Manipulate_ClipGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "ClipGeoLayer()"))
         self.Menu_Commands_Manipulate_GeoLayer.addAction(self.Menu_Commands_Manipulate_ClipGeoLayer)
+
+        # FixGeoLayer
+        self.Menu_Commands_Manipulate_FixGeoLayer = QtWidgets.QAction(main_window)
+        self.Menu_Commands_Manipulate_FixGeoLayer.setObjectName(
+            qt_util.from_utf8("Menu_commands_Manipulate_FixGeoLayer"))
+        self.Menu_Commands_Manipulate_FixGeoLayer.setText(
+            "FixGeoLayer()... <fix a GeoLayer's invalid geometries>")
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # noinspection PyUnresolvedReferences
+        self.Menu_Commands_Manipulate_FixGeoLayer.triggered.connect(
+            functools.partial(self.edit_new_command, "FixGeoLayer()"))
+        self.Menu_Commands_Manipulate_GeoLayer.addAction(
+            self.Menu_Commands_Manipulate_FixGeoLayer)
 
         # IntersectGeoLayer
         self.Menu_Commands_Manipulate_IntersectGeoLayer = QtWidgets.QAction(main_window)

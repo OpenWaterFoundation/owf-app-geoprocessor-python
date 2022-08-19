@@ -1,7 +1,7 @@
 # command_util - useful utility functions for the GeoProcessor
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2022 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -17,10 +17,10 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# Don't import class only because there are additional functions in CommandParameterMetaData
+# Don't import class only because there are additional functions in CommandParameterMetaData.
 import geoprocessor.core.CommandParameterMetadata as CommandParameterMetaData
 
-# TODO smalers 2020-01-14 can't import for type hint because it results in circular reference
+# TODO smalers 2020-01-14 can't import for type hint because it results in circular reference.
 # from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
 from geoprocessor.core.CommandLogRecord import CommandLogRecord
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
@@ -51,11 +51,11 @@ def append_command_status_log_records(command_status: CommandStatus, commands: [
     if commands is None:
         return
 
-    # Loop through the commands
+    # Loop through the commands.
     for command in commands:
         # Transfer the command log records from each command to the given command_status.
         status2 = command.command_status
-        # Append command log records for each run mode...
+        # Append command log records for each run mode.
         # logs = status2.get_command_log(CommandPhaseType.INITIALIZATION)
         logs = status2.initialization_log_list
         for log_record in logs:
@@ -73,7 +73,7 @@ def append_command_status_log_records(command_status: CommandStatus, commands: [
             command_status.add_to_log(CommandPhaseType.RUN, log_record)
 
 
-# TODO smalers 2020-01-15 cannot type hint GeoProcessor becauese it results in circular dependence with import
+# TODO smalers 2020-01-15 cannot type hint GeoProcessor because it results in circular dependence with import.
 def get_command_status_max_severity(processor) -> CommandStatusType:
     """
     Get the maximum command status severity for the processor.  This is used, for example, when
@@ -107,7 +107,7 @@ def get_highest_command_status_severity(command_status: CommandStatusType) -> Co
     if command_status is None:
         return status_severity  # Default is UNKNOWN
 
-    # Python 2 does not have enumerations like Java code so do comparisons brute force
+    # Python 2 does not have enumerations like Java code so do comparisons brute force.
     phase_status = command_status.get_command_status_for_phase(CommandPhaseType.INITIALIZATION)
     if phase_status is None:
         phase_status = CommandStatusType.UNKNOWN
@@ -146,21 +146,21 @@ def get_required_parameter_names(command) -> list:
     """
     required_parameter_names = []
     if command is None:
-        # Null input so return an empty list
+        # Null input so return an empty list.
         return required_parameter_names
 
-    # Loop through all parameter names because input metadata may not be defined for all
+    # Loop through all parameter names because input metadata may not be defined for all.
     for command_parameter_metadata in command.command_parameter_metadata:
         parameter_name = command_parameter_metadata.parameter_name
-        # Check that the ParameterName.Required input metadata is defined
+        # Check that the ParameterName.Required input metadata is defined.
         try:
             # Loop
             required_value = command.parameter_input_metadata[parameter_name + '.Required']
             if required_value:
-                # Parameter is confirmed to be required so add to the return list
+                # Parameter is confirmed to be required so add to the return list.
                 required_parameter_names.append(parameter_name)
         except KeyError:
-            # Input is not defined so use default of optional
+            # Input is not defined so use default of optional.
             pass
 
     return required_parameter_names
@@ -216,7 +216,7 @@ def parse_key_value_pairs_into_dictionary(parameter_items: [str]) -> dict:
     for parameter_item in parameter_items:
 
         # The key=value format is determined by the inclusion of an equals sign.
-        # -Parameter values are expected to ALWAYS be surrounded by double quotes.
+        # Parameter values are expected to ALWAYS be surrounded by double quotes.
         #  TODO smalers 2017-12-23 need to revisit this because some parameters may need to escape.
         if "=" in parameter_item:
             # The parameter name is on the left-side of the equal sign and
@@ -272,27 +272,27 @@ def parse_parameter_string_from_command_string(command_string: str) -> str:
     # Remove white spaces on either side of the command line.
     command_string_stripped = command_string.strip()
 
-    # Determine the index of the first and last parenthesis within the command line string.
-    # - ( and ) are allowed in parameters if quoted, as determined in further parsing.
+    # Determine the index of the first and last parenthesis within the command line string:
+    # - ( and ) are allowed in parameters if quoted, as determined in further parsing
     paren_start_pos = command_string_stripped.find("(")
     if paren_start_pos < 0:
-        # No parameters so return an empty string
+        # No parameters so return an empty string.
         return ""
-    # Find the right-most parenthesis in case one is included in the quoted part of the parameter value
+    # Find the right-most parenthesis in case one is included in the quoted part of the parameter value.
     paren_end_pos = command_string_stripped.rfind(")")
 
     if (paren_start_pos <= 0) or (paren_end_pos != (len(command_string_stripped) - 1)):
-        # Bounding parenthesis are not present.
+        # Bounding parenthesis are not present:
         # - expecting somewhere on left and in last position on the right
         message = 'Invalid syntax for "' + command_string + '".  Expecting CommandName(Parameter="Value",...)'
-        # Get logger her instead of top to increase performance, but can move it
+        # Get logger her instead of top to increase performance, but can move it.
         logger = logging.getLogger(__name__)
         logger.warning(message)
         raise ValueError(message)
 
     # Get the parameter line from the command string (in between the '(' and the ')' ).
     parameter_string = command_string_stripped[paren_start_pos + 1: paren_end_pos]
-    # Strip enclosing whitespace
+    # Strip enclosing whitespace.
     parameter_string = parameter_string.strip()
     return parameter_string
 
@@ -325,7 +325,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str, delimiter
 
         # Boolean to determine if the current character is part of a quoted parameter value.
         in_quoted_string = False
-        # Whether a comma is found after a parameter pair
+        # Whether a comma is found after a parameter pair.
         comma_found = False
         param_name_start_pos = -1
         # param_value_end_pos = -1
@@ -347,29 +347,29 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str, delimiter
                     # Whitespace, skip
                     pass
                 elif current_char == delimiter:
-                    # Found a delimiter between parameters
+                    # Found a delimiter between parameters.
                     comma_found = True
                 else:
-                    # Assume that the character is the start of a parameter name
+                    # Assume that the character is the start of a parameter name.
                     if param_name_start_pos < 0:
                         param_name_start_pos = char_index
-                    # Error if there was not a comma found separating parameters
-                    # (actually can handle as nonfatal but prefer commas for clarity).
+                    # Error if there was not a comma found separating parameters:
+                    # - can handle as nonfatal but prefer commas for clarity
                     if (len(parameter_items) > 0) and not comma_found:
-                        # 2nd or greater parameter so need to have found a comma to separate parameters
+                        # 2nd or greater parameter so need to have found a comma to separate parameters.
                         logger.warning("Missing comma between parameter definitions")
                         comma_found = False
             else:
                 # In a quoted parameter value string.
                 if current_char == '"':
-                    # Found the ending quote
+                    # Found the ending quote.
                     in_quoted_string = False
                     param_value_end_pos = char_index
-                    # Add the parameter string to the list
+                    # Add the parameter string to the list.
                     current_parameter_string = parameter_string[param_name_start_pos:param_value_end_pos+1]
                     # print("Adding parameter item to list:  " + current_parameter_string)
                     parameter_items.append(current_parameter_string)
-                    # Now reset for the next parameter
+                    # Now reset for the next parameter.
                     param_name_start_pos = -1
 
     # Return the list of parameter strings, may be empty.
@@ -418,13 +418,13 @@ def parse_properties_from_parameter_string(properties_string: str, delimiter1: s
     # Parse if the properties string is not empty.
     if len(properties_string_stripped) > 0:
         # Boolean to determine if the current character is part of a quoted property value.
-        in_quoted_string = False  # Used for property value
-        in_property_name = True  # To start processing - first character should be a non-special character
+        in_quoted_string = False  # Used for property value.
+        in_property_name = True  # To start processing - first character should be a non-special character.
         in_property_value = False
         property_name = ""
         property_value = ""
 
-        # Iterate over the characters in the properties_string.
+        # Iterate over the characters in the properties_string:
         # - the state is either in_property_name or in_property_value
         last_index = len(properties_string_stripped) - 1
         for char_index in range(0, len(properties_string_stripped)):
@@ -437,46 +437,46 @@ def parse_properties_from_parameter_string(properties_string: str, delimiter1: s
 
             if current_char == ' ':
                 if in_property_name:
-                    # Skip - auto compress property names
+                    # Skip - auto compress property names.
                     pass
                 elif in_property_value:
-                    # Spaces are allowed in the value if quoted, otherwise skip
+                    # Spaces are allowed in the value if quoted, otherwise skip.
                     if in_quoted_string:
                         property_value += current_char
                     else:
                         pass
             elif current_char == delimiter1:
-                # Typically a comma, which separates properties
+                # Typically a comma, which separates properties.
                 if in_property_name:
                     raise ValueError("Unexpected delimiter ({}) found at character {}, "
                                      "maybe need to surround property value with ' '.".format(delimiter1,
                                                                                               (char_index + 1)))
                 elif in_property_value:
-                    # Delimiters are allowed in the value if quoted, otherwise, end of value
+                    # Delimiters are allowed in the value if quoted, otherwise, end of value.
                     if in_quoted_string:
                         property_value += current_char
                     else:
-                        # Add the property
+                        # Add the property.
                         if debug:
                             logger.debug('Found comma in value, adding property ' + property_name + "=" +
                                          property_value)
                         properties_dict[property_name] = property_value
-                        # Reset for the next property
+                        # Reset for the next property.
                         in_property_name = False
                         property_name = ""
                         in_property_value = False
                         property_value = ""
                 else:
-                    # Transitioning from previous property
+                    # Transitioning from previous property.
                     in_property_name = True
             elif current_char == delimiter2:
-                # Typically colon, which separates property name and value
+                # Typically colon, which separates property name and value.
                 if in_property_name:
-                    # Ignore the character and start processing the property value
+                    # Ignore the character and start processing the property value.
                     in_property_name = False
                     in_property_value = True
                 elif in_property_value:
-                    # Delimiters are allowed in the value if quoted, otherwise bad format
+                    # Delimiters are allowed in the value if quoted, otherwise bad format.
                     if in_quoted_string:
                         property_value += current_char
                     else:
@@ -490,38 +490,38 @@ def parse_properties_from_parameter_string(properties_string: str, delimiter1: s
                                      format((char_index + 1)))
                 elif in_property_value:
                     if in_quoted_string:
-                        # In a quoted string so this indicates the end of the property value
+                        # In a quoted string so this indicates the end of the property value.
                         properties_dict[property_name] = property_value
-                        # Reset for next property
+                        # Reset for next property.
                         in_property_name = False
                         property_name = ""
                         in_property_value = False
                         property_value = ""
-                        # Close the quoted string
+                        # Close the quoted string.
                         in_quoted_string = False
                     else:
-                        # Not yet in a quoted string so start
+                        # Not yet in a quoted string so start.
                         in_quoted_string = True
                 else:
-                    # Single quote should not start a new property name
+                    # Single quote should not start a new property name.
                     raise ValueError("Unexpected character (') found at character {}, bad property definition.".
                                      format((char_index + 1)))
             else:
                 # Non-special character to add to property name or value.
                 if in_property_name:
-                    # Add the character to the property name
+                    # Add the character to the property name.
                     property_name += current_char
                 elif in_property_value:
-                    # Add the character to the property value
+                    # Add the character to the property value.
                     property_value += current_char
                 else:
-                    # Not in property name or value.
+                    # Not in property name or value:
                     # - between properties so start the property name
                     in_property_name = True
                     property_name += current_char
 
             if char_index == last_index:
-                # Last character from input string.
+                # Last character from input string:
                 # - close out the last un-quoted property value
                 # - loop will exit normally
                 if current_char != "'":
@@ -628,10 +628,10 @@ def validate_command_parameter_names(command, warning_message: str, deprecated_p
         remove_invalid_string = "  Removing the invalid parameter."
 
     # Cannot iterate through a dictionary and remove items from dictionary.
-    # Therefore convert the dictionary to a list and iterate on the list
+    # Therefore convert the dictionary to a list and iterate on the list.
     command_parameter_names = list(command.command_parameters.keys())
 
-    # Check size dynamically in case props are removed below
+    # Check size dynamically in case props are removed below.
     # Because the dictionary size may change during iteration, keep a list of invalid parameters and delete in 2nd loop.
     for i_parameter in range(len(command_parameter_names)):
         # First make sure that the parameter is in the valid parameter name list.
@@ -675,15 +675,15 @@ def validate_command_parameter_names(command, warning_message: str, deprecated_p
                 invalid_parameters.append(parameter_name)
 
     if remove_invalid:
-        # Have a list of index positions to remove
+        # Have a list of index positions to remove.
         for invalid_parameter in invalid_parameters:
             try:
                 del command.command_parameters[invalid_parameter]
             except KeyError:
-                # Just absorb - should not happen since the parameter name was from the dictionary
+                # Just absorb - should not happen since the parameter name was from the dictionary.
                 pass
 
-    # Now add the warning messages to the list of strings
+    # Now add the warning messages to the list of strings:
     # - these are full messages formatted above, not just lists of parameter names
     for i_invalid in range(len(invalid_parameter_messages)):
         warning_list.append(invalid_parameter_messages[i_invalid])
@@ -692,23 +692,23 @@ def validate_command_parameter_names(command, warning_message: str, deprecated_p
         warning_list.append(deprecated_parameter_messages[i_deprecated])
 
     if len(warning_list) == 0:
-        # No new warnings were generated
+        # No new warnings were generated.
         if warning_message is not None:
-            # Return the original warning string
+            # Return the original warning string.
             return warning_message
         else:
-            # Return an empty string
+            # Return an empty string.
             return ""
     else:
         # Some new warnings were generated.
         # Add a warning formatted for command status logging and UI.
-        # Multiple lines are indicated by embedded newline (\n) characters
+        # Multiple lines are indicated by embedded newline (\n) characters.
         size = len(warning_list)
         msg = ""
         for i in range(size):
             warning_message += "\n" + warning_list[i]
             msg += warning_list[i]
-        # Add a command status log message for the warning messages that were generated
+        # Add a command status log message for the warning messages that were generated.
         command.command_status.add_to_log(
             CommandPhaseType.INITIALIZATION,
             CommandLogRecord(CommandStatusType.WARNING, msg, "Specify only valid parameters - see documentation."))
@@ -757,7 +757,7 @@ def validate_geolayer_attributes_exist(command, command_phase_type: CommandPhase
     if len(invalid_attributes) > 0:
         # If there are invalid attributes, the check failed.
         is_valid = False
-        # Log the issue
+        # Log the issue.
         message = "Parameter {}:  GeoLayerID {} does not contain attributes: {}".format(
                   geolayerid_parameter, geolayer_id, invalid_attributes)
         recommendation = "Specify valid attribute names."

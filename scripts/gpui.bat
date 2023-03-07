@@ -2,7 +2,7 @@
 rem gpui.bat
 rem _________________________________________________________________NoticeStart_
 rem GeoProcessor
-rem Copyright (C) 2017-2020 Open Water Foundation
+rem Copyright (C) 2017-2023 Open Water Foundation
 rem  
 rem GeoProcessor is free software:  you can redistribute it and/or modify
 rem     it under the terms of the GNU General Public License as published by
@@ -19,19 +19,19 @@ rem     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 rem _________________________________________________________________NoticeEnd___
 rem
 rem Simple Windows batch file to run the Open Water Foundation GeoProcessor application
-rem user interface.
-rem - If it does not work, make sure that gp.bat works.
+rem user interface:
+rem - if it does not work, make sure that gp.bat works
 
-rem Determine the folder that the script was called in
+rem Determine the folder that the script was called in.
 set scriptFolder=%~dp0
-rem Remove trailing \ from scriptFolder
+rem Remove trailing \ from 'scriptFolder'.
 set scriptFolder=%scriptFolder:~0,-1%
 
-rem Call the GeoProcessor in UI mode.
+rem Call the GeoProcessor in UI mode:
 rem - use the full path because 'gp' may not be in the PATH
 rem - this batch file may be called with /s or /u so pass arguments to gp.bat
 echo Calling:  gp.bat --ui %*
 call "%scriptFolder%\gp.bat" --ui %*
 
-rem Exit with the error level of the gp.bat command
+rem Exit with the error level of the gp.bat command.
 exit /b %ERRORLEVEL%

@@ -1,4 +1,5 @@
-# Ignore files in repository working files
+# Ignore files in repository working files.
+#
 # See also:
 #   ./venv/.gitignore - working virtual environments for different combinations of QGIS and Python versions
 #   ./build-util/build-tmp/.gitignore - temporary files used in build process for installers
@@ -6,30 +7,31 @@
 #   ./tests/.pytest_cache/.gitignore - ignore dynamic Python cache files
 #   ./z-local-notes/.gitignore - local notes for developers
 
-
-# Ignore user-specific files in PyCharm environment
+# Ignore user-specific files in PyCharm environment:
 # - based on experience, it is easy enough to set up a PyCharm dev environment
 #   so don't hand off any PyCharm files in the repository
 .idea/
 __pycache__/
-# The following is a newer convention but will be phased out in favor of venv/ folder
+
+# The following is a newer convention but will be phased out in favor of venv/ folder.
 venv-qgis-python37/
-# The following is a temporary folder to hold an archive of an earlier venv - it will be removed
+
+# The following is a temporary folder to hold an archive of an earlier venv - it will be removed.
 x-venv/
 
-# Ignore "junk" and other files often used for work
+# Ignore "junk" and other files often used for work.
 junk
 
-# Ignore compiled Python files
+# Ignore compiled Python files.
 *.py[cod]
 
-# Ignore Python stack dump files when a crash occurs
+# Ignore Python stack dump files when a crash occurs.
 *.stackdump
 
-# Ignore log files
+# Ignore log files.
 *.log
 
-# Ignore build folder files, used to create installers
+# Ignore build folder files, used to create installers:
 # - remove these at some point when process is in place since local .gitignore files are used
 build/*.tar
 build/*.gz
@@ -37,17 +39,17 @@ build/*.zip
 build/tmp-gp/
 build/tmp-gptest/
 
-# MkDocs site
+# MkDocs site.
 doc-dev-mkdocs-project/site/
 
-# vim editor files
+# vim editor files.
 
 *.swp
 *.swo
 
-# Microsoft temporary files
+# Microsoft temporary files.
 *.tmp
 ~$*
 
-# Ignore file extension used as temporary for .bat, etc. so email attachment works
+# Ignore file extension used as temporary for .bat, etc. so email attachment works.
 *.xxx

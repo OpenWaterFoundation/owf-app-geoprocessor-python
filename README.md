@@ -7,21 +7,21 @@ features to automate processing geospatial data.
 
 See the following online user and developer documentation:
 
-* [OWF GeoProcessor](http://software.openwaterfoundation.org/geoprocessor/) - download page (with links to versioned software and documentation)
-* [Latest GeoProcessor user documentation](http://software.openwaterfoundation.org/geoprocessor/latest/doc-user/) - latest user documentation
-* [Latest GeoProcessor developer documentation)](http://software.openwaterfoundation.org/geoprocessor/latest/doc-dev/) - latest developer documentation
+*   [OWF GeoProcessor](http://software.openwaterfoundation.org/geoprocessor/) - download page (with links to versioned software and documentation)
+*   [Latest GeoProcessor user documentation](http://software.openwaterfoundation.org/geoprocessor/latest/doc-user/) - latest user documentation
+*   [Latest GeoProcessor developer documentation)](http://software.openwaterfoundation.org/geoprocessor/latest/doc-dev/) - latest developer documentation
 
 The following sections provide a summary of the project repository and getting started:
 
-* [GeoProcessor Repository Folder Structure](#geoprocessor-repository-folder-structure)
-* [Links to GeoProcessor Repositories and Online Resources](#links-to-geoprocessor-repositories-and-online-resources)
-* [Development Environment](#development-environment)
-* [Git Workflow](#git-workflow)
-* [Testing](#testing)
-* [Contributing](#contributing)
-* [License](#license)
-* [Maintainers](#maintainers)
-* [Release Notes](#release-notes)
+*   [GeoProcessor Repository Folder Structure](#geoprocessor-repository-folder-structure)
+*   [Links to GeoProcessor Repositories and Online Resources](#links-to-geoprocessor-repositories-and-online-resources)
+*   [Development Environment](#development-environment)
+*   [Git Workflow](#git-workflow)
+*   [Testing](#testing)
+*   [Contributing](#contributing)
+*   [License](#license)
+*   [Maintainers](#maintainers)
+*   [Release Notes](#release-notes)
 
 -----
 
@@ -61,6 +61,10 @@ however, OWF may not have resources to troubleshoot.
 Folders and files in repositories will be automatically created when the repository is cloned
 or when PyCharm is used.
 
+Folders that do not contain source files are marked by right-clicking on folders and using
+***Mark Director as / Excluded***.
+Only the top-level `src` folder should be treated as code.
+
 ```text
 owf-app-geoprocessor-python/       The GeoProcessor code and documentation repository.
   .git/                            Standard Git folder for repository files (DO NOT TOUCH!).
@@ -68,22 +72,24 @@ owf-app-geoprocessor-python/       The GeoProcessor code and documentation repos
   .gitignore/                      Standard Git configuration file to ignore dynamic working files.
   .idea/                           PyCharm project files (ignored using .gitignore).
   build-util/                      Scripts to help in the GeoProcessor development environment.
-  geoprocessor/                    Main module folder for GeoProcessor software.
-    app/                           Main GeoProcessor application module.
-    commands/                      Modules containing GeoProcessor commands.
-    core/                          Core GeoProcessor module, containing the processor.
-    resources/                     Resources that support the softare.
-      images/                      Images including icons that should be distributed at runtime.
-      notices/                     License notices to be inserted into code files.
-      qt-stylesheets/              Qt stylesheets that customize the UI, to be distributed.
-    ui/                            User interface modules, using Qt.
-    util/                          Utility modules.
   LICENSE.md                       GeoProcessor license (GPL v3).
   README.md                        This README file.
-  scripts/                         Scripts to run GeoProcesssor in the development and tdeployed environments.
+  scripts/                         Scripts to run GeoProcessor in the development and deployed environments.
+  src/                             Source Python files (root folder for code).
+    geoprocessor/                  Main module folder for GeoProcessor software.
+      app/                         Main GeoProcessor application module.
+      commands/                    Modules containing GeoProcessor commands.
+      core/                        Core GeoProcessor module, containing the processor.
+      resources/                   Resources that support the software.
+        images/                    Images including icons that should be distributed at runtime.
+        notices/                   License notices to be inserted into code files.
+        qt-stylesheets/            Qt stylesheets that customize the UI, to be distributed.
+      ui/                          User interface modules, using Qt.
+      util/                        Utility modules.
   venv/                            Virtual environments used by PyCharm (ignored using .gitignore).
     venv-qgis-3.10-python37/       Example virtual environment used for development.
-  venv-qgis-python37/              Virtual environment used by PyCharm (ignored using .gitignore),
+  x-venv/                          Old virtual environments, will be deleted at some point (ignored using .gitignore).
+    venv-qgis-python37/            Virtual environment used by PyCharm (ignored using .gitignore),
                                    old convention that is being phased out.
   z-local-notes/                   Use for local files that won't be committed to the repository.
 ```
@@ -106,10 +112,10 @@ The development environment consists of the following.
 OWF has developed the GeoProcessor on Windows using Cygwin but other development environments will be supported
 as resources allow.
 
-* QGIS (Python 3 version - Python is included with QGIS) - recent version is supported, as resources allow
-* Python 3 (used with MkDocs documentation) - compatible with QGIS Python version
-* PyCharm Community Edition - latest version if possible
-* Git client such as Git for Windows - latest version for operating system
+*   QGIS (Python 3 version - Python is included with QGIS) - recent version is supported, as resources allow
+*   Python 3 (used with MkDocs documentation) - compatible with QGIS Python version
+*   PyCharm Community Edition - latest version if possible
+*   Git client such as Git for Windows - latest version for operating system
 
 See the published [GeoProcessor Developer Documentation](http://software.openwaterfoundation.org/geoprocessor/latest/doc-dev/).
 
@@ -120,8 +126,8 @@ The `master` branch contains the most current commits, with functionality tested
 but should not be considered bulletproof.
 Periodic releases are made and are indicated by tags on the master branch.
 
-* [Jeremy Helms "Branching" gist, with diagram](https://gist.github.com/digitaljhelms/4287848)
-* [Git Feature Branch Workflow documentation on Atlassian](https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow)
+*   [Jeremy Helms "Branching" gist, with diagram](https://gist.github.com/digitaljhelms/4287848)
+*   [Git Feature Branch Workflow documentation on Atlassian](https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow)
 
 A small number of committers are responsible for maintaining the integrity of the master branch.
 
@@ -136,20 +142,20 @@ consistent with normal Python conventions.
 
 The GeoProcessor contains an internal functional testing framework described in the following resources:
 
-* [Developer documentation for testing tasks](http://software.openwaterfoundation.org/geoprocessor/latest/doc-dev/dev-tasks/dev-tasks/#testing)
-* [owf-app-geoprocessor-python-test functional tests repository](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test)
+*   [Developer documentation for testing tasks](http://software.openwaterfoundation.org/geoprocessor/latest/doc-dev/dev-tasks/dev-tasks/#testing)
+*   [owf-app-geoprocessor-python-test functional tests repository](https://github.com/OpenWaterFoundation/owf-app-geoprocessor-python-test)
 
 ## Contributing ##
 
 Contributions to this project can be submitted using the following options.
 
-1. GeoProcessor software developers with commit privileges can write to this repository
-as per normal development Git workflow protocols.
-2. Post an issue on GitHub with suggested change (preferred for small changes).
-3. Fork the repository, make changes, and do a pull request (preferred for large changes).
-Contents of the current master branch should be merged with the fork to minimize
-code review before committing the pull request.
-OWF developers will review suggestions and implement by whatever means makes sense.
+1.  GeoProcessor software developers with commit privileges can write to this repository
+    as per normal development Git workflow protocols.
+2.  Post an issue on GitHub with suggested change (preferred for small changes).
+3.  Fork the repository, make changes, and do a pull request (preferred for large changes).
+    Contents of the current master branch should be merged with the fork to minimize
+    code review before committing the pull request.
+    OWF developers will review suggestions and implement by whatever means makes sense.
 
 ## License ##
 

@@ -43,8 +43,8 @@ rem   :runStandaloneQgis
 
 rem The script version can be different from the GeoProcessor Python version:
 rem - this version is just used to help track changes to this script
-set gpdevBatVersion=1.3.0
-set gpdevBatVersionDate=2023-03-01
+set gpdevBatVersion=1.4.0
+set gpdevBatVersionDate=2023-03-06
 
 rem Turn on delayed expansion so that loops work:
 rem - seems crazy but see:  https://ss64.com/nt/delayedexpansion.html
@@ -78,10 +78,11 @@ echo [INFO]   GeoProcessor source code is located in folder:
 echo [INFO]     %srcFolder%
 
 rem Print the command line parameters.
-echo [INFO] Command line parmeter 1 = %1
-echo [INFO] Command line parmeter 2 = %2
-echo [INFO] Command line parmeter 3 = %3
-echo [INFO] Command line parmeter 4 = %4
+echo [INFO] Command line parameter 1 = %1
+echo [INFO] Command line parameter 2 = %2
+echo [INFO] Command line parameter 3 = %3
+echo [INFO] Command line parameter 4 = %4
+echo [INFO] Command line parameter 5 = %5
 
 rem Evaluate command options, using Windows-style options:
 rem - have to check %1% and %2% because may be called from another file such as from gpuidev.bat using -ui
@@ -172,11 +173,13 @@ if "%4"=="-s" goto runStandaloneQgis
 rem Print this script version:
 rem - don't include -v or --version since the gp*.bat script uses that
 if "%1"=="/v" goto printVersion
-if "%2"=="/v" goto printVersion
-if "%3"=="/v" goto printVersion
 if "%1"=="/version" goto printVersion
+if "%2"=="/v" goto printVersion
 if "%2"=="/version" goto printVersion
+if "%3"=="/v" goto printVersion
 if "%3"=="/version" goto printVersion
+if "%4"=="/v" goto printVersion
+if "%4"=="/version" goto printVersion
 
 rem If here /s was not specified but /sN.N might have been.
 rem Options that specify the standalone QGIS version to use:
@@ -260,7 +263,7 @@ rem Run the standalone version of QGIS, which is installed in a versioned folder
 echo [INFO]
 echo [INFO] Using standalone version of QGIS.
 
-echo [INFO] Target standalone QGIS version = %targetQgisVersion%
+echo [INFO] Requested target standalone QGIS version = %targetQgisVersion%
 if "%targetQgisVersion%"=="unknown" (
   echo [ERROR]
   echo [ERROR]  Requested target standalone QGIS version is unknown.  Run with /sN.N, /sN.N.N, or /o option.
@@ -298,10 +301,10 @@ rem This code is similar to the initial check at the top of the batch file.
 echo [INFO]
 echo [INFO] Try to find QGIS in ?:\Program Files (may be installed on any drive C or after).
 for %%D in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-  echo [INFO] Checking for existence of %%D:\Program Files\QGIS !targetQgisVersion!
+  echo [INFO]   Checking for existence of %%D:\Program Files\QGIS !targetQgisVersion!
   if exist "%%D:\Program Files\QGIS !targetQgisVersion!" (
     SET QGIS_SA_INSTALL_HOME=%%D:\Program Files\QGIS !targetQgisVersion!
-    echo [INFO] Standard QGIS exists in:  !QGIS_SA_INSTALL_HOME!
+    echo [INFO]   Standard QGIS exists in:  !QGIS_SA_INSTALL_HOME!
     goto setupStandalone1b
   )
 )
@@ -313,10 +316,6 @@ echo [ERROR]  Cannot continue.
 goto exit1
 
 :setupStandalone1b
-
-rem TODO smalers 2022-01-17 Old syntax.  Remove if the following short names work.
-rem SET QGIS_SA_ROOT=!QGIS_SA_INSTALL_HOME!
-rem echo [INFO] Running GeoProcessor using standalone GQGIS in:  !QGIS_SA_INSTALL_HOME!
 
 rem Get the short version of the install home:
 rem - TODO smalers 2023-03-02 evaluate whether 8.3 is needed or can long paths with spaces work
@@ -368,150 +367,35 @@ if not exist "!QGIS_SA_ROOT!" (
   goto noStandaloneQgis
 )
 
-rem Set the QGIS environment by calling the setup batch files that are distributed with QGIS:
-rem
-rem - the following relies on OSGEO4W_ROOT being set and will reset it to 8.3 format
-rem - the 8.3 OSGEO4W_ROOT is then added to the path
-rem - the path is also updated to include standard Windows programs but the previous path is lost
-rem - therefore other programs that were found before may not be found
-rem - this effectively isolates QGIS from the system
-rem - the batch file is the same as for OSGeo4W (non-standalone) install
-echo [INFO]
-echo [INFO] Setting QGIS main environment variables.
-if exist "!QGIS_SA_ROOT!\bin\o4w_env.bat" (
-  echo [INFO]   Calling QGIS setup batch file:
-  echo [INFO]     !QGIS_SA_ROOT!\bin\o4w_env.bat
-  call "!QGIS_SA_ROOT!\bin\o4w_env.bat"
-  rem The batch file may not explicitly exit with a status.
-  if errorlevel 1 (
-    echo [ERROR]  Error calling o4w_env.bat.  Cannot continue.
-    goto exit1
-  )
-  echo [INFO]     The script sets OSGEO4W_ROOT to 8.3 format to avoid space issues in the folder,
-  echo [INFO]     and adds to the PATH.
-  echo [INFO]     OSGEO4W_ROOT = !OSGEO4W_ROOT!
-  echo [INFO]     PATH = !PATH!
-  goto qtEnvStandalone
-)
-rem If here the o4w_env.bat file was not found, which is a major problem.
-echo [ERROR]
-echo [ERROR]  o4w_env.bat file was not found:
-echo [ERROR]    !QGIS_SA_ROOT!\bin\o4w_env.bat
-echo [ERROR]  Cannot setup QGIS main environment.
-goto exit1
-
-:qtEnvStandalone
-
-rem The following sets a number of QT environment variables (QT is used in the UI):
+rem The following sets up the QGIS environment for Python:
+rem - handles QGIS, Python, and Qt setup
 rem - same batch file name as for OSGeo4W install
-rem - as of QGIS 3.20 the batch file is no longer distributed?
 
 echo [INFO]
-echo [INFO] Setting QGIS Qt environment variables.
-rem Add the Qt5 bin to the path.
-if not exist "!QGIS_SA_ROOT!\apps\Qt5\bin" (
-  echo [ERROR]  The Qt5\bin folder does not exist:
-  echo [ERROR]    !QGIS_SA_ROOT!\apps\Qt5\bin
-  echo [ERROR]  Cannot continue.
-  goto exit1
-)
-rem Now can set the path.
-
-rem Set the Qt environment variables.
-set PATH=!QGIS_SA_ROOT!\apps\Qt5\bin;%PATH%
-if exist "!QGIS_SA_ROOT!\bin\qt5_env.bat" (
-  echo [INFO]   Calling QGIS Qt setup batch file from QGIS:
-  echo [INFO]     !QGIS_SA_ROOT!\bin\qt5_env.bat
-  call "!QGIS_SA_ROOT!\bin\qt5_env.bat"
+echo [INFO] Setting QGIS Python and Qt environment variables.
+if exist "!scriptFolder!\python-qgis-ltr.bat" (
+  echo [INFO]   Calling QGIS Python setup batch file from GeoProcessor:
+  echo [INFO]     !scriptFolder!\python-qgis-ltr.bat
+  call "!scriptFolder!\python-qgis-ltr.bat"
   if errorlevel 1 (
-    echo [ERROR]  Error calling qt5_env.bat.  Cannot continue.
-    goto exit1
-  )
-  goto pythonEnvStandalone
-)
-rem Fall through is to try calling the version saved with GeoProcessor.
-if exist "%scriptFolder%\..\scripts\qt5_env.bat" (
-  echo [INFO]   Calling QGIS Qt setup batch file from GeoProcessor because not found in QGIS.
-  echo [INFO]     %scriptFolder%\..\scripts\qt5_env.bat
-  call "%scriptFolder%\..\scripts\qt5_env.bat"
-  if errorlevel 1 (
-    echo [ERROR]  Error calling qt5_env.bat.  Cannot continue.
-    goto exit1
-  )
-  goto pythonEnvStandalone
-)
-rem If here the qt5_env.bat file was not found, which is a major problem.
-echo [ERROR]
-echo [ERROR]  qt5_env.bat file was not found in either of the following locations:
-echo [ERROR]    !QGIS_SA_ROOT!\bin\qt5_env.bat
-echo [ERROR]    %scriptFolder%\..\scripts\qt5_env.bat
-echo [ERROR]  Cannot setup QGIS Qt environment.
-goto exit1
-
-:pythonEnvStandalone
-
-rem The following sets:
-rem - PYTHONHOME to Python shipped with QGIS install
-rem - clears PYTHONPATH
-rem - PATH to include Python shipped with QGIS and Python scripts folder
-rem - same batch file name as for OSGeo4W install
-echo [INFO]
-echo [INFO] Setting QGIS Python environment variables.
-if exist "!QGIS_SA_ROOT!\bin\py3_env.bat" (
-  echo [INFO]   Calling QGIS Python 3 setup batch file from QGIS:
-  echo [INFO]     !QGIS_SA_ROOT!\bin\py3_env.bat
-  call "!QGIS_SA_ROOT!\bin\py3_env.bat"
-  if errorlevel 1 (
-    echo [ERROR]    Error calling py3_env.bat.  Cannot continue.
+    echo [ERROR]  Error calling python-qgis-ltr.bat.  Cannot continue.
     goto exit1
   )
   goto qgisEnvStandalone
 )
-rem Fall through is to try calling the version saved with GeoProcessor.
-if exist "%scriptFolder%\..\scripts\py3_env.bat" (
-  echo [INFO]   Calling QGIS Python 3 setup batch file from GeoProcessor because not found in QGIS.
-  echo [INFO]     %scriptFolder%\..\scripts\py3_env.bat
-  call %scriptFolder%\..\scripts\py3_env.bat
-  if errorlevel 1 (
-    echo [ERROR]    Error calling py3_env.bat.  Cannot continue.
-    goto exit1
-  )
-  goto qgisEnvStandalone
-)
-rem If here the py3_env.bat file was not found, which is a major problem.
+rem If here the python-qgis-ltr.bat file was not found, which is a major problem.
 echo [ERROR]
-echo [ERROR]  py3_env.bat file was not found in either of the following locations:
-echo [ERROR]    !QGIS_SA_ROOT!\bin\py3_env.bat
-echo [ERROR]    %scriptFolder%\..\scripts\py3_env.bat
-echo [ERROR]  Cannot setup QGIS Qt environment.
+echo [ERROR]  python-qgis-ltr.bat file was not found:
+echo [ERROR]    %scriptFolder%\python-qgis-ltr.bat
+echo [ERROR]  Cannot setup QGIS Python environment.
 goto exit1
 
 :qgisEnvStandalone
 
-rem Add QGIS to the PATH environment variable so that all QGIS, GDAL, OGR, etc. programs are found.
-set PATH=!QGIS_SA_ROOT!\bin;%PATH%
-set GDAL_FILENAME_IS_UTF8=YES
-rem --
-rem Set VSI cache to be used as buffer, see https://issues.qgis.org/issues/6448
-set VSI_CACHE=TRUE
-set VSI_CACHE_SIZE=1000000
-rem --
-
-echo [INFO]
-echo [INFO] After QGIS/Qt/Python setup:
-echo [INFO]   PATH = %PATH%
-echo [INFO]   PYTHONHOME = %PYTHONHOME%
-echo [INFO]   PYTHONPATH = !PYTHONPATH!
-
 rem Add QGIS 'python' and 'plugins' folders to the PYTHONPATH:
-rem - old version of this batch file used %QGISNAME%, which was typically 'qgis';
-rem   however, it could be 'qgis-ltr` for long term release or 'qgis-dev' for development.
-rem   Therefore, the following now checks for multiple release types.
-rem   See:  https://docs.qgis.org/3.4/pdf/en/QGIS-3.4-PyQGISDeveloperCookbook-en.pdf
 rem - the qgis-ltr folder needs to be checked first because for a long term release
 rem - the qgis-ltr/python and qgis/python folders each exist, but qgis/python is empty
 rem - 'qgis-ltr' is used in several environment variables
-rem The qgis-ltr is used when an LTR release was downloaded from the website:
 rem - the latest release (under development) does not seem to include qgis-ltr
 echo [INFO]
 echo [INFO] Setting the QGIS Python app files environment variables.
@@ -519,24 +403,7 @@ for %%Q in (qgis-ltr qgis qgis-dev) do (
   if exist !QGIS_SA_ROOT!\apps\%%Q\python (
     echo [INFO]   Found QGIS Python application files:
     echo [INFO]     !QGIS_SA_ROOT!
-    rem TODO smalers 2023-03-02 does the order matter?
-    rem set PATH=!QGIS_SA_ROOT!\apps\%%Q\bin;%PATH%
-    set PATH=%PATH%;!QGIS_SA_ROOT!\apps\%%Q\bin
-    set QGIS_PREFIX_PATH=!QGIS_SA_ROOT!\apps\%%Q
-    rem QGIS 3.22.16 uses Qt5 rather than qt5.
-    rem set QT_PLUGIN_PATH=!QGIS_SA_ROOT!\apps\%%Q\qtplugins;!QGIS_SA_ROOT!\apps\qt5\plugins
-    set QT_PLUGIN_PATH=!QGIS_SA_ROOT!\apps\%%Q\qtplugins;!QGIS_SA_ROOT!\apps\Qt5\plugins
 
-    rem TODO smalers 2023-03-01 The following works with QGIS 3.10:
-    rem - imports must specify 'qgis' at the beginning
-    set PYTHONPATH_QGIS_PYTHON=!QGIS_SA_ROOT!\apps\%%Q\python
-    echo [INFO]   Adding standalone QGIS Python to front of PYTHONPATH:
-    echo [INFO]     !PYTHONPATH_QGIS_PYTHON!
-    set PYTHONPATH=!PYTHONPATH_QGIS_PYTHON!;!PYTHONPATH!
-
-    rem Plugins folder does not use 'qgis-ltr'.
-    rem See https://anitagraser.com/2018/01/28/porting-processing-scripts-to-qgis3/
-    rem set PYTHONPATH_QGIS_PLUGINS=!QGIS_SA_ROOT!\apps\%%Q\plugins
     rem The following is "python/plugins", not just "plugins".
     set PYTHONPATH_QGIS_PLUGINS=!QGIS_SA_ROOT!\apps\%%Q\python\plugins
     echo [INFO]   Adding standalone QGIS plugins to front of PYTHONPATH:
@@ -548,7 +415,7 @@ for %%Q in (qgis-ltr qgis qgis-dev) do (
 )
 rem If here the application variables could not bet set.
 echo [ERROR]
-echo [ERROR]  Could not find QGIS Python files:
+echo [ERROR]  Could not find QGIS Python files in any of the following:
 echo [ERROR]    !QGIS_SA_ROOT!\apps\qgis-ltr\python
 echo [ERROR]    !QGIS_SA_ROOT!\apps\qgis\python
 echo [ERROR]    !QGIS_SA_ROOT!\apps\qgis-dev\python
@@ -558,41 +425,13 @@ goto exit1
 :standalonePathSet
 rem If here the PYTHONPATH was set above for PyQGIS.
 
-rem Add QGIS site-packages to PYTHONPATH.
-rem TODO smalers 2020-03-30 this should just use the Python version from PYTHONHOME
-rem List the following in order so most recent Python for target version is found first:
-rem - cannot get if else if to work so use goto
-echo [INFO]
-echo [INFO] Adding QGIS Python site packages.
-for %%V in (39 38 37 36) do (
-  echo [INFO] Checking for existence of !QGIS_SA_ROOT!\apps\Python%%V
-  if exist !QGIS_SA_ROOT!\apps\Python%%V\ (
-    rem It appears that QGIS Python uses lowercase "lib" is used rather than "Lib", so use lowercase below:
-    rem - not sure why that is done (maybe for Linux?) but make lowercase here
-    rem - TODO smalers 2022-10-17 QGIS 3.22.16 and 3.26.3 uses Lib
-    set PYTHONPATH_QGIS_SITEPACKAGES=!QGIS_SA_ROOT!\apps\Python%%V\Lib\site-packages
-    echo [INFO]   Adding standalone QGIS Python%%V 'Lib\site-packages' to front of PYTHONPATH:
-    echo [INFO]     !PYTHONPATH_QGIS_SITEPACKAGES!
-    set PYTHONPATH=!PYTHONPATH_QGIS_SITEPACKAGES!;!PYTHONPATH!
-    goto standalonePathSet2
-  )
-)
-rem Warning because could not find QGIS Python.
-echo [ERROR]  Could not find Python39, Python38, Python37 or Python36 in !QGIS_SA_ROOT!\apps for site-packages
-goto exit1
-
-:standalonePathSet2
-
-rem Add additional packages to PYTHONPATH, located in PyCharm development venv.
-rem TODO smalers 2020-03-30 this should just use the Python version from PYTHONHOME
+rem Add additional packages to PYTHONPATH located in PyCharm development venv.
 rem List the following in order so most recent Python for target version is found first:
 rem - cannot get 'if else if' to work so use goto
-rem TODO smalers 2023-03-04 Bypass the following for now to run independent of PyCharm.
-rem goto setupStandalone2
 echo [INFO]
 echo [INFO] Adding venv site packages to PYTHONPATH.
 for %%T in (39 38 37 36) do (
-  echo [INFO] Checking for existence of %installFolder%\venv\venv-qgis-!targetQgisVersion!-python%%T
+  echo [INFO]   Checking for existence of %installFolder%\venv\venv-qgis-!targetQgisVersion!-python%%T
   if exist %installFolder%\venv\venv-qgis-!targetQgisVersion!-python%%T\ (
     set PYTHONPATH_PYCHARM_SITEPACKAGES=%installFolder%\venv\venv-qgis-!targetQgisVersion!-python%%T\Lib\site-packages
     echo [INFO]   Adding venv PyCharm Python%%T 'Lib\site-packages' to front of PYTHONPATH:
@@ -608,7 +447,7 @@ goto exit1
 
 :setupStandalone2
 
-rem Add the GeoProcessor to the PYTHONPATH:
+rem Add the GeoProcessor Python code to the PYTHONPATH:
 rem - OK to put at the front because 'geoprocessor' should not conflict with anything else
 rem - the Python main specifies the 'geoprocessor' folder in the module to load
 set GEOPROCESSOR_HOME=%srcFolder%
@@ -656,6 +495,7 @@ echo [INFO]   Using Python3/standalone QGIS3 for GeoProcessor.
 echo [INFO]   Environment for Python/GeoProcessor:
 echo [INFO]     QGIS_SA_INSTALL_HOME=!QGIS_SA_INSTALL_HOME!
 echo [INFO]     QGIS_SA_ROOT=!QGIS_SA_ROOT!
+echo [INFO]     OSGEO4W_ROOT=!OSGEO4W_ROOT!
 echo [INFO]     PATH=%PATH%
 echo [INFO]     PYTHONHOME=!PYTHONHOME!
 echo [INFO]     PYTHONPATH=!PYTHONPATH!
@@ -669,7 +509,7 @@ if "!doPrintEnv!"=="yes" (
   rem Run the geoprocessor.app.printenv program, useful for troubleshooting.
   rem - this can be used with other program parameters
   rem echo [INFO] Running printenv.py to print the environment.
-  "!PYTHONHOME!\python.exe" -m geoprocessor.app.printenv %*
+  "!OSGEO4W_ROOT!\bin\python.exe" -m geoprocessor.app.printenv %*
 )
 
 rem Run QGIS Python with the geoprocessor module found using PYTHONPATH set above:
@@ -687,19 +527,20 @@ if "!runPython!"=="yes" (
   echo [INFO] Running Python directly in GeoProcessor environment.
   echo [INFO] Use Python language syntax at the prompt.
   rem Don't pass command line options because Python tries to interpret.
-  rem "%PYTHONHOME%\python" -v %*
-  rem "%PYTHONHOME%\python" -v
-  echo [INFO] Running: "%PYTHONHOME%\python" !verboseOpt! -B -d -X dev
-  "%PYTHONHOME%\python" !verboseOpt! -B -d -X dev
+  rem "!PYTHONHOME!\python" -v %*
+  rem "!PYTHONHOME!\python" -v
+  echo [INFO] Running: "!PYTHONHOME!\python" !verboseOpt! -B -d -X dev
+  "!OSGEO4W_ROOT!\bin\python" !verboseOpt! -B -d -X dev
 ) else (
   echo [INFO]
-  echo [INFO] Running:  "%PYTHONHOME%\python" !verboseOpt! -m geoprocessor.app.gp %*
+  echo [INFO] Running:  "!PYTHONHOME!\python" !verboseOpt! -m geoprocessor.app.gp %*
   echo [INFO] If errors result due to missing packages,
   echo [INFO] install those packages in the PyCharm venv and report to developers.
   echo [INFO] Start-up may be slow if virus scanner needs to check.
   echo.
-  rem Run the full GeoProcessor.
-  "%PYTHONHOME%\python" !verboseOpt! -m geoprocessor.app.gp %*
+  rem Run the GeoProcessor application.
+  "!OSGEO4W_ROOT!\bin\python" !verboseOpt! -m geoprocessor.app.gp %*
+  rem "!OSGEO4W_ROOT!\apps\Python39\python" !verboseOpt! -m geoprocessor.app.gp %*
 )
 
 rem Exit with the error level of the Python command.

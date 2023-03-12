@@ -3259,7 +3259,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_Table = QtWidgets.QTableWidget(self.results_Properties_GroupBox)
         self.results_Properties_Table.setAlternatingRowColors(True)
         self.results_Properties_Table.setObjectName(qt_util.from_utf8("results_Properties_Table"))
-        self.results_Properties_Table.setColumnCount(3)
+        self.results_Properties_Table.setColumnCount(4)
         self.results_Properties_Table.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.results_Properties_Table.setHorizontalHeaderItem(0, item)
@@ -3267,6 +3267,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_Table.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
         self.results_Properties_Table.setHorizontalHeaderItem(2, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.results_Properties_Table.setHorizontalHeaderItem(3, item)
         self.results_Properties_Table.horizontalHeader().setStretchLastSection(False)
         self.results_Properties_Table.verticalHeader().setStretchLastSection(False)
         self.results_Properties_GroupBox_VerticalLayout.addWidget(self.results_Properties_Table)
@@ -3278,11 +3280,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             "parameters using ${Property} notation (see command documentation). ")
         self.results_Properties_Table.horizontalHeaderItem(0).setText("Property Name")
         self.results_Properties_Table.horizontalHeaderItem(0).setToolTip("Property Name")
-        self.results_Properties_Table.horizontalHeaderItem(1).setText("Property Value")
-        self.results_Properties_Table.horizontalHeaderItem(1).setToolTip("Property Value")
+        self.results_Properties_Table.horizontalHeaderItem(1).setText("Property Type")
+        self.results_Properties_Table.horizontalHeaderItem(1).setToolTip("Property Type")
+        self.results_Properties_Table.horizontalHeaderItem(2).setText("Property Value")
+        self.results_Properties_Table.horizontalHeaderItem(2).setToolTip("Property Value")
         self.results_Properties_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         # Hide last column to ensure horizontal scroll.
-        self.results_Properties_Table.setColumnWidth(2, 0)
+        self.results_Properties_Table.setColumnWidth(3, 0)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Properties_Tab), "Properties")
 
         # Results - Tables tab
@@ -4096,9 +4100,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Property Name
             self.results_Properties_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(prop_name))
 
+            # Property Type:
+            # - 'type' will show something like: <class 'str'>
+            # - strip out the extra characters
+            prop_type = str(type(prop_value)).replace("<class '", "").replace("'>", "")
+            if prop_type == 'NoneType':
+                # Show the type as a blank.
+                prop_type = ''
+            self.results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(prop_type))
+
             # Property Value:
             # - have to cast to string because table is configured to display strings
-            self.results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(prop_value)))
+            self.results_Properties_Table.setItem(new_row_index, 2, QtWidgets.QTableWidgetItem(str(prop_value)))
 
         self.results_Properties_Table.sortByColumn(0, QtCore.Qt.AscendingOrder)
         self.results_Properties_Table.resizeColumnsToContents()
@@ -4111,27 +4124,27 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Remove items from the Results Tables table (from a previous run).
+        # Remove items from the Results / Tables table (from a previous run).
         self.results_Tables_Table.setRowCount(0)
 
-        # Populate the Results / Tables Table.
-        # Iterate through all of the Table objects in the GeoProcessor.
+        # Populate the Results / Tables table.
+        # Iterate through all the Table objects in the GeoProcessor.
         for table in self.gp.tables:
 
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_Tables_Table.rowCount()
             self.results_Tables_Table.insertRow(new_row_index)
 
-            # Retrieve the Tables's Table ID and set as the attribute for the Table ID column.
+            # Retrieve the table's ID and set as the attribute for the table ID column.
             self.results_Tables_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(table.id))
 
-            # Retrieve the number of columns in the Table and set as the attribute for the Column Count column.
+            # Retrieve the number of columns in the table and set as the attribute for the Column Count column.
             # TODO smalers 2020-11-14 is the following from Pandas?
             #self.results_Tables_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(table.count_columns())))
             self.results_Tables_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(
                 str(table.get_number_of_columns())))
 
-            # Retrieve the number of rows in the Table and set as the attribute for the Row Count column.
+            # Retrieve the number of rows in the table and set as the attribute for the Row Count column.
             # TODO smalers 2020-11-14 is the following from Pandas?
             #self.results_Tables_Table.setItem(new_row_index, 2, QtWidgets.QTableWidgetItem(str(table.count_rows())))
             self.results_Tables_Table.setItem(new_row_index, 2, QtWidgets.QTableWidgetItem(
@@ -5481,7 +5494,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_GroupBox.setTitle(
             "Properties ({} Properties, {} selected)".format(row_num, selected_rows))
 
-        self.results_Properties_Table.setColumnWidth(2, 0)
+        self.results_Properties_Table.setColumnWidth(3, 0)
 
     def update_ui_status_results_tables(self) -> None:
         """

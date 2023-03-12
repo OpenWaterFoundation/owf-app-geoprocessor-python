@@ -144,8 +144,7 @@ class RunCommands(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, and if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, and if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
@@ -216,7 +215,7 @@ class RunCommands(AbstractCommand):
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message,
                                      "Confirm that the command file exists."))
-                # Set the following to skip code below
+                # Set the following to skip code below.
                 file_found = False
 
             # If the command file is not enabled, don't need to initialize or process.
@@ -295,7 +294,7 @@ class RunCommands(AbstractCommand):
                         CommandLogRecord(
                             max_severity, "Severity for RunCommands (" + str(max_severity) +
                             ") is max of commands in command file that was run.",
-                            "Status messages from commands that were run are appended to RunCommand status messages."))
+                            "Status messages from commands that were run are appended to RunCommands status messages."))
 
                     # Append the log records from the command file that was run.
                     # The status contains lists of CommandLogRecord for each run mode.
@@ -317,8 +316,8 @@ class RunCommands(AbstractCommand):
                     is_enabled, run_time_total,
                     test_pass_fail, expected_status, max_severity, command_file_absolute)
 
-                # If it was requested to append the results to the calling processor, get
-                # the results from the runner and do so.
+                # If it was requested to append the results to the calling processor,
+                # get the results from the runner and do so.
 
                 # if ( (AppendResults != null) && AppendResults.equalsIgnoreCase("true")) {
                 #     TSCommandProcessor processor2 = runner.getProcessor();
@@ -338,8 +337,8 @@ class RunCommands(AbstractCommand):
                 # }
                 logger.info("...done processing commands from file.")
             else:
-                # Add a record to the regression report (the is_enabled value is what is important for the report
-                # because the test is not actually run).
+                # Add a record to the regression report
+                # (the is_enabled value is what is important for the report because the test is not actually run).
                 # TODO smalers 2018-01-26 finish.
                 logger.info("Command file is not enabled")
                 run_time_total = 0

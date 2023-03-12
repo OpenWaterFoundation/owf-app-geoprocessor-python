@@ -1,18 +1,18 @@
 # CopyGeoLayer - command to copy a GeoLayer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -36,10 +36,10 @@ import logging
 
 class CopyGeoLayer(AbstractCommand):
     """
-    Creates a copy of a GeoLayer in the GeoProcessor's geolayers list. The copied GeoLayer is added to the
-    GeoProcessor's geolayers list.
+    Creates a copy of a GeoLayer in the GeoProcessor's geolayers list.
+    The copied GeoLayer is added to the GeoProcessor's geolayers list.
 
-    Command Parameters
+    Command Parameters:
 
     * GeoLayerID (str, required): The ID of the existing GeoLayer to copy.
     * IncludeAttributes (str, optional): A list of glob-style patterns to determine the attributes to include in the
@@ -66,13 +66,13 @@ class CopyGeoLayer(AbstractCommand):
         CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = \
         "Copy a GeoLayer to a new GeoLayer, optionally constrain the copy to a subset of the original features."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "the id of the GeoLayer to be copied"
@@ -135,18 +135,18 @@ class CopyGeoLayer(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "CopyGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -200,7 +200,7 @@ class CopyGeoLayer(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_geolayer_id: str, output_geolayer_id: str,
@@ -221,8 +221,8 @@ class CopyGeoLayer(AbstractCommand):
                 should not be copied.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
@@ -303,7 +303,7 @@ class CopyGeoLayer(AbstractCommand):
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
                 copied_geolayer = input_geolayer.deepcopy(pv_OutputGeoLayerID)
 
-                # Set the name and description
+                # Set the name and description.
                 copied_geolayer.name = pv_Name
                 copied_geolayer.description = pv_Description
 
@@ -331,7 +331,7 @@ class CopyGeoLayer(AbstractCommand):
                 self.command_processor.add_geolayer(copied_geolayer)
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error copying GeoLayer {} ".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."
@@ -340,7 +340,7 @@ class CopyGeoLayer(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

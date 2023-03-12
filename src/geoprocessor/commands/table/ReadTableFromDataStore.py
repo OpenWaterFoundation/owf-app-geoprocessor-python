@@ -1,18 +1,18 @@
 # ReadTableFromDataStore - command to read a table from a datastore
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -45,23 +45,25 @@ class ReadTableFromDataStore(AbstractCommand):
 
     Command Parameters
     * DataStoreID (str, required): The id of a database datastore to read. ${Property} syntax is recognized.
-    * DataStoreTable (str, optional): The name of the database table to read when querying a single table or view. Can
-        use ${Property} notation to insert processor property values. If specified, do not specify Sql or SqlFile.
+    * DataStoreTable (str, optional): The name of the database table to read when querying a single table or view.
+        Can use ${Property} notation to insert processor property values. If specified, do not specify Sql or SqlFile.
     * Sql(str, optional): The SQL string that will be used to query the database, optionally using ${Property} notation
         to insert processor property values. If specified, do not specify DataStoreTable or SqlFile.
-    * SqlFile(str, optional): The name of the file containing an SQL string to execute, optionally using ${Property}
-        notation in the SQL file contents to insert processor property values. If specified, do not specify
-        DataStoreTable or Sql.
-    * Top (str, optional): Indicate how many rows to return. Default: return all rows. Must be a string representing
-        a positive integer. Only enabled if DataStoreTable is enabled.
+    * SqlFile(str, optional): The name of the file containing an SQL string to execute,
+        optionally using ${Property} notation in the SQL file contents to insert processor property values.
+        If specified, do not specify DataStoreTable or Sql.
+    * Top (str, optional): Indicate how many rows to return. Default: return all rows.
+        Must be a string representing a positive integer. Only enabled if DataStoreTable is enabled.
     * IncludeColumns (str, optional): A list of glob-style patterns to determine the DataStore table columns
         to read. Default: * (All columns are read).
     * ExcludeColumns (str, optional): A list of glob-style patterns to determine the DataStore table columns
         to read. Default: '' (No columns are excluded - All columns are read).
-    * TableID (str, required): Identifier to assign to the output table in the GeoProcessor, which allows the table
-        data to be used with other commands. A new table will be created. Can be specified with ${Property}.
-    * IfTableIDExists (str, optional): This parameter determines the action that occurs if the TableID already exists
-        within the GeoProcessor. Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
+    * TableID (str, required): Identifier to assign to the output table in the GeoProcessor,
+        which allows the table data to be used with other commands.
+        A new table will be created. Can be specified with ${Property}.
+    * IfTableIDExists (str, optional):
+        This parameter determines the action that occurs if the TableID already exists within the GeoProcessor.
+        Available options are: `Replace`, `ReplaceAndWarn`, `Warn` and `Fail`
         (Refer to user documentation for detailed description.) Default value is `Replace`.
     """
 
@@ -77,12 +79,12 @@ class ReadTableFromDataStore(AbstractCommand):
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Read a table from a database DataStore."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # DataStoreID
     __parameter_input_metadata['DataStoreID.Description'] = "database datastore to read"
@@ -154,7 +156,7 @@ class ReadTableFromDataStore(AbstractCommand):
     __parameter_input_metadata['IfTableIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
     __parameter_input_metadata['IfTableIDExists.Value.Default'] = "Replace"
 
-    # Choices for IfTableIDExists, used to validate parameter and display in editor
+    # Choices for IfTableIDExists, used to validate parameter and display in editor.
     __choices_IfTableIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
     def __init__(self) -> None:
@@ -162,18 +164,18 @@ class ReadTableFromDataStore(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ReadTableFromDataStore"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -280,7 +282,7 @@ class ReadTableFromDataStore(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, sql_file_abs: str, table_id: str, datastore_id: str) -> bool:
@@ -299,8 +301,8 @@ class ReadTableFromDataStore(AbstractCommand):
              Boolean. If TRUE, the reading process should be run. If FALSE, it should not be run.
        """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = []
 
         # Only run following check if SqlFile method is being used.
@@ -310,8 +312,8 @@ class ReadTableFromDataStore(AbstractCommand):
             should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "SqlFile",
                                                                sql_file_abs, "FAIL"))
 
-        # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
-        # value of the IfTableIDExists parameter.)
+        # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE
+        # (depends on the value of the IfTableIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
@@ -353,7 +355,7 @@ class ReadTableFromDataStore(AbstractCommand):
         # If a SQL statement has been specified, then continue.
         if sql:
 
-            # Run the SQL statement
+            # Run the SQL statement.
             # result_from_sql = ds.connection.execute(sql)
 
             # Get the columns from the sql statement.
@@ -369,16 +371,17 @@ class ReadTableFromDataStore(AbstractCommand):
             # Iterate over all of the available columns in the DataStore table.
             for table_col in table_cols:
 
-                # Try to read the value of the DataStore table column. If it does not throw an error, it is known that
-                # the column was included in the result set of the user-specified SQL statement. Add the column name to
-                # the included_cols list.
+                # Try to read the value of the DataStore table column.
+                # If it does not throw an error, it is known that the column was included in the result set of
+                # the user-specified SQL statement. Add the column name to the included_cols list.
                 # noinspection PyBroadException
                 try:
                     # value = row[table_col]
                     included_cols.append(table_col)
 
                 # If an error is thrown, it is known that the column was not included in the result set of the
-                #  user-specified SQL statement. Do not add the column name to the included_cols list.
+                # user-specified SQL statement.
+                # Do not add the column name to the included_cols list.
                 except Exception:
                     pass
 
@@ -388,7 +391,7 @@ class ReadTableFromDataStore(AbstractCommand):
                 # Create a TableField object and assign the field "name" as the column name.
                 table_field = TableField(included_col)
 
-                # Run the SQL statement
+                # Run the SQL statement.
                 result_from_sql = ds.connection.execute(sql)
 
                 # Iterate over the rows of the DataStore table data.
@@ -415,18 +418,18 @@ class ReadTableFromDataStore(AbstractCommand):
                 elif all(x == data_types[0] for x in data_types):
                     table_field.data_type = data_types[0]
 
-                # All of the data types in the list should be the same value because database columns require that
-                # the data in each column is only one data type. If more than one data type exists in the data_types
-                # list, print an error message.
+                # All the data types in the list should be the same value because database columns require that
+                # the data in each column is only one data type.
+                # If more than one data type exists in the data_types list, print an error message.
                 else:
                     print("There was an error. Not all the data types are the same.")
 
                 # Add the TableField object to the Table attributes.
                 table.add_table_field(table_field)
 
-                # Get the number of row entries in the TableField. This will be the same number for each of the
-                # TableField objects so only the count of the entries in the last TableField object is used in the
-                # remaining code.
+                # Get the number of row entries in the TableField.
+                # This will be the same number for each of the TableField objects so only the count of the entries
+                # in the last TableField object is used in the remaining code.
                 table.entry_count = len(table_field.items)
 
         # If a SQL statement has not been specified, continue.
@@ -441,7 +444,7 @@ class ReadTableFromDataStore(AbstractCommand):
             # Select all fields and rows of the table.
             s = sqlalchemy.sql.select([ds_table_obj])
 
-            # Get a list of all of the column names.
+            # Get a list of all the column names.
             table_cols = [col["name"] for col in q.column_descriptions]
 
             # Sort the list of column names to create create a second list that only includes the columns to read.
@@ -502,9 +505,9 @@ class ReadTableFromDataStore(AbstractCommand):
                 elif all(x == data_types[0] for x in data_types):
                     table_field.data_type = data_types[0]
 
-                # All of the data types in the list should be the same value because database columns require that the
-                # data in each column is only one data type. If more than one data type exists in the data_types list,
-                # print an error message.
+                # All the data types in the list should be the same value because database columns require that the
+                # data in each column is only one data type.
+                # If more than one data type exists in the data_types list, print an error message.
                 else:
                     print("There was an error. Not all the data types are the same.")
 
@@ -538,7 +541,7 @@ class ReadTableFromDataStore(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Read the Table from the DataStore
+        Run the command. Read the Table from the DataStore.
 
         Returns: None.
 
@@ -624,7 +627,7 @@ class ReadTableFromDataStore(AbstractCommand):
                 # Add the table to the GeoProcessor's Tables list.
                 self.command_processor.add_table(table)
 
-            # Raise an exception if an unexpected error occurs during the process
+            # Raise an exception if an unexpected error occurs during the process.
             except Exception:
                 self.warning_count += 1
                 message = "Unexpected error reading Table {} from DataStore ({}).".format(pv_TableID,
@@ -634,7 +637,7 @@ class ReadTableFromDataStore(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

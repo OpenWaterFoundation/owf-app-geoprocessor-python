@@ -1,7 +1,7 @@
 # GeoProcessorListView - class to serve as derived QListView for list of Command
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -39,11 +39,11 @@ class GeoProcessorListView(QtWidgets.QListView):
 
     def __init__(self, parent):
         """
-        Initialize an instance of the view
+        Initialize an instance of the view.
         """
         super(GeoProcessorListView, self).__init__(parent)
 
-        # Set the selection model to ensure that selection of a cell selects the row
+        # Set the selection model to ensure that selection of a cell selects the row.
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent):

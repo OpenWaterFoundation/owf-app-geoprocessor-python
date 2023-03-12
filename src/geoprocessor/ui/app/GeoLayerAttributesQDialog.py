@@ -1,7 +1,7 @@
 # AttributesQDialog - class for attributes dialog
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -35,10 +35,10 @@ class GeoLayerAttributesQDialog(QtWidgets.QDialog):
 
         super(GeoLayerAttributesQDialog, self).__init__()
 
-        # Layer that is being viewed
+        # Layer that is being viewed.
         self.geolayer: VectorGeoLayer = geolayer
 
-        # Initialise the UI
+        # Initialise the UI.
         self.init_ui()
 
     def init_ui(self) -> None:
@@ -58,33 +58,34 @@ class GeoLayerAttributesQDialog(QtWidgets.QDialog):
             icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
             self.setWindowIcon(QtGui.QIcon(icon_path))
 
-            # Create a vertical layout for the map window
+            # Create a vertical layout for the map window.
             attributes_window_layout = QtWidgets.QVBoxLayout(self)
             attributes_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
             attributes_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
 
-            # Get features from vector layer
+            # Get features from vector layer.
             features = qgs_layer.getFeatures()
             num_features = qgs_layer.featureCount()
-            # Get attribute field names
+
+            # Get attribute field names.
             attribute_field_names = self.geolayer.get_attribute_field_names()
 
-            # Create a table for attributes
+            # Create a table for attributes.
             attributes_table = QtWidgets.QTableWidget()
             attributes_window_layout.addWidget(attributes_table)
             attributes_table.setColumnCount(len(attribute_field_names))
             attributes_table.setRowCount(num_features)
 
-            # Set Column Headers
+            # Set column headers.
             for i, attribute_field in enumerate(attribute_field_names):
                 item = QtWidgets.QTableWidgetItem()
                 attributes_table.setHorizontalHeaderItem(i, item)
                 attributes_table.horizontalHeaderItem(i).setText(str(attribute_field))
 
-            # Customize Header Row
+            # Customize header row.
             attributes_table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
 
-            # Retrieve attributes per feature and add them to the table
+            # Retrieve attributes per feature and add them to the table.
             for i, feature in enumerate(features):
                 for j, attribute_field in enumerate(attribute_field_names):
                     attribute = feature[attribute_field]

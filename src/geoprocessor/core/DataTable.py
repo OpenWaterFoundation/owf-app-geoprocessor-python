@@ -1,18 +1,18 @@
-# Table - class to represent a table using general design
+# DataTable - class to represent a table using general design
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -23,7 +23,7 @@ import pandas as pd
 from geoprocessor.core import TableField as TableField
 from geoprocessor.core import TableRecord as TableRecord
 
-from typing import Any
+import typing
 
 
 class DataTable(object):
@@ -32,26 +32,30 @@ class DataTable(object):
     Instances are generically referred to as "Table" in the user interface.
     All DataTable objects contain a list of TableRecord and a list of TableField, similar to Java TSTool design.
 
-    The table_records list contains a list of TableRecord objects. Each TableRecord object contains a list of
-    table items (data objects or None). A TableRecord holds one row of the Table's data.
+    The table_records list contains a list of TableRecord objects.
+    Each TableRecord object contains a list of table items (data objects or None).
+    A TableRecord holds one row of the Table's data.
     Organizing Table data by records is beneficial when deleting and inserting data rows.
     Inserting or deleting columns requires processing all rows.
 
-    The table_fields list holds a list of TableField objects. Each TableField object contains metadata for a table
-    column. A TableField holds one column of the Table's data.
+    The table_fields list holds a list of TableField objects.
+    Each TableField object contains metadata for a table column.
+    A TableField holds one column of the Table's data.
 
     The DataTable data can also be stored in a pandas DataFrame object in order to leverage the pandas library and
-    functionality. Processing Table data by pandas DataFrame is beneficial when attempting complicated analysis
-    processes. The pandas library is designed to accomplish intricate table analytics at a fast processing speed.
+    functionality.
+    Processing Table data by pandas DataFrame is beneficial when attempting complicated analysis processes.
+    The pandas library is designed to accomplish intricate table analytics at a fast processing speed.
     THIS FUNCTIONALITY IS BEING EVALUATED.
 
-    A list of DataTable instances are maintained by the GeoProcessor's self.tables property (type: list). The
-    GeoProcessor's commands retrieve in-memory DataTable instances from the GeoProcessor's self.tables property
-    using the GeoProcessor.get_table() function. New Table instances are added to teh GeoProcessor list using the
-    add_table() function.
+    A list of DataTable instances are maintained by the GeoProcessor's self.tables property (type: list).
+    The GeoProcessor's commands retrieve in-memory DataTable instances from the GeoProcessor's 'self.tables'
+    property using the GeoProcessor.get_table() function.
+    New Table instances are added to teh GeoProcessor list using the add_table() function.
 
-    There are a number of properties associated with each Table. The initialized properties stored within each Table
-    instance.  The table identifier is only set at creation but row and column data can change dynamically.
+    There are a number of properties associated with each Table.
+    The initialized properties stored within each Table instance.
+    The table identifier is only set at creation but row and column data can change dynamically.
     """
 
     def __init__(self, table_id: str) -> None:
@@ -59,28 +63,29 @@ class DataTable(object):
         Initialize the DataTable object.
 
         Args:
-            table_id (str): String that is the Table's reference ID. This ID is used to access the Table from the
-            GeoProcessor for manipulation.
+            table_id (str):
+                String that is the Table's reference ID.
+                This ID is used to access the Table from the GeoProcessor for manipulation.
         """
 
-        # "id" is a string that is the Table's reference ID. This ID is used to access the Table from the GeoProcessor
-        # for manipulation.
+        # "id" is a string that is the Table's reference ID.
+        # This ID is used to access the Table from the GeoProcessor for manipulation.
         self.id: str = table_id
 
-        # TODO smalers 2020-11-13 attempted to use Pandas Data Frame for tables but had issues
+        # TODO smalers 2020-11-13 attempted to use Pandas Data Frame for tables but had issues:
         # - previous developer could not resolve how to handle missing data values
         # - for now use a design similar to TSTool Java
         # - if Pandas object added, refactor the methods that access the table but hopefully functionality is retained
-        # "pandas_df" is a Pandas Data Frame object created by the pandas library. All manipulations are performed on
-        # the Table's pandas data frame.
+        # "pandas_df" is a Pandas Data Frame object created by the pandas library.
+        # All manipulations are performed on the Table's pandas data frame.
         # self.pandas_df = None
 
-        # "table_fields" is a list that holds the Table's TableField objects. A TableField object represents one
-        # column of the Table.
+        # "table_fields" is a list that holds the Table's TableField objects.
+        # A TableField object represents one column of the Table.
         self.table_fields: [TableField] = []
 
-        # "table_records" is a list that holds the Table's TableRecords objects. TableRecord object represents one
-        # row of the Table.
+        # "table_records" is a list that holds the Table's TableRecords objects.
+        # TableRecord object represents one row of the Table.
         self.table_records: [TableRecord] = []
 
     def add_field(self, table_field: TableField) -> None:
@@ -110,6 +115,41 @@ class DataTable(object):
         # Add the TableRecord object to the Table's "table_records" list.
         self.table_records.append(table_record)
 
+    def get_column_index(self, column_name: str) -> int:
+        """
+        Return the column index (0+) for a column name.
+
+        Args:
+            column_name (str): name of the column of interest
+
+        Returns:
+            index (0+) of the column in the table
+        """
+        return self.get_field_names().index(column_name)
+
+    def get_column_values_as_list(self, column_name: str) -> typing.List[typing.Any]:
+        """
+        Return the values in the requested column.
+
+        Args:
+            column_name (str): name of the column of interest
+
+        Returns:
+            list of values from the column
+        """
+
+        # First get the column index:
+        # - this will throw an error if not found
+        column_index = self.get_column_index(column_name)
+
+        # Loop through the table and extract the values.
+        values = []
+
+        for record in self.table_records:
+            values.append(record.get_field_value(column_index))
+
+        return values
+
     def get_field_data_type(self, index: int) -> int:
         """
         Return the field data type given an index.
@@ -125,7 +165,7 @@ class DataTable(object):
         else:
             return self.table_fields[index].data_type
 
-    def get_field_index(self, field_name: str):
+    def get_field_index(self, field_name: str) -> int:
         """
         Return the field index (0+) corresponding to the field name.
 
@@ -141,7 +181,20 @@ class DataTable(object):
 
         return -1
 
-    def get_field_value(self, record_index: int, field_index: int) -> Any:
+    def get_field_names(self) -> typing.List[str]:
+        """
+        Return the table column (field) names.
+
+        Returns:
+            A list of the table column(field) names in the order of the table.
+        """
+        field_names = []
+        for table_field in self.table_fields:
+            field_names.append(table_field.name)
+
+        return field_names
+
+    def get_field_value(self, record_index: int, field_index: int) -> typing.Any:
         """
         Return the value for a record and column.
 
@@ -178,7 +231,22 @@ class DataTable(object):
         """
         return len(self.table_records)
 
-    def get_records(self, columns: [str] or [int], column_values: [Any]) -> [TableRecord]:
+    def get_record(self, record_index: int = -1 ) -> TableRecord or None:
+        """
+        Return the TableRecord for the requested index.
+
+        Args:
+            record_index(int) table row index (0+_
+
+        Returns:
+            The TableRecord for the requested index or None if out of range.
+        """
+        if record_index >= 0:
+            return self.table_records[record_index]
+        else:
+            return None
+
+    def get_records(self, columns: [str] or [int], column_values: [typing.Any]) -> [TableRecord]:
         """
         Return records that match the values in specified columns.
 
@@ -193,7 +261,7 @@ class DataTable(object):
         if len(columns) == 0:
             return records
         elif isinstance(columns[0], str):
-            # Convert column names to column numbers and then call recursively
+            # Convert column names to column numbers and then call recursively.
             column_numbers = []
             column_names = columns
             for column_name in column_names:
@@ -213,28 +281,28 @@ class DataTable(object):
                 # - column_contents - is what is in the table in that column
                 # - column_value - is the value being requested
                 for icol, column_value in enumerate(column_values):
-                    # In some cases below, create a string version of the column value for comparisons.
+                    # In some cases below, create a string version of the column value for comparisons:
                     # - TODO smalers 2020-11-15 does this do bad things for large floating point numbers
                     #   such as use scientific notation?
                     column_contents = record.get_field_value(column_numbers[icol])
                     if column_contents is None:
-                        # Only match if both are None
+                        # Only match if both are None.
                         if column_value is None:
                             match_count += 1
                     elif self.get_field_data_type(column_numbers[icol]) == str:
-                        # Do case-sensitive comparison
-                        # - TODO smalers 2020-11-14 evaluate whether to do case-insensitive comparision
+                        # Do case-sensitive comparison:
+                        # - TODO smalers 2020-11-14 evaluate whether to do case-insensitive comparison
                         if isinstance(column_value,str):
                             if column_value == column_contents:
                                 match_count += 1
                         else:
-                            # Convert the value to string
+                            # Convert the value to string.
                             column_value_str = "{}".format(column_value)
                             if column_value_str == column_contents:
                                 match_count += 1
                     else:
-                        # Not a string so use == to compare
-                        # - works well for int and bool but flaating point may have roundoff
+                        # Not a string so use == to compare:
+                        # - works well for int and bool but floating point may have roundoff
                         if column_value == column_contents:
                             match_count += 1
                 if match_count == len(column_values):
@@ -245,7 +313,7 @@ class DataTable(object):
         else:
             raise RuntimeError("column_names type is not str or int.")
 
-    def x_create_df(self):
+    def create_df(self):
         """
         Create/recreate a pandas DataFrame from the Table's fields.
 
@@ -266,7 +334,7 @@ class DataTable(object):
             # Convert the dictionary of Table fields into a pandas DataFrame. Add the DataFrame to the Table attribute.
             self.pandas_df = pd.DataFrame(data=col_entries_dic)
 
-    def x_print_df(self):
+    def print_df(self):
         """
         Print the Table's pandas DataFrame to the console.
 
@@ -278,7 +346,7 @@ class DataTable(object):
         print(self.pandas_df)
         print("\n---------------\n")
 
-    def x_print_fields(self):
+    def print_fields(self):
         """
         Print the Table's TableFields to the console.
 
@@ -291,7 +359,7 @@ class DataTable(object):
             print(table_field.items)
         print("\n---------------\n")
 
-    def x_print_records(self):
+    def print_records(self):
         """
         Print the Table's TableRecords to the console.
 
@@ -303,17 +371,3 @@ class DataTable(object):
         for table_record in self.table_records:
             print(table_record.items)
         print("\n---------------\n")
-
-    def x_return_column_index(self, column_name):
-
-        return self.return_fieldnames().index(column_name)
-
-    def x_return_fieldnames(self):
-
-        fieldnames = []
-        for table_field in self.table_fields:
-            fieldnames.append(table_field.name)
-
-        return fieldnames
-
-

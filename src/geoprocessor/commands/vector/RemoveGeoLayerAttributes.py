@@ -1,18 +1,18 @@
 # RemoveGeoLayerAttributes - command to remove GeoLayer attributes
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -40,7 +40,8 @@ class RemoveGeoLayerAttributes(AbstractCommand):
 
     * The names of the attributes to remove are specified.
 
-    Command Parameters
+    Command Parameters:
+
     * GeoLayerID (str, required): the ID of the input GeoLayer, the layer to remove the attribute from
     * AttributeNames (str, required): the names of the attributes to remove. Strings separated by commas. Attribute
         names must be valid attribute fields to the GeoLayer. This parameter is case specific.
@@ -51,12 +52,12 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         CommandParameterMetadata("GeoLayerID", type("")),
         CommandParameterMetadata("AttributeNames", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Removes one or more attributes from a GeoLayer."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
@@ -75,18 +76,18 @@ class RemoveGeoLayerAttributes(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "RemoveGeoLayerAttributes"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -125,7 +126,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id: str, attribute_names: [str]) -> bool:
@@ -167,7 +168,8 @@ class RemoveGeoLayerAttributes(AbstractCommand):
             # Get the existing attribute names of the input GeoLayer.
             list_of_existing_attributes = input_geolayer.get_attribute_field_names()
 
-            # Create a list of invalid input attribute names. An invalid attribute name is an input attribute name
+            # Create a list of invalid input attribute names.
+            # An invalid attribute name is an input attribute name
             # that is not matching any of the existing attribute names of the GeoLayer.
             invalid_attrs = (attr_name for attr_name in attribute_names if attr_name not in list_of_existing_attributes)
 
@@ -183,8 +185,8 @@ class RemoveGeoLayerAttributes(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Return the Boolean to determine if the attribute should be removed. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
+        # Return the Boolean to determine if the attribute should be removed. If TRUE, all checks passed.
+        # If FALSE, one or many checks failed.
         return remove_attribute
 
     def run_command(self) -> None:
@@ -223,7 +225,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
                     input_geolayer.remove_attribute(attribute_name)
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
 
                 self.warning_count += 1
                 message = "Unexpected error removing attribute(s) ({}) from GeoLayer {}.".format(pv_AttributeNames,
@@ -233,7 +235,7 @@ class RemoveGeoLayerAttributes(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

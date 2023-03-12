@@ -1,18 +1,18 @@
 # ReadGeoLayersFromFGDB - command to read GeoLayers from a file geodatabase
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -50,8 +50,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     """
     Reads the GeoLayers (feature classes) within a file geodatabase (FGDB).
 
-    This command reads the GeoLayers from a file geodatabase and creates GeoLayer objects within the
-    geoprocessor. The GeoLayers can then be accessed in the geoprocessor by their identifier and further processed.
+    This command reads the GeoLayers from a file geodatabase and creates GeoLayer objects within the geoprocessor.
+    The GeoLayers can then be accessed in the geoprocessor by their identifier and further processed.
 
     GeoLayers are stored on a computer or are available for download as a spatial data file (GeoJSON, shapefile,
     feature class in a file geodatabase, etc.). Each GeoLayer has one feature type (point, line, polygon, etc.) and
@@ -97,12 +97,12 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Read one or more GeoLayers from an Esri File Geodatabase."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # InputFolder
     __parameter_input_metadata['InputFolder.Description'] = "file geodatabase to read"
@@ -112,7 +112,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
     __parameter_input_metadata['InputFolder.FileSelector.Type'] = "Read"
     __parameter_input_metadata['InputFolder.FileSelector.SelectFolder'] = True
     __parameter_input_metadata['InputFolder.FileSelector.Title'] = "Select the file geodatabase folder"
-    # Filters only seem to work on files, not folders
+    # Filters only seem to work on files, not folders.
     # __parameter_input_metadata['InputFolder.FileSelector.Filters'] = \
     #    ["Geodatabase (*.gdb)", "All folders (*.*)"]
     # ReadOnlyOneFeatureClass
@@ -190,21 +190,21 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
     def __init__(self) -> None:
         """
-        Initialize the command
+        Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ReadGeoLayersFromFGDB"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -276,13 +276,13 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
+        # Properties - verify that the properties can be parsed.
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
         try:
             command_util.parse_properties_from_parameter_string(pv_Properties)
         except ValueError as e:
-            # Use the exception
+            # Use the exception.
             message = str(e)
             recommendation = "Check the Properties string format."
             warning_message += "\n" + message
@@ -300,7 +300,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             raise CommandParameterError(warning_message)
 
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
@@ -335,8 +335,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
              should not be read.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input spatial data folder is not a valid file path, raise a FAILURE.
@@ -375,12 +375,12 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 should not be read.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
-        # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
-        # on the value of the IfGeoLayerIDExists parameter.)
+        # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+        # (depends on the value of the IfGeoLayerIDExists parameter).
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
 
         # If only one geolayer is being read from the file geodatabase, continue.
@@ -398,9 +398,9 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Read the feature classes within a file geodatabase. For each desired feature class (can be
-        specified by the Subset_Pattern parameter), create a GeoLayer object, and add to the GeoProcessor's geolayer
-        list.
+        Run the command. Read the feature classes within a file geodatabase. For each desired feature class
+        (can be specified by the Subset_Pattern parameter), create a GeoLayer object,
+        and add to the GeoProcessor's geolayer list.
 
         Returns:
             None.
@@ -411,7 +411,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the required and optional parameter values
+        # Obtain the required and optional parameter values.
         # noinspection PyPep8Naming
         pv_InputFolder = self.get_parameter_value("InputFolder")
         # noinspection PyPep8Naming
@@ -449,7 +449,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
         # noinspection PyPep8Naming
         pv_ReadOnlyOneFeatureClass = string_util.str_to_bool(pv_ReadOnlyOneFeatureClass)
 
-        # Convert the InputFolder parameter value relative path to an absolute path
+        # Convert the InputFolder parameter value relative path to an absolute path.
         sd_folder_abs = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_InputFolder, self)))
@@ -462,8 +462,8 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                 if self.check_runtime_data_geolayer(pv_GeoLayerID, True, pv_FeatureClass, sd_folder_abs):
                     # noinspection PyBroadException
                     try:
-                        # Get the full pathname to the feature class
-                        # TODO egiles 2018-01-04 Need to research how to properly document feature class source path
+                        # Get the full pathname to the feature class.
+                        # TODO egiles 2018-01-04 Need to research how to properly document feature class source path.
                         input_folder_absolute = os.path.join(sd_folder_abs, str(pv_FeatureClass))
 
                         # Create a QgsVectorLayer object from the feature class.
@@ -471,7 +471,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                                                             pv_FeatureClass,
                                                                                             query=pv_Query)
 
-                        # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                        # Create a GeoLayer and add it to the geoprocessor's GeoLayers list:
                         # - TODO smalers 2020-08-23 is built in OpenFileGDB used by default in underlying
                         #   QgsVectorLayer?
                         new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
@@ -482,15 +482,15 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                       input_path_full=input_folder_absolute,
                                                       input_path=pv_InputFolder)
 
-                        # Set the properties as additional properties (don't just reset the properties dictionary)
+                        # Set the properties as additional properties (don't just reset the property dictionary).
                         properties = command_util.parse_properties_from_parameter_string(pv_Properties)
                         new_geolayer.set_properties(properties)
-                        # Set the source type
+                        # Set the source type.
 
                         self.command_processor.add_geolayer(new_geolayer)
 
                     except Exception:
-                        # Raise an exception if an unexpected error occurs during the process
+                        # Raise an exception if an unexpected error occurs during the process.
                         self.warning_count += 1
                         message = "Unexpected error reading feature class ({}) from file geodatabase ({}).".format(
                             pv_FeatureClass, sd_folder_abs)
@@ -503,7 +503,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
             else:
                 # If configured to read multiple Feature Classes into multiple GeoLayers.
 
-                # Get a list of all of the feature classes in the file geodatabase.
+                # Get a list of all the feature classes in the file geodatabase.
                 fc_list = ReadGeoLayersFromFGDB.__return_a_list_of_fc(sd_folder_abs)
 
                 # Filter the fc_list to only include feature classes that meet the Subset Pattern configuration.
@@ -522,15 +522,15 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                     if self.check_runtime_data_geolayer(geolayer_id, False):
                         # noinspection PyBroadException
                         try:
-                            # Get the full pathname to the feature class
-                            # TODO egiles 2018-01-04 Need to research how to properly document feature class source path
+                            # Get the full pathname to the feature class.
+                            # TODO egiles 2018-01-04 Need to research how to properly document feature class source path.
                             input_file_absolute = os.path.join(sd_folder_abs, str(feature_class))
 
                             # Create a QgsVectorLayer object from the feature class.
                             qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_feature_class(sd_folder_abs,
                                                                                                 feature_class)
 
-                            # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                            # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
                             geolayer_obj = VectorGeoLayer(geolayer_id=geolayer_id,
                                                           qgs_vector_layer=qgs_vector_layer,
                                                           name=pv_Name,
@@ -541,7 +541,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                             self.command_processor.add_geolayer(geolayer_obj)
 
                         except Exception:
-                            # Raise an exception if an unexpected error occurs during the process
+                            # Raise an exception if an unexpected error occurs during the process.
 
                             self.warning_count += 1
                             message = "Unexpected error reading feature class ({}) from file geodatabase ({}).".format(
@@ -552,7 +552,7 @@ class ReadGeoLayersFromFGDB(AbstractCommand):
                                                            CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                             recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

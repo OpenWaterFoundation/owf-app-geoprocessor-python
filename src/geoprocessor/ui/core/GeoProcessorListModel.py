@@ -1,7 +1,7 @@
 # GeoProcessorListModel - data model for the GeoProcessor command list
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -37,19 +37,19 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
 
     def __init__(self, gp, *args, **kwargs):
         """
-        Initialize an instance of the model
+        Initialize an instance of the model.
         """
         super(GeoProcessorListModel, self).__init__(*args, **kwargs)
         self.gp = gp
 
-        # TODO smalers 2020-01-19 data model should not need any knowledge of the UI component,
-        # use a listener to notify of changes
+        # TODO smalers 2020-01-19 data model should not need any knowledge of the UI component:
+        # - use a listener to notify of changes
         # self.commands_CommandsListWidget = commands_CommandListWidget
 
-        # Listeners for model changes
+        # Listeners for model changes.
         self.model_listeners = []
 
-        # Add the command list widget as a listener to be notified of changes made in this class
+        # Add the command list widget as a listener to be notified of changes made in this class:
         # - this is mainly so that the numbered list on left and gutter on right can be adjusted
         # self.command_list_view.add_model_listener(self)
 
@@ -91,8 +91,7 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
 
     def clear_all_commands(self) -> None:
         """
-        Called when 'Clear Commands' button is pressed in
-        CommandListWidget. Removes all commands from GeoProcessor.
+        Called when 'Clear Commands' button is pressed in CommandListWidget. Removes all commands from GeoProcessor.
 
         Returns:
             None
@@ -107,13 +106,13 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         logger.info("Inside clear_all_commands, removing commands from table model delete_row=" +
                     str(delete_row) + " delete_count=" +
                     str(delete_count) + " delete_row_last=" + str(delete_row_last))
-        # Tell the list model which rows will be removed
+        # Tell the list model which rows will be removed.
         self.beginRemoveRows(QModelIndex(), delete_row, delete_row_last)
-        # Remove them from the data
+        # Remove them from the data.
         self.gp.commands.clear()
-        # Tell the list model that they have been removed - this will update the command list
+        # Tell the list model that they have been removed.  This will update the command list.
         self.endRemoveRows()
-        # Tell other listeners that the commands have been removed
+        # Tell other listeners that the commands have been removed.
         self.notify_listeners_about_clear_all_commands()
 
     def clear_selected_commands(self, selected_indices: [int] or [QModelIndex]) -> None:
@@ -128,35 +127,35 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         Returns:
             None
         """
-        # Make sure that selected_indices is [int]
+        # Make sure that selected_indices is [int].
         for i in range(len(selected_indices)):
             if isinstance(selected_indices[i], QModelIndex):
                 selected_indices[i] = selected_indices[i].row()
-            # Else the list already contains integers
+            # Else the list already contains integers.
 
         size = len(selected_indices)
 
-        # Figure out if the indices are sequential, can remove the rows with one call
+        # Figure out if the indices are sequential, can remove the rows with one call:
         # - TODO smalers 2020-01-19 best performance might be if groups of sequential
-        rows_sequential = True  # Default for short list
+        rows_sequential = True  # Default for short list.
         index_prev = -1
         for i in range(size):
             index_i = selected_indices[i]
             if index_prev < 0:
-                # Should only occur for the first value
+                # Should only occur for the first value.
                 index_prev = index_i
                 continue
             else:
                 if index_i != (index_prev + 1):
-                    # Rows are not sequential
+                    # Rows are not sequential.
                     rows_sequential = False
                     break
                 else:
-                    # Rows are sequential - save the index as previous for the next loop
+                    # Rows are sequential - save the index as previous for the next loop.
                     index_prev = index_i
 
         if rows_sequential:
-            # Can call the model's built-in method
+            # Can call the model's built-in method.
             self.removeRows(selected_indices[0], len(selected_indices), QtCore.QModelIndex())
         else:
             # Remove in reverse order so that commands are removed from the end of the list to the front,
@@ -166,8 +165,8 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             for i in reversed(range(len(selected_indices))):
                 self.removeRows(selected_indices[i], 1, model_index)
 
-        # Tell other listeners that the commands have been removed
-        # - this is done once so hopefully not a bit performance hit
+        # Tell other listeners that the commands have been removed:
+        # - this is done once so hopefully not a big performance hit
         self.notify_listeners_about_clear_selected_commands(selected_indices)
 
     # def data(self, index: QtCore.QModelIndex, role: Qt.DisplayRole):
@@ -187,17 +186,16 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             logger = logging.getLogger(__name__)
             logger.info("Inside data, index.row()=" + str(index.row()))
         if role == Qt.DisplayRole:
-            # Return the command as text to display
+            # Return the command as text to display.
             command = self.gp.commands[index.row()]
-            # Return the text to display, with indentation
+            # Return the text to display, with indentation.
             return str(command)
 
     def decrease_indent_command_string(self, selected_indices: [int]) -> None:
         """
         Update the GeoProcessor command list to remove white space in front of the
         given command string in order to decrease the indent.
-        Then update the command list widget to reflect in the user interface
-        changes made in GeoProcessor.
+        Then update the command list widget to reflect in the user interface changes made in GeoProcessor.
 
         Args:
             selected_indices: A list of integers containing the index of the
@@ -210,13 +208,13 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             return
         for i in selected_indices:
             self.gp.decrease_indent_command_string(i)
-        # Update the CommandListWidget to reflect decreased indent commands
+        # Update the CommandListWidget to reflect decreased indent commands.
         # self.update_command_list_ui()
-        # Emit signal to trigger repaint
+        # Emit signal to trigger repaint.
         top_left = self.createIndex(0, 0)
         bottom_right = self.createIndex((len(self.gp) - 1), 0)
         self.dataChanged.emit(top_left, bottom_right)
-        # Notify listeners
+        # Notify listeners.
         self.notify_listeners_about_indent_change()
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlags:
@@ -249,8 +247,7 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         """
         Update the GeoProcessor command list to add white space in the front of the
         given command string in order to increase the indent.
-        Then update the command list widget to reflect changes
-        made in GeoProcessor.
+        Then update the command list widget to reflect changes made in GeoProcessor.
 
         Args:
             selected_indices: A list of integers representing the index of the
@@ -263,13 +260,13 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             return
         for i in selected_indices:
             self.gp.indent_command_string(i)
-        # Update the CommandListWidget UI to reflect indented commands
+        # Update the CommandListWidget UI to reflect indented commands.
         # self.update_command_list_ui()
-        # Emit signal to trigger repaint
+        # Emit signal to trigger repaint.
         top_left = self.createIndex(0, 0)
         bottom_right = self.createIndex((len(self.gp) - 1), 0)
         self.dataChanged.emit(top_left, bottom_right)
-        # Notify listeners
+        # Notify listeners.
         self.notify_listeners_about_indent_change()
 
     def insert_command_at_index(self, command: AbstractCommand, index: int) -> None:
@@ -284,10 +281,10 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         Returns:
             None
         """
-        # Insert the command in the model
+        # Insert the command in the model.
         commands = [command]
         self.insert_commands_at_index(commands, index)
-        # Don't notify listeners because called method above will do it
+        # Don't notify listeners because called method above will do it.
 
     def insert_commands_at_index(self, commands: [AbstractCommand], insert_index: int) -> None:
         """
@@ -302,7 +299,7 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             None
         """
         logger = logging.getLogger(__name__)
-        # Insert the command in the model
+        # Insert the command in the model.
         insert_row = insert_index
         insert_count = len(commands)
         insert_row_last = insert_row + insert_count - 1
@@ -317,7 +314,7 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             insert_index += 1
         self.endInsertRows()
 
-        # Notify listeners
+        # Notify listeners.
         self.notify_listeners_about_insert_commands_at_index(insert_index)
 
     def insertRows(self, row: int, count: int, parent: QModelIndex = ...) -> bool:
@@ -336,13 +333,13 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
 
         """
         # See:  https://www.riverbankcomputing.com/pipermail/pyqt/2015-December/036666.html
-        # This only inserts blank data in the view object
-        # First indicate rows to be inserted
+        # This only inserts blank data in the view object.
+        # First indicate rows to be inserted.
         logger = logging.getLogger(__name__)
         last_row = row + count - 1
         logger.info("Inside insertRows, row=" + str(row) + " count=" + str(count) + " last_row=" + str(last_row))
         self.beginInsertRows(QModelIndex(), row, last_row)
-        # The following causes a call to data for for inserted/visible rows
+        # The following causes a call to data for inserted/visible rows.
         self.endInsertRows()
         return True
 
@@ -410,7 +407,7 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             None.
         """
         logger = logging.getLogger(__name__)
-        # If the commands file currently contains commands, remove in the UI and commands
+        # If the commands file currently contains commands, remove in the UI and commands:
         # - this will trigger an initial notification
         self.clear_all_commands()
         # The Qt convention is to notify the model base class how many items will be inserted, then insert.
@@ -422,12 +419,12 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         logger.info("Inserting commands insert_row=" + str(insert_row) + " insert_count=" +
                     str(insert_count) + " insert_row_last=" + str(insert_row_last))
         self.beginInsertRows(QtCore.QModelIndex(), insert_row, insert_row_last)
-        # Now read and instantiate the commands in the GeoProcessor, and hence this table model
+        # Now read and instantiate the commands in the GeoProcessor, and hence this table model.
         self.gp.read_command_file(cmd_filepath)
-        # Update the list model
+        # Update the list model.
         self.endInsertRows()
 
-        # Notify listeners that the command file was read
+        # Notify listeners that the command file was read.
         self.notify_listeners_about_read_command_file(cmd_filepath)
 
     def removeRows(self, row: int, count: int, parent: QModelIndex = ...) -> bool:
@@ -445,17 +442,17 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
         if debug:
             logger = logging.getLogger(__name__)
         if count == 0:
-            # No need to do anything
+            # No need to do anything.
             return True
-        last_row = row + count - 1  # 0-index
-        # Tell Qt list which rows will be removed
+        last_row = row + count - 1  # 0-index.
+        # Tell Qt list which rows will be removed.
         self.beginRemoveRows(QModelIndex(), row, last_row)
-        # Remove the rows from the end so that the positions do not get out of sync
+        # Remove the rows from the end so that the positions do not get out of sync.
         for i in reversed(range(row, (row + count), 1)):
             if debug:
                 logger.debug("Removing command [" + str(i) + "]")
             del self.gp.commands[i]
-        # Tell Qt list which rows have been removed
+        # Tell Qt list which rows have been removed.
         self.endRemoveRows()
         return True
 
@@ -475,5 +472,5 @@ class GeoProcessorListModel(QtCore.QAbstractListModel):
             pass
         return len(self.gp.commands)
 
-    # TODO smalers 2020-01-20 Not implemented because data editing occurs through the interactions with GeoProcessor
+    # TODO smalers 2020-01-20 Not implemented because data editing occurs through the interactions with GeoProcessor.
     # def setData(self, index: QModelIndex, value: typing.Any, role: int = ...) -> bool:

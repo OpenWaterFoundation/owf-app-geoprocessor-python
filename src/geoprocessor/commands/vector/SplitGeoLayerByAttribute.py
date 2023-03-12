@@ -1,18 +1,18 @@
 # SplitGeoLayerByAttribute - command to split a GeoLayer into multiple GeoLayers based on an attribute's values
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -70,7 +70,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         CommandParameterMetadata("TemporaryFolder", type(""))]
     # CommandParameterMetadata("RemoveTemporaryFiles", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = \
         "Split an input GeoLayer into one or more new GeoLayers by unique attribute value.\n" \
@@ -79,7 +79,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         'The attribute values being processed can be filtered to limit the number of output layers.'
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
 
     # InputGeoLayerID
@@ -141,7 +141,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
     __parameter_input_metadata['TemporaryFolder.FileSelector.SelectFolder'] = True
     __parameter_input_metadata['TemporaryFolder.FileSelector.Type'] = "Write"
 
-    # TODO smalers 2020-07-07 evaluate whether to enable the parameter
+    # TODO smalers 2020-07-07 evaluate whether to enable the parameter:
     #  - by default leave temporary files so they can be reviewed.
     # RemoveTemporaryFiles
     # self.parameter_input_metadata['RemoveTemporaryFiles.Description'] = "remove temporary files"
@@ -157,18 +157,18 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "SplitGeoLayerByAttribute"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -220,7 +220,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_geolayer_id: str, attribute_name: str, output_geolayer_ids: [str]) -> bool:
@@ -239,8 +239,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         """
 
         logger = logging.getLogger(__name__)
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
@@ -269,8 +269,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             logger.info('Found attribute "' + attribute_name + '" in input layer attributes')
 
-            # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
-            # on the value of the IfGeoLayerIDExists parameter.)
+            # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+            # (depends on the value of the IfGeoLayerIDExists parameter).
             should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
                                                                output_geolayer_ids, None))
 
@@ -288,14 +288,14 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                               exclude_attribute_values: [str]) -> bool:
         """
         Determine whether to include an attribute based on the include and exclude lists.
-        
+
         Args:
             attribute_value (str) - the attribute value to check, as a string
             include_attribute_values ([str]) - the list of attribute values to include
             exclude_attribute_values ([str]) - the list of attribute values to exclude
         """
         include = False
-        # First see if in the include list
+        # First see if in the include list.
         if len(include_attribute_values) == 0:
             # Default is to include all.
             include = True
@@ -305,7 +305,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 if attribute_value == include_attribute_value:
                     include = True
                     break
-        # Next see if in the exclude list
+        # Next see if in the exclude list.
         for exclude_attribute_value in exclude_attribute_values:
             if attribute_value == exclude_attribute_value:
                 include = False
@@ -314,8 +314,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Split the input GeoLayer by the selected Attribute. Create new GeoLayers based on
-        unique attribute values.
+        Run the command. Split the input GeoLayer by the selected Attribute.
+        Create new GeoLayers based on unique attribute values.
 
         Returns:
             None.
@@ -328,7 +328,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
 
         # Obtain the parameter values.
 
-        # Get the 'Input GeoLayerID' parameter
+        # Get the 'Input GeoLayerID' parameter.
         # noinspection PyPep8Naming
         pv_InputGeoLayerID = self.get_parameter_value("InputGeoLayerID")
         # noinspection PyPep8Naming
@@ -350,9 +350,9 @@ class SplitGeoLayerByAttribute(AbstractCommand):
         # noinspection PyPep8Naming
         pv_TemporaryFolder = self.get_parameter_value("TemporaryFolder")
 
-        # Get the temporary folder based on TemporaryFolder parameter
+        # Get the temporary folder based on TemporaryFolder parameter.
         if pv_TemporaryFolder is not None and pv_TemporaryFolder != "":
-            # Convert the TemporaryFolder parameter value to an absolute path and expand for ${Property} syntax
+            # Convert the TemporaryFolder parameter value to an absolute path and expand for ${Property} syntax.
             temp_folder_absolute = io_util.verify_path_for_os(
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                          self.command_processor.expand_parameter_value(
@@ -384,7 +384,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
             # noinspection PyPep8Naming
             pv_OutputGeoLayerIDs = None
 
-        # Create logger
+        # Create logger.
         logger = logging.getLogger(__name__)
 
         # Run the checks on the parameter values. Only continue if the checks passed.
@@ -393,9 +393,9 @@ class SplitGeoLayerByAttribute(AbstractCommand):
             try:
                 # Get the Input GeoLayer.
 
-                # Get the GeoLayer which will be QgsVectorLayer
+                # Get the GeoLayer which will be QgsVectorLayer.
                 # https://qgis.org/api/classQgsVectorLayer.html
-                # Passes a GeoLayerID to GeoProcessor to return the GeoLayer that matches the ID
+                # Passes a GeoLayerID to GeoProcessor to return the GeoLayer that matches the ID.
                 input_geolayer = self.command_processor.get_geolayer(pv_InputGeoLayerID)
 
                 logger.info('Input GeoLayer [GeoLayerID: ' + pv_InputGeoLayerID + '] has been found.')
@@ -407,7 +407,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # 2.8/en/docs/user_manual/processing_algs/qgis/vector_general_tools.html#split-vector-layer
                 # TODO smalers 2020-07-07 the QGIS documentation is bad.
 
-                # Assign parameter to pass into runAlgorithm for splitting the GeoLayer
+                # Assign parameter to pass into runAlgorithm for splitting the GeoLayer:
                 # INPUT = input GeoLayer (QgsVectorLayer)
                 # FIELD = Attribute name to split by
                 # OUTPUT = path to write output GeoLayers to this creates a list of files following the naming
@@ -430,12 +430,12 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                                                         feedback_handler=feedback_handler)
                 self.warning_count += feedback_handler.get_warning_count()
 
-                # Get the list of features from the input GeoLayer. This returns all attributes for each feature listed.
+                # Get the list of features from the input GeoLayer. This returns all attributes for each feature listed:
                 # - this is used to determine the attribute values used below to create layers
                 # - returns a QgsFeatureIterator
                 features = input_geolayer.qgs_layer.getFeatures()
                 num_features = input_geolayer.qgs_layer.featureCount()
-                # TODO smalers 2020-07-07 Make sure that the number of output GeoLayerID match the features to include
+                # TODO smalers 2020-07-07 Make sure that the number of output GeoLayerID match the features to include.
                 # for i, feature in enumerate(features):
                 #    #attribute = feature[attribute_name]
 
@@ -445,9 +445,9 @@ class SplitGeoLayerByAttribute(AbstractCommand):
 
                 # Parse through the list of features in the input layer and also enumerate to get the index which
                 # is used for accessing which OutputGeoLayerIDs to name each GeoLayer.
-                # TODO jurentie 01/26/2019 need to decide what to do with a default OutputGeoLayerIDs
+                # TODO jurentie 01/26/2019 need to decide what to do with a default OutputGeoLayerIDs:
                 # 1. Get the attribute of interest from each feature
-                # TODO jurentie 01/26/2019 need to handle parsing out unique attributes only...
+                # TODO jurentie 01/26/2019 need to handle parsing out unique attributes only:
                 # 2. Create the path name using the output folder specified in alg_parameters and passed in to
                 #    split_output, and the naming convention defaults for qgis:splitvectorlayer
                 # 3. Construct a QgsVectorLayer()
@@ -470,8 +470,8 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 #       is set to `MEMORY`.
                 # 5. Add the new GeoLayer to the GeoProcessor
 
-                # Get the list of attributes to process
-                # - sort the the attributes so that when added as GeoLayer they are easier to review
+                # Get the list of attributes to process:
+                # - sort the attributes so that when added as GeoLayer they are easier to review
                 attributes_to_process = []
                 for i, feature in enumerate(features):
                     attribute = feature[attribute_name]
@@ -486,15 +486,15 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                             if attribute_str == attribute_to_process:
                                 found = True
                                 break
-                        # Indicate that attribute has been processed
+                        # Indicate that attribute has been processed.
                         if not found:
-                            # Have a new attribute to process
+                            # Have a new attribute to process.
                             attributes_to_process.append(attribute_str)
 
-                # Sort the attributes
+                # Sort the attributes.
                 attributes_to_process.sort()
 
-                # Now process the attributes that are to be included
+                # Now process the attributes that are to be included.
                 for attribute_str in attributes_to_process:
                     # The attribute was not previously processed so create the layer from the file.
                     logger.info("Attribute has not previously been processed... so read the split file.")
@@ -517,30 +517,29 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                 # TODO smalers 2020-07-12 need to enable removing the temporary split files,
                 # but workflow will neeed to copy or read/write to another location.
                 # @jurentie
-                # remove files if specified in parameters
-                # TODO @jurentie figure out how to delete files after using them...
+                # Remove files if specified in parameters.
+                # TODO @jurentie figure out how to delete files after using them.
                 # remove_files = self.get_parameter_value("RemoveTemporaryFiles")
                 # files = glob.glob(temp_directory + "/*")
                 # print(files)
                 # if remove_files == None:
-                #     # Remove all files from directory
+                #     # Remove all files from directory.
                 #     for f in files:
                 #         os.remove(f)
                 #     os.rmdir(temp_directory)
 
                 # In QGIS 2 the clipped_output["OUTPUT"] returned the full file pathname of the memory output layer
-                # (saved in a QGIS temporary folder)
+                # (saved in a QGIS temporary folder).
                 # qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(clipped_output["OUTPUT"])
                 # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerID, qgs_vector_layer, GeoLayer.SOURCE_MEMORY)
-                # Get this list of ID's, name can be changed later to make more sense
-                # in a dynamic fashion
+                # Get this list of ID's, name can be changed later to make more sense in a dynamic fashion.
 
-                # In QGIS 3 the clipped_output["OUTPUT"] returns the QGS vector layer object
+                # In QGIS 3 the clipped_output["OUTPUT"] returns the QGS vector layer object.
                 # new_geolayer = VectorGeoLayer(pv_OutputGeoLayerIDs, split_output["OUTPUT"], GeoLayer.SOURCE_MEMORY)
                 # self.command_processor.add_geolayer(new_geolayer)
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error splitting GeoLayer {}.".format(pv_InputGeoLayerID)
                 recommendation = "Check the log file for details."
@@ -549,7 +548,7 @@ class SplitGeoLayerByAttribute(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

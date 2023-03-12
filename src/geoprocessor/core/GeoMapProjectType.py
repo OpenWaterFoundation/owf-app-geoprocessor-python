@@ -1,7 +1,7 @@
 # GeoMapProjectType - map project types
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+.
 # See:  https://stackoverflow.com/questions/33533148/
 #         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
 from __future__ import annotations
@@ -94,7 +94,7 @@ class GeoMapProjectType(Enum):
             name_upper = name.upper()
             if name_upper == project_type_upper:
                 return member
-        # Nothing found
+        # Nothing found.
         return None
 
     def __str__(self) -> str:

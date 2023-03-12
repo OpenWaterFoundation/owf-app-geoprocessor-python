@@ -1,23 +1,23 @@
 # GeoLayer - class for GeoLayer (base class for spatial data layer)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+.
 # See:  https://stackoverflow.com/questions/33533148/
 #         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
 from __future__ import annotations
@@ -30,33 +30,34 @@ from qgis.core import QgsCoordinateReferenceSystem as QgsCoordinateReferenceSyst
 
 class GeoLayer(object):
     """
-    The GeoLayer class stores geometry and identifier data for a spatial data layer. The core layer data are stored in
-    a QgsVectorLayer or QgsRasterObject instances, indicated as QgsMapLayer base class,
-    in order to leverage the QGIS data model and functionality. Additional data members are
-    used to store data that are not part of QgsVectorLayer objects and are required by the GeoProcessor, such as source
-    filename and identifier used by the GeoProcessor.
+    The GeoLayer class stores geometry and identifier data for a spatial data layer.
+    The core layer data are stored in a QgsVectorLayer or QgsRasterObject instances,
+    indicated as QgsMapLayer base class, in order to leverage the QGIS data model and functionality.
+    Additional data members are used to store data that are not part of QgsVectorLayer objects
+    and are required by the GeoProcessor, such as source filename and identifier used by the GeoProcessor.
 
     A list of registered GeoLayer instances are maintained in the GeoProcessor's self.geolayers property (type: list).
     The GeoProcessor's commands retrieve in-memory GeoLayer instances from the GeoProcessor's self.geolayers property
-    using the GeoProcessor.get_geolayer() function. New GeoLayer instances are added to the GeoProcessor list using the
-    add_geolayer() function.
+    using the GeoProcessor.get_geolayer() function.
+    New GeoLayer instances are added to the GeoProcessor list using the add_geolayer() function.
 
-    There are a number of properties associated with each GeoLayer (id, coordinate reference system, feature count,
-    etc.) The GeoLayer properties stored within each GeoLayer instance are the STATIC properties that will never change
-    (ids, QgsMapLayer object, and source path). The DYNAMIC GeoLayer properties (coordinate reference
-    system, feature count, etc.) are created when needed by accessing class functions.
+    There are a number of properties associated with each GeoLayer
+    (id, coordinate reference system, feature count, etc.).
+    The GeoLayer properties stored within each GeoLayer instance are the STATIC properties that will never change
+    (ids, QgsMapLayer object, and source path). The DYNAMIC GeoLayer properties
+    (coordinate reference system, feature count, etc.) are created when needed by accessing class functions.
 
     GeoLayers can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
-    creates a new GeoLayer (example: Clip). When this occurs, the in-memory GeoLayer is assigned a geolayer_id from
-    within the command, the geolayer_qgs_vector_layer is created from within the command and the geolayer_source_path
-    is set to 'MEMORY'.
+    creates a new GeoLayer (example: Clip).
+    When this occurs, the in-memory GeoLayer is assigned a geolayer_id from within the command,
+    the geolayer_qgs_vector_layer is created from within the command and the geolayer_source_path is set to 'MEMORY'.
     """
 
-    # Indicates that the layer source is memory, rather than being read from a file.
+    # Indicates that the layer source is memory, rather than being read from a file:
     # - used with input_source* and output_source* values
     SOURCE_MEMORY = 'MEMORY'
 
-    # Indicates that the layer format is memory, rather than being read from a file.
+    # Indicates that the layer format is memory, rather than being read from a file:
     # - used with input_format and output_format values
     FORMAT_MEMORY = 'MEMORY'
 
@@ -103,14 +104,14 @@ class GeoLayer(object):
                 These properties facilitate processing by external applications if written to map project.
         """
 
-        # "id" is a string that is the GeoLayer's reference ID. This ID is used to access the GeoLayer from the
-        # GeoProcessor for manipulation.
+        # "id" is a string that is the GeoLayer's reference ID.
+        # This ID is used to access the GeoLayer from the GeoProcessor for manipulation.
         self.id = geolayer_id
 
-        # Name that will be used as a legend label
+        # Name that will be used as a legend label.
         self.name = name
 
-        # Description that will be used as a legend label
+        # Description that will be used as a legend label.
         self.description = description
 
         # "qgs_layer" is a QgsVectorLayer or QgsRasterLayer object created by the QGIS processor.
@@ -145,15 +146,15 @@ class GeoLayer(object):
         # - it could also be the full path, which would be the same value as self.input_path_full
         self.output_path = GeoLayer.SOURCE_MEMORY
 
-        # "qgs_id" (str) is the GeoLayer's id in the Qgs environment (this is automatically assigned by the QGIS
-        # GeoProcessor when a GeoLayer is originally created)
+        # "qgs_id" (str) is the GeoLayer's id in the Qgs environment
+        # (this is automatically assigned by the QGIS GeoProcessor when a GeoLayer is originally created)
         if qgs_layer is None:
-            # This may happen if an error or map service
+            # This may happen if an error or map service.
             self.qgs_id = ""
         else:
             self.qgs_id = qgs_layer.id()
 
-        # History of modifications to the layer, performed by the GeoProcessor, as a list of strings.
+        # History of modifications to the layer, performed by the GeoProcessor, as a list of strings:
         # - this is equivalent to the TSTool "genesis" data.
         # - it is useful to understand how data have been manipulated
         self.history: [str] = []
@@ -186,13 +187,13 @@ class GeoLayer(object):
             return
 
         if isinstance(history_comment, str):
-            # Single string so append
+            # Single string so append.
             self.history.append(history_comment)
         elif isinstance(history_comment, list):
-            # List of strings or other objects
+            # List of strings or other objects.
             for history_comment2 in history_comment:
                 if history_comment2 is not None:
-                    # Append the string representation of the object
+                    # Append the string representation of the object.
                     self.history.append(str(history_comment2))
 
     def deepcopy(self, copied_geolayer_id: str) -> GeoLayer:
@@ -273,7 +274,7 @@ class GeoLayer(object):
             return self.properties[property_name]
         except KeyError:
             if if_not_found_except is True:
-                # Let the exception from not finding a key in the dictionary be raised
+                # Let the exception from not finding a key in the dictionary be raised.
                 # print('Property not found so throwing exception')
                 raise
             else:
@@ -299,7 +300,7 @@ class GeoLayer(object):
 
     def set_property(self, property_name: str, property_value: object) -> None:
         """
-        Set a GeoLayer property
+        Set a GeoLayer property.
 
         Args:
             property_name (str):  Property name.
@@ -309,8 +310,8 @@ class GeoLayer(object):
 
     def set_properties(self, properties: dict, clear_first: bool = False) -> None:
         """
-        Set properties.  This does not replace the properties - it resets existing properties or resets
-        existing properties.
+        Set properties.
+        This does not replace the properties - it resets existing properties or resets existing properties.
 
         Args:
             properties (dict): properties to set.
@@ -334,8 +335,8 @@ class GeoLayer(object):
             # Dictionary has too much information but is useful to illustrate what objects need to be handled.
             return self.__dict__
         else:
-            # Return a dictionary with JSON objects
-            # - this remaps the names to camelcase, which is is more consistent with JSON standards
+            # Return a dictionary with JSON objects:
+            # - this remaps the names to camelcase, which is more consistent with JSON standards
             # - 'sourcePath' maps to the output file because what is written serves as the path
             # - if the layer was written, then the output source path will e set and can be used;
             #   otherwise, use the input source path, for example for WMS and WFS, and GeoJSON read from URL
@@ -349,7 +350,7 @@ class GeoLayer(object):
             elif self.input_path is not None and self.input_path != GeoLayer.SOURCE_MEMORY:
                 source_path = self.input_path
                 source_format = self.input_format
-            # Determine the layer type, to inform the application how to handle, especially for web services
+            # Determine the layer type, to inform the application how to handle, especially for web services:
             # - can't use isinstance() because this will result in a circular import dependency,
             #   therefore check the class name
             layer_type = None

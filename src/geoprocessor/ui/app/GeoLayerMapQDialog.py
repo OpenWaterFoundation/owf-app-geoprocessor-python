@@ -1,7 +1,7 @@
 # GeoLayerMapQDialog - class for map dialog
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -71,38 +71,38 @@ class GeoLayerMapQDialog(QtWidgets.QDialog):
             self.resize(800, 500)
             self.setWindowTitle("Map")
             self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-            # Add icon
+            # Add icon.
             icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
             self.setWindowIcon(QtGui.QIcon(icon_path))
 
-            # Create a vertical layout for the map window
+            # Create a vertical layout for the map window.
             self.map_window_layout = QtWidgets.QVBoxLayout(self)
             self.map_window_layout.setSizeConstraint(QtWidgets.QLayout.SetNoConstraint)
             self.map_window_layout.setObjectName(qt_util.from_utf8("mapVerticalLayout"))
 
-            # Add toolbar to map window
+            # Add toolbar to map window.
             self.map_toolbar = QtWidgets.QToolBar()
             self.map_window_layout.addWidget(self.map_toolbar)
 
-            # Create a widget for the canvas and add it to map_window in the map_window_layout
+            # Create a widget for the canvas and add it to map_window in the map_window_layout.
             self.map_window_widget = QtWidgets.QWidget()
             self.map_window_layout.addWidget(self.map_window_widget)
             self.map_window_widget.setGeometry(QtCore.QRect(25, 20, 750, 450))
-            # Create canvas and add it to the previously widget
+            # Create canvas and add it to the previously added widget.
             self.canvas = qgis.gui.QgsMapCanvas(self.map_window_widget)
             self.canvas.setCanvasColor(QtCore.Qt.white)
             self.canvas.resize(750, 400)
 
-            # Get the extent for all the layers by calling qgis_util
+            # Get the extent for all the layers by calling qgis_util.
             logger.info("Have {} selected layers.".format(len(self.geolayers)))
             extent = qgis_util.get_extent_from_geolayers(self.geolayers, buffer_fraction=.05)
             self.canvas.setExtent(extent)
             self.canvas.setLayers(self.geolayers)
 
-            # Add tools for map canvas
+            # Add tools for map canvas.
             self.actionZoomIn = QtWidgets.QAction("Zoom in", self)
             self.actionZoomIn.setToolTip("Zoom in by clicking on a location to center on.")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.actionZoomIn.triggered.connect(self.ui_action_map_zoom_in)
             self.actionZoomIn.setCheckable(True)
@@ -110,7 +110,7 @@ class GeoLayerMapQDialog(QtWidgets.QDialog):
 
             self.actionZoomOut = QtWidgets.QAction("Zoom out", self)
             self.actionZoomOut.setToolTip("Zoom out by clicking on a location to center on.")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.actionZoomOut.triggered.connect(self.ui_action_map_zoom_out)
             self.actionZoomOut.setCheckable(True)
@@ -118,13 +118,13 @@ class GeoLayerMapQDialog(QtWidgets.QDialog):
 
             self.actionPan = QtWidgets.QAction("Pan", self)
             self.actionPan.setToolTip("Use mouse to drag the viewing area.")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.actionPan.triggered.connect(self.ui_action_map_pan)
             self.actionPan.setCheckable(True)
             self.map_toolbar.addAction(self.actionPan)
 
-            # # Add tools to canvas
+            # Add tools to canvas.
             self.toolPan = qgis.gui.QgsMapToolPan(self.canvas)
             self.toolPan.setAction(self.actionPan)
             self.toolZoomIn = qgis.gui.QgsMapToolZoom(self.canvas, False)  # false = in
@@ -133,7 +133,7 @@ class GeoLayerMapQDialog(QtWidgets.QDialog):
             self.toolZoomOut.setAction(self.actionZoomOut)
 
             QtCore.QMetaObject.connectSlotsByName(self)
-            # Assign a resize event to resize map canvas when dialog window is resized
+            # Assign a resize event to resize map canvas when dialog window is resized.
             self.map_window_widget.resizeEvent = self.ui_action_map_resize
             self.show()
         except Exception:
@@ -162,7 +162,7 @@ class GeoLayerMapQDialog(QtWidgets.QDialog):
             None
         """
         if event is None:
-            # Use this to avoid warning about 'event' not being used
+            # Use this to avoid warning about 'event' not being used.
             pass
         self.canvas.resize(self.map_window_widget.width(), self.map_window_widget.height())
 

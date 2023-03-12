@@ -1,7 +1,7 @@
 # GutterFrame - gutter parallel to command list, with color indicator for warning or error
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ class GutterFrame(QtWidgets.QFrame):
         Returns:
             None
         """
-        # Call the parent class
+        # Call the parent class.
         super().__init__()
 
         self.gp_model = gp_model
@@ -79,8 +79,8 @@ class GutterFrame(QtWidgets.QFrame):
         marker_height = 5
         market_width = gutter_width
 
-        # Marker is a color-filled rectangle with black outline
-        color_fill = self.color_outline  # Just in case logic below does not pick a color
+        # Marker is a color-filled rectangle with black outline.
+        color_fill = self.color_outline  # Just in case logic below does not pick a color.
         if status is CommandStatusType.WARNING:
             # qp.setBackground(self.color_warning)
             color_fill = self.color_warning
@@ -89,17 +89,18 @@ class GutterFrame(QtWidgets.QFrame):
             color_fill = self.color_failure
 
         x = 0
-        height = 4  # Height of rectangle
+        height = 4  # Height of rectangle.
         height2 = height/2
         y = int(float(gutter_height)*y_fraction - height2)
         width = gutter_width
         if debug:
             logger.debug("Filling rectangle x=" + str(x) + " y=" + str(y) + " width=" + str(width) +
                          " height=" + str(height))
-        # Fill the rectangle
+        # Fill the rectangle.
         qp.fillRect(x, y, width, height, color_fill)
         qp.setPen(self.color_outline)
-        # Draw outline rectangle - not sure if can do in one step above
+        # Draw outline rectangle:
+        # - not sure if can do in one step above
         # - decrement width so that outline is fully drawn
         qp.drawRect(x, y, (width - 1), height)
 
@@ -116,24 +117,24 @@ class GutterFrame(QtWidgets.QFrame):
             logger.debug("In paintEvent")
 
         if self.gp_model is None:
-            # UI does not yet have commands to draw
+            # UI does not yet have commands to draw.
             return
 
         qp = QtGui.QPainter()
         qp.begin(self)
 
-        # Now update the numbered list and gutter with current errors and warnings
+        # Update the numbered list and gutter with current errors and warnings.
         command_phase_type = CommandPhaseType.RUN
         for i in range(len(self.gp_model)):
             if command_phase_type is CommandPhaseType.INITIALIZATION:
-                # Will be used after loading a command file, but have not run yet
+                # Will be used after loading a command file, but have not run yet.
                 command_status = self.gp_model.gp.commands[i].command_status.initialization_status
                 if debug:
                     logger.debug("Command [" + str(i) + "] initialization status = " + str(command_status))
             elif command_phase_type is CommandPhaseType.DISCOVERY:
                 command_status = self.gp_model.gp.commands[i].command_status.discovery_status
             elif command_phase_type is CommandPhaseType.RUN:
-                # Will be used by default, after running commands
+                # Will be used by default, after running commands.
                 command_status = self.gp_model.gp.commands[i].command_status.run_status
                 if debug:
                     logger.debug("Command [" + str(i) + "] run status = " + str(command_status))

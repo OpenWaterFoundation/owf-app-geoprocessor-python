@@ -1,18 +1,18 @@
 # FixGeoLayer - command to fix a GeoLayer's geometry
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -40,10 +40,10 @@ import os
 
 class FixGeoLayer(AbstractCommand):
     """
-    Fixes the geometry of a layer.  A new GeoLayer is optionally created with the fixed geometry
-    (default is to replace the old layer).
+    Fixes the geometry of a layer.
+    A new GeoLayer is optionally created with the fixed geometry (default is to replace the old layer).
 
-    Command Parameters
+    Command Parameters:
 
     * GeoLayerID (str, required): the ID of the input GeoLayer, the layer to be clipped
     * FixedGeoLaterID (str, optional): the ID of the fixed GeoLayer.
@@ -60,13 +60,13 @@ class FixGeoLayer(AbstractCommand):
         CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Fix the geometry for each feature of a GeoLayer.")
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
@@ -110,18 +110,18 @@ class FixGeoLayer(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "FixGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -175,7 +175,7 @@ class FixGeoLayer(AbstractCommand):
             self.logger.warning(warning)
             raise CommandParameterError(warning)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id: str, fixed_geolayer_id: str) -> bool:
@@ -193,16 +193,16 @@ class FixGeoLayer(AbstractCommand):
                 should not be fixed.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIDExisting", "GeoLayerID", geolayer_id,
                                                            "FAIL"))
 
-        # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
-        # on the value of the IfGeoLayerIDExists parameter.)
+        # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+        # (depends on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
                                                            fixed_geolayer_id, None))
 
@@ -261,15 +261,15 @@ class FixGeoLayer(AbstractCommand):
                     # Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'), geolayer.id)
 
-                    # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
-                    # on-disk GeoLayer.
+                    # Write the GeoLayer to disk.
+                    # Overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer.
                     geolayer = geolayer.write_to_disk(geolayer_disk_abs_path)
                     self.command_processor.add_geolayer(geolayer)
 
                 do_fix = True
                 if do_fix:
                     # Perform the QGIS fix geometries function. Refer to the REF below for parameter descriptions.
-                    # TODO smalers the following link is broken, need to find the correct documentation
+                    # TODO smalers the following link is broken, need to find the correct documentation.
                     # REF: https://docs.qgis.org/2.8/en/docs/user_manual/processing_algs/qgis/
                     #       vector_geometry_tools/fixgeometries.html
                     alg_parameters = {
@@ -284,8 +284,8 @@ class FixGeoLayer(AbstractCommand):
                     self.warning_count += feedback_handler.get_warning_count()
 
                     # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-                    # in QGIS3, simple_output["OUTPUT"] returns the returns the QGS vector layer object
-                    # see ClipGeoLayer.py for information about value in QGIS2 environment
+                    # In QGIS3, simple_output["OUTPUT"] returns the QGS vector layer object
+                    # see ClipGeoLayer.py for information about value in QGIS2 environment.
                     new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerID,
                                                   qgs_vector_layer=simple_output["OUTPUT"],
                                                   name=pv_Name,
@@ -303,7 +303,7 @@ class FixGeoLayer(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

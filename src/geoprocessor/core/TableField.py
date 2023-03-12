@@ -1,7 +1,7 @@
 # TableField - class to represent table field information
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -22,9 +22,9 @@ import enum
 
 class TableField(object):
     """
-    A TableField class is a building block object of a Table object. It represents a single column of a Table.
-    The TableField holds data for a Table column. Its core structure is the "items" attribute, a list of data values in
-    sequential order of the Table's row entries.
+    A TableField class is a building block object of a Table object.
+    It represents a single column of a Table. The TableField holds data for a Table column.
+    Its core structure is the "items" attribute, a list of data values in sequential order of the Table's row entries.
     """
 
     def __init__(self, data_type: type, column_name: str, description: str = "", width: int = None,
@@ -53,11 +53,11 @@ class TableField(object):
         # A value of None means not used.
         self.precision: int = precision
 
-        # "items" is a list that holds the TableField's data values  (must be the same data type, Nones allowed)
-        # TODO smalers 2020-11-14 this design stored table data in columns - for now rely on record-based storage
+        # "items" is a list that holds the TableField's data values (must be the same data type, Nones allowed)
+        # TODO smalers 2020-11-14 this design stored table data in columns - for now rely on record-based storage.
         # self.items = []
 
-        # "data_type" is the Python data type class that represents the items in the TableField's items attribute list
+        # "data_type" is the Python data type class that represents the items in the TableField's items attribute list:
         # - bool
         # - float
         # - int
@@ -65,15 +65,15 @@ class TableField(object):
         # - etc
         self.data_type: type = data_type
 
-        # "null_values" is a list of values from the original table that represent NULL values
-        # TODO smalers 2020-11-14 was this used with Pandas?  No need for this since Python supports None
-        #  for generic case and NaN for floating point numbers
+        # "null_values" is a list of values from the original table that represent NULL values.
+        # TODO smalers 2020-11-14 was this used with Pandas?
+        # No need for this since Python supports None for generic case and NaN for floating point numbers.
         # self.null_values = []
 
     def x__is_data_type(self, data_type_to_check):
         """
-        Check if the items in the column are of the desired data type. Pass over None values. Only assess the column
-         based off of the non-None values.
+        Check if the items in the column are of the desired data type. Pass over None values.
+        Only assess the column based off of the non-None values.
 
          Args:
             data_type_to_check: The data type to check if the column items match.
@@ -81,7 +81,7 @@ class TableField(object):
         Return: Boolean that specifies if the items in the column are of the specified data type.
         """
 
-        # Boolean to determine if the items are all of the expected data type or None.
+        # Boolean to determine if the items are all the expected data type or None.
         # Set to TRUE until proven FALSE.
         is_correct_type = True
 
@@ -138,7 +138,7 @@ class TableField(object):
             None
         """
 
-        #  A list to hold the column items that have been converted to the desired data type.
+        # A list to hold the column items that have been converted to the desired data type.
         converted_list = []
 
         # Iterate over the items in the column.
@@ -174,9 +174,10 @@ class TableField(object):
 
     def x_assign_data_type(self):
         """
-        Convert the column contents to the correct data type. By default, the logic attempts to determine the correct
-        data type based upon the content items. Handles Boolean, integers, floats and strings. Need to figure out how
-        to gracefully handle dictionaries, lists, and tuples.
+        Convert the column contents to the correct data type.
+        By default, the logic attempts to determine the correct data type based upon the content items.
+        Handles Boolean, integers, floats and strings.
+        Need to figure out how to gracefully handle dictionaries, lists, and tuples.
 
         Return: None
         """
@@ -188,7 +189,7 @@ class TableField(object):
         # If there is at least one value other than None in the column, determine the column data type.
         else:
 
-            # Enumerator of DataTypes
+            # Enumerator of DataTypes.
             # In specific order to make sure that the logic assumes the correct data type.
             # TODO smalers 2020-11-14 currently using internal Python types
             class DataTypes(enum.Enum):
@@ -209,8 +210,8 @@ class TableField(object):
 
     def x_assign_nulls(self):
         """
-        Convert the value in a list that represent null values to a None value. This function requires that the
-        data list items that match the specified null values are of the same data type.
+        Convert the value in a list that represent null values to a None value.
+        This function requires that the data list items that match the specified null values are of the same data type.
 
         For example:
 
@@ -231,8 +232,8 @@ class TableField(object):
             # Iterate over the data list items.
             for item in self.items:
 
-                # If the null value is equal to the data list item. The data types must also match. Python doesn't
-                # require that two objects have the same type for them to be considered equal.
+                # If the null value is equal to the data list item. The data types must also match.
+                # Python doesn't require that two objects have the same type for them to be considered equal.
                 if null_value == item and isinstance(item, type(null_value)):
 
                     # Get the index of the null value in the data list.

@@ -1,7 +1,7 @@
 # ReadTableFromExcel - command to read a table from an Excel worksheet
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -39,8 +39,8 @@ class ReadTableFromExcel(AbstractCommand):
     """
     Reads a Table from an Excel file.
 
-    This command reads a tables from an Excel file and creates a Table object within the geoprocessor. The Table can
-    then be accessed in the geoprocessor by its identifier and further processed.
+    This command reads a tables from an Excel file and creates a Table object within the geoprocessor.
+    The Table can then be accessed in the geoprocessor by its identifier and further processed.
 
     Command Parameters
     * InputFile (str, required): the relative pathname to the excel data file (known as a workbook)
@@ -58,12 +58,13 @@ class ReadTableFromExcel(AbstractCommand):
         CommandParameterMetadata("TableID", type("")),
         CommandParameterMetadata("IfTableIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
-    __command_metadata['Description'] = "Read a table from an Excel worksheet."
+    __command_metadata['Description'] = "Read a table from an Excel worksheet." \
+                                        "This command is under development."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # InputFile
     __parameter_input_metadata['InputFile.Description'] = "Excel file to read"
@@ -108,18 +109,18 @@ class ReadTableFromExcel(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ReadTableFromExcel"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -174,7 +175,7 @@ class ReadTableFromExcel(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, file_abs, sheet_name, table_id):
@@ -194,8 +195,9 @@ class ReadTableFromExcel(AbstractCommand):
                 should not be read.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values.
+        # The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input file is not a valid file path, raise a FAILURE.
@@ -204,11 +206,11 @@ class ReadTableFromExcel(AbstractCommand):
         # If the input file is valid, continue with the checks.
         if False not in should_run_command:
 
-            # If the Worksheet parameter is None, assign it with the name of the first worksheet in the excel file.
+            # If the Worksheet parameter is None, assign it with the name of the first worksheet in the Excel file.
             if sheet_name is None:
                 sheet_name = pandas_util.create_excel_workbook_obj(file_abs).sheet_names[0]
 
-            # If the input sheet name is not a valid sheet name in the excel workbook file, raise a FAILURE.
+            # If the input sheet name is not a valid sheet name in the Excel workbook file, raise a FAILURE.
             should_run_command.append(validator_util.run_check(self, "IsExcelSheetNameValid", "Worksheet", sheet_name,
                                                                "FAIL", other_values=[file_abs]))
 
@@ -216,8 +218,8 @@ class ReadTableFromExcel(AbstractCommand):
             if table_id is None:
                 table_id = sheet_name
 
-            # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
-            # value of the IfTableIDExists parameter.)
+            # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE
+            # (depends on the value of the IfTableIDExists parameter).
             should_run_command.append(validator_util.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
 
         # Return the Boolean to determine if the process should be run.
@@ -228,8 +230,8 @@ class ReadTableFromExcel(AbstractCommand):
 
     def run_command(self):
         """
-        Run the command. Read the tabular data from the Excel workbook/worksheet. Create a Table object, and add to the
-        GeoProcessor's tables list.
+        Run the command. Read the tabular data from the Excel workbook/worksheet.
+        Create a Table object, and add to the GeoProcessor's tables list.
 
         Returns:
             None.
@@ -288,7 +290,7 @@ class ReadTableFromExcel(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

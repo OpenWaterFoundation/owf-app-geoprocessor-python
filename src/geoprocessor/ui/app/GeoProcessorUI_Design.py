@@ -2,7 +2,7 @@
 # GeoProcessorUI_Design - used with Qt Designer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -18,10 +18,10 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# THIS CLASS IS NOT CURRENTLY USED BECAUSE UI COMPONENTS ARE MANUALLY CODED.
+# THIS CLASS IS NOT CURRENTLY USED BECAUSE UI COMPONENTS ARE MANUALLY CODED:
 # - Qt Designer is useful for some things but not complex GeoProcessor code.
 
-# Form implementation generated from reading ui file 'main-window-draft2.ui'
+# Form implementation generated from reading ui file 'main-window-draft2.ui'.
 #
 # Created: Tue May 08 10:21:50 2018
 #      by: PyQt4 UI code generator 4.10.2

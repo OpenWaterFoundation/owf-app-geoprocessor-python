@@ -1,7 +1,7 @@
 # CommentEditor - editor for Comment command
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -40,47 +40,47 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         Args:
             command: the command to edit
         """
-        # Call the parent class
+        # Call the parent class.
         super().__init__(command)
 
-        # Defined in AbstractCommandEditor
-        # Initialize components that will be used
+        # Defined in AbstractCommandEditor.
+        # Initialize components that will be used>
         # self.CommandDisplay_View_TextBrowser = None
 
-        # NOT defined in AbstractCommandEditor - local to this class
+        # NOT defined in AbstractCommandEditor - local to this class:
         # - ruler above the comment area
         self.CommandDisplay_View_Ruler: QtWidgets.QTextEdit or None = None
 
-        # NOT defined in AbstractCommandEditor - local to this class
+        # NOT defined in AbstractCommandEditor - local to this class:
         # - used for fixed-width font in comment editor area
         self.CommandDisplay_View_Font: QtGui.QFont or None = None
 
-        # Defined in AbstractCommandEditor
-        # Layout used for the main editor
+        # Defined in AbstractCommandEditor.
+        # Layout used for the main editor:
         # - other layouts may be added as needed to organize components
         # self.grid_layout = None
 
-        # Defined in AbstractCommandEditor
-        # Position in the layout for components as they are added, 0=row at top, 1 is next down, etc.
+        # Defined in AbstractCommandEditor.
+        # Position in the layout for components as they are added, 0=row at top, 1 is next down, etc.:
         # - each addition should increment before adding a component
         # self.grid_layout_row = -1
 
-        # NOT defined in AbstractCommandEditor - local to this class
-        # Indicate if an error status is currently in effect, due to invalid parameters
+        # NOT defined in AbstractCommandEditor - local to this class.
+        # Indicate if an error status is currently in effect, due to invalid parameters:
         # - will be set in check_input() and is checked in ui_action_ok_clicked()
         self.error_wait = False
 
-        # NOT defined in AbstractCommandEditor - local to this class
+        # NOT defined in AbstractCommandEditor - local to this class.
         # If command parameters have already been defined for the command, know that are updating an existing command.
         if command.command_parameters:
             self.update = True
 
-        # NOT defined in AbstractCommandEditor - local to this class
+        # NOT defined in AbstractCommandEditor - local to this class.
         # Create variable to know whether updating an existing command or inserting a new command into the command list.
         self.update = False
 
-        # Set up the UI for the command editor window
-        # - this calls the AbstractCommandEditor method, which in turn calls specific methods to setup parts of the UI.
+        # Set up the UI for the command editor window:
+        # - this calls the AbstractCommandEditor method, which in turn calls specific methods to setup parts of the UI
         self.setup_ui_core()
 
     def check_input(self) -> None:
@@ -103,41 +103,41 @@ class InsertLineRulerEditor(AbstractCommandEditor):
             A list of strings corresponding to each comment line.
         """
         # logger = logging.getLogger(__name__)
-        # First split the text area using newline delimiter
+        # First split the text area using newline delimiter.
         command_text = self.CommandDisplay_View_TextBrowser.toPlainText()
         command_string_list = []
         if len(command_text) == 0:
             # Return an empty list, which should be handled in calling code.
             return command_string_list
         else:
-            # Split the text by newlines according to Python universal newlines
+            # Split the text by newlines according to Python universal newlines.
             command_string_list = command_text.splitlines()
-            # Add the # with determined indent
-            # Verify that each line edited by user starts with #
+            # Add the # with determined indent.
+            # Verify that each line edited by user starts with '#'.
             for i in range(len(command_string_list)):
                 command_string_stripped = command_string_list[i].strip()
-                # Check if the stripped line starts with # and if so, it is OK
+                # Check if the stripped line starts with # and if so, it is OK:
                 # - otherwise, add # at the start, indented appropriately
                 if not command_string_stripped.startswith('#'):
-                    # Figure out how many spaces to indent by examining the comment lines
+                    # Figure out how many spaces to indent by examining the comment lines:
                     # - assume that indent should be consistent with nearest previous indented, commented line
                     # - if that is not found, search after the current line (TODO smalers 2019-01-18 need to do)
                     indent = ""
                     for j in range(i - 1, 0, -1):
                         indent_pos = command_string_list[j].find('#')
                         if indent_pos >= 0:
-                            # Found a previous comment line so use its indent
+                            # Found a previous comment line so use its indent:
                             # - the following one-liner sets the indent to the number of spaces
                             indent += ' ' * indent_pos
                             break
                     command_string_list[i] = indent + "# " + command_string_list[i]
-            # Return a list with one item for each line that was edited
+            # Return a list with one item for each line that was edited.
             return command_string_list
 
     def set_text(self, text: str) -> None:
         """
         Set the text in the text browser for the command editor.
-        Typically this is called when a multi-line comment is being edited.
+        Typically, this is called when a multi-line comment is being edited.
 
         Args:
             text: String to insert as text in the command editor.
@@ -160,12 +160,12 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         """
 
         # The command has a custom editor area.
-        # Set up the fixed-font ruler that helps editing the comments
+        # Set up the fixed-font ruler that is used when editing the comments.
         self.setup_ui_core_ruler()
         # TODO smalers 2020-03-12 the following don't appear to be needed.
         # self.setup_ui_core_command_area()
         # self.setup_ui_horizontal_scrolling()
-        # The following sets the window size and sets to resizable
+        # The following sets the window size and sets to resizable.
         self.setup_ui_window()
 
     def setup_ui_2(self) -> None:
@@ -179,7 +179,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # logger = logging.getLogger(__name__)
         self.CommandDisplay_View_TextBrowser.setFocus()
         # TODO smalers 2020-03-15 the following only seems to work for new commands.
-        # Set the position of the cursor the end of the document (same as TSTool)
+        # Set the position of the cursor the end of the document (same as TSTool):
         # - see:  https://doc.qt.io/qt-5/qtextcursor.html#MoveOperation-enum
         # - see:  https://forum.qt.io/topic/12336/solved-always-show-the-end-of-qtextbrowser/4
         # logger.debug("Command string: '" + str(self.command.command_string) + "'")
@@ -194,7 +194,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         Returns:
             None
         """
-        # Set the size of the window
+        # Set the size of the window:
         # - this is necessary because the AbstractCommandEditor sets the size to smaller
         # - TODO smalers 2020-03-12 maybe need a property in command metadata to set
         self.setMaximumWidth(1150)
@@ -214,13 +214,13 @@ class InsertLineRulerEditor(AbstractCommandEditor):
             None
 
         """
-        # The grid_layout_row is managed in AbstractCommandEditor
+        # The grid_layout_row is managed in AbstractCommandEditor.
         self.grid_layout_row = self.grid_layout_row + 1
         self.CommandDisplay_Label = QtWidgets.QLabel(self)
         self.CommandDisplay_Label.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.CommandDisplay_Label.setObjectName(qt_util.from_utf8("CommandDisplay_Label"))
         self.CommandDisplay_Label.setText(qt_util.translate("Dialog", "Comments: ", None))
-        comment_area_rows = 4  # How many layout rows the comment area fills
+        comment_area_rows = 4  # How many layout rows the comment area fills.
         self.grid_layout.addWidget(self.CommandDisplay_Label, self.grid_layout_row, 0, comment_area_rows, 1)
         # Create a text edit object. Add the text edit object to the Dialog window.
         # Set the size, the name and the html of the text edit object.
@@ -234,10 +234,10 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         self.CommandDisplay_View_Font.setPointSize(10)
         self.CommandDisplay_View_TextBrowser.setFont(self.CommandDisplay_View_Font)
         self.CommandDisplay_View_TextBrowser.setWordWrapMode(QtGui.QTextOption.NoWrap)
-        # Do not display default command string when editing a new comment
-        # If command_string is default reset to empty
+        # Do not display default command string when editing a new comment.
+        # If command_string is default reset to empty.
         command_string = self.command.command_string
-        # - existing comments should be shown as is without stripping the leading #
+        # Existing comments should be shown as is without stripping the leading #.
         self.CommandDisplay_View_TextBrowser.setText(command_string)
         # self.CommandDisplay_View_TextBrowser.setMinimumSize(QtCore.QSize(0, 100))
         # self.CommandDisplay_View_TextBrowser.setMaximumSize(QtCore.QSize(16777215, 100))
@@ -249,7 +249,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # #       "<span style=\" font-size:8pt;\">ReadGeoLayerFromGeoJSON()</span></p></body></html>"
         # #self.CommandDisplay_View_TextBrowser.setHtml(qt_util.translate("Dialog", html, None))
         self.grid_layout.addWidget(self.CommandDisplay_View_TextBrowser, self.grid_layout_row, 1, 4, -1)
-        # Increment the row so it is positioned at the last row of the text area, so it can be incremented again
+        # Increment the row so that it is positioned at the last row of the text area, so it can be incremented again:
         # - already incremented by one above, so subtract one below
         if comment_area_rows > 1:
             self.grid_layout_row = self.grid_layout_row + (comment_area_rows - 1)
@@ -289,7 +289,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         Returns:
             None
         """
-        # To cancel, call the standard reject() function, which will set the return value.
+        # To cancel, call the standard reject() function, which will set the return value:
         # - this allows the return value to be checked in the calling code
         self.reject()
 
@@ -307,18 +307,18 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # Check the input
         self.check_input()
         if self.error_wait:
-            # User was shown a warning dialog and had to acknowledge it, so here just ignore the "OK"
+            # User was shown a warning dialog and had to acknowledge it, so here just ignore the "OK":
             # - errors in input parameters need to be fixed before OK works
             pass
         else:
-            # No error so OK to exit
+            # No error so OK to exit:
             # - call the standard accept() function to set the return value
             # Set the comment string in the command:
             # - multiple lines will be parsed into separate lines, each with a Comment command
             self.command.command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
             self.accept()
 
-    # TODO smalers 2020-03-12 Keep the following functions for now but need to remove if not needed.
+    # TODO smalers 2020-03-12 Keep the following functions for now but need to remove if not needed:
     # - some of these are already in AbstractCommandEditor
     # - others have been rewritten
     def x_add_ui_horizontal_separator(self) -> None:
@@ -354,8 +354,8 @@ class InsertLineRulerEditor(AbstractCommandEditor):
             the value within the QtGui.Widget object
         """
 
-        # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
-        # value when one works.
+        # Different QtGui widgets have different ways of reading their input data.
+        # Try both versions and assign the value when one works.
         # Reads LineEdit widgets.
         # noinspection PyBroadException
         try:
@@ -382,13 +382,13 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         hs.setValue(value)
 
     def x_setup_ui_core(self) -> None:
-        # Set up QDialog specifications
+        # Set up QDialog specifications.
         self.setup_ui_window()
         # Set up the editor core elements, which apply to any command.
         self.setup_ui_core_top()
-        # Add separator
+        # Add separator.
         self.add_ui_horizontal_separator()
-        # Set up the core components at the bottom
+        # Set up the core components at the bottom.
         self.setup_ui_core_bottom()
 
         # This will wire up the signals and slots depending on names.
@@ -396,7 +396,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         # - don't do this because not using QtDesigner
         # QtCore.QMetaObject.connectSlotsByName(self)
 
-        # Make sure the text area has the focus since that is where input will be typed
+        # Make sure the text area has the focus since that is where input will be typed.
         self.CommandDisplay_View_TextBrowser.setFocus()
 
     def x_setup_ui_core_bottom(self) -> None:
@@ -418,9 +418,9 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         Returns:
             None
         """
-        # Set the window title to the command name
+        # Set the window title to the command name.
         self.setObjectName("InsertLineRulerEditor")
-        # See if title is specified as 'EditorTitle' property (used for commands that don't follow the normal pattern)
+        # See if title is specified as 'EditorTitle' property (used for commands that don't follow the normal pattern).
         editor_title = None
         try:
             editor_title = self.command.command_metadata['EditorTitle']
@@ -429,17 +429,17 @@ class InsertLineRulerEditor(AbstractCommandEditor):
         if editor_title is not None:
             self.setWindowTitle(editor_title)
         else:
-            # Typical CommandName() command
+            # Typical CommandName() command.
             self.setWindowTitle("Edit " + self.command.command_name + " command")
         self.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
         icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
         self.setWindowIcon(QtGui.QIcon(icon_path))
 
-        # Because components are added to the UI the dialog will have a size.
+        # Because components are added to the UI the dialog will have a size:
         # - don't set the size unless a dialog misbehaves, perhaps a maximum size
         # self.resize(684, 404)
 
-        # Add a grid layout for components to be added
+        # Add a grid layout for components to be added.
         self.grid_layout = QtWidgets.QGridLayout(self)
         self.grid_layout.setObjectName(qt_util.from_utf8("gridLayout"))
 
@@ -463,7 +463,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
 
     def x_setup_ui_core_command_description(self) -> None:
         """
-        Setup the description component at the top of the dialog.
+        Set up the description component at the top of the dialog.
         """
         # Create a frame object. Add the frame object to the Dialog window.
         # Set the shape, the shadow, and the name of the frame object.
@@ -496,10 +496,11 @@ class InsertLineRulerEditor(AbstractCommandEditor):
     def x_update_command_display(self) -> None:
         """
         Each command dialog box has a command display that shows the string representation of the command with the
-        user-specified input parameters. It is updated dynamically as the user enters/selects values for the different
-        command parameter fields (this function is called when any text is changed in the input field Qt widgets). The
-        function is responsible for reading the inputs, creating the updated string representation of the command and
-        updating the CommandDisplay widget.
+        user-specified input parameters.
+        It is updated dynamically as the user enters/selects values for the different command parameter fields
+        (this function is called when any text is changed in the input field Qt widgets).
+        The function is responsible for reading the inputs,
+        creating the updated string representation of the command and updating the CommandDisplay widget.
 
         Returns:
             None
@@ -517,7 +518,7 @@ class InsertLineRulerEditor(AbstractCommandEditor):
             # Update the current values dictionary with the new user-specified value.
             self.command_parameter_current_values[command_parameter] = value
 
-        # If all of the command parameter values are set to "" (not set), continue.
+        # If all the command parameter values are set to "" (not set), continue.
         if list(self.command_parameter_current_values.values()).count("") == len(self.command_parameter_current_values):
 
             # The Command Display field should print the command name followed by an empty parenthesis.
@@ -538,13 +539,13 @@ class InsertLineRulerEditor(AbstractCommandEditor):
                 value = self.command_parameter_current_values[command_parameter]
 
                 # If there is a value, add the parameter name and parameter value to the parameter_string_text in a
-                # "CommandParameterName=CommandParameterValue" format. A comma is added at the end in order to set up
-                # for the next command parameter.
+                # "CommandParameterName=CommandParameterValue" format.
+                # A comma is added at the end in order to set up for the next command parameter.
                 if value != "":
                     text = '{}="{}", '.format(command_parameter, value)
                     parameter_string_text += text
 
-            # After all of the command parameters with user-specified values have been added to the
+            # After all the command parameters with user-specified values have been added to the
             # parameter_string_text, remove the final comma.
             updated_parameter_string_text = parameter_string_text.rsplit(", ", 1)[0]
 

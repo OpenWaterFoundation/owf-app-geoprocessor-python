@@ -1,18 +1,18 @@
 # zip_util - useful utility functions for zip file manipulations.
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -65,8 +65,8 @@ def is_zip_file_request(response_obj) -> bool:
         zip file format.
     """
 
-    # The following comment is in place to make PyCharm skip review of the exception clause. Without this comment,
-    # PyCharm raises error "Too broad exception clause"
+    # The following comment is in place to make PyCharm skip review of the exception clause.
+    # Without this comment, PyCharm raises error "Too broad exception clause".
     # noinspection PyBroadException
     try:
         zipfile.ZipFile(StringIO(response_obj.content))
@@ -78,7 +78,7 @@ def is_zip_file_request(response_obj) -> bool:
 
 def untar_all_files(tar_file_path: str, output_folder: str) -> None:
     """
-    Extracts all of the archived files from a .tar file and saves them to the output folder.
+    Extracts all the archived files from a .tar file and saves them to the output folder.
 
     Args:
         tar_file_path: the full pathname to the tar file that is to be extracted
@@ -90,7 +90,7 @@ def untar_all_files(tar_file_path: str, output_folder: str) -> None:
     # Create a tar file object from the input tar file.
     tar_file = tarfile.open(tar_file_path)
 
-    # Extract all of the archived files within the tar file to the output_folder.
+    # Extract all the archived files within the tar file to the output_folder.
     tar_file.extractall(output_folder)
 
     # Close the .tar file object.
@@ -99,7 +99,7 @@ def untar_all_files(tar_file_path: str, output_folder: str) -> None:
 
 def unzip_all_files(zip_file_path: str, output_folder: str) -> None:
     """
-    Extracts all of the archived files from a .zip file and saves them to the output folder.
+    Extracts all the archived files from a .zip file and saves them to the output folder.
 
     Args:
         zip_file_path: the full pathname to the zip file that is to be unzipped
@@ -111,7 +111,7 @@ def unzip_all_files(zip_file_path: str, output_folder: str) -> None:
     # Create a .zip file object from the input zip file.
     zip_file = zipfile.ZipFile(zip_file_path, 'r')
 
-    # Extract all of the archived files within the zip file to the output_folder.
+    # Extract all the archived files within the zip file to the output_folder.
     zip_file.extractall(output_folder)
 
     # Close the .zip file object.
@@ -135,8 +135,8 @@ def zip_files(list_of_files_to_archive: [str], output_filename: str, keep_origin
     Compress a list of files into a .zip file.
 
     Args:
-        list_of_files_to_archive (list of strings): each item of the list is the full pathname to a file that will
-            be archived
+        list_of_files_to_archive (list of strings):
+            each item of the list is the full pathname to a file that will be archived
         output_filename (string): the name of the output .zip file (can, but is not required to, end in .zip extension)
         keep_originals (Boolean): if True, the files to be archived will be saved. if False, the files to be archived
             will be deleted (once the files have been successfully archived within the .zip file). Default: TRUE
@@ -154,7 +154,7 @@ def zip_files(list_of_files_to_archive: [str], output_filename: str, keep_origin
     # Iterate over the input files to archive.
     for to_archive_file in list_of_files_to_archive:
 
-        # Get the file's filename (without leading path)
+        # Get the file's filename (without leading path).
         filename = os.path.basename(to_archive_file)
 
         # Archive the file. The archived file will have the same filename as the input file.
@@ -194,7 +194,7 @@ def zip_shapefile(output_file_abs: str, keep_archive_files: bool = False) -> Non
     output_folder = os.path.dirname(output_file_abs)
     output_filename = os.path.basename(output_file_abs)
 
-    # A list of files to archive
+    # The list of files to archive.
     files_to_archive = []
 
     # Iterate over the possible extensions of a shapefile.
@@ -203,10 +203,10 @@ def zip_shapefile(output_file_abs: str, keep_archive_files: bool = False) -> Non
         # Get the full pathname of the shapefile component file.
         output_file_full_path = os.path.join(output_folder, output_filename + extension)
 
-        # If the shapefile component file exists, add it' s absolute path to the files_to_archive list. Note that not
-        # all shapefile component files are required -- some may not exist.
+        # If the shapefile component file exists, add it' s absolute path to the files_to_archive list.
+        # Note that not all shapefile component files are required -- some may not exist.
         if os.path.exists(output_file_full_path):
             files_to_archive.append(output_file_full_path)
 
-    # Zip the files to archive (the zip file will have the same name as the orginal .shp file.
+    # Zip the files to archive (the zip file will have the same name as the original file).
     zip_files(files_to_archive, output_file_abs, keep_archive_files)

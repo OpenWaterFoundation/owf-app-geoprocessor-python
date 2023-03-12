@@ -1,7 +1,7 @@
 # TabbedCommandEditor - class for tabbed command editors
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -36,11 +36,11 @@ class TabbedCommandEditor(AbstractCommandEditor):
 
         Args:
         """
-        # TODO smalers 2020-01-16 need to figure out what this is
+        # TODO smalers 2020-01-16 need to figure out what this is.
         # command_name (str): the name of the GeoProcessor command that the Dialog box is representing
         # command_description (str): the description of the GeoProcessor command that the Dialog box is representing
-        # parameter_count (int): the number of command parameters of the GeoProcessor command that the Dialog box is
-        #     representing
+        # parameter_count (int):
+        #     the number of command parameters of the GeoProcessor command that the Dialog box is representing
         # command_parameters (list): a list of string representing the command parameter names (in order) of the
         #     GeoProcessor command that the Dialog box is representing
         # current_values (dic):  a dictionary that holds the command parameters and their current values
@@ -48,38 +48,36 @@ class TabbedCommandEditor(AbstractCommandEditor):
         #     Value: the entered value of the command parameter
         super().__init__(command)
 
-        # "command_name" is the name of the GeoProcessor command that the Dialog box is representing.
+        # The name of the GeoProcessor command that the Dialog box is representing.
         # #self.command_name = command_name
 
-        # TODO smales 2020-01-16 evaluate standardizing the buttons
-        # NOT defined in AbstractCommandEditor - local to this class
-        # UI components at the top of the dialog
-        # "command_description" is the description of the GeoProcessor command that the Dialog box is representing
+        # TODO smales 2020-01-16 evaluate standardizing the buttons.
+        # NOT defined in AbstractCommandEditor - local to this class.
+        # UI components at the top of the dialog.
+        # Description of the GeoProcessor command that the Dialog box is representing.
         # #self.command_description = command_description
         self.Command_Description: QtWidgets.QFrame or None = None
         self.gridLayout: QtWidgets.QGridLayout or None = None
 
-        # "parameter_count" is the number of command parameters of the GeoProcessor command that the Dialog box is
-        # representing
+        # The number of command parameters of the GeoProcessor command that the Dialog box is representing.
         # #self.parameter_count = parameter_count
 
-        # "parameters_list" is a list of strings representing the command parameter names (in order) of the
-        # GeoProcessor command that the Dialog box is representing
+        # List of strings representing the command parameter names (in order) of the
+        # GeoProcessor command that the Dialog box is editing.
         # #self.parameters_list = command_parameters
 
-        # TODO smales 2020-01-16 evaluate standardizing the buttons
-        # NOT defined in AbstractCommandEditor - local to this class
-        # Buttons at the bottom of the dialog
+        # TODO smales 2020-01-16 evaluate standardizing the buttons.
+        # NOT defined in AbstractCommandEditor - local to this class.
+        # Buttons at the bottom of the dialog.
         self.OK_Cancel_Buttons: QtWidgets.QDialogButtonBox or None = None
 
-        # Defined in AbstractCommandEditor
-        # "input_edit_objects" is a dictionary that relates each command parameter with its associated Qt Widget
-        # input field
+        # Defined in AbstractCommandEditor.
+        # The dictionary that relates each command parameter with its associated Qt Widget input field.
         # KEY (str): the command parameter name
         # VALUE (obj): the associated Qt Widget input field
         self.input_edit_objects = {}
 
-        # "command_parameter_current_values" is a dictionary that holds the command parameters and their current values
+        # The dictionary that holds the command parameters and their current values.
         # KEY (str): the name of the command parameter
         # VALUE (str): the entered value of the command parameter
         # #self.command_parameter_current_values = current_values
@@ -123,8 +121,8 @@ class TabbedCommandEditor(AbstractCommandEditor):
         Return: the value within the QtGui.Widget object
         """
 
-        # Different QtGui widgets have different ways of reading their input data. Try both versions and assign the
-        # value when one works.
+        # Different QtGui widgets have different ways of reading their input data.
+        # Try both versions and assign the value when one works.
         # Reads LineEdit widgets.
         # noinspection PyBroadException
         try:
@@ -153,7 +151,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         Dialog.setObjectName(qt_util.from_utf8("Dialog"))
         Dialog.resize(684, 404)
 
-        # See if title is specified as 'EditorTitle' property (used for commands that don't follow the normal pattern)
+        # See if title is specified as 'EditorTitle' property (used for commands that don't follow the normal pattern).
         editor_title = None
         try:
             editor_title = self.command.command_metadata['EditorTitle']
@@ -162,7 +160,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         if editor_title is not None:
             self.setWindowTitle(editor_title)
         else:
-            # Typical CommandName() command
+            # Typical CommandName() command.
             self.setWindowTitle("Edit " + self.command.command_name + " command")
 
         # Create a grid layout object. Apply the grid layout to the Dialog window object.
@@ -194,7 +192,7 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.View_Documentation_Button = QtWidgets.QPushButton(self.Command_Description)
         self.View_Documentation_Button.setObjectName(qt_util.from_utf8("View_Documentation_Button"))
         self.View_Documentation_Button.setText(qt_util.translate("Dialog", "  View Documentation  ", None))
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.View_Documentation_Button.clicked.connect(self.view_documentation)
         grid_layout_2.addWidget(self.View_Documentation_Button, 2, 1, 1, 1)
@@ -228,10 +226,10 @@ class TabbedCommandEditor(AbstractCommandEditor):
         self.OK_Cancel_Buttons.setOrientation(QtCore.Qt.Horizontal)
         self.OK_Cancel_Buttons.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.OK_Cancel_Buttons.setObjectName(qt_util.from_utf8("OK_Cancel_Buttons"))
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.OK_Cancel_Buttons.accepted.connect(Dialog.accept)
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.OK_Cancel_Buttons.rejected.connect(Dialog.reject)
         self.gridLayout.addWidget(self.OK_Cancel_Buttons, self.parameter_count + 4, 6, 1, 2)
@@ -274,9 +272,9 @@ class TabbedCommandEditor(AbstractCommandEditor):
         """
         Each command dialog box has a command display that shows the string representation of the command with the
         user-specified input parameters. It is updated dynamically as the user enters/selects values for the different
-        command parameter fields (this function is called when any text is changed in the input field Qt widgets). The
-        function is responsible for reading the inputs, creating the updated string representation of the command and
-        updating the CommandDisplay widget.
+        command parameter fields (this function is called when any text is changed in the input field Qt widgets).
+        The function is responsible for reading the inputs, creating the updated string representation of the command
+        and updating the CommandDisplay widget.
 
         Return: None
         """
@@ -314,13 +312,13 @@ class TabbedCommandEditor(AbstractCommandEditor):
                 value = self.command_parameter_current_values[command_parameter]
 
                 # If there is a value, add the parameter name and parameter value to the parameter_string_text in a
-                # "CommandParameterName=CommandParameterValue" format. A comma is added at the end in order to set up
-                # for the next command parameter.
+                # "CommandParameterName=CommandParameterValue" format.
+                # A comma is added at the end in order to set up for the next command parameter.
                 if value != "":
                     text = '{}="{}", '.format(command_parameter, value)
                     parameter_string_text += text
 
-            # After all of the command parameters with user-specified values have been added to the
+            # After all the command parameters with user-specified values have been added to the
             # parameter_string_text, remove the final comma.
             updated_parameter_string_text = parameter_string_text.rsplit(", ", 1)[0]
 
@@ -335,8 +333,8 @@ class TabbedCommandEditor(AbstractCommandEditor):
     @staticmethod
     def select_file(qt_widget: QtWidgets.QWidget) -> None:
         """
-        Opens a file browser to allow a user to select a file through a Qt predefined user interface. The path of the
-        selected file is added to the qt_widget Qt Widget input field.
+        Opens a file browser to allow a user to select a file through a Qt predefined user interface.
+        The path of the selected file is added to the qt_widget Qt Widget input field.
 
         Args:
             qt_widget (obj): the Qt Widget that will display the full path of the selected file

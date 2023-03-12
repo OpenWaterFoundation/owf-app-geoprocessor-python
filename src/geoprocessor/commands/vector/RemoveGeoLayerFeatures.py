@@ -1,18 +1,18 @@
 # RemoveGeoLayerFeatures - command to remove GeoLayer features
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -37,7 +37,7 @@ import logging
 class RemoveGeoLayerFeatures(AbstractCommand):
     """
     Removes one or more features from a GeoLayer.
-    Currently the feature values are checked against the values in a table.
+    Currently, the feature values are checked against the values in a table.
     """
 
     # Define the command parameters.
@@ -49,7 +49,7 @@ class RemoveGeoLayerFeatures(AbstractCommand):
         CommandParameterMetadata("ExcludeAttributes", str)
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Remove one or more feature from a GeoLayer.\n"
@@ -58,7 +58,7 @@ class RemoveGeoLayerFeatures(AbstractCommand):
     )
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
@@ -96,18 +96,18 @@ class RemoveGeoLayerFeatures(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "RemoveGeoLayerFeatures"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ class RemoveGeoLayerFeatures(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id: str, match_attribute: str, include_table_id: str,
@@ -194,7 +194,8 @@ class RemoveGeoLayerFeatures(AbstractCommand):
             # Get the existing attribute names of the input GeoLayer.
             list_of_existing_attributes = input_geolayer.get_attribute_field_names()
 
-            # Create a list of invalid input attribute names. An invalid attribute name is an input attribute name
+            # Create a list of invalid input attribute names.
+            # An invalid attribute name is an input attribute name
             # that is not matching any of the existing attribute names of the GeoLayer.
             attribute_names = []
             if match_attribute is not None and len(match_attribute) > 0:
@@ -274,7 +275,7 @@ class RemoveGeoLayerFeatures(AbstractCommand):
         pv_ExcludeAttributes = self.get_parameter_value("ExcludeAttributes")
         exclude_attributes = None
         if pv_ExcludeAttributes is not None and (len(pv_ExcludeAttributes) > 0):
-            # Have attributes to exclude so parse:
+            # Have attributes to exclude so parse.
             exclude_attributes = string_util.parse_dictionary(pv_ExcludeAttributes)
         self.logger.info("ExcludeAttributes={}".format(exclude_attributes))
 
@@ -296,18 +297,18 @@ class RemoveGeoLayerFeatures(AbstractCommand):
                     table = self.command_processor.get_table(pv_IncludeTableID)
                     table_columns = [pv_IncludeTableColumn]
 
-                    # Iterate over the features and check that the requested attribute value is in the table column
+                    # Iterate over the features and check that the requested attribute value is in the table column.
                     for feature in input_geolayer.qgs_layer.getFeatures():
                         # Remove the attribute from the GeoLayer.
                         if pv_IncludeTableID is not None:
                             attribute_value = feature[attribute_name]
-                            # Column values to check in table
+                            # Column values to check in table.
                             column_values = [attribute_value]
                             if table_columns is not None:
                                 # Make sure that the feature's attribute value matches a table column value.
                                 records = table.get_records(table_columns, column_values)
                                 if len(records) == 0:
-                                    # No table records matched the feature attribute value so remove the feature
+                                    # No table records matched the feature attribute value so remove the feature:
                                     # - TODO smalers 2020-11-14 probably have to fix so don't get an
                                     #   iterator concurrency issue
                                     feature_ids_to_remove.append(feature.id())
@@ -336,7 +337,7 @@ class RemoveGeoLayerFeatures(AbstractCommand):
                     feature_count_start, input_geolayer.qgs_layer.featureCount()))
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
 
                 self.warning_count += 1
                 message = "Unexpected error removing features from GeoLayer {}.".format(pv_GeoLayerID)
@@ -345,7 +346,7 @@ class RemoveGeoLayerFeatures(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

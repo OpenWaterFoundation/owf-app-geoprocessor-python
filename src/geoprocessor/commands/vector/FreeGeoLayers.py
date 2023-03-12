@@ -1,18 +1,18 @@
 # FreeGeoLayers - command to free GeoLayer(s)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -37,7 +37,7 @@ class FreeGeoLayers(AbstractCommand):
     """
     Removes one or more GeoLayers from the GeoProcessor.
 
-    Command Parameters
+    Command Parameters:
     * GeoLayerIDs (str, required): A comma-separated list of the IDs of the existing GeoLayers to free.
     """
 
@@ -45,12 +45,12 @@ class FreeGeoLayers(AbstractCommand):
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerIDs", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Remove one or more GeoLayers from the GeoProcessor."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayersIDs
     __parameter_input_metadata['GeoLayerIDs.Description'] = \
@@ -66,18 +66,18 @@ class FreeGeoLayers(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "FreeGeoLayers"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class FreeGeoLayers(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id_list: [str]) -> bool:
@@ -128,12 +128,12 @@ class FreeGeoLayers(AbstractCommand):
             geolayer_id_list: an id list of the GeoLayers to be removed
 
         Returns:
-            Boolean. If TRUE, the file should be extracted. If FALSE, at least one check failed and the file should
-            not be extracted.
+            Boolean. If TRUE, the file should be extracted.
+            If FALSE, at least one check failed and the file should not be extracted.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = []
 
         # Iterate over the GeoLayerIDs in the GeoLayerIDList.
@@ -167,7 +167,7 @@ class FreeGeoLayers(AbstractCommand):
         pv_GeoLayerIDs = self.get_parameter_value("GeoLayerIDs")
 
         # Convert the GeoLayerIDs parameter from string to list format.
-        # If configured, list all of the registered GeoLayer IDs.
+        # If configured, list all the registered GeoLayer IDs.
         if pv_GeoLayerIDs == "*":
             list_of_geolayer_ids = []
 
@@ -209,7 +209,7 @@ class FreeGeoLayers(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

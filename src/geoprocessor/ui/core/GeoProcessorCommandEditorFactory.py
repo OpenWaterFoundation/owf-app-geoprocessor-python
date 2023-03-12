@@ -1,7 +1,7 @@
 # GeoProcessorCommandEditorFactory - class to create command editor for a command
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -41,11 +41,11 @@ class GeoProcessorCommandEditorFactory(object):
         Initialize the command editor factory.
         """
 
-        # TODO smalers 2019-01-18 the following data members are misplaced - need to move
-        # Use the following for diagnostics and performance analysis - total count of commands processed
+        # TODO smalers 2019-01-18 the following data members are misplaced - need to move.
+        # Use the following for diagnostics and performance analysis - total count of commands processed.
         self.command_created_count: int = 0
 
-        # Use the following for error-handling - total number of unknown commands
+        # Use the following for error-handling - total number of unknown commands.
         self.command_unknown_count: int = 0
 
     @classmethod
@@ -60,7 +60,7 @@ class GeoProcessorCommandEditorFactory(object):
            in which case the command will have zero or more parameters defined.
 
         Some commands such as # comments require special handling, since multiple command lines are edited.
-        This should be be handled before calling this function.
+        This should be handled before calling this function.
 
         Args:
             command (derived from AbstractCommand): command object
@@ -75,7 +75,7 @@ class GeoProcessorCommandEditorFactory(object):
 
         logger = logging.getLogger(__name__)
 
-        # Initialize the command editor for the command object.
+        # Initialize the command editor for the command object:
         # - only some commands have custom editors, depending on whether time has been spent building an editor
 
         # Check to see if command has editor type specified.
@@ -93,31 +93,31 @@ class GeoProcessorCommandEditorFactory(object):
             # The editor type is not specified so default to 'Generic'
             editor_type = 'Generic'
 
-        # Create the appropriate editor type
+        # Create the appropriate editor type.
         if editor_type == "Custom":
             # TODO smalers 2020-03-30 for now hard-code commands that use custom editors but once
-            # have an example make this generic
+            # have an example make this generic.
             if command.command_name == "CompareFiles":
                 return CompareFilesEditor(command, app_session)
         elif editor_type == "Generic":
-            # Generic editor is simple parameter: value text fields
+            # Generic editor is simple parameter: value text fields.
             return GenericCommandEditor(command)
         elif editor_type == "InsertLineEditor":
             # Single line commands like /*, */, and empty.
             return InsertLineEditor(command)
         elif editor_type == "InsertLineRulerEditor":
-            # Multi-line commands that use a ruler, such as one or more # commands
+            # Multi-line commands that use a ruler, such as one or more # commands.
             return InsertLineRulerEditor(command)
         elif editor_type == "Simple":
-            # Simple editor uses command class parameter_input_metadata dictionary to provide editor configuration
+            # Simple editor uses command class parameter_input_metadata dictionary to provide editor configuration.
             return SimpleCommandEditor(command, app_session)
         elif editor_type == "Tabbed":
-            # Tabbed editor is similar to Simple editor but parameters are grouped into tabs
+            # Tabbed editor is similar to Simple editor but parameters are grouped into tabs.
             logger.warning('Tabbed editor is not implemented for command ' + str(command.command_name))
             logger.warning('Using generic command editor.')
             return GenericCommandEditor(command)
         else:
-            # Editor type that is specified is not recognized, either a typo or code is out of date
+            # Editor type that is specified is not recognized, either a typo or code is out of date.
             logger.warning('Editor type "' + editor_type + '" unrecognized for command ' + str(command.command_name))
             logger.warning('Using generic command editor.')
             return GenericCommandEditor(command)

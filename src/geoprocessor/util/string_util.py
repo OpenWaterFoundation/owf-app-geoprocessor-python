@@ -1,18 +1,18 @@
 # string_util - utility functions for string manipulation
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2022 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -243,10 +243,10 @@ def filter_list_of_strings(input_list: [str], include_glob_patterns: [str] = Non
     elif len([x for x in exclude_glob_patterns if x is None]) == len(exclude_glob_patterns):
         exclude_glob_patterns = ['*']
 
-    # A list to hold all of the item to include.
+    # A list to hold all the items to include.
     master_items_to_include = []
 
-    # A list to hold all of the item to exclude.
+    # A list to hold all the items to exclude.
     master_items_to_exclude = []
 
     # Iterate over the include glob patterns.
@@ -344,10 +344,10 @@ def get_leading_whitespace(s: str):
     white = ""
     for i in range(len(s)):
         if s[i] == " " or s[i] == "\t":
-            # Add to the whitespace
+            # Add to the whitespace.
             white += s[i]
         else:
-            # Done processing
+            # Done processing.
             break
     return white
 
@@ -356,9 +356,9 @@ def glob2re(pat: str) -> str:
     """
     Translates a glob-style shell pattern using '*' for wildcards to a regular expression.
 
-    This function converts a glob-style pattern into a regular expression that can be used to iterate over a
-    list of strings. This function was not written by Open Water Foundation but was instead copied from the
-    following source: https://stackoverflow.com/questions/27726545/
+    Converts a glob-style pattern into a regular expression that can be used to iterate over a list of strings.
+    This function was not written by Open Water Foundation but was instead copied from the following source:
+        https://stackoverflow.com/questions/27726545/
     python-glob-but-against-a-list-of-strings-rather-than-the-filesystem.
 
     Args:

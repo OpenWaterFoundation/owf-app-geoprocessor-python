@@ -1,18 +1,18 @@
 # WritePropertiesToFile - command to write processor properties to a file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -47,12 +47,12 @@ class WritePropertiesToFile(AbstractCommand):
         CommandParameterMetadata("SortOrder", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Write command processor properties to a file."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # OutputFile
     __parameter_input_metadata['OutputFile.Description'] = "output file to write"
@@ -95,28 +95,28 @@ class WritePropertiesToFile(AbstractCommand):
     __parameter_input_metadata['SortOrder.Values'] = ["", "Ascending", "Descending"]
     __parameter_input_metadata['SortOrder.Value.Default'] = 'Ascending'
 
-    # Choices for WriteMode, used to validate parameter and display in editor
+    # Choices for WriteMode, used to validate parameter and display in editor.
     __choices_WriteMode = ["Append", "Overwrite"]
 
-    # Choices for FileFormat, used to validate parameter and display in editor
+    # Choices for FileFormat, used to validate parameter and display in editor.
     __choices_FileFormat = ["NameTypeValue", "NameTypeValuePython", "NameValue"]
 
-    # Choices for SortOrder, used to validate parameter and display in editor
+    # Choices for SortOrder, used to validate parameter and display in editor.
     __choices_SortOrder = ["Ascending", "Descending"]
 
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "WritePropertiesToFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -147,9 +147,9 @@ class WritePropertiesToFile(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # IncludeProperties is optional, default to * at runtime
+        # IncludeProperties is optional, default to * at runtime.
 
-        # WriteMode is optional, will default to Overwrite at runtime
+        # WriteMode is optional, will default to Overwrite at runtime.
         # noinspection PyPep8Naming
         pv_WriteMode = self.get_parameter_value(parameter_name='WriteMode', command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_WriteMode,
@@ -162,7 +162,7 @@ class WritePropertiesToFile(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # FileFormat is optional, will default to NameTypeValue at runtime
+        # FileFormat is optional, will default to NameTypeValue at runtime.
         # noinspection PyPep8Naming
         pv_FileFormat = self.get_parameter_value(parameter_name='FileFormat', command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_FileFormat,
@@ -175,7 +175,7 @@ class WritePropertiesToFile(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # SortOrder is optional, will default to None (no sort) at runtime
+        # SortOrder is optional, will default to None (no sort) at runtime.
         # noinspection PyPep8Naming
         pv_SortOrder = self.get_parameter_value(parameter_name='SortOrder', command_parameters=command_parameters)
         if not validator_util.validate_string_in_list(pv_SortOrder,
@@ -189,16 +189,15 @@ class WritePropertiesToFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self) -> None:
@@ -214,24 +213,24 @@ class WritePropertiesToFile(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
-        # Get data for the command
+        # Get data for the command.
         # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
         # noinspection PyPep8Naming
         pv_IncludeProperties = self.get_parameter_value('IncludeProperties')
-        include_properties = []  # Default
+        include_properties = []  # Default.
         if pv_IncludeProperties is not None and len(pv_IncludeProperties) > 0:
             include_properties = string_util.delimited_string_to_list(pv_IncludeProperties)
         # noinspection PyPep8Naming
         pv_WriteMode = self.get_parameter_value('WriteMode')
         write_mode = pv_WriteMode
         if pv_WriteMode is None or pv_WriteMode == "":
-            write_mode = 'Overwrite'  # Default
+            write_mode = 'Overwrite'  # Default.
         # noinspection PyPep8Naming
         pv_FileFormat = self.get_parameter_value('FileFormat')
         file_format = pv_FileFormat
         if pv_FileFormat is None or pv_FileFormat == "":
-            file_format = 'NameTypeValue'  # Default
+            file_format = 'NameTypeValue'  # Default.
         # noinspection PyPep8Naming
         pv_SortOrder = self.get_parameter_value('SortOrder')
         sort_order = 0  # no sort
@@ -241,7 +240,7 @@ class WritePropertiesToFile(AbstractCommand):
             elif pv_SortOrder == 'Descending':
                 sort_order = -1
 
-        # Runtime checks on input
+        # Runtime checks on input.
 
         # noinspection PyPep8Naming
         pv_OutputFile_absolute = io_util.verify_path_for_os(
@@ -253,14 +252,14 @@ class WritePropertiesToFile(AbstractCommand):
             logger.warning(message)
             raise CommandError(message)
 
-        # Write the output file
+        # Write the output file.
 
         # noinspection PyBroadException
         try:
-            problems = []  # Empty list of properties
+            problems = []  # Empty list of properties.
             io_util.write_property_file(pv_OutputFile_absolute, self.command_processor.properties,
                                         include_properties, write_mode, file_format, sort_order, problems)
-            # Record any problems that were found
+            # Record any problems that were found.
             for problem in problems:
                 warning_count += 1
                 logger.warning(problem)

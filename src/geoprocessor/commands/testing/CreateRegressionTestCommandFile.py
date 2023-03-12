@@ -1,7 +1,7 @@
 # CreateRegressionTestCommandFile - command to create a command file to run tests
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -34,9 +34,9 @@ import logging
 import os
 import re
 from typing import Pattern
+from typing import TextIO
 
 
-# TODO smalers 2018-01-21 This command is not yet fully functional
 class CreateRegressionTestCommandFile(AbstractCommand):
     """
     The CreateRegressionTestCommandFile examines a folder tree and creates a command
@@ -47,18 +47,21 @@ class CreateRegressionTestCommandFile(AbstractCommand):
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("SearchFolder", type("")),
         CommandParameterMetadata("FilenamePattern", type("")),
-        CommandParameterMetadata("OutputFile", type(""))
+        CommandParameterMetadata("OutputFile", type("")),
+        CommandParameterMetadata("SetupCommandFile", type("")),
+        CommandParameterMetadata("TestResultsFile", type("")),
+        CommandParameterMetadata("EndCommandFile", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
-        "This command is used for software functional testing and validation of workflow processes.\n"
+        "This command is used for software end-to-end testing and validation of workflow processes.\n"
         "It searches all folders in the selected folder to find tests to run and creates a "
         "test suite command file.")
     __command_metadata['EditorType'] = "Simple"
 
-    # Parameter Metadata
+    # Parameter Metadata.
     __parameter_input_metadata = dict()
     # SearchFolder
     __parameter_input_metadata['SearchFolder.Description'] = ""
@@ -73,13 +76,36 @@ class CreateRegressionTestCommandFile(AbstractCommand):
     __parameter_input_metadata['SearchFolder.FileSelector.SelectFolder'] = True
     # OutputFile
     __parameter_input_metadata['OutputFile.Description'] = "regression test command file to write"
-    __parameter_input_metadata['OutputFile.Label'] = "Output file"
+    __parameter_input_metadata['OutputFile.Label'] = "Command file to create"
     __parameter_input_metadata['OutputFile.Tooltip'] = (
-        "The property file to write, as an absolute path or relative to the command file, can use ${Property}.")
+        "The command file to create to run the test suite, can use ${Property}.")
     __parameter_input_metadata['OutputFile.Required'] = True
     __parameter_input_metadata['OutputFile.FileSelector.Type'] = "Write"
-    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
-        ["GP command file (*.gp)", "All files (*)"]
+    __parameter_input_metadata['OutputFile.FileSelector.Filters'] = ["GP command file (*.gp)", "All files (*)"]
+    # SetupCommandFile
+    __parameter_input_metadata['SetupCommandFile.Description'] = "command file to prepend"
+    __parameter_input_metadata['SetupCommandFile.Label'] = "Setup command file"
+    __parameter_input_metadata['SetupCommandFile.Tooltip'] = (
+        "Setup command file to prepend to output command file, can use ${Property}.")
+    __parameter_input_metadata['SetupCommandFile.Required'] = False
+    __parameter_input_metadata['SetupCommandFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['SetupCommandFile.FileSelector.Filters'] = ["GP command file (*.gp)", "All files (*)"]
+    # TestResultsFile
+    __parameter_input_metadata['TestResultsFile.Description'] = "test results file"
+    __parameter_input_metadata['TestResultsFile.Label'] = "Test results file"
+    __parameter_input_metadata['TestResultsFile.Tooltip'] = (
+        "Test results file for StartRegressionResultsReport, relative to the output command file, can use ${Property}.")
+    __parameter_input_metadata['TestResultsFile.Required'] = False
+    __parameter_input_metadata['TestResultsFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['TestResultsFile.FileSelector.Filters'] = ["GP command file (*.gp)", "All files (*)"]
+    # EndCommandFile
+    __parameter_input_metadata['EndCommandFile.Description'] = "command file to append"
+    __parameter_input_metadata['EndCommandFile.Label'] = "End command file"
+    __parameter_input_metadata['EndCommandFile.Tooltip'] = (
+        "End command file to append to output command file, can use ${Property}.")
+    __parameter_input_metadata['EndCommandFile.Required'] = False
+    __parameter_input_metadata['EndCommandFile.FileSelector.Type'] = "Read"
+    __parameter_input_metadata['EndCommandFile.FileSelector.Filters'] = ["GP command file (*.gp)", "All files (*)"]
     # FilenamePattern
     __parameter_input_metadata['FilenamePattern.Description'] = "pattern to find command files"
     __parameter_input_metadata['FilenamePattern.Label'] = "Filename pattern"
@@ -95,7 +121,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         self.command_name = "CreateRegressionTestCommandFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
         # Parameter Metadata
@@ -134,12 +160,12 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         # triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
@@ -166,9 +192,9 @@ class CreateRegressionTestCommandFile(AbstractCommand):
                 line_upper = line.upper()
                 index = line_upper.find("@EXPECTEDSTATUS")
                 if index >= 0:
-                    # Get the status as the next token after the tag
+                    # Get the status as the next token after the tag.
                     expected_status = line_upper[index + len("@EXPECTEDSTATUS"):].strip()
-                    # Translate variations to the official name recognized by RunCommands()
+                    # Translate variations to the official name recognized by RunCommands().
                     expected_status_upper = expected_status.upper()
                     if expected_status_upper == "WARN" or expected_status_upper == "WARNING":
                         expected_status = "Warning"
@@ -178,7 +204,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
                     break
         return expected_status_parameter
 
-    # TODO smalers 2018-01-20 Evaluate whether to include additional functionality as per TSTool
+    # TODO smalers 2018-01-20 Evaluate whether to include additional functionality as per TSTool.
     # Pattern type hint corresponds to re.compile("...")
     @classmethod
     def __get_matching_filenames_in_tree(cls, file_list: [str], path: str, pattern_regex: Pattern[str],
@@ -194,10 +220,10 @@ class CreateRegressionTestCommandFile(AbstractCommand):
             pattern_string (str): The pattern regex string before being compiled, used in logging.
         """
         logger = logging.getLogger(__name__)
-        # Use the following for troubleshooting
+        # Use the following for troubleshooting.
         debug = False
         if os.path.isdir(path):
-            # A directory (folder) so get the children and recurse
+            # A directory (folder) so get the children and recurse.
             children = os.listdir(path)
             for child in children:
                 # Recursively call with full path using the folder and child name.
@@ -205,7 +231,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
                                                                                  pattern_regex,
                                                                                  pattern_string=pattern_string)
         else:
-            # A file - add to list if file matches the pattern, but only check the filename (not leading path)
+            # A file - add to list if file matches the pattern, but only check the filename (not leading path).
             filename = os.path.basename(path)
             if debug:
                 logger.debug('Checking filename "' + filename + '" against "' + pattern_string + '"')
@@ -218,7 +244,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
             #    # logger.info("start=" + str(match_object.start()))
             #    # logger.info("end=" + str(match_object.end()))
             if match_object is not None and match_object.start() == 0 and match_object.end() == len(filename):
-                # FIXME SAM 2007-10-15 Need to enable something like the following to make more robust
+                # FIXME SAM 2007-10-15 Need to enable something like the following to make more robust.
                 # && isValidCommandsFile( dir )
                 if debug:
                     logger.debug("File matched.")
@@ -231,6 +257,35 @@ class CreateRegressionTestCommandFile(AbstractCommand):
                 if debug:
                     logger.debug("File not matched.")
                 pass
+
+    @classmethod
+    def __include_command_file(cls, out: TextIO, include_command_file: str, label: str) -> None:
+        """
+        Include the setup command file in the regression test command file.
+        The output file must already be open and is left open.
+
+        Args:
+        out: PrintWriter to write to.
+        includeCommandFile(str): full path for setup command file.
+        label(str): a short label that indicates the type of file being included ("setup" or "end")
+        @exception IOException if there is an error including the file.
+        """
+        if not include_command_file:
+            return
+
+        # Add a newline where needed.
+        nl = "\n"
+        out.write("#----------------" + nl)
+        out.write("# The following " + label + " commands were imported from:" + nl)
+        out.write("#   {}{}".format(include_command_file, nl) )
+        with open(include_command_file, 'r') as infile:
+            while True:
+                line = infile.readline()
+                if not line:
+                    break
+                # Don't need to add a newline to the following.
+                out.write(line)
+        out.write("#----------------")
 
     def run_command(self) -> None:
         """
@@ -245,20 +300,26 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
-        # Get data for the command
+        # Get data for the command.
         # noinspection PyPep8Naming
         pv_SearchFolder = self.get_parameter_value('SearchFolder')
         # noinspection PyPep8Naming
         pv_FilenamePattern = self.get_parameter_value('FilenamePattern')
         if pv_FilenamePattern is None or pv_FilenamePattern == "":
-            # The pattern that is desired is test_*.gp, using globbing syntax
+            # The pattern that is desired is test_*.gp, using globbing syntax.
             # noinspection PyPep8Naming
             pv_FilenamePattern = "[Tt][Ee][Ss][Tt]-*.gp"
             # noinspection PyPep8Naming
         # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
+        # noinspection PyPep8Naming
+        pv_SetupCommandFile = self.get_parameter_value('SetupCommandFile')
+        # noinspection PyPep8Naming
+        pv_TestResultsFile = self.get_parameter_value('TestResultsFile')
+        # noinspection PyPep8Naming
+        pv_EndCommandFile = self.get_parameter_value('EndCommandFile')
 
-        # Runtime checks on input
+        # Runtime checks on input.
 
         working_dir = self.command_processor.get_property('WorkingDir')
         logger.info('working_dir: "' + working_dir + '"')
@@ -287,57 +348,67 @@ class CreateRegressionTestCommandFile(AbstractCommand):
             logger.warning(message)
             raise CommandError(message)
 
-        # Do the processing
+        # Do the processing.
+
+        working_dir = self.command_processor.get_property('WorkingDir')
 
         # noinspection PyBroadException
         try:
-            # Output folder is used when constructing filenames for command files to run
+            # Output folder is used when constructing filenames for command files to run.
             output_folder_absolute = os.path.dirname(output_file_absolute_internal)
             logger.info('output_folder_absolute: "' + output_folder_absolute + '"')
             logger.info('output_folder_absolute_internal: "' + output_file_absolute_internal + '"')
-            files = []  # List of files to match
-            # Convert globbing-style wildcards to Pythonic regex
+            files = []  # List of files to match.
+            # Convert globbing-style wildcards to Pythonic regex.
             logger.info('Filename pattern using globbing = "' + pv_FilenamePattern + '"')
             # filename_pattern_regex = pv_FilenamePattern.replace("*", "[^/]*")
-            # Match any character of any length, making sure that special characters are dealt with
-            filename_pattern_regex = pv_FilenamePattern.replace(".", "\\.")  # So .gp is handled literally
-            # The following is used to match between "test-" and ".gp"
+            # Match any character of any length, making sure that special characters are dealt with.
+            filename_pattern_regex = pv_FilenamePattern.replace(".", "\\.")  # So .gp is handled literally.
+            # The following is used to match between "test-" and ".gp".
             filename_pattern_regex = filename_pattern_regex.replace("*", ".*")
             logger.info('Filename pattern using Python regex = "' + filename_pattern_regex + '"')
             filename_pattern_regex_compiled = re.compile(filename_pattern_regex)
             CreateRegressionTestCommandFile.__get_matching_filenames_in_tree(files, search_folder_absolute_internal,
                                                                              filename_pattern_regex_compiled,
                                                                              pattern_string=filename_pattern_regex)
-            # Sort the list
+            # Sort the list.
             files = sorted(files)
-            # Open the output file...
-            # TODO smalers 2018-10-20 decide whether to support append mode
+            # Open the output file.
+            # TODO smalers 2018-10-20 decide whether to support append mode.
             out = open(output_file_absolute_internal, "w")
-            # Write a standard header to the file so that it is clear when the file was created
+            # Write a standard header to the file so that it is clear when the file was created.
             io_util.print_standard_file_header(out, comment_line_prefix="#")
-            # Include the setup command file if requested
+            # Include the setup command file if requested.
+            setup_command_file_full = io_util.verify_path_for_os( io_util.to_absolute_path(working_dir,
+                                         self.command_processor.expand_parameter_value(pv_SetupCommandFile)))
+            self.__include_command_file(out, setup_command_file_full, "setup")
+            # Include the setup command file if requested.
             # logger.info('Adding commands from setup command file "' + setup_command_file_absolute + '"')
             # include_setup_file(out, setup_file_absolute, "setup")
-            # Include the matching test cases
+            # Include the matching test cases.
             # Python 2...
-            # nl = os.linesep  # newline character for operating system
-            # Python 3 translates \n into the OS-specific end of line so os.linesep introduces extra end of lines
+            # nl = os.linesep  # newline character for operating system.
+            # Python 3 translates \n into the OS-specific end of line so os.linesep introduces extra end of lines.
             nl = "\n"
             out.write("#" + nl)
             out.write("# The following " + str(len(files)) +
                       " test cases will be run to compare results with expected results." + nl)
             out.write("# Individual log files are generally created for each test." + nl)
-            # TODO smalers 2018-01-20 evaluate how to handle output table
-            # - Currently the GeoProcessor does not have table commands
+            # TODO smalers 2018-01-20 evaluate how to handle output table.
             table_param = ""
+            # Default the output file to the command file name with ".out.txt".
+            output_file = os.path.basename(output_file_absolute) + ".out.txt"
+            if (pv_TestResultsFile != None) and (pv_TestResultsFile != ""):
+                # Use the specified output file.
+                output_file = pv_TestResultsFile
             # Use absolute path since each developer will regenerate this file.
             out.write('StartRegressionTestResultsReport(OutputFile="' +
-                      output_file_absolute + '.out.txt"' + table_param + ")" + nl)
-            # Find the list of matching files...
+                      output_file + '.out.txt"' + table_param + ")" + nl)
+            # Find the list of matching files.
             # logger.debug('output_folder_absolute"' + output_folder_absolute + '"')
             for a_file in files:
                 logger.info('Adding command file "' + a_file + '"')
-                # The command files to run are relative to the commands file being created.
+                # The command files to run are relative to the commands file being created:
                 # - use the operating system separator
                 command_file_to_run = io_util.verify_path_for_os(
                     io_util.to_relative_path(output_folder_absolute, a_file))
@@ -346,16 +417,20 @@ class CreateRegressionTestCommandFile(AbstractCommand):
                 logger.info('Relative path to command file is "' + command_file_to_run + '"')
                 out.write('RunCommands(CommandFile="' + command_file_to_run + '"' +
                           CreateRegressionTestCommandFile.__determine_expected_status_parameter(a_file) + ')' + nl)
-            # TODO smalers 2018-12-30 Maybe the output file is relative to the working folder
-            # output_file_relative = io_util.to_relative_path(working_dir, output_file_absolute)
-            # out.write('WriteCommandSummaryToFile(OutputFile="' + output_file_relative + '.summary.html")' + nl)
-            out.write('WriteCommandSummaryToFile(OutputFile="' + output_file_absolute + '.summary.html")' + nl)
-            # TODO smalers 2018-01-28 evaluate whether to support end content
-            # Include the end command file if requested
-            # Message.printStatus ( 2, routine, "Adding commands from end command file \"" + EndCommandFile_full + "\"")
-            # includeCommandFile ( out, EndCommandFile_full, "end" );
+            # The following should now be put in the end commands.
+            # out.write('WriteCommandSummaryToFile(OutputFile="' + output_file_absolute + '.summary.html")' + nl)
+            # TODO smalers 2018-01-28 evaluate whether to support end content.
+            # Include the end command file if requested.
+            end_command_file_full = io_util.verify_path_for_os(
+                io_util.to_absolute_path(working_dir,
+                                         self.command_processor.expand_parameter_value(pv_EndCommandFile)))
+            logger.debug("Adding commands from end command file '" + end_command_file_full + "'")
+            self.__include_command_file(out, end_command_file_full, "end")
+
+            # Close the output file.
             out.close()
-            # Add the log file to output
+
+            # Add the log file to output.
             self.command_processor.add_output_file(output_file_absolute)
 
         except Exception:

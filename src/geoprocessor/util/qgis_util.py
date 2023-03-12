@@ -35,7 +35,7 @@ from qgis.core import QgsRasterBandStats
 from qgis.core import QgsGeometry, QgsMapLayer, QgsRasterLayer, QgsRectangle, QgsVectorFileWriter, QgsVectorLayer
 from qgis.core import QgsExpressionContext, QgsExpressionContextScope
 if (qgis_version_util.get_qgis_version_int(1) >= 3) and (qgis_version_util.get_qgis_version_int(2) <= 10):
-    # Works on QGIS 3.10
+    # Works on QGIS 3.10.
     from qgis import processing
 elif (qgis_version_util.get_qgis_version_int(1) >= 3) and (qgis_version_util.get_qgis_version_int(2) > 10):
     # Newer than 3.10, not sure exactly when changed.

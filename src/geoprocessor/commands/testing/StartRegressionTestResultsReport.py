@@ -1,7 +1,7 @@
 # StartRegressionTestResultsReport - command to start the regression test results report
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import geoprocessor.util.validator_util as validator_util
 
 import logging
 # import os
+import re
 
 
 class StartRegressionTestResultsReport(AbstractCommand):
@@ -44,13 +45,13 @@ class StartRegressionTestResultsReport(AbstractCommand):
         CommandParameterMetadata("OutputFile", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = \
         "Start a report file (and optionally results table) to be written to as regression tests are run."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # OutputFile
     __parameter_input_metadata['OutputFile.Description'] = "regression results report file"
@@ -64,8 +65,9 @@ class StartRegressionTestResultsReport(AbstractCommand):
     __parameter_input_metadata['OutputFile.FileSelector.Filters'] = \
         ["Report file (*.txt)", "All files (*)"]
 
-    # Only one regression command test file
-    __regression_test_fp = None  # Open file pointer to write regression test results
+    # Only one regression command test file.
+    __regression_test_file = None  # Name of regression test results file.
+    __regression_test_fp = None  # Open file pointer to write regression test results.
     __regression_test_line_count = 0
     __regression_test_disabled_count = 0
     __regression_test_fail_count = 0
@@ -75,15 +77,15 @@ class StartRegressionTestResultsReport(AbstractCommand):
         """
         Initialize a new instance of the command.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "StartRegressionTestResultsReport"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     @classmethod
@@ -129,19 +131,19 @@ class StartRegressionTestResultsReport(AbstractCommand):
         # nl = os.linesep
         nl = "\n"
         if cls.__regression_test_fp is None:
-            # Regression test results report is not open
-            logger.warning("Regression test report file is not open")
+            # Regression test results report is not open.
+            logger.warning("Regression test report file is not open.")
         else:
             cls.__regression_test_fp.write(
                 line_count + delim +
                 enabled + delim +
                 # run_time is in the tables because in the report it makes it difficult to "diff" previous
-                # and current reports because the run time will change for each run
+                # and current reports because the run time will change for each run.
                 # runTime + delim +
                 indicator + '{:4}'.format(test_pass_fail) + indicator + delim +
                 '{:10}'.format(expected_status) + delim +
                 '{:10}'.format(str(max_severity)) + " " + delim + test_command_file + nl)
-        # TODO smalers 2018-01-27 need to decide how to handle tables output
+        # TODO smalers 2018-01-27 need to decide how to handle tables output.
         """
         if StartRegressionTestResultsReport.__regression_test_table is not None:
             TableRecord rec = __regressionTestTable.emptyRecord();
@@ -198,32 +200,38 @@ class StartRegressionTestResultsReport(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
+        # This returns a message that can be appended to the warning, and if non-empty
         # triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
+    # Class method because need to call from outside an instance of this command.
     @classmethod
     def close_regression_test_report_file(cls) -> None:
         """
         Close the regression test report file.
+        Also create a file that is the same but with name including '.nonum' at the end that
+        does not have test numbers, which facilitates comparing the results, for example in KDiff3.
 
         Returns:
             None
         """
-        # logger = logging.getLogger(__name__)
+
+        logger = logging.getLogger(__name__)
         if cls.__regression_test_fp is None:
-            # Regression test file was never opened
+            # Regression test file was never opened:
             # - this is not important to most users, especially if not running tests
-            # logger.info("Regression report file is None")
+            # logger.info("The test results file was never opened so not closing.")
             return
+
+        logger.info("Closing the test results file: " + cls.__regression_test_file)
 
         # nl = os.linesep
         nl = "\n"
@@ -245,10 +253,43 @@ class StartRegressionTestResultsReport(AbstractCommand):
         fp.write("#--------------------------------" + nl)
         fp.write("Total          = " + str(total_count) + nl)
 
+        # Close the normal results file.
         cls.__regression_test_fp.close()
-        cls.__regression_test_fp = None  # Set so that it can be opened again
+        cls.__regression_test_fp = None  # Set so that it can be opened again.
 
-    # TODO smalers 2018-01-28 Evaluate whether to make this a class method
+        # Create a filename that has extension: .nonum.ext
+        ext = io_util.get_extension(cls.__regression_test_file)
+        output_file = None
+        if not ext:
+            output_file = cls.__regression_test_file + ".nonum.txt"
+        else:
+            output_file = cls.__regression_test_file[0:len(cls.__regression_test_file) - len(ext)] + "nonum." + ext
+
+        logger.info("Creating the 'nonum' test results file: " + output_file)
+
+        try:
+            # Open the normal results file to read and transfer to the 'nonum' version.
+            with open(cls.__regression_test_file, 'r') as ifp, open(output_file, 'w') as ofp:
+                # Read the normal report file, which contains the test number in the left column.
+                while True:
+                    line = ifp.readline()
+                    if not line:
+                        break
+                    # Replace the number column with spaces:
+                    # - the newline is read and is retaned when writing
+                    line = re.sub("^[ 0-9][ 0-9][ 0-9][ 0-9][ 0-9]", "     ",line)
+                    ofp.write(line)
+        # noinspection PyBroadException
+        except Exception:
+            message = 'Unexpected error creating "nonum" test results file: {}'.format(output_file)
+            logger.warning(message, exc_info=True)
+        finally:
+            if ifp:
+                ifp.close()
+            if ofp:
+                ofp.close()
+
+    # TODO smalers 2018-01-28 Evaluate whether to make this a class method.
     @staticmethod
     def __open_new_regression_test_report_file(output_file: str, append: bool = False) -> None:
         """
@@ -262,20 +303,21 @@ class StartRegressionTestResultsReport(AbstractCommand):
         Returns:
             None.
         """
-        # TODO smalers 2018-01-27 evaluate how to use the counts (is used in Java)
+        # TODO smalers 2018-01-27 evaluate how to use the counts (is used in Java).
         # Initialize the report counts.
         StartRegressionTestResultsReport.__regression_test_line_count = 0
         StartRegressionTestResultsReport.__regression_test_fail_count = 0
         StartRegressionTestResultsReport.__regression_test_pass_count = 0
         # TODO smalers 2018-01-27 evaluate how to support tables for output
-        # Save the tables to be used for the regression summary
+        # Save the tables to be used for the regression summary.
         # __regressionTestTable = tables;
         # Print the report headers.
         mode = "w"
         if append:
             mode = "a"
+        StartRegressionTestResultsReport.__regression_test_file = output_file
         StartRegressionTestResultsReport.__regression_test_fp = open(output_file, mode)
-        fp = StartRegressionTestResultsReport.__regression_test_fp  # Local variable for class data
+        fp = StartRegressionTestResultsReport.__regression_test_fp  # Local variable for class data.
         io_util.print_standard_file_header(fp, comment_line_prefix="#", max_width=80)
         # nl = os.linesep
         nl = "\n"
@@ -318,18 +360,18 @@ class StartRegressionTestResultsReport(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
-        # Get data for the command
+        # Get data for the command.
         # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
 
-        # Runtime checks on input
+        # Runtime checks on input.
 
         if warning_count > 0:
             message = "There were {} warnings about command parameters.".format(warning_count)
             logger.warning(message)
             raise CommandError(message)
 
-        # Open the regression test results file
+        # Open the regression test results file.
 
         output_file_absolute = pv_OutputFile
         # noinspection PyBroadException
@@ -338,10 +380,10 @@ class StartRegressionTestResultsReport(AbstractCommand):
             output_file_absolute = io_util.verify_path_for_os(
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                          self.command_processor.expand_parameter_value(pv_OutputFile, self)))
-            self.__open_new_regression_test_report_file(output_file_absolute, False)  # Do not append
+            self.__open_new_regression_test_report_file(output_file_absolute, False)  # Do not append.
             logger.info('Opened regression test results report file: {}'.format(output_file_absolute))
 
-            # Save the output file in the processor, used by the UI to list output files
+            # Save the output file in the processor, used by the UI to list output files.
             self.command_processor.add_output_file(output_file_absolute)
 
         except Exception:

@@ -1,18 +1,18 @@
 # CreatePointsAlongLine - command to create point layer along a line
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -34,10 +34,10 @@ import logging
 
 class CreatePointsAlongLine(AbstractCommand):
     """
-    Creates a copy of a GeoLayer in the GeoProcessor's geolayers list. The copied GeoLayer is added to the
-    GeoProcessor's geolayers list.
+    Creates a copy of a GeoLayer in the GeoProcessor's geolayers list.
+    The copied GeoLayer is added to the GeoProcessor's geolayers list.
 
-    Command Parameters
+    Command Parameters:
 
     * GeoLayerID (str, required): The ID of the existing GeoLayer to copy.
     * CopiedGeoLayerID (str, optional): The ID of the copied GeoLayer. Default "{}_copy".format(GeoLayerID)
@@ -57,12 +57,12 @@ class CreatePointsAlongLine(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "CreatePointsAlongLine"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class CreatePointsAlongLine(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_geolayer_id: str, output_geolayer_id: str) -> bool:
@@ -149,8 +149,8 @@ class CreatePointsAlongLine(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message,
                                                             recommendation))
 
-        # If the output GeoLayer ID is the same as an already-registered GeoLayerID, react according to the
-        # pv_IfGeoLayerIDExists value.
+        # If the output GeoLayer ID is the same as an already-registered GeoLayerID,
+        # react according to the pv_IfGeoLayerIDExists value.
         elif self.command_processor.get_geolayer(output_geolayer_id):
             # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
@@ -189,8 +189,8 @@ class CreatePointsAlongLine(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE,
                                                                 message, recommendation))
 
-        # Return the Boolean to determine if the copy process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
+        # Return the Boolean to determine if the copy process should be run. If TRUE, all checks passed.
+        # If FALSE, one or many checks failed.
         return run_copy
 
     def run_command(self) -> None:

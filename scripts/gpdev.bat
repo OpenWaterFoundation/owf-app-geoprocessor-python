@@ -526,20 +526,30 @@ if "!runPython!"=="yes" (
   echo [INFO]
   echo [INFO] Running Python directly in GeoProcessor environment.
   echo [INFO] Use Python language syntax at the prompt.
-  rem Don't pass command line options because Python tries to interpret.
-  rem "!PYTHONHOME!\python" -v %*
-  rem "!PYTHONHOME!\python" -v
   echo [INFO] Running: "!PYTHONHOME!\python" !verboseOpt! -B -d -X dev
+  rem Running the bin\python.exe works:
+  rem - don't pass command line options with %* because Python tries to interpret.
   "!OSGEO4W_ROOT!\bin\python" !verboseOpt! -B -d -X dev
+
+  rem Running the Python39 executable fails:
+  rem - fails if using the same environment as the above
+  rem"!OSGEO4W_ROOT!\apps\Python39\python" !verboseOpt! -B -d -X dev
 ) else (
+  rem Run the full GeoProcessor application.
   echo [INFO]
   echo [INFO] Running:  "!PYTHONHOME!\python" !verboseOpt! -m geoprocessor.app.gp %*
   echo [INFO] If errors result due to missing packages,
   echo [INFO] install those packages in the PyCharm venv and report to developers.
   echo [INFO] Start-up may be slow if virus scanner needs to check.
-  echo.
+  echo [INFO]
   rem Run the GeoProcessor application.
+  rem Running the bin\python.exe works.
   "!OSGEO4W_ROOT!\bin\python" !verboseOpt! -m geoprocessor.app.gp %*
+
+  rem Running the Python39 executable fails:
+  rem - fails if using the same environment as the above
+  rem set PATH=!OSGEO4W_ROOT!\apps\Python39\DLLs;!PATH!
+  rem echo Modified path to: !PATH!
   rem "!OSGEO4W_ROOT!\apps\Python39\python" !verboseOpt! -m geoprocessor.app.gp %*
 )
 

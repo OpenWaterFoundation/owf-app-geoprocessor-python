@@ -1,7 +1,7 @@
 # RasterGeoLayer - class for RasterGeoLayer (raster spatial data layer)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+.
 # See:  https://stackoverflow.com/questions/33533148/
 #         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
 from __future__ import annotations
@@ -95,7 +95,7 @@ class RasterGeoLayer(GeoLayer):
                 These properties facilitate processing.
         """
 
-        # GeoLayer data
+        # GeoLayer data:
         # - the layer is stored in the parent class using QGIS QgsLayer
         super().__init__(geolayer_id=geolayer_id,
                          name=name,
@@ -223,5 +223,5 @@ class RasterGeoLayer(GeoLayer):
         """
         return False
 
-    # TODO smalers 2020-01-13 evaluate whether this is needed for raster
+    # TODO smalers 2020-01-13 evaluate whether this is needed for raster.
     # def write_to_disk(self, output_file_absolute):

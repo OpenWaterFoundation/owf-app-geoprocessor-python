@@ -74,6 +74,9 @@ owf-app-geoprocessor-python/       The GeoProcessor code and documentation repos
   build-util/                      Scripts to help in the GeoProcessor development environment.
   LICENSE.md                       GeoProcessor license (GPL v3).
   README.md                        This README file.
+  requirements/                    Python package requirements lists for GeoProcessor virtual environment.
+    requirements-qgis-N.N.txt      Pytyon package requiremetns lsit for GeoProcessor virtual environment,
+                                   QGIS version N.N.
   scripts/                         Scripts to run GeoProcessor in the development and deployed environments.
   src/                             Source Python files (root folder for code).
     geoprocessor/                  Main module folder for GeoProcessor software.

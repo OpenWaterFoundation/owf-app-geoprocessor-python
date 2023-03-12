@@ -1,18 +1,18 @@
 # RunSql - command to run an SQL statement on a datastore
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -60,12 +60,12 @@ class RunSql(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "RunSql"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -113,8 +113,9 @@ class RunSql(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # TEMPORARY CHECK: Check that the DataStoreProcedure method is not being used. Currently disabled until future
-        # development. Once developed, this check can be removed.
+        # TEMPORARY CHECK:
+        # Check that the DataStoreProcedure method is not being used. Currently disabled until future development.
+        # Once developed, this check can be removed.
         else:
             # noinspection PyPep8Naming
             pv_DataStoreProcedure = self.get_parameter_value(parameter_name="DataStoreProcedure",
@@ -137,7 +138,7 @@ class RunSql(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, datastore_id: str) -> bool:
@@ -152,8 +153,8 @@ class RunSql(AbstractCommand):
              Boolean. If TRUE, the  process should be run. If FALSE, it should not be run.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
@@ -205,7 +206,7 @@ class RunSql(AbstractCommand):
         if self.check_runtime_data(pv_DataStoreID):
             # noinspection PyBroadException
             try:
-                # Get the DataStore object
+                # Get the DataStore object.
                 datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
 
                 if pv_Sql:
@@ -220,13 +221,13 @@ class RunSql(AbstractCommand):
                     sql_statement = f.read().strip()
 
                 else:
-                    # If using the DataStoreProcedure method, ... .
+                    # Used with the DataStoreProcedure method.
                     sql_statement = None
 
                 # Execute and commit the SQL statement.
                 datastore_obj.run_sql(sql_statement)
 
-            # Raise an exception if an unexpected error occurs during the process
+            # Raise an exception if an unexpected error occurs during the process.
             except Exception:
                 self.warning_count += 1
                 message = "Unexpected error executing the Sql statement on the {} DataStore.".format(pv_DataStoreID)
@@ -235,7 +236,7 @@ class RunSql(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

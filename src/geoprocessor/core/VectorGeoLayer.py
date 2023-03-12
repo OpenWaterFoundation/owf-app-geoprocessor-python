@@ -1,7 +1,7 @@
 # VectorGeoLayer - class for VectorGeoLayer (vector spatial data layer)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+.
 # See:  https://stackoverflow.com/questions/33533148/
 #         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
 from __future__ import annotations
@@ -39,8 +39,8 @@ class VectorGeoLayer(GeoLayer):
 
     A list of registered GeoLayer instances are maintained in the GeoProcessor's self.geolayers property.
     The GeoProcessor's commands retrieve in-memory GeoLayer instances from the GeoProcessor's self.geolayers property
-    using the GeoProcessor.get_geolayer() function. New GeoLayer instances are added to the GeoProcessor list using the
-    add_geolayer() function.
+    using the GeoProcessor.get_geolayer() function.
+    New GeoLayer instances are added to the GeoProcessor list using the add_geolayer() function.
     """
 
     def __init__(self, geolayer_id: str,
@@ -86,7 +86,7 @@ class VectorGeoLayer(GeoLayer):
                 These properties facilitate processing.
         """
 
-        # GeoLayer data
+        # GeoLayer data:
         # - the layer is stored in the parent class using QGIS QgsLayer
         super().__init__(geolayer_id,
                          name=name,
@@ -137,12 +137,12 @@ class VectorGeoLayer(GeoLayer):
 
     def get_attribute_field_names(self) -> [str]:
         """
-        Returns the a list of attribute field names (list of strings) within the GeoLayer.
+        Returns the list of attribute field names (list of strings) within the GeoLayer.
         """
 
-        # Get the attribute field names of the GeoLayer
-        # "attribute_field_names" (list of strings) is a list of the GeoLayer's attribute field names. Return the
-        # attribute_field_names variable.
+        # Get the attribute field names of the GeoLayer.
+        # "attribute_field_names" (list of strings) is a list of the GeoLayer's attribute field names.
+        # Return the attribute_field_names variable.
         attribute_field_names = [attr_field.name() for attr_field in self.qgs_layer.fields()]
         return attribute_field_names
 
@@ -178,14 +178,14 @@ class VectorGeoLayer(GeoLayer):
             if geom_format.upper() == "QGIS":
                 return qgis_util.get_geometrytype_qgis(self.qgs_layer)
             elif geom_format.upper() == "WKB":
-                # Return the geometry in WKB format
+                # Return the geometry in WKB format.
                 return qgis_util.get_geometrytype_wkb(self.qgs_layer)
             elif geom_format.upper() == "WKT":
-                # Use the WKT values, essentially the same as binary
+                # Use the WKT values, essentially the same as binary.
                 return qgis_util.get_geometrytype_wkt(self.qgs_layer)
 
         else:
-            # The geometry is not a valid format. Raise ValueError
+            # The geometry is not a valid format. Raise ValueError.
             raise ValueError("Geom_format ({}) is not a valid geometry format. Valid geometry formats are:"
                              " {}".format(geom_format, valid_geom_formats))
 
@@ -223,7 +223,7 @@ class VectorGeoLayer(GeoLayer):
 
     def remove_attributes(self, keep_pattern: list = None, remove_pattern: list = None) -> None:
         """
-        Removes attributes of the GeoLayer depending on the glob-style input patterns
+        Removes attributes of the GeoLayer depending on the glob-style input patterns.
 
         Args:
             keep_pattern (list): a list of glob-style patterns of attributes to keep (will not be removed)
@@ -287,7 +287,7 @@ class VectorGeoLayer(GeoLayer):
     def update_properties(self) -> None:
         """
         Update properties, typically before writing the output file.
-        For example, this includes the extent of the file
+        For example, this includes the extent of the file.
 
         Returns:
             None
@@ -295,8 +295,8 @@ class VectorGeoLayer(GeoLayer):
 
     def write_to_disk(self, output_path_full: str) -> GeoLayer:
         """
-        Write the GeoLayer to a file on disk. The in-memory GeoLayer will be replaced by the on-disk GeoLayer. This
-        utility method is useful when running a command that requires the input of a source path rather than a
+        Write the GeoLayer to a file on disk. The in-memory GeoLayer will be replaced by the on-disk GeoLayer.
+        This utility method is useful when running a command that requires the input of a source path rather than a
         QgsVectorLayer object. For example, the "qgis:mergevectorlayers" requires source paths as inputs.
 
         Args:
@@ -307,9 +307,9 @@ class VectorGeoLayer(GeoLayer):
             current GeoLayer.
         """
 
-        # Remove the shapefile (with its component files) from the temporary directory if it already exists. This
-        # block of code was developed to see if it would fix the issue of tests failing when running under suite mode
-        # and passing when running as a single test.
+        # Remove the shapefile (with its component files) from the temporary directory if it already exists.
+        # This block of code was developed to see if it would fix the issue of tests failing when running
+        # under suite mode and passing when running as a single test.
         if os.path.exists(output_path_full + '.shp'):
 
             # Iterate over the possible extensions of a shapefile.
@@ -326,7 +326,7 @@ class VectorGeoLayer(GeoLayer):
         # Write the GeoLayer (generally an in-memory GeoLayer) to a GeoJSON on disk (with the input absolute path).
         qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_layer, output_path_full, self.get_crs_code())
 
-        # Read a QgsVectorLayer object from the on disk spatial data file (GeoJSON)
+        # Read a QgsVectorLayer object from the on disk spatial data file (GeoJSON).
         qgs_vector_layer_disk = qgis_util.read_qgsvectorlayer_from_file(output_path_full + ".shp")
 
         # Create a new GeoLayer object with the same ID as the current object. The data however is not written to disk.

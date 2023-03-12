@@ -1,7 +1,7 @@
 # ExtractGeoLayerSelectionConditionType - selection condition type enumeration for ExtractGeoLayer command
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2022 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ class ExtractGeoLayerSelectionConditionType(Enum):
 
         Args:
             str_value (str): String value of the enumeration.
-            ignore_case (bool): Whether or not to ignore case (default = False).
+            ignore_case (bool): Whether to ignore case (default = False).
 
         Returns:
             Value of the enumeration, or None if not matched.

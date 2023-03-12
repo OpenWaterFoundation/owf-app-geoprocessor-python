@@ -1,18 +1,18 @@
 # AbstractCommand - class that is the abstract parent class for all commands
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -22,6 +22,7 @@ from geoprocessor.core.CommandStatus import CommandStatus
 
 import geoprocessor.util.command_util as command_util
 
+import logging
 from typing import Any
 
 
@@ -36,44 +37,45 @@ class AbstractCommand(object):
         # Full command string (with indentation).
         self.command_string: str = ""
 
-        # Command name as user would see. Will be set when command is parsed. Will NOT be set if an UnknownCommand.
+        # Command name as user would see. Will be set when command is parsed. Will NOT be set if an UnknownCommand:
         # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
         self.command_name: str = ""
 
-        # Command description, used in editors.
+        # Command description, used in editors:
         # - TODO smalers 2020-01-14 figure out how to make this class data in the derived class
         self.command_description: str = ""
 
-        # Command processor, needed to interact with the geoprocessing environment.
+        # Command processor, needed to interact with the geoprocessing environment:
         # - TODO smalers 2020-01-14 don't type hint for GeoProcessor because would get into circular imports
         self.command_processor = None
 
-        # Command processor user interface, needed for ?
+        # Command processor user interface, needed for:
+        # - not sure why this is needed
         # - TODO smalers 2020-01-14 don't type hint for GeoProcessorUI because would get into circular imports
         self.geoprocessor_ui = None
 
         # Command parameters, a dictionary of input parameter names and parameter values.
         # The parameter values are all strings, matching the parsed values from the command string.
         # This ensures that no internal conversion, decimal round-off, etc. is exhibited.
-        # The parameters are converted to needed non-string values in the command's run_command() function.
-        # - Derived class typically defines as class data '__command_parameters' and then has a reference to class
-        #   data from the command instance 'command_parameters'.
+        # The parameters are converted to needed non-string values in the command's run_command() function:
+        # - derived class typically defines as class data '__command_parameters' and then has a reference to class
+        #   data from the command instance 'command_parameters'
         self.command_parameters: dict = {}
 
-        # Command metadata, used to display the description, etc.
-        # - Derived class typically defines as class data '__command_metadata' and then has a reference to class
-        #   data from the command instance 'command_metadata'.
+        # Command metadata, used to display the description, etc.:
+        # - derived class typically defines as class data '__command_metadata' and then has a reference to class
+        #   data from the command instance 'command_metadata'
         self.command_metadata: dict = {}
 
         # Command parameter metadata, a list of CommandParameterMetadata to
-        # describe parameter names and types used by the command.
-        # - Derived class typically defines as class data '__command_parameter_metadata' and then has a
-        #   reference to class data from the command instance 'command_parameter_metadata'.
+        # describe parameter names and types used by the command:
+        # - derived class typically defines as class data '__command_parameter_metadata' and then has a
+        #   reference to class data from the command instance 'command_parameter_metadata'
         self.command_parameter_metadata: [CommandParameterMetadata] = []
 
-        # Command parameter input metadata, a dictionary of properties that describe UI features
-        # - Derived class typically defines as class data '__parameter_input_metadata' and then has a
-        #   reference to class data from the command instance 'parameter_input_metadata'.
+        # Command parameter input metadata, a dictionary of properties that describe UI features:
+        # - derived class typically defines as class data '__parameter_input_metadata' and then has a
+        #   reference to class data from the command instance 'parameter_input_metadata'
         self.parameter_input_metadata: dict = {}
 
         # Command status to track issues.
@@ -119,7 +121,7 @@ class AbstractCommand(object):
         for parameter_metadata in self.command_parameter_metadata:
             if parameter_metadata.parameter_name.upper() == parameter_name.upper():
                 return parameter_metadata
-        # Matching parameter not found so return None
+        # Matching parameter not found so return None.
         return None
 
     def get_parameter_input_metadata_value(self,
@@ -135,25 +137,24 @@ class AbstractCommand(object):
             parameter_input_metadata_name (str):
                 Parameter input metadata name of interest, for example 'Name.Value.Default'
             parameter_input_metadata (dict):
-                A dictionary of parameter_input_metadata, defaults to the commands dictionary.
+                A dictionary of parameter_input_metadata, defaults to the command's dictionary.
             default_value (object):
                 Default value if no value is found, if None then won't be used.
 
         Returns:
             object:
-                Parameter input metadata object for the requested parameter input metadata name,
-                or None if not found.
+                Parameter input metadata object for the requested parameter input metadata name, or None if not found.
         """
         try:
             if parameter_input_metadata is None:
-                # Get the parameter from the command's dictionary
+                # Get the parameter from the command's dictionary.
                 parameter_input_metadata_value = self.parameter_input_metadata[parameter_input_metadata_name]
             else:
-                # Get the parameter from the provided parameter dictionary
+                # Get the parameter from the provided parameter dictionary.
                 parameter_input_metadata_value = parameter_input_metadata[parameter_input_metadata_name]
             return parameter_input_metadata_value
         except KeyError:
-            # Parameter was not found, return the default value or None
+            # Parameter was not found, return the default value or None.
             return default_value
 
     def get_parameter_value(self, parameter_name: str, command_parameters: dict = None,
@@ -176,19 +177,19 @@ class AbstractCommand(object):
         """
         try:
             if command_parameters is None:
-                # Get the parameter from the command's dictionary
+                # Get the parameter from the command's dictionary.
                 # parameter_value = self.command_parameters.get(parameter_name)
                 parameter_value = self.command_parameters[parameter_name]
             else:
-                # Get the parameter from the provided parameter dictionary
+                # Get the parameter from the provided parameter dictionary.
                 # parameter_value = command_parameters.get(parameter_name)
                 parameter_value = command_parameters[parameter_name]
             return parameter_value
         except KeyError:
-            # Parameter was not found, return the default value or None
+            # Parameter was not found, return the default value or None.
             return default_value
 
-    # TODO smalers 2020-01-14 Don't type hint processor to GeoProcessor because it will result in circular import
+    # TODO smalers 2020-01-14 Don't type hint processor to GeoProcessor because it will result in circular import.
     def initialize_command(self, command_string: str, processor, full_initialization: bool) -> None:
         """
         Initialize the command by setting the processor and parsing parameters.
@@ -199,7 +200,7 @@ class AbstractCommand(object):
             full_initialization (bool):  Indicates whether to call parse_command to fully initialize
                                             (otherwise just sets the command string and GeoProcessor)
         """
-        # Set the command string
+        # Set the command string:
         # - strip off the whitespace on the right such as newline (may be present if reading from a file)
         # - do not strip the left side since indent is used for formatting and want to retain
         self.command_string = command_string.rstrip()
@@ -208,18 +209,17 @@ class AbstractCommand(object):
         self.command_processor = processor
 
         # If full initialization, the input parameters will be parsed and the values will be added to the
-        # command_parameters
+        # 'command_parameters'.
         if full_initialization:
 
-            # the following will call the AbstractCommand.parse_command by default
+            # The following will call the AbstractCommand.parse_command by default.
             self.parse_command(command_string)
 
     # TODO smalers 2020-03-13 is there a better way to do this so that commands don't need to know about UI?
-    # TODO smalers 2020-01-14 don't type hint GeoProcessorUI because it will result in circular import issue
+    # TODO smalers 2020-01-14 don't type hint GeoProcessorUI because it will result in circular import issue.
     def initialize_geoprocessor_ui(self, geoprocessor_ui) -> None:
         """
-        Initialize the geoprocessor ui for commands that need to access data
-        or functions from GeoProcessorUI.py
+        Initialize the geoprocessor ui for commands that need to access data or functions from GeoProcessorUI.py.
 
         Args:
             geoprocessor_ui (obj): a geoprocessor instance
@@ -249,33 +249,42 @@ class AbstractCommand(object):
         parameter_string = command_util.parse_parameter_string_from_command_string(command_string)
 
         debug = False
+        logger = None
+        if debug:
+            logger = logging.getLogger(__name__)
+
         if len(parameter_string) > 0:
-            # Parameters are available to parse...
+            # Parameters are available to parse.
             # Parse the parameter string of form Parameter="Value",Parameter="Value" into a list of parameter items.
             # Parameter items are strings that represent key=value pairs for each parameter in the parameter string.
             # The parameter items are separated by commas in the parameter string.
             parameter_items = command_util.parse_parameter_string_into_key_value_pairs(parameter_string)
 
             # Parse each parameter key and value pair. If the parameter value is supposed to be in list format
-            # (rather than string format) convert it to a list. Return a dictionary with each parameter as a separate
-            # entry (key: parameter name as entered by the user, value: the parameter value (in either string or list
-            # format) assign the parameter dictionary to self.command_parameters for use by the specific command.
+            # (rather than string format) convert it to a list.
+            # Return a dictionary with each parameter as a separate entry:
+            #   key: parameter name as entered by the user
+            #   value: the parameter value (in either string or list format)
+            # assign the parameter dictionary to self.command_parameters for use by the specific command.
             self.command_parameters = command_util.parse_key_value_pairs_into_dictionary(parameter_items)
             if debug:
-                print("CMD_PARAM: {}".format(self.command_parameters))
+                logger.info("Parsing: {}".format( self.command_string))
+                logger.info("command_parameters: {}".format(self.command_parameters))
 
-        # Print out the parsed command parameters for debugging
+        # Print out the parsed command parameters for debugging.
         if debug:
             for parameter_name, parameter_value in self.command_parameters.items():
-                print('After parsing, command parameter name="' + parameter_name + '" value="' + parameter_value + '"')
+                logger.info('After parsing, command parameter name="' + parameter_name + '" value="' + parameter_value + '"')
                 pass
 
     def print_for_debug(self) -> None:
-        print("Debug information for command")
-        print("Command name=" + self.command_name)
-        print("Command string=" + self.command_string)
+        logger = logging.getLogger(__name__)
+
+        logger.info("Debug information for command:")
+        logger.info("  Command name=" + self.command_name)
+        logger.info("  Command string=" + self.command_string)
         for parameter_name, parameter_value in self.command_parameters.items():
-            print('Command parameter name ="' + parameter_name + '", value="' + parameter_value + '"')
+            logger.info('    Command parameter name ="' + parameter_name + '", value="' + parameter_value + '"')
 
     def run_command(self) -> None:
         """
@@ -310,12 +319,12 @@ class AbstractCommand(object):
 
         Returns:  Formatted command string such as CommandName(Param1="Value1",Param2="Value2",...)
         """
-        # If the parameters passed in are None, use the command parameters
+        # If the parameters passed in are None, use the command parameters.
         if command_parameters is None:
             command_parameters = self.command_parameters
-        # First part of command is the indent from the original command
+        # First part of command is the indent from the original command.
         command_string_formatted = ""
-        # TODO smalers 2019-01-19 need to fix this logic to indent the correct number
+        # TODO smalers 2019-01-19 need to fix this logic to indent the correct number:
         # - if formatting/editing an existing command the indent should be retained
         # - if formatting/editing a new command, the indent needs to be determined from previous commands
         do_indent = False
@@ -324,34 +333,34 @@ class AbstractCommand(object):
                 if self.command_string[i_command] == " ":
                     command_string_formatted = command_string_formatted + " "
                 else:
-                    # No more spaces at front of the command
+                    # No more spaces at front of the command.
                     break
-        # Append the command name and starting parenthesis
+        # Append the command name and starting parenthesis.
         command_string_formatted = command_string_formatted + self.command_name + "("
         # Loop through all the parameters that are valid for the command.
         param_output_count = 0
         for command_parameter_meta in self.command_parameter_metadata:
             parameter_value = self.get_parameter_value(command_parameter_meta.parameter_name,
                                                        command_parameters=command_parameters)
-            # Determine whether to output
+            # Determine whether to output.
             do_output = False
             if format_all:
                 do_output = True
             else:
-                # Only output if the parameter is not None and not a blank string
+                # Only output if the parameter is not None and not a blank string.
                 if (parameter_value is not None) and (str(parameter_value) != ""):
                     do_output = True
             if do_output:
-                # If this is not the first parameter, add a comma separator
+                # If this is not the first parameter, add a comma separator.
                 if param_output_count > 0:
                     command_string_formatted = command_string_formatted + ","
-                # Append the parameter using syntax ParameterName="ParameterValue"
+                # Append the parameter using syntax ParameterName="ParameterValue":
                 # - simple objects will output with no formatting
                 # - lists will be output as ['a', 'b', 'c'] or [1, 2, 3], OK for now but will have to handle parsing
                 command_string_formatted = command_string_formatted + command_parameter_meta.parameter_name + '="' + \
                     str(parameter_value) + '"'
-                # Increment the counter
+                # Increment the counter.
                 param_output_count = param_output_count + 1
-        # Append the trailing parenthesis
+        # Append the trailing parenthesis.
         command_string_formatted = command_string_formatted + ")"
         return command_string_formatted

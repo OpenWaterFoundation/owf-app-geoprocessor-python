@@ -1,8 +1,8 @@
 # GenericCommandEditor - default generic command editor
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
@@ -42,62 +42,59 @@ class GenericCommandEditor(AbstractCommandEditor):
         Args:
             command (command obj): this is a command object passed from GeoProcessorCommandEditorFactory
         """
-        # Initialize the parent abstract editor
+        # Initialize the parent abstract editor:
         # - this will do basic setup of the dialog
         super().__init__(command)
 
-        # NOT defined in AbstractCommandEditor - local to this class
-        # Turn localized debug on/off, useful for development
+        # NOT defined in AbstractCommandEditor - local to this class.
+        # Turn localized debug on/off, useful for development:
         # - should be False for production release
         # - this causes logger.info messages to be printed
         # - later can convert to logger.debug if still needed
         self.debug = True
 
-        # NOT defined in AbstractCommandEditor - local to this class
-        # Indicate if an error status is currently in effect, due to invalid parameters
+        # NOT defined in AbstractCommandEditor - local to this class.
+        # Indicate if an error status is currently in effect, due to invalid parameters:
         # - will be set in check_input() and is checked in ui_action_ok_clicked()
         self.error_wait = False
 
-        # NOT defined in AbstractCommandEditor - local to this class
-        # Indicate whether first time refresh_ui is called
+        # NOT defined in AbstractCommandEditor - local to this class.
+        # Indicate whether first time refresh_ui is called:
         # - the first time the UI components may be initialized from data
         # self.first_refresh_ui = True
 
-        # Defined in AbstractCommandEditor
-        # "input_ui_components" is a dictionary that relates each command parameter with its associated Qt Widget
-        # input field
+        # Defined in AbstractCommandEditor.
+        # Dictionary that relates each command parameter with its associated Qt Widget input field.
         # KEY (str): the command parameter name
         # VALUE (obj): the associated Qt Widget input component
         # self.input_ui_components = {}
 
-        # NOT defined in AbstractCommandEditor - local to this class
-        # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name
+        # NOT defined in AbstractCommandEditor - local to this class.
+        # Array of text fields (Qt LineEdit) containing parameter values, with object name matching parameter name.
         # self.parameter_LineEdit = [None]*len(self.command.command_parameter_metadata)
         # self.parameter_LineEdit = dict()
 
-        # Defined in AbstractCommandEditor
+        # Defined in AbstractCommandEditor.
         # The row position in the self.parameter_QGridLayout, used in setup_ui() and its helper functions.
         # self.y_parameter = -1
 
-        # UI components
-        # Defined in AbstractCommandEditor
+        # UI components.
+        # Defined in AbstractCommandEditor.
         # self.parameter_QFrame: QtWidgets.QFrame or None = None
         # self.parameter_QGridLayout: QtWidgets.QGridLayout or None = None
 
-        # NOT defined in AbstractCommandEditor - local to this class
-        # Create variable to know if we are updating an existing command
-        # or inserting a new command into the command list
+        # NOT defined in AbstractCommandEditor - local to this class.
+        # Create variable to know if we are updating an existing or inserting a new command into the command list.
         # self.update = False
 
-        # if command parameters have already been defined for command
-        # we know that we are updating an existing command
+        # If command parameters have already been defined for command known that we are updating an existing command.
         # if command.command_parameters:
         #    self.update = True
 
-        # Setup the UI in the abstract class, which will call back to set_ui() in this class.
+        # Set up the UI in the abstract class, which will call back to set_ui() in this class.
         self.setup_ui_core()
 
-        # Initially call refresh in case updating a command
+        # Initially call refresh in case updating a command.
         self.refresh_ui()
 
     def check_input(self) -> None:
@@ -115,7 +112,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         This function is called to ensure that the UI and command are consistent in the UI:
 
         1. The first time called:
-            - Make sure the UI is up to date with initial command parameters
+            - Make sure the UI is up-to-date with initial command parameters
         2. Every time called:
             - Update the command string from values in the UI components.
             - Only non-empty values are set in the string.
@@ -129,7 +126,7 @@ class GenericCommandEditor(AbstractCommandEditor):
 
     def setup_ui(self) -> None:
         """
-        Setup the main UI input areas.
+        Set up the main UI input areas.
         This does not do anything because the command is unknown.
         Just make sure the command string is shown and can be retrieved.
 
@@ -140,7 +137,7 @@ class GenericCommandEditor(AbstractCommandEditor):
 
     def setup_ui_2(self) -> None:
         """
-        Setup the main UI input areas.
+        Set up the main UI input areas.
         This does not do anything major because the command is unknown.
         Set the command area to editable.
 
@@ -156,7 +153,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         Returns:
             None
         """
-        # To cancel, call the standard reject() function, which will set the return value.
+        # To cancel, call the standard reject() function, which will set the return value:
         # - this allows the return value to be checked in the calling code
         self.reject()
 
@@ -171,14 +168,14 @@ class GenericCommandEditor(AbstractCommandEditor):
         Returns:
             None
         """
-        # Check the input
+        # Check the input.
         self.check_input()
         if self.error_wait:
-            # User was shown a warning dialog and had to acknowledge it, so here just ignore the "OK"
+            # User was shown a warning dialog and had to acknowledge it, so here just ignore the "OK":
             # - errors in input parameters need to be fixed before OK works
             pass
         else:
-            # No error so OK to exit
+            # No error so OK to exit:
             # - set the text area content to the command string
             self.command.command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
             # - call the standard accept() function to set the return value
@@ -194,7 +191,7 @@ class GenericCommandEditor(AbstractCommandEditor):
             None.
         """
         logger = logging.getLogger(__name__)
-        # Get the command string from the command display text box
+        # Get the command string from the command display text box.
         command_string = self.CommandDisplay_View_TextBrowser.toPlainText()
         logger.info('Checking command parameter input using command string:' + str(command_string))
         # Initialize the parameters of the command object.
@@ -205,11 +202,11 @@ class GenericCommandEditor(AbstractCommandEditor):
 
         self.error_wait = False
         try:
-            # Check command parameters
+            # Check command parameters.
             self.command.check_command_parameters(self.command.command_parameters)
         except Exception as e:
             message = str(e)
-            # Indicate that an error occurred
+            # Indicate that an error occurred.
             self.error_wait = True
             logger.info(message)
             qt_util.warning_message_box(message)
@@ -219,10 +216,10 @@ class GenericCommandEditor(AbstractCommandEditor):
         This function is called to ensure that the UI and command are consistent in the UI:
 
         1. The first time called:
-            - Make sure the UI is up to date with initial command parameters
+            - make sure the UI is up-to-date with initial command parameters
         2. Every time called:
-            - Update the command string from values in the UI components.
-            - Only non-empty values are set in the string.
+            - update the command string from values in the UI components
+            - only non-empty values are set in the string
 
         Returns:
             None
@@ -235,24 +232,24 @@ class GenericCommandEditor(AbstractCommandEditor):
             # - in particular set combobox selections
             # - TODO smalers 2019-01-19 figure out how strict to be on case-specific
             for command_parameter_metadata in self.command.command_parameter_metadata:
-                # Parameters listed in logical order such as input / analysis / output
+                # Parameters listed in logical order such as input / analysis / output.
                 parameter_name = command_parameter_metadata.parameter_name
-                # The parameter value comes from the command
+                # The parameter value comes from the command:
                 # - if a new command most values will not be set
                 # - if an existing command then need to make sure all previous data is handled
                 parameter_value = self.command.get_parameter_value(parameter_name)
                 try:
-                    # Get the UI input component for the parameter
+                    # Get the UI input component for the parameter.
                     parameter_ui = self.input_ui_components[parameter_name]
-                    # Based on the UI component type, retrieve the parameter value
+                    # Based on the UI component type, retrieve the parameter value:
                     # - check the object type with isinstance
                     # - use the class name for logging, should agree with object type
                     ui_type = parameter_ui.__class__.__name__
-                    # But try the isinstance
+                    # But try the isinstance.
                     if isinstance(parameter_ui, QtWidgets.QLineEdit):
                         parameter_ui.setText(parameter_value)
                     else:
-                        # Should not happen
+                        # Should not happen.
                         logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
                                        parameter_name + "' - code problem.")
                         continue
@@ -261,39 +258,39 @@ class GenericCommandEditor(AbstractCommandEditor):
                     message = "No input component for parameter '" + parameter_name + "' - code problem."
                     logger.warning(message, exc_info=True)
                     continue
-            # Set the following so won't do this initialization again
+            # Set the following so won't do this initialization again.
             self.first_refresh_ui = False
 
         # Always do the following to transfer UI component values to the full command string at the bottom of editor.
-        # UI components should be fully initialized and contain values that match the command parameters
+        # UI components should be fully initialized and contain values that match the command parameters:
         # - loop through all UI components, extract the values from the components (by component type)
         #   and use to update the command string
 
-        # Loop through the command parameter metadata and retrieve the values from editor components
+        # Loop through the command parameter metadata and retrieve the values from editor components.
         # noinspection PyBroadException
         try:
-            # Add all parameters to a temporary dictionary
+            # Add all parameters to a temporary dictionary.
             parameters_from_ui = dict()
             for command_parameter_metadata in self.command.command_parameter_metadata:
-                # Parameters listed in logical order such as input / analysis / output
+                # Parameters listed in logical order such as input / analysis / output.
                 parameter_name = command_parameter_metadata.parameter_name
                 # parameter_value = None
                 try:
-                    # Get the UI input component for the parameter
+                    # Get the UI input component for the parameter.
                     parameter_ui = self.input_ui_components[parameter_name]
-                    # Based on the UI component type, retrieve the parameter value
+                    # Based on the UI component type, retrieve the parameter value:
                     # - check the object type with isinstance
                     # - use the class name for logging, should agree with object type
                     ui_type = parameter_ui.__class__.__name__
-                    # But try the isinstance
+                    # But try the isinstance.
                     if isinstance(parameter_ui, QtWidgets.QLineEdit):
                         parameter_value = parameter_ui.text()
                     else:
-                        # Should not happen
+                        # Should not happen.
                         logger.warning("Unknown input component type '" + ui_type + "' for parameter '" +
                                        parameter_name + "' - code problem.")
                         continue
-                    # If here a parameter value was determined
+                    # If here a parameter value was determined:
                     # - TODO smalers 2019-01-19 need to be a bit careful with empty string values
                     #        such as checking the parameter's default value
                     if parameter_value is not None and parameter_value != "":
@@ -303,7 +300,7 @@ class GenericCommandEditor(AbstractCommandEditor):
                     message = "No input component for parameter '" + parameter_name + "' - code problem."
                     logger.warning(message, exc_info=True)
                     continue
-            # Have a dictionary of parameters extracted from UI components
+            # Have a dictionary of parameters extracted from UI components:
             # - format the command string using the command instance
             # - this does not change the command string in the command instance
             command_string = self.command.to_string(parameters_from_ui)
@@ -352,10 +349,10 @@ class GenericCommandEditor(AbstractCommandEditor):
         # 1. Initializes the dialog.
         # 2. Setting up standard editor top.
         # 3. Calls this method to set up command editor specifics.
-        #    Set up a simple list of command parameter text fields
+        #    Set up a simple list of command parameter text fields.
         # 4. Setting up the standard editor bottom.
 
-        # Set up an area for a list of parameters
+        # Set up an area for a list of parameters.
         self.parameter_QFrame = QtWidgets.QFrame(self)
         self.parameter_QFrame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.parameter_QFrame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -368,29 +365,29 @@ class GenericCommandEditor(AbstractCommandEditor):
         self.parameter_QGridLayout = QtWidgets.QGridLayout(self.parameter_QFrame)
         self.parameter_QGridLayout.setObjectName("Command_Parameters_Layout")
 
-        # Add entry fields for each parameter
+        # Add entry fields for each parameter.
         self.y_parameter = -1
         for command_parameter_metadata in self.command.command_parameter_metadata:
-            # Get the parameter name for retrieving all other parameter variables
+            # Get the parameter name for retrieving all other parameter variables:
             # - the command parameter_input_metadata dictionary contains UI configuration properties
             # - each dictionary key starts with `ParameterName.', for example 'LogFile.Label'
             parameter_name = command_parameter_metadata.parameter_name
 
-            # Parameters listed in logical order, from left to right
+            # Parameters listed in logical order, from left to right.
             # ---------------
-            # Leftmost UI component, which is the label
+            # Leftmost UI component, which is the label.
             # ---------------
-            # Label component, consistent for all input component types
+            # Label component, consistent for all input component types.
             # ---------------
             # noinspection PyPep8Naming
             parameter_Label = parameter_name
             self.setup_ui_parameter_label(parameter_name, parameter_Label)
 
             # --------------------
-            # Text entry component
+            # Text entry component.
             # --------------------
             # --------------------
-            # LineEdit (text field)
+            # LineEdit (text field):
             # - default if properties don't indicate any other component
             # --------------------
             # noinspection PyPep8Naming
@@ -399,14 +396,14 @@ class GenericCommandEditor(AbstractCommandEditor):
                 # noinspection PyPep8Naming
                 parameter_Tooltip = command_parameter_metadata.editor_tooltip
             except KeyError:
-                # Default is an empty string
+                # Default is an empty string:
                 # - components should check for None or empty string and not set tooltip in this case
                 # noinspection PyPep8Naming
                 parameter_Tooltip = ""
             self.setup_ui_parameter_text_field(parameter_name, parameter_Tooltip)
 
             # # ----------------------------------------------------
-            # # Description component, optionally with default value
+            # # Description component, optionally with default value.
             # # ----------------------------------------------------
             # noinspection PyPep8Naming
             parameter_Description = None
@@ -422,9 +419,9 @@ class GenericCommandEditor(AbstractCommandEditor):
     def x_setup_ui_parameter_description(self, parameter_name: str, parameter_desc: str) -> None:
         """
         Override function in AbstractCommand class to add a description if it is specified
-        in the command_parameter_metadata. This description will not be as specific as is
-        in TabbedCommandEditor or SimpleCommandEditor, therefore there is a need for an overriden
-        function.
+        in the command_parameter_metadata.
+        This description will not be as specific as is in TabbedCommandEditor or SimpleCommandEditor,
+        therefore there is a need for an overridden function.
 
         Args:
             parameter_name (str) : the name of the parameter
@@ -453,7 +450,7 @@ class GenericCommandEditor(AbstractCommandEditor):
         Returns:
             None
         """
-        # To cancel, call the standard reject() function, which will set the return value.
+        # To cancel, call the standard reject() function, which will set the return value:
         # - this allows the return value to be checked in the calling code
         self.reject()
 
@@ -468,12 +465,12 @@ class GenericCommandEditor(AbstractCommandEditor):
         Returns:
             None
         """
-        # Check the input
+        # Check the input.
         self.check_input()
         if self.error_wait:
-            # User was shown a dialog and had to acknowledge it, so here just ignore the "OK"
+            # User was shown a dialog and had to acknowledge it, so here just ignore the "OK".
             pass
         else:
-            # No error so OK to exit
+            # No error so OK to exit:
             # - call the standard accept() function to set the return value
             self.accept()

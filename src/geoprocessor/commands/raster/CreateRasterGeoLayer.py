@@ -1,18 +1,18 @@
 # CreateRasterGeoLayer - command to create a raster GeoLayer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -57,16 +57,17 @@ class CreateRasterGeoLayer(AbstractCommand):
         # CommandParameterMetadata("NoDataValue", str),
         CommandParameterMetadata("IfGeoLayerIDExists", str)]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Create a new raster GeoLayer, using TIF driver.\n"
         "A temporary file will be created and will be read into memory.\n"
-        "Once created, the layer can be processed with other commands."
+        "Once created, the layer can be processed with other commands.\n"
+        "This command is under development."
     )
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # NewGeoLayerID
     __parameter_input_metadata['NewGeoLayerID.Description'] = "id of the new GeoLayer"
@@ -140,18 +141,18 @@ class CreateRasterGeoLayer(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "CreateRasterGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -184,7 +185,7 @@ class CreateRasterGeoLayer(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that OriginX parameter is a float
+        # Check that OriginX parameter is a float.
         # noinspection PyPep8Naming
         pv_OriginX = self.get_parameter_value(parameter_name="OriginX",
                                               command_parameters=command_parameters)
@@ -197,7 +198,7 @@ class CreateRasterGeoLayer(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that OriginY parameter is a float and not 0 (zero causes CRS issue?)
+        # Check that OriginY parameter is a float and not 0 (zero causes CRS issue?).
         # noinspection PyPep8Naming
         pv_OriginY = self.get_parameter_value(parameter_name="OriginY",
                                               command_parameters=command_parameters)
@@ -210,7 +211,7 @@ class CreateRasterGeoLayer(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that PixelWidth parameter is a float (zero causes CRS issue?)
+        # Check that PixelWidth parameter is a float (zero causes CRS issue?).
         # noinspection PyPep8Naming
         pv_PixelWidth = self.get_parameter_value(parameter_name="PixelWidth",
                                                  command_parameters=command_parameters)
@@ -222,7 +223,7 @@ class CreateRasterGeoLayer(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that PixelHeight parameter is a float
+        # Check that PixelHeight parameter is a float.
         # noinspection PyPep8Naming
         pv_PixelHeight = self.get_parameter_value(parameter_name="PixelHeight",
                                                   command_parameters=command_parameters)
@@ -250,7 +251,7 @@ class CreateRasterGeoLayer(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
+        # This returns a message that can be appended to the warning, and if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
@@ -258,7 +259,7 @@ class CreateRasterGeoLayer(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id: str, crs: str) -> bool:
@@ -277,8 +278,8 @@ class CreateRasterGeoLayer(AbstractCommand):
                 should not be simplified.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
@@ -362,7 +363,7 @@ class CreateRasterGeoLayer(AbstractCommand):
                     data_type=pv_DataType,
                     initial_value=initial_value)
 
-                # Create a new GeoLayer with the QgsVectorLayer and add it to the GeoProcesor's geolayers list.
+                # Create a new GeoLayer with the QgsVectorLayer and add it to the GeoProcesor's geolayers list:
                 # - treat as if memory since a temporary file is used but not expected to be used later
                 new_geolayer = RasterGeoLayer(geolayer_id=pv_NewGeoLayerID,
                                               name=pv_NewGeoLayerID,

@@ -1,18 +1,18 @@
 # If - command to start an If block
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -40,17 +40,17 @@ class If(AbstractCommand):
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("Name", type("")),
         CommandParameterMetadata("Condition", type("")),
-        CommandParameterMetadata("CompareAsStrings", type(True))  # Not yet implemented
+        CommandParameterMetadata("CompareAsStrings", type(True))  # Not yet implemented.
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "The If command evaluates a conditional statement and if true will "
         "result in the commands between If and matching EndIf being executed. ")
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # Name
     __parameter_input_metadata['Name.Description'] = \
@@ -78,18 +78,18 @@ class If(AbstractCommand):
         Initialize the command instance.
         """
         super().__init__()
-        # AbstractCommand data
+        # AbstractCommand data.
         self.command_name: str = "If"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Local private data
-        self.__condition_eval = True  # The result of evaluating the condition
+        # Local private data.
+        self.__condition_eval = True  # The result of evaluating the condition.
 
     def check_command_parameters(self, command_parameters: dict) -> None:
         """
@@ -120,16 +120,15 @@ class If(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, and if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def get_condition_eval(self) -> bool:
@@ -137,8 +136,7 @@ class If(AbstractCommand):
         Return the result of evaluating the condition, which is set when run_command() is called.
 
         Returns:
-            Return the result (bool) of evaluating the condition,
-            which is set when run_command() is called.
+            Return the result (bool) of evaluating the condition, which is set when run_command() is called.
         """
         return self.__condition_eval
 
@@ -151,7 +149,7 @@ class If(AbstractCommand):
         """
         return self.get_parameter_value("Name")
 
-    # The logic of this command closely matches the TSTool If command
+    # The logic of this command closely matches the TSTool If command:
     # - could possibly improve but for now implement something basic that works
     def run_command(self) -> None:
         """
@@ -161,8 +159,8 @@ class If(AbstractCommand):
             None.
         """
         logger = logging.getLogger(__name__)
-        debug = True  # Use for troubleshooting
-        warning_count = 0  # General count for issues
+        debug = True  # Use for troubleshooting.
+        warning_count = 0  # General count for issues.
 
         # noinspection PyPep8Naming
         pv_Name = self.get_parameter_value("Name")
@@ -176,7 +174,7 @@ class If(AbstractCommand):
         compare_as_strings = False
         if pv_CompareAsStrings is not None and pv_CompareAsStrings.upper == "TRUE":
             compare_as_strings = True
-        # TODO smalers 2018-02-18 need to add other special conditions such as empty properties, GeoLayer exists, etc.
+        # TODO smalers 2018-02-18 need to add other special conditions such as empty properties, GeoLayer exists, etc.:
         # - see TSTool code
 
         # noinspection PyBroadException
@@ -225,18 +223,18 @@ class If(AbstractCommand):
                     pos1 = pos
                     pos2 = pos + 2
                 elif condition_upper.find("!CONTAINS") > 0:
-                    # Put this before the next "CONTAINS" operator
+                    # Put this before the next "CONTAINS" operator.
                     pos = condition_upper.find("!CONTAINS")
                     op = "!CONTAINS"
                     pos1 = pos
                     pos2 = pos + 9
-                    compare_as_strings = True   # "!contains" is only used on strings
+                    compare_as_strings = True   # "!contains" is only used on strings.
                 elif condition_upper.find("CONTAINS") > 0:
                     pos = condition_upper.find("CONTAINS")
                     op = "CONTAINS"
                     pos1 = pos
                     pos2 = pos + 8
-                    compare_as_strings = True  # "contains" is only used on strings
+                    compare_as_strings = True  # "contains" is only used on strings.
                 elif pv_Condition.find("=") > 0:
                     message = "Bad use of = in condition."
                     recommendation = "Use == to check for equality."
@@ -254,7 +252,7 @@ class If(AbstractCommand):
                         CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
                 logger.info('operator="' + op + '" pos1=' + str(pos1) + " pos2=" + str(pos2))
-                # Now evaluate the left and right sides of the condition
+                # Now evaluate the left and right sides of the condition.
                 arg1 = pv_Condition[0:pos1].strip()
                 if debug:
                     logger.info('Left side of condition before property expansion check: "' + str(arg1) + '"')
@@ -277,18 +275,18 @@ class If(AbstractCommand):
                     value2 = arg2
                     if debug:
                         logger.info("Right side (no expansion needed): " + value2)
-                # If the arguments are quoted, then all of the following will be false
+                # If the arguments are quoted, then all the following will be false.
                 is_value1_int = string_util.is_int(value1)
                 is_value2_int = string_util.is_int(value2)
                 is_value1_float = string_util.is_float(value1)
                 is_value2_float = string_util.is_float(value2)
                 is_value1_bool = string_util.is_bool(value1)
                 is_value2_bool = string_util.is_bool(value2)
-                # Strip surrounding double quotes for comparisons below - do after above checks for type
+                # Strip surrounding double quotes for comparisons below - do after above checks for type.
                 value1 = value1.replace('"', "")
                 value2 = value2.replace('"', "")
                 if not compare_as_strings and is_value1_int and is_value2_int:
-                    # Do an integer comparison
+                    # Do an integer comparison.
                     ivalue1 = int(value1)
                     ivalue2 = int(value2)
                     if op == "<=":
@@ -310,7 +308,7 @@ class If(AbstractCommand):
                         if ivalue1 != ivalue2:
                             condition_eval = True
                 elif not compare_as_strings and is_value1_float and is_value2_float:
-                    # Compare floats
+                    # Compare floats.
                     fvalue1 = float(value1)
                     fvalue2 = float(value2)
                     if op == "<=":
@@ -332,7 +330,7 @@ class If(AbstractCommand):
                         if fvalue1 != fvalue2:
                             condition_eval = True
                 elif not compare_as_strings and is_value1_bool and is_value2_bool:
-                    # Do a boolean comparison
+                    # Do a boolean comparison:
                     # - bool("") is False, every other string is True!
                     bvalue1 = string_util.str_to_bool(value1)
                     bvalue2 = string_util.str_to_bool(value2)
@@ -340,19 +338,19 @@ class If(AbstractCommand):
                         logger.info('Evaluating boolean condition "' + str(bvalue1) + " " + op + " " + str(bvalue2))
                     if op == "<=":
                         if not bvalue1:
-                            # false <= false or true (does not matter what right side is)
+                            # false <= false or true (does not matter what right side is).
                             condition_eval = True
                     elif op == "<":
                         if not bvalue1 and bvalue2:
-                            # false < true
+                            # false < true.
                             condition_eval = True
                     elif op == ">=":
                         if bvalue1:
-                            # true >= false or true (does not matter what right side is)
+                            # true >= false or true (does not matter what right side is).
                             condition_eval = True
                     elif op == ">":
                         if bvalue1 and not bvalue2:
-                            # true > false
+                            # true > false.
                             condition_eval = True
                     elif op == "==":
                         if bvalue1 == bvalue2:
@@ -363,7 +361,7 @@ class If(AbstractCommand):
                 elif compare_as_strings or\
                     (not is_value1_int and not is_value2_int and
                      not is_value1_float and not is_value2_float and not is_value1_bool and not is_value2_bool):
-                    # Always compare the string values or the input is not other types so assume strings
+                    # Always compare the string values or the input is not other types so assume strings.
                     if op == "CONTAINS":
                         if value1.find(value2) >= 0:
                             condition_eval = True
@@ -371,7 +369,7 @@ class If(AbstractCommand):
                         if value1.find(value2) < 0:
                             condition_eval = True
                     else:
-                        # Do a comparison of the strings to figure out lexicographically order
+                        # Do a comparison of the strings to figure out lexicographically order.
                         if value1 < value2:
                             comp = -1
                         elif value1 == value2:
@@ -406,19 +404,19 @@ class If(AbstractCommand):
                         CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
                 if debug:
-                    logger.info("Condition evaluated to: " + str(condition_eval))
+                    logger.info("Condition evaluated to " + str(condition_eval) + ": " + pv_Condition)
 
-                # For now leave the following two messages in to reinforce to user the evaluation
+                # For now leave the following two messages in to reinforce to user the evaluation:
                 # - may only output when in debug mode in the future
                 if pv_Condition.find("${") >= 0:
-                    # Show the original
+                    # Show the original.
                     message = pv_Condition + " (showing ${Property} notation) evaluates to " + str(condition_eval)
                     recommendation = "Informational message."
                     self.command_status.add_to_log(
                         CommandPhaseType.RUN,
                         CommandLogRecord(CommandStatusType.SUCCESS, message, recommendation))
 
-                # Always also show the expanded
+                # Always also show the expanded.
                 message = str(value1) + " " + op + " " + str(value2) + " evaluates to " + str(condition_eval)
                 recommendation = "Informational message."
                 self.command_status.add_to_log(

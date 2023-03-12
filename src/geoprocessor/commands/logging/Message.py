@@ -1,18 +1,18 @@
 # Message - command to output a message
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -43,14 +43,14 @@ class Message(AbstractCommand):
         CommandParameterMetadata("CommandStatus", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Print a message to the log file and optionally set the command status for notification.\n"
         "For example, use with an If command to notify when a condition is met.")
     __command_metadata['EditorType'] = "Simple"
 
-    # Parameter Metadata
+    # Parameter Metadata.
     __parameter_input_metadata = dict()
     # Message
     __parameter_input_metadata['Message.Description'] = "message to print"
@@ -73,10 +73,10 @@ class Message(AbstractCommand):
         self.command_name = "Message"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Parameter Metadata
+        # Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -120,16 +120,15 @@ class Message(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, and if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self) -> None:
@@ -150,17 +149,20 @@ class Message(AbstractCommand):
         pv_Message = self.get_parameter_value('Message')
         # noinspection PyPep8Naming
         pv_CommandStatus = self.get_parameter_value('CommandStatus')
+        logger.info("CommandStatus after property get=\"" + str(pv_CommandStatus) + "\", CommandString=" + self.command_string)
         if pv_CommandStatus is None or pv_CommandStatus == "":
-            # Default status as a string
+            # Default status as a string.
             # noinspection PyPep8Naming
-            pv_CommandStatus = str(CommandStatusType.SUCCESS)
-        # Convert the string to the enum
+            pv_CommandStatus = self.__parameter_input_metadata['CommandStatus.Value.Default']
+        # Convert the string to the enum.
+        logger.info("CommandStatus after default check=\"" + str(pv_CommandStatus) + "\", CommandString=" + self.command_string)
         command_status_type = CommandStatusType.value_of(pv_CommandStatus, ignore_case=True)
         message_expanded = self.command_processor.expand_parameter_value(pv_Message)
         logger.info(message_expanded)
 
-        # Add a log message for the requested status type
+        # Add a log message for the requested status type:
         # - don't add to the warning count
+        logger.info("Adding command status log of type " + str(command_status_type) + ", message=" + message_expanded)
         self.command_status.add_to_log(
             CommandPhaseType.RUN,
             CommandLogRecord(command_status_type, message_expanded, ""))

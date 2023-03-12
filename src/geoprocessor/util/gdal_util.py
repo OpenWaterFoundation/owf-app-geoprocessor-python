@@ -1,18 +1,18 @@
 # gdal_util - utility functions to use with GDAL software
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -60,7 +60,7 @@ def polygonize(raster_full_path: str, field_name: str, output_format: str, outpu
 
     if field_name:
 
-        # create a field
+        # Create a field.
         id_field = ogr.FieldDefn(field_name, ogr.OFTReal)
         dst_layer.CreateField(id_field)
 
@@ -80,57 +80,57 @@ def reproject_a_layer(input_path: str, input_driver: str, output_path: str, outp
 
     driver = ogr.GetDriverByName(input_driver)
 
-    # input SpatialReference
+    # Input SpatialReference.
     inSpatialRef = osr.SpatialReference()
     inSpatialRef.ImportFromEPSG(2927)
 
-    # output SpatialReference
+    # Output SpatialReference.
     outSpatialRef = osr.SpatialReference()
     outSpatialRef.ImportFromEPSG(4326)
 
-    # create the CoordinateTransformation
+    # Create the CoordinateTransformation.
     coordTrans = osr.CoordinateTransformation(inSpatialRef, outSpatialRef)
 
-    # get the input layer
+    # Get the input layer.
     inDataSet = driver.Open(r'c:\data\spatial\basemap.shp')
     inLayer = inDataSet.GetLayer()
     inSpatialRef = inLayer.GetSpatialRef()
 
-    # create the output layer
+    # Create the output layer.
     outputShapefile = r'c:\data\spatial\basemap_4326.shp'
     if os.path.exists(outputShapefile):
         driver.DeleteDataSource(outputShapefile)
     outDataSet = driver.CreateDataSource(outputShapefile)
     outLayer = outDataSet.CreateLayer("basemap_4326", geom_type=ogr.wkbMultiPolygon)
 
-    # add fields
+    # Add fields.
     inLayerDefn = inLayer.GetLayerDefn()
     for i in range(0, inLayerDefn.GetFieldCount()):
         fieldDefn = inLayerDefn.GetFieldDefn(i)
         outLayer.CreateField(fieldDefn)
 
-    # get the output layer's feature definition
+    # Get the output layer's feature definition.
     outLayerDefn = outLayer.GetLayerDefn()
 
-    # loop through the input features
+    # Loop through the input features.
     inFeature = inLayer.GetNextFeature()
     while inFeature:
-        # get the input geometry
+        # Get the input geometry.
         geom = inFeature.GetGeometryRef()
-        # reproject the geometry
+        # Reproject the geometry.
         geom.Transform(coordTrans)
-        # create a new feature
+        # Create a new feature.
         outFeature = ogr.Feature(outLayerDefn)
-        # set the geometry and attribute
+        # Set the geometry and attribute.
         outFeature.SetGeometry(geom)
         for i in range(0, outLayerDefn.GetFieldCount()):
             outFeature.SetField(outLayerDefn.GetFieldDefn(i).GetNameRef(), inFeature.GetField(i))
-        # add the feature to the shapefile
+        # Add the feature to the shapefile.
         outLayer.CreateFeature(outFeature)
-        # dereference the features and get the next input feature
+        # Dereference the features and get the next input feature.
         outFeature = None
         inFeature = inLayer.GetNextFeature()
 
-    # Save and close the shapefiles
+    # Save and close the shapefiles.
     inDataSet = None
     outDataSet = None

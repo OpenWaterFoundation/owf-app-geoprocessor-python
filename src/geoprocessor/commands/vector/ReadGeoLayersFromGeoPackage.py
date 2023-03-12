@@ -1,21 +1,22 @@
 # ReadGeoLayersFromGeoPackage - command to read GeoLayers from a GeoPackage file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
+
 from qgis._core import QgsVectorLayer
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
@@ -40,19 +41,20 @@ import os
 import logging
 # import re
 if (qgis_version_util.get_qgis_version_int(1) >= 3) and (qgis_version_util.get_qgis_version_int(2) <= 10):
-    #  Works for QGIS 3.10
+    #  Works for QGIS 3.10.
     import ogr
 elif (qgis_version_util.get_qgis_version_int(1) >= 3) and (qgis_version_util.get_qgis_version_int(2) > 10):
-    #  Works for QGIS 3.22.16 - QGIS 3.22.16/apps/Python39/Lib/site-packages/osgeo/ogr.py
+    #  Works for QGIS 3.22.16 - QGIS 3.22.16/apps/Python39/Lib/site-packages/osgeo/ogr.py.
     import osgeo.ogr
 
 
 class ReadGeoLayersFromGeoPackage(AbstractCommand):
     """
-    This command reads 1+ GeoLayers from a GeoPackage file (.gpkg) and creates GeoLayer objects within the
-    geoprocessor. The GeoLayers can then be accessed in the geoprocessor by their identifier and further processed.
+    This command reads 1+ GeoLayers from a GeoPackage file (.gpkg) and creates GeoLayer objects within the geoprocessor.
+    The GeoLayers can then be accessed in the geoprocessor by their identifier and further processed.
 
-    Command Parameters
+    Command Parameters:
+
     * InputFile (str, required): the path to the GeoPackage file containing spatial data.
     * ReadOneLayer (str, required): a string that can be converted to a valid boolean value. If TRUE, only
          one specific feature class is read in as a GeoLayer. If FALSE, multiple feature classes are read in as
@@ -84,14 +86,14 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
         CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Read one or more GeoLayers from a GeoPackage file.\n" \
         "Currently only a single (sub)layer can be read from a GeoPackage file."
 
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
 
     # InputFile
@@ -101,7 +103,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
     __parameter_input_metadata['InputFile.Tooltip'] = "The GeoPackage file to read (must end in .gpkg)."
     __parameter_input_metadata['InputFile.FileSelector.Type'] = "Read"
     __parameter_input_metadata['InputFile.FileSelector.Title'] = "Select the file GeoPackage file"
-    # Filters only seem to work on files, not folders
+    # Filters only seem to work on files, not folders.
     # __parameter_input_metadata['InputFolder.FileSelector.Filters'] = \
     #    ["Geodatabase (*.gdb)", "All folders (*.*)"]
 
@@ -182,21 +184,21 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
 
     def __init__(self) -> None:
         """
-        Initialize the command
+        Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ReadGeoLayersFromGeoPackage"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -266,13 +268,13 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
+        # Properties - verify that the properties can be parsed.
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
         try:
             command_util.parse_properties_from_parameter_string(pv_Properties)
         except ValueError as e:
-            # Use the exception
+            # Use the exception.
             message = str(e)
             recommendation = "Check the Properties string format."
             warning_message += "\n" + message
@@ -290,7 +292,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
             raise CommandParameterError(warning_message)
 
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
@@ -321,19 +323,19 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
             input_file_absolute (str): the full pathname to the GeoPackage file
 
         Returns:
-             Boolean. If TRUE, the GeoPackage should be read. If FALSE, at least one check failed and the GeoPackage
-             fle should not be read.
+             Boolean. If TRUE, the GeoPackage should be read.
+             If FALSE, at least one check failed and the GeoPackage file should not be read.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input file is not a valid file path, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "InputFile",
                                                            input_file_absolute, "FAIL"))
 
-        # TODO smalers 2020-07-12 need to enable
+        # TODO smalers 2020-07-12 need to enable.
         #if False not in should_run_command:
         #    # If the input spatial data folder is not a geopackage file, raise a FAILURE.
         #    should_run_command.append(validator_util.run_check(self, "IsFolderAfGDB", "InputFolder",
@@ -364,22 +366,22 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
                 should not be read.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
-        # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
-        # on the value of the IfGeoLayerIDExists parameter.)
+        # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+        # (depends on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
 
-        # If only one geolayer is being read from the geopackage file, continue.
+        # If only one geolayer is being read from the geopackage file, continue:
         # - TODO smalers 2020-07-12 need to enable similar check
         #if one_geolayer_bool:
         #    # If the requested layer is not in the GeoPackage raise a FAILURE.
         #    should_run_command.append(validator_util.run_check(self, "IsFeatureClassInFGDB", "FeatureClass", fc_name,
         #                                                       "FAIL", other_values=[input_folder_absolute]))
 
-        # TODO smalers 2020-07-12 the following does not seem to work, even though layer CAN be read later in code
+        # TODO smalers 2020-07-12 the following does not seem to work, even though layer CAN be read later in code.
         one = 2
         if one == 1:
             # List the layers in a GeoPackage, which are "sublayers":
@@ -422,7 +424,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the required and optional parameter values
+        # Obtain the required and optional parameter values.
         # noinspection PyPep8Naming
         pv_InputFile = self.get_parameter_value("InputFile")
         # noinspection PyPep8Naming
@@ -462,7 +464,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
         # noinspection PyPep8Naming
         pv_ReadOneLayer = string_util.str_to_bool(pv_ReadOneLayer)
 
-        # Convert the InputFile parameter to an absolute path
+        # Convert the InputFile parameter to an absolute path.
         input_file_abs = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_InputFile, self)))
@@ -481,7 +483,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
                                                                                          pv_LayerName,
                                                                                          pv_Description)
 
-                        # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                        # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
                         new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
                                                       qgs_vector_layer=qgs_vector_layer,
                                                       name=pv_Name,
@@ -489,15 +491,16 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
                                                       input_path_full=input_file_abs,
                                                       input_path=pv_InputFile)
 
-                        # Set the properties
+                        # Set the properties.
                         properties = command_util.parse_properties_from_parameter_string(pv_Properties)
-                        # Set the properties as additional properties (don't just reset the properties dictionary)
+
+                        # Set the properties as additional properties (don't just reset the property dictionary).
                         new_geolayer.set_properties(properties)
 
                         self.command_processor.add_geolayer(new_geolayer)
 
                     except Exception:
-                        # Raise an exception if an unexpected error occurs during the process
+                        # Raise an exception if an unexpected error occurs during the process.
                         self.warning_count += 1
                         message = "Unexpected error reading layer ({}) from GeoPackage file ({}).".format(
                             pv_LayerName, input_file_abs)
@@ -509,7 +512,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
 
             else:
                 # If configured to read multiple Feature Classes into multiple GeoLayers.
-                # TODO smalers 2020-07-12 currently not supported, need to convert to GeoPackage
+                # TODO smalers 2020-07-12 currently not supported, need to convert to GeoPackage.
 
                 self.warning_count += 1
                 message = "Reading multiple layers from a GeoPackage file is currently not supported"
@@ -520,7 +523,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
                                                                 recommendation))
                 raise CommandError(message)
 
-                # Get a list of all of the feature classes in the file geodatabase.
+                # Get a list of all the feature classes in the file geodatabase.
                 fc_list = ReadGeoLayersFromGeoPackage.__return_a_list_of_fc(sd_folder_abs)
 
                 # Filter the fc_list to only include feature classes that meet the Subset Pattern configuration.
@@ -539,15 +542,15 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
                     if self.check_runtime_data_geolayer(geolayer_id, False):
                         # noinspection PyBroadException
                         try:
-                            # Get the full pathname to the feature class
-                            # TODO egiles 2018-01-04 Need to research how to properly document feature class source path
+                            # Get the full pathname to the feature class.
+                            # TODO egiles 2018-01-04 Need to research how to properly document feature class source path.
                             input_file_absolute = os.path.join(sd_folder_abs, str(feature_class))
 
                             # Create a QgsVectorLayer object from the feature class.
                             qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_feature_class(sd_folder_abs,
                                                                                                 feature_class)
 
-                            # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                            # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
                             geolayer_obj = VectorGeoLayer(geolayer_id=geolayer_id,
                                                           qgs_vector_layer=qgs_vector_layer,
                                                           name=pv_Name,
@@ -558,7 +561,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
                             self.command_processor.add_geolayer(geolayer_obj)
 
                         except Exception:
-                            # Raise an exception if an unexpected error occurs during the process
+                            # Raise an exception if an unexpected error occurs during the process.
 
                             self.warning_count += 1
                             message = "Unexpected error reading feature class ({}) from file geodatabase ({}).".format(
@@ -569,7 +572,7 @@ class ReadGeoLayersFromGeoPackage(AbstractCommand):
                                                            CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                             recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

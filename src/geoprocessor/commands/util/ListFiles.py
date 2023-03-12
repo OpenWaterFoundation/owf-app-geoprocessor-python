@@ -1,18 +1,18 @@
 # ListFiles - command to list files in a folder or URL location
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -38,10 +38,10 @@ import urllib
 
 class ListFiles(AbstractCommand):
     """
-    Lists file and/or folders from a input folder. The input folder can be a folder on a local machine or a url 
+    Lists file and/or folders from a input folder. The input folder can be a folder on a local machine or a url
     directory.
     
-    Command Parameters
+    Command Parameters:
     * Folder (str, optional): the path to a folder on the local machine (relative or absolute)
     * URL (str, optional): a valid URL/web address (can end in / but is not required)
     * IncludePatterns (str, optional): a comma-separated list of glob-style patterns to determine which files/folders
@@ -71,7 +71,7 @@ class ListFiles(AbstractCommand):
         CommandParameterMetadata("ListProperty1", str),
         CommandParameterMetadata("IfPropertyExists", str)]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Lists the files and/or folders within a folder or a URL.\n"
@@ -79,7 +79,7 @@ class ListFiles(AbstractCommand):
         "The files and folders are sorted in alphabetical order using lowercase strings.")
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # Folder
     __parameter_input_metadata['Folder.Description'] = "path of the folder"
@@ -158,21 +158,21 @@ class ListFiles(AbstractCommand):
 
     def __init__(self) -> None:
         """
-        Initialize the command
+        Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ListFiles"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -246,7 +246,7 @@ class ListFiles(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that parameter ListCount is an integer if specified
+        # Check that parameter ListCount is an integer if specified:
         # - allow blank and None
         # noinspection PyPep8Naming
         pv_ListCount = self.get_parameter_value(parameter_name='ListCount', command_parameters=command_parameters)
@@ -301,7 +301,7 @@ class ListFiles(AbstractCommand):
             raise CommandParameterError(warning_message)
 
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, folder_abs: str, url_abs: str, list_files_bool: bool, list_dirs_bool: bool,
@@ -322,12 +322,12 @@ class ListFiles(AbstractCommand):
             if_property_exists (bool): indicate how to handle if requested property exists
 
         Returns:
-            Boolean. If TRUE, the GeoLayer should be clipped. If FALSE, at least one check failed and the GeoLayer
-            should not be clipped.
+            Boolean. If TRUE, the GeoLayer should be clipped.
+            If FALSE, at least one check failed and the GeoLayer should not be clipped.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = []
 
         if folder_abs:
@@ -365,8 +365,8 @@ class ListFiles(AbstractCommand):
     def scrape_html(url: str, read_files: bool, read_dirs: bool,
                     include_list: [str] = None, exclude_list: [str] = None, include_count: int = None) -> [str]:
         """
-        Reads a URL and outputs a list of links within the URL's source. The list of links can be filtered be the
-        following options:
+        Reads a URL and outputs a list of links within the URL's source.
+        The list of links can be filtered be the following options:
             * include file links, directory/folder links or both types of links
             * include/exclude links with names match a/multiple glob-style pattern(s)
 
@@ -402,8 +402,8 @@ class ListFiles(AbstractCommand):
         # Get the URL of the parent directory.
         parent_dir_url = url.rsplit('/', 2)[0]
 
-        # in_link determines if a URL character in within an HTML link. Set to FALSE until proven TRUE (when a link is
-        # found within the source content of the URL).
+        # in_link determines if a URL character in within an HTML link.
+        # Set to FALSE until proven TRUE (when a link is found within the source content of the URL).
         in_link = False
 
         # A list to hold the URL's source links that are directories/folders.
@@ -435,13 +435,13 @@ class ListFiles(AbstractCommand):
                 # Get the link's name.
                 link_name = string[link_start_char_index: link_end_char_index]
 
-                # If the link name ends in a forward slash, the link is a folder/directory. Add the link name (without
-                # the leading path or the ending forward slash) to the dir_list.
+                # If the link name ends in a forward slash, the link is a folder/directory.
+                # Add the link name (without the leading path or the ending forward slash) to the dir_list.
                 if link_name.endswith('/'):
                     dir_list.append(link_name.split('/')[-2])
 
-                # If the link name does not end in a forward slash, the link is a file. Add the link name (without
-                # the leading path) to the file_list.
+                # If the link name does not end in a forward slash, the link is a file.
+                # Add the link name (without the leading path) to the file_list.
                 else:
                     file_list.append(link_name.split('/')[-1])
 
@@ -458,14 +458,14 @@ class ListFiles(AbstractCommand):
         elif read_dirs:
             link_list = dir_list
 
-        # Iterate over the each link name.
+        # Iterate over each link name.
         for link in link_list:
 
             # Remove the link if it corresponds to a parent directory.
             if link in parent_dir_url:
                 link_list.remove(link)
 
-        # Filter the list of links with regards to the include_list and exclude_list parameters.
+        # Filter the list of links considering the include_list and exclude_list parameters.
         link_list_filtered = string_util.filter_list_of_strings(link_list, include_list, exclude_list,
                                                                 include_count=include_count)
 
@@ -550,21 +550,21 @@ class ListFiles(AbstractCommand):
                     # If configured to list files and folders, continue.
                     if list_files_bool and list_dirs_bool:
 
-                        # Filter the list of files and folders with regards to the IncludePatterns and ExcludePatterns.
+                        # Filter the list of files and folders considering the IncludePatterns and ExcludePatterns.
                         output_filtered = string_util.filter_list_of_strings(files + dirs, to_include, to_exclude,
                                                                              include_count=list_count)
 
                     # If configured to list files, continue.
                     elif list_files_bool:
 
-                        # Filter the list of files with regards to the IIncludePatterns and ExcludePatterns.
+                        # Filter the list of files considering the IIncludePatterns and ExcludePatterns.
                         output_filtered = string_util.filter_list_of_strings(files, to_include, to_exclude,
                                                                              include_count=list_count)
 
                     # If configured to list folders, continue.
                     elif list_dirs_bool:
 
-                        # Filter the list of folders with regards to the IIncludePatterns and ExcludePatterns.
+                        # Filter the list of folders considering the IIncludePatterns and ExcludePatterns.
                         output_filtered = string_util.filter_list_of_strings(dirs, to_include, to_exclude,
                                                                              include_count=list_count)
 
@@ -650,7 +650,7 @@ class ListFiles(AbstractCommand):
                                                                             recommendation))
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error running ListFiles command."
                 recommendation = "Check the log file for details."
@@ -658,7 +658,7 @@ class ListFiles(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

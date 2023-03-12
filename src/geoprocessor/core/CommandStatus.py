@@ -1,18 +1,18 @@
 # CommandStatus - class to hold command status log records and status summary
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -24,14 +24,14 @@ from geoprocessor.core.CommandPhaseType import CommandPhaseType
 
 class CommandStatus(object):
     """
-    Class to hold the command status, including a log of messages generated
-    when initializing, discovering, and running the command.
+    Class to hold the command status, including a log of messages generated when initializing,
+    discovering, and running the command.
     """
     def __init__(self) -> None:
         """
         Initialize the instance.
         """
-        # The default status of the command is UNKNOWN
+        # The default status of the command is UNKNOWN.
         self.initialization_status = CommandStatusType.UNKNOWN
         self.discovery_status = CommandStatusType.UNKNOWN
         self.run_status = CommandStatusType.UNKNOWN
@@ -47,7 +47,7 @@ class CommandStatus(object):
         which is the previous maximum severity and that of the new log record.
 
         Args:
-            command_phase: The command phase for the log record, e.g, CommandPhaseType.RUN
+            command_phase: The command phase for the log record (e.g, CommandPhaseType.RUN)
             log_record: A CommandLogRecord instance.
 
         Returns:

@@ -1,18 +1,18 @@
 # CommandFileRunner - class to run a command file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -68,12 +68,12 @@ class CommandFileRunner(object):
                 # Message.printStatus(2, "", "Detected tag: " + C)
                 # Check the token following @ enabled
                 if len(command_string) > (pos + 8):
-                    # Have trailing characters
+                    # Have trailing characters.
                     value = command_string[pos + len("@ENABLED"):].strip()
                     if value.upper() == "FALSE":
                         # Message.printStatus(2, "", "Detected false")
                         return False
-        # No #@enabled False found so command file is enabled
+        # No #@enabled False found so command file is enabled.
         return True
 
     def read_command_file(self, command_file_path: str, run_discovery_on_load: bool = True) -> None:
@@ -94,8 +94,8 @@ class CommandFileRunner(object):
             FileNotFoundError:  If the command file is not found.
         """
         self.command_processor.read_command_file(
-            command_file_path,  # InitialWorkingDir processor property will be set to command file location
-            True,  # Create UnknownCommand instances for unknown commands
+            command_file_path,  # InitialWorkingDir processor property will be set to command file location.
+            True,  # Create UnknownCommand instances for unknown commands.
             False,  # Do not append the commands to the commands already in the processor.
             run_discovery_on_load)
 
@@ -116,7 +116,7 @@ class CommandFileRunner(object):
         logger = logging.getLogger(__name__)
         logger.info("Before calling run_commands")
         self.command_processor.run_commands(
-            None,  # Subset of Command instances to run - just run all commands
-            run_properties=run_properties,  # Properties to control run
-            env_properties=env_properties)  # Properties from the environment
+            None,  # Subset of Command instances to run - just run all commands.
+            run_properties=run_properties,  # Properties to control run.
+            env_properties=env_properties)  # Properties from the environment.
         logger.info("Back from calling run_commands")

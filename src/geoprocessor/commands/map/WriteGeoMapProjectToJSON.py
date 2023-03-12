@@ -1,18 +1,18 @@
 # WriteGeoMapProjectToJSON - command to write a GeoMapProject to a JSON file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -47,12 +47,12 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
         CommandParameterMetadata("Indent", int),
         CommandParameterMetadata("OutputFile", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Write a GeoMapProject to a JSON file."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoMapID
     __parameter_input_metadata['GeoMapProjectID.Description'] = "GeoMapProject identifier"
@@ -81,15 +81,15 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "WriteGeoMapProjectToJSON"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
@@ -145,7 +145,7 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geomapproject_id, output_file_abs):
@@ -206,7 +206,7 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the parameter values
+        # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_GeoMapProjectID = self.get_parameter_value("GeoMapProjectID")
         # noinspection PyPep8Naming
@@ -221,7 +221,7 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
         # noinspection PyPep8Naming
         pv_GeoMapProjectID = self.command_processor.expand_parameter_value(pv_GeoMapProjectID, self)
 
-        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -230,7 +230,7 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
         if self.check_runtime_data(pv_GeoMapProjectID, output_file_absolute):
             # noinspection PyBroadException
             try:
-                # Get the GeoMap
+                # Get the GeoMap.
                 geomapproject = self.command_processor.get_geomapproject(pv_GeoMapProjectID)
                 if geomapproject is None:
                     self.warning_count += 1
@@ -240,7 +240,7 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
                 else:
-                    # Ensure that visualizations are detected in the map property.
+                    # Ensure that visualizations are detected in the map property:
                     # - need to handle here because event handler does not know map project file for relative path
                     #   until here
 
@@ -253,11 +253,11 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
                                     if has_visualization_property.upper() == 'TRUE':
                                         layer_view_has_visualization = True
                                 except KeyError:
-                                    # OK, just means that the property was not found
+                                    # OK, just means that the property was not found.
                                     layer_view_has_visualization = False
                                 for event_handler in geolayerview.event_handlers:
                                     try:
-                                        # Check the event handler for visualization.
+                                        # Check the event handler for visualization:
                                         # - the event handler configuration files are relative to the map configuration
                                         #   folder
                                         # - if GeoLayerView has property hasVisualization='true', set any
@@ -277,20 +277,20 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
                                                                        CommandLogRecord(CommandStatusType.WARNING,
                                                                                         message, recommendation))
 
-                    # Create the JSON string to write
+                    # Create the JSON string to write:
                     # - the GeoMapProjectCustomJsonEncoder.default() function handles encoding types that cannot
                     #   otherwise be serialized, for example PyQGIS types
                     json_string = json.dumps(geomapproject, indent=indent, cls=GeoMapCustomJsonEncoder)
 
-                    # Write the JSON string
+                    # Write the JSON string.
                     with open(output_file_absolute, 'w') as file:
                         file.write(json_string)
 
-                    # Save the output file in the processor
+                    # Save the output file in the processor.
                     self.command_processor.add_output_file(output_file_absolute)
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error writing GeoMapProject {} to JSON format.".format(pv_GeoMapProjectID)
                 recommendation = "Check the log file for details."
@@ -298,7 +298,7 @@ class WriteGeoMapProjectToJSON(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

@@ -1,18 +1,18 @@
 # AddGeoMapToGeoMapProject - command to add a GeoMap to GeoMapProject
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -45,7 +45,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
         CommandParameterMetadata("InsertBefore", type("")),
         CommandParameterMetadata("InsertAfter", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display:
     # - * character takes up about two spaces for indentation
     __command_metadata = dict()
     __command_metadata['Description'] = "Add a GeoMap to a GeoMapProject, to construct an overall visualization.\n"\
@@ -58,7 +58,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
         "The last GeoMap in the list is displayed on the bottom of the map."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoMapProjectID
     __parameter_input_metadata['GeoMapProjectID.Description'] = "GeoMapProject identifier"
@@ -98,18 +98,18 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "AddGeoMapToGeoMapProject"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Only allow one of InsertPosition, InsertBefore, and InsertAfter can be specified
+        # Only allow one of InsertPosition, InsertBefore, and InsertAfter can be specified.
         # noinspection PyPep8Naming
         pv_InsertPosition = self.get_parameter_value(parameter_name='InsertPosition',
                                                      command_parameters=command_parameters)
@@ -156,9 +156,9 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
         check_list.append(pv_InsertBefore)
         check_list.append(pv_InsertAfter)
         if validator_util.validate_list_has_one_value(check_list, True):
-            # List has at least one value
+            # List has at least one value.
             if not validator_util.validate_list_has_one_value(check_list):
-                # List does not have exactly one value
+                # List does not have exactly one value.
                 message = "Zero or one of InsertPosition, InsertBefore, and InsertAfter can be specified."
                 recommendation = "Specify only one insert parameter (or none)."
                 warning_message += "\n" + message
@@ -175,7 +175,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geomapproject_id: str, geomap_id: str,
@@ -233,12 +233,12 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the parameter values
+        # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_GeoMapProjectID = self.get_parameter_value("GeoMapProjectID")
         geomapproject_id = None
         if pv_GeoMapProjectID is None or pv_GeoMapProjectID == "":
-            # No map project ID was specified so get the latest added map project from the processor
+            # No map project ID was specified so get the latest added map project from the processor.
             if len(self.command_processor.geomapprojects) == 0:
                 self.warning_count += 1
                 message = "No GeoMapProjects have been created.  Cannot determine default GeoMapProject."
@@ -247,7 +247,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             else:
-                # Use the last added
+                # Use the last added.
                 geomapproject_id = self.command_processor.last_geomapproject_added.id
                 self.logger.info('Using default map GeoMapProjectID: {}'.format(geomapproject_id))
         else:
@@ -285,7 +285,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-                # Get the GeoMap
+                # Get the GeoMap.
                 geomap = self.command_processor.get_geomap(pv_GeoMapID)
                 if geomap is None:
                     self.warning_count += 1
@@ -295,13 +295,13 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-                # Add the GeoMap to the GeoMapProject
+                # Add the GeoMap to the GeoMapProject.
                 if (geomapproject is not None) and (geomap is not None):
                     geomapproject.add_geomap(geomap, insert_position=pv_InsertPosition,
                                              insert_before=pv_InsertBefore, insert_after=pv_InsertAfter)
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error adding GeoMap {} to GeoMapProject {}.".format(pv_GeoMapID,
                                                                                           geomapproject_id)
@@ -310,7 +310,7 @@ class AddGeoMapToGeoMapProject(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

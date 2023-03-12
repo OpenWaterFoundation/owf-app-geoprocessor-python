@@ -1,18 +1,18 @@
 # WriteGeoLayerToShapefile - write a GeoLayer to a shapefile
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -41,23 +41,23 @@ class WriteGeoLayerToShapefile(AbstractCommand):
     """
     Write a GeoLayer to a spatial data file in shapefile format.
 
-    This command writes a GeoLayer registered within the geoprocessor to a spatial date file in Shapefile format (a
-    group of multiple files).
+    This command writes a GeoLayer registered within the geoprocessor to a spatial date file in Shapefile format
+    (a group of multiple files).
     """
 
-    # Define the command parameters/
+    # Define the command parameters.
     __command_parameter_metadata: [CommandParameterMetadata] = [
         CommandParameterMetadata("GeoLayerID", str),
         CommandParameterMetadata("OutputFile", str),
         CommandParameterMetadata("OutputCRS", str),
         CommandParameterMetadata("ZipOutput", bool)]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Write a GeoLayer to a file in Esri Shapefile format."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
@@ -97,18 +97,18 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "WriteGeoLayerToShapefile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id: str, output_file_abs: str) -> bool:
@@ -203,8 +203,8 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                   message, recommendation))
 
-        # Return the Boolean to determine if the write process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
+        # Return the Boolean to determine if the write process should be run. If TRUE, all checks passed.
+        # If FALSE, one or many checks failed.
         return run_write
 
     def run_command(self) -> None:
@@ -220,7 +220,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the parameter values except for the OutputCRS
+        # Obtain the parameter values except for the OutputCRS.
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         # noinspection PyPep8Naming
@@ -231,7 +231,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
         # Convert the ZipOutput value to a Boolean value.
         zip_output_bool = string_util.str_to_bool(pv_ZipOutput)
 
-        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -242,17 +242,17 @@ class WriteGeoLayerToShapefile(AbstractCommand):
             # noinspection PyBroadException
             try:
 
-                # Get the GeoLayer
+                # Get the GeoLayer.
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                # Get the current coordinate reference system (in EPSG code) of the current GeoLayer
+                # Get the current coordinate reference system (in EPSG code) of the current GeoLayer.
                 geolayer_crs = geolayer.get_crs()
 
-                # Obtain the parameter value of the OutputCRS
+                # Obtain the parameter value of the OutputCRS.
                 # noinspection PyPep8Naming
                 pv_OutputCRS = self.get_parameter_value("OutputCRS", default_value=geolayer_crs)
 
-                # Write the GeoLayer to a spatial data file in Shapefile format
+                # Write the GeoLayer to a spatial data file in Shapefile format.
                 qgis_util.write_qgsvectorlayer_to_shapefile(geolayer.qgs_layer,
                                                             output_file_absolute,
                                                             pv_OutputCRS)
@@ -262,7 +262,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                     zip_util.zip_shapefile(output_file_absolute)
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error writing GeoLayer {} to spatial data file in Shapefile format.".format(
                     pv_GeoLayerID)
@@ -271,7 +271,7 @@ class WriteGeoLayerToShapefile(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

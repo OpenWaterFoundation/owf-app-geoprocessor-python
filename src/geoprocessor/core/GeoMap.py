@@ -1,7 +1,7 @@
 # GeoMap- class for map
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ class GeoMap(object):
                 GeoLayerSymbol         # Symbol configuration for the layer
     """
 
-    # Default CRS code
+    # Default CRS code.
     default_crs_code = "EPSG:4326"
 
     def __init__(self,
@@ -60,36 +60,36 @@ class GeoMap(object):
             crs_code (str): CRS code such as "EPSG:4326"
         """
 
-        # Identifier for GeoMap
+        # Identifier for GeoMap.
         self.id = geomap_id
 
-        # Name for the GeoMap
+        # Name for the GeoMap.
         self.name = name
 
-        # Description for the GeoMap
+        # Description for the GeoMap.
         self.description = description
 
-        # Coordinate Reference System (CRS) for the map
+        # Coordinate Reference System (CRS) for the map:
         # - this will be set to None if CRS is not found
         self.crs: QgsCoordinateReferenceSystem or None = qgis_util.parse_qgs_crs(crs_code)
 
-        # Data path for the GeoMap, folders or URL path to look for data.
+        # Data path for the GeoMap, folders or URL path to look for data:
         # - geolayer file name will be relative to this, if not specified as absolute path
         self.data_path: str = data_path
 
-        # Dictionary of general map properties
+        # Dictionary of general map properties.
         self.properties = dict()
 
-        # Array of GeoLayer objects, which supply data for the layer views
+        # Array of GeoLayer objects, which supply data for the layer views.
         self.geolayers = []
 
-        # Array of GeoLayerViewGroup
+        # Array of GeoLayerViewGroup.
         self.geolayerviewgroups = []
 
     def add_geolayer(self, geolayer: GeoLayer) -> None:
         """
-        Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
-        existing GeoLayer will be replaced with the input GeoLayer.
+        Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID,
+        the existing GeoLayer will be replaced with the input GeoLayer.
         The GeoLayer can be either a VectorGeoLayer or RasterGeoLayer.
 
         Args:
@@ -115,8 +115,8 @@ class GeoMap(object):
                                               insert_before: str = None,
                                               insert_after: str = None) -> None:
         """
-        Add a GeoLayerView object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
-        existing GeoLayer will be replaced with the input GeoLayer.
+        Add a GeoLayerView object to the geolayers list. If a geolayer already exists with the same GeoLayer ID,
+        the existing GeoLayer will be replaced with the input GeoLayer.
         The GeoLayer can be either a VectorGeoLayer or RasterGeoLayer.
 
         Args:
@@ -130,7 +130,7 @@ class GeoMap(object):
             None
         """
 
-        # First insert the GeoLayer for complete list of layers associated with the GeoMap.
+        # First insert the GeoLayer for complete list of layers associated with the GeoMap:
         # - this is done in case any downstream technologies can utilize shared layers
         # - the order is not important since position is handled in the GeoLayerViewGroup
         if geolayerview.geolayer is None:
@@ -140,16 +140,16 @@ class GeoMap(object):
 
         # If the geolayerviewgroup is a string, get the object that corresponds to the given identifier.
         if isinstance(geolayerviewgroup, str):
-            # Get the geolayerviewgroup using its ID
+            # Get the geolayerviewgroup using its ID.
             geolayerviewgroup_id = geolayerviewgroup
             geolayerviewgroup = self.get_geolayerviewgroup(geolayerviewgroup_id)
             if geolayerviewgroup is None:
                 raise ValueError(
                     "GeoLayerViewGroup with ID '{}' does not exist.  Cannot add GeoLayer to GeoMap.".format(
                         geolayerviewgroup_id))
-        # Else the GeoLayerViewGroup instance was passed in
+        # Else the GeoLayerViewGroup instance was passed in.
 
-        # Add the GeoLayerView to the GeoLayerViewGroup
+        # Add the GeoLayerView to the GeoLayerViewGroup.
 
         # Iterate over the existing GeoLayerView and if found, remove the previous instance.
         for existing_geolayerview in geolayerviewgroup.geolayerviews:
@@ -165,13 +165,13 @@ class GeoMap(object):
             for geolayerview in geolayerviewgroup.geolayerviews:
                 insert_index += 1
                 if geolayerview.id == insert_before:
-                    # Found the insert position
+                    # Found the insert position.
                     geolayerviewgroup.geolayerviews.insert(insert_index, geolayerview)
             if insert_index < 0:
                 raise ValueError("GeoLayerViewID '" + insert_before + "' does not exist - can't insert '" +
                                  geolayerview.id + "'")
         elif insert_after is not None and (insert_after != ""):
-            # Insert after the specified GeoLayerViewID
+            # Insert after the specified GeoLayerViewID.
             insert_index = -1
             for geolayerview in geolayerviewgroup.geolayerviews:
                 insert_index += 1
@@ -181,20 +181,20 @@ class GeoMap(object):
                 raise ValueError("GeoLayerViewID '" + insert_after + "' does not exist - can't insert '" +
                                  geolayerview.id + "'")
         elif insert_position is not None and (insert_position != ""):
-            # Insert using a general position
+            # Insert using a general position.
             insert_position_upper = insert_position.upper()
             if insert_position_upper == 'TOP':
                 if len(geolayerviewgroup.geolayerviews) == 0:
-                    # Nothing in the list so just append
+                    # Nothing in the list so just append.
                     geolayerviewgroup.geolayerviews.append(geolayerview)
                 else:
-                    # Insert at the front of the list
+                    # Insert at the front of the list.
                     geolayerviewgroup.geolayerviews.insert(0, geolayerview)
             elif insert_position_upper == 'BOTTOM':
-                # Insert at the end of the list
+                # Insert at the end of the list.
                 geolayerviewgroup.geolayerviews.append(geolayerview)
         else:
-            # Insert at the end
+            # Insert at the end.
             geolayerviewgroup.geolayerviews.append(geolayerview)
 
     def add_geolayerviewgroup(self,
@@ -235,12 +235,12 @@ class GeoMap(object):
 
         # Add the input GeoLayerViewGroup to the geolayerviewgroups list.
         if insert_before is not None and (insert_before != ""):
-            # Insert before the specified GeoLayerViewGroupID
+            # Insert before the specified GeoLayerViewGroupID.
             insert_index = -1
             for geolayerviewgroup in self.geolayerviewgroups:
                 insert_index += 1
                 if geolayerviewgroup.id == insert_before:
-                    # Found the insert position
+                    # Found the insert position.
                     self.geolayerviewgroups.insert(insert_index, geolayerviewgroup)
                     if debug:
                         logger.info("Inserting GeoLayerViewGroup {} at position [{}].".format(
@@ -250,7 +250,7 @@ class GeoMap(object):
                 raise ValueError("GeoLayerViewGroupID '" + insert_before + "' does not exist - can't insert '" +
                                  geolayerviewgroup.id + "'")
         elif insert_after is not None and (insert_after != ""):
-            # Insert after the specified GeoLayerViewGroupID
+            # Insert after the specified GeoLayerViewGroupID.
             insert_index = -1
             for geolayerviewgroup in self.geolayerviewgroups:
                 insert_index += 1
@@ -264,26 +264,26 @@ class GeoMap(object):
                 raise ValueError("GeoLayerViewGroupID '" + insert_after + "' does not exist - can't insert '" +
                                  geolayerviewgroup.id + "'")
         elif insert_position is not None and (insert_position != ""):
-            # Insert using a general position
+            # Insert using a general position.
             insert_position_upper = insert_position.upper()
             if insert_position_upper == 'TOP':
                 if len(self.geolayerviewgroups) == 0:
-                    # Nothing in the list so just append
+                    # Nothing in the list so just append.
                     self.geolayerviewgroups.append(geolayerviewgroup)
                     if debug:
                         logger.info("Inserting GeoLayerViewGroup {} at position [0].".format(geolayerviewgroup.id))
                 else:
-                    # Insert at the front of the list
+                    # Insert at the front of the list.
                     self.geolayerviewgroups.insert(0, geolayerviewgroup)
                     if debug:
                         logger.info("Inserting GeoLayerViewGroup {} at position [0].".format(geolayerviewgroup.id))
             elif insert_position_upper == 'BOTTOM':
-                # Insert at the end of the list
+                # Insert at the end of the list.
                 self.geolayerviewgroups.append(geolayerviewgroup)
                 if debug:
                     logger.info("Inserting GeoLayerViewGroup {} at bottom.".format(geolayerviewgroup.id))
         else:
-            # Insert at the end
+            # Insert at the end.
             self.geolayerviewgroups.append(geolayerviewgroup)
             if debug:
                 logger.info("Inserting GeoLayerViewGroup {} at end.".format(geolayerviewgroup.id))
@@ -335,9 +335,9 @@ class GeoMap(object):
         for geolayer in self.geolayers:
             if geolayer is not None:
                 if geolayer.id == geolayer_id:
-                    # Found the requested identifier
+                    # Found the requested identifier.
                     return geolayer
-        # Did not find the requested identifier so return None
+        # Did not find the requested identifier so return None.
         return None
 
     def get_geolayerviewgroup(self, geolayerviewgroup_id: str) -> GeoLayerViewGroup or None:
@@ -353,15 +353,15 @@ class GeoMap(object):
         for geolayerviewgroup in self.geolayerviewgroups:
             if geolayerviewgroup is not None:
                 if geolayerviewgroup.id == geolayerviewgroup_id:
-                    # Found the requested identifier
+                    # Found the requested identifier.
                     return geolayerviewgroup
-        # Did not find the requested identifier so return None
+        # Did not find the requested identifier so return None.
         return None
 
     def set_properties(self, properties: dict, clear_first: bool = False) -> None:
         """
-        Set properties.  This does not replace the properties - it resets existing properties or resets
-        existing properties.
+        Set properties.  This does not replace the properties.
+        It resets existing properties or resets existing properties.
 
         Args:
             properties (dict): properties to set.
@@ -382,10 +382,10 @@ class GeoMap(object):
         """
         use_dict = False
         if use_dict:
-            # Just return the dictionary since it is equivalent to the other option
+            # Just return the dictionary since it is equivalent to the other option.
             return self.__dict__
         else:
-            # Return a dictionary with JSON objects
+            # Return a dictionary with JSON objects:
             # - this remaps the names to camelcase, which is is more consistent with JSON standards
             return {
                 "geoMapId": self.id,

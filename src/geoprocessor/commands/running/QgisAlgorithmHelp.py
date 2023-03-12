@@ -1,18 +1,18 @@
 # QgisAlgorithmHelp - command to list and writes QGIS algorithm help
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -50,7 +50,7 @@ class QgisAlgorithmHelp(AbstractCommand):
         CommandParameterMetadata("ShowHelp", str)
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Print QGIS algorithm help.\n"
@@ -58,7 +58,7 @@ class QgisAlgorithmHelp(AbstractCommand):
     )
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # ListAlgorithms
     __parameter_input_metadata['ListAlgorithms.Description'] = "should algorithms be listed?"
@@ -97,15 +97,15 @@ class QgisAlgorithmHelp(AbstractCommand):
         """
         Initialize a command instance.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "QgisAlgorithmHelp"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -164,14 +164,14 @@ class QgisAlgorithmHelp(AbstractCommand):
         # triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             # Message.printWarning ( warning_level,
             #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, output_file_abs):
@@ -187,8 +187,8 @@ class QgisAlgorithmHelp(AbstractCommand):
                should not be written.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the folder of the OutputFile file path is not a valid folder, raise a FAILURE.
@@ -224,7 +224,7 @@ class QgisAlgorithmHelp(AbstractCommand):
         pv_AlgorithmIDs = self.get_parameter_value('AlgorithmIDs')
         algorithm_ids = []
         if pv_AlgorithmIDs is not None and pv_AlgorithmIDs != "":
-            # Have algorithm IDs to print help
+            # Have algorithm IDs to print help.
             algorithm_ids = pv_AlgorithmIDs.split(",")
             for i in range(len(algorithm_ids)):
                 algorithm_ids[i] = algorithm_ids[i].strip()
@@ -237,7 +237,7 @@ class QgisAlgorithmHelp(AbstractCommand):
             if pv_ShowHelp.upper() == 'FALSE':
                 show_help = False
 
-        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         output_file_absolute = None
         if pv_OutputFile is not None:
             output_file_absolute = io_util.verify_path_for_os(
@@ -255,7 +255,7 @@ class QgisAlgorithmHelp(AbstractCommand):
                 if show_help:
                     qt_util.info_message_box(output_list, title="QGIS Algorithm Help")
 
-            # Save the output file in the processor, used by the UI to list output files
+            # Save the output file in the processor, used by the UI to list output files.
             self.command_processor.add_output_file(output_file_absolute)
         except Exception:
             warning_count += 1

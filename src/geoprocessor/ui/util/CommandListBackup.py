@@ -1,18 +1,18 @@
 # CommandListBackup - ?
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -29,13 +29,13 @@ class CommandListBackup(object):
 
     def __init__(self) -> None:
 
-        # Create a new command list QListWidget object
+        # Create a new command list QListWidget object.
         self.command_list = []
 
     def command_list_modified(self, command_list: [AbstractCommand]) -> bool:
         """
-        Check to see if the command list has been modified since the last save. The last saved
-        command list should have been updated by update_command_list()
+        Check to see if the command list has been modified since the last save.
+        The last saved command list should have been updated by update_command_list().
         :param command_list: the current command_list in geoprocessor
         :return: True if file has been modified, otherwise False
         """
@@ -59,7 +59,7 @@ class CommandListBackup(object):
 
     def update_command_list(self, command_list: [AbstractCommand]) -> None:
         """
-        Update the command list with what is currently saved or opened in geoprocessor
+        Update the command list with what is currently saved or opened in geoprocessor.
         :param command_list: the command list being saved or opened by geoprocessor
         :return: None
         """

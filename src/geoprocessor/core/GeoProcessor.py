@@ -1,18 +1,18 @@
 # GeoProcessor - class to process a workflow of commands
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -38,10 +38,10 @@ import geoprocessor.util.os_util as os_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.qgis_version_util as qgis_version_util
 
-# QGIS-specific code
+# QGIS-specific code.
 from plugins.processing.core import Processing
 
-# General modules
+# General modules.
 import getpass
 import logging
 import os
@@ -55,8 +55,7 @@ from typing import Any
 
 class GeoProcessor(object):
     """
-    Overarching class that performs the work of the geoprocessing tool
-    by executing a sequence of commands.
+    Overarching class that performs the work of the geoprocessing tool by executing a sequence of commands.
     """
 
     def __init__(self) -> None:
@@ -64,11 +63,12 @@ class GeoProcessor(object):
         Construct/initialize a geoprocessor.
         """
 
-        # The array of command processor listeners to be called
-        # when the commands are running, to indicate progress.
+        # The array of command processor listeners to be called when the commands are running, to indicate progress:
         # - would be an interface in Java but in Python is just an object with methods:
-        #   command_started() and command_completed()
-        # Call sequence is:
+        #     command_started()
+        #     command_completed()
+        #
+        # The call sequence is:
         #   add_command_processor_listener()                                <- called by GeoProcessorUI.__init__()
         #     - adds the listener object to self.command_processor_listener_array
         #   notify_command_processor_listeners_of_command_started()         <- called by run_commands()
@@ -82,7 +82,7 @@ class GeoProcessor(object):
         # Command list that holds all command objects to run.
         self.commands: [AbstractCommand] = []
 
-        # datastores list that holds all registered DataStore objects.
+        # Datastores list that holds all registered DataStore objects.
         self.datastores: [DataStore] = []
 
         # Property dictionary that holds all geoprocessor properties.
@@ -93,16 +93,16 @@ class GeoProcessor(object):
         # - these objects are also displayed in Results in the UI
         # - other map-related objects are stored in these main objects
 
-        # GeoLayer list that holds all registered GeoLayer objects.
+        # GeoLayer list that holds all registered GeoLayer objects:
         # - can contain vector and raster layers
         # - this array is updated when a layer is created or read with a command
         self.geolayers: [GeoLayer] = []
 
-        # GeoMap list that holds all registered GeoMap objects.
+        # GeoMap list that holds all registered GeoMap objects:
         # - this array is updated when a map is created with CreateGeoMap
         self.geomaps: [GeoMap] = []
 
-        # GeoMap list that holds all registered GeoMapProject objects.
+        # GeoMap list that holds all registered GeoMapProject objects:
         # - this array is updated when a project is created with CreateGeoMapProject
         self.geomapprojects: [GeoMapProject] = []
 
@@ -111,25 +111,25 @@ class GeoProcessor(object):
         # Start tracking 'last' map objects added, to allow providing a default for commands ===========================
         # - these need to be maintained in the GeoProcessor to allow commands to access
 
-        # Last GeoMapProject added with commands, used to help determine defaults in commands
+        # Last GeoMapProject added with commands, used to help determine defaults in commands:
         # - used when determining the default map project
         # - needed because the geomapprojects array may not reflect the order of commands
         # - the CreateGeoMapProject command sets this
         self.last_geomapproject_added = None
 
-        # Last GeoMap added
+        # Last GeoMap added:
         # - used when determining the default map
         # - needed because the geomaps array may not reflect the order of commands
         # - the CreateGeoMap command sets this
         self.last_geomap_added = None
 
-        # Last GeoLayerViewGroup added
+        # Last GeoLayerViewG:roup added:
         # - used when determining the default view group
         # - needed because the geo layer view group array for a map may not reflect the order of commands
         # - the AddGeoLayerViewGroupToGeoMap command sets this
         self.last_geolayerviewgroup_added = None
 
-        # Last GeoLayerViewGroup added
+        # Last GeoLayerViewGroup added:
         # - used when determining the default view
         # - needed because the geo layer view array for a map may not reflect the order of commands
         # - the AddGeoLayerToGeoMap command sets this
@@ -137,25 +137,26 @@ class GeoProcessor(object):
 
         # End tracking 'last' map tracking objects =====================================================================
 
-        # Table list that holds all registered tables object.
+        # List that holds all DataTable objects, which is a class similar to TSTool DataTable.
+        # This is NOT the Pandas data frame.
         self.tables: [DataTable] = []
 
         # List that holds the absolute paths to the output files.
         self.output_files: [str] = []
 
-        # Holds the initialized QGIS processor, to run processing algorithms.
+        # Holds the initialized QGIS processor, to run processing algorithms:
         # - this uses plugins.processing.core.Processing.runAlgorithm
         # - alternatively, could use qgis.processing.processAlgorithm
         # - the Processing class provides handling of errors whereas qgis.processing is simple function call
         self.qgis_processor: Processing = qgis_util.initialize_qgis_processor()
         #self.qgis_processing: processing = qgis_util.initialize_qgis_processing()
 
-        # qgis version
+        # qgis version.
         self.properties["QGISVersion"] = qgis_version_util.get_qgis_version_str()
 
         # Set properties for QGIS environment.
         # qgis_prefix_path: the full pathname to the qgis install folder (often C:\OSGeo4W\apps\qgis)
-        # TODO smalers 2017-12-30 Need to rework to not hard code.
+        # TODO smalers 2017-12-30 Need to rework to not hard code:
         # - Need to pass in QGIS configuration from the startup batch file or script.
         self.set_property("qgis_prefix_path", r"C:\OSGeo4W64\apps\qgis")
 
@@ -163,28 +164,29 @@ class GeoProcessor(object):
         # Reading the command file should reset these properties.
         # TODO smalers 2017-12-30 need to handle "New command file" action when UI is implemented.
         cwd = os.getcwd()
-        # These will have C:\ on Windows and / on Linux.
+
+        # These will have C:\ on Windows and / on Linux:
         # - will be reset to Python friendly version with all forward slashes when a command file is opened
         self.properties["InitialWorkingDir"] = os.path.dirname(cwd)
         self.properties["InitialWorkingDirNative"] = os.path.dirname(cwd)
         self.properties["WorkingDir"] = os.path.dirname(cwd)
         self.properties["WorkingDirNative"] = os.path.dirname(cwd)
 
-        # TODO smalers 2017-12-30 May not need this - Python design improves on Java design
+        # TODO smalers 2017-12-30 May not need this - Python design improves on Java design:
         # - remove once tested out
         # Indicate whether commands should clear their log before running.
         # Normally this is True.  However, when using For() commands it is helpful to accumulate
-        # logging messages in commands within the For() loop.  Otherwise, only the log messages from
-        # the last For() loop iteration will be in the log.  The command processor sets this value,
-        # which is checked before running the command.
+        # logging messages in commands within the For() loop.
+        # Otherwise, only the log messages from the last For() loop iteration will be in the log.
+        # The command processor sets this value, which is checked before running the command.
         # This check was performed in each command in the Java code but is handled in the processor
         # to simplify command class code.
         # self.__command_should_clear_run_log = True
 
-        # Environment properties passed in from the application
-        # - TODO smalers 2018-02-28 may need to be more explicit about setting.
-        #   currently gets set when run_commands() is called.
-        # - Should always work for RunCommands but what if nested several layers?
+        # Environment properties passed in from the application:
+        # - TODO smalers 2018-02-28 may need to be more explicit about setting
+        # - currently gets set when run_commands() is called.
+        # - should always work for RunCommands but what if nested several layers?
         self.env_properties = {}
 
     def __len__(self) -> int:
@@ -224,7 +226,7 @@ class GeoProcessor(object):
             logger.debug("First command debug:")
             self.commands[0].print_for_debug()
 
-    # TODO smalers 2020-03-13 evaluate removing this or inserting a Command object instead
+    # TODO smalers 2020-03-13 evaluate removing this or inserting a Command object instead.
     def add_command_at_index(self, command_string: str, index: int) -> None:
         """
         Add a command string above currently selected command in command file.
@@ -244,7 +246,7 @@ class GeoProcessor(object):
         # Work is done in the AbstractCommand class.
         command_object.initialize_command(command_string, self, True)
 
-        # Add command above selected command
+        # Add command above selected command.
         self.commands.insert(index, command_object)
 
     def add_command_processor_listener(self, listener: object) -> None:
@@ -257,10 +259,10 @@ class GeoProcessor(object):
             listener: a command list model
         """
 
-        # Use arrays to make a little simpler than Vectors to use later...
+        # Use arrays to make a little simpler than Vectors to use later.
         if not listener:
             return
-        # See if the listener has already been added...
+        # See if the listener has already been added.
         for listener_from_array in self.command_processor_listener_array:
             if listener_from_array == listener:
                 return
@@ -268,8 +270,9 @@ class GeoProcessor(object):
 
     def add_datastore(self, datastore: DataStore) -> None:
         """
-        Add a DataStore object to the datastores list. If the DataStore already exists with the same DataStore ID, the
-        existing DataStore will be overwritten with the input DataStore.
+        Add a DataStore object to the datastores list.
+        If the DataStore already exists with the same DataStore ID,
+        the existing DataStore will be overwritten with the input DataStore.
 
         Args:
             datastore: instance of a DataStore object
@@ -281,8 +284,8 @@ class GeoProcessor(object):
         # Iterate over the existing DataStores.
         for existing_datastore in self.datastores:
 
-            # If an existing DataStore has the same ID as the input DataStore, remove the existing DataStore from the
-            # datastores list.
+            # If an existing DataStore has the same ID as the input DataStore,
+            # remove the existing DataStore from the datastores list.
             if existing_datastore.id == datastore.id:
                 self.free_datastore(existing_datastore)
 
@@ -291,8 +294,9 @@ class GeoProcessor(object):
 
     def add_geolayer(self, geolayer: GeoLayer) -> None:
         """
-        Add a GeoLayer object to the geolayers list. If a geolayer already exists with the same GeoLayer ID, the
-        existing GeoLayer will be replaced with the input GeoLayer.
+        Add a GeoLayer object to the geolayers list.
+        If a geolayer already exists with the same GeoLayer ID,
+        the existing GeoLayer will be replaced with the input GeoLayer.
         The GeoLayer can be either a VectorGeoLayer or RasterGeoLayer.
 
         Args:
@@ -304,8 +308,8 @@ class GeoProcessor(object):
 
         # Iterate over the existing GeoLayers.
         for existing_geolayer in self.geolayers:
-            # If an existing GeoLayer has the same ID as the input GeoLayer, remove the existing GeoLayer from the
-            # geolayers list.
+            # If an existing GeoLayer has the same ID as the input GeoLayer,
+            # remove the existing GeoLayer from the geolayers list.
             if existing_geolayer.id == geolayer.id:
                 self.free_geolayer(existing_geolayer)
 
@@ -314,10 +318,10 @@ class GeoProcessor(object):
 
     def add_geomap(self, geomap: GeoMap) -> None:
         """
-        Add a GeoMap object to the geomaps list. If a geomap already exists with the same GeoMap ID, the
-        existing GeoMap will be replaced with the input GeoMap.
-        The GeoMap is saved as the last added, so it can be used as default for following commands that don't
-        specify a GeoMap ID.
+        Add a GeoMap object to the geomaps list. If a geomap already exists with the same GeoMap ID,
+        the existing GeoMap will be replaced with the input GeoMap.
+        The GeoMap is saved as the last added,
+        so it can be used as default for following commands that don't specify a GeoMap ID.
 
         Args:
             geomap: instance of a GeoMap object
@@ -328,24 +332,24 @@ class GeoProcessor(object):
 
         # Iterate over the existing GeoMaps.
         for existing_geomap in self.geomaps:
-            # If an existing GeoMap has the same ID as the input GeoMap, remove the existing GeoMap from the
-            # geomaps list.
+            # If an existing GeoMap has the same ID as the input GeoMap,
+            # remove the existing GeoMap from the geomaps list.
             if existing_geomap.id == geomap.id:
                 self.free_geomap(existing_geomap)
 
         # Add the input GeoMap to the geomaps list.
         self.geomaps.append(geomap)
 
-        # Save the last map added
+        # Save the last map added.
         self.last_geomap_added = geomap
 
     def add_geomapproject(self, geomapproject: GeoMapProject) -> None:
         """
         Add a GeoMapProject object to the geomapprojects list.
-        If a geomapproject already exists with the same GeoMap ID, the
-        existing GeoMapProject will be replaced with the input GeoMapProject.
-        The GeoMap is saved as the last added, so it can be used as default for following commands that don't
-        specify a GeoMap ID.
+        If a geomapproject already exists with the same GeoMap ID,
+        the existing GeoMapProject will be replaced with the input GeoMapProject.
+        The GeoMap is saved as the last added,
+        so it can be used as default for following commands that don't specify a GeoMap ID.
 
         Args:
             geomapproject: instance of a GeoMapProject object
@@ -364,7 +368,7 @@ class GeoProcessor(object):
         # Add the input GeoMap to the geomaps list.
         self.geomapprojects.append(geomapproject)
 
-        # Save the last project added
+        # Save the last project added.
         self.last_geomapproject_added = geomapproject
 
     def add_output_file(self, output_file_abs_path: str) -> None:
@@ -394,14 +398,15 @@ class GeoProcessor(object):
             None
         """
 
-        # Iterate over the existing Tables.
+        # Iterate over the existing DataTable list.
         for existing_table in self.tables:
 
-            # If an existing Table has the same ID as the input Table, remove the existing Table from the tables list.
+            # If an existing table has the same ID as the input table,
+            # remove the existing table from the tables list (the input table will be added below).
             if existing_table.id == table.id:
                 self.free_table(existing_table)
 
-        # Add the input Table to the tables list.
+        # Add the input table to the tables list.
         self.tables.append(table)
 
     def convert_command_line_from_comment(self, selected_indices: [int]) -> None:
@@ -432,8 +437,7 @@ class GeoProcessor(object):
                 command_string = command_string[remove_count:]
                 # Create the command from the shorter string.
                 create_unknown_command_if_not_recognized = True
-                command_object = command_factory.new_command(command_string,
-                                                             create_unknown_command_if_not_recognized)
+                command_object = command_factory.new_command(command_string, create_unknown_command_if_not_recognized)
 
                 # Initialize the parameters of the command object.
                 # Work is done in the AbstractCommand class.
@@ -442,7 +446,7 @@ class GeoProcessor(object):
                 # Reset the previous command with the new command.
                 self.commands[index] = command_object
             else:
-                # Not a comment so ignore
+                # Not a comment so ignore.
                 return
 
     def convert_command_line_to_comment(self, selected_indices: [int]) -> None:
@@ -468,13 +472,13 @@ class GeoProcessor(object):
             # Work is done in the AbstractCommand class.
             command_object.initialize_command(command_string, self, True)
 
-            # Add command above selected command
+            # Add command above selected command.
             self.commands[index] = command_object
 
     def decrease_indent_command_string(self, index: int) -> None:
         """
-        Remove an indent from the front of the command string. If there are multiple
-        indents this only removes space representing a single indent.
+        Remove an indent from the front of the command string.
+        If there are multiple indents this only removes space representing a single indent.
 
         Args:
             index: The index of the command string to decrease the indent from
@@ -524,7 +528,7 @@ class GeoProcessor(object):
         Returns:
             Expanded parameter value string.
         """
-        debug = False  # For developers
+        debug = False  # For developers.
         logger = logging.getLogger(__name__)
         if debug:
             logger.debug('parameter_value=' + str(parameter_value))
@@ -539,33 +543,33 @@ class GeoProcessor(object):
         # TODO smalers 2017-12-25 might need to change this for Python
         parameter_value = parameter_value.replace("\\\"", "\"")
         parameter_value = parameter_value.replace("\\'", "'")
-        # Else see if the parameter value can be expanded to replace ${} symbolic references with other values
-        # Search the parameter string for $ until all processor parameters have been resolved
+        # Else see if the parameter value can be expanded to replace ${} symbolic references with other values.
+        # Search the parameter string for $ until all processor parameters have been resolved.
         search_pos = 0  # Position in the "parameter_value" string to search for ${} references
-        found_pos_start = -1  # Position when leading "${" is found
-        found_pos_end = -1  # Position when ending "}" is found
-        prop_name = None  # Whether a property is found that matches the "$" character
-        delim_env_start = "${ENV:"  # Start of property when environment variable
-        delim_start = "${"  # Start of property
-        delim_start_len = 2  # Length of start delimiter for ${, will be changed if ${env:
-        delim_end = "}"  # End of property
+        found_pos_start = -1  # Position when leading "${" is found.
+        found_pos_end = -1  # Position when ending "}" is found.
+        prop_name = None  # Whether a property is found that matches the "$" character.
+        delim_env_start = "${ENV:"  # Start of property when environment variable.
+        delim_start = "${"  # Start of property.
+        delim_start_len = 2  # Length of start delimiter for ${, will be changed if '${env:'.
+        delim_end = "}"  # End of property.
         while search_pos < len(parameter_value):
-            found_pos_start = -1  # Indicates no ${ notation of any kind
-            # First see if any "${env:" strings. using uppercase conversion to allow any case
+            found_pos_start = -1  # Indicates no ${ notation of any kind.
+            # First see if any "${env:" strings. using uppercase conversion to allow any case.
             found_pos_env_start = parameter_value.upper().find(delim_env_start, search_pos)
             if found_pos_env_start >= 0:
-                # Environment variable property syntax
-                found_pos_start = found_pos_env_start  # Set general value for general logic below
-                delim_start_len = 6  # Length of "${env:"
-                delim_start = delim_env_start  # Use for general code below
+                # Environment variable property syntax.
+                found_pos_start = found_pos_env_start  # Set general value for general logic below.
+                delim_start_len = 6  # Length of "${env:".
+                delim_start = delim_env_start  # Use for general code below.
             else:
-                # Check general property syntax
+                # Check general property syntax.
                 found_pos_start = parameter_value.find(delim_start, search_pos)
                 if found_pos_start >= 0:
-                    delim_start_len = 2  # Length of "${"
-            # End position syntax is the same regardless of the start
+                    delim_start_len = 2  # Length of "${".
+            # End position syntax is the same regardless of the start.
             found_pos_end = parameter_value.find(delim_end, (search_pos + delim_start_len))
-            # Need both start and end positions to be >= 0 to continue
+            # Need both start and end positions to be >= 0 to continue:
             # - otherwise property syntax is not found or is malformed and can't be processed
             found_delim_count = 0
             if found_pos_start >= 0:
@@ -575,62 +579,62 @@ class GeoProcessor(object):
                 found_delim_count = found_delim_count + 1
             if found_delim_count < 2:
                 return parameter_value
-            # Else found the delimiter so continue with the replacement
+            # Else found the delimiter so continue with the replacement.
             # Message.printStatus(2, routine, "Found " + delimStart + " at position [" + found_pos_start + "]")
             if debug:
                 if found_pos_start >= 0:
                     logger.debug("Found " + delim_start + " at position [" + str(found_pos_start) + "]")
-            # Get the name of the property
+            # Get the name of the property.
             prop_name = parameter_value[(found_pos_start + delim_start_len):found_pos_end]
             if debug:
                 logger.debug('Property name is "' + prop_name + '"')
-            # Try to get the property from the processor
+            # Try to get the property from the processor.
             # TODO smalers 2007-12-23 Evaluate whether to skip None.  For now show "None" in result.
             propval = None
             propval_string = ""
             # noinspection PyBroadException
             try:
                 if found_pos_env_start >= 0:
-                    # Looking up an environment variable
+                    # Looking up an environment variable.
                     if debug:
                         logger.debug('Getting property value for environment variable "' + prop_name + '"')
                     propval = os.environ[prop_name]
                 else:
-                    # Looking up a normal property
+                    # Looking up a normal property.
                     if debug:
                         logger.debug('Getting property value for "' + prop_name + '"')
                     propval = self.get_property(prop_name)
                 if debug:
                     logger.debug('Property value is "' + propval + '"')
-                # The following should work for all representations as long as str() does not truncate
+                # The following should work for all representations as long as str() does not truncate.
                 # TODO smalers 2017-12-28 confirm that Python shows numbers with full decimal, not scientific notation.
                 propval_string = "" + str(propval)
             except Exception as e:
-                # Keep the original literal value to alert user that property could not be expanded
+                # Keep the original literal value to alert user that property could not be expanded.
                 if debug:
                     logger.debug('Exception getting the property value from the processor')
                 propval_string = delim_start + prop_name + delim_end
             if propval is None:
-                # Keep the original literal value to alert user that property could not be expanded
+                # Keep the original literal value to alert user that property could not be expanded.
                 propval_string = delim_start + prop_name + delim_end
-            # If here have a property
-            # b = new StringBuffer()
+            # If here have a property:
+            #   b = new StringBuffer()
             b = ""
-            # Append the start of the string
+            # Append the start of the string.
             if found_pos_start > 0:
                 # b.append ( parameter_value[0:found_pos] )
                 b = b + parameter_value[0:found_pos_start]
-            # Now append the value of the property.
-            # b.append(propval_string)
+            # Now append the value of the property:
+            #   b.append(propval_string)
             b = b + propval_string
-            # Now append the end of the original string if anything is at the end...
+            # Now append the end of the original string if anything is at the end.
             if len(parameter_value) > (found_pos_end + 1):
                 # b.append ( parameter_value[(found_pos_end + 1):]
                 b = b + parameter_value[(found_pos_end + 1):]
             # Now reset the search position to finish evaluating whether to expand the string.
             # parameter_value = b.toString()
             parameter_value = b
-            search_pos = found_pos_start + len(propval_string)  # Expanded so no need to consider delim *
+            search_pos = found_pos_start + len(propval_string)  # Expanded so no need to consider delim *.
             if debug:
                 #    Message.printDebug( 1, routine, "Expanded parameter value is \"" + parameter_value +
                 #    "\" searchpos is now " + searchPos + " in string \"" + parameter_value + "\"" )
@@ -700,7 +704,7 @@ class GeoProcessor(object):
 
     def get_command_list(self) -> [AbstractCommand]:
         """
-        Return the list of command objects from the processor
+        Return the list of command objects from the processor.
 
         Returns: list of commands
 
@@ -720,9 +724,9 @@ class GeoProcessor(object):
         for datastore in self.datastores:
             if datastore is not None:
                 if datastore.id == datastore_id:
-                    # Found the requested identifier
+                    # Found the requested identifier.
                     return datastore
-        # Did not find the requested identifier so return None
+        # Did not find the requested identifier so return None.
         return None
 
     def get_datastore_id_list(self) -> [DataStore]:
@@ -733,7 +737,7 @@ class GeoProcessor(object):
             List of available DataStore IDS.
         """
 
-        # An empty list to hold all of the available DataStore IDs.
+        # An empty list to hold all the available DataStore IDs.
         datastore_id_list = []
 
         # Iterate over the available DataStores in the GeoProcessor. For each DataStore, append its ID to the list.
@@ -756,9 +760,9 @@ class GeoProcessor(object):
         for geolayer in self.geolayers:
             if geolayer is not None:
                 if geolayer.id == geolayer_id:
-                    # Found the requested identifier
+                    # Found the requested identifier.
                     return geolayer
-        # Did not find the requested identifier so return None
+        # Did not find the requested identifier so return None.
         return None
 
     def get_geomap(self, geomap_id: str) -> GeoMap or None:
@@ -776,7 +780,7 @@ class GeoProcessor(object):
                 if geomap.id == geomap_id:
                     # Found the requested identifier
                     return geomap
-        # Did not find the requested identifier so return None
+        # Did not find the requested identifier so return None.
         return None
 
     def get_geomapproject(self, geomapproject_id: str) -> GeoMapProject or None:
@@ -792,9 +796,9 @@ class GeoProcessor(object):
         for geomapproject in self.geomapprojects:
             if geomapproject is not None:
                 if geomapproject.id == geomapproject_id:
-                    # Found the requested identifier
+                    # Found the requested identifier.
                     return geomapproject
-        # Did not find the requested identifier so return None
+        # Did not find the requested identifier so return None.
         return None
 
     def get_number_errors(self) -> int:
@@ -841,11 +845,11 @@ class GeoProcessor(object):
             return self.properties[property_name]
         except KeyError:
             if if_not_found_val is None:
-                # Requested that None is returned if not found so do it
+                # Requested that None is returned if not found so do it.
                 # print('Property not found so returning None')
                 return None
             else:
-                # Let the exception from not finding a key in the dictionary be raised
+                # Let the exception from not finding a key in the dictionary be raised.
                 # print('Property not found so throwing exception')
                 raise
 
@@ -862,15 +866,14 @@ class GeoProcessor(object):
         for table in self.tables:
             if table is not None:
                 if table.id == table_id:
-                    # Found the requested identifier
+                    # Found the requested identifier.
                     return table
-        # Did not find the requested identifier so return None
+        # Did not find the requested identifier so return None.
         return None
 
     def indent_command_string(self, index: int) -> None:
         """
-        Add an indent to the front of the command string using a predetermined
-        amount of white space (TAB).
+        Add an indent to the front of the command string using a predetermined amount of white space (TAB).
 
         Args:
             index (int): The index of the command string to indent
@@ -878,7 +881,7 @@ class GeoProcessor(object):
         Returns:
             None
         """
-        tab = "    "  # 4 characters
+        tab = "    "  # 4 characters.
         current_command = self.commands[index].command_string
         current_command = tab + current_command
         self.commands[index].command_string = current_command
@@ -984,8 +987,8 @@ class GeoProcessor(object):
 
         Args:
             icommand (int): The index (0+) of the command that is starting.
-            ncommand (int): The number of commands being processed. This will often be the
-                total number of commands but calling code may process a subset.
+            ncommand (int): The number of commands being processed.
+                This will often be the total number of commands but calling code may process a subset.
             command (Command): The instance of the command that is starting.
 
         Returns:
@@ -1002,8 +1005,8 @@ class GeoProcessor(object):
 
         Args:
             icommand (int): The index (0+) of the command that is starting.
-            ncommand (int): The number of commands being processed. This will often be the
-                total number of commands but calling code may process a subset.
+            ncommand (int): The number of commands being processed.
+                This will often be the total number of commands but calling code may process a subset.
             command (Command): The instance of the command that is starting.
 
         Returns:
@@ -1013,7 +1016,7 @@ class GeoProcessor(object):
             for listener_from_array in self.command_processor_listener_array:
                 listener_from_array.command_started(icommand, ncommand, command, -1.0, "Command started.")
 
-    # TODO smalers 2017-12-31 Need to switch to CommandFileRunner class
+    # TODO smalers 2017-12-31 Need to switch to CommandFileRunner class.
     def process_command_file(self, command_file: str) -> None:
         """
         Reads the command file and runs the commands within the command file.
@@ -1056,7 +1059,7 @@ class GeoProcessor(object):
         logger = logging.getLogger(__name__)
 
         if not create_commands:
-            # Just figure out how many commands would be created
+            # Just figure out how many commands would be created.
             command_file_strings = command_util.read_file_into_string_list(command_file)
             return len(command_file_strings)
 
@@ -1067,7 +1070,7 @@ class GeoProcessor(object):
 
         # Remove all items within the geoprocessor from the previous run.
         self.commands = []
-        # self.datastores remain open since opened when the software starts
+        # self.datastores remain open since opened when the software starts.
         self.geolayers = []
         self.geomaps = []
         self.geomapprojects = []
@@ -1083,7 +1086,7 @@ class GeoProcessor(object):
         else:
             # First get the working directory.
             # Then append the command file, which may have a relative path prefix like ../../.
-            # Then get the parent folder of the resulting file
+            # Then get the parent folder of the resulting file.
             cwd = os.getcwd()
             command_file_abs = os.path.join(cwd, command_file)
             self.properties["InitialWorkingDir"] = os.path.dirname(command_file_abs)
@@ -1104,7 +1107,7 @@ class GeoProcessor(object):
         # Get a list of command file strings (each line of the command file is its own item in the list).
         command_file_strings = command_util.read_file_into_string_list(command_file)
 
-        # clear commands
+        # Clear the commands.
         self.commands.clear()
 
         # Iterate over each line in the command file.
@@ -1118,13 +1121,13 @@ class GeoProcessor(object):
             # Initialize the parameters of the command object.
             command_object.initialize_command(command_file_string, self, True)
 
-            # Check the command parameters so that initialization log messages are generated
+            # Check the command parameters so that initialization log messages are generated:
             # - this ensures that the UI will display initialization messages
             # noinspection PyBroadException
             try:
                 command_object.check_command_parameters(command_object.command_parameters)
             except Exception:
-                # Errors will have been added to the command log and should display in the UI
+                # Errors will have been added to the command log and should display in the UI:
                 # - TODO smalers 2020-03-22 TSTool logic does more - do simple logging here
                 logger.warning("Command has errors.  See command log in UI and log file.")
 
@@ -1137,8 +1140,8 @@ class GeoProcessor(object):
                 logger.debug("First command debug:")
                 self.commands[0].print_for_debug()
 
-        # Let the command list processor know that the commands have been read from the command file
-        # TODO smalers 2020-03-09 Not sure why this is needed so comment out
+        # Let the command list processor know that the commands have been read from the command file.
+        # TODO smalers 2020-03-09 Not sure why this is needed so comment out.
         # self.notify_command_list_processor_listener_of_commands_read()
 
         logger.info("Read and initialized " + str(len(self.commands)) + " commands.")
@@ -1166,17 +1169,17 @@ class GeoProcessor(object):
         self.properties = {}
         self.tables = []
 
-        # Set the working directory to that indicated by the properties
+        # Set the working directory to that indicated by the properties.
 
         # Create an instance of the GeoProcessorCommandFactory.
         command_factory = GeoProcessorCommandFactory()
         try:
             self.properties["WorkingDir"] = runtime_properties.get("WorkingDir")
         except KeyError:
-            # For now swallow this because UI my not have saved the working directory
+            # For now swallow this because UI my not have saved the working directory.
             pass
         # TODO smalers 2018-07-24 Need to evaluate whether initial folder is also needed,
-        # such as for redundant calls by RunCommands()
+        # such as for redundant calls by RunCommands().
         # self.properties["InitialWorkingDir"] = ??
 
         # Iterate over each line in the command file.
@@ -1203,16 +1206,16 @@ class GeoProcessor(object):
 
     def remove_all_commands(self) -> None:
         """
-        Remove all the commands from the command list>
+        Remove all the commands from the command list.
 
         Returns:
             None
         """
-        # Remove all commands from command list
+        # Remove all commands from command list.
         del self.commands[:]
         # Notify the command list model that the commands list UI in CommandListWidget
-        # needs to be updated to reflect changes made to commands in GeoProcessor
-        # TODO smalers 2020-03-10 Not sure this is needed in current design
+        # needs to be updated to reflect changes made to commands in GeoProcessor.
+        # TODO smalers 2020-03-10 Not sure this is needed in current design.
         # self.notify_command_list_processor_listener_update_commands()
 
     def remove_command(self, index: str) -> None:
@@ -1226,9 +1229,8 @@ class GeoProcessor(object):
             None
         """
         del self.commands[index]
-        # Notify the command list processor that the command list now needs to be updated in
-        # the user interface.
-        # TODO smalers 2020-03-10 Not sure this is needed in current design
+        # Notify the command list processor that the command list now needs to be updated in the user interface.
+        # TODO smalers 2020-03-10 Not sure this is needed in current design.
         # self.notify_command_list_processor_listener_update_commands()
 
     def __reset_data_for_run_start(self, append_results: bool = False) -> None:
@@ -1237,8 +1239,8 @@ class GeoProcessor(object):
         This ensures that the command processor state from one run is isolated from the next run.
         Reset values are set to the initial defaults.
         This is used to handle calls to RunCommands() command, which results in recursive calls to the processor.
-        It is not the same as the __reset_workflow_properties() function, which is called once for the
-        initial command run (or outermost level when recursing).
+        It is not the same as the __reset_workflow_properties() function,
+        which is called once for the initial command run (or outermost level when recursing).
 
         Args:
             append_results (bool):  Indicates whether the results from the current run should be
@@ -1247,21 +1249,21 @@ class GeoProcessor(object):
         Returns:
             None
         """
-        # The following are the initial defaults...
-        # TODO smalers 2017-12-30 Clear any hashtables used to increase performance, currently none
+        # The following are the initial defaults.
+        # TODO smalers 2017-12-30 Clear any hashtables used to increase performance, currently none.
         self.properties["InputStart"] = None
         self.properties["InputEnd"] = None
         self.properties["OutputStart"] = None
         self.properties["OutputEnd"] = None
         self.properties["OutputYearType"] = None
-        # Free all data from the previous run rather than append
+        # Free all data from the previous run rather than append:
         # - TODO smalers 2020-03-16 why is this "not append_results"?
         if append_results:
             # All in-memory lists of results, such as layers, should be cleared.
-            # If a list (future design change?)...
-            # del self.GeoLayers[:]
-            # del self.GeoLists[:]
-            # ...but currently a dictionary...
+            # If a list (future design change?):
+            #   del self.GeoLayers[:]
+            #   del self.GeoLists[:]
+            # Is currently a dictionary.
             self.geolayers.clear()
             self.geomaps.clear()
             self.geomapprojects.clear()
@@ -1279,21 +1281,21 @@ class GeoProcessor(object):
         """
 
         # Java code uses separate properties rather than Python using one dictionary.
-        # Therefore protect the properties that should absolutely not be reset.
-        # First clear properties, including user-defined properties, but protect fundamental properties that
-        # should not be reset (such as properties that are difficult to reset).
-        # Check size dynamically in case props are removed below
-        # Because the dictionary size may change during iteration, can't do the following
-        #     for property_name, property_value in self.properties.items():
+        # Therefore, protect the properties that should absolutely not be reset.
+        # First clear properties, including user-defined properties,
+        # but protect fundamental properties that should not be reset (such as properties that are difficult to reset).
+        # Check size dynamically in case props are removed below.
+        # Because the dictionary size may change during iteration, can't do the following for property_name,
+        # property_value in self.properties.items():
         # Cannot iterate through a dictionary and remove items from dictionary.
-        # Therefore convert the dictionary to a list and iterate on the list
+        # Therefore, convert the dictionary to a list and iterate on the list.
         processor_property_names = list(self.properties.keys())
         protected_property_names = ["InitialWorkingDir",
                                     "InitialWorkingDirNative",
                                     "WorkingDir",
                                     "WorkingDirNative",
                                     "QGISVersion"]
-        # Loop through properties and delete all except for protected properties
+        # Loop through properties and delete all except for protected properties.
         for i_parameter in range(0, len(processor_property_names)):
             property_name = processor_property_names[i_parameter]
             found_protected = False
@@ -1304,8 +1306,8 @@ class GeoProcessor(object):
             if not found_protected:
                 del self.properties[property_name]
 
-        # Define standard properties that are always available from the processor
-        self.properties["ComputerName"] = platform.node()  # Useful for messages
+        # Define standard properties that are always available from the processor.
+        self.properties["ComputerName"] = platform.node()  # Useful for messages.
         self.properties["ComputerTimezone"] = strftime("%z", gmtime())
         # Define the folder where GIS software programs are located, for use with RunGdalProgram, etc.
         qgis_install_folder = ""
@@ -1325,22 +1327,22 @@ class GeoProcessor(object):
             qgis_install_folder_path = Path(qgis_install_folder)
             gdal_bin_folder = qgis_install_folder_path.parent.parent.as_posix() + "/bin"
             gis_software = "QGIS"
-        # TODO smalers 2020-01-16 Add support for ArcGIS Pro
+        # TODO smalers 2020-01-16 Add support for ArcGIS Pro.
         self.properties["GisSoftware"] = gis_software
         self.properties["GdalBinDir"] = gdal_bin_folder
-        # TODO smalers 2017-12-30 need to figure out
-        self.properties["InstallDir"] = None  # IOUtil.getApplicationHomeDir() )
+        # TODO smalers 2017-12-30 need to figure out.
+        self.properties["InstallDir"] = None  # IOUtil.getApplicationHomeDir().
         self.properties["InstallDirURL"] = None  # "file:///" + IOUtil.getApplicationHomeDir().replace("\\", "/") )
-        # Temporary directory useful in some cases
+        # Temporary directory useful in some cases.
         self.properties["TempDir"] = tempfile.gettempdir()
         home_dir = os.path.expanduser("~")
         self.properties["UserHomeDir"] = home_dir
         self.properties["UserHomeDirURL"] = "file:///" + home_dir.replace("\\", "/")
         self.properties["UserName"] = getpass.getuser()
-        # Set the program version as a property, useful for version-dependent command logic
-        # Assume the version is xxx.xxx.xxx beta (date), with at least one period
-        # Save the program version as a string
-        # TODO smalers 2017-12-30 need to complete...
+        # Set the program version as a property, useful for version-dependent command logic.
+        # Assume the version is xxx.xxx.xxx beta (date), with at least one period.
+        # Save the program version as a string.
+        # TODO smalers 2017-12-30 need to complete.
         self.properties["ProgramVersionString"] = None  # programVersion )
         self.properties["ProgramVersionNumber"] = None  # new Double(programVersionNumber) )
 
@@ -1363,13 +1365,13 @@ class GeoProcessor(object):
         Returns:
             None
         """
-        # Logger for the processor
+        # Logger for the processor.
         logger = logging.getLogger(__name__)
 
-        # Create a boolean to keep track of number of warnings, if any
+        # Create a boolean to keep track of number of warnings, if any.
         warning_count = 0
 
-        # Remove all items within the geoprocessor from the previous run.
+        # Remove all items within the geoprocessor from the previous run:
         # - TODO smalers 2020-03-16 evaluate how this relates to __reset_data_for_run_start
         self.geolayers = []
         self.geomaps = []
@@ -1379,27 +1381,27 @@ class GeoProcessor(object):
         # self.properties = {}
         self.tables = []
 
-        # Reset the global workflow properties if requested, used when RunCommands command calls recursively...
-        # - This code is a port of Java TSCommandProcessor.runCommands().
+        # Reset the global workflow properties if requested, used when RunCommands command calls recursively:
+        # - this code is a port of Java TSCommandProcessor.runCommands()
         reset_workflow_properties = True
         if run_properties is None:
-            # Reset to an empty dictionary to simplify error handling below
+            # Reset to an empty dictionary to simplify error handling below.
             run_properties = {}
         try:
             prop_value = run_properties["ResetWorkflowProperties"]
             if prop_value is not None and prop_value == "False":
                 reset_workflow_properties = False
         except KeyError:
-            # Property not set so use default value
+            # Property not set so use default value.
             pass
         if reset_workflow_properties:
             self.__reset_workflow_properties()
-        # Set the environment properties in the processor
-        # - These are global properties that should always be known
+        # Set the environment properties in the processor:
+        # - these are global properties that should always be known
         self.set_properties(env_properties)
-        # Also set in the environment for RunCommands to access
+        # Also set in the environment for RunCommands to access.
         self.env_properties = env_properties
-        # ...end reset of global workflow properties
+        # End reset of global workflow properties.
 
         # The remainder of this code is a port of the Java TSEngine.processCommands() function.
 
@@ -1415,10 +1417,10 @@ class GeoProcessor(object):
             recursive_prop = run_properties["Recursive"]
             if recursive_prop == "True":
                 recursive = True
-                # Default for recursive runs is to NOT append results...
+                # Default for recursive runs is to NOT append results.
                 append_results = False
         except Exception:
-            # Recursive property was not defined so not running in recursive mode
+            # Recursive property was not defined so not running in recursive mode.
             recursive = False
         # noinspection PyBroadException
         try:
@@ -1426,7 +1428,7 @@ class GeoProcessor(object):
             if append_prop == "True":
                 append_results = True
         except Exception:
-            # Use default value from above
+            # Use default value from above.
             pass
 
         logger.info("Recursive=" + str(recursive) + " AppendResults=" + str(append_results))
@@ -1436,7 +1438,7 @@ class GeoProcessor(object):
             command_list = self.commands
         else:
             logger.info("Running specified command list")
-            # Running selected commands so reset all commands in command list
+            # Running selected commands so reset all commands in command list.
             for i_command in range(len(self.commands)):
                 command = self.commands[i_command]
                 command.command_status.clear_log(CommandPhaseType.RUN)
@@ -1444,18 +1446,18 @@ class GeoProcessor(object):
         # Reset any properties left over from the previous run that may impact the current run.
         self.__reset_data_for_run_start()
 
-        # Whether or no the command is within a /*   */ comment block
+        # Whether or no the command is within a /*   */ comment block.
         in_comment = False
 
-        # Initialize the If() command stack that is in effect, needed to nest If() commands
+        # Initialize the If() command stack that is in effect, needed to nest If() commands.
         # noinspection PyPep8Naming
         If_command_stack = []
 
-        # Initialize the For() command stack that is in effect, needed to nest For() commands
+        # Initialize the For() command stack that is in effect, needed to nest For() commands.
         # noinspection PyPep8Naming
         For_command_stack = []
 
-        # Whether the If stack evaluates to True so enclosed commands can run
+        # Whether the If stack evaluates to True so enclosed commands can run.
         # noinspection PyPep8Naming
         If_stack_ok_to_run = True
 
@@ -1472,17 +1474,17 @@ class GeoProcessor(object):
             # Clear the command Run log.
             command.command_status.clear_log(CommandPhaseType.RUN)
 
-        # Run all the commands
+        # Run all the commands:
         # - set debug = True to turn on debug messages
         debug = False
-        # Python does not allow modifying the for loop iterator variable so use a while loop
+        # Python does not allow modifying the for loop iterator variable so use a while loop.
         # for i_command in range(n_commands):
         i_command = -1
         command = None
         while i_command < n_commands:
             # noinspection PyBroadException
             try:
-                # Catch exceptions in any command, to make sure all commands can run through
+                # Catch exceptions in any command, to make sure all commands can run through:
                 # - hopefully nothing is amiss with main controlling commands - otherwise need to bulletproof code
                 i_command = i_command + 1
                 if i_command == n_commands:
@@ -1494,31 +1496,31 @@ class GeoProcessor(object):
                     command.print_for_debug()
 
                 # if not in_comment and If_stack_ok_to_run:
-                # The following message brackets any command class run_command messages that may be generated
+                # The following message brackets any command class run_command messages that may be generated.
                 message = '-> Start processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
                     command.command_string
                 # print(message)
                 logger.info(message)
-                # notify listener that command has started running
+                # Notify listener that command has started running.
                 self.notify_command_processor_listeners_of_command_started(i_command, n_commands, command)
 
                 command_class = command.__class__.__name__
 
                 if command_class == 'Comment':
-                    # Hash-comment - TODO need to mark as processing successful - confirm when UI in place
+                    # Hash-comment - TODO need to mark as processing successful - confirm when UI in place.
                     # Run the command to update the status to success.
                     command.run_command()
                     self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
                     continue
                 elif command_class == 'CommentBlockStart':
-                    # /* comment block start - TODO need to mark as processing successful - confirm when UI in place
+                    # /* comment block start - TODO need to mark as processing successful - confirm when UI in place.
                     in_comment = True
                     # Run the command to update the status to success.
                     command.run_command()
                     self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
                     continue
                 elif command_class == 'CommentBlockEnd':
-                    # */ comment block end - TODO need to mark as processing successful - confirm when UI in place
+                    # */ comment block end - TODO need to mark as processing successful - confirm when UI in place.
                     in_comment = False
                     # Run the command to update the status to success.
                     command.run_command()
@@ -1526,41 +1528,41 @@ class GeoProcessor(object):
                     continue
 
                 if in_comment:
-                    # In a /* */ comment block so set status to successful
+                    # In a /* */ comment block so set status to successful:
                     # - TODO smalers 2020-03-16 need to implement this
                     continue
 
-                # Clear the log for the commands
+                # Clear the log for the commands.
                 command.command_status.clear_log(CommandPhaseType.INITIALIZATION)
                 command.command_status.clear_log(CommandPhaseType.DISCOVERY)
-                # TODO smalers 2020-03-22 need to handle clearing of log in For loops - for now clear all
+                # TODO smalers 2020-03-22 need to handle clearing of log in For loops - for now clear all:
                 # - would be nice to figure this out at the processor level, TSTool seems not optimal
                 command.command_status.clear_log(CommandPhaseType.RUN)
 
-                # Initialize the command by parsing command string, which will regenerate command log for issues
+                # Initialize the command by parsing command string, which will regenerate command log for issues:
                 # - need for the UI since the processor will be re-run multiple times
                 command.initialize_command(command.command_string, self, True)
 
-                # Check the command parameters
+                # Check the command parameters:
                 # - this is called when editing the command but also need to check here when running
                 # - the list of parameters is passed because the code is reused with editors that check
                 #   parameters before saving the edits
                 command.check_command_parameters(command.command_parameters)
 
-                # Check to see whether the If stack evaluates to True and can run the command
+                # Check to see whether the If stack evaluates to True and can run the command:
                 # - evaluation of the stack only occurs when an If() is encountered
                 if If_stack_ok_to_run:
-                    # Run the command
+                    # Run the command.
                     if command_class == 'Exit':
-                        # Exit command causes hard exit from processing - following commands are ignored
-                        # Do notify of the completion
+                        # Exit command causes hard exit from processing - following commands are ignored.
+                        # Do notify of the completion.
                         self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
                         break
                     # elif isinstance(command, For):
                     elif command_class == 'For':
-                        # Initialize or increment the For loop
+                        # Initialize or increment the For loop.
                         logger.info('Detected For command')
-                        # Use a local variable For_command for clarity
+                        # Use a local variable For_command for clarity.
                         # noinspection PyPep8Naming
                         For_command = command
                         ok_to_run_for = False
@@ -1569,12 +1571,12 @@ class GeoProcessor(object):
                             ok_to_run_for = For_command.next()
                             # print('ok_to_run_for=' + str(ok_to_run_for))
                             # If False, the For loop is done.
-                            # However, need to handle the case where the for loop may be nested and need to run again...
+                            # However, need to handle the case where the for loop may be nested and need to run again.
                             if not ok_to_run_for:
                                 For_command.reset_command()
                         except Exception:
                             # This is serious and can lead to an infinite loop so generate an exception and
-                            # jump to the end of the loop
+                            # jump to the end of the loop.
                             ok_to_run_for = False
                             message = 'Error going to next iteration.'
                             logger.warning(message, exc_info=True)
@@ -1584,15 +1586,15 @@ class GeoProcessor(object):
                                     CommandStatusType.FAILURE, message,
                                     "Check For() command iteration data."))
                             logger.warning('Error going to next iteration.  Check For() command iteration data.')
-                            # Same logic as ending the loop...
+                            # Same logic as ending the loop.
                             end_for_index = GeoProcessor.__lookup_endfor_command_index(
                                 command_list, For_command.get_name())
                             if end_for_index >= 0:
-                                # OK because don't want to trigger EndFor() going back to the top
+                                # OK because don't want to trigger EndFor() going back to the top.
                                 i_command = end_for_index
                                 continue
                             else:
-                                # Did not match the end of the For() so generate an error and exit
+                                # Did not match the end of the For() so generate an error and exit.
                                 need_to_interrupt = True
                                 message = 'Unable to match For loop name "' + For_command.get_name() + \
                                     '" in EndFor() commands.'
@@ -1603,27 +1605,27 @@ class GeoProcessor(object):
                                 warning_count += 1
                                 raise RuntimeError(message)
                         if ok_to_run_for:
-                            # Continue running commands that are after the For() command
+                            # Continue running commands that are after the For() command.
                             # Add to the For stack - if in any For loops, commands should by default NOT reset the
-                            # command logging so that message will accumulate and help users troubleshoot errors
+                            # command logging so that message will accumulate and help users troubleshoot errors.
                             For_command_stack.append(For_command)
-                            # Run the For() command to set the iterator property and then skip to the next command
+                            # Run the For() command to set the iterator property and then skip to the next command.
                             # TODO smalers 2017-12-21 equivalent but should the following be For_command?
                             For_command.run_command()
                             continue
                         else:
-                            # Done running the For() loop matching the EndFor() command
+                            # Done running the For() loop matching the EndFor() command.
                             end_for_index = GeoProcessor.__lookup_endfor_command_index(
                                 command_list, For_command.get_name())
                             # Modify the main command loop index and continue - the command after the end
                             # will be executed (or done).
                             if end_for_index >= 0:
-                                # Loop will increment so EndFor will be skipped, which is OK
+                                # Loop will increment so EndFor will be skipped, which is OK:
                                 # - otherwise infinite loop
                                 i_command = end_for_index
                                 continue
                             else:
-                                # Did not match the end of the For() so generate an error and exit
+                                # Did not match the end of the For() so generate an error and exit.
                                 need_to_interrupt = True
                                 message = 'Unable to match For loop name "' + For_command.get_name() + \
                                     '" in EndFor() commands.'
@@ -1634,14 +1636,14 @@ class GeoProcessor(object):
                                 raise RuntimeError(message)
                     # elif isinstance(command,EndFor):
                     elif command_class == 'EndFor':
-                        # Jump to the matching For()
+                        # Jump to the matching For().
                         # noinspection PyPep8Naming
                         EndFor_command = command
                         # noinspection PyBroadException
                         try:
                             For_command_stack.remove(For_command)
                         except Exception:
-                            # TODO smalers 2017-12-21 might need to log as mismatched nested loops
+                            # TODO smalers 2017-12-21 might need to log as mismatched nested loops.
                             # print('Error removing For loop from stack for EndFor(Name="' +
                             #      EndFor_command.get_name() + '"...)')
                             pass
@@ -1650,32 +1652,32 @@ class GeoProcessor(object):
                         logger.debug('Jumping to command [' + str(i_command + 1) + '] at top of For() loop')
                         continue
                     else:
-                        # A typical command - run it
+                        # A typical command - run it:
                         # - exceptions for CommandParameterError and CommandError are handled below and unexpected
                         #   errors of other types are added to the command log
                         # - this detects unknown Python coding errors
                         command.run_command()
-                        # TODO smalers 2020-03-22 not sure these comments or concerns are relevant anymore
+                        # TODO smalers 2020-03-22 not sure these comments or concerns are relevant anymore.
                         # If the command generated an output file, add it to the list of output files.
                         # The list is used by the UI to display results.
-                        # TODO smalers 2017-12-21 - add the file list generator like TSEngine
+                        # TODO smalers 2017-12-21 - add the file list generator like TSEngine.
                 # if isinstance(command, If):
                 if command_class == 'If':
-                    # Add to the If command stack
+                    # Add to the If command stack.
                     If_command_stack.append(command)
-                    # Re-evaluate If stack
+                    # Re-evaluate the If stack.
                     # noinspection PyPep8Naming
                     If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
                 # elif isinstance(command, EndIf):
                 elif command_class == 'EndIf':
                     # Remove from the If command stack (generate a warning if the matching If()
-                    # is not found in the stack)
+                    # is not found in the stack).
                     # noinspection PyPep8Naming
                     EndIf_command = command
                     # noinspection PyPep8Naming
                     If_command = GeoProcessor.__lookup_if_command(If_command_stack, EndIf_command.get_name())
                     if If_command is None:
-                        # TODO smalers 2017-12-21 need to log error
+                        # TODO smalers 2017-12-21 need to log error.
                         message = 'Unable to find matching If() command for Endif(Name="' + \
                             EndIf_command.get_name() + '")'
                         command.command_status.add_to_log(
@@ -1683,43 +1685,44 @@ class GeoProcessor(object):
                             CommandLogRecord(CommandStatusType.FAILURE, message,
                                              "Confirm that matching If() and EndIf() commands are specified."))
                     else:
-                        # Run the command so the status is set to success
+                        # Run the command so the status is set to success.
                         EndIf_command.run_command()
                         If_command_stack.remove(If_command)
-                    # Reevaluate If stack
+                    # Reevaluate If stack.
                     # noinspection PyPep8Naming
                     If_stack_ok_to_run = GeoProcessor.__evaluate_if_stack(If_command_stack)
                     logger.debug('...back from running command')
-                # The following message brackets any command class run_command messages that may be generated
+                # The following message brackets any command class run_command messages that may be generated.
                 message = '<- End processing command ' + str(i_command + 1) + ' of ' + str(n_commands) + ': ' + \
                           command.command_string
                 logger.info(message)
                 # logger.info("Notify Command Processor Listener of Command Completed")
-                # Notify listeners that the command has completed
+                # Notify listeners that the command has completed.
                 self.notify_command_processor_listener_of_command_completed(i_command, n_commands, command)
+
             except CommandParameterError as cpe:
-                # Will be raised by command.check_command_parameters() when parsing the command
+                # Will be raised by command.check_command_parameters() when parsing the command.
                 logger.warning("Error in command parameter(s) ({}).".format(cpe), exc_info=True)
-                # Notify listeners that the command has completed
+                # Notify listeners that the command has completed.
                 warning_count += 1
                 self.notify_command_processor_listeners_of_command_exception(i_command, n_commands, command)
             except CommandError as ce:
-                # Will be raised by command.run_command() when running the command
+                # Will be raised by command.run_command() when running the command.
                 logger.warning("Error in running command ({}).".format(ce), exc_info=True)
-                # Notify listeners that the command has completed
+                # Notify listeners that the command has completed.
                 warning_count += 1
                 self.notify_command_processor_listeners_of_command_exception(i_command, n_commands, command)
             except Exception:
                 message = "Unexpected error processing command - unable to complete command"
                 logger.warning(message, exc_info=True)
-                # Don't raise an exception because want all commands to run as best they can, each with
-                # message logging, so that user can troubleshoot all at once rather than first error at a time
+                # Don't raise an exception because want all commands to run as best they can, each with message logging,
+                # so that user can troubleshoot all at once rather than first error at a time.
                 # Do add to the command log so that the exception will be known to the software developer and user,
                 # typically requiring code changes.
                 command.command_status.add_to_log(
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message, "See the log file for details."))
-                # Notify listeners that the command has completed
+                # Notify listeners that the command has completed.
                 warning_count += 1
                 self.notify_command_processor_listeners_of_command_exception(i_command, n_commands, command)
 
@@ -1730,11 +1733,12 @@ class GeoProcessor(object):
             logger.error(message)
             # raise RuntimeError(message)
 
-        # TODO smalers 2020-03-09 need to evaluate how to deal with this
-        # - listeners are notified when each command completes.  If the last command or Exit, the UI status is updated.
+        # TODO smalers 2020-03-09 need to evaluate how to deal with this:
+        # - listeners are notified when each command completes
+        # - if the last command or Exit, the UI status is updated
         # self.notify_command_list_processor_listener_of_all_commands_completed()
 
-        # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts
+        # TODO smalers 2018-01-01 Java code has multiple checks at the end for checking error counts:
         # - may or may not need something similar in Python code if above error-handling is not enough
         logger.info("At end of run_commands")
 
@@ -1760,16 +1764,16 @@ class GeoProcessor(object):
         if env_properties is not None:
             logger.warning("Processor 'env_properties' is not implemented.")
 
-        # Create a blank array of commands
+        # Create a blank array of commands.
         command_list = []
 
-        # Sort the selected indices so they are run in the proper order, top - down
+        # Sort the selected indices so that they are run in the proper order, top - down.
         selected_indices.sort()
-        # Append the selected commands to the command_list array defined above
+        # Append the selected commands to the command_list array defined above.
         for index in selected_indices:
             command_list.append(self.commands[index])
 
-        # Pass the newly created command list to run_commands to run only the selected commands
+        # Pass the newly created command list to run_commands to run only the selected commands.
         self.run_commands(command_list)
 
     def set_command_strings(self, command_strings: [str]) -> None:
@@ -1805,7 +1809,7 @@ class GeoProcessor(object):
             self.commands.append(command_object)
 
             # TODO smalers 2017-12-30 the following included because of troubleshooting bug in
-            # GeoProcessorCommandFactory
+            # GeoProcessorCommandFactory.
             debug = False
             if debug:
                 command_object.print_for_debug()

@@ -1,18 +1,18 @@
 # WriteRasterGeoLayerToFile - command to write a rster GeoLayer to a file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -48,7 +48,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
         CommandParameterMetadata("OutputFile", str),
         CommandParameterMetadata("OutputCRS", str)]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Write a raster GeoLayer to a file.\n"
@@ -57,7 +57,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
     )
     __command_metadata['EditorType'] = "Simple"
 
-    # Parameter Metadata
+    # Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
@@ -85,21 +85,21 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
 
     def __init__(self) -> None:
         """
-        Initialize the command
+        Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "WriteRasterGeoLayerToFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Parameter Metadata
+        # Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
             raise CommandParameterError(warning_message)
 
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, output_file_abs: str, geolayer_id: str) -> bool:
@@ -175,8 +175,8 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Read the layer file from a raster format file, create a GeoLayer object, and add to the
-        GeoProcessor's geolayer list.
+        Run the command. Read the layer file from a raster format file, create a GeoLayer object,
+        and add to the GeoProcessor's geolayer list.
 
         Returns: None.
 
@@ -200,7 +200,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
         # noinspection PyPep8Naming
         pv_OutputCRS = self.command_processor.expand_parameter_value(pv_OutputCRS, self)
 
-        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -210,16 +210,16 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
         if self.check_runtime_data(output_file_absolute, pv_GeoLayerID):
             # noinspection PyBroadException
             try:
-                # Get the GeoLayer
+                # Get the GeoLayer.
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
                 # Handle output CRS.
-                # TODO smalers 2020-07-17 not sure how to handle the transfer
+                # TODO smalers 2020-07-17 not sure how to handle the transfer:
                 # - how does it differ from the CRS function parameter?
                 if pv_OutputCRS is not None and pv_OutputCRS != "":
                     crs = qgis_util.parse_qgs_crs(pv_OutputCRS)
                     if crs is None:
-                        # Default the layer CRS and generate an error
+                        # Default the layer CRS and generate an error.
                         crs = geolayer.qgs_layer.crs()
                         self.warning_count += 1
                         message = "Requested output CRS {} is invalid, keeping the original CRS {}.".format(
@@ -230,7 +230,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                 else:
-                    # Default to outputting the same CRS as the input layer
+                    # Default to outputting the same CRS as the input layer.
                     crs = geolayer.qgs_layer.crs()
 
                 use_gdal_translate = True
@@ -238,7 +238,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                     # Use GDAL translate algorithm because it accepts any output format.
                     self.logger.info("Using GDAL 'translate' to change format and/or CRS and write raster.")
 
-                    # The following parameters are for GeoTIFF
+                    # The following parameters are for GeoTIFF.
                     alg_parameters = {
                         # Generic parameters regardless of output format.
                         "INPUT": geolayer.qgs_layer,
@@ -277,7 +277,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                     # TODO smalers 2020-11-27 what will happen if the original raster is not TIF?
                     self.logger.info("Using built-in writeRaster to write TIF raster.")
 
-                    # Write the raster layer to a file
+                    # Write the raster layer to a file.
                     # See:  https://python.hotexamples.com/examples/qgis.core/QgsRasterFileWriter/
                     #             writeRaster/python-qgsrasterfilewriter-writeraster-method-examples.html
                     file_writer = QgsRasterFileWriter(output_file_absolute)
@@ -294,12 +294,12 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                                                                         recommendation))
                     else:
                         # Handle output CRS.
-                        # TODO smalers 2020-07-17 not sure how to handle the transfer
+                        # TODO smalers 2020-07-17 not sure how to handle the transfer:
                         # - how does it differ from the CRS function parameter?
                         if pv_OutputCRS is not None and pv_OutputCRS != "":
                             crs = qgis_util.parse_qgs_crs(pv_OutputCRS)
                             if crs is None:
-                                # Default the layer CRS and generate an error
+                                # Default the layer CRS and generate an error.
                                 crs = qgs_raster_layer.crs()
                                 self.warning_count += 1
                                 message = "Requested output CRS {} is invalid, keeping the original CRS {}.".format(
@@ -310,7 +310,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                                 recommendation))
                         else:
-                            # Default to outputting the same CRS as the input layer
+                            # Default to outputting the same CRS as the input layer.
                             crs = qgs_raster_layer.crs()
                         # crs_transform = QgsCoordinateTransformContext(qgs_raster_layer.crs(), crs, crs_string)
                         crs_transform = QgsCoordinateTransformContext()
@@ -335,7 +335,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                             provider.extent(),
                             crs,
                             # qgs_raster_layer.crs(),
-                            crs_transform  # seems to be redundant with crs - is QGIS migrating design?
+                            crs_transform  # Seems to be redundant with crs - is QGIS migrating design?
                         )
 
             except Exception:
@@ -347,7 +347,7 @@ class WriteRasterGeoLayerToFile(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise RuntimeError if any errors occurred
+        # Determine success of command processing. Raise RuntimeError if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

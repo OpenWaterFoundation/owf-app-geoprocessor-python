@@ -1,7 +1,7 @@
 # gp - main entry point for GeoProcessor application
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication
 # from geoprocessor.ui.app.GeoProcessorUI import GeoProcessorUI
 
-# GeoProcessor modules
+# GeoProcessor modules.
 
 from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
 from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
@@ -49,7 +49,7 @@ import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.ui.util.qt_util as qt_util
 import geoprocessor.app.version as version
 
-# General Python modules
+# General Python modules.
 import argparse
 import cmd
 import getpass
@@ -73,9 +73,9 @@ class GeoProcessorCmd(cmd.Cmd):
     Because the docstrings are usd for user help, documentation for functions is provided in in-lined comments.
     """
     def __init__(self, qtapp=None) -> None:
-        # Initialize parent
+        # Initialize parent.
         super().__init__()
-        if qtapp is None:  # Put this here to get rid of PyCharm warning about qtapp not being used
+        if qtapp is None:  # Put this here to get rid of PyCharm warning about qtapp not being used.
             pass
 
         self.prompt = "gp> "
@@ -89,7 +89,7 @@ class GeoProcessorCmd(cmd.Cmd):
         """
         Exit the geoprocessor command shell, same as "quit".
         """
-        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used.
             pass
         exit(0)
 
@@ -100,10 +100,10 @@ class GeoProcessorCmd(cmd.Cmd):
         Run in the shell with:  printenv
         """
         # logger = logging.getLogger(__name__)
-        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used.
             pass
         print("Python version (sys.version) = " + sys.version)
-        # Print value of environment variables that impact Python, alphabetized.
+        # Print value of environment variables that impact Python, alphabetized:
         # - skip the more esoteric ones
         # - See:  https://docs.python.org/2/using/cmdline.html
         env_vars = ["PYTHONBYTECODE", "PYTHONDEBUG", "PYTHONHOME", "PYTHONHTTPSVERIFY", "PYTHONOPTIMIZE",
@@ -123,7 +123,7 @@ class GeoProcessorCmd(cmd.Cmd):
         print("platform.system_alias = " + str(platform.system_alias(platform.system(),
               platform.release(), platform.version())))
         print("user = " + getpass.getuser())
-        # GeoProcessor information, such as properties
+        # GeoProcessor information, such as properties.
         # noinspection PyPep8Naming
         GeoProcessor = importlib.import_module('geoprocessor.core.GeoProcessor')
         class_ = getattr(GeoProcessor, 'GeoProcessor')
@@ -135,7 +135,7 @@ class GeoProcessorCmd(cmd.Cmd):
     # noinspection PyPep8Naming
     @classmethod
     def do_EOF(cls, line: str) -> bool:
-        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used.
             pass
         return True
 
@@ -144,7 +144,7 @@ class GeoProcessorCmd(cmd.Cmd):
         """
         Quit the geoprocessor command shell, same as "exit".
         """
-        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used.
             pass
         exit(0)
 
@@ -153,7 +153,7 @@ class GeoProcessorCmd(cmd.Cmd):
         """
         Run the command file from the command line using syntax:  run command-file
         """
-        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used.
             pass
         logger = logging.getLogger(__name__)
         command_file = line
@@ -163,7 +163,7 @@ class GeoProcessorCmd(cmd.Cmd):
         working_dir = os.getcwd()
         # Convert the command file to an absolute path if not already.
         command_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(working_dir, command_file))
-        # Make sure the file exists so ugly exception is not printed
+        # Make sure the file exists so ugly exception is not printed.
         if not os.path.isfile(command_file_absolute):
             print("File does not exist, cannot run:  " + command_file_absolute)
             return
@@ -172,7 +172,7 @@ class GeoProcessorCmd(cmd.Cmd):
         CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
         class_ = getattr(CommandFileRunner, 'CommandFileRunner')
         runner = class_()
-        # Read the command file
+        # Read the command file.
         # noinspection PyBroadException
         try:
             runner.read_command_file(command_file_absolute)
@@ -185,7 +185,7 @@ class GeoProcessorCmd(cmd.Cmd):
             message = 'Error reading command file.'
             logger.error(message, exc_info=True)
             print(message)
-        # Run the command file
+        # Run the command file.
         # noinspection PyBroadException
         try:
             runner.run_commands()
@@ -202,9 +202,9 @@ class GeoProcessorCmd(cmd.Cmd):
     @classmethod
     def do_ui(cls, line: str) -> None:
         """
-        Run the command file from the command line using syntax:  run command-file
+        Run the command file from the command line using syntax:  run command-file.
         """
-        if line is None:  # Put this here to get rid of PyCharm warning about line not being used
+        if line is None:  # Put this here to get rid of PyCharm warning about line not being used.
             pass
         run_ui(app_session)
 
@@ -259,7 +259,7 @@ def print_version() -> None:
     print("gp version " + version.app_version)
     print("")
     print("GeoProcessor")
-    print("Copyright 2017-2020 Open Water Foundation.")
+    print("Copyright 2017-2023 Open Water Foundation.")
     print("")
     print("License GPLv3+:  GNU GPL version 3 or later")
     print("")
@@ -270,7 +270,7 @@ def print_version() -> None:
     print("")
 
 
-# This is the same as the GeoProcessorCmd.do_run() function.
+# This is the same as the GeoProcessorCmd.do_run() function:
 # - could reuse code but inline it for now
 def run_batch(command_file, runtime_properties: dict) -> None:
     """
@@ -296,7 +296,7 @@ def run_batch(command_file, runtime_properties: dict) -> None:
     CommandFileRunner = importlib.import_module('geoprocessor.core.CommandFileRunner')
     class_ = getattr(CommandFileRunner, 'CommandFileRunner')
     runner = class_()
-    # Read the command file
+    # Read the command file.
     # noinspection PyBroadException
     try:
         runner.read_command_file(command_file_absolute)
@@ -311,10 +311,10 @@ def run_batch(command_file, runtime_properties: dict) -> None:
         logger.error(message, exc_info=True)
         print(message)
         return
-    # Run the command file
+    # Run the command file.
     # noinspection PyBroadException
     try:
-        # Pass the runtime properties to supplement default properties and those created in the command file
+        # Pass the runtime properties to supplement default properties and those created in the command file.
         runner.run_commands(env_properties=runtime_properties)
         logger.info("At end of gp.run_batch")
     except Exception:
@@ -349,7 +349,7 @@ def run_prompt() -> None:
     Returns:
         None.
     """
-    # Use a subclass of the Python Cmd class
+    # Use a subclass of the Python Cmd class.
     GeoProcessorCmd().cmdloop()
 
 
@@ -369,11 +369,11 @@ def run_ui(ui_app_session: GeoProcessorAppSession) -> None:
     # The following was done previously but is redundant with the call to qgis_util.initialize_qgis() in main.
     qt_app = None
     if qgis_util.qgs_app is None:
-        # If QGIS is not used (such as with gptest), use Qt5 application
+        # If QGIS is not used (such as with gptest), use Qt5 application:
         # - QgsApplication is derived from QApplication
-        # The following line is needed for initialization
-        # - If not there is a warning about WebEngine initialization
-        # - See similar code in qgis_util.initialize_qgis() for more information
+        # The following line is needed for initialization:
+        # - if not there is a warning about WebEngine initialization
+        # - see similar code in qgis_util.initialize_qgis() for more information
         print("QGIS is NOT being used (instead, GeoProcessor is being run as gptest).")
         # noinspection PyBroadException
         try:
@@ -384,7 +384,7 @@ def run_ui(ui_app_session: GeoProcessorAppSession) -> None:
             print("- possibly due to Python API version issue")
             print("- ignoring exception and starting the application")
         qt_app = QApplication(sys.argv)
-        # Set the Qt style sheet
+        # Set the Qt style sheet.
         path_to_style_sheet = get_qt_stylesheet_file()
         if path_to_style_sheet is not None:
             print("Setting Qt stylesheet file: " + path_to_style_sheet)
@@ -401,7 +401,7 @@ def run_ui(ui_app_session: GeoProcessorAppSession) -> None:
     #
     # sys.exit(qtapp.exec())
 
-    # The following is used when not dynamically importing modules
+    # The following is used when not dynamically importing modules.
     # command_processor = GeoProcessor()
     logger.info("Loading GeoProcessor class...")
     print("Loading GeoProcessor class...")
@@ -409,26 +409,26 @@ def run_ui(ui_app_session: GeoProcessorAppSession) -> None:
     GeoProcessor_module = importlib.import_module('geoprocessor.core.GeoProcessor')
     class_ = getattr(GeoProcessor_module, 'GeoProcessor')
     command_processor = class_()
-    # GeoProcessorUI derives from window = QtWidgets.QMainWindow()
+    # GeoProcessorUI derives from window = QtWidgets.QMainWindow().
     # noinspection PyPep8Naming
     GeoProcessorUI_module = importlib.import_module('geoprocessor.ui.app.GeoProcessorUI')
     class_ = getattr(GeoProcessorUI_module, 'GeoProcessorUI')
-    ui_runtime_properties = dict()  # PyCharm complains if = {} is used
+    ui_runtime_properties = dict()  # PyCharm complains if = {} is used.
     ui_runtime_properties['AppVersion'] = version.app_version
     ui_runtime_properties['AppVersionDate'] = version.app_version_date
     ui = class_(command_processor, ui_runtime_properties, ui_app_session)
     print("...back from loading GeoProcessor class.")
     logger.info("...back from loading GeoProcessor class.")
-    # Print Qt styles
+    # Print Qt styles:
     # - used to help know what styles are so that alternate stylesheet properties can be specified
     qt_util.print_application_stylesheet()
     print("Showing the UI...")
     logger.info("Showing the UI...")
     ui.show()
-    # Enter the main loop for the application
+    # Enter the main loop for the application:
     # - the following ensures a clean exit from the application
     if qgis_util.qgs_app is None:
-        # QGIS is not used so use Qt5 application
+        # QGIS is not used so use Qt5 application.
         logger.info("QGIS application is null, assuming Qt5 application")
         if qt_app is None:
             logger.critical("Unable to initialize QApplication.  Exiting.", exc_info=True)
@@ -436,7 +436,7 @@ def run_ui(ui_app_session: GeoProcessorAppSession) -> None:
         else:
             sys.exit(qt_app.exec())
     else:
-        # QGIS is used so use its application
+        # QGIS is used so use its application.
         qgis_util.qgs_app.exec_()
 
 
@@ -450,7 +450,7 @@ def set_global_data() -> None:
     Returns:  None
     """
     # Determine the absolute path to the application, useful later when trying to find resources such as
-    # configuration and image
+    # configuration and image.
     # logger = logging.getLogger(__name__)
     # noinspection PyBroadException
     try:
@@ -458,23 +458,23 @@ def set_global_data() -> None:
         ps = '/'  # Use Linux/POSIX style always
         app_util.set_property('ProgramCopyright', version.app_copyright)
         program_home = os.path.dirname(os.path.realpath(__file__))
-        # Program executable name, what is typed on command line
+        # Program executable name, what is typed on command line.
         app_util.set_property('ProgramExecutableName', "gp")
-        # Does not have trailing separator
+        # Does not have trailing separator.
         app_util.set_property('ProgramHome', program_home)
-        # Icon is in geoprocessor/resources/images/OWF-Logo-Favicon-32x32.png
+        # Icon is in geoprocessor/resources/images/OWF-Logo-Favicon-32x32.png.
         # - TODO smalers 2018-07-29 figure out what the optimal logo size is for Qt
         app_util.set_property('ProgramIconPath', program_home + ps + ".." +
                               ps + "resources" + ps + "images" + ps + "OWF-Logo-Favicon-32x32.png")
         app_util.set_property('ProgramLicense', version.app_license)
-        # Program name, shown in UI title bars
+        # Program name, shown in UI title bars.
         app_util.set_property('ProgramName', version.app_name)
-        # Program organization and URL, shown in Help / About
+        # Program organization and URL, shown in Help / About.
         app_util.set_property('ProgramOrganization', version.app_organization)
         app_util.set_property('ProgramOrganizationUrl', version.app_organization_url)
-        # Resources are in geoprocessor/resources
+        # Resources are in geoprocessor/resources.
         app_util.set_property('ProgramResourcesPath', program_home + ps + ".." + ps + "resources")
-        # User documentation URL, without trailing slash
+        # User documentation URL, without trailing slash:
         # - preferred documentation matches the version
         # - backup is the latest published, which may be older if in "dev" release, etc.
         app_util.set_property('ProgramUserDocumentationUrl',
@@ -482,13 +482,13 @@ def set_global_data() -> None:
                                   version.app_version))
         app_util.set_property('ProgramUserDocumentationUrl2',
                               "http://software.openwaterfoundation.org/geoprocessor/latest/doc-user")
-        # Program version, tracks with release notes
+        # Program version, tracks with release notes.
         app_util.set_property('ProgramVersion', version.app_version)
         app_util.set_property('ProgramVersionDate', version.app_version_date)
     except Exception:
         message = "Error setting up program data."
         print(message)
-        # TODO smalers 2020-04-07 logging is not set up yet so don't use logger
+        # TODO smalers 2020-04-07 logging is not set up yet so don't use logger:
         # - maybe need to reorder so some initial properties are set the allow logger to be used
         # logger.error(message, exc_info=True)
         print("Error setting program data.")
@@ -504,18 +504,18 @@ def setup_logging(session) -> None:
     Returns:
         None.
     """
-    # Customized logging config using log file in user's home folder
-    # - For now use default log levels defined by the utility function
+    # Customized logging config using log file in user's home folder:
+    # - for now use default log levels defined by the utility function
     print("Setting up application logging configuration...")
     initial_file_log_level = logging.DEBUG
     log_file = session.get_user_log_file()
     logger = log_util.initialize_logging(app_name="gp", logfile_name=log_file,
                                          logfile_log_level=initial_file_log_level)
 
-    # Test some logging messages
+    # Test some logging messages.
     message = 'Opened initial log file: "' + log_file + '"'
     logger.info(message)
-    # Also print to the console because normal the console should only have error messages
+    # Also print to the console because normal the console should only have error messages.
     print(message)
 
 
@@ -527,22 +527,22 @@ if __name__ == '__main__':
     if debug:
         print_env()
 
-    # Open an application to initialize static UI data
+    # Open an application to initialize static UI data:
     # - might not be needed in batch mode, but UI may be needed for image manipulation, etc.
     # print("Initializing QApplication")
     # The following should work, and allow passing to run_ui(), but the UI does not open.
     # Instead, declare the application in run_ui(), which works.
     # qtapp = QtWidgets.QApplication(sys.argv)
     # qtapp = QApplication(sys.argv)
-    # Set global environment data that will be used by library code
+    # Set global environment data that will be used by library code.
     set_global_data()
-    # Set up a session instance
+    # Set up a session instance:
     # - requesting an instance will cause required user files to be created, if they do not exist
     print("Initializing GeoProcessorAppSession...")
     app_session = GeoProcessorAppSession.get_instance(version.app_version_major)
     print("...after initializing GeoProcessorAppSession")
 
-    # Set up logging for the application
+    # Set up logging for the application:
     # - A logger is defined for all geoprocessing code.
     # - A default log file is created in the users .owfgp/log folder.
     # - The log file will be closed and another restarted by the StartLog() command.
@@ -553,35 +553,35 @@ if __name__ == '__main__':
     # Remove left-over temporary files from previous session that could not be removed because they were locked.
     app_session.remove_user_tmp_files()
 
-    # Parse the command line parameters...
-    # - The -h and --help arguments are automatically included so don't need to add below.
-    # - The default action is "store" which will save a variable with the same name as the option.
-    # - The --version option has special behavior, as documented in the argparse module documentation,
-    #   but use a custom print_version() function so can include the license.
+    # Parse the command line parameters:
+    # - the -h and --help arguments are automatically included so don't need to add below
+    # - the default action is "store" which will save a variable with the same name as the option
+    # - the --version option has special behavior, as documented in the argparse module documentation,
+    #   but use a custom print_version() function so can include the license
     parser = argparse.ArgumentParser(description='GeoProcessor Application')
-    # Assigns the command file to args.commands
+    # Assigns the command file to args.commands:
     # --commands CommandFile.gp
     parser.add_argument("-c", "--commands", help="Specify command file.")
-    # Start the http server (will store True in the 'http' variable)
+    # Start the http server (will store True in the 'http' variable):
     # --http
     parser.add_argument("--http", action='store_true', help="Start the web server.")
-    # Define processor properties on the command line, assumed to be str property
+    # Define processor properties on the command line, assumed to be str property:
     # -p PropertyName=PropertyValue
     # Evaluate later how to allow values with quotes but maybe shell will handle?
     parser.add_argument("-p", action='append', help="Set a processor property.")
-    # Start the user interface (will store True in the 'ui' variable)
+    # Start the user interface (will store True in the 'ui' variable):
     # --ui
     parser.add_argument("--ui", action='store_true', help="Start the user interface.")
-    # Print the version using (will store True in the 'version' variable)
+    # Print the version using (will store True in the 'version' variable):
     # --version
     parser.add_argument("--version", help="Print program version.", action="store_true")
-    # The following will result in exit if unknown argument
+    # The following will result in exit if unknown argument.
     # args = parser.parse_args()
-    # TODO smalers 2020-03-27 Need to print out unknown arguments, but for move on.
+    # TODO smalers 2020-03-27 Need to print out unknown arguments, but for move on:
     # - this handles /o, etc. that are used with calling bat file so program can continue and not exit.
     args, unknown_args = parser.parse_known_args()
 
-    # # If handling QGIS environment here, rather than in GeoProcessor
+    # # If handling QGIS environment here, rather than in GeoProcessor:
     # # - previously the QGIS set up was done in the GeoProcessor but better to start and stop once
     # # - previously used the following line of code  --->  qgis_util.initialize_qgis(r"C:\OSGeo4W64\apps\qgis")
     # noinspection PyBroadException
@@ -592,13 +592,13 @@ if __name__ == '__main__':
         print(err_message)
         logger_main.error(err_message, exc_info=True)
 
-    # Process configuration parameters
+    # Process configuration parameters.
     runtime_properties_cl = {}
     if args.p:
         print("-p options: " + str(args.p))
         runtime_properties_cl = parse_command_line_properties(args.p)
 
-    # Launch a GeoProcessor based on command line parameters that control run mode
+    # Launch a GeoProcessor based on command line parameters that control run mode.
     if args.commands:
         # A command file has been specified so run the batch processor.
         print("Running GeoProcessor batch")
@@ -610,7 +610,7 @@ if __name__ == '__main__':
             print(err_message)
             logger_main.error(err_message, exc_info=True)
     elif args.http:
-        # Run the http server
+        # Run the http server.
         print("Running GeoProcessor http server")
         # noinspection PyBroadException
         try:
@@ -620,7 +620,7 @@ if __name__ == '__main__':
             print(err_message)
             logger_main.error(err_message, exc_info=True)
     elif args.ui:
-        # Run the user interface
+        # Run the user interface.
         err_message = "Running GeoProcessor UI"
         print(err_message)
         logger_main.info(err_message)
@@ -632,7 +632,7 @@ if __name__ == '__main__':
             print(err_message)
             logger_main.error(err_message, exc_info=True)
     elif args.version:
-        # Print the version
+        # Print the version.
         print_version()
     else:
         # No arguments given to indicate whether batch, UI, etc. so start up the shell.
@@ -645,13 +645,13 @@ if __name__ == '__main__':
             print(err_message)
             logger_main.error(err_message, exc_info=True)
 
-    # Exit QGIS environment
+    # Exit QGIS environment.
     qgis_util.exit_qgis()
 
-    # Close the regression test file
-    # - If none is used then nothing is done
-    # from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
+    # Close the regression test file if it was opened:
+    # - this is a fall-through
+    # - should normally do it from the UI such as when running the full test suite
     StartRegressionTestResultsReport.close_regression_test_report_file()
 
-    # Application exit
+    # Application exit.
     exit(0)

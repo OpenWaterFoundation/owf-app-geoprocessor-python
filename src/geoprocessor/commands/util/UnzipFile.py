@@ -1,18 +1,18 @@
 # UnzipFile - command to unzip a zip file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -41,7 +41,7 @@ class UnzipFile(AbstractCommand):
     """
     Unzips a file.
 
-    Command Parameters
+    Command Parameters:
     * File (str, required): the path to the file to extract relative or absolute)
     * FileType (str, optional): the type of compressed file.  Must be one of the following:
         `zip`: ZIP file (.zip)
@@ -61,12 +61,12 @@ class UnzipFile(AbstractCommand):
         CommandParameterMetadata("IfFolderDoesNotExist", type("")),
         CommandParameterMetadata("DeleteFile", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Unzip a compressed file."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # File
     __parameter_input_metadata['File.Description'] = "file to be unzipped"
@@ -117,21 +117,21 @@ class UnzipFile(AbstractCommand):
 
     def __init__(self) -> None:
         """
-        Initialize the command
+        Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "UnzipFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -212,7 +212,7 @@ class UnzipFile(AbstractCommand):
             raise CommandParameterError(warning_message)
 
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, file_abs: str, file_type: str) -> bool:
@@ -230,8 +230,8 @@ class UnzipFile(AbstractCommand):
             not be extracted.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the File parameter value is not a valid file, raise a FAILURE.
@@ -245,12 +245,12 @@ class UnzipFile(AbstractCommand):
             self.logger.warning(message)
             self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                   message, recommendation))
-
-        # If the File Type is not actually recognized by the input File, raise a FAILURE.
-        if file_type.upper() == "ZIP":
-            should_run_command.append(validator_util.run_check(self, "IsZipFile", "File", file_abs, "FAIL"))
-        elif file_type.upper() == "TAR":
-            should_run_command.append(validator_util.run_check(self, "IsTarFile", "File", file_abs, "FAIL"))
+        else:
+            # If the File Type is not actually recognized by the input File, raise a FAILURE.
+            if file_type.upper() == "ZIP":
+                should_run_command.append(validator_util.run_check(self, "IsZipFile", "File", file_abs, "FAIL"))
+            elif file_type.upper() == "TAR":
+                should_run_command.append(validator_util.run_check(self, "IsTarFile", "File", file_abs, "FAIL"))
 
         # Return the Boolean to determine if the process should be run.
         if False in should_run_command:
@@ -266,8 +266,8 @@ class UnzipFile(AbstractCommand):
         Arg:
             file_path: the absolute path to the input File parameter
 
-        Returns: The default FileType parameter value. Returns None if the file extension does not correlate with
-            a compatible FileType.
+        Returns: The default FileType parameter value.
+            Returns None if the file extension does not correlate with a compatible FileType.
         """
 
         # A dictionary of compatible file extensions and their corresponding FileType.
@@ -275,7 +275,7 @@ class UnzipFile(AbstractCommand):
         # value: Uppercase file type.
         dic = {"TAR": "TAR", "ZIP": "ZIP"}
 
-        # Iterate over the dictionary and return the FileType that corresponds to the the input file's extension.
+        # Iterate over the dictionary and return the FileType that corresponds to the input file's extension.
         for ext, file_type in dic.items():
             if io_util.get_extension(file_path).upper() == ext:
                 return file_type
@@ -329,10 +329,10 @@ class UnzipFile(AbstractCommand):
 
         # Run the checks on the parameter values. Only continue if the checks passed.
         if self.check_runtime_data(file_abs, pv_FileType):
-            # ok_to_run indicates if it is OK to run the command's main logic
+            # ok_to_run indicates if it is OK to run the command's main logic.
             ok_to_run = True
             if not os.path.isdir(output_folder_abs):
-                # Output folder does not exist
+                # Output folder does not exist.
                 self.logger.info("Output folder does not exist.")
                 # If requested, create the output folder.
                 IfFolderDoesNotExist_upper = pv_IfFolderDoesNotExist.upper()
@@ -373,7 +373,7 @@ class UnzipFile(AbstractCommand):
                         # If configured, remove the input compressed file.
                         os.remove(file_abs)
 
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 except Exception:
                     self.warning_count += 1
                     message = "Unexpected error extracting the {} file ({}).".format(pv_FileType, pv_File)
@@ -382,7 +382,7 @@ class UnzipFile(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

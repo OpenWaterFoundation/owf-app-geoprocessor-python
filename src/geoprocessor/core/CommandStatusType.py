@@ -1,7 +1,7 @@
 # CommandStatusType - command status types
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+.
 # See:  https://stackoverflow.com/questions/33533148/
 #         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
 from __future__ import annotations
@@ -50,13 +50,13 @@ class CommandStatusType(Enum):
 
         """
         if sort:
-            # Sort alphabetically
+            # Sort alphabetically.
             return [CommandStatusType.FAILURE,
                     CommandStatusType.INFO,
                     CommandStatusType.SUCCESS,
                     CommandStatusType.WARNING]
         else:
-            # Return in order of severity (good to bad)
+            # Return in order of severity (good to bad).
             return [CommandStatusType.INFO,
                     CommandStatusType.SUCCESS,
                     CommandStatusType.WARNING,
@@ -74,10 +74,10 @@ class CommandStatusType(Enum):
             The list of status types as str, for example for use in command parameter choice.
 
         """
-        # First get the list of types
+        # First get the list of types.
         command_status_types = cls.get_command_status_types(sort=sort)
 
-        # Convert to strings
+        # Convert to strings.
         command_status_types_as_str = []
         for command_status_type in command_status_types:
             command_status_types_as_str.append(command_status_type.name)
@@ -125,7 +125,7 @@ class CommandStatusType(Enum):
 
         Args:
             str_value (str): String value of the enumeration.
-            ignore_case (bool): Whether or not to ignore case (default = False).
+            ignore_case (bool): Whether to ignore case (default = False).
 
         Returns:
             Value of the enumeration, or None if not matched.
@@ -134,7 +134,7 @@ class CommandStatusType(Enum):
         warning_short = "Warn"
         failure_short = "Fail"
         if ignore_case:
-            # Input string can be anything so convert to uppercase for comparison
+            # Input string can be anything so convert to uppercase for comparison.
             str_value = str_value.upper()
             warning_short = warning_short.upper()
             failure_short = failure_short.upper()

@@ -1,18 +1,18 @@
 # WriteTableToDelimitedFile - command to write a table to a delimited file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -39,7 +39,7 @@ from operator import itemgetter
 
 class WriteTableToDelimitedFile(AbstractCommand):
     """
-    Writes a Table to an delimiter-separated file.
+    Writes a DataTable to a delimiter-separated file.
 
     Command Parameters
     * TableID (str, required): the identifier of the Table to be written to the delimited file
@@ -79,12 +79,13 @@ class WriteTableToDelimitedFile(AbstractCommand):
         CommandParameterMetadata("ArrayFormat", type("")),
         CommandParameterMetadata("NullValueFormat", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
-    __command_metadata['Description'] = "Write a table to a delimited file."
+    __command_metadata['Description'] = "Write a table to a delimited file." \
+                                        "This command is under development."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # TableID
     __parameter_input_metadata['TableID.Description'] = "table identifier"
@@ -172,7 +173,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
     __parameter_input_metadata['NullValueFormat.Value.Default'] = "NULL"
     __parameter_input_metadata['NullValueFormat.Values'] = ["", "NULL", "None"]
 
-    # Choices for parameters, used to validate parameter and display in editor
+    # Choices for parameters, used to validate parameter and display in editor.
     __choices_ArrayFormat = ["SquareBrackets", "CurlyBrackets"]
     __choices_NullValueFormat = ["Null", "None"]
 
@@ -181,18 +182,18 @@ class WriteTableToDelimitedFile(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "WriteTableToDelimitedFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -264,7 +265,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
+        # This returns a message that can be appended to the warning, and if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
         # If any warnings were generated, throw an exception.
@@ -272,7 +273,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, table_id: str, output_file_abs: str, delimiter: str, sort_columns: [str]) -> bool:
@@ -293,8 +294,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
             run_write: Boolean. If TRUE, the writing process should be run. If FALSE, it should not be run.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the Table ID is not an existing Table ID, raise a FAILURE.
@@ -303,11 +304,11 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # If the Table ID does exist and the sort_columns is not None, continue with checks.
         if True in should_run_command and sort_columns is not None:
 
-            # Get the Table object
+            # Get the Table object.
             table = self.command_processor.get_table(table_id)
 
             # Get a list of the columns in the table.
-            columns = table.return_fieldnames()
+            columns = table.get_field_names()
 
             # If one of the SortingColumns does not exist in the Table, raise a FAILURE.
             invalid_columns = []
@@ -326,7 +327,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                                                                       message, recommendation))
                 should_run_command.append(False)
 
-        # Get the full path to the output folder
+        # Get the full path to the output folder.
         output_folder_abs = io_util.get_path(output_file_abs)
 
         # If the output folder is not an existing folder, raise a FAILURE.
@@ -349,12 +350,12 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                         sort_columns: [str], sorting_dic: dict, use_sq_brackets: bool,
                                         use_null_values: bool):
         """
-        Writes a GeoProcessor table to a delimited file. There are many parameters to customize how the table is
-        written to the delimited file.
+        Writes a GeoProcessor table to a delimited file.
+        There are many parameters to customize how the table is written to the delimited file.
 
         Args:
-            path (str): the full pathname to the output file (can be an existing file or a new file). If it is
-                existing, the file will be overwritten.
+            path (str): the full pathname to the output file (can be an existing file or a new file).
+                If it is existing, the file will be overwritten.
             table_obj (obj): the GeoProcessor Table to write
             delimiter (str): a single character delimiter to separate each column in the delimited file
             cols_to_include_list (list): a list of glob-style pattern strings used to select the columns to write
@@ -376,8 +377,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
         Return: None
         """
 
-        # Get a list of the table's fieldnames.
-        fieldnames = table_obj.return_fieldnames()
+        # Get a list of the table's field names.
+        field_names = table_obj.get_field_names()
 
         # Get a list of the table's records. Each record is a list of data values.
         all_records = [table_record.items for table_record in table_obj.table_records]
@@ -393,7 +394,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                     sort_column = sort_columns[i]
 
                     # Get the column index.
-                    index = fieldnames.index(sort_column)
+                    index = field_names.index(sort_column)
 
                     # Get the appropriate sorting order.
                     if sort_column in list(sorting_dic.keys()):
@@ -419,7 +420,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 # Sort the records in ascending order of the first table column.
                 all_records = sorted(all_records, key=itemgetter(0))
 
-        # Try to sort but do not throw an error if the sort fails. Instead keep the records in the original order.
+        # Try to sort but do not throw an error if the sort fails. Instead, keep the records in the original order.
         except Exception:
             all_records = all_records
 
@@ -435,44 +436,44 @@ class WriteTableToDelimitedFile(AbstractCommand):
 
             # If an index column is specified to be written, add an empty string to the first item of the header list.
             if include_index:
-                fieldnames.insert(0, "")
+                field_names.insert(0, "")
 
-            # Insert the header list (fieldnames) as the first item of the all_records list.
-            all_records.insert(0, fieldnames)
+            # Insert the header list (field_names) as the first item of the all_records list.
+            all_records.insert(0, field_names)
 
-        # Determine the fieldnames of the columns that should NOT be written to the delimited file.
-        cols_to_remove = string_util.filter_list_of_strings(fieldnames, cols_to_include_list, cols_to_exclude_list,
+        # Determine the 'field_names' of the columns that should NOT be written to the delimited file.
+        cols_to_remove = string_util.filter_list_of_strings(field_names, cols_to_include_list, cols_to_exclude_list,
                                                             return_inclusions=False)
 
-        # If an index column is specifies to be written, make sure that the first column (the index column) is not
-        # specified to be removed.
+        # If an index column is specifies to be written,
+        # make sure that the first column (the index column) is not specified to be removed.
         if include_index:
             del cols_to_remove[0]
 
         # Get the indexes of the columns that should NOT be written to the delimited file.
-        cols_to_remove_indexes = [fieldnames.index(col) for col in cols_to_remove]
+        cols_to_remove_indexes = [field_names.index(col) for col in cols_to_remove]
 
         # Iterate over each record in the table.
         for record in all_records:
 
-            # Iterate over each column index specified NOT to be written to the delimited file. Remove the record's
-            # data value for each column specified NOT to be written to the delimited file.Must iterate over the
-            # indexes in reverse to ensure that the proper values are removed.
+            # Iterate over each column index specified NOT to be written to the delimited file.
+            # Remove the record's data value for each column specified NOT to be written to the delimited file.
+            # Must iterate over the indices in reverse to ensure that the proper values are removed.
             for index in sorted(cols_to_remove_indexes, reverse=True):
                 del record[index]
 
         # Open the output delimited file. Can be an existing or a new file path.
         with open(path, "w") as f:
 
-            # Write the records (one record for each row) to the output delimited file. Use the specified delimiter
-            # character.
+            # Write the records (one record for each row) to the output delimited file.
+            # Use the specified delimiter character.
             writer = csv.writer(f, delimiter=delimiter, lineterminator='\n')
             writer.writerows(all_records)
 
         # If configured to use NULL values in an array instead of default None values, continue.
         if use_null_values:
 
-            # A dictionary to store all of the strings that are to be replaced with different strings.
+            # A dictionary to store all the strings that are to be replaced with different strings.
             # Key: the string within the delimited file to be replaced
             # Value: the replacement string
             replacement_dictionary = {}
@@ -510,8 +511,8 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                 if subitem.upper() == "NONE":
                                     replacement_list.append("NULL")
 
-                                # If the item does not represent a None value, add the original value to the
-                                # replacement_list.
+                                # If the item does not represent a None value,
+                                # add the original value to the replacement_list.
                                 else:
                                     replacement_list.append(str(subitem))
 
@@ -541,7 +542,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         # Otherwise, the lists and arrays uses the default square brackets.
         if not use_sq_brackets:
 
-            # A dictionary to store all of the strings that are to be replaced with different strings.
+            # A dictionary to store all the strings that are to be replaced with different strings.
             # Key: the string within the delimited file to be replaced
             # Value: the replacement string
             replacement_dictionary = dict()
@@ -625,7 +626,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                                                                key_value_delimiter=":",
                                                                                trim=True)
 
-        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -640,7 +641,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
         if self.check_runtime_data(pv_TableID, output_file_absolute, pv_Delimiter, sort_cols_list):
             # noinspection PyBroadException
             try:
-                # Get the Table object
+                # Get the Table object.
                 table = self.command_processor.get_table(pv_TableID)
 
                 # Determine if square brackets should be used depending on the user input of the ArrayFormat parameter.
@@ -659,7 +660,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                                                      cols_to_exclude, pv_WriteHeaderRow, pv_WriteIndexColumn,
                                                      sort_cols_list, sort_dictionary, use_sq_brackets, use_null_value)
 
-            # Raise an exception if an unexpected error occurs during the process
+            # Raise an exception if an unexpected error occurs during the process.
             except Exception:
                 self.warning_count += 1
                 message = "Unexpected error writing Table {} to delimited file {}.".format(pv_TableID,
@@ -669,7 +670,7 @@ class WriteTableToDelimitedFile(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

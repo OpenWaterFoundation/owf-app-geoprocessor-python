@@ -1,7 +1,7 @@
 # CommandListWidget - UI component to display list of commands with scrolling and status gutter
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -49,8 +49,9 @@ except AttributeError:
 class CommandListWidget(object):
     """
     This class is designed to be a modular component that can be placed in the overall GeoProcessor UI design.
-    This class is not actually derived from QListWidget but may be in the future, in which case Qt integration will
-    be more typical of a widget.  This is a complex component that manages the UI representation of the command list and
+    This class is not actually derived from QListWidget but may be in the future,
+    in which case Qt integration will be more typical of a widget.
+    This is a complex component that manages the UI representation of the command list and
     left and right information/navigation components.
 
     The design of the components is as follows:
@@ -99,34 +100,34 @@ class CommandListWidget(object):
             None
         """
 
-        # Initialize the group box that will contain the command list widget
+        # Initialize the group box that will contain the command list widget.
         self.commands_GroupBox = commands_GroupBox
 
-        # Create empty object to hold the model listener
+        # Create empty object to hold the model listener.
         self.command_model_listener = None
 
-        # Create empty object to hold main ui listener
+        # Create empty object to hold main ui listener.
         self.command_main_ui_listener = None
 
-        # An array to hold the list of commands coming from the geoprocessor
+        # An array to hold the list of commands coming from the geoprocessor.
         # self.command_list: [AbstractCommand] = []
 
-        # The list model to interface the processor to the QtListWidget
+        # The list model to interface the processor to the QtListWidget.
         self.gp_model: GeoProcessorListModel = None
 
-        # Global ui elements...
+        # Global ui elements.
         # Layout
         self.commands_GridLayout = None
         self.commands_HBoxLayout_Commands = None
         self.commands_HBoxLayout_Buttons = None
 
-        # List widgets
-        # self.command_ListWidget: QtWidgets.QListWidget or None = None
+        # List widgets:
         # - use a view for commands since have the GeoProcessor that maintains the data as list of Command
         # - the view uses a GeoProcessorListModel 'gp_model', which has a reference to the GeoProcessor instance
+        # self.command_ListWidget: QtWidgets.QListWidget or None = None
         self.command_ListView: GeoProcessorListView or None = None
 
-        # List of numbers on the left, aligned with command list
+        # List of numbers on the left, aligned with command list:
         # - UI actions are driven by this 'command_ListView' knowing about its events and listening to events
         #   independently generated in the 'gp_model'
         # - since a QListWidget, the data model list of strings to display
@@ -135,12 +136,12 @@ class CommandListWidget(object):
         self.number_VBoxLayout: QtWidgets.QVBoxLayout or None = None
         self.number_bottom_space_QFrame: QtWidgets.QFrame or None = None
 
-        # Gutter on the right, indicating color-coded issues
+        # Gutter on the right, indicating color-coded issues:
         # - UI actions are driven by this 'command_ListView' knowing about its events and listening to events
         #   independently generated in the 'gp_model'
         # - since a QListWidget, the data model list of strings to display
         self.gutter_ListWidget: QtWidgets.QListWidget or None = None
-        self.gutter_is_list: bool = False   # True to use list (old design) or False to use sime Frame area
+        self.gutter_is_list: bool = False   # True to use list (old design) or False to use sime Frame area.
         #self.gutter_Frame: QtWidgets.QFrame or None = None
         self.gutter_Frame: GutterFrame or None = None
 
@@ -149,14 +150,14 @@ class CommandListWidget(object):
         self.commands_RunSelectedCommands_PushButton: QtWidgets.QPushButton or None = None
         self.commands_ClearCommands_PushButton: QtWidgets.QPushButton or None = None
 
-        # Keep track of errors and warnings in command list
+        # Keep track of errors and warnings in command list.
         self.num_errors = 0
         self.num_warnings = 0
 
-        # Keep track of block comments
+        # Keep track of block comments.
         self.comment_block = False
 
-        # Setup the user interface elements of the command list widget
+        # Setup the user interface elements of the command list widget.
         self.setup_ui()
 
     def __len__(self):
@@ -171,8 +172,7 @@ class CommandListWidget(object):
         Initialize the command list model listener.
 
         Args:
-            listener: GeoProcessorListModel object that will listen for events from
-                command list widget.
+            listener: GeoProcessorListModel object that will listen for events from command list widget.
 
         Returns:
             Return if the listener is None.
@@ -209,7 +209,7 @@ class CommandListWidget(object):
         if (selected_indices is not None) and (len(selected_indices) != 0) and \
                 (len(selected_indices)) < len(self.gp_model):
             # Fewer than all commands are selected.
-            # Open a message box to confirm with the user that they want to delete all of the commands.
+            # Open a message box to confirm with the user that they want to delete all the commands:
             # - only do this if the selected commands are all the commands
             # - otherwise the dialog interrupts normal workflow
             do_confirm = False
@@ -220,29 +220,29 @@ class CommandListWidget(object):
                     "Are you sure you want to delete selected " + str(len(selected_indices)) + " commands?",
                     "Clear Commands")
             else:
-                # Always delete
+                # Always delete.
                 response = QtWidgets.QMessageBox.Yes
 
-            # If the user confirms that they want to delete the selected commands, delete the commands.
-            # - Delete using objects so indices are not an issue
+            # If the user confirms that they want to delete the selected commands, delete the commands:
+            # - delete using objects so indices are not an issue
             if response == QtWidgets.QMessageBox.Yes:
                 self.gp_model.clear_selected_commands(selected_indices)
         elif (selected_indices is None) or (len(selected_indices) == 0) or \
                 (len(selected_indices) == len(self.gp_model)):
             # Deleting all commands.
-            # Open a message box to confirm with the user that they want to delete all of the commands.
+            # Open a message box to confirm with the user that they want to delete all the commands.
             response = qt_util.new_message_box(
                 QtWidgets.QMessageBox.Question,
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 "Are you sure you want to delete ALL the commands?",
                 "Clear Commands")
 
-            # If the user confirms that they want to delete the selected commands, delete the commands.
-            # - Delete using objects so indices are not an issue
+            # If the user confirms that they want to delete the selected commands, delete the commands:
+            # - delete using objects so indices are not an issue
             if response == QtWidgets.QMessageBox.Yes:
                 self.gp_model.clear_all_commands()
 
-        # TODO smalers 2020-01-19 need to do this via a listener
+        # TODO smalers 2020-01-19 need to do this via a listener.
         # Check to see if command list modified. If so notify the main UI.
         self.command_main_ui_listener.update_ui_main_window_title()
 
@@ -255,13 +255,13 @@ class CommandListWidget(object):
         """
         # There is no deselectAll() similar to selectAll().
         # Therefore, get the selected indices and deselect them.
-        # Deselect all in the main commands
+        # Deselect all in the main commands.
         self.command_ListView.clearSelection()
-        # Also deselect all in the secondary lists
+        # Also deselect all in the secondary lists.
         self.number_ListWidget.clearSelection()
         # TODO smalers 2020-03-30 is anything needed?
         # self.gutter_Frame.clear()
-        # Update the UI state
+        # Update the UI state.
         self.update_ui_status_commands()
 
     def command_list_select_all(self) -> None:
@@ -271,16 +271,16 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Select all in the main commands
+        # Select all in the main commands.
         self.command_ListView.selectAll()
-        # Also select all in the secondary lists
+        # Also select all in the secondary lists.
         self.number_ListWidget.selectAll()
         # TODO smalers 2020-03-30 - is anything needed?
         #self.gutter_Frame.selectAll()
-        # Update the UI state
+        # Update the UI state.
         self.update_ui_status_commands()
 
-    # TODO smalers 2020-03-12 Can't seem to get this to work for QListView
+    # TODO smalers 2020-03-12 Can't seem to get this to work for QListView.
     def command_list_select_rows(self, rows: [int]) -> None:
         """
         Select commands in the command list given a list of indices.
@@ -293,7 +293,7 @@ class CommandListWidget(object):
             None
         """
         for row in rows:
-            # Select all in the main commands
+            # Select all in the main commands.
             index = self.gp_model.createIndex(row,0)
             #self.command_ListView.select(index,QtWidgets.QAbstractItemView.SelectRow)
             # Is it possible to use the selection model to select?
@@ -304,7 +304,7 @@ class CommandListWidget(object):
             # self.number_ListWidget.select(index)
             # self.gutter_ListWidget.select(index)
 
-        # Update the UI state
+        # Update the UI state.
         self.update_ui_status_commands()
 
     @staticmethod
@@ -324,8 +324,7 @@ class CommandListWidget(object):
     # TODO smalers 2020-01-18 does not seem to be called by anything
     def delete_numbered_list_item(self, index: int) -> None:
         """
-        Delete the row in the numbered list and update the other numbers
-        accordingly so they are still in order.
+        Delete the row in the numbered list and update the other numbers accordingly so that they are still in order.
 
         Args:
             index: Index of numbered list item to be deleted.
@@ -333,12 +332,12 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Remove item at index
+        # Remove item at index.
         self.number_ListWidget.takeItem(index)
         # Get the length of the numbered list
         count = self.number_ListWidget.count()
 
-        # Update numbers past the deleted row
+        # Update numbers past the deleted row.
         for i in range(index, count):
             list_text = self.number_ListWidget.item(i).text()
             if list_text:
@@ -357,7 +356,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Event is not actually used (list is examined)
+        # Event is not actually used (list is examined):
         # - put in some code to use the event so PyCharm does not complain about not being used
         if event is None:
             pass
@@ -375,7 +374,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Event is not actually used (list is examined)
+        # Event is not actually used (list is examined):
         # - put in some code to use the event so PyCharm does not complain about not being used
         if event is None:
             pass
@@ -396,18 +395,17 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Event is not actually used (list is examined)
+        # Event is not actually used (list is examined):
         # - put in some code to use the event so PyCharm does not complain about not being used
         if event is None:
             pass
 
-        # Call the method to do the work
+        # Call the method to do the work.
         self.command_list_clear()
 
     def event_handler_command_list_clicked(self, event: QtGui.QMouseEvent) -> None:
         """
-        When clicking on a command list item also select the same
-        row in the numbered list and gutter.
+        When clicking on a command list item also select the same row in the numbered list and gutter.
 
         Args:
             event: Release click event from numbered list, necessary as a parameter
@@ -422,7 +420,7 @@ class CommandListWidget(object):
         if debug:
             logger = logging.getLogger(__name__)
 
-        # Detect whether shift or control key was pressed for mouse event
+        # Detect whether shift or control key was pressed for mouse event.
         control_pressed = False
         shift_pressed = False
         if event.modifiers() & Qt.ControlModifier:
@@ -432,20 +430,20 @@ class CommandListWidget(object):
         if debug:
             logger.info("Shift pressed=" + str(shift_pressed) + " control pressed=" + str(control_pressed))
 
-        # Event is not actually used (list is examined)
+        # Event is not actually used (list is examined):
         # - put in some code to use the event so PyCharm does not complain about not being used
         if event is None:
             pass
 
-        # TODO smalers 2020-01-19 evaluate not doing this if it results in flashing.
+        # TODO smalers 2020-01-19 evaluate not doing this if it results in flashing:
         # - instead, compare the selection status item by item below.
-        # First clear previous selections from numbered list and gutter
+        # First clear previous selections from numbered list and gutter:
         # - will be updated based on a review below
         self.number_ListWidget.clearSelection()
         if self.gutter_is_list:
             self.gutter_ListWidget.clearSelection()
         else:
-            # TODO smalers 2020-03-24 evaluate if need to do or will repaint do it
+            # TODO smalers 2020-03-24 evaluate if need to do or will repaint do it.
             pass
 
         # Update numbered list and gutter with selection to match the main list.
@@ -457,7 +455,7 @@ class CommandListWidget(object):
         #    logger.debug("number_ListWidget size=" + str(self.number_ListWidget.count()) +
         #                 " gutterListWidget size=" + str(self.gutter_ListWidget.count()))
         for index in selected_indices:
-            # 'index' is a QModelIndex, so need to request the row
+            # 'index' is a QModelIndex, so need to request the row.
             row = index.row()
             if debug:
                 logger.debug("Updating selection of secondary lists for row " + str(row))
@@ -466,7 +464,7 @@ class CommandListWidget(object):
             gutter_list_item = self.number_ListWidget.item(row)
             gutter_list_item.setSelected(True)
 
-        # Update the UI status
+        # Update the UI status.
         self.update_ui_status_commands()
 
     def event_handler_command_list_double_clicked(self, event: QtGui.QMouseEvent) -> None:
@@ -481,7 +479,7 @@ class CommandListWidget(object):
         """
         logger = logging.getLogger(__name__)
         # Let the main UI know
-        row = self.command_ListView.indexAt(event.pos()).row();
+        row = self.command_ListView.indexAt(event.pos()).row()
         logger.info("Double click detected on command list row [" + str(row) + "]")
         self.command_main_ui_listener.ui_action_command_list_double_click(row)
 
@@ -502,7 +500,7 @@ class CommandListWidget(object):
         self.notify_model_listener_decrease_indent_button_clicked(selected_indices)
         self.update_selected_commands(selected_indices)
 
-        # Check to see if command list modified. If so notify the main ui
+        # Check to see if command list modified. If so notify the main ui.
         self.command_main_ui_listener.update_ui_main_window_title()
 
     # TODO smalers 2020-01-19 should not need this now - why?
@@ -521,14 +519,13 @@ class CommandListWidget(object):
         self.notify_model_listener_increase_indent_button_clicked(selected_indices)
         self.update_selected_commands(selected_indices)
 
-        # Check to see if command list modified. If so notify the main ui
+        # Check to see if command list modified. If so notify the main ui.
         self.command_main_ui_listener.update_ui_main_window_title()
 
     def event_handler_gutter_clicked(self, event: QtGui.QMouseEvent) -> None:
         """
         Gutter was clicked.
         Select the corresponding (nearest) row in the command list and the numbered list.
-        Because the gutter vertical dimension is
 
         Args:
             event: User click event, necessary as a parameter so that this function
@@ -544,7 +541,7 @@ class CommandListWidget(object):
         if debug:
             logger.debug("Clicked in gutter at position " + str(event.x()) + "," + str(event.y()))
 
-        # Calculate the list row using simple math
+        # Calculate the list row using simple math.
         gutter_height = self.gutter_Frame.height()
         if gutter_height == 0:
             row = 0
@@ -557,7 +554,7 @@ class CommandListWidget(object):
         # self.number_ListWidget.setCurrentRow(index)
         do_command_list = False
         if do_command_list:
-            # TODO smalers 2020-03-23 the following does not work since not a widget - can't find an example
+            # TODO smalers 2020-03-23 the following does not work since not a widget - can't find an example.
             # self.command_ListView.setCurrentRow(index)
             # model_index = self.gp_model.createIndex(index,-1)
             #self.gp_model.selectionModel().setCurrentIndex(model_index,QtCore.QItemSelectionModel.SelectCurrent)
@@ -566,8 +563,7 @@ class CommandListWidget(object):
 
     def event_handler_gutter_list_clicked(self, event: QtCore.QEvent) -> None:
         """
-        When clicking on a gutter item also select the same
-        row in the command list and the numbered list.
+        When clicking on a gutter item also select the same row in the command list and the numbered list.
 
         Args:
             event: User click event, necessary as a parameter so that this function
@@ -579,7 +575,7 @@ class CommandListWidget(object):
         debug = True
         if debug:
             logger = logging.getLogger(__name__)
-        # Event is not actually used (list is examined)
+        # Event is not actually used (list is examined):
         # - put in some code to use the event so PyCharm does not complain about not being used
         if event is None:
             pass
@@ -599,8 +595,7 @@ class CommandListWidget(object):
 
     def event_handler_numbered_list_item_clicked(self, event: QtCore.QEvent) -> None:
         """
-        When clicking on a numbered list item also select the same
-        row in the command list and the gutter.
+        When clicking on a numbered list item also select the same row in the command list and the gutter.
 
         Args:
             event: Release click event from numbered list, necessary as a parameter so that this function
@@ -609,7 +604,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Event is not actually used (list is examined)
+        # Event is not actually used (list is examined):
         # - put in some code to use the event so PyCharm does not complain about not being used
         if event is None:
             pass
@@ -666,11 +661,10 @@ class CommandListWidget(object):
         Return the selected indices from selected command list.
 
         Returns:
-            An array of integers representing the selected indices from command list.
-            Sorted in ascending order
+            An array of integers representing the selected indices from command list sorted in ascending order.
         """
         selected_indices = self.command_ListView.selectedIndexes()
-        # Convert QModelIndex to simple int
+        # Convert QModelIndex to simple int.
         for i in range(len(selected_indices)):
             selected_indices[i] = selected_indices[i].row()
         # TODO smalers 2020-01-19 don't think the following is needed
@@ -689,17 +683,17 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Event is not actually used (list is examined)
+        # Event is not actually used (list is examined):
         # - put in some code to use the event so PyCharm does not complain about not being used
         if event is None:
             pass
 
         if self.gutter_is_list:
-            # Overly-complicated logic to deal with gutter size when it is a list
+            # Overly-complicated logic to deal with gutter size when it is a list:
             # - TODO smalers 2020-03-23 remove this when Frame logic is tested out
-            # Get the current height of the gutter
+            # Get the current height of the gutter.
             current_height = self.gutter_ListWidget.height()
-            # Check the count of all commands
+            # Check the count of all commands.
             # count = self.command_ListView.count()
             logger = logging.getLogger(__name__)
             command_count = 0
@@ -712,9 +706,9 @@ class CommandListWidget(object):
             else:
                 command_count = len(self.gp_model.gp.commands)
             count = command_count
-            # Get the height of all items
+            # Get the height of all items.
             current_items_height = 16 * count
-            # Make sure count is never 0, if so set to 1
+            # Make sure count is never 0, if so set to 1.
             if count == 0:
                 count = 1
 
@@ -729,17 +723,17 @@ class CommandListWidget(object):
                     item = self.gutter_ListWidget.item(i)
                     item.setSizeHint(QtCore.QSize(-1, 16))
 
-            # Update last item in list to always fill whole space, for better appearance
-            # and to also ensure there is never any scrolling.
-            # could be improved upon in the future
+            # Update last item in list to always fill whole space,
+            # for better appearance and to also ensure there is never any scrolling.
+
             # new gutter height
             need_to_set_gutter_height = False  # Don't think this is needed because other code sets
             if need_to_set_gutter_height:
                 new_height = item_height * count
                 if new_height > current_height - 4:
-                    # 4 offers as a buffer
+                    # 4 offers as a buffer.
                     last_item_height = item_height + (current_height - new_height - 4)
-                    # update height of last item
+                    # update height of last item.
                     # TODO smalers added the following check, otherwise the app crashed
                     # if self.gutter_ListWidget.item(count - 1) is not None:
                     self.gutter_ListWidget.item(count - 1).setSizeHint(QtCore.QSize(-1, last_item_height))
@@ -763,7 +757,7 @@ class CommandListWidget(object):
             if debug:
                 logger.debug("Set gutter error at index [" + str(index) + "]")
         else:
-            # Nothing is needed here because gutter repaints itself
+            # Nothing is needed here because gutter repaints itself.
             pass
 
     def gutter_list_sync_with_commands(self) -> None:
@@ -775,24 +769,24 @@ class CommandListWidget(object):
             None
         """
         if self.gutter_is_list:
-            # Clear all the gutter list items
+            # Clear all the gutter list items.
             self.gutter_ListWidget.clear()
-            # Add empty list item - background color is used but no other indicator
+            # Add empty list item - background color is used but no other indicator.
             num_commands = len(self.gp_model)
             for i in range(num_commands):
-                # Add empty item to the gutter list
+                # Add empty item to the gutter list.
                 item = QtWidgets.QListWidgetItem()
                 # Row height SHOULD NOT align with main list because gutter is compressing all rows into the height
                 # of the command list.
                 # Row height should be gutter height divided by number of rows, but this won't work because integer
                 # math will result in issues.
-                # Get the row height hint from the command list
+                # Get the row height hint from the command list.
                 # command_list_row_height_hint = self.command_ListView.sizeHintForRow(i)
-                # Set the size hint to the same as the main command list so that rows align
+                # Set the size hint to the same as the main command list so that rows align.
                 # item.setSizeHint(QtCore.QSize(-1, command_list_row_height_hint))
                 self.gutter_ListWidget.addItem(item)
         else:
-            # Repaint the frame in background color
+            # Repaint the frame in background color:
             # - TODO smalers 2020-03-24 need to enable
             # self.gutter_Frame.setAutoFillBackground(True)
             # palette = self.gutter_Frame.palette()
@@ -819,7 +813,7 @@ class CommandListWidget(object):
             if debug:
                 logger.debug("Set gutter warning at index [" + str(index) + "]")
         else:
-            # Nothing is needed here because gutter repaints itself
+            # Nothing is needed here because gutter repaints itself.
             pass
 
     def list_model_clear_all_commands(self, gp_model: GeoProcessorListModel) -> None:
@@ -830,14 +824,14 @@ class CommandListWidget(object):
         Returns:
             None.
         """
-        # Put in the following to avoid warnings about not being used
+        # Put in the following to avoid warnings about not being used.
         if gp_model is None:
             pass
         # The command view will already have been updated because it tracks the data model.
         # Also need to synchronize the number and gutter lists.
         self.number_list_sync_with_commands()
         self.gutter_list_sync_with_commands()
-        # Update the UI status
+        # Update the UI status.
         self.update_ui_status_commands()
 
     def list_model_clear_selected_commands(self, gp_model: GeoProcessorListModel, selected_indices: [int]) -> None:
@@ -848,7 +842,7 @@ class CommandListWidget(object):
         Returns:
             None.
         """
-        # Put in the following to avoid warnings about not being used
+        # Put in the following to avoid warnings about not being used.
         if gp_model is None:
             pass
         if selected_indices is None:
@@ -869,15 +863,15 @@ class CommandListWidget(object):
             None.
         """
         # logger = logging.getLogger(__name__)
-        # Put in the following to avoid warnings about not being used
+        # Put in the following to avoid warnings about not being used.
         if gp_model is None:
             pass
         # The command view will already have been updated because it tracks the data model.
         # Also need to synchronize the number and gutter lists.
-        # self.number_list_sync_with_commands()  # Should not change
-        # self.gutter_list_sync_with_commands()  # Should not change
-        # Update the UI status
-        # Repaint the view
+        # self.number_list_sync_with_commands()  # Should not change.
+        # self.gutter_list_sync_with_commands()  # Should not change.
+        # Update the UI status.
+        # Repaint the view.
         # self.command_ListView.repaint()
         self.update_ui_status_commands()
 
@@ -889,7 +883,7 @@ class CommandListWidget(object):
         Returns:
             None.
         """
-        # Put in the following to avoid warnings about not being used
+        # Put in the following to avoid warnings about not being used.
         if gp_model is None:
             pass
         if insert_index is None:
@@ -898,7 +892,7 @@ class CommandListWidget(object):
         # Also need to synchronize the number and gutter lists.
         self.number_list_sync_with_commands()
         self.gutter_list_sync_with_commands()
-        # Update the UI status
+        # Update the UI status.
         self.update_ui_status_commands()
 
     def list_model_read_command_file(self, gp_model: GeoProcessorListModel, cmd_filepath: str) -> None:
@@ -915,20 +909,20 @@ class CommandListWidget(object):
         Returns:
             None.
         """
-        # Add the following to avoid IDE warnings
+        # Add the following to avoid IDE warnings.
         if gp_model is None:
             pass
         if cmd_filepath is None:
             pass
         logger = logging.getLogger(__name__)
         logger.info("In CommandListWidget.list_model_read_command_file()")
-        # The following is needed to make sure commands that were read result in updated error count
+        # The following is needed to make sure commands that were read result in updated error count.
         # self.update_ui_command_list_errors()
         # The command view will already have been updated because it tracks the data model.
         # Also need to synchronize the number and gutter lists.
         self.number_list_sync_with_commands()
         self.gutter_list_sync_with_commands()
-        # Update the UI status
+        # Update the UI status.
         self.update_ui_status_commands()
 
     def notify_main_ui_listener_numbered_list_clicked(self) -> None:
@@ -969,13 +963,12 @@ class CommandListWidget(object):
         Notify the model listener that one of the decrease indent button has been clicked.
 
         Args:
-            selected_indices: A list of integers representing the index of the
-                commands to decrease the indent of.
+            selected_indices: A list of integers representing the index of the commands to decrease the indent of.
 
         Returns:
             None
         """
-        # TODO smalers 2020-01-19 should not need to do this now
+        # TODO smalers 2020-01-19 should not need to do this now.
         # self.command_model_listener.decrease_indent_command_string(selected_indices)
 
     def notify_model_listener_increase_indent_button_clicked(self, selected_indices: [int]) -> None:
@@ -983,13 +976,12 @@ class CommandListWidget(object):
         Notify the model listener that one of the indent button has been clicked.
 
         Args:
-            selected_indices: A list of integers representing the index of the
-                commands to add indent to.
+            selected_indices: A list of integers representing the index of the commands to add indent to.
 
         Returns:
             None
         """
-        # TODO smalers 2019-01-19 should not need to do this now
+        # TODO smalers 2019-01-19 should not need to do this now.
         # self.command_model_listener.indent_command_string(selected_indices)
         # self.gp_model.indent_command_string(selected_indices)
 
@@ -1009,8 +1001,7 @@ class CommandListWidget(object):
         Notify the model listener that the geoprocessor.
 
         Args:
-            selected_indices: A list of integers representing the index of the
-                commands selected.
+            selected_indices: A list of integers representing the index of the commands selected.
 
         Returns:
             None
@@ -1036,23 +1027,23 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Clear all the number list items
+        # Clear all the number list items.
         self.number_ListWidget.clear()
-        # Add number list items with line numbers
+        # Add number list items with line numbers.
         num_commands = len(self.gp_model)
         for i in range(num_commands):
-            # Get the row height hint from the command list
+            # Get the row height hint from the command list.
             command_list_row_height_hint = self.command_ListView.sizeHintForRow(i)
-            # Add numbers to number list
+            # Add numbers to number list.
             item = QtWidgets.QListWidgetItem()
             item.setText(str(i + 1))
             item.setTextAlignment(QtCore.Qt.AlignRight)
-            # Set the size hint to the same as the main command list so that rows align
+            # Set the size hint to the same as the main command list so that rows align.
             item.setSizeHint(QtCore.QSize(-1, command_list_row_height_hint))
             ## item.mouseReleaseEvent = self.show_command_status_tooltip
             self.number_ListWidget.addItem(item)
 
-        # Update the list width based on the number of commands and resulting maximum number
+        # Update the list width based on the number of commands and resulting maximum number.
         self.update_numbered_list_width()
 
     def numbered_list_error_at_row(self, index: int) -> None:
@@ -1068,21 +1059,21 @@ class CommandListWidget(object):
         debug = False
         if debug:
             logger = logging.getLogger(__name__)
-        # Get item from index
+        # Get item from index.
         item = self.number_ListWidget.item(index)
-        # Get the error icon from path
+        # Get the error icon from path.
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/error.gif"
-        # Create icon
+        # Create icon.
         error_icon = QtGui.QIcon(icon_path)
-        # Add icon to QListWidgetItem
+        # Add icon to QListWidgetItem.
         item.setIcon(error_icon)
         if debug:
             logger.debug("Set error icon at index [" + str(index) + "]")
 
     def numbered_list_warning_at_row(self, index: int) -> None:
         """
-        Add the warning icon to the numbered list row with an warning.
+        Add the warning icon to the numbered list row with a warning.
 
         Args:
             index: index of numbered list item where warning occurred.
@@ -1093,14 +1084,14 @@ class CommandListWidget(object):
         debug = False
         if debug:
             logger = logging.getLogger(__name__)
-        # Get item from index
+        # Get item from index.
         item = self.number_ListWidget.item(index)
-        # Get the warning icon from path
+        # Get the warning icon from path.
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/warning.gif"
-        # Create icon
+        # Create icon.
         warning_icon = QtGui.QIcon(icon_path)
-        # Add icon to QListWidgetItem
+        # Add icon to QListWidgetItem.
         item.setIcon(warning_icon)
         if debug:
             logger.debug("Set error icon at index [" + str(index) + "]")
@@ -1110,18 +1101,18 @@ class CommandListWidget(object):
         Add the unknown icon to the numbered list row with an unknown.
 
         Args:
-            index: index of numbered list item where unkown occurred.
+            index: index of numbered list item where unknown occurred.
 
         Returns:
             QListWidgetItem
         """
         item = self.number_ListWidget.item(index)
-        # Get the unknown icon from path
+        # Get the unknown icon from path.
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/unknown.gif"
-        # Create icon
+        # Create icon.
         error_icon = QtGui.QIcon(icon_path)
-        # Add icon to QListWidgetItem
+        # Add icon to QListWidgetItem.
         item.setIcon(error_icon)
 
     def set_gp_model(self, gp_model: GeoProcessorListModel) -> None:
@@ -1135,44 +1126,44 @@ class CommandListWidget(object):
             None
         """
         logger = logging.getLogger(__name__)
-        # Keep a local reference to the model for convenience
+        # Keep a local reference to the model for convenience.
         self.gp_model = gp_model
-        self.gutter_Frame.gp_model = gp_model  # Needed to refresh the gutter
-        # Also set in the QListView, to be handled by Qt
+        self.gutter_Frame.gp_model = gp_model  # Needed to refresh the gutter.
+        # Also set in the QListView, to be handled by Qt.
         self.command_ListView.setModel(gp_model)
         logger.debug("Set model, has " + str(len(self.gp_model.gp.commands)) + " commands.")
 
-        # The main command view will update automatically but need to update the gutter and numbered lists.
+        # The main command view will update automatically but need to update the gutter and numbered lists:
         # - do this by having this class listen for changes on the model, and make UI changes accordingly
         # self.update_command_list_widget()
         self.gp_model.add_model_listener(self)
 
     def setup_ui(self) -> None:
         """
-        Setup all GUI elements of the CommandListWidget Area including the command list, the numbered
-        list to the left of the commands and the gutter to the right of the commands.
+        Setup all GUI elements of the CommandListWidget Area including the command list,
+        the numbered list to the left of the commands and the gutter to the right of the commands.
         This is called by GeoProcessorUI.setup_ui_commands() function.
 
         Returns:
             None
         """
 
-        # Add event handler for QGroupBox resize event
+        # Add event handler for QGroupBox resize event.
         self.commands_GroupBox.resizeEvent = self.group_box_resize
         self.commands_GroupBox.setObjectName(_fromUtf8("commands_GroupBox"))
-        # Initial status
+        # Initial status:
         # - will be updated in update_ui_status_commands()
         self.commands_GroupBox.setTitle("Commands (0 commands, 0 selected, 0 with failures, 0 with warnings)")
 
-        # Add basic QListWidget elements to design the command list
+        # Add basic QListWidget elements to design the command list:
         # - add from left to right
-        self.setup_ui_command_list_widget_layout()   # First set up layout
-        self.setup_ui_command_list_widget_numbered_list()   # Numbered list on left
-        self.setup_ui_command_list_widget_command_list()   # Command list in middle
-        # Connect scrolling between commands list and numbered list
+        self.setup_ui_command_list_widget_layout()   # First set up layout.
+        self.setup_ui_command_list_widget_numbered_list()   # Numbered list on left.
+        self.setup_ui_command_list_widget_command_list()   # Command list in middle.
+        # Connect scrolling between commands list and numbered list.
         vs1 = self.command_ListView.verticalScrollBar()
         vs2 = self.number_ListWidget.verticalScrollBar()
-        # TODO smalers 2020-03-23 there is no scroll bar on the numbered list so ony connect one direction.
+        # TODO smalers 2020-03-23 there is no scroll bar on the numbered list so ony connect one direction:
         # - scrolling the command QListView cases the numbered list QListWidget to scroll
         vs1.valueChanged.connect(functools.partial(self.command_list_vertical_scroll, vs2))
         # vs2.valueChanged.connect(functools.partial(self.command_list_vertical_scroll, vs1))
@@ -1181,7 +1172,7 @@ class CommandListWidget(object):
         # Buttons
         self.setup_ui_command_list_widget_button_run_selected_commands()
         self.setup_ui_command_list_widget_button_run_all_commands()
-        # Spacer makes sure that buttons on left and right are correctly positioned
+        # Spacer makes sure that buttons on left and right are correctly positioned.
         spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.commands_HBoxLayout_Buttons.addItem(spacer_item)
         self.setup_ui_command_list_widget_button_clear_commands()
@@ -1196,10 +1187,11 @@ class CommandListWidget(object):
         debug = False
         if debug:
             logger = logging.getLogger(__name__)
-        # Commands area list
+        # Commands area list.
         # self.command_ListView = QtWidgets.QListWidget(self.commands_GroupBox)
         # self.command_ListView = QtWidgets.QListView(self.commands_GroupBox)
         self.command_ListView = GeoProcessorListView(self.commands_GroupBox)
+        # Set the command list view font to the same as the number list so that the rows align.
         font = QtGui.QFont()
         font.setFamily(_fromUtf8("MS Shell Dlg 2"))
         self.command_ListView.setFont(font)
@@ -1212,7 +1204,7 @@ class CommandListWidget(object):
         self.command_ListView.setWordWrap(False)
         self.command_ListView.setSelectionRectVisible(False)
 
-        # Remap list events to event handling functions
+        # Remap list events to event handling functions.
         self.command_ListView.mouseReleaseEvent = self.event_handler_command_list_clicked
         self.command_ListView.mouseDoubleClickEvent = self.event_handler_command_list_double_clicked
         self.command_ListView.setObjectName(_fromUtf8("command_ListView"))
@@ -1224,23 +1216,23 @@ class CommandListWidget(object):
         doSelectionChanged = False
         if doSelectionChanged:
             selection_model = self.command_ListView.selectionModel()
-            # Use the following because connect() is shown as unresolved reference in PyCharm
+            # Use the following because connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             #selection_model.selectionChanged.connect(self.update_ui_status_commands)
         else:
-            # Do clicked event
+            # Do clicked event.
             self.command_ListView.clicked.connect(self.update_ui_status_commands)
-        # Handle key event on list for delete key and Enter for edit
+        # Handle key event on list for delete key and Enter for edit.
         # - TODO smalers 2020-03-17 need to figure out how to handle Enter=edit and Delete=delete keys.
-        # Other connections
+        # Other connections.
         # Connect right-click of command_ListView widget item.
         self.command_ListView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.command_ListView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.command_ListView.customContextMenuRequested.connect(self.notify_main_ui_listener_right_click)
 
-        # Set the height of the numbered list lower-left spacer to be the same as the main list scrollbar
+        # Set the height of the numbered list lower-left spacer to be the same as the main list scrollbar.
         horizontal_scroll_height = self.command_ListView.horizontalScrollBar().height()
         if debug:
             logger.debug("Command list horizontal scrollbar height is " + str(horizontal_scroll_height))
@@ -1260,35 +1252,35 @@ class CommandListWidget(object):
             logger = logging.getLogger(__name__)
             logger.info("Initializing gutter")
         if self.gutter_is_list:
-            # Gutter is a list - original design
+            # Gutter is a list - original design.
             self.gutter_ListWidget = QtWidgets.QListWidget(self.commands_GroupBox)
             self.gutter_ListWidget.setFixedWidth(21)
             self.gutter_ListWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
             self.gutter_ListWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
             self.gutter_ListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
             self.gutter_ListWidget.setObjectName('gutter')
-            # Connect gutter click to custom gutter_clicked function
+            # Connect gutter click to custom gutter_clicked function.
             self.gutter_ListWidget.mouseReleaseEvent = self.event_handler_gutter_list_clicked
             self.commands_HBoxLayout_Commands.addWidget(self.gutter_ListWidget)
         else:
-            # Gutter is a Frame that is drawn into - current design
+            # Gutter is a Frame that is drawn into - current design.
             # self.gutter_Frame = QtWidgets.QFrame()
             self.gutter_Frame = GutterFrame(self.gp_model)
             # TODO smalers 2020-03-24 20 seems too wide
             # self.gutter_Frame.setFixedWidth(20)
             self.gutter_Frame.setFixedWidth(10)
             self.gutter_Frame.setObjectName('gutter')
-            # Start set background of frame...
+            # Start set background of frame:
             # - TODO smalers 2020-03-24 need to enable handling painting
             # - just draw on background color, similar to TSTool
             # self.gutter_Frame.setAutoFillBackground(True)
             # palette = self.gutter_Frame.palette()
             # palette.setColor(self.gutter_Frame.backgroundRole(), Qt.white)
             # self.gutter_Frame.setPalette(palette)
-            # Add an event handler for mouse click
+            # Add an event handler for mouse click.
             #self.command_ListView.mouseReleaseEvent = self.event_handler_gutter_clicked
             self.gutter_Frame.mousePressEvent = self.event_handler_gutter_clicked
-            # Add the gutter to the layout of the CommandListWidget
+            # Add the gutter to the layout of the CommandListWidget.
             self.commands_HBoxLayout_Commands.addWidget(self.gutter_Frame)
 
     def setup_ui_command_list_widget_layout(self) -> None:
@@ -1298,23 +1290,23 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Add a grid layout to group box
+        # Add a grid layout to group box.
         self.commands_GridLayout = QtWidgets.QGridLayout(self.commands_GroupBox)
 
-        # Create a horizontal box layout for the numbered list, command list, and the gutter
+        # Create a horizontal box layout for the numbered list, command list, and the gutter.
         self.commands_HBoxLayout_Commands = QtWidgets.QHBoxLayout()
         self.commands_GridLayout.addLayout(self.commands_HBoxLayout_Commands, 0, 0)
 
-        # Create a horizontal box layout for the buttons
+        # Create a horizontal box layout for the buttons.
         self.commands_HBoxLayout_Buttons = QtWidgets.QHBoxLayout()
         self.commands_GridLayout.addLayout(self.commands_HBoxLayout_Buttons, 1, 0)
 
-        # Set spacing between the two horizontal layouts to none
+        # Set spacing between the two horizontal layouts to none.
         self.commands_HBoxLayout_Commands.setSpacing(0)
 
     def setup_ui_command_list_widget_numbered_list(self) -> None:
         """
-        Setup the numbered list to left of command list.
+        Set up the numbered list to left of command list.
 
         Returns:
             None
@@ -1324,7 +1316,7 @@ class CommandListWidget(object):
         if debug:
             logger = logging.getLogger(__name__)
 
-        # Whether extra space should be added at bottom to align with active command list
+        # Whether extra space should be added at bottom to align with active command list.
         do_extra_space = True
 
         if do_extra_space:
@@ -1337,15 +1329,19 @@ class CommandListWidget(object):
                 palette1 = self.number_Frame.palette()
                 palette1.setColor(self.number_Frame.backgroundRole(), Qt.green)
                 self.number_Frame.setPalette(palette1)
-            # ...end set background of frame so can understand layout.
+                # ...end set background of frame so can understand layout.
             self.number_VBoxLayout = QtWidgets.QVBoxLayout(self.number_Frame)
             self.number_VBoxLayout.setObjectName("number_VBoxLayout")
-            # Don't want any additional buffer around components
+            # Don't want any additional buffer around components.
             self.number_VBoxLayout.setSpacing(0)
             self.number_VBoxLayout.setMargin(0)
             self.number_VBoxLayout.setContentsMargins(0, 0, 0, 0)
             # Start code that is the same as below...
             self.number_ListWidget = QtWidgets.QListWidget()
+            # Set the Number list view font to the same as the command list so that the rows align.
+            font = QtGui.QFont()
+            font.setFamily(_fromUtf8("MS Shell Dlg 2"))
+            self.number_ListWidget.setFont(font)
             self.number_ListWidget.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
             self.number_ListWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
             self.number_ListWidget.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
@@ -1356,9 +1352,9 @@ class CommandListWidget(object):
             self.number_ListWidget.setObjectName("numbered_list")
             self.number_ListWidget.addItem('')
             # ... end of the code that is the same as below
-            # Add the numbered list to the vertical layout
+            # Add the numbered list to the vertical layout.
             self.number_VBoxLayout.addWidget(self.number_ListWidget)
-            # Add a frame to take up space in the lower left
+            # Add a frame to take up space in the lower left.
             self.number_bottom_space_QFrame = QtWidgets.QFrame()
             if debug_components:
                 # Start set background of filler frame...
@@ -1367,17 +1363,17 @@ class CommandListWidget(object):
                 palette2.setColor(self.number_bottom_space_QFrame.backgroundRole(), Qt.red)
                 self.number_bottom_space_QFrame.setPalette(palette2)
                 # ...end set background of filler frame so can understand layout.
-            # Set the initial fixed height
+            # Set the initial fixed height:
             # - this is reset to the actual command list scroll bar height in setup_ui_command_list_widget_commmand_list
             horizontal_scroll_height = 30
             self.number_bottom_space_QFrame.setFixedHeight(horizontal_scroll_height)
             self.number_VBoxLayout.addWidget(self.number_bottom_space_QFrame)
-            # Add the vertical layout to the horizontal layout
+            # Add the vertical layout to the horizontal layout.
             self.commands_HBoxLayout_Commands.addWidget(self.number_Frame)
             self.update_numbered_list_width()
         else:
-            # Create a list next to command list that reflects command line numbers
-            # - keep this code as an example if if not called
+            # Create a list next to command list that reflects command line numbers:
+            # - keep this code as an example if not called
             # - this generally works but has the following problem:
             #
             #  |   |                                                   |
@@ -1386,8 +1382,8 @@ class CommandListWidget(object):
             #  |XXX|<------------- command list scrollbar -----------> |
             #
             #  XXX is part of the numbered list whereas it should be dead space with same height as command
-            # list scrollbar.  This leads to the numbered list not scrolling in sync with command list, even though
-            # the row height is the same.
+            # list scrollbar.  This leads to the numbered list not scrolling in sync with command list,
+            # even though the row height is the same.
             #
             # Start code that is the same as above...
             self.number_ListWidget = QtWidgets.QListWidget()
@@ -1411,7 +1407,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Commands area buttons under the list
+        # Commands area buttons under the list.
         self.commands_RunSelectedCommands_PushButton = QtWidgets.QPushButton(self.commands_GroupBox)
         self.commands_RunSelectedCommands_PushButton.setEnabled(False)
         self.commands_RunSelectedCommands_PushButton.setDefault(False)
@@ -1508,7 +1504,7 @@ class CommandListWidget(object):
         else:
             self.commands_RunSelectedCommands_PushButton.setEnabled(False)
 
-        # Call code to count the errors
+        # Call code to count the errors:
         # - TODO smalers 2020-03-22 this is called elsewhere
         # self.update_ui_command_list_errors()
 
@@ -1517,14 +1513,13 @@ class CommandListWidget(object):
             "Commands ({} commands, {} selected, {} with failures, {} with warnings)".format(
                 total_commands, selected_commands, self.num_errors, self.num_warnings))
 
-        # Update the UI via listener so it can update the indent button state
+        # Update the UI via listener so it can update the indent button state:
         # - TODO smalers 2020-03-13 the listener is the main UI
         self.command_main_ui_listener.update_ui_status()
 
     def x_update_numbered_list(self, index: int) -> None:
         """
-        Add a new line to numbered list in accordance with command list
-        given the index of the command list.
+        Add a new line to numbered list in accordance with command list given the index of the command list.
 
         Args:
             index: index of numbered list to add
@@ -1532,9 +1527,9 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Increment index to index starting at 1
+        # Increment index to index starting at 1.
         index += 1
-        # Add numbers to numbered list
+        # Add numbers to numbered list.
         item = QtWidgets.QListWidgetItem()
         item.setText(str(index))
         item.setTextAlignment(QtCore.Qt.AlignRight)
@@ -1545,8 +1540,7 @@ class CommandListWidget(object):
 
     def update_numbered_list_width(self) -> None:
         """
-        Update the width of the numbered list to allow elements to
-        fit comfortably inside it.
+        Update the width of the numbered list to allow elements to fit comfortably inside it.
 
         Returns:
             None
@@ -1558,10 +1552,10 @@ class CommandListWidget(object):
         maximum_int_width = fm.width(string)
         width = maximum_int_width + 38
         self.number_ListWidget.setFixedWidth(width)
-        # Also set the width on the container frame
+        # Also set the width on the container frame.
         if self.number_bottom_space_QFrame is not None:
             self.number_bottom_space_QFrame.setFixedWidth(width)
-        # Also set the width on the container frame
+        # Also set the width on the container frame:
         # - TODO smalers 2020-03-23 this causes things to misbehave
         self.number_Frame.setFixedWidth(self.number_ListWidget.width())
 
@@ -1576,7 +1570,7 @@ class CommandListWidget(object):
         debug = False
         if debug:
             logger = logging.getLogger(__name__)
-        # Start by clearing previous icons from numbered list and gutter
+        # Start by clearing previous icons from numbered list and gutter.
         blank_icon = QtGui.QIcon()
         for i in range(len(self.gp_model)):
             numbered_list_item = self.number_ListWidget.item(i)
@@ -1586,7 +1580,7 @@ class CommandListWidget(object):
                 gutter_item.setBackground(QtCore.Qt.white)
 
         if not self.gutter_is_list:
-            # Clear by redrawing in background color
+            # Clear by redrawing in background color:
             # - TODO smalers 2020-03-24 need to enable
             # self.gutter_Frame.setAutoFillBackground(True)
             # palette = self.gutter_Frame.palette()
@@ -1594,21 +1588,21 @@ class CommandListWidget(object):
             # self.gutter_Frame.setPalette(palette)
             pass
 
-        # Clear number of warnings and errors
+        # Clear number of warnings and errors.
         self.num_errors = 0
         self.num_warnings = 0
 
-        # Now update the numbered list and gutter with current errors and warnings
+        # Now update the numbered list and gutter with current errors and warnings.
         for i in range(len(self.gp_model)):
             if command_phase_type is CommandPhaseType.INITIALIZATION:
-                # Will be used after loading a command file, but have not run yet
+                # Will be used after loading a command file, but have not run yet.
                 command_status = self.gp_model.gp.commands[i].command_status.initialization_status
                 if debug:
                     logger.debug("Command [" + str(i) + "] initialization status = " + str(command_status))
             elif command_phase_type is CommandPhaseType.DISCOVERY:
                 command_status = self.gp_model.gp.commands[i].command_status.discovery_status
             elif command_phase_type is CommandPhaseType.RUN:
-                # Will be used by default, after running commands
+                # Will be used by default, after running commands.
                 command_status = self.gp_model.gp.commands[i].command_status.run_status
                 if debug:
                     logger.debug("Command [" + str(i) + "] run status = " + str(command_status))
@@ -1629,7 +1623,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # Add items to gutter
+        # Add items to gutter.
         item = QtWidgets.QListWidgetItem()
         item.setSizeHint(QtCore.QSize(-1, 16))
         self.gutter_ListWidget.addItem(item)
@@ -1638,8 +1632,7 @@ class CommandListWidget(object):
         """
         This method is no longer used.  Instead, use set_gp_model().
 
-        Assign the command list to the passed in command list
-        coming from geoprocessor in the GeoProcessorListModel.
+        Assign the command list to the passed in command list coming from geoprocessor in the GeoProcessorListModel.
 
         Args:
             command_list: Array of commands
@@ -1660,7 +1653,7 @@ class CommandListWidget(object):
         Returns:
             None
         """
-        # If inserting blank line
+        # If inserting blank line.
         if not command_string:
             item = QtWidgets.QListWidgetItem()
             item.setText("")
@@ -1679,7 +1672,7 @@ class CommandListWidget(object):
         item.setSizeHint(qsize)
         if command_string.strip() == "/*":
             self.comment_block = True
-        # Check to see if comment block started or ended
+        # Check to see if comment block started or ended.
         if command_string.strip()[0] == '#' or self.comment_block is True:
             item.setForeground(QtGui.QColor(68, 121, 206))
         self.command_ListView.addItem(item)
@@ -1691,20 +1684,19 @@ class CommandListWidget(object):
         """
         This method is no longer used.  Instead, update data in the model.
 
-        Update the command list widget from a command list that
-        has already been initialized.
+        Update the command list widget from a command list that has already been initialized.
 
         Returns:
             None
         """
-        # Start by clearing all data from the command list widget
+        # Start by clearing all data from the command list widget.
         # self.command_ListView.clear()
         self.number_ListWidget.clear()
         self.gutter_ListWidget.clear()
 
         self.comment_block = False
 
-        # Loop through command_list from geoprocessor and add data to command list widget
+        # Loop through command_list from geoprocessor and add data to command list widget.
         for i, command in self.gp_model.gp.commands:
             command_string = command.command_string
             # self.update_command_list(command_string)
@@ -1712,4 +1704,3 @@ class CommandListWidget(object):
             self.update_gutter()
 
         self.number_ListWidget.addItem("")
-

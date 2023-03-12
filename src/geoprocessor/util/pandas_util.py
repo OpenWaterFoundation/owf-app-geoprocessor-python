@@ -1,18 +1,18 @@
 # pandas_util - utility functions related to the pandas library
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -54,29 +54,30 @@ def create_data_frame_from_delimited_file(file_path: str, delimiter: str):
         A pandas data frame object. This is the object that support the GeoProcessor's Table object.
     """
 
-    # Define and return the data frame from the delimited file. Pass the delimited file's delimiter as the sep argument.
+    # Define and return the data frame from the delimited file.
+    # Pass the delimited file's delimiter as the sep argument.
     df = pd.read_csv(file_path, sep=delimiter)
     return df
 
 
 def create_data_frame_from_excel(excel_workbook_path: str, excel_worksheet_name: str = None):
     """
-    Creates a pandas data frame object from an excel file.
+    Creates a pandas data frame object from an Excel file.
 
     Args:
-        excel_workbook_path (str): the full pathname to the excel file
-        excel_worksheet_name (str): the name of the worksheet to read from the excel workbook
+        excel_workbook_path (str): the full pathname to the Excel file
+        excel_worksheet_name (str): the name of the worksheet to read from the Excel workbook
 
     Returns:
         A pandas data frame object. This is the object that support the GeoProcessor's Table object.
     """
 
-    # If an excel worksheet is defined, define and return the data frame from the worksheet.
+    # If an Excel worksheet is defined, define and return the data frame from the worksheet.
     if excel_worksheet_name:
         df = pd.read_excel(excel_workbook_path, sheet_name=excel_worksheet_name)
         return df
 
-    # If an excel worksheet is not defined, define and return the data frame from the FIRST worksheet.
+    # If an eEcel worksheet is not defined, define and return the data frame from the FIRST worksheet.
     else:
         df = pd.read_excel(excel_workbook_path)
         return df
@@ -84,17 +85,18 @@ def create_data_frame_from_excel(excel_workbook_path: str, excel_worksheet_name:
 
 def create_excel_workbook_obj(excel_workbook_path: str):
     """
-    Creates a pandas excel workbook object from an excel file.
+    Creates a pandas excel workbook object from an Excel file.
 
     Args:
-        excel_workbook_path (str): the full pathname to the excel file
+        excel_workbook_path (str): the full pathname to the Excel file
 
     Returns:
-        A pandas excel workbook object. This object allows for the GeoProcessor to read the properties of the Excel
-         workbook. For example, it can return the names of all of the available worksheets.
+        A pandas excel workbook object.
+        This object allows for the GeoProcessor to read the properties of the Excel workbook.
+        For example, it can return the names of all the available worksheets.
     """
 
-    # Define and return the pandas excel workbook object from the excel file.
+    # Define and return the pandas excel workbook object from the Excel file.
     xl = pd.ExcelFile(excel_workbook_path)
     return xl
 
@@ -109,8 +111,8 @@ def write_df_to_delimited_file(df, output_file_full_path: str, include_col_list:
         output_file_full_path (str): the full pathname to an output delimited file
         include_col_list (list of strings): A list of Table columns to write to the delimited file
         include_index (bool): If TRUE, write the index column. If FALSE, exclude the index column.
-        delimiter (str): the delimiter symbol to use in the output delimited file. Must be a single character. Default
-         value is a comma.
+        delimiter (str): the delimiter symbol to use in the output delimited file.
+            Must be a single character. Default value is a comma.
 
     Returns: None
     """
@@ -122,13 +124,13 @@ def write_df_to_delimited_file(df, output_file_full_path: str, include_col_list:
 def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, include_col_list: [str],
                       include_index: bool) -> None:
     """
-    Writes a pandas data frame object to an excel file.
+    Writes a pandas data frame object to an Excel file.
 
     Args:
         df (object): the pandas data frame object to write
-        excel_workbook_path (str): the full pathname to an excel workbook (either existing or non-existing)
+        excel_workbook_path (str): the full pathname to an Excel workbook (either existing or non-existing)
         excel_worksheet_name (str): the worksheet name to write to (either existing or non-existing)
-        include_col_list (list of strings): A list of Table columns to write to the excel file
+        include_col_list (list of strings): A list of Table columns to write to the Excel file
         include_index (bool): If TRUE, write out column names. If FALSE, do not write column names.
 
     Returns: None
@@ -159,8 +161,8 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
     except Exception:
         pass
 
-    # If the output excel file already exists, take into consideration the current file format and the current
-    # worksheets.
+    # If the output Excel file already exists,
+    # take into consideration the current file format and the current worksheets.
     if os.path.exists(excel_workbook_path):
 
         # TODO egiles 2018-04-25 Currently this function does not work. Need to fix.
@@ -173,12 +175,12 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
             book = xlwt.Workbook(excel_workbook_path)
             writer.book = book
 
-            # Write the df to the excel workbook with the given worksheet name.
+            # Write the df to the Excel workbook with the given worksheet name.
             df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
             writer.save()
 
         else:
-            # Write the table to an existing excel file in XLSX format.
+            # Write the table to an existing Excel file in XLSX format.
 
             # REf: https://stackoverflow.com/questions/20219254/
             # how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas
@@ -198,11 +200,11 @@ def write_df_to_excel(df, excel_workbook_path: str, excel_worksheet_name: str, i
             writer.save()
 
     else:
-        # If the output excel file does not already exists, configure which excel file version to use.
+        # If the output Excel file does not already exist, configure which Excel file version to use.
 
         # Set the writer object.
         writer = pd.ExcelWriter(excel_workbook_path)
 
-        # Write the df to the excel workbook with the given worksheet name.
+        # Write the df to the Excel workbook with the given worksheet name.
         df.to_excel(writer, sheet_name=excel_worksheet_name, index=include_index, columns=include_col_list)
         writer.save()

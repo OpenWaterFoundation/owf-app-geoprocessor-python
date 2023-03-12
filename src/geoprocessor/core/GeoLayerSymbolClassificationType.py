@@ -1,7 +1,7 @@
 # GeoLayerSymbolClassificationType - classification type enumeration for GeoLayerSymbol
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+
+# The following is needed to allow type hinting -> GeoLayer, and requires Python 3.7+.
 # See:  https://stackoverflow.com/questions/33533148/
 #         how-do-i-specify-that-the-return-type-of-a-method-is-the-same-as-the-class-itsel
 from __future__ import annotations
@@ -46,7 +46,7 @@ class GeoLayerSymbolClassificationType(Enum):
         """
         Return dictionary of class data to support JSON serialization using json package.
         Don't serialize all the data because daa are in the typical spatial data format.
-        Instead serialize what is needed to support web mapping and other visualization.
+        Instead, serialize what is needed to support web mapping and other visualization.
         """
         return {
             "classificationType": self.name

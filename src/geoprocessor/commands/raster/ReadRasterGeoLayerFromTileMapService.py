@@ -1,18 +1,18 @@
 # ReadRasterGeoLayerFromTileMapService - command to read a GeoLayer from a web map service (WMS)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -39,10 +39,10 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
     """
     Read a raster GeoLayer from a tile map service (TMS).
 
-    This command reads a raster GeoLayer from a file and creates a GeoLayer object within the
-    geoprocessor. The GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
+    This command reads a raster GeoLayer from a file and creates a GeoLayer object within the geoprocessor.
+    The GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
 
-    TODO smalers 2020-04-09 need to ealuate for processing, for now use to store the URL
+    TODO smalers 2020-04-09 need to ealuate for processing, for now use to store the URL.
     """
 
     # Define the command parameters.
@@ -54,13 +54,13 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
         CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Read a raster GeoLayer from a Tile Map Service (TMS).\n"\
         "This layer is typically used for a background layer, such as when creating a map."
     __command_metadata['EditorType'] = "Simple"
 
-    # Parameter Metadata
+    # Parameter Metadata.
     __parameter_input_metadata = dict()
     # InputUrl
     __parameter_input_metadata['InputUrl.Description'] = "URL to WMS server"
@@ -108,23 +108,23 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
     __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
     __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
 
-    # Choices for IfGeoLayerIDExists, used to validate parameter and display in editor
+    # Choices for IfGeoLayerIDExists, used to validate parameter and display in editor.
     __choices_IfGeoLayerIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
     def __init__(self) -> None:
         """
-        Initialize the command
+        Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ReadRasterGeoLayerFromTileMapService"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Parameter Metadata
+        # Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
@@ -181,7 +181,7 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
             raise CommandParameterError(warning_message)
 
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_url: str, geolayer_id: str) -> bool:
@@ -201,7 +201,7 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
         # Boolean to determine if the read process should be run. Set to true until an error occurs.
         run_read = True
 
-        # If the input URL is not a valid URL, raise a FAILURE.
+        # If the input URL is not a valid URL, raise a FAILURE:
         # - TODO need to implement some type of check
         # if not os.path.isfile(input_file_abs):
         #     run_read = False
@@ -212,8 +212,8 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
         #     self.command_status.add_to_log(CommandPhaseType.RUN,
         #                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
-        # pv_IfGeoLayerIDExists value.
+        # If the GeoLayerID is the same as an already-registered GeoLayerID,
+        # react according to the pv_IfGeoLayerIDExists value.
         if self.command_processor.get_geolayer(geolayer_id):
             # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
@@ -249,14 +249,14 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE,
                                                                 message, recommendation))
 
-        # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
+        # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed.
+        # If FALSE, one or many checks failed.
         return run_read
 
     def run_command(self) -> None:
         """
-        Run the command. Read the layer file from a Tile Map Service (TMS), create a GeoLayer object, and add to the
-        GeoProcessor's geolayer list.
+        Run the command. Read the layer file from a Tile Map Service (TMS), create a GeoLayer object,
+        and add to the GeoProcessor's geolayer list.
 
         Returns: None.
 
@@ -304,8 +304,7 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
         # noinspection PyPep8Naming
         pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
-        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property}
-        # syntax
+        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         # input_file_absolute = io_util.verify_path_for_os(
         #     io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
         #                              self.command_processor.expand_parameter_value(pv_InputFile, self)))
@@ -340,15 +339,15 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
                                               input_path_full=pv_InputUrl,
                                               input_path=pv_InputUrl)
 
-                # Set the properties
+                # Set the properties.
                 properties = command_util.parse_properties_from_parameter_string(pv_Properties)
-                # Set the properties as additional properties (don't just reset the properties dictionary)
+                # Set the properties as additional properties (don't just reset the property dictionary).
                 geolayer_obj.set_properties(properties)
 
                 self.command_processor.add_geolayer(geolayer_obj)
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error reading RasterGeoLayer {} from Tile Map Service {}.".format(
                     pv_GeoLayerID, pv_InputUrl)
@@ -357,7 +356,7 @@ class ReadRasterGeoLayerFromTileMapService(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise RuntimeError if any errors occurred
+        # Determine success of command processing. Raise RuntimeError if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

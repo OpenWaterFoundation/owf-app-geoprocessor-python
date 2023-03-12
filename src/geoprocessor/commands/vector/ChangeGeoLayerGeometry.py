@@ -1,18 +1,18 @@
 # ChangeGeoLayerGeometry - command to change a GeoLayer's geometry to new geometry
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -49,7 +49,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
         CommandParameterMetadata("IfGeoLayerIDExists", str),
         CommandParameterMetadata("TemporaryFolder", str)]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Change a GeoLayer's geometry to new geometry and create a new layer.\n"
@@ -57,7 +57,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
     )
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
 
     # InputGeoLayerID
@@ -104,7 +104,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
     __parameter_input_metadata['TemporaryFolder.FileSelector.SelectFolder'] = True
     __parameter_input_metadata['TemporaryFolder.FileSelector.Type'] = "Write"
 
-    # TODO smalers 2020-07-07 evaluate whether to enable the parameter
+    # TODO smalers 2020-07-07 evaluate whether to enable the parameter:
     #  - by default leave temporary files so they can be reviewed.
     # RemoveTemporaryFiles
     # self.parameter_input_metadata['RemoveTemporaryFiles.Description'] = "remove temporary files"
@@ -120,18 +120,18 @@ class ChangeGeoLayerGeometry(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ChangeGeoLayerGeometry"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -183,7 +183,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_geolayer_id: str) -> bool:
@@ -198,8 +198,8 @@ class ChangeGeoLayerGeometry(AbstractCommand):
         """
 
         logger = logging.getLogger(__name__)
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
@@ -241,7 +241,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
 
         # Obtain the parameter values.
 
-        # Get the 'Input GeoLayerID' parameter
+        # Get the 'Input GeoLayerID' parameter.
         # noinspection PyPep8Naming
         pv_InputGeoLayerID = self.get_parameter_value("InputGeoLayerID")
         # noinspection PyPep8Naming
@@ -252,10 +252,10 @@ class ChangeGeoLayerGeometry(AbstractCommand):
         # noinspection PyPep8Naming
         pv_TemporaryFolder = self.get_parameter_value("TemporaryFolder")
 
-        # TODO smalers 2020-11-17 evaluate whether need to deal with temporary files
-        # Get the temporary folder based on TemporaryFolder parameter
+        # TODO smalers 2020-11-17 evaluate whether need to deal with temporary files.
+        # Get the temporary folder based on TemporaryFolder parameter.
         # if pv_TemporaryFolder is not None and pv_TemporaryFolder != "":
-        #     # Convert the TemporaryFolder parameter value to an absolute path and expand for ${Property} syntax
+        #     # Convert the TemporaryFolder parameter value to an absolute path and expand for ${Property} syntax.
         #     temp_folder_absolute = io_util.verify_path_for_os(
         #         io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
         #                                  self.command_processor.expand_parameter_value(
@@ -290,9 +290,9 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                 algorithm = None
                 algorithm_parameters = {}
                 if input_geometry_upper == "POINT":
-                    # Input geometry is point
+                    # Input geometry is point.
                     if output_geometry_upper == "LINESTRING":
-                        # Change points to lines
+                        # Change points to lines.
                         algorithm = "qgis:pointstopath"
                         # algorithm_parameters = {'INPUT': input_file, 'ORDER_FIELD': 'fid', OUTPUT: output_file}
 
@@ -315,7 +315,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                     else:
-                        # Unhandled
+                        # Unhandled.
                         self.warning_count += 1
                         message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
@@ -325,9 +325,9 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                 elif input_geometry_upper == "LINESTRING":
-                    # Input geometry is line
+                    # Input geometry is line.
                     if output_geometry_upper == "POINT":
-                        # Change lines to point
+                        # Change lines to point.
                         algorithm = "saga:convertlinestopoints"
                         # algorithm_parameters = {"LINES":input_file, "POINTS": output_file}
 
@@ -340,7 +340,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                     elif output_geometry_upper == "POLYGON":
-                        # Change lines to polygons
+                        # Change lines to polygons:
                         # - a simple example using polygonize did not work so need more evaluation
                         alg_to_use = 1
                         if alg_to_use == 1:
@@ -362,7 +362,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                 'OUTPUT': "memory:"
                             }
                     else:
-                        # Unhandled
+                        # Unhandled.
                         self.warning_count += 1
                         message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
@@ -372,9 +372,9 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                 elif input_geometry_upper == "POLYGON":
-                    # Input geometry is polygon
+                    # Input geometry is polygon.
                     if output_geometry_upper == "POINT":
-                        # Change polygons to points
+                        # Change polygons to points.
 
                         self.warning_count += 1
                         message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
@@ -385,7 +385,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                     elif output_geometry_upper == "LINESTRING":
-                        # Change polygons to lines
+                        # Change polygons to lines.
 
                         self.warning_count += 1
                         message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
@@ -396,7 +396,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                     else:
-                        # Unhandled
+                        # Unhandled.
                         self.warning_count += 1
                         message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                             pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
@@ -406,7 +406,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                 else:
-                    # Not handled
+                    # Not handled.
                     self.warning_count += 1
                     message = "Changing GeoLayer {} from {} geometry to {} geometry is not supported.".format(
                         pv_InputGeoLayerID, input_geometry, pv_OutputGeometry)
@@ -445,13 +445,13 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                     # TODO smalers 2020-07-12 need to enable removing the temporary split files,
                     # but workflow will neeed to copy or read/write to another location.
                     # @jurentie
-                    # remove files if specified in parameters
+                    # Remove files if specified in parameters.
                     # TODO @jurentie figure out how to delete files after using them...
                     # remove_files = self.get_parameter_value("RemoveTemporaryFiles")
                     # files = glob.glob(temp_directory + "/*")
                     # print(files)
                     # if remove_files == None:
-                    #     # Remove all files from directory
+                    #     # Remove all files from directory.
                     #     for f in files:
                     #         os.remove(f)
                     #     os.rmdir(temp_directory)
@@ -476,7 +476,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                                                 recommendation))
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected converting GeoLayer {} geometry.".format(pv_InputGeoLayerID)
                 recommendation = "Check the log file for details."
@@ -485,7 +485,7 @@ class ChangeGeoLayerGeometry(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

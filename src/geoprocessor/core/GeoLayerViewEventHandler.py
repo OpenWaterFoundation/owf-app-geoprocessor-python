@@ -1,7 +1,7 @@
 # GeoLayerView - Class to hold a layer and its symbology
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -36,8 +36,8 @@ class GeoLayerViewEventHandler(object):
                  description: str = "",
                  properties: dict = None) -> None:
         """
-        Construct a new GeoLayerViewEventHandler, which represents a UI event handler that should be implemented
-        in application code.
+        Construct a new GeoLayerViewEventHandler,
+        which represents a UI event handler that should be implemented in application code.
 
         Args:
             event_type (str): Event type, need to standardize.
@@ -45,26 +45,26 @@ class GeoLayerViewEventHandler(object):
             description (str): Event description.
             properties (dict): Properties for the event handler.
         """
-        # Name for the event
+        # Name for the event.
         self.name: str = name
 
-        # Description for the event
+        # Description for the event.
         self.description: str = description
 
-        # Event type, currently a string, may change to enumeration
+        # Event type, currently a string, may change to enumeration.
         self.event_type: str = event_type
 
-        # Whether the event has a visualization
+        # Whether the event has a visualization:
         # - this is determined by examining the event configuration file and finding at least one click event action
         self.has_visualization: bool or None = None
 
-        # Properties for the event
+        # Properties for the event.
         self.properties: {} = None
         if properties is None:
-            # Initialize an empty dictionary
+            # Initialize an empty dictionary.
             self.properties = {}
         else:
-            # Use the dictionary that was passed in
+            # Use the dictionary that was passed in.
             self.properties = properties
 
     def determine_has_visualization(self, map_config_path):
@@ -96,18 +96,18 @@ class GeoLayerViewEventHandler(object):
         try:
             event_config_path = self.properties['eventConfigPath']
         except KeyError:
-            # Property is not found
+            # Property is not found:
             # - no visualization
             logger.info("Event handler has no 'eventConfigPath' property - not checking for visualizations.")
             self.has_visualization = False
             return
 
-        # Get the absolute path for the configuration file.
+        # Get the absolute path for the configuration file:
         # - if relative, it is relative to the map configuration file.
         map_config_folder = Path(map_config_path).parent
         event_config_path_full = io_util.to_absolute_path(map_config_folder, event_config_path)
         logger.info("Event handler configuration file full path is: {}".format(event_config_path_full))
-        # TODO smalers 2020 evaluate whether to handle exception and throw
+        # TODO smalers 2020 evaluate whether to handle exception and throw.
         # logger.info("Event configuration file '{}' is not readable.".format(event_config_path_full))
         # Read the JSON file into an object.
         event_config_path_full2 = Path(event_config_path_full)
@@ -127,7 +127,7 @@ class GeoLayerViewEventHandler(object):
                 logger.info("Detected event actions for layer.")
                 self.has_visualization = True
         except KeyError:
-            # No actions in the file
+            # No actions in the file.
             logger.info("No event actions are configured for layer.")
             self.has_visualization = False
 

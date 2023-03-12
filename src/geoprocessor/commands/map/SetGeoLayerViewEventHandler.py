@@ -1,18 +1,18 @@
 # SetGeoLayerViewEventHandler - command to set a GeoLayerView event handler
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -49,7 +49,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
         CommandParameterMetadata("Description", type("")),
         CommandParameterMetadata("Properties", type(""))]
 
-    # Command metadata for command editor display.
+    # Command metadata for command editor display:
     # - The * character is equivalent to two spaces for indent.
     __command_metadata = dict()
     __command_metadata['Description'] =\
@@ -63,7 +63,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
         "*          GeoLayer + GeoLayerSymbol + EventHandler [ ]"
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoMapID
     __parameter_input_metadata['GeoMapID.Description'] = "GeoMap identifier"
@@ -77,7 +77,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
     __parameter_input_metadata['GeoLayerViewGroupID.Required'] = False
     __parameter_input_metadata['GeoLayerViewGroupID.Tooltip'] = "The GeoLayerViewGroup identifier, can use ${Property}."
     __parameter_input_metadata['GeoLayerViewGroupID.Value.Default.Description'] = "last added GeoLayerViewGroup ID"
-    # GeoLayerViewID
+    # GeoLayerViewID:
     # - TODO smalers 2020-08-29 evaluate whether to make optional
     __parameter_input_metadata['GeoLayerViewID.Description'] = "GeoLayerView identifier"
     __parameter_input_metadata['GeoLayerViewID.Label'] = "GeoLayerViewID"
@@ -110,18 +110,18 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "SetGeoLayerViewEventHandler"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -153,13 +153,13 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
+        # Properties - verify that the properties can be parsed.
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
         try:
             command_util.parse_properties_from_parameter_string(pv_Properties)
         except ValueError as e:
-            # Use the exception
+            # Use the exception.
             message = str(e)
             recommendation = "Check the properties string format."
             warning_message += "\n" + message
@@ -176,7 +176,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geomap_id, geolayerviewgroup_id, geolayerview_id) -> bool:
@@ -208,7 +208,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
                                            CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             should_run_command.append(False)
         else:
-            # TODO smalers 2020-08-29 need to add runtime checks
+            # TODO smalers 2020-08-29 need to add runtime checks.
             # If the GeoLayerViewGroup ID is not an existing GeoLayerViewGroup ID, fail.
             # geolayerviewgroup = geomap.get_geolayerviewgroup(geolayerviewgroup_id)
             # if geolayerviewgroup is None:
@@ -249,11 +249,11 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the parameter values
+        # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_GeoMapID = self.get_parameter_value("GeoMapID")
         if pv_GeoMapID is None or pv_GeoMapID == "":
-            # No map ID was specified so get the single map from the processor, complain if can't find
+            # No map ID was specified so get the single map from the processor, complain if can't find.
             if len(self.command_processor.geomaps) == 0:
                 self.warning_count += 1
                 message = "No GeoMaps have been created.  Cannot determine default GeoMap."
@@ -262,7 +262,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             else:
-                # Use the last added map
+                # Use the last added map.
                 geomap_id = self.command_processor.last_geomap_added.id
                 self.logger.info('Using default map GeoMapID: {}'.format(geomap_id))
         else:
@@ -296,15 +296,15 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
         # noinspection PyPep8Naming
         pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
-        # Run the checks on the parameter values. Only continue if the checks passed.
+        # Run the checks on the parameter values. Only continue if the checks passed:
         # - TODO smalers 2020-03-18 not sure if the following is useful because need to handle checks granularly
         if self.check_runtime_data(geomap_id, pv_GeoLayerViewGroupID, pv_GeoLayerViewID):
             # noinspection PyBroadException
             try:
-                # Initialize so can check below
+                # Initialize so can check below.
                 geolayerview = None
                 geolayerviewgroup = None
-                # Get the GeoMap
+                # Get the GeoMap.
                 geomap = self.command_processor.get_geomap(geomap_id)
                 if geomap is None:
                     self.warning_count += 1
@@ -314,9 +314,9 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
                 else:
-                    # Get the GeoLayerViewGroup
+                    # Get the GeoLayerViewGroup.
                     if pv_GeoLayerViewGroupID is None or pv_GeoLayerViewGroupID == "":
-                        # No layer view ID was specified so get from the map, complain if can't find
+                        # No layer view ID was specified so get from the map, complain if can't find.
                         if len(geomap.geolayerviewgroups) == 0:
                             self.warning_count += 1
                             message = "No GeoLayerViewGroups have been created for the map. " \
@@ -327,7 +327,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
                                                            CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                             recommendation))
                         else:
-                            # Use the last added map
+                            # Use the last added map.
                             geolayerviewgroup_id = self.command_processor.last_geolayerviewgroup_added.id
                             self.logger.info('Using default GeoLayerViewGroupID: {}'.format(geolayerviewgroup_id))
                     else:
@@ -344,7 +344,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE,
                                                                         message, recommendation))
                     else:
-                        # Get the GeoLayerView
+                        # Get the GeoLayerView.
                         geolayerview = geolayerviewgroup.get_geolayerview(pv_GeoLayerViewID)
                         if geolayerview is None:
                             self.warning_count += 1
@@ -357,17 +357,17 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
                                                                             message, recommendation))
 
                 if (geomap is not None) and (geolayerviewgroup is not None) and (geolayerview is not None):
-                    # Set the properties
+                    # Set the properties.
                     properties = command_util.parse_properties_from_parameter_string(pv_Properties)
 
                     event_handler = GeoLayerViewEventHandler(pv_EventType, properties=properties, name=pv_Name,
                                                              description=pv_Description)
 
-                    # Append the event handler
+                    # Append the event handler.
                     geolayerview.event_handlers.append(event_handler)
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error setting event handler for GeoLayerView {}.".format(pv_GeoLayerViewID)
                 recommendation = "Check the log file for details."
@@ -375,7 +375,7 @@ class SetGeoLayerViewEventHandler(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

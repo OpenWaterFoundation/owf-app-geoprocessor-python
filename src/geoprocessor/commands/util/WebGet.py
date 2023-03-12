@@ -1,18 +1,18 @@
 # WebGet - command to retrieve a file from the web
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -61,7 +61,7 @@ class WebGet(AbstractCommand):
         CommandParameterMetadata("Timeout", int),
         CommandParameterMetadata("ResponseCodeProperty", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Download a file from a URL." \
                                         "HTTPS certification is not required."
@@ -113,18 +113,18 @@ class WebGet(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
-        # Name of command for menu and window title
+        # Name of command for menu and window title.
         self.command_name = "WebGet"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -154,7 +154,7 @@ class WebGet(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that the timeout is a number
+        # Check that the timeout is a number.
         # noinspection PyPep8Naming
         pv_Timeout = self.get_parameter_value(parameter_name='Timeout', command_parameters=command_parameters)
         if pv_Timeout is not None:
@@ -174,7 +174,7 @@ class WebGet(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, output_file_abs: str) -> bool:
@@ -204,14 +204,13 @@ class WebGet(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                   message, recommendation))
 
-        # Return the Boolean to determine if the webget process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
+        # Return the Boolean to determine if the webget process should be run. If TRUE, all checks passed.
+        # If FALSE, one or many checks failed.
         return run_webget
 
     @ staticmethod
     def __rename_files_in_a_folder(list_of_files: [str], folder_path: str, new_filename: str) -> None:
         """
-
         Renames files within a folder to a new name. The files retain their pathname (they stay in the same folder)
         and retain their file extension.
 
@@ -231,14 +230,14 @@ class WebGet(AbstractCommand):
         # Iterate over the files to be renamed.
         for existing_file in list_of_files:
 
-            # Get the full path of the existing file
+            # Get the full path of the existing file.
             existing_path = os.path.join(folder_path, existing_file)
 
-            # Get the file extension of the existing file
+            # Get the file extension of the existing file.
             existing_extension = io_util.get_extension(existing_path)
 
-            # Create the full path of the renamed file. If an extension was included in the original filename, then that
-            # same extension is included in the new filename.
+            # Create the full path of the renamed file. If an extension was included in the original filename,
+            # then that same extension is included in the new filename.
             new_path = os.path.join(folder_path, "{}.{}".format(new_filename, existing_extension))
             os.rename(existing_path, new_path)
 
@@ -255,7 +254,7 @@ class WebGet(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the parameter values
+        # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_URL = self.get_parameter_value("URL")
         # noinspection PyPep8Naming
@@ -266,7 +265,7 @@ class WebGet(AbstractCommand):
         pv_Password = self.get_parameter_value("Password", default_value=None)
         # noinspection PyPep8Naming
         pv_Timeout = self.get_parameter_value("Timeout", default_value=None)
-        timeout = None  # Default is no timeout
+        timeout = None  # Default is no timeout.
         if pv_Timeout is not None:
             timeout = float(WebGet.__parameter_input_metadata['Timeout.Value.Default'])
         # noinspection PyPep8Naming
@@ -282,7 +281,7 @@ class WebGet(AbstractCommand):
                 self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
         else:
-            # Don't default the output filename if a URL
+            # Don't default the output filename if a URL.
             # original_filename = io_util.get_filename(pv_URL) + "." + io_util.get_extension(pv_URL)
             original_filename = io_util.get_filename(pv_URL)
             output_file_absolute = io_util.verify_path_for_os(io_util.to_absolute_path(
@@ -296,7 +295,7 @@ class WebGet(AbstractCommand):
                 # Get the output folder.
                 output_folder = os.path.dirname(output_file_absolute)
 
-                # Get the URL file and convert it into a request Response object
+                # Get the URL file and convert it into a request Response object.
                 # Authentication Reference: http://docs.python-requests.org/en/master/user/authentication/
                 # TODO smalers 2020-10-18 does this need the following?
                 #   https://urllib3.readthedocs.io/en/latest/user-guide.html#ssl
@@ -307,7 +306,7 @@ class WebGet(AbstractCommand):
                 else:
                     r = requests.get(url_abs, stream=True, timeout=timeout, verify=False)
 
-                # Check the exit status
+                # Check the exit status.
                 if r.status_code == 200:
                     # Success.  Get the filename of the URL and the output file.
                     url_filename = io_util.get_filename(url_abs)
@@ -327,8 +326,9 @@ class WebGet(AbstractCommand):
                             downloaded_zip_file.write(r.content)
                         downloaded_files.append("{}.zip".format(url_filename))
 
-                        # Determine if the downloaded zip file(s) should be renamed. If the filename is %f then the
-                        # filenames of the downloaded products should be the same as the url filenames
+                        # Determine if the downloaded zip file(s) should be renamed.
+                        # If the filename is %f then the filenames of the downloaded products should be the
+                        # same as the url filenames.
                         if not output_filename == '%f':
                             self.__rename_files_in_a_folder(list_of_files=downloaded_files, folder_path=output_folder,
                                                             new_filename=output_filename)
@@ -341,18 +341,19 @@ class WebGet(AbstractCommand):
                         with open(output_file_absolute, "wb") as downloaded_file:
                             downloaded_file.write(r.content)
 
-                        # Determine if the downloaded file should be renamed. If the filename is %f then the filename
-                        # of the downloaded product should be the same as the url filename
+                        # Determine if the downloaded file should be renamed.
+                        # If the filename is %f then the filename of the downloaded product should be the
+                        # same as the url filename.
                         # TODO smalers 2020-07-28 not sure if this logic is correct, need to handle %f better?
                         if output_filename == '%f':
                             self.__rename_files_in_a_folder(list_of_files=[os.path.basename(url_abs)],
                                                             folder_path=output_folder,
                                                             new_filename=output_filename)
-                            # Save the output file in the processor, used by the UI to list output files
+                            # Save the output file in the processor, used by the UI to list output files.
                         self.command_processor.add_output_file(output_file_absolute)
 
                     if pv_ResponseCodeProperty is not None:
-                        # Set the processor property with the return code
+                        # Set the processor property with the return code.
                         self.command_processor.set_property(pv_ResponseCodeProperty,r.status_code)
 
                 else:
@@ -365,7 +366,7 @@ class WebGet(AbstractCommand):
                                                                                           message, recommendation))
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error {} ({}) downloading file from URL: {}".format(
                     r.status_code, r.reason, url_abs)

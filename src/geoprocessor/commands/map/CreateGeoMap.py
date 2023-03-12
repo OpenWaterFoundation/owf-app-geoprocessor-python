@@ -1,18 +1,18 @@
 # CreateGeoMap - command to create a new GeoMap
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -58,7 +58,7 @@ class CreateGeoMap(AbstractCommand):
         CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoMapIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display:
     # - * character takes up about two spaces in the following
     __command_metadata = dict()
     __command_metadata['Description'] = "Create a new GeoMap, for display and to save the map configuration.\n"\
@@ -69,7 +69,7 @@ class CreateGeoMap(AbstractCommand):
         "            GeoLayer + GeoLayerSymbol\n"
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # NewGeoMapID
     __parameter_input_metadata['NewGeoMapID.Description'] = "identifier for the new GeoMap"
@@ -126,12 +126,12 @@ class CreateGeoMap(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "CreateGeoMap"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
         # Command Parameter Metadata
@@ -184,7 +184,7 @@ class CreateGeoMap(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
+        # Properties - verify that the properties can be parsed.
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
         try:
@@ -225,15 +225,15 @@ class CreateGeoMap(AbstractCommand):
              If False, at least one check failed and the GeoMap should not be created.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
 
         # If the GeoMapID is the same as an already-existing GeoMapID, raise a WARNING or FAILURE
-        # (depends on the value of the IfGeoMapIDExists parameter.)
+        # (depends on the value of the IfGeoMapIDExists parameter).
         should_run_command.append(validator_util.run_check(self, "IsGeoMapIDUnique", "NewGeoMapID", geomap_id, None))
 
         # Return the Boolean to determine if the process should be run.
@@ -268,7 +268,7 @@ class CreateGeoMap(AbstractCommand):
         # noinspection PyPep8Naming
         pv_DataPath = self.get_parameter_value("DataPath")
         if pv_DataPath is None:
-            # Set to the default
+            # Set to the default.
             # noinspection PyPep8Naming
             pv_DataPath = self.parameter_input_metadata['DataPath.Value.Default']
         # noinspection PyPep8Naming
@@ -291,17 +291,17 @@ class CreateGeoMap(AbstractCommand):
         if self.check_runtime_data(pv_NewGeoMapID, pv_CRS):
             # noinspection PyBroadException
             try:
-                # TODO smalers 2020-03-09 need to decide if manage a list of QGIS maps or just GeoProcessor form
-                # Create a new GeoMap and add it to the GeoProcesor's geomaps list if the ID does not exist.
+                # TODO smalers 2020-03-09 need to decide if manage a list of QGIS maps or just GeoProcessor form.
+                # Create a new GeoMap and add it to the GeoProcesor's geomaps list if the ID does not exist:
                 # - this will automatically add as the latest GeoMapProject
                 self.logger.debug("Creating map with ID: '" + str(pv_NewGeoMapID) + "' CRS='" + str(pv_CRS) + "'")
                 new_geomap = GeoMap(geomap_id=pv_NewGeoMapID, name=pv_Name, description=pv_Description, crs_code=pv_CRS,
                                     data_path=pv_DataPath)
                 self.command_processor.add_geomap(new_geomap)
 
-                # Set the properties
+                # Set the properties.
                 properties = command_util.parse_properties_from_parameter_string(pv_Properties)
-                # Set the properties as additional properties (don't just reset the properties dictionary)
+                # Set the properties as additional properties (don't just reset the property dictionary).
                 new_geomap.set_properties(properties)
 
             except Exception:
@@ -316,7 +316,7 @@ class CreateGeoMap(AbstractCommand):
         else:
             self.logger.debug("Not enough data to create GeoMap.")
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

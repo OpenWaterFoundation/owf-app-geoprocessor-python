@@ -1,7 +1,7 @@
 # ReadGeoLayerFromGeoJSON_Editor - editor for ReadGeoLayerFromGeoJSON command
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ except AttributeError:
 
 class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
 
-    # CLASS VARIABLES: static across all classes
+    # CLASS VARIABLES: static across all classes.
 
     # The GeoProcessor ReadGeoLayerFromGeoJSON object.
     command_obj = ReadGeoLayerFromGeoJSON()
@@ -60,7 +60,7 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
     # The number of parameters within the command. Indirectly, read from the GeoProcessor command object.
     parameter_count = len(command_parameters)
 
-    # UI label objects are to be assigned within the setupUI function
+    # UI label objects are to be assigned within the setupUI function.
     # These label objects are non-changing and are present in each ReadGeoLayerFromGeoJSON dialog box.
     #   I: labels the InputFile input text field. Note that the InputFile parameter
     #   does not need a description label object because the parameter description is written in the text field as
@@ -120,17 +120,17 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
         # Value: the entered value of the command parameter
         self.command_parameter_values = {}
 
-        # Add all of the command parameters to the command_parameter_values dictionary. By default, set all
-        # parameter values to an empty string. The values are populated later as the user enters text in the dialog box.
+        # Add all the command parameters to the command_parameter_values dictionary.
+        # By default, set all parameter values to an empty string.
+        # The values are populated later as the user enters text in the dialog box.
         # # for command_parameter_name in UiDialog.command_parameters:
         # #     self.command_parameter_values[command_parameter_name] = ""
 
-        # UI input field objects are to be assigned within the setupUI function
-        # The values of these input field objects are dynamic and unique to the instance. They are, however, all
-        # present in each ReadGeoLayerFromGeoJSON dialog box.
+        # UI input field objects are to be assigned within the setupUI function.
+        # The values of these input field objects are dynamic and unique to the instance.
+        # They are, however, all present in each ReadGeoLayerFromGeoJSON dialog box.
         #   InputFile_LineEdit: the input field (PyQt5 LineEdit obj) for the InputFile parameter
-        #   InputFile_ToolButton: the button (PyQt5 ToolButton obj) to select a file for the InputFile
-        #   parameter
+        #   InputFile_ToolButton: the button (PyQt5 ToolButton obj) to select a file for the InputFile parameter
         #   GeoLayerID_LineEdit: the input field (PyQt5 LineEdit obj) for the GeoLayerID parameter
         #   IfGeoLayerIDExists_ComboBox: the input field (PyQt5 ComboBox obj) for the IfGeoLayerIDExists parameter
         self.InputFile_LineEdit = None
@@ -224,9 +224,9 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
         This updates the dialog box with the previously defined parameter values when editing a command within the UI.
         """
 
-        # Get the values of the previously-defined command dialog box. Assign to static variables before updating
-        # the command dialog window. As the command dialog window is updated, the command_parameter_values
-        # dictionary is altered.
+        # Get the values of the previously-defined command dialog box.
+        # Assign to static variables before updating the command dialog window.
+        # As the command dialog window is updated, the command_parameter_values dictionary is altered.
         inputfile_value = self.command_parameter_values["InputFile"]
         geolayerid_value = self.command_parameter_values["GeoLayerID"]
         ifgeolayeridexists_value = self.command_parameter_values["IfGeoLayerIDExists"]
@@ -237,9 +237,9 @@ class ReadGeoLayerFromGeoJSON_Editor(AbstractCommandEditor):
         # Set the text of the InputFile input field to the predefined value of the InputFile parameter.
         self.GeoLayerID_LineEdit.setText(geolayerid_value)
 
-        # If the predefined IfGeoLayerIDExists parameter value is within one of the available options, the index of
-        # the value in the ComboBox object is the index of the value in the options list plus one. The one accounts
-        #  for the blank option that is available in the ComboBox but is not in the available options list.
+        # If the predefined IfGeoLayerIDExists parameter value is within one of the available options,
+        # the index of the value in the ComboBox object is the index of the value in the options list +1.
+        # The 1 accounts for the blank option that is in the ComboBox but is not in the available options list.
         # # if ifgeolayeridexists_value in UiDialog.command_obj.choices_IfGeoLayerIDExists:
         # #     index = UiDialog.command_obj.choices_IfGeoLayerIDExists.index(ifgeolayeridexists_value) + 1
 

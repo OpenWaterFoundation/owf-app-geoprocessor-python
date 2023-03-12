@@ -1,18 +1,18 @@
 # WriteTableToDataStore - command to write a table to a datastore
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -41,8 +41,8 @@ class WriteTableToDataStore(AbstractCommand):
 
     Command Parameters
     * TableID (str, required): Identifier for Table to write. Can be specified with ${Property}.
-    * IncludeColumns (str, optional) A comma-separated list of the glob-style patterns filtering which table columns to
-        write.
+    * IncludeColumns (str, optional):
+        A comma-separated list of the glob-style patterns filtering which table columns to write.
     * ExcludeColumns (str, optional) A comma-separated list of the glob-style patterns filtering which table columns to
         NOT write. This will override IncludeColumns.
     * DataStoreID (str, required): The ID of a DataStore to receive data. ${Property} syntax is recognized.
@@ -76,14 +76,14 @@ class WriteTableToDataStore(AbstractCommand):
         CommandParameterMetadata("DataStoreRelatedColumnsMap", type("")),
         CommandParameterMetadata("WriteMode", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "This command processes each row in a Table and executes and "
         "SQL statement to insert the row into a database DataStore.")
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # TableID
     __parameter_input_metadata['TableID.Description'] = "table identifier"
@@ -153,7 +153,7 @@ class WriteTableToDataStore(AbstractCommand):
         "Rows of the TableID that do conflict with any of the rows in the existing database table are "
         "used to update the existing database rows.")
 
-    # Choices for WriteMode, used to validate parameter and display in editor
+    # Choices for WriteMode, used to validate parameter and display in editor.
     __choices_WriteMode = ["NewTableInsert", "ExistingTableOverwrite", "ExistingTableInsert", "ExistingTableUpdate",
                            "ExistingTableInsertUpdate"]
 
@@ -162,18 +162,18 @@ class WriteTableToDataStore(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "WriteTableToDataStore"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -226,18 +226,18 @@ class WriteTableToDataStore(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @staticmethod
     def __get_table_cols_to_write(include_col_patterns: str, exclude_col_patterns: str, table: DataTable) -> [str]:
         """
-        The command allows for users to select a subset of the Table columns to write to the DataStore database. This
-        function returns a list of Table columns configured to write data by the user inputs.
+        The command allows for users to select a subset of the Table columns to write to the DataStore database.
+        This function returns a list of Table columns configured to write data by the user inputs.
 
         Args:
-            include_col_patterns (str): A comma-separated list of the glob-style patterns filtering which table columns
-                to write.
+            include_col_patterns (str):
+                comma-separated list of the glob-style patterns filtering which table columns to write.
             exclude_col_patterns (str): A comma-separated list of the glob-style patterns filtering which table columns
                 to NOT write. This will override IncludeColumns.
             table (obj): the Table that is being written to the DataStore
@@ -246,14 +246,14 @@ class WriteTableToDataStore(AbstractCommand):
             A list of Table column names configured to write data.
         """
 
-        # Convert the IncludeColumns and the ExcludeColumns parameters from strings to lists
+        # Convert the IncludeColumns and the ExcludeColumns parameters from strings to lists.
         table_cols_to_include_patterns = string_util.delimited_string_to_list(include_col_patterns)
         table_cols_to_exclude_patterns = string_util.delimited_string_to_list(exclude_col_patterns)
 
-        # Get a list of all of the columns in the Table
+        # Get a list of all the columns in the Table.
         all_table_cols = table.get_column_names()
 
-        # Get a list of the columns in the Table that are configured to be pushed to the DataStore
+        # Get a list of the columns in the Table that are configured to be pushed to the DataStore.
         table_cols_to_include = string_util.filter_list_of_strings(all_table_cols, table_cols_to_include_patterns,
                                                                    table_cols_to_exclude_patterns,
                                                                    return_inclusions=True)
@@ -264,12 +264,12 @@ class WriteTableToDataStore(AbstractCommand):
     @staticmethod
     def __get_table_cols_to_exclude(include_col_patterns: str, exclude_col_patterns: str, table: DataTable) -> [str]:
         """
-        The command allows for users to select a subset of the Table columns to write to the DataStore database. This
-        function returns a list of Table columns NOT configured to write data by the user inputs.
+        The command allows for users to select a subset of the Table columns to write to the DataStore database.
+        This function returns a list of Table columns NOT configured to write data by the user inputs.
 
         Args:
-            include_col_patterns (str): A comma-separated list of the glob-style patterns filtering which table columns
-                to write.
+            include_col_patterns (str):
+                A comma-separated list of the glob-style patterns filtering which table columns to write.
             exclude_col_patterns (str): A comma-separated list of the glob-style patterns filtering which table columns
                 to NOT write. This will override IncludeColumns.
             table (obj): the Table that is being written to the DataStore
@@ -278,14 +278,14 @@ class WriteTableToDataStore(AbstractCommand):
             A list of Table column names configured to write data.
         """
 
-        # Convert the IncludeColumns and the ExcludeColumns parameters from strings to lists
+        # Convert the IncludeColumns and the ExcludeColumns parameters from strings to lists.
         table_cols_to_include_patterns = string_util.delimited_string_to_list(include_col_patterns)
         table_cols_to_exclude_patterns = string_util.delimited_string_to_list(exclude_col_patterns)
 
-        # Get a list of all of the columns in the Table
+        # Get a list of all the columns in the Table.
         all_table_cols = table.get_column_names()
 
-        # Get a list of the columns in the Table that are NOT configured to be pushed to the DataStore
+        # Get a list of the columns in the Table that are NOT configured to be pushed to the DataStore.
         table_cols_to_exclude = string_util.filter_list_of_strings(all_table_cols, table_cols_to_include_patterns,
                                                                    table_cols_to_exclude_patterns,
                                                                    return_inclusions=False)
@@ -296,8 +296,8 @@ class WriteTableToDataStore(AbstractCommand):
     @staticmethod
     def __get_mapped_datastore_col_from_table_col(table_col_name: str, col_map_dic: dict) -> str:
         """
-        Get the corresponding DataStore table column name given the Table column name. This is achieved by looking up
-        the corresponding values in the user-configured ColumnMap.
+        Get the corresponding DataStore table column name given the Table column name.
+        This is achieved by looking up the corresponding values in the user-configured ColumnMap.
 
         Args:
             table_col_name (str): the name of the Table column
@@ -311,8 +311,8 @@ class WriteTableToDataStore(AbstractCommand):
         if table_col_name in col_map_dic.keys():
             return col_map_dic[table_col_name]
 
-        # If the Table column name is not registered in the ColumnMap, assume the Table column name directly maps to a
-        # DataStore table column name. Return the Table column name.
+        # If the Table column name is not registered in the ColumnMap,
+        # assume the Table column name directly maps to a DataStore table column name. Return the Table column name.
         else:
             return table_col_name
 
@@ -331,7 +331,7 @@ class WriteTableToDataStore(AbstractCommand):
         # Get a list of the columns in the DataStore that are configured to receive data.
         datastore_table_cols_to_receive = []
 
-        # Iterate over the Table Columns to Write
+        # Iterate over the Table Columns to Write.
         for table_col_to_include in table_cols_to_write:
 
             # Get the corresponding DataStore table column name, as configured with user input in the ColumnMap.
@@ -363,8 +363,8 @@ class WriteTableToDataStore(AbstractCommand):
              Boolean. If TRUE, the process should be run. If FALSE, it should not be run.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
@@ -413,8 +413,8 @@ class WriteTableToDataStore(AbstractCommand):
                  Boolean. If TRUE, the process should be run. If FALSE, it should not be run.
            """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = []
 
         # A list of Table columns that do not map to the DataStore Table columns.
@@ -430,8 +430,8 @@ class WriteTableToDataStore(AbstractCommand):
             # Iterate over the DataStore columns that are configured to read data.
             for datastore_table_col_to_receive in datastore_table_cols_to_receive:
 
-                # If the configured DataStore column does not exist in the DataStore table, add the configured
-                # DataStore column to the list of invalid columns.
+                # If the configured DataStore column does not exist in the DataStore table,
+                # add the configured DataStore column to the list of invalid columns.
                 if datastore_table_col_to_receive not in datastore_table_cols:
                     invalid_columns.append(datastore_table_col_to_receive)
 
@@ -455,7 +455,7 @@ class WriteTableToDataStore(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Read the Table from the DataStore
+        Run the command. Read the Table from the DataStore.
 
         Returns:
             None.
@@ -498,7 +498,7 @@ class WriteTableToDataStore(AbstractCommand):
             # Get the Table object.
             table_obj = self.command_processor.get_table(pv_TableID)
 
-            # Get DataStore object
+            # Get DataStore object.
             datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
 
             # Convert the ColumnMap from string to a dictionary. Key: Table Column Name; Value: DataStore Column Name
@@ -558,7 +558,7 @@ class WriteTableToDataStore(AbstractCommand):
 
                         print("The ExistingTableInsertUpdate WriteMode is currently disabled.")
 
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 except Exception:
                     self.warning_count += 1
                     message = "Unexpected error writing Table {} to DataStore ({}).".format(pv_TableID,
@@ -569,7 +569,7 @@ class WriteTableToDataStore(AbstractCommand):
                                                    CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                     recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

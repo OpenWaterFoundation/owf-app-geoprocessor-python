@@ -1,18 +1,18 @@
 # log_util - utility functions for logging
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -44,7 +44,7 @@ import platform
 # such as with GeoProcessor RunProgram, RunGdalProgram, etc. commands.
 __logfile_handler: logging.FileHandler or None = None
 
-# The name of the current log file, will be reset by functions below
+# The name of the current log file, will be reset by functions below.
 __logfile_name: str or None = None
 
 
@@ -102,22 +102,21 @@ def initialize_logging(app_name: str = None, logfile_name: str = None, logfile_l
     global __logfile_handler, __logfile_name
     log_formatter = logging.Formatter('%(levelname)s|%(name)s|%(module)s line %(lineno)d|%(message)s')
 
-    # Request a logger for the geoprocessor (gp), which will create a new logger since not previously found.
-    # - Use "geoprocessor" for the name, which matches the top-level package name.
-    #   All requests in library code using __name__ will therefore match the root module name.
-    # - This also allows the __main__ program to request a logger with name "geoprocessor" so that
-    #   messages can be written to the same log file.
+    # Request a logger for the geoprocessor (gp), which will create a new logger since not previously found:
+    # - use "geoprocessor" for the name, which matches the top-level package name
+    # - all requests in library code using __name__ will therefore match the root module name
+    # - this also allows the __main__ program to request a logger with name "geoprocessor" so that
+    #   messages can be written to the same log file
     logger_name = "geoprocessor"
     logger = logging.getLogger(logger_name)
 
-    # Set the logger level to DEBUG because it needs to handle all levels
-    # - If this is not set then the default of WARNING will control
+    # Set the logger level to DEBUG because it needs to handle all levels:
+    # - if this is not set then the default of WARNING will control
     logger.setLevel(logging.DEBUG)
 
-    # Configure the logger handlers below, which indicate how to output log messages if they
-    # pass through the logger.
+    # Configure the logger handlers below, which indicate how to output log messages if they pass through the logger.
 
-    # Configure the log file handler
+    # Configure the log file handler.
     if logfile_name is not None:
         # Use mode 'w' to restart the log because default is append 'a'.
         log_file_handler = logging.FileHandler(logfile_name, mode='w')
@@ -125,20 +124,20 @@ def initialize_logging(app_name: str = None, logfile_name: str = None, logfile_l
         log_file_handler.setFormatter(log_formatter)
         logger.addHandler(log_file_handler)
 
-        # Save the logfile as a module variable
+        # Save the logfile as a module variable.
         __logfile_handler = log_file_handler
         __logfile_name = logfile_name
 
-    # Configure the console handler, which defaults to stderr
-    # - This is OK for startup but once a StartLog command is used the console handler should not be used
-    # - Console output defaults to WARNING and worse
+    # Configure the console handler, which defaults to stderr:
+    # - this is OK for startup but once a StartLog command is used the console handler should not be used
+    # - console output defaults to WARNING and worse
     if console_log_level != logging.NOTSET:
         console_handler = logging.StreamHandler()
         console_handler.setLevel(console_log_level)
         console_handler.setFormatter(log_formatter)
         logger.addHandler(console_handler)
 
-    # Print some messages to logging so that the application, user, etc. are known
+    # Print some messages to logging so that the application, user, etc. are known.
     if app_name is None:
         logger.info("Application = unknown")
     else:
@@ -167,17 +166,17 @@ def reset_log_file_handler(logfile_name: str) -> None:
         Run
 
     """
-    # Get the GeoProcessor logging handler
+    # Get the GeoProcessor logging handler:
     # - the logger should have been set up initially by the application by calling initialize_logging()
 
     logger = logging.getLogger("geoprocessor")
 
-    # Loop through the handlers on the "geoprocessor" logger and replace the FileHandler logger.
+    # Loop through the handlers on the "geoprocessor" logger and replace the FileHandler logger:
     # - there should only be one such handler
 
     global __logfile_handler, __logfile_name
     found_handler = None
-    # Defaults are the same as in the initialize_logging() function
+    # Defaults are the same as in the initialize_logging() function.
     old_log_file_handler_level = logging.INFO
     old_log_file_handler_formatter = logging.Formatter('%(levelname)s|%(name)s|%(module)s line %(lineno)d|%(message)s')
     for handler in logger.handlers:
@@ -188,25 +187,25 @@ def reset_log_file_handler(logfile_name: str) -> None:
             break
 
     if found_handler:
-        # Found an old FileHandler so remove it first
+        # Found an old FileHandler so remove it first:
         # - the following message will show up in the old log file
         message = 'Closing the old file so new log file can be used: "' + logfile_name + '"'
         logger.info(message)
-        # Remove the old FileHandler
+        # Remove the old FileHandler.
         found_handler.close()
         logger.removeHandler(found_handler)
 
-    # Whether or not a handler was found, always create a new FileHandler using the information determined from above
+    # Whether a handler was found, always create a new FileHandler using the information determined from above.
     new_log_file_handler = logging.FileHandler(logfile_name, mode='w')
     new_log_file_handler.setLevel(old_log_file_handler_level)
     new_log_file_handler.setFormatter(old_log_file_handler_formatter)
     __log_file_handler = new_log_file_handler
     logger.addHandler(new_log_file_handler)
 
-    # Save the logfile name in the module data
+    # Save the logfile name in the module data.
     __logfile_name = logfile_name
 
-    # The following message will show up in the new log file
+    # The following message will show up in the new log file.
     message = 'Opened new log file: "' + logfile_name + '"'
     print('Opened new log file: "' + logfile_name + '"')
     logger.info(message)

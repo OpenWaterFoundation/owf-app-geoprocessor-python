@@ -1,0 +1,24 @@
+# This file was created from the venv-qgis-3.22.16-python39 virtual environment:
+# - may start using to install additional packages
+#
+# After creating the venv, pandas was removed because it is now distributed with QGIS 3.22.16 and caused
+# a conflict with Excel read write packages: xlrd 1.2.0 and xlwd 1.3.0.
+# The GeoProcessor can just rely on the QGIS packages.
+# There are a few more packages like "requests" that may also need to be checked for compatibility.
+certifi==2022.12.7
+charset-normalizer==3.1.0
+distlib==0.3.6
+et-xmlfile==1.1.0
+filelock==3.9.0
+greenlet==2.0.2
+idna==3.4
+openpyxl==3.1.1
+platformdirs==3.1.0
+python-dateutil==2.8.2
+pytz==2022.7.1
+requests==2.28.2
+six==1.16.0
+SQLAlchemy==2.0.5.post1
+typing_extensions==4.5.0
+urllib3==1.26.14
+virtualenv==20.20.0

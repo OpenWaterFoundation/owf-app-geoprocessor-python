@@ -1,7 +1,7 @@
 # GeoProcessorCommandFactory - class to instantiate a command from is string representation
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ class GeoProcessorCommandFactory(object):
     The command string is parsed within the command class instance.
     """
 
-    # TODO smalers 2018-07-27 evaluate whether the following is needed
+    # TODO smalers 2018-07-27 evaluate whether the following is needed.
     # The dictionary of all available commands, in alphabetical order.
     # key: the name of the command (converted to all UPPERCASE)
     # value: the constructor (__init__) function to create an instance of the command
@@ -273,10 +273,9 @@ class GeoProcessorCommandFactory(object):
         command_string_trimmed = command_string.strip()
         paren_pos = command_string_trimmed.find('(')
 
-        # If the command is any variation of a comment return the
-        # appropriate unique command editor
+        # If the command is any variation of a comment return the appropriate unique command editor.
         if command_string_trimmed == "":
-            # Empty line
+            # Empty line.
             return Blank()
         elif command_string_trimmed.startswith('#'):
             return Comment()
@@ -288,11 +287,11 @@ class GeoProcessorCommandFactory(object):
         # Assume command of syntax CommandName(Param1="...",Param2="...")
         else:
             if paren_pos >= 0:
-                # Get command name from command string CommandName(...)
+                # Get command name from command string 'CommandName(...)':
                 # - command name is before the first open parenthesis
                 command_name = command_util.parse_command_name_from_command_string(command_string_trimmed)
             else:
-                # Get command name from command string:  CommandName
+                # Get command name from command string 'CommandName':
                 # - command name is the string
                 # - TODO smalers 2020-03-11 evaluate whether to allow this or generate an error
                 command_name = command_string_trimmed
@@ -311,10 +310,10 @@ class GeoProcessorCommandFactory(object):
                     command = self.registered_commands[command_name_upper]
                     return command
             else:
-                # Constructing the following way always seems to work properly
-                # - Alphabetize the commands.
+                # Constructing the following way always seems to work properly:
+                # - alphabetize the commands
 
-                # A commands
+                # 'A' commands.
                 if command_name_upper == "ADDGEOLAYERATTRIBUTE":
                     return AddGeoLayerAttribute()
                 elif command_name_upper == "ADDGEOLAYERVIEWGROUPTOGEOMAP":
@@ -324,18 +323,18 @@ class GeoProcessorCommandFactory(object):
                 elif command_name_upper == "ADDGEOMAPTOGEOMAPPROJECT":
                     return AddGeoMapToGeoMapProject()
 
-                # B commands
+                # 'B' commands.
                 elif command_name_upper == "BLANK":
                     return Blank()
 
-                # C commands
+                # 'C' commands.
                 elif command_name_upper == "CHANGEGEOLAYERGEOMETRY":
                     return ChangeGeoLayerGeometry()
                 elif command_name_upper == "CHANGERASTERGEOLAYERCRS":
                     return ChangeRasterGeoLayerCRS()
                 elif command_name_upper == "CLIPGEOLAYER":
                     return ClipGeoLayer()
-                # Comment, CommentBlockStart, and CommentBlockEnd are checked for above
+                # Comment, CommentBlockStart, and CommentBlockEnd are checked for above:
                 # - might be able to treat similar to other commands but need to confirm out parsing is done
                 elif command_name_upper == "CLOSEDATASTORE":
                     return CloseDataStore()
@@ -358,7 +357,7 @@ class GeoProcessorCommandFactory(object):
                 elif command_name_upper == "CREATEREGRESSIONTESTCOMMANDFILE":
                     return CreateRegressionTestCommandFile()
 
-                # E commands
+                # 'E' commands.
                 elif command_name_upper == "ENDFOR":
                     return EndFor()
                 elif command_name_upper == "ENDIF":
@@ -368,7 +367,7 @@ class GeoProcessorCommandFactory(object):
                 elif command_name_upper == "EXTRACTGEOLAYER":
                     return ExtractGeoLayer()
 
-                # F commands
+                # 'F' commands.
                 elif command_name_upper == "FIXGEOLAYER":
                     return FixGeoLayer()
                 elif command_name_upper == "FOR":
@@ -378,31 +377,31 @@ class GeoProcessorCommandFactory(object):
                 elif command_name_upper == "FTPGET":
                     return FTPGet()
 
-                # I commands
+                # 'I' commands.
                 elif command_name_upper == "IF":
                     return If()
                 elif command_name_upper == "INTERSECTGEOLAYER":
                     return IntersectGeoLayer()
 
-                # L commands
+                # 'L' commands.
                 elif command_name_upper == "LISTFILES":
                     return ListFiles()
 
-                # M commands
+                # 'M' commands.
                 elif command_name_upper == "MERGEGEOLAYERS":
                     return MergeGeoLayers()
                 elif command_name_upper == "MESSAGE":
                     return Message()
 
-                # O commands
+                # 'O' commands.
                 elif command_name_upper == "OPENDATASTORE":
                     return OpenDataStore()
 
-                # Q commands
+                # 'Q' commands.
                 elif command_name_upper == "QGISALGORITHMHELP":
                     return QgisAlgorithmHelp()
 
-                # R commands
+                # 'R' commands:
                 elif command_name_upper == "RASTERIZEGEOLAYER":
                     return RasterizeGeoLayer()
                 elif command_name_upper == "READGEOLAYERFROMDELIMITEDFILE":
@@ -454,7 +453,7 @@ class GeoProcessorCommandFactory(object):
                 elif command_name_upper == "RUNSQL":
                     return RunSql()
 
-                # S commands
+                # 'S' commands:
                 elif command_name_upper == "SETGEOLAYERATTRIBUTE":
                     return SetGeoLayerAttribute()
                 elif command_name_upper == "SETGEOLAYERCRS":
@@ -482,11 +481,11 @@ class GeoProcessorCommandFactory(object):
                 elif command_name_upper == "STARTREGRESSIONTESTRESULTSREPORT":
                     return StartRegressionTestResultsReport()
 
-                # U commands
+                # 'U' commands:
                 elif command_name_upper == "UNZIPFILE":
                     return UnzipFile()
 
-                # W commands
+                # 'W' commands:
                 elif command_name_upper == "WEBGET":
                     return WebGet()
                 elif command_name_upper == "WRITECOMMANDSUMMARYTOFILE":

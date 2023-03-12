@@ -1,7 +1,7 @@
 # SetProperty - command to set a processor property
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -45,12 +45,12 @@ class SetProperty(AbstractCommand):
         CommandParameterMetadata("PropertyValues", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Set the value of a property used by the processor."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # PropertyName
     __parameter_input_metadata['PropertyName.Description'] = "property name"
@@ -62,7 +62,7 @@ class SetProperty(AbstractCommand):
     __parameter_input_metadata['PropertyType.Label'] = "Property type"
     __parameter_input_metadata['PropertyType.Required'] = True
     __parameter_input_metadata['PropertyType.Values'] = ['bool', 'float', 'int', 'str']
-    # TODO smalers 2020-07-14 remove when tested
+    # TODO smalers 2020-07-14 remove when tested.
     # __parameter_input_metadata['PropertyType.Value.DefaultForDisplay'] = 'str'
     __parameter_input_metadata['PropertyType.Value.Default.ForEditor'] = 'str'
     __parameter_input_metadata['PropertyType.Tooltip'] = \
@@ -84,22 +84,22 @@ class SetProperty(AbstractCommand):
     __parameter_input_metadata['PropertyValues.Value.Default.Description'] = \
         "'PropertyValue' or 'PropertyValues' must be specified."
 
-    # Choices for PropertyType valid values
+    # Choices for PropertyType valid values.
     __choices_PropertyType: [str] = ["bool", "float", "int", "long", "str"]
 
     def __init__(self) -> None:
         """
         Initialize a command instance.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "SetProperty"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -133,7 +133,7 @@ class SetProperty(AbstractCommand):
         # TODO smalers 2017-12-28 add other parameters similar to TSTool to set special values
         # TODO smalers 2020-03-21 make sure type can be parsed into the indiated type, also for the list
 
-        # Only one of PropertyValue and PropertyValues can be specified
+        # Only one of PropertyValue and PropertyValues can be specified.
         property_value_parameter_count = 0
         # noinspection PyPep8Naming
         pv_PropertyValue = self.get_parameter_value(
@@ -162,18 +162,17 @@ class SetProperty(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, and if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             # Message.printWarning ( warning_level,
             #    MessageUtil.formatMessageTag(command_tag, warning_level), routine, warning );
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self) -> None:
@@ -198,14 +197,14 @@ class SetProperty(AbstractCommand):
         pv_PropertyValue = self.get_parameter_value('PropertyValue')
         # noinspection PyPep8Naming
         pv_PropertyValues = self.get_parameter_value('PropertyValues')
-        # Expand the property value string before converting to the requested type
+        # Expand the property value string before converting to the requested type.
         # noinspection PyPep8Naming
         pv_PropertyValue_expanded = self.command_processor.expand_parameter_value(pv_PropertyValue)
         # noinspection PyPep8Naming
         pv_PropertyValues_expanded = self.command_processor.expand_parameter_value(pv_PropertyValues)
-        do_list = False  # Single property is the default
+        do_list = False  # Single property is the default.
         if pv_PropertyValues is not None and pv_PropertyValues != "":
-            # Doing a list
+            # Doing a list.
             do_list = True
 
         # noinspection PyBroadException
@@ -215,10 +214,10 @@ class SetProperty(AbstractCommand):
             if do_list:
                 parameter_value_to_parse = pv_PropertyValues_expanded
             else:
-                # Single property - add to a list as if a single-value list
+                # Single property - add to a list as if a single-value list.
                 parameter_value_to_parse = pv_PropertyValue_expanded
             # logger.info('Parsing parameter "' + str(parameter_value_to_parse) + "'")
-            # Parse the list into a string list
+            # Parse the list into a string list:
             # - Remove leading [ and trailing ] so only have simple string list
             parameter_value_to_parse = parameter_value_to_parse.strip()  # First strip whitespace
             if parameter_value_to_parse.startswith("["):
@@ -227,13 +226,13 @@ class SetProperty(AbstractCommand):
                 parameter_value_to_parse = parameter_value_to_parse[0:len(parameter_value_to_parse) - 1]
             parameter_value_as_string_list = string_util.delimited_string_to_list(parameter_value_to_parse, trim=True)
             # logger.info('Parsed parameter "' + str(parameter_value_as_string_list) + "'")
-            # Loop through the list
+            # Loop through the list.
             parameter_value2 = None
             for parameter_value in parameter_value_as_string_list:
-                # Convert the property value string to the requested type
+                # Convert the property value string to the requested type.
                 parameter_value2 = None
                 if pv_PropertyType == 'bool':
-                    # Use the following because conversion of strings to booleans is tricky, too many unexpected True
+                    # Use the following because conversion of strings to booleans is tricky, too many unexpected True.
                     parameter_value2 = string_util.str_to_bool(parameter_value)
                 elif pv_PropertyType == 'float':
                     parameter_value2 = float(parameter_value)
@@ -241,19 +240,19 @@ class SetProperty(AbstractCommand):
                     parameter_value2 = int(parameter_value)
                 elif pv_PropertyType == 'str':
                     parameter_value2 = str(parameter_value)
-                # Now set the object as a property, will be the requested type
+                # Now set the object as a property, will be the requested type.
                 if do_list:
-                    # The property is a list
+                    # The property is a list:
                     # - for now avoid adding None - later For command should process only valid values
                     if parameter_value2 is not None:
                         parameter_value_as_list.append(parameter_value2)
             if do_list:
-                # Doing a list so set the property value to the list
+                # Doing a list so set the property value to the list:
                 # - list could be empty - is this an issue?
                 self.command_processor.set_property(pv_PropertyName, parameter_value_as_list)
                 # logger.info('Setting parameter "' + str(pv_PropertyName) + '"="' + str(parameter_value_as_list) + '"')
             else:
-                # The property value is a single object and will have been processed in the loop's only iteration
+                # The property value is a single object and will have been processed in the loop's only iteration.
                 if parameter_value2 is not None:
                     self.command_processor.set_property(pv_PropertyName, parameter_value2)
                     # logger.info('Setting parameter "' + str(pv_PropertyName) + '"="' + str(parameter_value2) + '"')

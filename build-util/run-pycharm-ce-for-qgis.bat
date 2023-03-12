@@ -341,10 +341,14 @@ rem - same batch file name as for OSGeo4W install
 
 echo [INFO]
 echo [INFO] Setting QGIS Python and Qt environment variables.
-if exist "!scriptFolder!\python-qgis-ltr.bat" (
+rem Replace "build-util" with "scripts" to find the file.
+set scriptsFolder=%scriptFolder:build-util=scripts%
+echo [INFO]
+echo [INFO]  scriptsFolder=!scriptsFolder!
+if exist "!scriptsFolder!\python-qgis-ltr.bat" (
   echo [INFO]   Calling QGIS Python setup batch file from GeoProcessor:
-  echo [INFO]     !scriptFolder!\python-qgis-ltr.bat
-  call "!scriptFolder!\python-qgis-ltr.bat"
+  echo [INFO]     !scriptsFolder!\python-qgis-ltr.bat
+  call "!scriptsFolder!\python-qgis-ltr.bat"
   if errorlevel 1 (
     echo [ERROR]  Error calling python-qgis-ltr.bat.  Cannot continue.
     goto exit1
@@ -354,7 +358,7 @@ if exist "!scriptFolder!\python-qgis-ltr.bat" (
 rem If here the python-qgis-ltr.bat file was not found, which is a major problem.
 echo [ERROR]
 echo [ERROR]  python-qgis-ltr.bat file was not found:
-echo [ERROR]    %scriptFolder%\python-qgis-ltr.bat
+echo [ERROR]    %scriptsFolder%\python-qgis-ltr.bat
 echo [ERROR]  Cannot setup QGIS Python environment.
 goto exit1
 

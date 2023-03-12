@@ -1,18 +1,18 @@
 # FTPGet - command to retrieve a file from the web
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -56,7 +56,7 @@ class FTPGet(AbstractCommand):
         CommandParameterMetadata("DryRun", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Download one or more files from an FTP site."
     __command_metadata['EditorType'] = "Simple"
@@ -146,13 +146,13 @@ class FTPGet(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
-        # Name of command for menu and window title
+        # Name of command for menu and window title.
         self.command_name = "FTPGet"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
         self.parameter_input_metadata = self.__parameter_input_metadata
@@ -187,7 +187,7 @@ class FTPGet(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that the retry count is a number
+        # Check that the retry count is a number.
         # noinspection PyPep8Naming
         pv_RetryCount = self.get_parameter_value(parameter_name='RetryCount', command_parameters=command_parameters)
         if pv_RetryCount is not None:
@@ -198,7 +198,7 @@ class FTPGet(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Check that the retry wait is a number
+        # Check that the retry wait is a number.
         # noinspection PyPep8Naming
         pv_RetryCount = self.get_parameter_value(parameter_name='RetryWait', command_parameters=command_parameters)
         if pv_RetryCount is not None:
@@ -218,7 +218,7 @@ class FTPGet(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, output_file_abs: str) -> bool:
@@ -248,8 +248,8 @@ class FTPGet(AbstractCommand):
             self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                   message, recommendation))
 
-        # Return the Boolean to determine if the FTPGet command should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
+        # Return the Boolean to determine if the FTPGet command should be run. If TRUE, all checks passed.
+        # If FALSE, one or many checks failed.
         return run_ftpget
 
     def run_command(self) -> None:
@@ -265,7 +265,7 @@ class FTPGet(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the parameter values
+        # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_RemoteSite = self.get_parameter_value("RemoteSite")
         # noinspection PyPep8Naming
@@ -303,7 +303,7 @@ class FTPGet(AbstractCommand):
         if pv_DryRun is not None and pv_DryRun.upper() == 'TRUE':
             dry_run = True
 
-        # Expand properties if ${Property} notation is used
+        # Expand properties if ${Property} notation is used.
         remote_site = self.command_processor.expand_parameter_value(pv_RemoteSite, self)
         remote_folder = self.command_processor.expand_parameter_value(pv_RemoteFolder, self)
 
@@ -319,24 +319,24 @@ class FTPGet(AbstractCommand):
         if self.check_runtime_data(destination_folder_absolute):
             # noinspection PyBroadException
             try:
-                # Open a connection
+                # Open a connection.
                 self.logger.info("Connecting to FTP server:  {}".format(remote_site))
                 ftp = FTP(remote_site)
 
-                # Login to the FTP site
+                # Login to the FTP site.
                 if pv_Login is None or pv_Login == "":
-                    # Anonymous
+                    # Anonymous.
                     self.logger.info("Logging into FTP server using anonymous")
                     ftp.login()
                 else:
                     self.logger.info("Logging into FTP server using login and password")
                     ftp.login(pv_Login, pv_Password)
 
-                # Change to the folder on the remote folder
+                # Change to the folder on the remote folder.
                 self.logger.info("Changing to FTP server folder: {}".format(remote_folder))
                 ftp.cwd(remote_folder)
 
-                # Retrieve files
+                # Retrieve files.
 
                 #root_dirs = ftp.nlst()
                 #facts = ['type']
@@ -346,13 +346,13 @@ class FTPGet(AbstractCommand):
                 for name, facts in remote_list:
                     # self.logger.info('Remote server folder contains:  {} {}'.format(name, facts))
                     if name == "." or name == "..":
-                        # Don't process special folders
+                        # Don't process special folders.
                         continue
                     local_dir = os.path.join(destination_folder_absolute)
                     file_type = facts['type']
                     if file_type == 'file':
-                        # See if it matches and if so download
-                        if fnmatch.fnmatch(name, pv_FilePattern):  # cannot use glob.glob
+                        # See if it matches and if so download.
+                        if fnmatch.fnmatch(name, pv_FilePattern):  # cannot use glob.glob.
                             self.logger.info("File pattern matched, downloading:")
                             remote_path = remote_folder + "/" + name
                             local_filename = os.path.join(local_dir, name)
@@ -367,16 +367,16 @@ class FTPGet(AbstractCommand):
                                     open_mode = 'wb'
                                 else:
                                     open_mode = 'w'
-                                # 'with' will automatically close the file
+                                # 'with' will automatically close the file.
                                 with open(local_filename, open_mode) as fh:
                                     try:
                                         ftp.retrbinary('RETR ' + remote_path, fh.write)
                                     except ftp.all_errors:
                                         self.logger.error("Error getting file.", exc_info=True)
-                                # Increment the download count
+                                # Increment the download count.
                                 download_count += 1
                     elif file_type == 'cdir':
-                        # Create directory
+                        # Create director:
                         # - TODO smalers 2020-08-22 need to enable and recurse
                         # if not os.path.exists(local_dir):
                         #    self.logger.info("Creating local folder:  {}".format(local_dir))
@@ -384,13 +384,13 @@ class FTPGet(AbstractCommand):
                         #        os.mkdir(local_dir)
                         pass
 
-                # Quit the FTP session
+                # Quit the FTP session.
                 ftp.quit()
 
                 self.logger.info("Downloaded {}".format(download_count) + " files.")
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error downloading file from FTP site {}.".format(pv_RemoteSite)
                 recommendation = "Check the log file for details."
@@ -398,7 +398,7 @@ class FTPGet(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN, CommandLogRecord(CommandStatusType.FAILURE,
                                                                                       message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

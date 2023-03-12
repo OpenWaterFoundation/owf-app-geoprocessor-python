@@ -1,18 +1,18 @@
 # RemoveFile - command to remove a file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -46,14 +46,14 @@ class RemoveFile(AbstractCommand):
         CommandParameterMetadata("IfSourceFileNotFound", type("")),
         CommandParameterMetadata("RemoveIfFolder", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         'Remove a file from the file system.  '
         'The file to be removed does not need to exist when editing this command.')
     __command_metadata['EditorType'] = 'Simple'
 
-    # Parameter input metadata
+    # Parameter input metadata.
     __parameter_input_metadata = dict()
     # SourceFile
     __parameter_input_metadata['SourceFile.Description'] = ""
@@ -76,22 +76,22 @@ class RemoveFile(AbstractCommand):
     __parameter_input_metadata['RemoveIfFolder.Values'] = ["", "False", "True"]
     __parameter_input_metadata['RemoveIfFolder.Value.Default'] = "False"
 
-    # Choices for IfNotFound, used to validate parameter and display in editor
+    # Choices for IfNotFound, used to validate parameter and display in editor.
     __choices_IfSourceFileNotFound = ["Ignore", "Warn", "Fail"]
 
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "RemoveFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Parameter input metadata
+        # Parameter input metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -134,7 +134,7 @@ class RemoveFile(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # IfSourceFileNotFound is optional, will default to Warn at runtime
+        # IfSourceFileNotFound is optional, will default to Warn at runtime.
         # noinspection PyPep8Naming
         pv_IfSourceFileNotFound = self.get_parameter_value(parameter_name='IfSourceFileNotFound',
                                                            command_parameters=command_parameters)
@@ -149,16 +149,15 @@ class RemoveFile(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self) -> None:
@@ -175,7 +174,7 @@ class RemoveFile(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
-        # Get data for the command
+        # Get data for the command.
         # noinspection PyPep8Naming
         pv_SourceFile = self.get_parameter_value('SourceFile')
         # noinspection PyPep8Naming
@@ -188,7 +187,7 @@ class RemoveFile(AbstractCommand):
         # noinspection PyPep8Naming
         pv_RemoveIfFolder = string_util.str_to_bool(pv_RemoveIfFolder)
 
-        # Runtime checks on input
+        # Runtime checks on input.
 
         # noinspection PyPep8Naming
         pv_SourceFile_absolute = io_util.verify_path_for_os(
@@ -200,7 +199,7 @@ class RemoveFile(AbstractCommand):
             logger.warning(message)
             raise CommandError(message)
 
-        # Remove the file
+        # Remove the file.
 
         # noinspection PyBroadException
         try:

@@ -1,18 +1,18 @@
 # CreateGeoLayer - command to create a GeoLayer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -40,7 +40,7 @@ class CreateGeoLayer(AbstractCommand):
     """
     Creates a new GeoLayer. The feature geometry is provided by the parameters.
 
-    Command Parameters
+    Command Parameters:
     * GeoLayerID (str, required): The ID of the new GeoLayer.
     * GeometryFormat (str, required): The format of the input geometry. Can be `BoundingBox`, `WKT` or `WKB`. Refer
         to user documentation for descriptions of each geometry format.
@@ -65,12 +65,12 @@ class CreateGeoLayer(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "CreateGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ class CreateGeoLayer(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id: str, crs: str, geometry_format: str, geometry_input: str) -> bool:
@@ -162,15 +162,15 @@ class CreateGeoLayer(AbstractCommand):
              If FALSE, at least one check failed and the GeoLayer should not be created.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the CRS is not a valid coordinate reference system code, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsCRSCodeValid", "CRS", crs, "FAIL"))
 
         # If the GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
-        # (depends on the value of the IfGeoLayerIDExists parameter.)
+        # (depends on the value of the IfGeoLayerIDExists parameter).
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "GeoLayerID", geolayer_id, None))
 
         # If the GeometryFormat is BoundingBox, continue with the checks.
@@ -188,8 +188,8 @@ class CreateGeoLayer(AbstractCommand):
 
     def run_command(self) -> None:
         """
-        Run the command. Create the GeoLayer with the input geometries. Add GeoLayer to the GeoProcessor's geolayers
-         list.
+        Run the command. Create the GeoLayer with the input geometries.
+        Add GeoLayer to the GeoProcessor's geolayer list.
 
         Returns:
             None.
@@ -286,7 +286,7 @@ class CreateGeoLayer(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

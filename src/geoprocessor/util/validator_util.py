@@ -33,7 +33,7 @@ if (qgis_version_util.get_qgis_version_int(1) >= 3) and (qgis_version_util.get_q
     import ogr
 elif (qgis_version_util.get_qgis_version_int(1) >= 3) and (qgis_version_util.get_qgis_version_int(2) > 10):
     #  Works for QGIS 3.22.16 - QGIS 3.22.16/apps/Python39/Lib/site-packages/osgeo/ogr.py
-    import osgeo.ogr
+    import osgeo.ogr as ogr
 
 from geoprocessor.core.CommandPhaseType import CommandPhaseType
 from geoprocessor.core.CommandStatusType import CommandStatusType

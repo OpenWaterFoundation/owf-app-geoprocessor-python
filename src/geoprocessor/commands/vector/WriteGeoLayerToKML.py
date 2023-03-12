@@ -1,7 +1,7 @@
 # WriteGeoLayerToKML - write a GeoLayer to a KML file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -38,15 +38,17 @@ class WriteGeoLayerToKML(AbstractCommand):
     """
     Writes a GeoLayer to a spatial data file in KML format.
 
-    This command writes a GeoLayer registered within the geoprocessor to a KML spatial data file. The KML
-    spatial data file can then be viewed within Google Earth, moved within folders on the local computer, packaged for
-    delivery, etc.
+    This command writes a GeoLayer registered within the geoprocessor to a KML spatial data file.
+    The KML spatial data file can then be viewed within Google Earth, moved within folders on the local computer,
+    packaged for delivery, etc.
 
-    Registered GeoLayers are stored as GeoLayer objects within the geoprocessor's GeoLayers list. Each GeoLayer has one
-    feature type (point, line, polygon, etc.) and other data (an identifier, a coordinate reference system, etc). This
-    function only writes one single GeoLayer to a single spatial data file in GeoJSON format.
+    Registered GeoLayers are stored as GeoLayer objects within the geoprocessor's GeoLayers list.
+    Each GeoLayer has one feature type (point, line, polygon, etc.) and other data
+    (an identifier, a coordinate reference system, etc).
+    This function only writes one single GeoLayer to a single spatial data file in GeoJSON format.
 
-    Command Parameters
+    Command Parameters:
+
     * GeoLayerID (str, required): the identifier of the GeoLayer to be written to a spatial data file in GeoJSON format.
     * OutputFile (str, required): the relative pathname of the output spatial data file.
     * PlacemarkNameAttribute (str, optional): Allows you to specify the field to use for the KML <name> element.
@@ -62,12 +64,12 @@ class WriteGeoLayerToKML(AbstractCommand):
         CommandParameterMetadata("PlacemarkNameAttribute", type("")),
         CommandParameterMetadata("PlacemarkDescriptionAttribute", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Write a GeoLayer to a file in KML format."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "identifier of the GeoLayer to write"
@@ -115,18 +117,18 @@ class WriteGeoLayerToKML(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "WriteGeoLayerToKML"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -166,7 +168,7 @@ class WriteGeoLayerToKML(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id: str, output_file_abs: str) -> bool:
@@ -180,12 +182,12 @@ class WriteGeoLayerToKML(AbstractCommand):
             output_file_abs: the full pathname to the output file
 
         Returns:
-             Boolean. If TRUE, the GeoLayer should be written. If FALSE, at least one check failed and the GeoLayer
-                should not be written.
+             Boolean. If TRUE, the GeoLayer should be written.
+                If FALSE, at least one check failed and the GeoLayer should not be written.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the GeoLayer ID is not an existing GeoLayer ID, raise a FAILURE.
@@ -225,7 +227,7 @@ class WriteGeoLayerToKML(AbstractCommand):
         # noinspection PyPep8Naming
         pv_PlacemarkDescriptionAttribute = self.get_parameter_value("PlacemarkDescriptionAttribute")
 
-        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         output_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -234,13 +236,14 @@ class WriteGeoLayerToKML(AbstractCommand):
         if self.check_runtime_data(pv_GeoLayerID, output_file_absolute):
             # noinspection PyBroadException
             try:
-                # Get the GeoLayer
+                # Get the GeoLayer.
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                # Write the GeoLayer to a spatial data file in KML format
-                # "Note that KML by specification uses only a single projection, EPSG:4326. All OGR KML output will be
-                # presented in EPSG:4326. As such OGR will create layers in the correct coordinate system and transform
-                # any geometries." - www.gdal.org/drv_kml.html
+                # Write the GeoLayer to a spatial data file in KML format.
+                # "Note that KML by specification uses only a single projection, EPSG:4326.
+                # All OGR KML output will be presented in EPSG:4326.
+                # As such OGR will create layers in the correct coordinate system and transform any geometries."
+                # - www.gdal.org/drv_kml.html
                 qgis_util.write_qgsvectorlayer_to_kml(geolayer.qgs_layer,
                                                       output_file_absolute,
                                                       "EPSG:4326",
@@ -249,7 +252,7 @@ class WriteGeoLayerToKML(AbstractCommand):
                                                       "clampToGround")
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error writing GeoLayer {} to GeoJSON format.".format(pv_GeoLayerID)
                 recommendation = "Check the log file for details."
@@ -257,7 +260,7 @@ class WriteGeoLayerToKML(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

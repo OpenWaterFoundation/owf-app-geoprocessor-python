@@ -1,7 +1,7 @@
 # CommandParameter - class to hold information about a command's parameter, used with UI
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
 
 class CommandParameter(object):
     """
-    Hold information required for the user interface about a command parameter. This can be added to the
-    core/CommandParameterMetadata in future development. For now, this class is separate to keep the core and the UI
-    information separate.
+    Hold information required for the user interface about a command parameter.
+    This can be added to the core/CommandParameterMetadata in future development.
+    For now, this class is separate to keep the core and the UI information separate.
     """
 
     def __init__(self, name: str, description: str, optional: bool, tooltip: str,
@@ -42,19 +42,19 @@ class CommandParameter(object):
                 in the dialog window. Default: None
         """
 
-        # "name" is the name of the command parameter
+        # Name of the command parameter.
         self.name = name
 
-        # "description" is the FULL description of the command parameter
+        # Full description of the command parameter.
         self.description = self.create_full_description(description, optional, default_value_description)
 
-        # "optional" is a boolean value to determine if the command parameter is required or optional
+        # Whether the command parameter is required or optional.
         self.optional = optional
 
-        # "tooltip" is a hint associated with the command parameter; further detail, if applicable
+        # Hint associated with the command parameter.
         self.tooltip = tooltip
 
-        # "default_value_desc" is the default value of the command parameter, if applicable
+        # Default value of the command parameter, if applicable.
         self.default_value_desc = default_value_description
 
     @staticmethod

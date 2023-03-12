@@ -1,18 +1,18 @@
 # SetPropertyFromGeoLayer - command to set a processor property from GeoLayer property
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -47,13 +47,13 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         CommandParameterMetadata("PropertyName", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = \
         "Set the value of a property used by the processor, by using the value of a GeoLayer property."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
@@ -75,15 +75,15 @@ class SetPropertyFromGeoLayer(AbstractCommand):
         """
         Initialize a command instance.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "SetPropertyFromGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -115,16 +115,15 @@ class SetPropertyFromGeoLayer(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self) -> None:
@@ -149,7 +148,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
 
         # noinspection PyBroadException
         try:
-            # Get the GeoLayer object
+            # Get the GeoLayer object.
             geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
             if geolayer is None:
                 message = 'Unable to find GeoLayer for GeoLayerID="' + pv_GeoLayerID + '"'
@@ -158,7 +157,7 @@ class SetPropertyFromGeoLayer(AbstractCommand):
                     CommandPhaseType.RUN,
                     CommandLogRecord(CommandStatusType.FAILURE, message, "Check the log file for details."))
             else:
-                # First get the property from the GeoLayer
+                # First get the property from the GeoLayer.
                 property_value = geolayer.get_property(pv_GeoLayerPropertyName)
                 if property_value is not None:
                     self.command_processor.set_property(pv_PropertyName, property_value)

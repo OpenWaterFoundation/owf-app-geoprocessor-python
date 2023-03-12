@@ -1,18 +1,18 @@
 # CloseDataStore - command to close a datastore
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -51,12 +51,12 @@ class CloseDataStore(AbstractCommand):
         CommandParameterMetadata("DataStoreID", type("")),
         CommandParameterMetadata("StatusMessage", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "This command closes a DataStore connection."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # DataStoreID
     __parameter_input_metadata['DataStoreID.Description'] = "the identifier of the DataStore to close"
@@ -78,19 +78,19 @@ class CloseDataStore(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
-        # Name of command for menu and window title
+        # Name of command for menu and window title.
         self.command_name = "CloseDataStore"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -130,7 +130,7 @@ class CloseDataStore(AbstractCommand):
             self.logger.warning(warning)
             raise CommandParameterError(warning)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, datastore_id: str) -> bool:
@@ -145,8 +145,8 @@ class CloseDataStore(AbstractCommand):
              Boolean. If TRUE, the  process should be run. If FALSE, it should not be run.
        """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the DataStore ID is not an existing DataStore ID, raise a FAILURE.
@@ -187,7 +187,7 @@ class CloseDataStore(AbstractCommand):
         if self.check_runtime_data(pv_DataStoreID):
             # noinspection PyBroadException
             try:
-                # Get the DataStore object
+                # Get the DataStore object.
                 datastore_obj = self.command_processor.get_datastore(pv_DataStoreID)
 
                 # Close the database connection.
@@ -204,7 +204,7 @@ class CloseDataStore(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

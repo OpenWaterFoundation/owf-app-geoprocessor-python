@@ -1,18 +1,18 @@
 # WriteCommandSummaryToFile - command to write command log summary to a file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -44,12 +44,12 @@ class WriteCommandSummaryToFile(AbstractCommand):
         CommandParameterMetadata("OutputFile", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Write command logging messages to a summary file."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # OutputFile
     __parameter_input_metadata['OutputFile.Description'] = "output file"
@@ -66,15 +66,15 @@ class WriteCommandSummaryToFile(AbstractCommand):
         """
         Initialize a new instance of the command.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "WriteCommandSummaryToFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -106,16 +106,15 @@ class WriteCommandSummaryToFile(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, which if non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self) -> None:
@@ -131,11 +130,11 @@ class WriteCommandSummaryToFile(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
-        # Get data for the command
+        # Get data for the command.
         # noinspection PyPep8Naming
         pv_OutputFile = self.get_parameter_value('OutputFile')
 
-        # Runtime checks on input
+        # Runtime checks on input.
 
         # noinspection PyPep8Naming
         pv_OutputFile_absolute = io_util.verify_path_for_os(
@@ -147,7 +146,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
             logger.warning(message)
             raise ValueError(message)
 
-        # Create the command summary file
+        # Create the command summary file.
 
         # noinspection PyBroadException
         try:
@@ -156,13 +155,13 @@ class WriteCommandSummaryToFile(AbstractCommand):
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                          self.command_processor.expand_parameter_value(pv_OutputFile, self)))
 
-            # Open the file and write command summary
+            # Open the file and write command summary.
             logger.info('Writing summary to "' + pv_OutputFile_absolute + '"')
             fp = open(pv_OutputFile_absolute, "w")
             WriteCommandSummaryToFile.write_file_header(fp)
             self.write_command_summary(fp)
             WriteCommandSummaryToFile.write_file_footer(fp)
-            # Close the file
+            # Close the file.
             fp.close()
 
         except Exception:
@@ -206,7 +205,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
         fp.write('</tr>' + nl)
         fp.write('</thead>' + nl)
 
-        # Output a list of all commands with the most severe status shown
+        # Output a list of all commands with the most severe status shown.
 
         i = 0
         for command in self.command_processor.commands:
@@ -229,7 +228,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
             fp.write('</tr>' + nl + nl)
         fp.write('</table>' + nl)
 
-        # Output a table for each command
+        # Output a table for each command.
 
         i = 0
         for command in self.command_processor.commands:
@@ -256,7 +255,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
             fp.write('</tr>' + nl)
             fp.write('</thead>' + nl)
 
-            # Output initialization log records
+            # Output initialization log records.
             j = 0
             for log_record in command.command_status.initialization_log_list:
                 j += 1
@@ -269,7 +268,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
                 fp.write('<td>' + log_record.recommendation + '</td>' + nl)
                 fp.write('</tr>' + nl)
 
-            # Output discovery log records
+            # Output discovery log records.
             j = 0
             for log_record in command.command_status.discovery_log_list:
                 j += 1
@@ -282,7 +281,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
                 fp.write('<td>' + log_record.recommendation + '</td>' + nl)
                 fp.write('</tr>' + nl)
 
-            # Output run log records
+            # Output run log records.
             j = 0
             for log_record in command.command_status.run_log_list:
                 j += 1
@@ -296,7 +295,7 @@ class WriteCommandSummaryToFile(AbstractCommand):
                 fp.write('</tr>' + nl)
 
             # TODO smalers 2018-01-28 Need to figure out how to show records from original commands
-            # when a command file is run by RunCommands() command
+            # when a command file is run by RunCommands() command.
 
             fp.write('</table>' + nl)
             fp.write('<hr>' + nl)

@@ -1,18 +1,18 @@
 # AddGeoLayerViewToGeoMap - command to add a GeoLayerView to GeoMap
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -52,7 +52,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         CommandParameterMetadata("InsertBefore", type("")),
         CommandParameterMetadata("InsertAfter", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display:
     # - * character takes up two spaces for indent below
     __command_metadata = dict()
     __command_metadata['Description'] = "Create a new GeoLayerView and add to a GeoLayerViewGroup in a GeoMap.\n"\
@@ -66,7 +66,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         "The last GeoLayerView in the list is displayed on the bottom of the group."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
@@ -135,18 +135,18 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "AddGeoLayerViewToGeoMap"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -178,13 +178,13 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                     CommandPhaseType.INITIALIZATION,
                     CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
+        # Properties - verify that the properties can be parsed.
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
         try:
             command_util.parse_properties_from_parameter_string(pv_Properties)
         except ValueError as e:
-            # Use the exception
+            # Use the exception.
             message = str(e)
             recommendation = "Check the properties string format."
             warning_message += "\n" + message
@@ -192,7 +192,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Only allow one of InsertPosition, InsertBefore, and InsertAfter
+        # Only allow one of InsertPosition, InsertBefore, and InsertAfter.
         # noinspection PyPep8Naming
         pv_InsertPosition = self.get_parameter_value(parameter_name='InsertPosition',
                                                      command_parameters=command_parameters)
@@ -206,9 +206,9 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         check_list.append(pv_InsertBefore)
         check_list.append(pv_InsertAfter)
         if validator_util.validate_list_has_one_value(check_list, True):
-            # List has at least one value
+            # List has at least one value.
             if not validator_util.validate_list_has_one_value(check_list):
-                # List does not have exactly one value
+                # List does not have exactly one value.
                 message = "Zero or one of InsertPosition, InsertBefore, and InsertAfter can be specified."
                 recommendation = "Specify only one insert parameter (or none)."
                 warning_message += "\n" + message
@@ -225,7 +225,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id, geomap_id, geolayerviewgroup_id,
@@ -265,7 +265,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
             should_run_command.append(False)
         else:
             # If the GeoLayerViewGroup ID is not an existing GeoLayerViewGroup ID, fail.
-            # TODO smalers 2020-08-29 Check at runtime
+            # TODO smalers 2020-08-29 Check at runtime.
             # geolayerviewgroup = geomap.get_geolayerviewgroup(geolayerviewgroup_id)
             # if geolayerviewgroup is None:
             #     message = "GeoLayerViewGroup for GeoLayerViewGroupID '{}' was not found.".format(geolayerviewgroup_id)
@@ -305,14 +305,14 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
 
         self.warning_count = 0
 
-        # Obtain the parameter values
+        # Obtain the parameter values.
         # noinspection PyPep8Naming
         pv_GeoLayerID = self.get_parameter_value("GeoLayerID")
         # noinspection PyPep8Naming
         pv_GeoMapID = self.get_parameter_value("GeoMapID")
         geomap_id = None
         if pv_GeoMapID is None or pv_GeoMapID == "":
-            # No map ID was specified so get the single map from the processor, complain if can't find
+            # No map ID was specified so get the single map from the processor, complain if can't find.
             if len(self.command_processor.geomaps) == 0:
                 self.warning_count += 1
                 message = "No GeoMaps have been created.  Cannot determine default GeoMap"
@@ -321,7 +321,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
             else:
-                # Use the last added map
+                # Use the last added map.
                 geomap_id = self.command_processor.last_geomap_added.id
                 self.logger.info('Using default map GeoMapID: {}'.format(geomap_id))
         else:
@@ -365,7 +365,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         # noinspection PyPep8Naming
         pv_InsertAfter = self.command_processor.expand_parameter_value(pv_InsertAfter, self)
 
-        # Run the checks on the parameter values. Only continue if the checks passed.
+        # Run the checks on the parameter values. Only continue if the checks passed:
         # - TODO smalers 2020-03-18 not sure if the following is useful because need to handle checks granularly
         if self.check_runtime_data(pv_GeoLayerID, geomap_id, pv_GeoLayerViewGroupID,
                                    pv_InsertBefore, pv_InsertAfter):
@@ -375,7 +375,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
             geolayerviewgroup = None
             # noinspection PyBroadException
             try:
-                # Get the GeoLayer
+                # Get the GeoLayer.
                 geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
                 if geolayer is None:
                     self.warning_count += 1
@@ -385,7 +385,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
                 else:
-                    # Get the GeoMap
+                    # Get the GeoMap.
                     geomap = self.command_processor.get_geomap(geomap_id)
                     if geomap is None:
                         self.warning_count += 1
@@ -396,10 +396,10 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                                                        CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                         recommendation))
                     else:
-                        # Get the GeoLayerViewGroup
+                        # Get the GeoLayerViewGroup.
                         geolayerviewgroup_id = None
                         if pv_GeoLayerViewGroupID is None or pv_GeoLayerViewGroupID == "":
-                            # No layer view ID was specified so get from the map, complain if can't find
+                            # No layer view ID was specified so get from the map, complain if can't find.
                             if len(geomap.geolayerviewgroups) == 0:
                                 self.warning_count += 1
                                 message = "No GeoLayerViewGroups have been created for the map. " \
@@ -410,7 +410,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                                 recommendation))
                             else:
-                                # Use the last added map
+                                # Use the last added map.
                                 geolayerviewgroup_id = self.command_processor.last_geolayerviewgroup_added.id
                                 self.logger.info('Using default GeoLayerViewGroupID: {}'.format(geolayerviewgroup_id))
                         else:
@@ -427,12 +427,12 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                                                            CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                             recommendation))
                         else:
-                            # Create a new GeoLayerView
+                            # Create a new GeoLayerView.
                             properties = command_util.parse_properties_from_parameter_string(pv_Properties)
                             new_geolayerview = GeoLayerView(pv_GeoLayerViewID, geolayer, name=pv_Name,
                                                             description=pv_Description, properties=properties)
 
-                # Add the GeoLayerView to the GeoMap
+                # Add the GeoLayerView to the GeoMap.
                 # self.logger.info("geomap={} geolayerviewgroup={} geolayerview={} geolayer={}".format(
                 #    geomap, geolayerviewgroup, new_geolayerview, geolayer))
                 if (geomap is not None) and (geolayerviewgroup is not None) and (new_geolayerview is not None):
@@ -441,13 +441,13 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
                                                                  insert_before=pv_InsertBefore,
                                                                  insert_after=pv_InsertAfter)
                     # Also tell the processor that the layer view group is the last layer view group added,
-                    # based on command order
+                    # based on command order:
                     # - this is needed because there is no 'Create' command such as CreateGeoMap - this command
                     #   creates the group and adds to the GeoMap in one step
                     self.command_processor.last_geolayerview_added = new_geolayerview
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error adding the GeoLayerView {} to the GeoLayerViewGroup {}.".format(
                     pv_GeoLayerViewID, pv_GeoLayerViewGroupID)
@@ -459,7 +459,7 @@ class AddGeoLayerViewToGeoMap(AbstractCommand):
         else:
             self.logger.info("Don't have enough data to run command.")
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

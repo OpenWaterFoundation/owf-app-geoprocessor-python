@@ -1,7 +1,7 @@
 # RasterizeGeoLayer - command to create a raster GeoLayer from a vector GeoLayer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 # 
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -63,14 +63,14 @@ class RasterizeGeoLayer(AbstractCommand):
         CommandParameterMetadata("NewGeoLayerID", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Create a new raster GeoLayer from an existing vector GeoLayer.\n"\
         "The GDAL 'rasterize' tool is used.  A file is created and can be read as a GeoLayer.\n"\
         "Only raster formats that support georeferencing are supported."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "ID of the existing vector GeoLayer"
@@ -172,15 +172,15 @@ class RasterizeGeoLayer(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "RasterizeGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
         # Class data
@@ -240,7 +240,7 @@ class RasterizeGeoLayer(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, new_geolayer_id: str) -> bool:
@@ -256,8 +256,8 @@ class RasterizeGeoLayer(AbstractCommand):
                 should not be simplified.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the new GeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
@@ -295,7 +295,7 @@ class RasterizeGeoLayer(AbstractCommand):
         # noinspection PyPep8Naming
         pv_RasterFormat = self.get_parameter_value(
             "RasterFormat", default_value=self.__parameter_input_metadata['RasterFormat.Value.Default'])
-        # Use TIF for the raster format
+        # Use TIF for the raster format:
         # - tif is handled well in GIS and is also supported by the OWF InfoMapper
         # - TODO smalers 2020-07-17 implement an enumeration to handle lookups
         raster_format_upper = pv_RasterFormat.upper()
@@ -319,7 +319,7 @@ class RasterizeGeoLayer(AbstractCommand):
         # noinspection PyPep8Naming
         pv_NewGeoLayerID = self.get_parameter_value("NewGeoLayerID")
 
-        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the OutputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         output_is_tmp = False
         if pv_OutputFile is None or pv_OutputFile == "":
             # Create a temporary file name.
@@ -340,12 +340,12 @@ class RasterizeGeoLayer(AbstractCommand):
                 os.getpid(),
                 nowstring,
                 output_ext))
-            # Second file is layer extent
+            # Second file is layer extent.
             raster_aux_xml_output_file = Path(tempfile.gettempdir()).joinpath('gp-{}-rasterize-{}.{}.aux.xml'.
                                                                               format(os.getpid(), nowstring,
                                                                                      output_ext))
         else:
-            # Use the specified output file
+            # Use the specified output file.
             output_file_absolute = io_util.verify_path_for_os(
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                          self.command_processor.expand_parameter_value(pv_OutputFile, self)))
@@ -356,11 +356,11 @@ class RasterizeGeoLayer(AbstractCommand):
 
             # noinspection PyBroadException
             try:
-                # Get the GeoLayer which will be QgsVectorLayer
-                # Passes a GeoLayerID to GeoProcessor to return the GeoLayer that matches the ID
+                # Get the GeoLayer which will be QgsVectorLayer.
+                # Passes a GeoLayerID to GeoProcessor to return the GeoLayer that matches the ID.
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
 
-                # Assign parameter to pass into runAlgorithm
+                # Assign parameter to pass into runAlgorithm.
                 # INPUT = input GeoLayer (QgsVectorLayer)
                 # FIELD = Attribute name to split by
                 # OUTPUT = path to write output GeoLayers to this creates a list of files following the naming
@@ -371,7 +371,7 @@ class RasterizeGeoLayer(AbstractCommand):
                 #          but go with GeoPackage.
                 alg_parameters = dict()
                 alg_parameters['INPUT'] = input_geolayer.qgs_layer
-                # Use the input layer ID to use it's extent
+                # Use the input layer ID to use its extent.
                 extent = input_geolayer.qgs_layer.extent()
                 # Despite documentation, it seems like extent requires the numbers
                 # - see:  https://gis.stackexchange.com/questions/212645/
@@ -404,7 +404,7 @@ class RasterizeGeoLayer(AbstractCommand):
                         alg_parameters['HEIGHT'] = int(pv_RasterHeight)
                     else:
                         alg_parameters['HEIGHT'] = float(pv_RasterHeight)
-                # The following is used with pixel units
+                # The following is used with pixel units.
                 if pv_CellWidth is not None and pv_CellWidth != "":
                     if units_are_int:
                         alg_parameters['WIDTH'] = int(pv_CellWidth)
@@ -468,7 +468,7 @@ class RasterizeGeoLayer(AbstractCommand):
                                                                         recommendation))
 
                 self.logger.info('Algorithm parameters: {}'.format(alg_parameters))
-                # Call runAlgorithm with the parameter "gdal:rasterize" and pass in the parameters defined above.
+                # Call runAlgorithm with the parameter "gdal:rasterize" and pass in the parameters defined above:
                 # - files ares still not unlinked
                 # - aux.xml file seems to be delayed writing, even requiring GeoProcessor to exit?
                 # - See:  https://gis.stackexchange.com/questions/136366/
@@ -476,17 +476,17 @@ class RasterizeGeoLayer(AbstractCommand):
                 feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
                 alg_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
                                                       algorithm="gdal:rasterize",
-                                                      algorithm_paramters=alg_parameters,
+                                                      algorithm_parameters=alg_parameters,
                                                       feedback_handler=feedback_handler)
                 self.warning_count += feedback_handler.get_warning_count()
-                # Output is a dictionary
+                # Output is a dictionary.
                 self.logger.info("Algorithm output: {}".format(alg_output))
 
                 # Read the raster layer file that was created.
                 qgs_raster_layer = qgis_util.read_qgsrasterlayer_from_file(str(raster_output_file))
 
                 if pv_NewGeoLayerID is not None and pv_NewGeoLayerID != "":
-                    # Create a GeoLayer and add it to the geoprocessor's GeoLayers list
+                    # Create a GeoLayer and add it to the geoprocessor's GeoLayers list:
                     # - for now hard-code the input format
                     input_format = RasterFormatType.GTiff
                     geolayer_obj = RasterGeoLayer(geolayer_id=pv_NewGeoLayerID,
@@ -499,7 +499,7 @@ class RasterizeGeoLayer(AbstractCommand):
                     self.command_processor.add_geolayer(geolayer_obj)
 
                 if output_is_tmp:
-                    # Remove the temporary files after running so that the file system does not fill up.
+                    # Remove the temporary files after running so that the file system does not fill up:
                     # - if not temporary file, leave the files
                     if raster_output_file.exists():
                         # noinspection PyBroadException
@@ -548,7 +548,7 @@ class RasterizeGeoLayer(AbstractCommand):
                                 ["Temporary file created by RasterizeGeoLayer command, process {}".format(os.getpid())]
                             io_util.add_tmp_file_to_remove(raster_aux_xml_output_file, tmp_file_comments)
                     else:
-                        # There seems to be a delay writing this file so add to the remove list just in case
+                        # There seems to be a delay writing this file so add to the remove list just in case.
                         tmp_file_comments = ["Temporary file created by RasterizeGeoLayer command, process {}".format(
                             os.getpid())]
                         io_util.add_tmp_file_to_remove(raster_aux_xml_output_file, tmp_file_comments)

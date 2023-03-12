@@ -1,7 +1,7 @@
 # GeoProcessorUI - class for main GeoProcessor UI
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,8 @@ from __future__ import annotations
 
 from geoprocessor.app.GeoProcessorAppSession import GeoProcessorAppSession
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
-# TODO smalers 2020-01-15 cannot type hint GeoProcessor because it results in circular import
+from geoprocessor.commands.testing.StartRegressionTestResultsReport import StartRegressionTestResultsReport
+# TODO smalers 2020-01-15 cannot type hint GeoProcessor because it results in circular import.
 # from geoprocessor.core.GeoProcessor import GeoProcessor
 from geoprocessor.core.GeoProcessorCommandFactory import GeoProcessorCommandFactory
 from geoprocessor.core.CommandStatusType import CommandStatusType
@@ -33,20 +34,20 @@ from geoprocessor.ui.core.GeoProcessorCommandEditorFactory import GeoProcessorCo
 # The following allows declaring QtWidgets.QMenu, QtWidgets.QAction, etc.
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 
-from sip import SIP_VERSION_STR  # Used for info, others extracted from above objects
+from sip import SIP_VERSION_STR  # Used for info, others extracted from above objects.
 
 import geoprocessor.util.app_util as app_util
 import geoprocessor.util.io_util as io_util
 import geoprocessor.util.log_util as log_util
 import geoprocessor.util.os_util as os_util
 import geoprocessor.util.string_util as string_util
-from geoprocessor.ui.app.CommandListWidget import CommandListWidget  # previously command_list_view
+from geoprocessor.ui.app.CommandListWidget import CommandListWidget  # Previously command_list_view.
 from geoprocessor.ui.app.GeoLayerAttributesQDialog import GeoLayerAttributesQDialog
 from geoprocessor.ui.app.GeoLayerMapQDialog import GeoLayerMapQDialog
 from geoprocessor.ui.app.TableQDialog import TableQDialog
-# from geoprocessor.ui.core.GeoProcessorListModel import GeoProcessorListModel  # previously gp_list_model
+# from geoprocessor.ui.core.GeoProcessorListModel import GeoProcessorListModel  # Previously gp_list_model.
 from geoprocessor.ui.core.GeoProcessorListModel import GeoProcessorListModel
-from geoprocessor.ui.util.CommandListBackup import CommandListBackup  # previously command_list_backup
+from geoprocessor.ui.util.CommandListBackup import CommandListBackup  # Previously command_list_backup.
 import geoprocessor.ui.util.qt_util as qt_util
 
 import datetime
@@ -57,7 +58,7 @@ from pathlib import Path
 import platform
 import qgis.utils
 import qgis.gui
-import shlex  # used to parse command line with spaces and quotes
+import shlex  # Used to parse command line with spaces and quotes.
 import struct
 import subprocess
 import sys
@@ -82,18 +83,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
 
         # ---------------------------------------------
-        # Start GeoProcessor and application data used in the UI
+        # Start GeoProcessor and application data used in the UI.
 
-        # This is a session object to keep track of session variables such as command file history
+        # This is a session object to keep track of session variables such as command file history.
         self.app_session: GeoProcessorAppSession = app_session
 
         # The GeoProcessor object from calling code (main app) will be used for processing.
         self.gp = geoprocessor
 
-        # GeoProcessorListModel that manages the commands, initialized when UI is created
+        # GeoProcessorListModel that manages the commands, initialized when UI is created.
         self.gp_model = None
 
-        # End properties that are used in the UI
+        # End properties that are used in the UI.
         # ---------------------------------------------
 
         # Initialize UI components to None so that PyCharm does not complain about initializing outside of __init__
@@ -118,7 +119,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.listWidget: QtWidgets.QListWidget or None = None
 
         # Command list
-        self.command_CommandListWidget: CommandListWidget or None = None  # previously command_ListWidget
+        self.command_CommandListWidget: CommandListWidget or None = None  # Previously command_ListWidget.
         self.commands_GroupBox: QtWidgets.QGroupBox or None = None
         # # self.gp_model: GeoProcessorListModel or None = None
         # self.command_list_model: GeoProcessorListModel or None = None
@@ -138,19 +139,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.menu_item_select_all_commands: QtWidgets.QAction or None = None
         self.menu_item_deselect_all_commands: QtWidgets.QAction or None = None
 
-        self.commands_cut_buffer: [AbstractCommand] = []  # List of commands for cut/copy/paste
+        self.commands_cut_buffer: [AbstractCommand] = []  # List of commands for cut/copy/paste.
 
-        # Dialog for command status
+        # Dialog for command status:
         # - apparently cannot make 'command_status_dialog' - must be a class member or goes out of scope in function?
         self.command_status_dialog: QtWidgets.QDialog or None = None
 
-        # Dialogs that must be global.
+        # Dialogs that must be global:
         # - otherwise they go out of scope in function and are closed automatically and immediately after opening
         # - use open_dialog() to open an instance and add to this list
         # - TODO smalers 2020-11-15 need to add a close_dialog() function to remove from the list
         self.dialogs: {QtWidgets.QDialog} = {}
 
-        # Results area
+        # Results area.
         self.results_GroupBox: QtWidgets.QGroupBox or None = None
         self.results_VerticalLayout: QtWidgets.QVBoxLayout or None = None
         self.results_TabWidget: QtWidgets.QTabWidget or None = None
@@ -208,9 +209,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.status_Label: QtWidgets.QLabel or None = None
         self.status_Label_Hint: QtWidgets.QLabel or None = None
 
-        # Define all application menus
-        # - This won't be needed for dynamically-loaded features.
-        # - Menus and submenus are of type QtWidgets.QMenu, and menu items are of type QtWidgets.QAction.
+        # Define all application menus:
+        # - this won't be needed for dynamically-loaded features
+        # - menus and submenus are of type QtWidgets.QMenu, and menu items are of type QtWidgets.QAction
 
         # File menu
         self.Menu_File: QtWidgets.QMenu or None = None
@@ -218,9 +219,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_New_CommandFile: QtWidgets.QAction or None = None
         self.Menu_File_Open: QtWidgets.QMenu or None = None
         self.Menu_File_Open_CommandFile: QtWidgets.QAction or None = None
-        # List of 20 most recent command files, dynamic menus
+        # List of 20 most recent command files, dynamic menus.
         self.Menu_File_Open_CommandFileHistory_List: list or None = None
-        # Maximum number of command files in the File / Open / Command File menu
+        # Maximum number of command files in the File / Open / Command File menu.
         self.command_file_menu_max: int = 20
         self.Menu_File_Save: QtWidgets.QMenu or None = None
         self.Menu_File_Save_Commands: QtWidgets.QAction or None = None
@@ -328,6 +329,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_VisualizationProcessing: QtWidgets.QMenu or None = None
 
         # Commands / General
+
         # Commands / General - Comments
         self.Menu_Commands_General_Comments: QtWidgets.QMenu or None = None
         self.Menu_Commands_General_Comments_Single: QtWidgets.QAction or None = None
@@ -427,47 +429,47 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.sys_info: QtWidgets.QDialog or None = None
         self.sys_info_text_browser: QtWidgets.QTextBrowser or None = None
 
-        # Old way was to initialize generically
+        # Old way was to initialize generically.
         # super().__init__()
-        # New way is to inherit from Qt main window
+        # New way is to inherit from Qt main window.
         QtWidgets.QMainWindow.__init__(self)
         print('Inside GeoProcessorUI constructor, calling setup_ui')
-        # Call the setupUi function to instantiate UI components
-        # - This is code that was originally auto-generated by QT Designer
+        # Call the setupUi function to instantiate UI components:
+        # - this is code that was originally auto-generated by QT Designer
         self.setup_ui()
 
-        # 2020-01-18 moved the following logic into setup_ui_commands()
-        # Model to map GeoProcessor commands to the CommandListWidget
+        # 2020-01-18 moved the following logic into setup_ui_commands().
+        # Model to map GeoProcessor commands to the CommandListWidget.
         # # self.gp_model = GeoProcessorListModel(self.gp, self.command_CommandListWidget)
         # self.gp_model = GeoProcessorListModel(self.gp)
         # self.command_CommandListWidget.set_gp_model(self.gp_model)
 
-        # Initialize a command list backup object. This will keep track of the command list and
-        # notify the program if it has been edited since the previous save.
+        # Initialize a command list backup object.
+        # This will keep track of the command list and notify the program if it has been edited since the previous save.
         # The backup list should be recreated every time a command file is read or written.
         self.command_list_backup = CommandListBackup()
 
-        # Save runtime properties
-        # - Initially the AppVersion and AppVersionDate, for use in Help About
+        # Save runtime properties:
+        # - initially the AppVersion and AppVersionDate, for use in Help About
         if runtime_properties is None:
             self.runtime_properties = {}
         else:
             self.runtime_properties = runtime_properties
 
-        # The most recent file save location, used to help file dialog start with recent location
+        # The most recent file save location, used to help file dialog start with recent location:
         # - could be command file or other files
         self.saved_file = None
 
         # Keep track of whether the user has opened a command file,
-        # used to decide whether to save command or save command as on exit
+        # used to decide whether to save command or save command as on exit.
         self.opened_command_file = False
 
-        # Has the command file been saved? False only if new command file has not yet been saved
+        # Has the command file been saved? False only if new command file has not yet been saved.
         self.command_file_saved = False
 
         # All event handlers and connections are configured in the setup_ui*() functions grouped by component.
 
-        # Tell the processor that the UI will listing to command processor progress,
+        # Tell the processor that the UI will listen to command processor progress,
         # including when commands are started, finish, etc., so the UI can update its state.
         self.gp.add_command_processor_listener(self)
 
@@ -489,8 +491,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     # noinspection PyPep8Naming
     def closeEvent_confirm_exit(self, event: QtGui.QCloseEvent) -> None:
         """
-        Prompt user with a dialog window that asks if the user really wants to exit
-        GeoProcessor.
+        Prompt user with a dialog window that asks if the user really wants to exit the GeoProcessor.
 
         Args:
             event: Event being the exit button clicked
@@ -512,16 +513,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     # noinspection PyPep8Naming
     def closeEvent_save_command_file(self) -> None:
         """
-        Before exiting check to see if the command file has been edited. If so ask if the user
+        Before exiting check to see if the command file has been edited. If so ask whether the user
         would like to save the command file.
 
         Returns:
             None
         """
-        # Check to see if command list has been modified
+        # Check to see if command list has been modified.
         command_list_modified = self.command_list_backup.command_list_modified(self.gp.commands)
 
-        # If modified, open dialog box to ask if user wants to save file
+        # If modified, open dialog box to ask if user wants to save file.
         if command_list_modified:
             save_command_dialog =\
                 QtWidgets.QMessageBox.question(self, 'GeoProcessor',
@@ -531,7 +532,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                                                QtWidgets.QMessageBox.No |
                                                QtWidgets.QMessageBox.Cancel)
 
-            # If user selects yes to save commands
+            # If user selects yes to save commands.
             if save_command_dialog == QtWidgets.QMessageBox.Yes:
                 # Open Save Window
                 if not self.opened_command_file:
@@ -565,18 +566,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         debug = True
         logger = logging.getLogger(__name__)
         if command is None:
-            # Not really needed but prevents a warning
+            # Not really needed but prevents a warning.
             return
 
         # Get the class name
         command_class = command.__class__.__name__
 
-        # Update the progress to indicate progress (0 to number of commands... completed).
-        # - icommand starts at 0 so need to update add 2, one for zero value and 1 for zero offset index
+        # Update the progress to indicate progress (0 to number of commands... completed):
+        # - 'icommand' starts at 0 so need to update add 2, one for zero value and 1 for zero offset index
         self.status_CommandWorkflow_StatusBar.setValue(icommand + 2)
         self.status_CurrentCommand_StatusBar.setValue(100)
 
-        # Set the tooltip text for the progress bar to indicate the numbers
+        # Set the tooltip text for the progress bar to indicate the numbers.
         hint = ("Completed command " + str(icommand + 1) + " of " + str(ncommand))
         self.status_CommandWorkflow_StatusBar.setToolTip(hint)
 
@@ -599,7 +600,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Last command being run has completed.
             self.status_Label.setText("Ready")
             self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
-            # The following updates the command status and displays warning/fail icons
+            # The following updates the command status and displays warning/fail icons.
             self.command_CommandListWidget.update_ui_command_list_errors()
             # TODO smalers 2020-03-13 old logic
             # self.update_ui_commands_list()
@@ -631,18 +632,18 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         debug = True
         logger = logging.getLogger(__name__)
         if command is None:
-            # Not really needed but prevents a warning
+            # Not really needed but prevents a warning.
             return
 
         # Get the class name
         command_class = command.__class__.__name__
 
-        # Update the progress to indicate progress (0 to number of commands... completed).
+        # Update the progress to indicate progress (0 to number of commands... completed):
         # - icommand starts at 0 so need to update add 2, one for zero value and 1 for zero offset index
         self.status_CommandWorkflow_StatusBar.setValue(icommand + 2)
         self.status_CurrentCommand_StatusBar.setValue(100)
 
-        # Set the tooltip text for the progress bar to indicate the numbers
+        # Set the tooltip text for the progress bar to indicate the numbers.
         hint = ("Exception for command " + str(icommand + 1) + " of " + str(ncommand))
         self.status_CommandWorkflow_StatusBar.setToolTip(hint)
 
@@ -654,7 +655,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 (icommand + 1)))
             detected_end = True
         elif command_class == "Exit":
-            # Last command has completed (or Exit() command) so refresh the command status.
+            # Last command has completed (or Exit() command) so refresh the command status:
             # - should not get an exception but put in code for consistency with 'command_completed'
             logger.info("Detected (from listener) exception running Exit command...updating UI status.")
             detected_end = True
@@ -666,9 +667,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Last command being run has completed.
             self.status_Label.setText("Ready")
             self.status_Label_Hint.setText("Completed running commands. Use Results and Tools menus.")
-            # The following updates the command status and displays warning/fail icons
+            # The following updates the command status and displays warning/fail icons.
             self.command_CommandListWidget.update_ui_command_list_errors()
-            # TODO smalers 2020-03-13 old logic
+            # TODO smalers 2020-03-13 old logic.
             # self.update_ui_commands_list()
             # Cause the labels to be updated
             self.command_CommandListWidget.update_ui_status_commands()
@@ -695,14 +696,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         """
 
         # command_completed updates the progress bar after each command.
-        # For this method, only reset the bounds of the progress bar and
-        # clear if the first command.
+        # For this method, only reset the bounds of the progress bar and clear if the first command.
         hint = ("Running command " + str(icommand + 1) + " of " + str(ncommand))
         self.status_Label_Hint.setText(hint)
-        # TODO check if run commands is being run then also put the input file name to make it easeir to understand
-        # TODO progress. Check TSTool.
+        # TODO Check if run commands is being run then also put the input file name to make it easeir to understand
+        #    progress. Check TSTool.
         # run_commands()/additional info?
-        # Use level zero because the command processor is already printing a log message when each command is run
+        # Use level zero because the command processor is already printing a log message when each command is run.
 
         self.status_Label.setText("Wait")
 
@@ -710,11 +710,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.status_CommandWorkflow_StatusBar.setMinimum(0)
             self.status_CommandWorkflow_StatusBar.setMaximum(ncommand)
             self.status_CommandWorkflow_StatusBar.setValue(0)
-        # Set the tooltip text for the progress bar to indicate the numbers
+            # Set the tooltip text for the progress bar to indicate the numbers.
             self.status_CommandWorkflow_StatusBar.setToolTip(hint)
-        # Always set the value for the command progress sot hat it shows up
-        # as zero. The command_progress() method will do a better job of setting
-        # the limits and current status for each specific command.
+        # Always set the value for the command progress sot hat it shows up as zero.
+        # The command_progress() method will do a better job of setting the limits and current status for each command.
         self.status_CurrentCommand_StatusBar.setMinimum(0)
         self.status_CurrentCommand_StatusBar.setMaximum(100)
         self.status_CurrentCommand_StatusBar.setValue(0)
@@ -733,11 +732,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         if size == 0:
             return
 
-        # Clear what may previously have been in the cut buffer...
+        # Clear what may previously have been in the cut buffer.
         self.commands_cut_buffer.clear()
 
-        # Transfer Command instances to the cut buffer...
-        command = None  # Command instance to process
+        # Transfer Command instances to the cut buffer.
+        command = None  # Command instance to process.
         for i in range(size):
             command = self.gp_model.gp.commands[selected_indices[i]]
             # It is OK ot store the original commands in the cut buffer because their command strings will be used
@@ -759,10 +758,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         if size == 0:
             return
 
-        # Clear what may previously have been in the cut buffer...
+        # Clear what may previously have been in the cut buffer.
         self.commands_cut_buffer.clear()
 
-        # Transfer Command instances to the cut buffer...
+        # Transfer Command instances to the cut buffer.
         command = None  # Command instance to process
         for i in range(size):
             command = self.gp_model.gp.commands[selected_indices[i]]
@@ -770,7 +769,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # to create new commands if necessary for paste.
             self.commands_cut_buffer.append(command)
 
-        # Remove the selected commands - same as pressing the clear button
+        # Remove the selected commands - same as pressing the clear button:
         # - commands will be removed from the list, with prompt if all commands are removed
         self.command_CommandListWidget.command_list_clear()
 
@@ -798,7 +797,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         logger = logging.getLogger(__name__)
 
-        # Get the list of selected indices.
+        # Get the list of selected indices:
         # -the following returns a list of PyQt5.QtCore.QModelIndex, an empty list if none are selected.
 
         selected_indices = self.command_CommandListWidget.get_selected_indices()
@@ -809,27 +808,27 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box('No commands are selected - cannot edit - the code has a logic problem.')
             return
 
-        # Ensure that if the first selected command is a comments that they are contiguous.
+        # Ensure that if the first selected command is a comments that they are contiguous:
         # - ignore remaining selections that are not contiguous
         is_hash_comment_block = False
         comment_commands = []
-        selected_indices_edited = []  # List of rows (0+) that are actually edited, may be less than all selections
+        selected_indices_edited = []  # List of rows (0+) that are actually edited, may be less than all selections.
         if self.gp.commands[selected_indices[0]].command_string.strip().startswith('#'):
             # Have a # comment
             is_hash_comment_block = True
 
-            # Get the first contiguous selected block of comment commands
+            # Get the first contiguous selected block of comment commands:
             # - remaining selected commands won't be edited
             comment_count = 0
             index_prev = -1
             for index in selected_indices:
-                # Check whether still in contiguous block of selected commands
+                # Check whether still in contiguous block of selected commands.
                 if index_prev >= 0:
-                    # Processing 2nd+ selected index
+                    # Processing 2nd+ selected index.
                     if (index - index_prev) > 1:
-                        # No longer in contiguous block
+                        # No longer in contiguous block.
                         break
-                # Always set the previous index for the next iteration
+                # Always set the previous index for the next iteration.
                 index_prev = index
                 if self.gp.commands[index].command_string.strip().startswith('#'):
                     # Still processing contiguous comments.
@@ -841,27 +840,27 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.debug("Editing " + str(len(comment_commands)) + " #-comments.")
 
         else:
-            # Editing a one-line command.
+            # Editing a one-line command:
             # - get the index of the first selected command
             command_object = self.gp.commands[selected_indices[0]]
             logger.debug("Editing a single command.")
 
-        # Create a copy of the command to edit.
+        # Create a copy of the command to edit:
         # - this matches TSTool logic
         # - this allows the new command edit to be discarded if Cancel is pressed in the edit
         # - otherwise, there is danger that the editor will change underlying data prior to Cancel
         # - a "deep" copy is probably needed because lists of metadata, etc. are needed; however, deepcopy() fails,
         #   and not sure how well copy() does.  Therefore, create a new instance of the command using the command string
 
-        create_unknown_command_if_not_recognized = True  # Similar to an original load from a command file
+        create_unknown_command_if_not_recognized = True  # Similar to an original load from a command file.
         command_factory = GeoProcessorCommandFactory()
         command_object_original = None
         if is_hash_comment_block:
-            # Copy the first comment command object
+            # Copy the first comment command object:
             # - multiple lines are handled below by setting text in the editor
             command_object_original = comment_commands[0]
         else:
-            # Copy the single command object
+            # Copy the single command object:
             command_object_original = command_object
 
         command_object_to_edit = command_factory.new_command(
@@ -870,7 +869,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # logger.debug("New command for editing is type " + str(type(command_object)))
         # logger.debug("Description =" + command_object.command_metadata['Description'])
 
-        # Initialize additional command object data.
+        # Initialize additional command object data:
         # - work is done in the AbstractCommand class
         # - the processor is set in the command
         # - full_initialization parses the command string
@@ -883,12 +882,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # - create a command editor using the factory
         # noinspection PyBroadException
         try:
-            # Create the editor for the command
+            # Create the editor for the command:
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object_to_edit, self.app_session)
             if is_hash_comment_block:
-                # Comment block editor is for 1+ comment lines separated by newline as formed above
+                # Comment block editor is for 1+ comment lines separated by newline as formed above.
                 comment_block_text = ""
                 for i in range(len(comment_commands)):
                     command = comment_commands[i]
@@ -914,21 +913,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Get the command string from the dialog window.
                 command_string = command_editor.CommandDisplay_View_TextBrowser.toPlainText()
 
-                # Update command in GeoProcessor list of commands
+                # Update command in GeoProcessor list of commands.
                 if is_hash_comment_block:
-                    # The editor will result in 0+ newline-separated comments
+                    # The editor will result in 0+ newline-separated comments:
                     # - let the command editor deal with formatting
                     # - the get_text() function is similar to TSTool Command_JDialog.getText().
                     command_string_list = command_editor.get_command_string_list()
-                    # Update or insert into the GeoProcessor
+                    # Update or insert into the GeoProcessor:
                     # - the number of comments as per num_selected_are_comments may be different from the
                     #   number of comments returned from the editor
 
-                    # First, remove the selected comments from before that were edited
+                    # First, remove the selected comments from before that were edited:
                     # - remove at the same index for the number of original comments since contiguous
                     # - callbacks will update UI status
                     self.gp_model.clear_selected_commands(selected_indices_edited)
-                    # Second, add the new comments starting at the same position as before.
+                    # Second, add the new comments starting at the same position as before:
                     # - use the data model to change the command list
                     comment_commands_new = []
                     for command_string in command_string_list:
@@ -937,31 +936,31 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                             command_string,
                             create_unknown_command_if_not_recognized)
                         full_initialization = True
-                        # Initialize the comment string
+                        # Initialize the comment string.
                         comment_command_new.initialize_command(command_string, self.gp_model.gp, full_initialization)
                         comment_command_new.initialize_geoprocessor_ui(self)
                         comment_commands_new.append(comment_command_new)
-                    # Insert the commands in bulk into the model
+                    # Insert the commands in bulk into the model.
                     self.gp_model.insert_commands_at_index(comment_commands_new, selected_indices_edited[0])
                 else:
-                    # Update the string in the original command
+                    # Update the string in the original command:
                     # - just reinitialize the command using the string from the edited command copy
                     full_initialization = True
                     command_object.initialize_command(command_object_to_edit.command_string, self.gp_model.gp,
                                                       full_initialization)
                     command_object.initialize_geoprocessor_ui(self)
 
-                # Manually set the run all commands and clear commands buttons to enabled
+                # Manually set the run all commands and clear commands buttons to enabled:
                 # - TODO smalers 2020-03-13 hopefully don't need this since status us checked below
                 # self.command_CommandListWidget.commands_RunAllCommands_PushButton.setEnabled(True)
                 # self.command_CommandListWidget.commands_ClearCommands_PushButton.setEnabled(True)
 
-                # update the window title in case command file has been modified
+                # Update the window title in case command file has been modified.
                 self.update_ui_status()
                 self.update_ui_main_window_title()
 
             else:
-                # Cancel was clicked so don't do anything
+                # Cancel was clicked so don't do anything.
                 pass
 
         except Exception:
@@ -989,14 +988,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         logger = logging.getLogger(__name__)
         logger.debug("Editing new command string:  '" + command_string + "'")
 
-        # Trim the command string string, just in case, but
+        # Trim the command string, just in case, but.
 
-        # Detect comment block, which is handled separately because it can edit more than one line
+        # Detect comment block, which is handled separately because it can edit more than one line.
         is_hash_comment_block = False
         if command_string.strip().startswith("#"):
             is_hash_comment_block = True
 
-        # Create a new command object for the command name using the command factory.
+        # Create a new command object for the command name using the command factory:
         # - the command object will be retained as is if a one-line command
         # - if a # comment block, the returned command object string will be split
         #   into 1+ comment commands and added separately for each line
@@ -1004,10 +1003,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         try:
             command_factory = GeoProcessorCommandFactory()
 
-            # Initialize the command object (without parameters).
-            # - Work is done in the GeoProcessorCommandFactory class.
-            # - Do not allow unrecognized commands because this function should only be called with valid commands.
-            # - # comments at this point will only be one line (may be more than one line after editing).
+            # Initialize the command object (without parameters):
+            # - work is done in the GeoProcessorCommandFactory class
+            # - do not allow unrecognized commands because this function should only be called with valid commands
+            # - # comments at this point will only be one line (may be more than one line after editing)
             create_unknown_command_if_not_recognized = False
             command_object = command_factory.new_command(
                 command_string,
@@ -1015,7 +1014,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             logger.debug("New command for editing is type " + str(type(command_object)))
             # logger.debug("Description =" + command_object.command_metadata['Description'])
 
-            # Initialize additional command object data.
+            # Initialize additional command object data:
             # - work is done in the AbstractCommand class
             # - the processor is set in the command
             # - full_initialization parses the command string, which won't do much here since new and no parameters
@@ -1028,14 +1027,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box(message)
             return
 
-        # If here, a new command instance was successfully created above.
-        # - Currently don't allow UnknownCommand instance, but might allow in the future.
+        # If here, a new command instance was successfully created above:
+        # - currently don't allow UnknownCommand instance, but might allow in the future
         # Use the command object to create a corresponding editor based on the command's
         # command_metadata[`EditorType`] value.
 
         # noinspection PyBroadException
         try:
-            # Create the editor for the command
+            # Create the editor for the command:
             # - initialization occurs in the dialog
             command_editor_factory = GeoProcessorCommandEditorFactory()
             command_editor = command_editor_factory.new_command_editor(command_object, self.app_session)
@@ -1048,7 +1047,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box(message)
             return
 
-        # Now edit the new command in the editor.
+        # Now edit the new command in the editor:
         # - the editor will check command parameters for validity
         # - if command parameters are validated, the user can press "OK" to accept the new command
         # - if command parameters do not validate, the user can press "Cancel"
@@ -1059,7 +1058,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             button_clicked = command_editor.exec_()
 
             if button_clicked == QtWidgets.QDialog.Accepted:
-                # The editor will have edited the command string.
+                # The editor will have edited the command string:
                 # - in most cases the string will not contain newlines
                 # - if a #-block of comments, multiple # lines will be separated by newline
                 if is_hash_comment_block:
@@ -1077,14 +1076,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     comment_lines = command_object.command_string.splitlines()
                     logger.debug("# comment block has " + str(len(comment_lines)) + " lines.")
                     for i in range(len(comment_lines)):
-                        # Make sure that the lines start with the comment character
+                        # Make sure that the lines start with the comment character.
                         if not comment_lines[i].strip().startswith("#"):
-                            # Need to add # in front of command, but need to check for leading spaces
+                            # Need to add # in front of command, but need to check for leading spaces.
                             if not comment_lines[i].startswith("") and not comment_lines[i].startswith("\t"):
-                                # String does not start with space or tab so add "# " at the start
+                                # String does not start with space or tab so add "# " at the start.
                                 comment_lines[i] = "# " + comment_lines[i]
                             else:
-                                # More than one space or tab so get the leading string
+                                # More than one space or tab so get the leading string:
                                 # - then insert the "# " in the middle of the string
                                 white = string_util.get_leading_whitespace(comment_lines[i])
                                 comment_lines[i] = white + "# " + comment_lines[i][len(white):]
@@ -1093,28 +1092,28 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                         command_object = command_factory.new_command(
                             comment_lines[i],
                             create_unknown_command_if_not_recognized)
-                        # The above just creates an instance of the command but does not initialize it
+                        # The above just creates an instance of the command but does not initialize it.
                         full_initialization = True
                         command_object.initialize_command(comment_lines[i], self.gp_model.gp, full_initialization)
                         logger.debug("New comment line after creating command: '" + command_object.command_string + "'")
-                        # Add the comment command to the temporary list
+                        # Add the comment command to the temporary list.
                         comment_commands.append(command_object)
 
                 # Add the command to the GeoProcessor commands.
                 # If there are already commands in the command list, see if any are selected.
                 insert_row = -1  # used to update the UI command list data model
                 if len(self.gp.commands) == 0:
-                    # Will insert at first row
+                    # Will insert at first row.
                     insert_row = 0
                 else:
-                    # Default insert row is at end (next index after the last row = length)
+                    # Default insert row is at end (next index after the last row = length):
                     # - end row is calculated below depending on whether one or more rows are inserted.
                     insert_row = len(self.gp_model)
 
                 # Check whether any commands are selected and if so reset the insert row.
                 selected_indices = self.command_CommandListWidget.command_ListView.selectedIndexes()
                 if (selected_indices is not None) and (len(selected_indices) > 0):
-                    # Have selected commands
+                    # Have selected commands:
                     # - selected_indices are QModelIndex so get the integer row
                     # - reset the insert row to the first selected
                     insert_row = selected_indices[0].row()
@@ -1124,23 +1123,23 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     # Add all the comment commands starting at the indicated index.
                     self.gp_model.insert_commands_at_index(comment_commands, insert_row)
                 else:
-                    # Insert the single row in the data model
+                    # Insert the single row in the data model.
                     self.gp_model.insert_command_at_index(command_object, insert_row)
 
                 # If rows were selected prior to the insert, select the same rows again by shifting by the
-                # number of commands that were inserted
-                # TODO smalers 2020-03-13 This needs to be implemented
-                new_selected_indices = [len(selected_indices)]  # array of integer rows (not QModelIndex)
+                # number of commands that were inserted.
+                # TODO smalers 2020-03-13 This needs to be implemented.
+                new_selected_indices = [len(selected_indices)]  # Array of integer rows (not QModelIndex).
                 if (selected_indices is not None) and (len(selected_indices) > 0):
                     if is_hash_comment_block:
                         pass
                     else:
-                        # Inserted a single row
+                        # Inserted a single row.
                         for i in range(len(selected_indices)):
                             if selected_indices[i].row() >= insert_row:
-                                # Shift by one row
+                                # Shift by one row.
                                 new_selected_indices[i] = selected_indices[i].row() + 1
-                    # Reselect the rows
+                    # Reselect the rows.
                     self.command_CommandListWidget.command_list_select_rows(new_selected_indices)
 
                 # The item has been added to the GeoProcessor command list but the Widget needs to be informed.
@@ -1176,12 +1175,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             The new dialog instance.
         """
         if existing_dialog is None:
-            # Create a new dialog
+            # Create a new dialog.
             dialog = QtWidgets.QDialog()
         else:
             dialog = existing_dialog
         if id is None:
-            # Default identifier is "dialogN" where N is the count of dialogs
+            # Default identifier is "dialogN" where N is the count of dialogs.
             id = "dialog{}".format((len(self.dialogs) + 1))
         self.dialogs[id] = dialog
         return dialog
@@ -1196,7 +1195,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
         if len(self.commands_cut_buffer) == 0:
-            # No commands in the buffer so nothing to do - should not have been called but check anyway
+            # No commands in the buffer so nothing to do - should not have been called but check anyway.
             return
 
         logger = logging.getLogger(__name__)
@@ -1207,10 +1206,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             new_commands = []
             command_factory = GeoProcessorCommandFactory()
             for command in self.commands_cut_buffer:
-                # Initialize the command object (without parameters).
-                # - Work is done in the GeoProcessorCommandFactory class.
-                # - Do not allow unrecognized commands because this function should only be called with valid commands.
-                # - # comments at this point will only be one line (may be more than one line after editing).
+                # Initialize the command object (without parameters):
+                # - work is done in the GeoProcessorCommandFactory class
+                # - do not allow unrecognized commands because this function should only be called with valid commands
+                # - # comments at this point will only be one line (may be more than one line after editing)
                 create_unknown_command_if_not_recognized = False
                 command_object = command_factory.new_command(
                     command.command_string,
@@ -1219,7 +1218,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 new_commands.append(command_object)
                 # logger.debug("Description =" + command_object.command_metadata['Description'])
 
-                # Initialize additional command object data.
+                # Initialize additional command object data:
                 # - work is done in the AbstractCommand class
                 # - the processor is set in the command
                 # - full_initialization parses the command string, which won't do much here since new and no parameters
@@ -1229,12 +1228,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Check whether any commands are selected and if so reset the insert row.
             selected_indices = self.command_CommandListWidget.command_ListView.selectedIndexes()
             if (selected_indices is not None) and (len(selected_indices) > 0):
-                # Have selected commands
+                # Have selected commands:
                 # - selected_indices are QModelIndex so get the integer row
                 # - reset the insert row to the row after the last selected row
                 insert_row = selected_indices[len(selected_indices) - 1].row() + 1
             else:
-                # Insert after all commands
+                # Insert after all commands.
                 insert_row = len(self.gp_model)
 
             self.gp_model.insert_commands_at_index(new_commands, insert_row)
@@ -1272,8 +1271,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
         print("Entering setup_ui")
-        main_window = self  # The main window, in this case self
-        # Main window that will contain all other components
+        main_window = self  # The main window, in this case self.
+        # Main window that will contain all other components.
         main_window.setObjectName(qt_util.from_utf8("MainWindow"))
         self.ui_set_main_window_title("commands not saved")
         main_window.resize(1038, 834)
@@ -1281,43 +1280,43 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         font.setFamily(qt_util.from_utf8("MS Shell Dlg 2"))
         main_window.setFont(font)
         main_window.setWindowOpacity(1.0)
-        # Set the main window title bar icon
+        # Set the main window title bar icon.
         icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
         main_window.setWindowIcon(QtGui.QIcon(icon_path))
         # main_window.setWindowIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
 
-        # Central widget is the place where the main content is placed
-        # - See http://doc.qt.io/qt-5/qmainwindow.html
-        # - Use 6 columns for grid layout
+        # Central widget is the place where the main content is placed:
+        # - see http://doc.qt.io/qt-5/qmainwindow.html
+        # - use 6 columns for grid layout
         main_window.centralwidget = QtWidgets.QWidget(main_window)
         main_window.centralwidget.setObjectName(qt_util.from_utf8("centralwidget"))
         main_window.centralwidget_GridLayout = QtWidgets.QGridLayout(self.centralwidget)
         main_window.centralwidget_GridLayout.setObjectName(qt_util.from_utf8("centralwidget_GridLayout"))
 
-        # Row position within central widget grid layout
+        # Row position within central widget grid layout:
         # - will be incremented by one before adding a component so first use will set to zero
         y_centralwidget = 2
 
-        # Set up the Catalog area
+        # Set up the Catalog area.
         # y_centralwidget = y_centralwidget + 1
         # self.setup_ui_catalog(y_centralwidget)
 
-        # Set up the Commands area
+        # Set up the Commands area.
         y_centralwidget = y_centralwidget + 1
         self.setup_ui_commands(y_centralwidget)
 
-        # Setup the Results components
+        # Setup the Results components.
         y_centralwidget = y_centralwidget + 1
         self.setup_ui_results(y_centralwidget)
 
-        # Setup the Status components
+        # Setup the Status components.
         y_centralwidget = y_centralwidget + 1
         self.setup_ui_status(main_window, y_centralwidget)
 
-        # Now set the central widget, which will have been populated with the above components
+        # Now set the central widget, which will have been populated with the above components.
         main_window.setCentralWidget(self.centralwidget)
 
-        # Setup the Menu components
+        # Setup the Menu components.
         self.setup_ui_menus(main_window)
         # Setup the Toolbar components
         self.setup_ui_toolbar(main_window)
@@ -1326,7 +1325,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Exit.triggered.connect(main_window.close)
         # QtCore.QObject.connect(self.Menu_File_Exit, QtCore.SIGNAL(qt_util.from_utf8("triggered()")), MainWindow.close)
         # Don't need to do the following anymore because Qt Designer approach is not used?
-        # - Use the new-style approach documented here:
+        # - use the new-style approach documented here:
         # http://joat-programmer.blogspot.com/2012/02/pyqt-signal-and-slots-to-capture-events.html
         # QtCore.QMetaObject.connectSlotsByName(main_window)
         # print("Leaving setup_ui")
@@ -1341,7 +1340,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Catalog area is in the top of the central widget
+        # Catalog area is in the top of the central widget:
         # - enable this area later since don't currently have browser for layers or datastores
         # - double hash below is what is commented out
         self.catalog_GroupBox = QtWidgets.QGroupBox(self.centralwidget)
@@ -1370,8 +1369,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Commands area is in the middle of the central widget
-        # First the main commands area with border
+        # Commands area is in the middle of the central widget.
+        # First the main commands area with border.
         self.commands_GroupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.commands_GroupBox.setObjectName(qt_util.from_utf8("commands_GroupBox"))
         self.commands_GroupBox.setTitle("Commands (0 commands, 0  selected, 0 with failures, 0 with warnings)")
@@ -1381,16 +1380,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Command-related events from the widget are passed back to this class to be handled.
         self.command_CommandListWidget = CommandListWidget(self.commands_GroupBox)
 
-        # Model to map GeoProcessor commands to the CommandListWidget
+        # Model to map GeoProcessor commands to the CommandListWidget.
         # self.gp_model = GeoProcessorListModel(self.gp, self.command_CommandListWidget)
         self.gp_model = GeoProcessorListModel(self.gp)
         # self.command_CommandListWidget.command_ListWidget.set_gp_model(self.gp_model)
         self.command_CommandListWidget.set_gp_model(self.gp_model)
 
-        # Add listener
+        # Add listener.
         self.command_CommandListWidget.add_main_ui_listener(self)
 
-        # Add the commands to the central widget
+        # Add the commands to the central widget.
         self.centralwidget_GridLayout.addWidget(self.commands_GroupBox, y_centralwidget, 0, 1, 6)
 
     def setup_ui_menus(self, main_window: GeoProcessorUI) -> None:
@@ -1426,7 +1425,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_New_CommandFile = QtWidgets.QAction(main_window)
         self.Menu_File_New_CommandFile.setObjectName(qt_util.from_utf8("Menu_File_New_CommandFile"))
         self.Menu_File_New_CommandFile.setText("Command File")
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_File_New_CommandFile.triggered.connect(self.ui_action_new_command_file)
         self.Menu_File_New.addAction(self.Menu_File_New_CommandFile)
@@ -1444,21 +1443,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/baseline_folder_open_black_18dp.png"
         self.Menu_File_Open_CommandFile.setIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_File_Open_CommandFile.triggered.connect(lambda: self.ui_action_open_command_file())
         self.Menu_File_Open.addAction(self.Menu_File_Open_CommandFile)
         self.Menu_File_Open.addSeparator()
 
-        # File / Open / Command File menu
+        # File / Open / Command File menu:
         # - initialize enough menu objects for the maximum, but will only actually use 0 to the maximum
         self.Menu_File_Open_CommandFileHistory_List =\
             [QtWidgets.QAction(main_window) for i in range(0, self.command_file_menu_max)]
         for i in range(0, self.command_file_menu_max):
             qt_action = QtWidgets.QAction(main_window)
             # Initially assigned a callback function so that it can be cleared in the first step of reassigning
-            # a new callback in ui_init_file_open_recent()
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # a new callback in ui_init_file_open_recent().
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             qt_action.triggered.connect(lambda: self.ui_action_open_command_file(""))
             self.Menu_File_Open_CommandFileHistory_List[i] = qt_action
@@ -1474,7 +1473,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Save_Commands = QtWidgets.QAction(main_window)
         self.Menu_File_Save_Commands.setObjectName(qt_util.from_utf8("Menu_File_Save_Commands"))
         self.Menu_File_Save_Commands.setText("Commands")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_File_Save_Commands.triggered.connect(self.ui_action_save_commands)
         self.Menu_File_Save.addAction(self.Menu_File_Save_Commands)
@@ -1483,7 +1482,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Save_CommandsAs = QtWidgets.QAction(main_window)
         self.Menu_File_Save_CommandsAs.setObjectName(qt_util.from_utf8("Menu_File_Save_CommandsAs"))
         self.Menu_File_Save_CommandsAs.setText("Commands as ...")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_File_Save_CommandsAs.triggered.connect(self.ui_action_save_commands_as)
         self.Menu_File_Save.addAction(self.Menu_File_Save_CommandsAs)
@@ -1492,13 +1491,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_File_Print = QtWidgets.QAction(main_window)
         self.Menu_File_Print.setObjectName(qt_util.from_utf8("Menu_File_Print"))
         self.Menu_File_Print.setText("Print")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_File_Print.triggered.connect(self.ui_action_print_commands)
         self.Menu_File.addSeparator()
         self.Menu_File.addAction(self.Menu_File_Print)
 
-        # File / Properties menu - TODO smalers 2018-07-29 evaluate whether needed
+        # File / Properties menu - TODO smalers 2018-07-29 evaluate whether needed.
         # self.Menu_File_Properties = QtWidgets.QAction(main_window)
         # self.Menu_File_Properties.setObjectName(qt_util.from_utf8("Menu_File_Properties"))
         # self.Menu_File_Properties.setText("Properties")
@@ -1529,7 +1528,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Edit_Format.setObjectName(qt_util.from_utf8("Menu_Edit_Format"))
         self.Menu_Edit_Format.setText("Format")
         self.Menu_Edit.addAction(self.Menu_Edit_Format)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Edit_Format.triggered.connect(self.ui_action_edit_format)
 
@@ -1548,7 +1547,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_View_CommandFileDiff.setObjectName(qt_util.from_utf8("Menu_View_CommandFileDiff"))
         self.Menu_View_CommandFileDiff.setText("Command File Diff")
         self.Menu_View.addAction(self.Menu_View_CommandFileDiff)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_View_CommandFileDiff.triggered.connect(self.ui_action_view_command_file_diff)
 
@@ -1577,7 +1576,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Select_Free_FreeGeoLayers"))
         self.Menu_Commands_Select_Free_FreeGeoLayers.setText(
             "FreeGeoLayers()... <removes one or more GeoLayers from the GeoProcessor>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Select_Free_FreeGeoLayers.triggered.connect(
             functools.partial(self.edit_new_command, "FreeGeoLayers()"))
@@ -1598,7 +1597,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Create_CopyGeoLayer.setText(
             "CopyGeoLayer()... <copy a GeoLayer to a new GeoLayer>")
         self.Menu_Commands_Create_GeoLayer.addAction(self.Menu_Commands_Create_CopyGeoLayer)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Create_CopyGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "CopyGeoLayer()"))
@@ -1609,7 +1608,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Create_CreateGeoLayerFromGeomtery"))
         self.Menu_Commands_Create_CreateGeoLayerFromGeometry.setText(
             "CreateGeoLayerFromGeometry()... <create a GeoLayer from input geometry data>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Create_CreateGeoLayerFromGeometry.triggered.connect(
             functools.partial(self.edit_new_command, "CreateGeoLayerFromGeometry()"))
@@ -1629,7 +1628,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_GeoLayer_Read_ReadGeoLayerFromDelimitedFile"))
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile.setText(
             "ReadGeoLayerFromDelimitedFile()... <read a GeoLayer from a file in delimited file format>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromDelimitedFile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromDelimitedFile()"))
@@ -1642,7 +1641,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.setText(
             "ReadGeoLayerFromGeoJSON()... <reads a GeoLayer from a GeoJSON file or URL>")
         self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromGeoJSON.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromGeoJSON()"))
@@ -1654,7 +1653,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromKML.setText(
             "ReadGeoLayerFromKML()... <reads a GeoLayer from a KML file or URL>")
         self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromKML)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromKML.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromKML()"))
@@ -1666,7 +1665,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.setText(
             "ReadGeoLayerFromShapefile()... <reads a GeoLayer from a shapefile>")
         self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayerFromShapefile)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromShapefile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromShapefile()"))
@@ -1677,7 +1676,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_GeoLayer_Read_ReadGeoLayerFromWebFeatureService"))
         self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService.setText(
             "ReadGeoLayerFromWebFeatureService()... <read a GeoLayer from a Web Feature Service>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayerFromWebFeatureService.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayerFromWebFeatureService()"))
@@ -1692,7 +1691,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.setText(
             "ReadGeoLayersFromFGDB()... <reads 1+ GeoLayer(s) from the feature classes of a file geodatabase>")
         self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFGDB)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayersFromFGDB.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayersFromFGDB()"))
@@ -1704,7 +1703,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayersFromFolder.setText(
             "ReadGeoLayersFromFolder()... <reads 1+ GeoLayer(s) from a local folder>")
         self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayersFromFolder)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayersFromFolder.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayersFromFolder()"))
@@ -1716,7 +1715,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage.setText(
             "ReadGeoLayersFromGeoPackage()... <reads 1+ GeoLayer(s) from a GeoPackage file>")
         self.Menu_Commands_Read_GeoLayer.addAction(self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Read_ReadGeoLayersFromGeoPackage.triggered.connect(
             functools.partial(self.edit_new_command, "ReadGeoLayersFromGeoPackage()"))
@@ -1746,7 +1745,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_SetContents_AddGeoLayerAttribute"))
         self.Menu_Commands_SetContents_AddGeoLayerAttribute.setText(
             "AddGeoLayerAttribute()... <add an attribute to a GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_SetContents_AddGeoLayerAttribute.triggered.connect(
             functools.partial(self.edit_new_command, "AddGeoLayerAttribute()"))
@@ -1758,7 +1757,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_SetContents_SetGeoLayerAttribute"))
         self.Menu_Commands_SetContents_SetGeoLayerAttribute.setText(
             "SetGeoLayerAttribute()... <set an attribute for a GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_SetContents_SetGeoLayerAttribute.triggered.connect(
             functools.partial(self.edit_new_command, "SetGeoLayerAttribute()"))
@@ -1770,7 +1769,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commnads_SetContents_RemoveGeoLayerAttributes"))
         self.Menu_Commands_SetContents_RemoveGeoLayerAttributes.setText(
             "RemoveGeoLayerAttributes()... <remove one or more attributes from GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_SetContents_RemoveGeoLayerAttributes.triggered.connect(
             functools.partial(self.edit_new_command, "RemoveGeoLayerAttributes()"))
@@ -1782,7 +1781,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_SetContents_RenameGeoLayerAttribute"))
         self.Menu_Commands_SetContents_RenameGeoLayerAttribute.setText(
             "RenameGeoLayerAttribute()... <rename a GeoLayer's attribute>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_SetContents_RenameGeoLayerAttribute.triggered.connect(
             functools.partial(self.edit_new_command, "RenameGeoLayerAttribute()"))
@@ -1796,7 +1795,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_SetContents_SetGeoLayerCRS"))
         self.Menu_Commands_SetContents_SetGeoLayerCRS.setText(
             "SetGeoLayerCRS()... <sets a GeoLayer's coordinate reference system>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_SetContents_SetGeoLayerCRS.triggered.connect(
             functools.partial(self.edit_new_command, "SetGeoLayerCRS()"))
@@ -1810,7 +1809,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_SetContents_SetGeoLayerProperty"))
         self.Menu_Commands_SetContents_SetGeoLayerProperty.setText(
             "SetGeoLayerProperty()... <set a GeoLayer property>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_SetContents_SetGeoLayerProperty.triggered.connect(
             functools.partial(self.edit_new_command, "SetGeoLayerProperty()"))
@@ -1831,7 +1830,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Manipulate_ChangeGeoLayerGeometry"))
         self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry.setText(
             "ChangeGeoLayerGeometry()... <change a GeoLayer to new geometry>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_ChangeGeoLayerGeometry.triggered.connect(
             functools.partial(self.edit_new_command, "ChangeGeoLayerGeometry()"))
@@ -1843,7 +1842,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Manipulate_ClipGeoLayer"))
         self.Menu_Commands_Manipulate_ClipGeoLayer.setText(
             "ClipGeoLayer()... <clip a GeoLayer by the boundary of another GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_ClipGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "ClipGeoLayer()"))
@@ -1855,7 +1854,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_commands_Manipulate_ExtractGeoLayer"))
         self.Menu_Commands_Manipulate_ExtractGeoLayer.setText(
             "ExtractGeoLayer()... <extract a GeoLayer's features to a new layer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_ExtractGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "ExtractGeoLayer()"))
@@ -1868,7 +1867,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_commands_Manipulate_FixGeoLayer"))
         self.Menu_Commands_Manipulate_FixGeoLayer.setText(
             "FixGeoLayer()... <fix a GeoLayer's invalid geometries>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_FixGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "FixGeoLayer()"))
@@ -1881,7 +1880,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_commands_Manipulate_IntersectGeoLayer"))
         self.Menu_Commands_Manipulate_IntersectGeoLayer.setText(
             "IntersectGeoLayer()... <intersects a GeoLayer by another GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_IntersectGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "IntersectGeoLayer()"))
@@ -1894,7 +1893,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Manipulate_MergeGeoLayers"))
         self.Menu_Commands_Manipulate_MergeGeoLayers.setText(
             "MergeGeoLayers()... <merge multiple GeoLayers into one GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_MergeGeoLayers.triggered.connect(
             functools.partial(self.edit_new_command, "MergeGeoLayers()"))
@@ -1906,7 +1905,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Manipulate_RemoveGeoLayerFeatures"))
         self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures.setText(
             "RemoveGeoLayerFeatures()... <remove GeoLayer features>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_RemoveGeoLayerFeatures.triggered.connect(
             functools.partial(self.edit_new_command, "RemoveGeoLayerFeatures()"))
@@ -1918,7 +1917,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Manipulate_SimplifyGeoLayerGeometry"))
         self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry.setText(
             "SimplifyGeoLayerGeometry()... <decreases the vertices in a polygon or line GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_SimplifyGeoLayerGeometry.triggered.connect(
             functools.partial(self.edit_new_command, "SimplifyGeoLayerGeometry()"))
@@ -1931,7 +1930,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Manipulate_SplitGeoLayerByAttribute"))
         self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute.setText(
             "SplitGeoLayerByAttribute()... <splits a GeoLayer into multiple GeoLayers by an attribute>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Manipulate_SplitGeoLayerByAttribute.triggered.connect(
             functools.partial(self.edit_new_command, "SplitGeoLayerByAttribute()"))
@@ -1973,7 +1972,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Write_WriteGeoLayerToDelimitedFile"))
         self.Menu_Commands_Write_WriteGeoLayerToDelimitedFile.setText(
             "WriteGeoLayerToDelimitedFile()... write GeoLayer to a file in delimited file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Write_WriteGeoLayerToDelimitedFile.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerToDelimitedFile()"))
@@ -1985,7 +1984,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Write_WriteGeoLayerToGeoJSON"))
         self.Menu_Commands_Write_WriteGeoLayerToGeoJSON.setText(
             "WriteGeoLayerToGeoJSON()... <write GeoLayer to a file in GeoJSON format>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Write_WriteGeoLayerToGeoJSON.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerToGeoJSON()"))
@@ -1997,7 +1996,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Write_WriteGeoLayerToKML"))
         self.Menu_Commands_Write_WriteGeoLayerToKML.setText(
             "WriteGeoLayerToKML()... <write GeoLayer to a file in KML format>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Write_WriteGeoLayerToKML.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerToKML()"))
@@ -2009,7 +2008,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Write_WriteGeoLayerToShapefile"))
         self.Menu_Commands_Write_WriteGeoLayerToShapefile.setText(
             "WriteGeoLayerToShapefile()... <write GeoLayer to a file shapefile format>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Write_WriteGeoLayerToShapefile.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerToShapefile()"))
@@ -2032,7 +2031,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_DatastoreProcessing_OpenDataStore"))
         self.Menu_Commands_DatastoreProcessing_OpenDataStore.setText(
             "OpenDataStore()... <create a DataStore connection>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_DatastoreProcessing_OpenDataStore.triggered.connect(
             functools.partial(self.edit_new_command, "OpenDataStore()"))
@@ -2044,7 +2043,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_DatastoreProcessing_ReadTableFromDataStore"))
         self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore.setText(
             "ReadTableFromDataStore()... <read a table from a DataStore>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_DatastoreProcessing_ReadTableFromDataStore.triggered.connect(
             functools.partial(self.edit_new_command, "ReadTableFromDataStore()"))
@@ -2231,7 +2230,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_Single.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_Single"))
         self.Menu_Commands_General_Comments_Single.setText("# comments <enter 1+ comments each starting with #>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_Single.triggered.connect(
             functools.partial(self.edit_new_command, "# "))
@@ -2242,7 +2241,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_MultipleStart.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_MultipleStart"))
         self.Menu_Commands_General_Comments_MultipleStart.setText("/* <start multi-line comment section> ")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_MultipleStart.triggered.connect(
             functools.partial(self.edit_new_command, "/*"))
@@ -2253,7 +2252,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_MultipleEnd.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_MultipleEnd"))
         self.Menu_Commands_General_Comments_MultipleEnd.setText("*/ <end multi-line comment section>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_MultipleEnd.triggered.connect(
             functools.partial(self.edit_new_command, "*/"))
@@ -2267,7 +2266,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_Comments_DocExample"))
         self.Menu_Commands_General_Comments_DocExample.setText(
             "#@docExample <command file is documentation example>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_DocExample.triggered.connect(
             functools.partial(self.edit_new_command, "#@docExample"))
@@ -2278,7 +2277,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_EnabledFalse.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_Enabled"))
         self.Menu_Commands_General_Comments_EnabledFalse.setText("#@enabled False <disables the command file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_EnabledFalse.triggered.connect(
             functools.partial(self.edit_new_command, "#@enabled False"))
@@ -2292,7 +2291,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_Comments_ExpectedStatusFail"))
         self.Menu_Commands_General_Comments_ExpectedStatusFail.setText(
             "#@expectedStatus Failure <used to test commands>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_ExpectedStatusFail.triggered.connect(
             functools.partial(self.edit_new_command, "#@expectedStatus Failure"))
@@ -2304,7 +2303,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_Comments_ExpectedStatusWarn"))
         self.Menu_Commands_General_Comments_ExpectedStatusWarn.setText(
             "#@expectedStatus Warning <used to test commands>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_ExpectedStatusWarn.triggered.connect(
             functools.partial(self.edit_new_command, "#@expectedStatus Warning"))
@@ -2319,7 +2318,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_General_Comments_Blank.setObjectName(
             qt_util.from_utf8("Menu_Commands_General_Comments_Blank"))
         self.Menu_Commands_General_Comments_Blank.setText("<empty line>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_Comments_Blank.triggered.connect(
             functools.partial(self.edit_new_command, ""))
@@ -2340,7 +2339,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_FileHandling_FTPGet"))
         self.Menu_Commands_General_FileHandling_FTPGet.setText(
             "FTPGet()... <download 1+ files from an FTP site>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_FileHandling_FTPGet.triggered.connect(
             functools.partial(self.edit_new_command, "FTPGet()"))
@@ -2352,7 +2351,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_FileHandling_WebGet"))
         self.Menu_Commands_General_FileHandling_WebGet.setText(
             "WebGet()... <download a file from website using URL>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_FileHandling_WebGet.triggered.connect(
             functools.partial(self.edit_new_command, "WebGet()"))
@@ -2366,7 +2365,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_FileHandling_CreateFolder"))
         self.Menu_Commands_General_FileHandling_CreateFolder.setText(
             "CreateFolder()... <create a folder>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_FileHandling_CreateFolder.triggered.connect(
             functools.partial(self.edit_new_command, "CreateFolder()"))
@@ -2380,7 +2379,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_FileHandling_CopyFile"))
         self.Menu_Commands_General_FileHandling_CopyFile.setText(
             "CopyFile()... <copy a file to a new file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_FileHandling_CopyFile.triggered.connect(
             functools.partial(self.edit_new_command, "CopyFile()"))
@@ -2392,7 +2391,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_FileHandling_ListFiles"))
         self.Menu_Commands_General_FileHandling_ListFiles.setText(
             "ListFiles()... <list the files and folder within a folder or a URL>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_FileHandling_ListFiles.triggered.connect(
             functools.partial(self.edit_new_command, "ListFiles()"))
@@ -2404,7 +2403,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_FileHandling_RemoveFile"))
         self.Menu_Commands_General_FileHandling_RemoveFile.setText(
             "RemoveFile()... <remove a file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_FileHandling_RemoveFile.triggered.connect(
             functools.partial(self.edit_new_command, "RemoveFile()"))
@@ -2418,7 +2417,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_FileHandling_UnzipFile"))
         self.Menu_Commands_General_FileHandling_UnzipFile.setText(
             "UnzipFile()... <unzip a file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_FileHandling_UnzipFile.triggered.connect(
             functools.partial(self.edit_new_command, "UnzipFile()"))
@@ -2439,7 +2438,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_LoggingMessaging_StartLog"))
         self.Menu_Commands_General_LoggingMessaging_StartLog.setText(
             "StartLog()... <start a new log file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_LoggingMessaging_StartLog.triggered.connect(
             functools.partial(self.edit_new_command, "StartLog()"))
@@ -2451,7 +2450,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_LoggingMessaging_Message"))
         self.Menu_Commands_General_LoggingMessaging_Message.setText(
             "Message()... <print a message to the log file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_LoggingMessaging_Message.triggered.connect(
             functools.partial(self.edit_new_command, "Message()"))
@@ -2472,7 +2471,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_If"))
         self.Menu_Commands_General_RunningProperties_If.setText(
             "If()... <indicate the start of an 'if' block>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_If.triggered.connect(
             functools.partial(self.edit_new_command, "If()"))
@@ -2484,7 +2483,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_EndIf"))
         self.Menu_Commands_General_RunningProperties_EndIf.setText(
             "EndIf()... <indicate the end of an 'if' block>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_EndIf.triggered.connect(
             functools.partial(self.edit_new_command, "EndIf()"))
@@ -2498,7 +2497,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_For"))
         self.Menu_Commands_General_RunningProperties_For.setText(
             "For()... <indicate the start of a 'for' block>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_For.triggered.connect(
             functools.partial(self.edit_new_command, "For()"))
@@ -2510,7 +2509,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_EndFor"))
         self.Menu_Commands_General_RunningProperties_EndFor.setText(
             "EndFor()... <indicate the end of a 'for' block>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_EndFor.triggered.connect(
             functools.partial(self.edit_new_command, "EndFor()"))
@@ -2524,7 +2523,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_RunCommands"))
         self.Menu_Commands_General_RunningProperties_RunCommands.setText(
             "RunCommands()... <run a command file, useful to automate running all tests or a multi-step workflow>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_RunCommands.triggered.connect(
             functools.partial(self.edit_new_command, "RunCommands()"))
@@ -2536,7 +2535,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_RunGdalProgram"))
         self.Menu_Commands_General_RunningProperties_RunGdalProgram.setText(
             "RunGdalProgram()... <run GDAL raster layer processing program>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_RunGdalProgram.triggered.connect(
             functools.partial(self.edit_new_command, "RunGdalProgram()"))
@@ -2549,7 +2548,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_RunOgrProgram"))
         self.Menu_Commands_General_RunningProperties_RunOgrProgram.setText(
             "RunOgrProgram()... <run OGR vector layer processing program>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_RunOgrProgram.triggered.connect(
             functools.partial(self.edit_new_command, "RunOgrProgram()"))
@@ -2562,7 +2561,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_RunProgram"))
         self.Menu_Commands_General_RunningProperties_RunProgram.setText(
             "RunProgram()... <run a program>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_RunProgram.triggered.connect(
             functools.partial(self.edit_new_command, "RunProgram()"))
@@ -2576,7 +2575,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_SetProperty"))
         self.Menu_Commands_General_RunningProperties_SetProperty.setText(
             "SetProperty()... <set a GeoProcessor property>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_SetProperty.triggered.connect(
             functools.partial(self.edit_new_command, "SetProperty()"))
@@ -2588,7 +2587,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer"))
         self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer.setText(
             "SetPropertyFromGeoLayer()... <set a GeoProcessor property from a GeoLayer property>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_SetPropertyFromGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "SetPropertyFromGeoLayer()"))
@@ -2601,7 +2600,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_WritePropertiesToFile"))
         self.Menu_Commands_General_RunningProperties_WritePropertiesToFile.setText(
             "WritePropertiesToFile()... <write properties to file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_WritePropertiesToFile.triggered.connect(
             functools.partial(self.edit_new_command, "WritePropertiesToFile()"))
@@ -2616,7 +2615,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_Exit"))
         self.Menu_Commands_General_RunningProperties_Exit.setText(
             "Exit()... <end processing>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_Exit.triggered.connect(
             functools.partial(self.edit_new_command, "Exit()"))
@@ -2630,7 +2629,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_RunningProperties_QgisAlgorithmHelp"))
         self.Menu_Commands_General_RunningProperties_QgisAlgorithmHelp.setText(
             "QgisAlgorithmHelp()... <print algorithm help>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_RunningProperties_QgisAlgorithmHelp.triggered.connect(
             functools.partial(self.edit_new_command, "QgisAlgorithmHelp()"))
@@ -2652,7 +2651,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_TestProcessing_CompareFiles"))
         self.Menu_Commands_General_TestProcessing_CompareFiles.setText(
             "CompareFiles()... <compare files and optionally warn/fail if different/same>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_TestProcessing_CompareFiles.triggered.connect(
             functools.partial(self.edit_new_command, "CompareFiles()"))
@@ -2665,7 +2664,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile"))
         self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile.setText(
             "CreateRegressionTestCommandFile()... <create a master command file to automate running all tests>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_TestProcessing_CreateRegressionTestCommandFile.triggered.connect(
             functools.partial(self.edit_new_command, "CreateRegressionTestCommandFile()"))
@@ -2678,7 +2677,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport"))
         self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport.setText(
             "StartRegressionTestResultsReport()... <start (open) a file to receive regression test results>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_TestProcessing_StartRegressionTestResultsReport.triggered.connect(
             functools.partial(self.edit_new_command, "StartRegressionTestResultsReport()"))
@@ -2691,7 +2690,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile"))
         self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile.setText(
             "WriteCommandSummaryToFile()... <write a summary of command log messages to a file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_TestProcessing_WriteCommandSummaryToFile.triggered.connect(
             functools.partial(self.edit_new_command, "WriteCommandSummaryToFile()"))
@@ -2704,7 +2703,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile"))
         self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile.setText(
             "WriteGeoLayerPropertiesToFile()... <write GeoLayer properties to file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_General_TestProcessing_WriteGeoLayerPropertiesToFile.triggered.connect(
             functools.partial(self.edit_new_command, "WriteGeoLayerPropertiesToFile()"))
@@ -2718,7 +2717,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Raster = QtWidgets.QMenu(self.menubar)
         self.Menu_Commands_Raster.setObjectName(qt_util.from_utf8("Menu_Commands_Raster"))
         self.Menu_Commands_Raster.setTitle("Commands(Raster)")
-        # Add to menu bar
+        # Add to menu bar.
         self.menubar.addAction(self.Menu_Commands_Raster.menuAction())
 
         # ------------------------------------------------------------------------------------------------------------
@@ -2736,7 +2735,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Raster_Create_CreateRasterGeoLayer"))
         self.Menu_Commands_Raster_Create_CreateRasterGeoLayer.setText(
             "CreateRasterGeoLayer()... <create a Raster GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Create_CreateRasterGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "CreateRasterGeoLayer()"))
@@ -2749,7 +2748,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Raster_Create_RasterizeGeoLayer"))
         self.Menu_Commands_Raster_Create_RasterizeGeoLayer.setText(
             "RasterizeGeoLayer()... <Create a raster GeoLayer from a vector GeoLayer>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Create_RasterizeGeoLayer.triggered.connect(
             functools.partial(self.edit_new_command, "RasterizeGeoLayer()"))
@@ -2771,7 +2770,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile"))
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile.setText(
             "ReadRasterGeoLayerFromFile()... <read a Raster GeoLayer from a file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromFile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromFile()"))
@@ -2786,7 +2785,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService"))
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService.setText(
             "ReadRasterGeoLayerFromTileMapService()... <read a Raster GeoLayer from a file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromTileMapService.triggered.connect(
             functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromTileMapService()"))
@@ -2799,7 +2798,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService"))
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService.setText(
             "ReadRasterGeoLayerFromWebMapService()... <read a Raster GeoLayer from a file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Read_ReadRasterGeoLayerFromWebMapService.triggered.connect(
             functools.partial(self.edit_new_command, "ReadRasterGeoLayerFromWebMapService()"))
@@ -2822,7 +2821,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS"))
         self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.setText(
             "ChangeRasterGeoLayerCRS()... <change a raster GeoLayer CRS>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Manipulate_ChangeRasterGeoLayerCRS.triggered.connect(
             functools.partial(self.edit_new_command, "ChangeRasterGeoLayerCRS()"))
@@ -2835,7 +2834,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands"))
         self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.setText(
             "RearrangeRasterGeoLayerBands()... <rearrange a raster GeoLayer's bands>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Manipulate_RearrangeRasterGeoLayerBands.triggered.connect(
             functools.partial(self.edit_new_command, "RearrangeRasterGeoLayerBands()"))
@@ -2858,7 +2857,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile"))
         self.Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile.setText(
             "WriteRasterGeoLayerToFile()... <write a Raster GeoLayer to a file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Raster_Write_WriteRasterGeoLayerToFile.triggered.connect(
             functools.partial(self.edit_new_command, "WriteRasterGeoLayerToFile()"))
@@ -2887,7 +2886,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Table_ReadTableFromDataStore"))
         self.Menu_Commands_Table_ReadTableFromDataStore.setText(
             "ReadTableFromDataStore()... <read a table from a DataStore>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Table_ReadTableFromDataStore.triggered.connect(
             functools.partial(self.edit_new_command, "ReadTableFromDataStore()"))
@@ -2899,7 +2898,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Table_ReadTableFromDelimitedFile"))
         self.Menu_Commands_Table_ReadTableFromDelimitedFile.setText(
             "ReadTableFromDelimitedFile()... <read a table from a delimited file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Table_ReadTableFromDelimitedFile.triggered.connect(
             functools.partial(self.edit_new_command, "ReadTableFromDelimitedFile()"))
@@ -2911,7 +2910,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Table_ReadTableFromExcel"))
         self.Menu_Commands_Table_ReadTableFromExcel.setText(
             "ReadTableFromExcel()... <read a table from an Excel file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Table_ReadTableFromExcel.triggered.connect(
             functools.partial(self.edit_new_command, "ReadTableFromExcel()"))
@@ -2933,7 +2932,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Commands_Tables_Write.setObjectName(qt_util.from_utf8("Menu_Commands_Tables_Write"))
         self.Menu_Commands_Tables_Write.setTitle("Write Table")
         self.Menu_Commands_Table.addAction(self.Menu_Commands_Tables_Write.menuAction())
-        # Add to menu bar
+        # Add to menu bar.
         self.menubar.addAction(self.Menu_Commands_Table.menuAction())
 
         # WriteTableToDataStore
@@ -2942,7 +2941,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Table_WriteTableToDataStore"))
         self.Menu_Commands_Table_WriteTableToDataStore.setText(
             "WriteTableToDataStore()... <write a table to a DataStore>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Table_WriteTableToDataStore.triggered.connect(
             functools.partial(self.edit_new_command, "WriteTableToDataStore()"))
@@ -2954,7 +2953,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Table_WriteTableToDelimitedFile"))
         self.Menu_Commands_Table_WriteTableToDelimitedFile.setText(
             "WriteTableToDelimitedFile()... <write a table to a delimited file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Table_WriteTableToDelimitedFile.triggered.connect(
             functools.partial(self.edit_new_command, "WriteTableToDelimitedFile()"))
@@ -2966,7 +2965,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("Menu_Commands_Table_WriteTableToExcel"))
         self.Menu_Commands_Table_WriteTableToExcel.setText(
             "WriteTableToExcel()... <write a table to an Excel file>")
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Commands_Table_WriteTableToExcel.triggered.connect(
             functools.partial(self.edit_new_command, "WriteTableToExcel()"))
@@ -2978,15 +2977,15 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Tools = QtWidgets.QMenu(self.menubar)
         self.Menu_Tools.setObjectName(qt_util.from_utf8("Menu_Tools"))
         self.Menu_Tools.setTitle("Tools")
-        # Add Tools menu to menubar
+        # Add Tools menu to menubar.
         self.menubar.addAction(self.Menu_Tools.menuAction())
 
-        # Tools / View Log File menu (for current log file from log_util)
+        # Tools / View Log File menu (for current log file from log_util).
         self.Menu_Tools_ViewLog = QtWidgets.QAction(main_window)
         self.Menu_Tools_ViewLog.setObjectName(qt_util.from_utf8("Menu_Tools_ViewLog"))
         self.Menu_Tools_ViewLog.setText("View Log File")
         self.Menu_Tools.addAction(self.Menu_Tools_ViewLog)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Tools_ViewLog.triggered.connect(self.ui_action_view_log_file)
 
@@ -2995,7 +2994,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Tools_ViewStartupLog.setObjectName(qt_util.from_utf8("Menu_Tools_ViewStartupLog"))
         self.Menu_Tools_ViewStartupLog.setText("View Startup Log File")
         self.Menu_Tools.addAction(self.Menu_Tools_ViewStartupLog)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Tools_ViewStartupLog.triggered.connect(self.ui_action_view_startup_log_file)
 
@@ -3012,7 +3011,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Help_About.setObjectName(qt_util.from_utf8("Menu_Help_About"))
         self.Menu_Help_About.setText("About GeoProcessor")
         self.Menu_Help.addAction(self.Menu_Help_About)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Help_About.triggered.connect(self.ui_action_help_about)
 
@@ -3021,7 +3020,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Help_SoftwareSystemInformation.setObjectName(qt_util.from_utf8("Menu_Help_SoftwareSystemInformation"))
         self.Menu_Help_SoftwareSystemInformation.setText("Software/System Information")
         self.Menu_Help.addAction(self.Menu_Help_SoftwareSystemInformation)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Help_SoftwareSystemInformation.triggered.connect(self.ui_action_help_software_system_information)
 
@@ -3033,7 +3032,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = icon_path + "/images/baseline_school_black_18dp.png"
         self.Menu_Help_ViewDocumentation.setIcon(QtGui.QIcon(QtGui.QPixmap(icon_path)))
         self.Menu_Help.addAction(self.Menu_Help_ViewDocumentation)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Help_ViewDocumentation.triggered.connect(self.ui_action_view_documentation)
 
@@ -3042,11 +3041,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.Menu_Help_QGISAlgorithmHelp.setObjectName(qt_util.from_utf8("Menu_Help_QGISAlgorithmHelp"))
         self.Menu_Help_QGISAlgorithmHelp.setText("QGIS Algorithm Help")
         self.Menu_Help.addAction(self.Menu_Help_QGISAlgorithmHelp)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.Menu_Help_QGISAlgorithmHelp.triggered.connect(self.ui_action_help_qgis_algorithm_help)
 
-        # Add Help menu to menubar
+        # Add Help menu to menubar.
         self.menubar.addAction(self.Menu_Help.menuAction())
 
     def setup_ui_results(self, y_centralwidget: int):
@@ -3059,9 +3058,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Results area is in the bottom of the central widget
-        # - Use Tab widget with vertical layout
-        # - Alphabetize the tabs
+        # Results area is in the bottom of the central widget:
+        # - use Tab widget with vertical layout
+        # - alphabetize the tabs
         self.results_GroupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.results_GroupBox.setTitle("Results")
         self.results_GroupBox.setObjectName(qt_util.from_utf8("results_GroupBox"))
@@ -3071,8 +3070,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_TabWidget = QtWidgets.QTabWidget(self.results_GroupBox)
         self.results_TabWidget.setObjectName(qt_util.from_utf8("results_TabWidget"))
 
-        # Results GeoLayers tab
-        # - Contains a table of GeoLayer
+        # Results GeoLayers tab:
+        # - contains a table of GeoLayer
         self.results_GeoLayers_Tab = QtWidgets.QWidget()
         self.results_GeoLayers_Tab.setAcceptDrops(False)
         self.results_GeoLayers_Tab.setObjectName(qt_util.from_utf8("results_GeoLayers_Tab"))
@@ -3120,7 +3119,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoLayers_Table.horizontalHeaderItem(6).setToolTip("Path to input file/database/service")
         self.results_GeoLayers_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_GeoLayers_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.results_GeoLayers_Table.customContextMenuRequested.connect(self.ui_action_results_geolayers_right_click)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_GeoLayers_Tab), "GeoLayers")
@@ -3149,7 +3148,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoMaps_GroupBox_VerticalLayout.addWidget(self.results_GeoMaps_Table)
         self.results_GeoMaps_VerticalLayout.addWidget(self.results_GeoMaps_GroupBox)
         self.results_TabWidget.addTab(self.results_GeoMaps_Tab, qt_util.from_utf8(""))
-        # Used to be in retranslateUi
+        # Used to be in 'retranslateUi'.
         self.results_GeoMaps_GroupBox.setTitle("GeoMaps (0 GeoMaps, 0 selected)")
         self.results_GeoMaps_Table.horizontalHeaderItem(0).setText("GeoMapID")
         self.results_GeoMaps_Table.horizontalHeaderItem(0).setToolTip("GeoMapID - uniquely identifies the GeoMap")
@@ -3189,7 +3188,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_GeoMapProjects_GroupBox_VerticalLayout.addWidget(self.results_GeoMapProjects_Table)
         self.results_GeoMapProjects_VerticalLayout.addWidget(self.results_GeoMapProjects_GroupBox)
         self.results_TabWidget.addTab(self.results_GeoMapProjects_Tab, qt_util.from_utf8(""))
-        # Used to be in retranslateUi
+        # Used to be in 'retranslateUi'.
         self.results_GeoMapProjects_GroupBox.setTitle("GeoMapProjects (0 GeoMapProjects, 0 selected)")
         self.results_GeoMapProjects_Table.horizontalHeaderItem(0).setText("GeoMapProjectID")
         self.results_GeoMapProjects_Table.horizontalHeaderItem(0).setToolTip(
@@ -3216,7 +3215,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.from_utf8("results_OutputFiles_GroupBox_VerticalLayout"))
         self.results_OutputFiles_Table = QtWidgets.QTableWidget(self.results_OutputFiles_GroupBox)
         self.results_OutputFiles_Table.setObjectName(qt_util.from_utf8("results_OutputFiles_Table"))
-        single_column = True  # Like TSTool, only the filename
+        single_column = True  # Like TSTool, only the filename.
         if single_column:
             self.results_OutputFiles_Table.setColumnCount(2)
         else:
@@ -3233,12 +3232,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_OutputFiles_GroupBox_VerticalLayout.addWidget(self.results_OutputFiles_Table)
         self.results_OutputFiles_VerticalLayout.addWidget(self.results_OutputFiles_GroupBox)
         self.results_TabWidget.addTab(self.results_OutputFiles_Tab, qt_util.from_utf8(""))
-        # Used to be in retranslateUi
+        # Used to be in 'retranslateUi'.
         self.results_OutputFiles_GroupBox.setTitle("Output Files (0 Output Files, 0 selected)")
         if not single_column:
             self.results_OutputFiles_Table.horizontalHeaderItem(1).setText("File Type")
             self.results_OutputFiles_Table.horizontalHeaderItem(2).setText("Command Reference")
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         self.results_OutputFiles_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         # noinspection PyUnresolvedReferences
         self.results_OutputFiles_Table.customContextMenuRequested.connect(
@@ -3256,7 +3255,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_GroupBox_VerticalLayout = QtWidgets.QVBoxLayout(self.results_Properties_GroupBox)
         self.results_Properties_GroupBox_VerticalLayout.setObjectName(
             qt_util.from_utf8("results_Properties_GroupBox_VerticalLayout"))
-        # Assign a resize event to resize map canvas when dialog window is resized
+        # Assign a resize event to resize map canvas when dialog window is resized.
         self.results_Properties_Table = QtWidgets.QTableWidget(self.results_Properties_GroupBox)
         self.results_Properties_Table.setAlternatingRowColors(True)
         self.results_Properties_Table.setObjectName(qt_util.from_utf8("results_Properties_Table"))
@@ -3273,7 +3272,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_GroupBox_VerticalLayout.addWidget(self.results_Properties_Table)
         self.results_Properties_Tab_VerticalLayout.addWidget(self.results_Properties_GroupBox)
         self.results_TabWidget.addTab(self.results_Properties_Tab, qt_util.from_utf8(""))
-        # Used to be in retranslateUi
+        # Used to be in 'retranslateUi'.
         self.results_Properties_GroupBox.setTitle(
             "Processor properties control processing and can be used in some command " +
             "parameters using ${Property} notation (see command documentation). ")
@@ -3282,7 +3281,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_Table.horizontalHeaderItem(1).setText("Property Value")
         self.results_Properties_Table.horizontalHeaderItem(1).setToolTip("Property Value")
         self.results_Properties_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
-        # Hide last column to ensure horizontal scroll
+        # Hide last column to ensure horizontal scroll.
         self.results_Properties_Table.setColumnWidth(2, 0)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Properties_Tab), "Properties")
 
@@ -3314,7 +3313,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_GroupBox_VerticalLayout.addWidget(self.results_Tables_Table)
         self.results_Tables_VerticalLayout.addWidget(self.results_Tables_GroupBox)
         self.results_TabWidget.addTab(self.results_Tables_Tab, qt_util.from_utf8(""))
-        # Used to be in retranslateUi
+        # Used to be in 'retranslateUi'.
         self.results_Tables_GroupBox.setTitle("Tables (0 Tables, 0 selected)")
         self.results_Tables_Table.horizontalHeaderItem(0).setText("Table ID")
         self.results_Tables_Table.horizontalHeaderItem(0).setToolTip("Table ID")
@@ -3326,52 +3325,52 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Tables_Table.horizontalHeaderItem(3).setToolTip("Description")
         self.results_Tables_Table.horizontalHeader().setStyleSheet("::section { background-color: #d3d3d3 }")
         self.results_Tables_Table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.results_Tables_Table.customContextMenuRequested.connect(self.ui_action_results_tables_right_click)
         self.results_TabWidget.setTabText(self.results_TabWidget.indexOf(self.results_Tables_Tab), "Tables")
 
-        # Add the Results tab to the vertical layout
+        # Add the Results tab to the vertical layout.
         self.results_VerticalLayout.addWidget(self.results_TabWidget)
-        # Now add the Results to the central widget
+        # Now add the Results to the central widget.
         self.centralwidget_GridLayout.addWidget(self.results_GroupBox, y_centralwidget, 0, 1, 6)
-        # Set the visible tab to the GeoLayers
+        # Set the visible tab to the GeoLayers.
         self.results_TabWidget.setCurrentIndex(0)
 
-        # Set up event handlers
+        # Set up event handlers.
 
         # GeoLayers
         # Listen for a change in item selection within the results_GeoLayers_Table widget.
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.results_GeoLayers_Table.itemSelectionChanged.connect(self.update_ui_status)
         # GeoMaps
         # Listen for a change in item selection within the results_GeoMaps_Table widget.
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.results_GeoMaps_Table.itemSelectionChanged.connect(self.update_ui_status)
         # GeoMapProjects
         # Listen for a change in item selection within the results_GeoMaps_Table widget.
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.results_GeoMapProjects_Table.itemSelectionChanged.connect(self.update_ui_status)
         # Output Files
         # Listen for a change in item selection within the results_OutputFiles_Table widget.
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.results_OutputFiles_Table.itemSelectionChanged.connect(self.update_ui_status)
         # Properties
         # Listen for a change in item selection within the results_Properties_Table widget.
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.results_Properties_Table.itemSelectionChanged.connect(self.update_ui_status)
         # Tables
         # Listen for a change in item selection within the results_Tables_Table widget.
-        # Use the following because connect() is shown as unresolved reference in PyCharm
+        # Use the following because connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.results_Tables_Table.itemSelectionChanged.connect(self.update_ui_status)
 
-    # TODO smalers 2018-07-24 evaluate whether the following status components can be moved to status bar area
+    # TODO smalers 2018-07-24 evaluate whether the following status components can be moved to status bar area.
     def setup_ui_status(self, main_window: GeoProcessorUI, y_centralwidget: int) -> None:
         """
         Set up the Status area of the UI.
@@ -3383,7 +3382,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Set the status bar
+        # Set the status bar.
         self.statusbar = QtWidgets.QStatusBar(main_window)
         self.statusbar.setObjectName(qt_util.from_utf8("statusbar"))
         self.statusbar.setStyleSheet("::item { border: none; }")
@@ -3420,7 +3419,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.status_Label_Hint.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.status_Label_Hint.setFrameShadow(QtWidgets.QFrame.Plain)
         self.status_Label_Hint.setLineWidth(2)
-        self.status_Label_Hint.setText("Use the Run buttons to run the commands.")
+        self.status_Label_Hint.setText("Open a command file or add new commands.")
 
         self.statusbar.addWidget(self.status_Label_Hint)
 
@@ -3440,7 +3439,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/baseline_format_indent_increase_black_18dp.png"
         self.increase_indent_button = QtWidgets.QAction(QtGui.QIcon(QtGui.QPixmap(icon_path)), "Increase indent", self)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.increase_indent_button.triggered.connect(
             self.command_CommandListWidget.event_handler_increase_indent_button_clicked)
@@ -3448,7 +3447,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/baseline_format_indent_decrease_black_18dp.png"
         self.decrease_indent_button = QtWidgets.QAction(QtGui.QIcon(QtGui.QPixmap(icon_path)), "Decrease indent", self)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         self.decrease_indent_button.triggered.connect(
             self.command_CommandListWidget.event_handler_decrease_indent_button_clicked)
@@ -3470,22 +3469,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Create command status dialog box
+        # Create command status dialog box.
         self.command_status_dialog = QtWidgets.QDialog()
         self.command_status_dialog.resize(600, 290)
         self.command_status_dialog.setWindowFlags(QtCore.Qt.WindowCloseButtonHint)
-        # Add window title
+        # Add window title.
         self.command_status_dialog.setWindowTitle("GeoProcessor - Command Status")
-        # Add icon to window
+        # Add icon to window.
         icon_path = app_util.get_property("ProgramIconPath").replace('\\', '/')
         self.command_status_dialog.setWindowIcon(QtGui.QIcon(icon_path))
         self.command_status_dialog.setObjectName("Command Status Dialog")
 
-        # Create a grid layout for dialog box
+        # Create a grid layout for dialog box.
         grid_layout = QtWidgets.QGridLayout(self.command_status_dialog)
         grid_layout.setObjectName("Command Status Grid Layout")
 
-        # Add a text browser for the content
+        # Add a text browser for the content.
         command_status_text_browser = QtWidgets.QTextBrowser(self.command_status_dialog)
         command_status_text_browser.setObjectName("Command Status Text Browser")
 
@@ -3493,10 +3492,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         html_string = ""
 
-        # Set colors for different status levels
+        # Set colors for different status levels.
         color_warning = 'yellow'
-        color_failure = '#ffa8a8'  # Red (dull so does not overwhelm text)
-        color_success = '#7dba71'  # Green (dull so does not overwhelm text)
+        color_failure = '#ffa8a8'  # Red (dull so does not overwhelm text).
+        color_success = '#7dba71'  # Green (dull so does not overwhelm text).
         color_unknown = 'white'
 
         logger = logging.getLogger(__name__)
@@ -3506,21 +3505,21 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             return
         # logger.info("In show_command_status, have " + str(len(gp.commands)) + " commands in processor.")
         selected_command = None
-        # Get the index of the command list selected and retrieve that command from the geoprocessor
+        # Get the index of the command list selected and retrieve that command from the geoprocessor.
         selected_indices = self.command_CommandListWidget.command_ListView.selectedIndexes()
         if (selected_indices is None) or (len(selected_indices) == 0):
-            # Nothing is selected, so use the first command
+            # Nothing is selected, so use the first command.
             selected_command = gp.commands[0]
         else:
-            # Something is selected so use the first selected command
+            # Something is selected so use the first selected command:
             # - the indices are instances of QModelIndex
             row_index = selected_indices[0].row()
             selected_command = gp.commands[row_index]
         if selected_command is None:
-            # Should not happen
+            # Should not happen.
             html_string = 'No command found to show status.'
         else:
-            # Format the information similar to TSTool status
+            # Format the information similar to TSTool status:
             # - HTML formatting or other free-form format is preferred because content will fill table cells
             show_all_log_messages = True   # False only shows warning and failure messages
             # noinspection PyBroadException
@@ -3546,7 +3545,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 elif command_status.initialization_status is CommandStatusType.SUCCESS:
                     style = "style='background-color:{}'".format(color_success)
                 else:
-                    # Typically UNKNOWN
+                    # Typically UNKNOWN.
                     style = "style='background-color:{}'".format(color_unknown)
 
                 html_string += (
@@ -3563,7 +3562,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 elif command_status.discovery_status is CommandStatusType.SUCCESS:
                     style = "style='background-color:{}'".format(color_success)
                 else:
-                    # Typically UNKNOWN
+                    # Typically UNKNOWN.
                     style = "style='background-color:{}'".format(color_unknown)
 
                 html_string += (
@@ -3580,7 +3579,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 elif command_status.run_status is CommandStatusType.SUCCESS:
                     style = "style='background-color:{}'".format(color_success)
                 else:
-                    # Typically UNKNOWN
+                    # Typically UNKNOWN.
                     style = "style='background-color:{}'".format(color_unknown)
 
                 html_string += (
@@ -3684,7 +3683,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         command_status_text_browser.setHtml(qt_util.translate("Dialog", html_string, None))
 
-        # Make non-modal so the status window can be viewed at the same time as the main application.
+        # Make non-modal so the status window can be viewed at the same time as the main application:
         # - this allows errors to be fixed
         self.command_status_dialog.setModal(False)
         self.command_status_dialog.show()
@@ -3692,8 +3691,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
     def show_command_status_tooltip(self, event) -> None:
         """
         When hovering or clicking on a numbered list item if there is an error or warning
-        display a tooltip with the command status. Called in CommandListWidget
-        when numbered list item is hovered over or clicked by the user.
+        display a tooltip with the command status.
+        Called in CommandListWidget when numbered list item is hovered over or clicked by the user.
 
         Args:
             event: Hover event over numbered list item.
@@ -3806,15 +3805,20 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
     def show_results(self) -> None:
         """
-        Populates the Results tables of the UI to reflect results of running the GeoProcessor, including
-        the existing GeoLayers, GeoMaps, Output Files, Properties, and Tables.
+        Populates the Results tables of the UI to reflect results of running the GeoProcessor,
+        including the existing GeoLayers, GeoMaps, Output Files, Properties, and Tables.
 
         Returns:
             None
         """
 
-        # Call the specific functions for each output category
-        # - Each call will also update the status information in the UI (counts, selected, etc.)
+        # Close the regression results report if it is open:
+        # - must do here because running commands may include 'RunCommands' commands and want to close only
+        #   when all the processing is complete
+        StartRegressionTestResultsReport.close_regression_test_report_file()
+
+        # Call the specific functions for each output category:
+        # - each call will also update the status information in the UI (counts, selected, etc.)
         logger = logging.getLogger(__name__)
         # GeoLayers
         # noinspection PyBroadException
@@ -3874,24 +3878,24 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Remove items from the Results GeoLayers table (from a previous run).
         self.results_GeoLayers_Table.setRowCount(0)
 
-        # Display the GeoLayers from the run
+        # Display the GeoLayers from the run.
         for geolayer in self.gp.geolayers:
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_GeoLayers_Table.rowCount()
             self.results_GeoLayers_Table.insertRow(new_row_index)
 
             col = -1
-            # GeoLayerID
+            # GeoLayerID:
             # - should not be null
             col += 1
             self.results_GeoLayers_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(str(geolayer.id)))
 
-            # Name
+            # Name:
             # - should not be null
             col += 1
             self.results_GeoLayers_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(str(geolayer.name)))
 
-            # Geometry
+            # Geometry:
             # - should not be null
             col += 1
             geometry_type = None
@@ -3903,12 +3907,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             # Feature Count
             if geolayer.is_vector():
-                # Display the feature count
+                # Display the feature count.
                 col += 1
                 self.results_GeoLayers_Table.setItem(new_row_index, col,
                                                      QtWidgets.QTableWidgetItem(str(geolayer.get_feature_count())))
             elif geolayer.is_raster():
-                # Display the row, column, and cell count in a formatted string
+                # Display the row, column, and cell count in a formatted string.
                 col += 1
                 self.results_GeoLayers_Table.setItem(new_row_index, col,
                                                      QtWidgets.QTableWidgetItem(str(geolayer.get_num_rows()) +
@@ -3924,7 +3928,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_GeoLayers_Table.setItem(new_row_index, col,
                                                  QtWidgets.QTableWidgetItem(geolayer.get_crs_code()))
 
-            # Source Format
+            # Source Format:
             # - should not be null
             col += 1
             input_format = None
@@ -3934,7 +3938,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 input_format = geolayer.input_format
             self.results_GeoLayers_Table.setItem(new_row_index, col, QtWidgets.QTableWidgetItem(input_format))
 
-            # Source Path
+            # Source Path:
             # - should not be null
             col += 1
             input_path = None
@@ -3957,7 +3961,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Remove items from the Results GeoMaps table (from a previous run).
         self.results_GeoMaps_Table.setRowCount(0)
 
-        # Display the GeoMaps from the run
+        # Display the GeoMaps from the run.
         for geomap in self.gp.geomaps:
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_GeoMaps_Table.rowCount()
@@ -3983,9 +3987,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_GeoMaps_Table.setItem(new_row_index, col,
                                                QtWidgets.QTableWidgetItem(str(len(geomap.geolayers))))
 
-            # CRS
-            col += 1
+            # CRS:
             # - the CRS might be null, but should not be
+            col += 1
             self.results_GeoMaps_Table.setItem(new_row_index, col,
                                                QtWidgets.QTableWidgetItem(str(geomap.get_crs_code())))
 
@@ -4002,7 +4006,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Remove items from the Results GeoMapProjects table (from a previous run).
         self.results_GeoMapProjects_Table.setRowCount(0)
 
-        # Display the GeoMapProjects from the run
+        # Display the GeoMapProjects from the run.
         for geomapproject in self.gp.geomapprojects:
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_GeoMapProjects_Table.rowCount()
@@ -4041,9 +4045,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Remove items from the Results Properties table (from a previous run).
         self.results_OutputFiles_Table.setRowCount(0)
 
-        # Populate the Results / Output Files Table
-        # Iterate through all of the Output Files in the GeoProcessor.
-        single_column = True  # Like TSTool, only the filename
+        # Populate the Results / Output Files Table.
+        # Iterate through all the Output Files in the GeoProcessor.
+        single_column = True  # Like TSTool, only the filename.
         for output_file in self.gp.output_files:
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_OutputFiles_Table.rowCount()
@@ -4056,7 +4060,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # Get the extension of the output file.
                 output_file_ext = io_util.get_extension(output_file)
 
-                # A dictionary that relates common file extensions to the appropriate file name
+                # A dictionary that relates common file extensions to the appropriate file name.
                 extension_dictionary = {'xlsx': 'Microsoft Excel Open XML Format Spreadsheet',
                                         'geojson': 'GeoJSON',
                                         'xls': 'Microsoft Excel 97-2003 Worksheet'}
@@ -4081,7 +4085,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_Properties_Table.setRowCount(0)
 
         # Populate the Results / Properties Table.
-        # Iterate through all of the properties in the GeoProcessor.
+        # Iterate through all the properties in the GeoProcessor.
         for prop_name, prop_value in self.gp.properties.items():
             # Get the index of the next available row in the table. Add a new row to the table.
             new_row_index = self.results_Properties_Table.rowCount()
@@ -4092,8 +4096,8 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Property Name
             self.results_Properties_Table.setItem(new_row_index, 0, QtWidgets.QTableWidgetItem(prop_name))
 
-            # Property Value
-            # - Have to cast to string because table is configured to display strings
+            # Property Value:
+            # - have to cast to string because table is configured to display strings
             self.results_Properties_Table.setItem(new_row_index, 1, QtWidgets.QTableWidgetItem(str(prop_value)))
 
         self.results_Properties_Table.sortByColumn(0, QtCore.Qt.AscendingOrder)
@@ -4133,7 +4137,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.results_Tables_Table.setItem(new_row_index, 2, QtWidgets.QTableWidgetItem(
                 str(table.get_number_of_rows())))
 
-        # Sort by Table ID
+        # Sort by Table ID.
         # self.results_Tables_Table.sortByColumn(0, QtCore.Qt.AscendingOrder)
 
         # Update the results count and results' tables' labels to show that the results were populated.
@@ -4172,42 +4176,42 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             # Add the menu options to the right-click menu and connect actions.
             self.menu_item_show_command_status = self.rightClickMenu_Commands.addAction("Show Command Status")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_show_command_status.triggered.connect(self.show_command_status)
 
             self.rightClickMenu_Commands.addSeparator()
             self.menu_item_edit_command = self.rightClickMenu_Commands.addAction("Edit")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_edit_command.triggered.connect(self.edit_existing_command)
 
             self.rightClickMenu_Commands.addSeparator()
             self.menu_item_cut_commands = self.rightClickMenu_Commands.addAction("Cut")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_cut_commands.triggered.connect(self.cut_commands_to_clipboard)
 
             self.menu_item_copy_commands = self.rightClickMenu_Commands.addAction("Copy")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_copy_commands.triggered.connect(self.copy_commands_to_clipboard)
 
             self.menu_item_paste_commands = self.rightClickMenu_Commands.addAction("Paste (after last selected)")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_paste_commands.triggered.connect(self.paste_commands_from_clipboard)
 
             self.rightClickMenu_Commands.addSeparator()
             self.menu_item_delete_commands = self.rightClickMenu_Commands.addAction("Delete Command(s)")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_delete_commands.triggered.connect(
                 self.command_CommandListWidget.event_handler_button_clear_commands_clicked)
 
             self.rightClickMenu_Commands.addSeparator()
             self.menu_item_select_all_commands = self.rightClickMenu_Commands.addAction("Select All Commands")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_select_all_commands.triggered.connect(self.select_all_commands)
 
@@ -4218,13 +4222,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             self.rightClickMenu_Commands.addSeparator()
             self.menu_item_increase_indent_command = self.rightClickMenu_Commands.addAction("Increase Indent")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_increase_indent_command.triggered.connect(
                 self.command_CommandListWidget.event_handler_increase_indent_button_clicked)
 
             self.menu_item_decrease_indent_command = self.rightClickMenu_Commands.addAction("Decrease Indent")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_decrease_indent_command.triggered.connect(
                 self.command_CommandListWidget.event_handler_decrease_indent_button_clicked)
@@ -4232,13 +4236,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.rightClickMenu_Commands.addSeparator()
             self.menu_item_convert_to_command = self.rightClickMenu_Commands.addAction(
                 "Convert selected command(s) to # comments")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_convert_to_command.triggered.connect(
                 self.ui_action_command_list_right_click_convert_to_command)
             self.menu_item_convert_from_command = self.rightClickMenu_Commands.addAction(
                 "Convert selected command(s) from # comments")
-            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+            # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
             # noinspection PyUnresolvedReferences
             self.menu_item_convert_from_command.triggered.connect(
                 self.ui_action_command_list_right_click_convert_from_command)
@@ -4247,10 +4251,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             parent_pos = self.command_CommandListWidget.command_ListView.mapToGlobal(QtCore.QPoint(0, 0))
             self.rightClickMenu_Commands.move(parent_pos + q_pos)
 
-        # Update the status of the menu to ensure accuracy
+        # Update the status of the menu to ensure accuracy.
         self.update_ui_status_commands_popup()
 
-        # Show the menu (it will be closed when user selects or escapes)
+        # Show the menu (it will be closed when user selects or escapes).
         self.rightClickMenu_Commands.show()
 
     def ui_action_command_list_right_click_convert_from_command(self) -> None:
@@ -4321,7 +4325,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 "under the conditions of the GPLv3 license in the LICENSE file.",
                 "About GeoProcessor")
         except Exception:
-            # Should not happen but does during initial development and UI code swallows exceptions so output to log
+            # Should not happen but does during initial development and UI code swallows exceptions so output to log.
             logger = logging.getLogger(__name__)
             message = "Problem showing Help About"
             logger.warning(message, exc_info=True)
@@ -4348,7 +4352,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # noinspection PyBroadException
         try:
-            # Local variables for operating system, used in checks below
+            # Local variables for operating system, used in checks below.
             is_cygwin = os_util.is_cygwin_os()
             is_linux = os_util.is_linux_os()
             is_mingw = os_util.is_mingw_os()
@@ -4360,7 +4364,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             if os_distro is None:
                 os_distro = "unknown"
 
-            # Format a string with content for Software/System Information:
+            # Format a string with content for 'Software/System Information'.
             tab = "    "
             tab2 = tab + tab
             properties = ""
@@ -4405,7 +4409,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 try:
                     architecture = os.environ["MSYSTEM_CARCH"]
                 except KeyError:
-                    # TODO smalers 2018-11-21 Need to fix the above to be portable
+                    # TODO smalers 2018-11-21 Need to fix the above to be portable.
                     architecture = "unknown"
             else:
                 architecture = "Code not implemented to check on operating system"
@@ -4418,7 +4422,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             if is_windows:
                 properties += (tab + "System Architecture (os.environ['MSYSTEM_CARCH']): {}\n".format(architecture))
             else:
-                # Linux variant
+                # Linux variant:
                 # - TODO smalers 2018-12-31 need to standardize
                 properties += (tab + "System Architecture: {}\n".format(architecture))
 
@@ -4426,12 +4430,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             for env_var in os.environ.keys():
                 properties += "{}{}={}\n".format(tab2, env_var, os.environ[env_var])
 
-            # Add unsorted path, each part on a separate line
+            # Add unsorted path, each part on a separate line.
             path = ''
             for path_item in os.environ['PATH'].split(os.pathsep):
                 path += "{}{}\n".format(tab2, path_item)
 
-            # Add sorted path, each part on a separate line
+            # Add sorted path, each part on a separate line.
             path_sorted = ''
             for path_item in os.environ['PATH'].split(os.pathsep):
                 path_sorted += "{}{}\n".format(tab2, path_item)
@@ -4443,7 +4447,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
             properties += "\n"
 
-            # Replace newlines in system version
+            # Replace newlines in system version.
             system_version = sys.version.replace("\r\n", " ").replace("\n", " ")
             system_path = ''
             system_path_sorted = ''
@@ -4452,7 +4456,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             for path_item in sorted(sys.path):
                 system_path_sorted += str(path_item) + '\n' + tab2
 
-            # Python properties
+            # Python properties.
 
             try:
                 python_home = os.environ['PYTHONHOME']
@@ -4469,7 +4473,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                            tab + 'Python Path (sys.path), sorted, useful for troubleshooting:\n' +
                            tab2 + system_path_sorted + "\n")
 
-            # Check if QGIS is being used at runtime
+            # Check if QGIS is being used at runtime:
             # - may want to provide information about what is installed even if not used at runtime but
             #   that could be confusing and documentation troubleshooting can help figure out issues
             qgis_install_type = "Unknown"
@@ -4484,11 +4488,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qgis_name = "qgis"
             qgis_version = qgis.utils.Qgis.QGIS_VERSION
 
-            # The QGIS environment variables are set by configuration scripts prior to running Python GeoProcessor
+            # The QGIS environment variables are set by configuration scripts prior to running Python GeoProcessor:
             # - output in case they are useful for troubleshooting
             # - use str() to ensure that None values won't cause problems
             if qgis_install_type == "Unknown":
-                # QGIS does not appear to be used at runtime so provide minimal information
+                # QGIS does not appear to be used at runtime so provide minimal information.
                 properties += (
                             "QGIS Information:\n" +
                             tab + "QGIS Installation Type: {}\n".format(qgis_install_type) +
@@ -4522,7 +4526,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                                tab2 + "VSI_CACHE_SIZE: {}\n".format(os.environ.get('VSI_CACHE_SIZE')) +
                                "\n")
 
-            # Add information for Qt
+            # Add information for Qt.
 
             properties += (
                  "Qt Information (used for user interface):\n" +
@@ -4531,7 +4535,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                  tab + "PyQt Version: {}\n".format(Qt.PYQT_VERSION_STR) +
                  "\n")
 
-            # Create Software/System Information Dialog Box
+            # Create Software/System Information Dialog Box.
             self.sys_info = QtWidgets.QDialog()
             self.sys_info.resize(800, 500)
             self.sys_info.setWindowTitle("Software/System Information")
@@ -4542,13 +4546,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.sys_info_text_browser.setGeometry(QtCore.QRect(25, 20, 750, 550))
             self.sys_info_text_browser.setText(properties)
             self.sys_info_text_browser.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
-            # Will implement copy button later once with a better understanding
+            # Will implement copy button later once with a better understanding.
             # self.push_button = QtWidgets.QPushButton(self.sys_info)
             # self.push_button.setGeometry(QtCore.QRect(300,460,75,23))
             # self.push_button.setText("Copy")
             # self.push_button.clicked.connect(lambda:self.copy_text(properties))
             QtCore.QMetaObject.connectSlotsByName(self.sys_info)
-            # Reassign default resizeEvent() to resizeTextBox()
+            # Reassign default resizeEvent() to resizeTextBox().
             self.sys_info.resizeEvent = self.ui_action_resize_software_system_information_text_box
             self.sys_info.show()
         except Exception:
@@ -4565,23 +4569,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Command file has not been saved
+        # Command file has not been saved.
         self.command_file_saved = False
-        # Use functions for CloseEvent override to see if user has edited command file and if so
-        # prompt user to save...
+        # Use functions for CloseEvent override to see if user has edited command file and if so prompt user to save.
         self.closeEvent_save_command_file()
 
-        # Set opened file to false since opening a new command file
+        # Set opened file to false since opening a new command file.
         self.opened_command_file = False
 
-        # Clear commands from geoprocessor
+        # Clear commands from geoprocessor:
         # - this retains the command file name
         self.gp_model.clear_all_commands()
 
-        # Save a new backup of commands (will be empty list)
+        # Save a new backup of commands (will be empty list).
         self.command_list_backup.update_command_list(self.gp.commands)
 
-        # Set the title for the main window
+        # Set the title for the main window.
         self.ui_set_main_window_title("commands not saved")
 
     def ui_action_results_geolayers_open_attributes(self) -> None:
@@ -4594,11 +4597,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         logger = logging.getLogger(__name__)
         # noinspection PyBroadException
         try:
-            # Get GeoLayer from Table
+            # Get GeoLayer from Table.
             selected_row_index = self.results_GeoLayers_Table.currentRow()
             selected_geolayer = self.gp.geolayers[selected_row_index]
 
-            # Create attributes window dialog
+            # Create attributes window dialog.
             self.open_dialog(existing_dialog=GeoLayerAttributesQDialog(selected_geolayer))
         except Exception:
             message = "Error opening attributes window.  See the log file."
@@ -4615,12 +4618,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         logger = logging.getLogger(__name__)
         # noinspection PyBroadException
         try:
-            # Get the first selected table
+            # Get the first selected table.
             selected_row_index = self.results_Tables_Table.selectedIndexes()[0].row()
             logger.info("Selected table index = {}".format(selected_row_index))
             selected_table = self.gp.tables[selected_row_index]
 
-            # Create attributes window dialog
+            # Create attributes window dialog.
             self.open_dialog(existing_dialog=TableQDialog(selected_table))
             return
         except Exception:
@@ -4633,6 +4636,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Open a command file. Each line of the command file is a separate item in the Command_List QList Widget.
         If the existing commands have not been saved, the user is prompted to ask if they should be saved
         before reading the indicated filename.
+        Do other housekeeping such as clearing the progress bars and status message at the bottom.
 
         Args:
             filename (str):
@@ -4643,7 +4647,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             True if the command file was opened and loaded into command list, False if error or canceled.
         """
 
-        # This command file has previously been saved
+        # This command file has previously been saved.
         self.command_file_saved = True
 
         self.closeEvent_save_command_file()
@@ -4654,14 +4658,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         cmd_filepath = ""
 
         if filename == "":
-            # The File / Open / Command File... menu has been selected, in which case the user is
-            # browsing for the command file.  Open the dialog by starting in the folder for the most recent
-            # file in the history, or otherwise the user's home folder.
+            # The File / Open / Command File... menu has been selected,
+            # in which case the user is  browsing for the command file.
+            # Open the dialog by starting in the folder for the most recent file in the history,
+            # or otherwise the user's home folder.
             last_opened_folder = ""
             command_file_list = self.app_session.read_history()
             if command_file_list and len(command_file_list) > 0:
-                # The history has at least one file so the most recent file can be used to provide
-                # the starting folder.
+                # The history has at least one file so the most recent file can be used to provide the starting folder.
                 last_opened_file = command_file_list[0]
                 index = last_opened_file.rfind('/')
                 last_opened_folder = last_opened_file[:index]
@@ -4673,13 +4677,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # The absolute pathname of the command file is added to the cmd_filepath variable.
             # cmd_filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", last_opened_folder)[0]
             title = "Open GeoProcessor Command File"
-            # Can't use full GeoProcessor below or choice is not fully visible
+            # Can't use full GeoProcessor below or choice is not fully visible.
             filters = "GP command files (*.gp);;All files (*)"
             cmd_filepath = QtWidgets.QFileDialog.getOpenFileName(self, title, last_opened_folder, filters)[0]
             if not cmd_filepath:
                 return False
         else:
-            # A command file name has been selected from the history list in File / Open
+            # A command file name has been selected from the history list in 'File / Open'.
             logger.info("In ui_action_open_command_file, request to open command file " + filename)
             cmd_filepath = filename
 
@@ -4691,33 +4695,42 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # Create a backup of the commands as text to allow checking for modifications.
             self.command_list_backup.update_command_list(self.gp.commands)
         except FileNotFoundError:
-            # The file should exist but may have been deleted outside of the UI
+            # The file should exist but may have been deleted outside of the UI:
             # - TODO smalers 2019-01-19 may automatically remove such files,
-            #   or leave assuming the user will rename, move the file back again.
+            #   or leave assuming the user will rename, move the file back again
             message = 'Selected command file does not exist (maybe deleted or renamed?):\n"' + cmd_filepath + '"'
             logger.warning(message, exc_info=True)
             qt_util.warning_message_box(message)
-            # Return so history is not changed to include a file that does not exist
+            # Return so history is not changed to include a file that does not exist.
             return False
 
-        # Update the error status for initialization run mode
+        # Update the error status for initialization run mode.
         self.command_CommandListWidget.update_ui_command_list_errors(command_phase_type=CommandPhaseType.INITIALIZATION)
-        # And refresh display of the messages
+
+        # And refresh display of the messages.
         self.command_CommandListWidget.update_ui_status_commands()
 
-        # Push new command onto history
+        # Push new command onto history.
         self.app_session.push_history(cmd_filepath)
 
-        # Set this file path as the path to save if the user click "Save Commands ..."
+        # Set this file path as the path to save if the user click "Save Commands ...".
         self.saved_file = cmd_filepath
 
-        # Set the title for the main window
+        # Update the status message.
+        self.status_Label.setText("Ready")
+        self.status_Label_Hint.setText("Use the Run menu or buttons to run the commands.")
+
+        # Clear the progress bars.
+        self.status_CommandWorkflow_StatusBar.setValue(0)
+        self.status_CurrentCommand_StatusBar.setValue(0)
+
+        # Set the title for the main window.
         self.ui_set_main_window_title('"' + cmd_filepath + '"')
 
-        # Update recently opened files in file menu
+        # Update recently opened files in file menu.
         self.ui_init_file_open_recent_files()
 
-        # Return True meaning a command file was opened
+        # Return True meaning a command file was opened.
         logger.info("Model size after reading command file=" + str(self.gp_model.rowCount(QtCore.QModelIndex())))
         return True
 
@@ -4729,7 +4742,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Set the title for the main window
+        # Set the title for the main window.
         qt_util.info_message_box("Printing features have not yet been implemented.")
 
     def ui_action_resize_software_system_information_text_box(self, event) -> None:
@@ -4755,7 +4768,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # noinspection PyBroadException
         try:
-            # Retrieve QgsVectorLayers from selected geolayers
+            # Retrieve QgsVectorLayers from selected geolayers:
             # - this retrieves selected indices
             # selected_rows = self.results_GeoLayers_Table.selectedIndexes()
             selected_rows = qt_util.get_table_rows_from_indexes(self.results_GeoLayers_Table.selectedIndexes())
@@ -4768,7 +4781,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                     logger.info("Appending raster layer \"{}\" [{}] for map ".format(geolayer.id, row))
                 selected_geolayers.append(geolayer.qgs_layer)
 
-            # Create attributes window dialog
+            # Create attributes window dialog.
             self.open_dialog(existing_dialog=GeoLayerMapQDialog(selected_geolayers))
             return
         except Exception:
@@ -4788,27 +4801,26 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
 
-        # Create the right click QMenu
+        # Create the right click QMenu.
         self.rightClickMenu_Results_GeoLayers = QtWidgets.QMenu()
 
-        # Add possible actions being Open Map or Attributes
+        # Add possible actions being Open Map or Attributes.
         menu_item_map_command = self.rightClickMenu_Results_GeoLayers.addAction("Open Map")
         menu_item_attributes = self.rightClickMenu_Results_GeoLayers.addAction("Attributes")
 
-        # Connect actions to the tooltip options
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Connect actions to the tooltip options.
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         menu_item_map_command.triggered.connect(self.ui_action_results_geolayers_open_map_window)
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         menu_item_attributes.triggered.connect(self.ui_action_results_geolayers_open_attributes)
 
-        # Using the position of the mouse on right click decide where the tooltip should
-        # be displayed
+        # Using the position of the mouse on right click decide where the tooltip should be displayed.
         parent_pos = self.results_GeoLayers_Table.mapToGlobal(QtCore.QPoint(0, 0))
         self.rightClickMenu_Results_GeoLayers.move(parent_pos + q_pos)
 
-        # Show the tooltip
+        # Show the tooltip.
         self.rightClickMenu_Results_GeoLayers.show()
 
     def ui_action_results_outputfiles_open_app(self, as_text: bool = False) -> None:
@@ -4822,16 +4834,16 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         # noinspection PyBroadException
         try:
-            # Get the first selected file
+            # Get the first selected file:
             # - this retrieves selected indices
             # selected_rows = self.results_GeoLayers_Table.selectedIndexes()
             selected_rows = qt_util.get_table_rows_from_indexes(self.results_OutputFiles_Table.selectedIndexes())
             for row in selected_rows:
-                # Get the output file
+                # Get the output file.
                 output_file_path = self.results_OutputFiles_Table.itemAt(row, 0).text()
                 logger.info("Output file item from table: {}".format(output_file_path))
                 os_util.run_default_app(output_file_path, as_text=as_text)
-                # Only show the first selected row
+                # Only show the first selected row:
                 # - TODO smalers 2020-07-22 evaluate whether multiple files should be provided to one application
                 break
 
@@ -4856,33 +4868,31 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Then start the appropriate application.
 
         Args:
-            q_pos (int): Position of mouse when right clicking on a GeoLayer from
-                the output table.
+            q_pos (int): Position of mouse when right-clicking on a GeoLayer from the output table.
 
         Returns:
             None
         """
 
-        # Create the right click QMenu
+        # Create the right click QMenu.
         self.rightClickMenu_Results_OutputFiles = QtWidgets.QMenu()
 
-        # Add possible actions
+        # Add possible actions.
         outputfiles_item_open = self.rightClickMenu_Results_OutputFiles.addAction("Open")
         outputfiles_item_openastext = self.rightClickMenu_Results_OutputFiles.addAction("Open as text")
 
-        # Connect actions to the tooltip options
+        # Connect actions to the tooltip options.
         # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
         # noinspection PyUnresolvedReferences
         outputfiles_item_open.triggered.connect(self.ui_action_results_outputfiles_open_app)
         # noinspection PyUnresolvedReferences
         outputfiles_item_openastext.triggered.connect(self.ui_action_results_outputfiles_openastext_app)
 
-        # Using the position of the mouse on right click decide where the tooltip should
-        # be displayed
+        # Using the position of the mouse on right click decide where the tooltip should be displayed.
         parent_pos = self.results_OutputFiles_Table.mapToGlobal(QtCore.QPoint(0, 0))
         self.rightClickMenu_Results_OutputFiles.move(parent_pos + q_pos)
 
-        # Show the tooltip
+        # Show the tooltip.
         self.rightClickMenu_Results_OutputFiles.show()
 
     def ui_action_results_tables_right_click(self, q_pos: int) -> None:
@@ -4897,23 +4907,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             None
         """
 
-        # Create the right click QMenu
+        # Create the right click QMenu.
         self.rightClickMenu_Results_Tables = QtWidgets.QMenu()
 
-        # Add possible actions being Open Map or Attributes
+        # Add possible actions being Open Map or Attributes.
         menu_item_attributes = self.rightClickMenu_Results_Tables.addAction("View")
 
-        # Connect actions to the tooltip options
-        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm
+        # Connect actions to the tooltip options.
+        # Use the following because triggered.connect() is shown as unresolved reference in PyCharm.
         # noinspection PyUnresolvedReferences
         menu_item_attributes.triggered.connect(self.ui_action_results_tables_view_table)
 
-        # Using the position of the mouse on right click decide where the tooltip should
-        # be displayed
+        # Using the position of the mouse on right click decide where the tooltip should be displayed.
         parent_pos = self.results_Tables_Tab.mapToGlobal(QtCore.QPoint(0, 0))
         self.rightClickMenu_Results_Tables.move(parent_pos + q_pos)
 
-        # Show the tooltip
+        # Show the tooltip.
         self.rightClickMenu_Results_Tables.show()
 
     def ui_action_save_commands(self) -> None:
@@ -4935,7 +4944,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             # A list to hold each command as a separate string.
             list_of_cmds = []
 
-            # Get the command list as strings
+            # Get the command list as strings.
             for i in range(len(self.gp.commands)):
                 # Add the command string text ot the list_of_cmds list.
                 list_of_cmds.append(self.gp.commands[i].command_string)
@@ -4948,13 +4957,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             file.write(all_commands_string)
             file.close()
 
-            # Update command file history list in GUI
+            # Update command file history list in GUI.
             self.ui_init_file_open_recent_files()
 
         # Successfully saved so record the new saved command file in the command list backup.
         self.command_list_backup.update_command_list(self.gp.commands)
 
-        # Update the title so that "modified" is not shown
+        # Update the title so that "modified" is not shown.
         self.update_ui_main_window_title()
 
     def ui_action_save_commands_as(self) -> None:
@@ -4968,23 +4977,22 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # A list to hold each command as a separate string.
         list_of_cmds = []
 
-        # Get the command list as strings
+        # Get the command list as strings.
         for i in range(len(self.gp.commands)):
             # Add the command string text ot the list_of_cmds list.
             list_of_cmds.append(self.gp.commands[i].command_string)
 
-        # Join all of the command strings together (separated by a line break).
+        # Join all the command strings together (separated by a line break).
         all_commands_string = '\n'.join(list_of_cmds)
 
         # Create a QDialog window instance.
         d = QtWidgets.QDialog()
 
-        # Try to get the last opened folder
+        # Try to get the last opened folder.
         last_opened_folder = ""
         command_file_list = self.app_session.read_history()
         if command_file_list and len(command_file_list) > 0:
-            # The history has at least one file so the most recent file can be used to provide
-            # the starting folder.
+            # The history has at least one file so the most recent file can be used to provide the starting folder.
             last_opened_file = command_file_list[0]
             index = last_opened_file.rfind('/')
             last_opened_folder = last_opened_file[:index]
@@ -5020,7 +5028,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Successfully saved so record the new saved command file in the command list backup.
         self.command_list_backup.update_command_list(self.gp.commands)
 
-        # Update the title so that "modified" is not shown
+        # Update the title so that "modified" is not shown.
         self.update_ui_main_window_title()
 
     def ui_action_view_command_file_diff(self) -> None:
@@ -5038,12 +5046,17 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # Prop prop = IOUtil.getProp("DiffProgram")
         prop = "xxx"
         # TODO smalers 2020-03-10 for now hard-code the path to KDiff3 - a repo issue has been added to
-        # - dummy in code below to mimic what would happen
+        #   dummy in code below to mimic what would happen.
         # implement an application configuration file.
         diff_program = None
         if prop is not None:
             # diff_program = "/C/Program Files/KDiff3/kdiff3.exe"
-            diff_program = Path("C:/Program Files/KDiff3/kdiff3.exe")
+            diff_program1 = Path("C:/Program Files/KDiff3/kdiff3.exe")
+            diff_program2 = Path("C:/Program Files/KDiff3/bin/kdiff3.exe")
+            if diff_program1.exists():
+                diff_program = diff_program1
+            elif diff_program2.exists():
+                diff_program = diff_program2
         else:
             message = "The visual diff program has not been configured in the TSTool configuration file.\n" \
                 "Define the \"DiffProgram\" property as the path to a visual diff program, for example kdiff3\n" \
@@ -5051,11 +5064,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box(message)
             return
 
-        p = Path(diff_program)
-        if p.exists():
+        if diff_program:
             # Diff program exists so save a temporary file with UI commands and then compare with file version.
             # Run the diff program on the input and output files
-            # (they should have existed because the button will have been disabled if not)
+            # (they should have existed because the button will have been disabled if not).
             file1_path = None
             if self.saved_file is not None:
                 file1_path = Path(self.saved_file)
@@ -5069,12 +5081,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             file2_path = Path(temp_folder) / "gp-commands.gp"
             list_of_cmds = []
             try:
-                # Get the command list as strings
+                # Get the command list as strings.
                 for i in range(len(self.gp.commands)):
                     # Add the command string text ot the list_of_cmds list.
                     list_of_cmds.append(self.gp.commands[i].command_string)
 
-                # Join all of the command strings together (separated by a line break).
+                # Join all the command strings together (separated by a line break).
                 all_commands_string = '\n'.join(list_of_cmds)
 
                 # Write the commands to the previously saved file location (overwrite).
@@ -5087,19 +5099,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 qt_util.warning_message_box(message)
                 return
 
-            # Run the diff program
+            # Run the diff program.
             # noinspection PyBroadException
             try:
-                # Files must be Platform-specific to work with with called program
-                # TODO smalers 2020-03-10 the following did not work
+                # Files must be Platform-specific to work with with called program.
+                # TODO smalers 2020-03-10 the following did not work.
                 logger.info("diff_program=" + str(diff_program))
                 logger.info("file1_path=" + str(file1_path))
                 logger.info("file2_path=" + str(file2_path))
                 # args = [diff_program, file1_path, file2_path]
                 command_line = '"' + str(diff_program) + '" "' + str(file1_path) + '" "' + str(file2_path) + '"'
                 args = shlex.split(command_line)
-                # use_command_shell = True   # Use shell to handle spaces in paths
-                use_command_shell = False  # Seems to work OK with command line parsed above
+                # use_command_shell = True   # Use shell to handle spaces in paths.
+                use_command_shell = False  # Seems to work OK with command line parsed above.
                 # env_dict = None
                 # capture_output = None
                 # stdout = None
@@ -5107,19 +5119,19 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 # timeout = 0
                 do_thread = True
                 if do_thread:
-                    # The following runs the diff tool as a separate thread
+                    # The following runs the diff tool as a separate thread.
                     subprocess.Popen(args, shell=use_command_shell)
                 else:
                     # completed_process = subprocess.run(args, shell=use_command_shell, env=env_dict, timeout=timeout,
                     #                                   capture_output=capture_output, stdout=stdout, stderr=stderr)
-                    # The following runs but not threaded so it hangs the UI until the diff tool exits
+                    # The following runs but not threaded so it hangs the UI until the diff tool exits.
                     completed_process = subprocess.run(args, shell=use_command_shell)
             except Exception:
                 message = "Error running diff program."
                 logger.warning(message, exc_info=True)
                 qt_util.warning_message_box(message)
         else:
-            message = "Visual diff program does not exist:  " + diff_program
+            message = "Visual diff program does not exist:\n  " + str(diff_program1) + "\n  " + str(diff_program2)
             qt_util.warning_message_box(message)
 
     @classmethod
@@ -5162,9 +5174,9 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             qt_util.warning_message_box(message)
             return
 
-        # Normal case is that a log file will always be available
+        # Normal case is that a log file will always be available.
         try:
-            # TODO smalers 2018-11-21 the following works on Windows - need to support other operating systems
+            # TODO smalers 2018-11-21 the following works on Windows - need to support other operating systems.
             if os_util.is_windows_os():
                 os.startfile(logfile_name)
             elif os_util.is_cygwin_os():
@@ -5174,10 +5186,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 try:
                     subprocess.call('xdg-open', logfile_name)
                 except (AttributeError, FileNotFoundError, NotImplementedError):
-                    # Log the message to help with development
+                    # Log the message to help with development.
                     message = 'Error viewing log file using xdg-open ' + logfile_name
                     logger.warning(message, exc_info=True)
-                    # Try to use nano as a default visual editor
+                    # Try to use nano as a default visual editor:
                     # - TODO smalers 2018-12-28 need to figure out what is installed rather than hard-code nano
                     try:
                         subprocess.call('nano', logfile_name)
@@ -5207,7 +5219,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             return
 
         try:
-            # TODO smalers 2018-11-21 the following works on Windows - need to support other operating systems
+            # TODO smalers 2018-11-21 the following works on Windows - need to support other operating systems.
             if os_util.is_windows_os():
                 os.startfile(logfile_name)
             elif os_util.is_cygwin_os():
@@ -5217,10 +5229,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 try:
                     subprocess.call('xdg-open', logfile_name)
                 except (AttributeError, FileNotFoundError, NotImplementedError):
-                    # Log the message to help with development
+                    # Log the message to help with development.
                     message = 'Error viewing log file using xdg-open ' + logfile_name
                     logger.warning(message, exc_info=True)
-                    # Try to use nano as a default visual editor
+                    # Try to use nano as a default visual editor:
                     # - TODO smalers 2018-12-28 need to figure out what is installed rather than hard-code nano
                     try:
                         subprocess.call('nano', logfile_name)
@@ -5249,11 +5261,11 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         # number of recently opened files.
         # If there are more than 20 cached commands in the command file history set the maximum to 20.
         max_files = self.command_file_menu_max  # Default size of command file history in menu
-        # Read the list of command files
+        # Read the list of command files.
         command_file_list = self.app_session.read_history()
         command_file_list_len = len(command_file_list)
         if command_file_list_len < max_files:
-            # There are less than the maximum number of files in the history so reset the maximum
+            # There are less than the maximum number of files in the history so reset the maximum.
             max_files = command_file_list_len
         # Always iterate through the maximum of command files in the menu to ensure that old event handlers
         # are disconnected.
@@ -5266,7 +5278,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 command_file = ""
             else:
                 command_file = command_file_list[i]
-            # First disconnect the event handler that was initially set up
+            # First disconnect the event handler that was initially set up.
             self.Menu_File_Open_CommandFileHistory_List[i].triggered.disconnect()
             self.Menu_File_Open_CommandFileHistory_List[i].setText(command_file)
             self.Menu_File_Open_CommandFileHistory_List[i].setObjectName(
@@ -5286,7 +5298,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        self.setWindowTitle("GeoProcessor - " + title)  # Initial title
+        self.setWindowTitle("GeoProcessor - " + title)  # Initial title.
 
     def update_command_list_backup(self) -> None:
         """
@@ -5311,13 +5323,13 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         else:
             # Command file has a name and may or may not have been modified.
             if self.command_list_backup.command_list_modified(self.gp.commands):
-                # The command file has been modified
+                # The command file has been modified.
                 window_title = "GeoProcessor - " + self.saved_file + " (modified)"
             else:
                 # The command file has not been modified.
                 window_title = "GeoProcessor - " + self.saved_file
 
-        # Set the window title
+        # Set the window title.
         self.setWindowTitle(window_title)
 
     def update_ui_status(self) -> None:
@@ -5343,14 +5355,14 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
 
         """
-        # Adjust whether menus are enabled or disabled based on the state of the data
+        # Adjust whether menus are enabled or disabled based on the state of the data.
         num_commands = len(self.gp)
         selected_indices = self.command_CommandListWidget.get_selected_indices()
         num_selected = len(selected_indices)
 
-        # The popup menu will not be populated until one right-click has occurred, so check for None once
+        # The popup menu will not be populated until one right-click has occurred, so check for None once.
         if num_selected > 0:
-            # Some commands are selected
+            # Some commands are selected.
             if self.menu_item_show_command_status is not None:
                 self.menu_item_show_command_status.setEnabled(True)
                 self.menu_item_edit_command.setEnabled(True)
@@ -5365,7 +5377,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             self.increase_indent_button.setEnabled(True)
             self.decrease_indent_button.setEnabled(True)
         else:
-            # No commands are selected
+            # No commands are selected.
             if self.menu_item_show_command_status is not None:
                 self.menu_item_show_command_status.setEnabled(False)
                 self.menu_item_edit_command.setEnabled(False)
@@ -5382,10 +5394,10 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
 
         if self.menu_item_paste_commands is not None:
             if len(self.commands_cut_buffer) > 0:
-                # The cut/copy/paste command list has some commands
+                # The cut/copy/paste command list has some commands.
                 self.menu_item_paste_commands.setEnabled(True)
             else:
-                # Nothing available to cut/copy/paste
+                # Nothing available to cut/copy/paste.
                 self.menu_item_paste_commands.setEnabled(False)
 
         if self.menu_item_select_all_commands is not None:
@@ -5452,7 +5464,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         self.results_OutputFiles_GroupBox.setTitle(
             "Output Files ({} Output Files, {} selected)".format(row_num, selected_rows))
 
-        # Hide last column to ensure horizontal scroll
+        # Hide last column to ensure horizontal scroll.
         self.results_OutputFiles_Table.setColumnWidth(1, 0)
 
     def update_ui_status_results_properties(self) -> None:
@@ -5497,12 +5509,12 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         Returns:
             None
         """
-        # Remove item at index
+        # Remove item at index.
         self.number_ListWidget.takeItem(index)
-        # Get the length of the numbered list
+        # Get the length of the numbered list.
         count = self.number_ListWidget.count()
 
-        # Update numbers past the deleted row
+        # Update numbers past the deleted row.
         for i in range(index, count):
             list_text = self.number_ListWidget.item(i).text()
             if list_text:
@@ -5510,7 +5522,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
                 num = num - 1
                 self.number_ListWidget.item(i).setText(str(num))
 
-    # TODO smalers 2020-03-13 a similar method exists in CommandListWidget and should be used directly
+    # TODO smalers 2020-03-13 a similar method exists in CommandListWidget and should be used directly.
     def x_update_ui_commands_list(self) -> None:
         """
         Once commands have been run. Loop through and check for any errors or warnings.
@@ -5525,7 +5537,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
             gp = self.gp
             count = len(self.command_CommandListWidget)
             for i in range(0, count):
-                # TODO jurentie may update to handle Discovery errors once implemented in GeoProcessor
+                # TODO jurentie may update to handle Discovery errors once implemented in GeoProcessor.
                 command_status = gp.commands[i].command_status.run_status
                 if command_status is CommandStatusType.FAILURE:
                     self.command_CommandListWidget.numbered_list_error_at_row(i)

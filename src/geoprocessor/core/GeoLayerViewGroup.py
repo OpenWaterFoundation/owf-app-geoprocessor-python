@@ -1,7 +1,7 @@
 # Class to hold a group of GeoLayerView
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -32,19 +32,19 @@ class GeoLayerViewGroup(object):
             description (str):  Description, used to describe the view group (default is empty string).
         """
 
-        # Unique identifier
+        # Unique identifier.
         self.id = geolayerviewgroup_id
 
-        # Name, used to display layer legend
+        # Name, used to display layer legend.
         self.name = name
 
-        # Description
+        # Description.
         self.description = description
 
-        # Additional properties for the layer view
+        # Additional properties for the layer view.
         self.properties = dict()
 
-        # List of GeoLayerView in the group
+        # List of GeoLayerView in the group.
         self.geolayerviews = []
 
     def get_geolayerview(self, geolayerview_id: str) -> GeoLayerView or None:
@@ -60,15 +60,15 @@ class GeoLayerViewGroup(object):
         for geolayerview in self.geolayerviews:
             if geolayerview is not None:
                 if geolayerview.id == geolayerview_id:
-                    # Found the requested identifier
+                    # Found the requested identifier.
                     return geolayerview
-        # Did not find the requested identifier so return None
+        # Did not find the requested identifier so return None.
         return None
 
     def set_properties(self, properties: dict, clear_first: bool = False) -> None:
         """
-        Set properties.  This does not replace the properties - it resets existing properties or resets
-        existing properties.
+        Set properties.  This does not replace the properties.
+        It resets existing properties or resets existing properties.
 
         Args:
             properties (dict): properties to set.

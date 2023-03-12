@@ -1,18 +1,18 @@
 # Table - class to store table data using Pandas table
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -22,23 +22,27 @@ import typing
 
 class Table(object):
     """
-    The Table class holds tabular data objects (columns and rows). The core data is stored in a pandas data frame
-    object in order to leverage the pandas library and functionality. Additional data members are used to store data
-    that are not part of the pandas data frame object and are required from the GeoProcessor. These include attributes
-    like a table identifier and a source filename.
+    The Table class holds tabular data objects (columns and rows).
+    The core data is stored in a pandas data frame object in order to leverage the pandas library and functionality.
+    Additional data members are used to store data that are not part of the pandas data frame object and are
+    required from the GeoProcessor.
+    These include attributes like a table identifier and a source filename.
 
-    A list of registered Table instances are maintained by the GeoProcessor's self.tables property (type: list). The
-    GeoProcessor's commands retrieve in-memory Table instances from the GeoProcessor's self.tables property using the
-    GeoProcessor.get_table() function. New Table instances are added to teh GeoProcessor list using the add_table()
-    function.
+    A list of registered Table instances are maintained by the GeoProcessor's 'self.tables' property (type: list).
+    The GeoProcessor's commands retrieve in-memory Table instances from the GeoProcessor's 'self.tables'
+    property using the GeoProcessor.get_table() function.
+    New Table instances are added to teh GeoProcessor list using the add_table() function.
 
-    There are a number of properties associated with each Table. The initialized properties stored within each Table
-    instance are the STATIC properties that will never change (identifier, df object, and source path). The DYNAMIC
-    properties (column names, number of table entries, etc.) are created when needed by accessing class functions.
+    There are a number of properties associated with each Table.
+    The initialized properties stored within each Table instance are the STATIC properties that will never change
+    (identifier, df object, and source path).
+    The DYNAMIC properties (column names, number of table entries, etc.)
+    are created when needed by accessing class functions.
 
-    Tables can be made in memory from within the GeoProcessor. This occurs when a command is called that, by design,
-    creates a new Table. When this occurs, the in-memory Table is assigned a table_id from within the command,
-    the df is created from within the command and the source_path is set to 'MEMORY'or 'NONE'.
+    Tables can be made in memory from within the GeoProcessor.
+    This occurs when a command is called that, by design, creates a new Table.
+    When this occurs, the in-memory Table is assigned a table_id from within the command,
+    the df is created from within the command and the source_path is set to 'MEMORY' or 'NONE'.
     """
     def __init__(self, table_id: str, pandas_df, table_source_path: str, properties:dict = None) -> None:
         """
@@ -59,19 +63,19 @@ class Table(object):
                 These properties facilitate processing.
         """
 
-        # "id" is a string that is the Table's reference ID. This ID is used to access the Table from the GeoProcessor
-        # for manipulation.
+        # "id" is a string that is the Table's reference ID.
+        # This ID is used to access the Table from the GeoProcessor for manipulation.
         self.id: str = table_id
 
-        # "pandas_df" is a Pandas Data Frame object created by the pandas library. All manipulations are performed on
-        # the Table's pandas data frame.
+        # "pandas_df" is a Pandas Data Frame object created by the 'pandas' library.
+        # All manipulations are performed on the Table's pandas data frame.
         self.df = pandas_df
 
-        # "source_path" (str) is the full pathname to the original data file on the user's local computer
+        # "source_path" (str) is the full pathname to the original data file on the user's local computer.
         self.source_path: str = table_source_path
 
         # "int_null_value" is the value used to replace the null value within the integer columns, if applicable.
-        # See ReadTableFromDataStore parameters IntNullHandleMethod  and IntNullValue for more information
+        # See ReadTableFromDataStore parameters IntNullHandleMethod  and IntNullValue for more information.
         self.int_null_value = None
 
         # "properties" (dict) is a dictionary of user (non-built-in) properties that are assigned to the layer.
@@ -107,7 +111,7 @@ class Table(object):
 
     def get_column_values_as_list(self, column_name) -> [typing.Any]:
         """
-        Return all of the column values for a given column.
+        Return all the column values for a given column.
 
         Args:
             column_name (str): the name of the column of interest

@@ -1,18 +1,18 @@
 # ChangeRasterGeoLayerCRS - command to change raster GeoLayer coordinate reference system (CRS)
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -39,7 +39,7 @@ import logging
 
 class ChangeRasterGeoLayerCRS(AbstractCommand):
     """
-    Change a raster GeoLayer's coordinate reference system (CRS)
+    Change a raster GeoLayer's coordinate reference system (CRS).
     """
 
     # Define the command parameters.
@@ -48,7 +48,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
         CommandParameterMetadata("CRS", str),
         CommandParameterMetadata("OutputGeoLayerID", str)]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Change the coordinate reference system (CRS) of a raster GeoLayer.\n"
@@ -56,7 +56,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
     )
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "GeoLayer identifier"
@@ -81,18 +81,18 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ChangeRasterGeoLayerCRS"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, geolayer_id: str, crs_code: str) -> bool:
@@ -188,8 +188,8 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
-        # Return the Boolean to determine if the crs should be set. If TRUE, all checks passed. If FALSE, one or many
-        # checks failed.
+        # Return the Boolean to determine if the crs should be set. If TRUE, all checks passed.
+        # If FALSE, one or many checks failed.
         return set_crs
 
     def run_command(self) -> None:
@@ -232,10 +232,10 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
 
                 # Check if the input GeoLayer has an existing CRS.
                 if input_geolayer.get_crs_code():
-                    # Reproject the GeoLayer.
+                    # Reproject the GeoLayer:
                     # - output is to a temporary file so have to read it
 
-                    # Get the temporary folder based on TemporaryFolder parameter
+                    # Get the temporary folder based on TemporaryFolder parameter:
                     # - for now use the system temporary folder
                     output_ext = "tif"
                     raster_output_file = io_util.create_tmp_filename('gp', 'warpreproject', output_ext)
@@ -254,7 +254,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
                         "INPUT": input_geolayer.qgs_layer,
                         "TARGET_CRS": pv_CRS,
                         "OUTPUT": str(raster_output_file),
-                        # The following are for GeoTIFF
+                        # The following are for GeoTIFF.
                         "OPTIONS": 'TILED=YES|COPY_SRC_OVERVIEWS=YES|COMPRESS=LZW'
                     }
                     feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
@@ -263,20 +263,20 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
                                                           algorithm_parameters=alg_parameters,
                                                           feedback_handler=feedback_handler)
                     self.warning_count += feedback_handler.get_warning_count()
-                    # Output is a dictionary
+                    # Output is a dictionary.
                     self.logger.info("Algorithm output: {}".format(alg_output))
 
-                    # Create a new QgsRasterLayer from the temporary file.
+                    # Create a new QgsRasterLayer from the temporary file:
                     # - output file name should be the same as specified but get from results to confirm
                     reprojected_layer = qgis_util.read_qgsrasterlayer_from_file(alg_output['OUTPUT'])
                     self.logger.info("Layer metadata after changing CRS:")
                     qgis_util.log_raster_metadata(reprojected_layer, logger=self.logger)
 
                     if (pv_OutputGeoLayerID is not None) and (pv_OutputGeoLayerID != ''):
-                        # Use the new GeoLayerID
+                        # Use the new GeoLayerID.
                         new_geolayer_id = pv_OutputGeoLayerID
                     else:
-                        # Use the existing GeoLayerID
+                        # Use the existing GeoLayerID.
                         new_geolayer_id = pv_GeoLayerID
 
                     # Create a new GeoLayer from the temporary file and add it to the GeoProcessor's geolayers list.
@@ -290,7 +290,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
                     self.command_processor.add_geolayer(new_geolayer)
 
                 else:
-                    # Input layer must have CRS defined in order to change the CRS
+                    # Input layer must have CRS defined in order to change the CRS.
                     self.warning_count += 1
                     message = "Input layer {} does not have CRS - cannot change".format(pv_GeoLayerID)
                     recommendation = "Set the layer CRS when reading or creating."
@@ -299,7 +299,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
                                                    CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error changing GeoLayer {} CRS to {}".format(pv_GeoLayerID, pv_CRS)
                 recommendation = "Check the log file for details."
@@ -311,7 +311,7 @@ class ChangeRasterGeoLayerCRS(AbstractCommand):
                 if raster_output_file is not None:
                     io_util.remove_tmp_file(raster_output_file)
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

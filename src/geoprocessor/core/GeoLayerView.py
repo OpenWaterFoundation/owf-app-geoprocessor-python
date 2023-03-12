@@ -1,7 +1,7 @@
 # GeoLayerView - Class to hold a layer and its symbology
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -41,32 +41,32 @@ class GeoLayerView(object):
         Returns:
             None
         """
-        # Identifier
+        # Identifier.
         self.id = geolayerview_id
 
-        # Name for the layer view
+        # Name for the layer view.
         self.name = name
 
-        # Description for the layer view
+        # Description for the layer view.
         self.description = description
 
-        # GeoLayer object
+        # GeoLayer object.
         self.geolayer = geolayer
 
-        # GeoLayerSymbol object
+        # GeoLayerSymbol object:
         # - TODO smalers 2020-03-18 need to define a default based on data
         # - the symbol is expected to be set by calling a set method because it originates in a separate command
         # - specific child classes may be derived from parent class GeoLayerSymbol
         self.geolayersymbol: GeoLayerSymbol or None = None
 
         if properties is None:
-            # No properties were provided so use an empty dictionary
+            # No properties were provided so use an empty dictionary.
             self.properties = dict()
         else:
-            # Use the provided properties
+            # Use the provided properties.
             self.properties = properties
 
-        # Event handlers for the GeoLayerView
+        # Event handlers for the GeoLayerView:
         # - code that reads the map should implement handlers for the specified event types
         # - initialize to an empty list
         self.event_handlers: [GeoLayerViewEventHandler] or None = []
@@ -79,7 +79,7 @@ class GeoLayerView(object):
             "geoLayerViewId": self.id,
             "name": self.name,
             "description": self.description,
-            # GeoLayer information is provided by reference to the main list of GeoLayer
+            # GeoLayer information is provided by reference to the main list of GeoLayer:
             # - this allows sharing the layers if software allows, although Leaflet does not allow sharing
             #   layers between maps (?)
             # - TODO smalers 2020-03-20 may need a property to indicate whether sharing or not

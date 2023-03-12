@@ -1,18 +1,18 @@
 # CreateFolder - command to create a folder
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -45,12 +45,12 @@ class CreateFolder(AbstractCommand):
         CommandParameterMetadata("IfFolderExists", type(""))
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Create a folder and optionally its parent folders."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # Folder
     __parameter_input_metadata['Folder.Description'] = "the name of the folder to create"
@@ -78,27 +78,27 @@ class CreateFolder(AbstractCommand):
         "Warn (generate a warning message)\n"
         "Fail (generate a failure message). ")
     __parameter_input_metadata['IfFolderExists.Values'] = ["", "Ignore", "Warn", "Fail"]
-    __parameter_input_metadata['IfFolderExists.Value.Default'] = "Warn"
+    __parameter_input_metadata['IfFolderExists.Value.Default'] = "Warn"  # If the folder exists, default is to warn.
 
-    # Choices for IfFolderExists, used to validate parameter and display in editor
+    # Choices for IfFolderExists, used to validate parameter and display in editor.
     __choices_IfFolderExists = ["Ignore", "Warn", "Fail"]
 
-    # Choices for CreateParentFolders, used to validate parameter and display in editor
+    # Choices for CreateParentFolders, used to validate parameter and display in editor.
     __choices_CreateParentFolders = ["False", "True"]
 
     def __init__(self) -> None:
         """
         Initialize a new instance of the command.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "CreateFolder"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -129,7 +129,7 @@ class CreateFolder(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # CreateParentFolders is optional, defaults to False at runtime
+        # CreateParentFolders is optional, defaults to False at runtime.
         # noinspection PyPep8Naming
         pv_IfNotFound = self.get_parameter_value(parameter_name='CreateParentFolders',
                                                  command_parameters=command_parameters)
@@ -142,7 +142,7 @@ class CreateFolder(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # IfFolderExists is optional, defaults to Warn at runtime
+        # IfFolderExists is optional, defaults to Warn at runtime.
         # noinspection PyPep8Naming
         pv_IfNotFound = self.get_parameter_value(parameter_name='IfFolderExists',
                                                  command_parameters=command_parameters)
@@ -156,16 +156,15 @@ class CreateFolder(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
         # Check for unrecognized parameters.
-        # This returns a message that can be appended to the warning, which if non-empty
-        # triggers an exception below.
+        # This returns a message that can be appended to the warning, and non-empty triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def run_command(self) -> None:
@@ -182,7 +181,7 @@ class CreateFolder(AbstractCommand):
         warning_count = 0
         logger = logging.getLogger(__name__)
 
-        # Get data for the command
+        # Get data for the command.
         # noinspection PyPep8Naming
         pv_Folder = self.get_parameter_value('Folder')
         # noinspection PyPep8Naming
@@ -199,7 +198,7 @@ class CreateFolder(AbstractCommand):
         logger.info("CreateParentFolders={}".format(pv_CreateParentFolders))
         logger.info("IfFolderExists={}".format(pv_IfFolderExists))
 
-        # Runtime checks on input
+        # Runtime checks on input.
 
         # noinspection PyPep8Naming
         pv_Folder_absolute = io_util.verify_path_for_os(
@@ -212,30 +211,30 @@ class CreateFolder(AbstractCommand):
             logger.warning(message)
             raise CommandError(message)
 
-        # Do the processing
+        # Do the processing.
 
         folder_path = Path(pv_Folder_absolute)
         # noinspection PyBroadException
         try:
             if folder_path.exists():
-                # Folder exists so generate a warning if requested
+                # Folder exists so generate a warning if requested.
                 message = 'The folder exists: "' + pv_Folder_absolute + '"'
                 if pv_IfFolderExists.upper() == 'FAIL':
                     warning_count += 1
                     self.command_status.add_to_log(
                         CommandPhaseType.RUN,
                         CommandLogRecord(CommandStatusType.FAILURE, message,
-                                         "Verify that the folder should not exist or ignore the error."))
+                                         "Verify that the folder should not exist or ignore an existing folder error."))
                     logger.warning(message)
                 elif pv_IfFolderExists.upper() == 'WARN':
                     warning_count += 1
                     self.command_status.add_to_log(
                         CommandPhaseType.RUN,
                         CommandLogRecord(CommandStatusType.WARNING, message,
-                                         "Verify that the folder should not exist or ignore the error."))
+                                         "Verify that the folder should not exist or ignore an existing folder error."))
                     logger.warning(message)
                 else:
-                    # Ignore
+                    # Ignore.
                     pass
             else:
                 # Create the folder.

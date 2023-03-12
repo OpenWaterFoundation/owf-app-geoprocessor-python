@@ -1,18 +1,18 @@
 # GeoProcessorAppSession - class to manage GeoProcessor session
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -46,7 +46,7 @@ class GeoProcessorAppSession(object):
        logs/
     """
 
-    # Private singleton instance (class data)
+    # Private singleton instance (class data).
     _instance: GeoProcessorAppSession = None
 
     def __init__(self, app_major_version: int) -> None:
@@ -54,7 +54,7 @@ class GeoProcessorAppSession(object):
         Constructor.
         """
 
-        # Major version for software, used to locate files in home folder
+        # Major version for software, used to locate files in home folder.
         self.app_major_version = app_major_version
 
     def create_user_logs_folder(self) -> bool:
@@ -65,7 +65,7 @@ class GeoProcessorAppSession(object):
             True if the creation is successful, False if not.
         """
         log_folder = self.get_user_logs_folder()
-        # Do not allow log file to be created under Linux root but allow the application to run
+        # Do not allow log file to be created under Linux root but allow the application to run.
         if log_folder == "/":
             return False
 
@@ -75,7 +75,7 @@ class GeoProcessorAppSession(object):
             except OSError:
                 return False
         else:
-            # Make sure it is writeable
+            # Make sure it is writeable.
             if not os.access(log_folder, os.W_OK):
                 return False
         return True
@@ -90,7 +90,7 @@ class GeoProcessorAppSession(object):
             True if the creation is successful, False if not.
         """
         tmp_folder = self.get_user_tmp_files_to_remove_folder()
-        # Do not allow log file to be created under Linux root but allow the application to run
+        # Do not allow log file to be created under Linux root but allow the application to run.
         if tmp_folder == "/":
             return False
 
@@ -100,7 +100,7 @@ class GeoProcessorAppSession(object):
             except OSError:
                 return False
         else:
-            # Make sure it is writeable
+            # Make sure it is writeable.
             if not os.access(tmp_folder, os.W_OK):
                 return False
         return True
@@ -125,9 +125,9 @@ class GeoProcessorAppSession(object):
             Singleton instance of GeoProcessorAppSession
         """
         if cls._instance is None:
-            # None instance because called the first time, so create an instance
+            # None instance because called the first time, so create an instance.
             cls._instance = GeoProcessorAppSession(app_major_version=app_major_version)
-        # Else an instance exists so can use it
+        # Else an instance exists so can use it:
         # - the following won't do anything if already initialized
         cls._instance.initialize_user_files()
 
@@ -211,8 +211,10 @@ class GeoProcessorAppSession(object):
 
     def initialize_user_files(self) -> bool:
         """
-        Initialize user files.  This method should be called at application startup by calling 'get_instance()'
-        to make sure that user files are created. The following summarizes the file structure:
+        Initialize user files.
+        This method should be called at application startup by calling 'get_instance()' to make sure that
+        user files are created.
+        The following summarizes the file structure:
 
             C:/Users/user/              # Windows user folder
             /home/user/                 # Linux user folder
@@ -226,9 +228,10 @@ class GeoProcessorAppSession(object):
                     2/
                         ... next major version's files ...
 
-        The use of a version folder is a design compromise.  Users will need to use migration tools to import previous
-        version configuration.  The version folder allows different major versions of software to remain
-        functional if major design changes occur.
+        The use of a version folder is a design compromise.
+        Users will need to use migration tools to import previous version configuration.
+        The version folder allows different major versions of software to remain functional
+        if major design changes occur.
 
         Returns:
             True if initialization was successful, False if initialization failed.
@@ -237,13 +240,13 @@ class GeoProcessorAppSession(object):
         user_folder = self.get_user_app_folder()
         return_status = True
         if user_folder == "/":
-            # Don't allow files to be created under root on Linux
+            # Don't allow files to be created under root on Linux.
             logger.warning("Unable to create user files in / (root) folder - need to run as a normal user.")
             return_status = False
 
-        # If OK so far, continue
+        # If OK so far, continue.
         if return_status:
-            # Create the version folder if it does not exist
+            # Create the version folder if it does not exist.
             if not os.path.exists(user_folder):
                 # The following gets rid of IDE warning about catching Exception, which is considered "too broad".
                 # noinspection PyBroadException
@@ -254,12 +257,12 @@ class GeoProcessorAppSession(object):
                                    exc_info=True)
                     return_status = False
             else:
-                # Make sure it is writeable
+                # Make sure it is writeable.
                 if not os.access(user_folder, os.W_OK):
                     logger.warning("Application user folder \"" + user_folder + "\" is not writeable.")
                     return_status = False
 
-            # If OK so far, continue
+            # If OK so far, continue.
             if return_status:
                 version_folder = self.get_user_app_major_version_folder()
                 if not os.path.exists(version_folder):
@@ -273,14 +276,14 @@ class GeoProcessorAppSession(object):
                         return_status = False
                 else:
                     # Version folder exists.
-                    # Make sure it is writeable
+                    # Make sure it is writeable.
                     if not os.access(version_folder, os.W_OK):
                         logger.warning("Application user files version folder \"" + version_folder +
                                        "\" is not writeable.")
                         return_status = False
 
                 if return_status:
-                    # Check/create main folders under the version folder
+                    # Check/create main folders under the version folder:
                     # - if folders already exist, True will be returned
 
                     # Check/create the 'logs' folder.
@@ -299,12 +302,12 @@ class GeoProcessorAppSession(object):
                         # Set the path in io_util so it can save files there without knowing about application.
                         io_util.tmp_files_to_remove_folder = self.get_user_tmp_files_to_remove_folder()
 
-        # Always attempt to remove temporary files from the previous session.
+        # Always attempt to remove temporary files from the previous session:
         # - necessary because they were locked at the time the GeoProcessor was previously run
         # - call this in the main application after logging has been set up
         # self.remove_user_tmp_files()
 
-        # Return the status
+        # Return the status:
         # - should be True if no issues or False if some issue occurred that may need attention
         return return_status
 
@@ -322,24 +325,24 @@ class GeoProcessorAppSession(object):
             None
         """
 
-        # Read the history file from the .geoprocessor file
+        # Read the history file from the .geoprocessor file.
         history = self.read_history()
-        # Add in the first position so it will show up first in the File... Open... menu
+        # Add in the first position so it will show up first in the File... Open... menu.
         history.insert(0, command_file)
 
         # print("Command File: " + command_file)
 
-        # Process from back so that old duplicates are removed and recent access is always at the top of the list
+        # Process from back so that old duplicates are removed and recent access is always at the top of the list.
         # print("History before loop: " +  str(history))
         max_files = 100
         for i in reversed(list(range(0, len(history)))):
             if i >= 1:
                 old = history[i]
                 if i >= max_files:
-                    # Trim the history to the maximum
+                    # Trim the history to the maximum.
                     del history[i]
                 elif old == command_file or old == '' or old.startswith("#"):
-                    # Ignore comments, blank lines and duplicate to most recent access
+                    # Ignore comments, blank lines and duplicate to most recent access.
                     del history[i]
                     i -= 1
         self.write_history(history)
@@ -368,17 +371,17 @@ class GeoProcessorAppSession(object):
                 history = f.read().splitlines()
                 for line in history:
                     if line.startswith("#"):
-                        # Remove comments
+                        # Remove comments.
                         history.remove(line)
                 return history
         except Exception:
-            # For now just swallow exception - may be because the history folder does not exist
+            # For now just swallow exception, which may be because the history folder does not exist.
             # message = 'Exception opening command file history'
             # print(message)
             # logging.warning(message, exc_info=True)
             return []
         finally:
-            # Close the history file
+            # Close the history file.
             if f is not None:
                 f.close()
 
@@ -396,13 +399,13 @@ class GeoProcessorAppSession(object):
         tmp_file_count = 0
         tmp_file_removed_count = 0
 
-        # List the files in the temporary folder
-        # See:  https://mkyong.com/python/python-how-to-list-all-files-in-a-directory/
+        # List the files in the temporary folder:
+        # - see:  https://mkyong.com/python/python-how-to-list-all-files-in-a-directory/
         for r, d, f in os.walk(tmp_folder):
-            # Process the files in the folder
+            # Process the files in the folder.
             for file in f:
                 # logger.info("Processing tmp file: {}".format(f))
-                # Get the full path to the file
+                # Get the full path to the file.
                 tracker_path = Path(os.path.join(r,file))
                 # Read the contents of the file, which include the path to a temporary file to remove.
                 tmp_file_lines = io_util.read_file(tracker_path, comment='#', return_comments=False)
@@ -412,7 +415,7 @@ class GeoProcessorAppSession(object):
                     # Remove the temporary file.
                     # logger.info("tmp file to remove: {}".format(tmp_file))
                     tmp_file_path = Path(tmp_file)
-                    # Whether to remove the tracker
+                    # Whether to remove the tracker.
                     do_remove_tracker = False
                     if tmp_file_path.exists():
                         # noinspection PyBroadException
@@ -429,7 +432,7 @@ class GeoProcessorAppSession(object):
                         logger.info("tmp file from previous session does not exist: {}".format(tmp_file))
                         do_remove_tracker = True
                     if do_remove_tracker:
-                        # Remove the tracker file
+                        # Remove the tracker file.
                         # noinspection PyBroadException
                         try:
                             tracker_path.unlink()
@@ -442,14 +445,14 @@ class GeoProcessorAppSession(object):
 
     def write_history(self, history_list: [str]) -> None:
         """
-        Write the history of command files that have been opened
+        Write the history of command files that have been opened.
 
         :param history_list: a list of strings representing the history of command files
         """
 
-        # Don't allow files to be created under root on Linux(?)
+        # Don't allow files to be created under root on Linux(?).
 
-        # History being written (?)
+        # History being written (?).
 
         string_builder =\
             "# GeoProcessor command file history, most recent at top, shared between GeoProcessor instances\n"
@@ -459,7 +462,7 @@ class GeoProcessorAppSession(object):
         try:
             for s in history_list:
                 string_builder += s + "\n"
-            # Create the history folder if necessary
+            # Create the history folder if necessary.
             f = open(self.get_history_file(), "w")
             folder = os.path.abspath(os.path.join(self.get_history_file(), '..'))
             if not os.path.exists(folder):
@@ -472,7 +475,7 @@ class GeoProcessorAppSession(object):
                 f.write(string_builder)
                 f.close()
             except Exception:
-                # Absorb exception for now
+                # Absorb exception for now.
                 pass
         except Exception:
             message = 'Exception writing command file history'

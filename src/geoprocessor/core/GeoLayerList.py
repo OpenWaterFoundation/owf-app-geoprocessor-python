@@ -1,41 +1,39 @@
 # GeoLayerList - class to hold a list of GeoLayer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
 
 class GeoLayerList(object):
-
     """
-    Metadata for the GeoLayerLists, a list of which is maintained as GeoProcessor.GeoLayerLists
+    Metadata for the GeoLayerLists, a list of which is maintained as GeoProcessor.GeoLayerLists.
     This class is used to hold GeoLayerList properties for each registered GeoLayerList.
     """
 
     def __init__(self, geolist_id: str, geolayer_id_list: [str]) -> None:
 
-        # "id" is a string that is the GeoLayerList's reference ID. This ID is used to call the GeoLayerList into the
-        # GeoProcessor for manipulation.
+        # GeoLayerList's reference ID.
+        # This ID is used to call the GeoLayerList into the GeoProcessor for manipulation.
         self.id = geolist_id
 
-        # "geolayers" is a list of strings. The strings are the ids of the GeoLayer objects that are included in the
-        # GeoLayerList.
+        # The ids of the GeoLayer identifiers that are included in the GeoLayerList.
         self.geolayers = geolayer_id_list
 
-        # Properties for the list
+        # Properties for the layer list.
         self.properties = dict()
 
     def get_property(self, property_name: str, if_not_found_val: bool = None,
@@ -61,7 +59,7 @@ class GeoLayerList(object):
             return self.properties[property_name]
         except KeyError:
             if if_not_found_except is True:
-                # Let the exception from not finding a key in the dictionary be raised
+                # Let the exception from not finding a key in the dictionary be raised.
                 # print('Property not found so throwing exception')
                 raise
             else:

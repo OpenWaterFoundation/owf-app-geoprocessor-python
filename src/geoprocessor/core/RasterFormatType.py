@@ -1,7 +1,7 @@
 # RasterFormatType - raster file format types
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@
 # know the input format in order to branch logic reading the layer.
 # See:  https://gdal.org/drivers/vector/index.html
 
-GTiff = 'GTiff'  # GeoTiff
-WMS = 'WMS'  # Web Map Services
-WMTS = 'WMTS'  # OGC Web Map Tile Service
+GTiff = 'GTiff'  # GeoTiff.
+WMS = 'WMS'  # Web Map Services.
+WMTS = 'WMTS'  # OGC Web Map Tile Service.
 
-# List of formats, used when providing a list such as in a command editor
+# List of formats, used when providing a list such as in a command editor.
 raster_formats = [
     GTiff,
     WMS,

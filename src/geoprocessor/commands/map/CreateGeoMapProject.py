@@ -1,18 +1,18 @@
 # CreateGeoMapProject - command to create a new GeoMap
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -48,7 +48,7 @@ class CreateGeoMapProject(AbstractCommand):
         CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoMapProjectIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display:
     # - * character takes up about two spaces in the following
     __command_metadata = dict()
     __command_metadata['Description'] = "Create a new GeoMapProject, to save the map configuration.\n"\
@@ -59,7 +59,7 @@ class CreateGeoMapProject(AbstractCommand):
         "            GeoLayer + GeoLayerSymbol\n"
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # NewGeoMapID
     __parameter_input_metadata['NewGeoMapProjectID.Description'] = "identifier for the new GeoMapProject"
@@ -110,18 +110,18 @@ class CreateGeoMapProject(AbstractCommand):
         """
         Initialize the command.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "CreateGeoMapProject"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -169,13 +169,13 @@ class CreateGeoMapProject(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
+        # Properties - verify that the properties can be parsed.
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
         try:
             command_util.parse_properties_from_parameter_string(pv_Properties)
         except ValueError as e:
-            # Use the exception
+            # Use the exception.
             message = str(e)
             recommendation = "Check the properties string format."
             warning_message += "\n" + message
@@ -192,7 +192,7 @@ class CreateGeoMapProject(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     # noinspection PyPep8Naming
@@ -211,8 +211,8 @@ class CreateGeoMapProject(AbstractCommand):
         Returns:
              True if the GeoMapProject should be created or False if at least one check failed.
         """
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the ProjectType is in the list of recognized values
@@ -220,7 +220,7 @@ class CreateGeoMapProject(AbstractCommand):
         should_run_command.append(validator_util.validate_string_in_list(
             project_type_str, GeoMapProjectType.get_geomapproject_types_as_str(), False, False, True))
 
-        # If the GeoMapProjectID is the same as an already-existing GeoMapProjectID, take action
+        # If the GeoMapProjectID is the same as an already-existing GeoMapProjectID, take action.
         if self.command_processor.get_geomapproject(geomapproject_id) is not None:
             # Warnings/recommendations if the GeolayerID is the same as a registered GeoLayerID.
             message = 'The GeoMapProjectID ({}) is already in use.'.format(geomapproject_id)
@@ -315,7 +315,7 @@ class CreateGeoMapProject(AbstractCommand):
                                                  description=pv_Description,
                                                  properties=properties)
 
-                # This will replace the existing if a matching identifier
+                # This will replace the existing if a matching identifier:
                 # - this will automatically add as the latest GeoMapProject
                 self.command_processor.add_geomapproject(new_geomaproject)
 
@@ -330,7 +330,7 @@ class CreateGeoMapProject(AbstractCommand):
         else:
             self.logger.debug("Not enough data to create GeoMapProject.")
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

@@ -1,18 +1,18 @@
 # IntersectGeoLayer - command to intersect GeoLayers
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -44,12 +44,14 @@ class IntersectGeoLayer(AbstractCommand):
     """
     Intersects the input GeoLayer with an intersecting GeoLayer.
 
-    This command intersects an input GeoLayer by the boundary of the intersect GeoLayer. The features of the input
-    GeoLayer are retained in the output GeoLayer if they intersect with the intersect GeoLayer. The output intersected
-    layer will become a new GeoLayer. The attribute fields and values of the input GeoLayer are retained within the
-    output intersected GeoLayer. The features of the input GeoLayer are retained within the output intersected
-    GeoLayer. The attributes fields and values of the intersect GeoLayer are appended to the output intersected
-    GeoLayer. The features of the intersect GeoLayer are NOT retained within the output intersected GeoLayer.
+    This command intersects an input GeoLayer by the boundary of the intersect GeoLayer.
+    The features of the input GeoLayer are retained in the output GeoLayer if they
+    intersect with the intersect GeoLayer.
+    The output intersected layer will become a new GeoLayer.
+    The attribute fields and values of the input GeoLayer are retained within the output intersected GeoLayer.
+    The features of the input GeoLayer are retained within the output intersected GeoLayer.
+    The attributes fields and values of the intersect GeoLayer are appended to the output intersected GeoLayer.
+    The features of the intersect GeoLayer are NOT retained within the output intersected GeoLayer.
 
     Command Parameters
 
@@ -85,7 +87,7 @@ class IntersectGeoLayer(AbstractCommand):
         "Extract the overlapping portions of features in the input GeoLayer and the intersect GeoLayer."
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "the ID of the input GeoLayer"
@@ -148,17 +150,17 @@ class IntersectGeoLayer(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "IntersectGeoLayer"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -227,7 +229,7 @@ class IntersectGeoLayer(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_geolayer_id: str, intersect_geolayer_id: str, output_geolayer_id: str) -> bool:
@@ -250,8 +252,8 @@ class IntersectGeoLayer(AbstractCommand):
                 should not be intersected.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
@@ -288,8 +290,8 @@ class IntersectGeoLayer(AbstractCommand):
                                                                    "IntersectGeoLayerID", intersect_geolayer_id,
                                                                    "FAIL", other_values=[["LineString", "Polygon"]]))
 
-        # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
-        # on the value of the IfGeoLayerIDExists parameter.)
+        # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+        # (depends on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
                                                            output_geolayer_id, None))
 
@@ -304,20 +306,22 @@ class IntersectGeoLayer(AbstractCommand):
                                               pv_OutputGeoLayerID: str,
                                               intersect_geolayer_copy: VectorGeoLayer) -> None:
         """
-        This is an under-construction intersection method designed by Open Water Foundation Emma Giles. It is not
-        in use within the command yet because its implementation is under discussion. This intersect method will not
-        clip input features that overlap multiple intersect features. Note that in the qgis_method, the input features
-        that overlap the intersect features are clipped. With the "single feature single attribute method" the
-        attribute values of the output features that were overlapping multiple intersect features are a combination
-        of the overlapping intersect features.
+        This is an under-construction intersection method designed by Open Water Foundation Emma Giles.
+        It is not in use within the command yet because its implementation is under discussion.
+        This intersect method will not clip input features that overlap multiple intersect features.
+        Note that in the qgis_method, the input features that overlap the intersect features are clipped.
+        With the "single feature single attribute method" the attribute values of the output features that were
+        overlapping multiple intersect features are a combination of the overlapping intersect features.
 
-        For example, an input line feature overlaps two polygon features. The intersect polygon layer has a string
-        attribute called "Name". The first overlapping intersect polygon has the "Name" attribute value of "Hill" and
-        the other has the name attribute value of "Moon". The "Name" attribute field in the output intersected line
-        layer would be "Hill, Moon". For integer values, a summary statistic of mean, min, max or sum can be applied.
+        For example, an input line feature overlaps two polygon features.
+        The intersect polygon layer has a string attribute called "Name".
+        The first overlapping intersect polygon has the "Name" attribute value of "Hill" and
+        the other has the name attribute value of "Moon".
+        The "Name" attribute field in the output intersected line layer would be "Hill, Moon".
+        For integer values, a summary statistic of mean, min, max or sum can be applied.
         """
 
-        # Command variables
+        # Command variables.
         within_target_feats = {}
         intersecting_target_feats = {}
 
@@ -342,21 +346,23 @@ class IntersectGeoLayer(AbstractCommand):
                 is_within = target_geom.within(intersect_geom)
                 does_intersect = target_geom.intersects(intersect_geom)
 
-                # If the target feature is within the intersecting feature, add an entry to the within dictionary where
-                # the key is the target feature and the value is the intersect feature.
+                # If the target feature is within the intersecting feature,
+                # add an entry to the within dictionary where the key is the target feature and the
+                # value is the intersect feature.
                 if is_within:
                     within_target_feats[target_feat] = intersect_feat
 
                 # Otherwise if the target feature is intersecting the intersect feature, continue.
                 elif does_intersect:
-                    # If the target feature (the key) is already registered in the dictionary, add the intersecting
-                    # feature to the list of intersecting features (the value).
+                    # If the target feature (the key) is already registered in the dictionary,
+                    # add the intersecting feature to the list of intersecting features (the value).
                     if target_feat in intersecting_target_feats.keys():
                         curr_dic_value = intersecting_target_feats[target_feat]
                         curr_dic_value.append(intersect_feat)
 
-                    # If the target feature has not yet been registered in the dictionary, add an entry to the intersect
-                    # dictionary where the key is the target feature and the value is a list of the intersect features.
+                    # If the target feature has not yet been registered in the dictionary,
+                    # add an entry to the intersect dictionary where the key is the target feature and the value
+                    # is a list of the intersect features.
                     else:
                         intersecting_target_feats[target_feat] = [intersect_feat]
 
@@ -406,7 +412,7 @@ class IntersectGeoLayer(AbstractCommand):
                 # Get the intersect attribute value.
                 intersect_feat_value = intersect_feat.attributes()[intersect_attr_to_add_idx]
 
-                # Create an an attribute dictionary. KEY: target attribute index VALUE: new attribute value
+                # Create an attribute dictionary. KEY: target attribute index VALUE: new attribute value.
                 attr_dic = {target_attr_idx: intersect_feat_value}
 
                 # Add the correct attribute value to the target layer.
@@ -442,21 +448,21 @@ class IntersectGeoLayer(AbstractCommand):
                     elif statistic_summary.upper() == "MAX":
                         intersect_feat_value_updated = max(list_of_intersect_attr_values)
 
-                # Create an an attribute dictionary. KEY: target attribute index VALUE: new attribute value
+                # Create an attribute dictionary. KEY: target attribute index VALUE: new attribute value.
                 attr_dic = {target_attr_idx: intersect_feat_value_updated}
 
                 # Add the correct attribute value to the target layer.
                 target_layer.dataProvider().changeAttributeValues(({target_feat.id(): attr_dic}))
 
         # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-        # intersected_output["OUTPUT"] returns the full file pathname of the memory output layer (saved
-        # in a QGIS temporary folder)
+        # intersected_output["OUTPUT"] returns the full file pathname of the memory output layer
+        # (saved in a QGIS temporary folder)
         self.command_processor.add_geolayer(target_geolayer)
 
     def run_command(self) -> None:
         """
-        Run the command. Intersect the input GeoLayer by the intersect GeoLayer. Create a new GeoLayer with the
-        intersected output layer.
+        Run the command. Intersect the input GeoLayer by the intersect GeoLayer.
+        Create a new GeoLayer with the intersected output layer.
 
         Returns:
             None.
@@ -498,16 +504,17 @@ class IntersectGeoLayer(AbstractCommand):
         # noinspection PyPep8Naming
         pv_Description = self.command_processor.expand_parameter_value(pv_Description, self)
 
-        # Set the method used for the command. The IntersectGeoLayer methodology can be completed in many different
-        # ways. Currently there are two designs:
+        # Set the method used for the command.
+        # The IntersectGeoLayer methodology can be completed in different ways.
+        # Currently, there are two designs:
         #   1. qgis_method: use "qgis: intersect" algorithm where input features that overlap multiple
         #   intersecting features, are clipped.
         #   2. owf_method: owf-design in progress where input features that overlap multiple
         #   intersecting features retain their geometry but the output attribute is a combination of the attributes of
         #   the overlapping intersect features
-        # Because the second method is not complete and is still in debate at OWF, the code is memorialized under the
-        # __single_feature_and_attribute_method function. The function is never called and the QGIS_method is always
-        # used (until further notice).
+        # Because the second method is not complete and is still in debate at OWF,
+        # the code is memorialized under the __single_feature_and_attribute_method function.
+        # The function is never called and the QGIS_method is always used (until further notice).
         qgis_method = True
         owf_method = False
 
@@ -523,8 +530,8 @@ class IntersectGeoLayer(AbstractCommand):
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
                 intersect_geolayer = self.command_processor.get_geolayer(pv_IntersectGeoLayerID)
 
-                # Make a copy of the intersect GeoLayer - manipulations will occur on this layer and the original
-                # should not be affected.
+                # Make a copy of the intersect GeoLayer.
+                # Manipulations will occur on this layer and the original should not be affected.
                 intersect_geolayer_copy = intersect_geolayer.deepcopy("intersect_geolayer_copy")
 
                 # Remove the attributes of the input intersect GeoLayer if configured to be excluded in the output
@@ -539,8 +546,8 @@ class IntersectGeoLayer(AbstractCommand):
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
                                                           input_geolayer.id)
 
-                    # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
-                    # on-disk GeoLayer.
+                    # Write the GeoLayer to disk.
+                    # Overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer.
                     input_geolayer = input_geolayer.write_to_disk(geolayer_disk_abs_path)
                     self.command_processor.add_geolayer(input_geolayer)
 
@@ -548,12 +555,12 @@ class IntersectGeoLayer(AbstractCommand):
                     intersect_geolayer_copy.input_path_full.upper() in \
                         ["", GeoLayer.SOURCE_MEMORY]:
                     # If the intersect GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
-                    #  Get the absolute path of the GeoLayer to write to disk.
+                    # Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
                                                           intersect_geolayer_copy.id)
 
-                    # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
-                    # on-disk GeoLayer.
+                    # Write the GeoLayer to disk.
+                    # Overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer.
                     intersect_geolayer_copy = intersect_geolayer_copy.write_to_disk(geolayer_disk_abs_path)
                     self.command_processor.add_geolayer(intersect_geolayer_copy)
 
@@ -575,7 +582,7 @@ class IntersectGeoLayer(AbstractCommand):
                     self.warning_count += feedback_handler.get_warning_count()
 
                     # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-                    # in QGIS3, intersected_output["OUTPUT"] returns the returns the QGS vector layer object
+                    # In QGIS3, intersected_output["OUTPUT"] returns the QGS vector layer object
                     # see ClipGeoLayer.py for information about value in QGIS2 environment
                     new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerID,
                                                   qgs_vector_layer=intersected_output["OUTPUT"],
@@ -598,7 +605,7 @@ class IntersectGeoLayer(AbstractCommand):
                 del intersect_geolayer_copy
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error intersecting GeoLayer {} with GeoLayer {}.".format(
                     pv_GeoLayerID, pv_IntersectGeoLayerID)
@@ -608,7 +615,7 @@ class IntersectGeoLayer(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

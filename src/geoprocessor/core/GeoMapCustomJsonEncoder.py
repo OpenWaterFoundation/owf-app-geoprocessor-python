@@ -1,7 +1,7 @@
 # GeoMapCustomJsonEncoder - class to encode GeoMap as JSON
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
+# Copyright (C) 2017-2023 Open Water Foundation
 #
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ class GeoMapCustomJsonEncoder(json.JSONEncoder):
             # - dictionary
             return obj.to_json()
         elif isinstance(obj, QgsCoordinateReferenceSystem):
-            # Serialize as the CRS code
+            # Serialize as the CRS code.
             return obj.authid()
         else:
             # No custom JSON encoder is provider so use default, which handles Python primitives.

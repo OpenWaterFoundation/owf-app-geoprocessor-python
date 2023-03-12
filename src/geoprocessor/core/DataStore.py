@@ -1,18 +1,18 @@
 # DataStore - class for datastore connection
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -24,11 +24,14 @@ from sqlalchemy.engine.url import URL
 class DataStore(object):
 
     """
-     DataStore (also called "datastore" and "data store"; mixed case "DataStore" is used in GeoProcessor for
-     readability) is a persistent storage component that stores tabular and other data. Currently, the concept of
-     datastores in the GeoProcessor focuses on databases and web services that store tabular data. Database datastores
-     use a database connection, typically using Open Database Connectivity standard, and web service datastores
-     typically use a REST web service API. Datastores have the following characteristics:
+     DataStore (also called "datastore" and "data store";
+     mixed case "DataStore" is used in GeoProcessor for readability)
+     is a persistent storage component that stores tabular and other data.
+     Currently, the concept of datastores in the GeoProcessor focuses on databases
+     and web services that store tabular data.
+     Database datastores use a database connection, typically using Open Database Connectivity standard,
+     and web service datastores typically use a REST web service API.
+     Datastores have the following characteristics:
 
         * Datastore ID is used for identification.
         * Datastore also has a descriptive name.
@@ -37,10 +40,11 @@ class DataStore(object):
         * Datastores may require credentials to access data.
         * Datastores are opened to establish a connection and can be closed to free resources.
 
-     The GeoProcessor provides the OpenDataStore command to open a datastore connection at run-time, and other commands
-     are used to read from and write to datastores. This is useful to run automated workflows. In the future, the
-     ability to configure datastore connections for use at software startup will be enabled, which is useful to
-     interactively browse datastore resources.
+     The GeoProcessor provides the OpenDataStore command to open a datastore connection at run-time,
+     and other commands are used to read from and write to datastores.
+     This is useful to run automated workflows.
+     In the future, the ability to configure datastore connections for use at software startup will be enabled,
+     which is useful to interactively browse datastore resources.
     """
 
     def __init__(self, datastore_id: str) -> None:
@@ -49,13 +53,13 @@ class DataStore(object):
 
         Args:
             datastore_id (str):
-                String that is the DataStore's reference ID. This ID is used to access the DataStore from the
-                GeoProcessor for manipulation.
+                String that is the DataStore's reference ID.
+                This ID is used to access the DataStore from the GeoProcessor for manipulation.
 
         """
 
-        # "id"  is a string representing the DataStore's reference ID. This ID is used to access the DataStore from the
-        # GeoProcessor for manipulation.
+        # "id"  is a string representing the DataStore's reference ID.
+        # This ID is used to access the DataStore from the GeoProcessor for manipulation.
         self.id: str = datastore_id
 
         # "dialect" is used to format the database connection URL for the matching database driver software.
@@ -65,9 +69,10 @@ class DataStore(object):
         # via the URI scheme to reference the connection of the DataStore's database.
         self.db_uri: str or None = None
 
-        # "engine" is the starting point for any SQLAlchemy application. It’s “home base” for the actual database and
-        # its DBAPI, delivered to the SQLAlchemy application through a connection pool and a Dialect, which describes
-        # how to talk to a specific kind of database/DBAPI combination.
+        # "engine" is the starting point for any SQLAlchemy application.
+        # It’s “home base” for the actual database and its DBAPI,
+        # delivered to the SQLAlchemy application through a connection pool and a Dialect,
+        # which describes how to talk to a specific kind of database/DBAPI combination.
         self.engine: str or None = None
 
         # "connection" is an instance of SqlAlchemy Connection, which is a proxy object for an actual DBAPI connection.

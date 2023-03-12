@@ -1,23 +1,23 @@
 # command_util - useful utility functions for the GeoProcessor
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2022 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# Don't import class only because there are additional functions in CommandParameterMetaData.
+import geoprocessor.core.CommandParameterMetadata as CommandParameterMetadata
 
 # TODO smalers 2020-01-14 can't import for type hint because it results in circular reference.
 # from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
@@ -32,8 +32,8 @@ import logging
 
 def append_command_status_log_records(command_status: CommandStatus, commands: []) -> None:
     """
-    Append log records from a list of commands to a status.  For example, this is used
-    when running a list of commands with a "runner" command like RunCommands to get a full list of logs.
+    Append log records from a list of commands to a status. For example,
+    this is used when running a list of commands with a "runner" command like RunCommands to get a full list of logs.
     The command associated with the individual logs is set to the original command so that
     the "runner" is not associated with the log.
 
@@ -75,8 +75,8 @@ def append_command_status_log_records(command_status: CommandStatus, commands: [
 # TODO smalers 2020-01-15 cannot type hint GeoProcessor because it results in circular dependence with import.
 def get_command_status_max_severity(processor) -> CommandStatusType:
     """
-    Get the maximum command status severity for the processor.  This is used, for example, when
-    determining an overall status for a RunCommands() command.
+    Get the maximum command status severity for the processor.
+    This is used, for example, when determining an overall status for a RunCommands() command.
 
     Args:
         processor:  Command processor, needed to get all commands.
@@ -104,7 +104,7 @@ def get_highest_command_status_severity(command_status: CommandStatusType) -> Co
     """
     status_severity = CommandStatusType.UNKNOWN
     if command_status is None:
-        return status_severity  # Default is UNKNOWN
+        return status_severity  # Default is UNKNOWN.
 
     # Python 2 does not have enumerations like Java code so do comparisons brute force.
     phase_status = command_status.get_command_status_for_phase(CommandPhaseType.INITIALIZATION)
@@ -123,7 +123,8 @@ def get_highest_command_status_severity(command_status: CommandStatusType) -> Co
     if phase_status is None:
         phase_status = CommandStatusType.UNKNOWN
     # TODO sam 2017-04-13 This can be problematic if the discovery mode had a warning or failure
-    # and run mode was success.  This may occur due to dynamic files being created, etc.
+    # and run mode was success.
+    # This may occur due to dynamic files being created, etc.
     # The overall status in this case should be success.
     # Need to evaluate how this method gets called and what intelligence is used.
     if phase_status.value > status_severity.value:
@@ -153,7 +154,7 @@ def get_required_parameter_names(command) -> list:
         parameter_name = command_parameter_metadata.parameter_name
         # Check that the ParameterName.Required input metadata is defined.
         try:
-            # Loop
+            # Loop.
             required_value = command.parameter_input_metadata[parameter_name + '.Required']
             if required_value:
                 # Parameter is confirmed to be required so add to the return list.
@@ -190,7 +191,7 @@ def parse_command_name_from_command_string(command_string: str) -> str:
         # Get the command name from the command string (in front of the '(' symbol ).
         command_name = command_string[:paren_start_pos].strip()
     else:
-        # Assume just the command name, used in factory
+        # Assume just the command name, used in factory.
         command_name = command_string.strip()
 
     return command_name
@@ -203,6 +204,7 @@ def parse_key_value_pairs_into_dictionary(parameter_items: [str]) -> dict:
 
     Args:
         parameter_items: A list of parameter strings, each with format Parameter="Value"
+
     Returns:
         A dictionary where the key is the parameter name and value is the parameter value as a string.
     """
@@ -233,8 +235,8 @@ def parse_key_value_pairs_into_dictionary(parameter_items: [str]) -> dict:
                 if parameter_value[len(parameter_value) - 1] == '"':
                     parameter_value = parameter_value[:len(parameter_value) - 1]
 
-                # Append the parameter name and the parameter value (in string or list format) to the
-                # parameter dictionary.
+                # Append the parameter name and the parameter value (in string or list format)
+                # to the parameter dictionary.
                 parameter_dictionary[parameter_name] = parameter_value
             else:
                 logger.warning("The parameter ({}) is not in a proper 'Parameter=\"Value\"' format.".format(
@@ -251,9 +253,9 @@ def parse_parameter_string_from_command_string(command_string: str) -> str:
     Parses a command string to extract the parameter string between parentheses.
     For example, for a full command string:
 
-        CommandName(Parameter1="Value1",Parameter2="Value2") would
+        CommandName(Parameter1="Value1",Parameter2="Value2")
 
-    return: Parameter1="Value1",Parameter2="Value2"
+    would return: Parameter1="Value1",Parameter2="Value2"
 
     Return an empty string if no parameters or just the command name.
 
@@ -293,6 +295,10 @@ def parse_parameter_string_from_command_string(command_string: str) -> str:
     parameter_string = command_string_stripped[paren_start_pos + 1: paren_end_pos]
     # Strip enclosing whitespace.
     parameter_string = parameter_string.strip()
+    debug = True
+    if debug:
+        logger = logging.getLogger(__name__)
+        logger.info("Parameter string part of command:" + parameter_string)
     return parameter_string
 
 
@@ -302,11 +308,17 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str, delimiter
 
     Example:
     [INPUT] parameter_string = Parameter1="Value1",Parameter2="Value2",...
-    [OUTPUT] parameter_strings = ['Parameter1="Value1"', 'Parameter2="Value2"', ... ]
+    [OUTPUT] parameter_strings = [
+        'Parameter1="Value1"',
+        'Parameter2="Value2"',
+        ...
+    ]
+
+    This DOES NOT handle unquoted parameters.
 
     Args:
         parameter_string (str):
-            The string inside the () of a command string that represents all of the input parameter values.
+            The string inside the () of a command string that represents all the input parameter values.
         delimiter (str):
             The delimiter character between pameter="value" strings.
     Returns:
@@ -318,6 +330,8 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str, delimiter
     parameter_items = []
 
     # print("Splitting full parameter string into pairs:  " + parameter_string)
+
+    debug = False
 
     # Parse if the parameter line is not empty.
     if len(parameter_string) > 0:
@@ -334,16 +348,17 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str, delimiter
 
             # Get the current character.
             current_char = parameter_string[char_index]
-            # print("Processing character '" + current_char + "'" )
+            if debug:
+                logger.info("Processing character '" + current_char + "'" )
 
             if not in_quoted_string:
                 # Not in a quoted parameter value string.
                 if current_char == '"':
-                    # Start of a parameter value string.
+                    # Start of a parameter value string:
                     # - TODO smalers 2018-12-17 need to evaluate whether to allow escaping double quote
                     in_quoted_string = True
                 elif current_char == ' ':
-                    # Whitespace, skip
+                    # Whitespace between parameters, skip.
                     pass
                 elif current_char == delimiter:
                     # Found a delimiter between parameters.
@@ -356,7 +371,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str, delimiter
                     # - can handle as nonfatal but prefer commas for clarity
                     if (len(parameter_items) > 0) and not comma_found:
                         # 2nd or greater parameter so need to have found a comma to separate parameters.
-                        logger.warning("Missing comma between parameter definitions")
+                        logger.warning("Missing comma between parameter definitions.")
                         comma_found = False
             else:
                 # In a quoted parameter value string.
@@ -364,7 +379,7 @@ def parse_parameter_string_into_key_value_pairs(parameter_string: str, delimiter
                     # Found the ending quote.
                     in_quoted_string = False
                     param_value_end_pos = char_index
-                    # Add the parameter string to the list.
+                    # Save the parameter string encompassing:  ParameterName=ParameterValue
                     current_parameter_string = parameter_string[param_name_start_pos:param_value_end_pos+1]
                     # print("Adding parameter item to list:  " + current_parameter_string)
                     parameter_items.append(current_parameter_string)
@@ -398,7 +413,7 @@ def parse_properties_from_parameter_string(properties_string: str, delimiter1: s
     Raises:
         ValueError if the command syntax is invalid.
     """
-    debug = False   # Use to troubleshoot code but not production
+    debug = False   # Use to troubleshoot code but not production.
     logger = None
     if debug:
         logger = logging.getLogger(__name__)
@@ -627,7 +642,7 @@ def validate_command_parameter_names(command, warning_message: str, deprecated_p
         remove_invalid_string = "  Removing the invalid parameter."
 
     # Cannot iterate through a dictionary and remove items from dictionary.
-    # Therefore convert the dictionary to a list and iterate on the list.
+    # Therefore, convert the dictionary to a list and iterate on the list.
     command_parameter_names = list(command.command_parameters.keys())
 
     # Check size dynamically in case props are removed below.

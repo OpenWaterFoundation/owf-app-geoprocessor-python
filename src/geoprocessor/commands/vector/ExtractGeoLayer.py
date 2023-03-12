@@ -1,18 +1,18 @@
 # ExtractGeoLayer - command to extract GeoLayer features from a layer
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2022 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -65,7 +65,7 @@ class ExtractGeoLayer(AbstractCommand):
     )
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # GeoLayerID
     __parameter_input_metadata['GeoLayerID.Description'] = "the ID of the input GeoLayer"
@@ -204,7 +204,7 @@ class ExtractGeoLayer(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_geolayer_id: str, intersect_geolayer_id: str, output_geolayer_id: str) -> bool:
@@ -227,8 +227,8 @@ class ExtractGeoLayer(AbstractCommand):
                 should not be intersected.
         """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values. The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input GeoLayerID is not an existing GeoLayerID, raise a FAILURE.
@@ -265,8 +265,8 @@ class ExtractGeoLayer(AbstractCommand):
                                                                    "IntersectGeoLayerID", intersect_geolayer_id,
                                                                    "FAIL", other_values=[["LineString", "Polygon"]]))
 
-        # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE (depends
-        # on the value of the IfGeoLayerIDExists parameter.)
+        # If the OutputGeoLayerID is the same as an already-existing GeoLayerID, raise a WARNING or FAILURE
+        # (depends on the value of the IfGeoLayerIDExists parameter.)
         should_run_command.append(validator_util.run_check(self, "IsGeoLayerIdUnique", "OutputGeoLayerID",
                                                            output_geolayer_id, None))
 
@@ -349,8 +349,8 @@ class ExtractGeoLayer(AbstractCommand):
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
                                                           input_geolayer.id)
 
-                    # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
-                    # on-disk GeoLayer.
+                    # Write the GeoLayer to disk.
+                    # Overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer.
                     input_geolayer = input_geolayer.write_to_disk(geolayer_disk_abs_path)
                     self.command_processor.add_geolayer(input_geolayer)
 
@@ -358,12 +358,12 @@ class ExtractGeoLayer(AbstractCommand):
                     intersect_geolayer_copy.input_path_full.upper() in \
                         ["", GeoLayer.SOURCE_MEMORY]:
                     # If the intersect GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
-                    #  Get the absolute path of the GeoLayer to write to disk.
+                    # Get the absolute path of the GeoLayer to write to disk.
                     geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
                                                           intersect_geolayer_copy.id)
 
-                    # Write the GeoLayer to disk. Overwrite the (memory) GeoLayer in the geoprocessor with the
-                    # on-disk GeoLayer.
+                    # Write the GeoLayer to disk.
+                    # Overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer.
                     intersect_geolayer_copy = intersect_geolayer_copy.write_to_disk(geolayer_disk_abs_path)
                     self.command_processor.add_geolayer(intersect_geolayer_copy)
 
@@ -386,7 +386,7 @@ class ExtractGeoLayer(AbstractCommand):
 
                 # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
                 # in QGIS3, intersected_output["OUTPUT"] returns the returns the QGS vector layer object
-                # see ClipGeoLayer.py for information about value in QGIS2 environment
+                # see ClipGeoLayer.py for information about value in QGIS2 environment.
                 new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerID,
                                               qgs_vector_layer=intersected_output["OUTPUT"],
                                               name=pv_Name,
@@ -401,7 +401,7 @@ class ExtractGeoLayer(AbstractCommand):
                 del intersect_geolayer_copy
 
             except Exception:
-                # Raise an exception if an unexpected error occurs during the process
+                # Raise an exception if an unexpected error occurs during the process.
                 self.warning_count += 1
                 message = "Unexpected error extracting GeoLayer {} using intersection GeoLayer {}.".format(
                     pv_GeoLayerID, pv_IntersectGeoLayerID)
@@ -411,7 +411,7 @@ class ExtractGeoLayer(AbstractCommand):
                                                CommandLogRecord(CommandStatusType.FAILURE, message,
                                                                 recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

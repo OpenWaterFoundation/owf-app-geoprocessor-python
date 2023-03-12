@@ -1,18 +1,18 @@
 # RunGdalProgram - command to run a program
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -59,7 +59,7 @@ class RunGdalProgram(AbstractCommand):
         CommandParameterMetadata("ExitCodeProperty", str)
     ]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Run a GDAL program to process spatial data and wait until the program is finished before processing"
@@ -73,7 +73,7 @@ class RunGdalProgram(AbstractCommand):
     # Choices for UseCommandShell, used to validate parameter and display in editor
     # See: https://gdal.org/programs/index.html
     __choices_GdalProgram = [
-        "",  # Required to pick one but allow a blank so that editor does not complain for new command
+        "",  # Required to pick one but allow a blank so that editor does not complain for a new command.
         "gdaladdo",
         "gdalbuildvrt",
         "gdal_calc.py",
@@ -109,7 +109,7 @@ class RunGdalProgram(AbstractCommand):
         "rgb2pct",
     ]
 
-    # Description for each program
+    # Description for each program.
     # See: https://gdal.org/programs/index.html
     __gdal_program_description = {
         "": "",
@@ -148,10 +148,10 @@ class RunGdalProgram(AbstractCommand):
         "rgb2pct": "Convert a 24bit RGB image to 8bit paletted.",
     }
 
-    # Parameter metadata
+    # Parameter metadata.
     __parameter_input_metadata = dict()
 
-    # GDAL program
+    # GDAL program.
     __parameter_input_metadata['GdalProgram.Description'] = "GDAL program to run"
     __parameter_input_metadata['GdalProgram.Label'] = "GDAL program"
     __parameter_input_metadata['GdalProgram.Tooltip'] = "GDAL program to run."
@@ -240,15 +240,15 @@ class RunGdalProgram(AbstractCommand):
         """
         Initialize a new instance of the command.
         """
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "RunGdalProgram"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Parameter metadata
+        # Parameter metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
     def check_command_parameters(self, command_parameters: dict) -> None:
@@ -279,7 +279,7 @@ class RunGdalProgram(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # IncludeParentEnvVars is optional, will default to True at runtime
+        # IncludeParentEnvVars is optional, will default to True at runtime.
         # noinspection PyPep8Naming
         pv_IncludeParentEnvVars = self.get_parameter_value(parameter_name='IncludeParentEnvVars',
                                                            command_parameters=command_parameters)
@@ -294,7 +294,7 @@ class RunGdalProgram(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # UseCommandShell is optional, will default to False at runtime
+        # UseCommandShell is optional, will default to False at runtime.
         # noinspection PyPep8Naming
         pv_UseCommandShell = self.get_parameter_value(parameter_name='UseCommandShell',
                                                       command_parameters=command_parameters)
@@ -309,7 +309,7 @@ class RunGdalProgram(AbstractCommand):
                 CommandPhaseType.INITIALIZATION,
                 CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # TODO smalers 2018-12-16 need to make sure IncludeEnvVars and ExcludeEnvVars are valid lists
+        # TODO smalers 2018-12-16 need to make sure IncludeEnvVars and ExcludeEnvVars are valid lists:
         # - for now allow any string to be specified
 
         # Check for unrecognized parameters.
@@ -317,12 +317,12 @@ class RunGdalProgram(AbstractCommand):
         # triggers an exception below.
         warning_message = command_util.validate_command_parameter_names(self, warning_message)
 
-        # If any warnings were generated, throw an exception
+        # If any warnings were generated, throw an exception.
         if len(warning_message) > 0:
             logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     @classmethod
@@ -348,8 +348,8 @@ class RunGdalProgram(AbstractCommand):
         if include_env_vars_dict is not None or exclude_env_vars_list is not None:
             # Need to process the dictionary specifically
             env_dict = {}
-            # First, if the parent environment variables are to be used, create a dictionary that has
-            # a copy of all parent environment variables.
+            # First, if the parent environment variables are to be used,
+            # create a dictionary that has a copy of all parent environment variables.
             if include_parent_env_vars:
                 for key, value in os.environ.items():
                     env_dict[key] = value
@@ -363,18 +363,18 @@ class RunGdalProgram(AbstractCommand):
                     try:
                         del env_dict[key]
                     except KeyError:
-                        # OK to ignore because may not exist in the dictionary
+                        # OK to ignore because may not exist in the dictionary.
                         pass
-            # Return the environment variable dictionary
+            # Return the environment variable dictionary.
             return env_dict
         else:
-            # No granular handling of environment variables occurs
+            # No granular handling of environment variables occurs.
             if include_parent_env_vars:
-                # All of the parent environment variables should be used
+                # All the parent environment variables should be used:
                 # - return None since the default is to use the parent environment
                 return None
             else:
-                # Don't want the parent environment to be visible to called program.
+                # Don't want the parent environment to be visible to called program:
                 # - because None would return the default, create an empty dictionary
                 # - also add SystemRoot as per Python documentation, to find DLLs.
                 env_dict = {}
@@ -397,7 +397,7 @@ class RunGdalProgram(AbstractCommand):
         logger = logging.getLogger(__name__)
         logger.info('In RunGdalProgram.run_command')
 
-        # Get data for the command
+        # Get data for the command.
         print("command parameters=" + string_util.format_dict(self.command_parameters))
         # noinspection PyPep8Naming
         pv_GdalProgram = self.get_parameter_value('GdalProgram')
@@ -410,14 +410,14 @@ class RunGdalProgram(AbstractCommand):
             use_command_shell = True
         # noinspection PyPep8Naming
         pv_IncludeParentEnvVars = self.get_parameter_value('IncludeParentEnvVars')
-        include_parent_env_vars = True  # Default
+        include_parent_env_vars = True  # Default.
         if pv_IncludeParentEnvVars is not None and pv_IncludeParentEnvVars == 'False':
             include_parent_env_vars = False
         # noinspection PyPep8Naming
         pv_IncludeEnvVars = self.get_parameter_value('IncludeEnvVars')
         include_env_vars_dict = None
         if pv_IncludeEnvVars is not None and pv_IncludeEnvVars != "":
-            # Have specified environment variables to include
+            # Have specified environment variables to include:
             # - expand the environment variable value using processor properties
             include_env_vars_dict = string_util.delimited_string_to_dictionary_one_value(pv_IncludeEnvVars,
                                                                                          key_value_delimiter="=",
@@ -429,23 +429,23 @@ class RunGdalProgram(AbstractCommand):
         pv_ExcludeEnvVars = self.get_parameter_value('ExcludeEnvVars')
         exclude_env_vars_list = None
         if pv_ExcludeEnvVars is not None and pv_ExcludeEnvVars != "":
-            # Have specified environment variables to exclude
+            # Have specified environment variables to exclude.
             exclude_env_vars_list = string_util.delimited_string_to_list(pv_ExcludeEnvVars, trim=True)
 
         # noinspection PyPep8Naming
         pv_Timeout = self.get_parameter_value('Timeout')
-        timeout = None  # handled by subprocess.run()
+        timeout = None  # Handled by subprocess.run().
         if pv_Timeout is not None and pv_Timeout != "":
-            # Have specified environment variables to exclude
+            # Have specified environment variables to exclude.
             timeout = int(pv_Timeout)
 
         # noinspection PyPep8Naming
         pv_OutputFiles = self.get_parameter_value('OutputFiles')
         output_files_list = None
         if pv_OutputFiles is not None and pv_OutputFiles != "":
-            # Have specified output files to add to command output files
+            # Have specified output files to add to command output files.
             output_files_list = string_util.delimited_string_to_list(pv_OutputFiles, trim=True)
-            # Expand each output file
+            # Expand each output file.
             ifile = -1
             for output_file in output_files_list:
                 ifile += 1
@@ -458,13 +458,13 @@ class RunGdalProgram(AbstractCommand):
         pv_StdoutFile = self.get_parameter_value('StdoutFile')
         stdout_file_full = pv_StdoutFile
         if pv_StdoutFile is not None and pv_StdoutFile != "":
-            # Have specified stdout file to use for stdout
+            # Have specified stdout file to use for stdout.
             stdout_file_full = io_util.verify_path_for_os(
                 io_util.to_absolute_path(
                     self.command_processor.get_property('WorkingDir'),
                     self.command_processor.expand_parameter_value(pv_StdoutFile, self)))
         else:
-            # Make sure it is None if an empty string was specified
+            # Make sure it is None if an empty string was specified.
             # noinspection PyPep8Naming
             pv_StdoutFile = None
 
@@ -472,13 +472,13 @@ class RunGdalProgram(AbstractCommand):
         pv_StderrFile = self.get_parameter_value('StderrFile')
         stderr_file_full = pv_StderrFile
         if pv_StderrFile is not None and pv_StderrFile != "":
-            # Have specified stderr file to use for stdout
+            # Have specified stderr file to use for stdout.
             stderr_file_full = io_util.verify_path_for_os(
                 io_util.to_absolute_path(
                     self.command_processor.get_property('WorkingDir'),
                     self.command_processor.expand_parameter_value(pv_StderrFile, self)))
         else:
-            # Make sure it is None if an empty string was specified
+            # Make sure it is None if an empty string was specified.
             # noinspection PyPep8Naming
             pv_StderrFile = None
 
@@ -487,16 +487,16 @@ class RunGdalProgram(AbstractCommand):
 
         logger.info('Command line before expansion="' + pv_CommandLine + '"')
 
-        # Runtime checks on input
+        # Runtime checks on input.
 
-        # TODO smalers 2020-01-18 determine if 'GdalProgram' is found in the ${GdalBinDir} folder
+        # TODO smalers 2020-01-18 determine if 'GdalProgram' is found in the ${GdalBinDir} folder:
         # - for now put in some logic to avoid warning about non-use of the variable
         if pv_GdalProgram is None:
             pass
 
-        # Expand the command line
+        # Expand the command line.
         if not pv_CommandLine.startswith("${"):
-            # Make sure that the executable location has the full path
+            # Make sure that the executable location has the full path.
             # noinspection PyPep8Naming
             pv_CommandLine = "${GdalBinDir}/" + pv_CommandLine
         command_line_expanded = self.command_processor.expand_parameter_value(pv_CommandLine, self)
@@ -506,12 +506,12 @@ class RunGdalProgram(AbstractCommand):
             logger.warning(message)
             raise CommandError(message)
 
-        # Run the program as a subprocess
+        # Run the program as a subprocess.
 
         # noinspection PyBroadException
         try:
             logger.info('Running command line: {}'.format(command_line_expanded))
-            # Create the environment dictionary
+            # Create the environment dictionary.
             env_dict = RunGdalProgram.create_env_dict(include_parent_env_vars, include_env_vars_dict,
                                                       exclude_env_vars_list)
             # print("env_dict=" + string_util.format_dict(env_dict))
@@ -520,80 +520,80 @@ class RunGdalProgram(AbstractCommand):
             use_run = True
             return_status = -1
             if use_run:
-                # Use subprocess.run(), available as of Python 3.5
-                # - For the following logic, 'capture_output' is not used because output is immediately redirected
-                #   to the appropriate location. 'capture_output' is used to retrieve output from
-                #   subprocess.CompletedProcess.
+                # Use subprocess.run(), available as of Python 3.5:
+                # - for the following logic, 'capture_output' is not used because output is immediately redirected
+                #   to the appropriate location
+                # - 'capture_output' is used to retrieve output from subprocess.CompletedProcess
                 if use_command_shell:
-                    # Using a shell so pass as a single string so that >, <, | are handled by the shell
+                    # Using a shell so pass as a single string so that >, <, | are handled by the shell.
                     args = command_line_expanded
                 else:
-                    # Have to split the command line arguments
+                    # Have to split the command line arguments:
                     # - shlex is used to parse command line string into arguments.
                     args = shlex.split(command_line_expanded)
-                # By default the stdout and stderr are just output by the subprocess defaults.
+                # By default, the stdout and stderr are just output by the subprocess defaults.
                 # However, the output can be redirected to a file.
-                stderr = None  # Default is don't capture stderr
-                stdout = None  # Default is don't capture stdout
+                stderr = None  # Default is don't capture stderr.
+                stdout = None  # Default is don't capture stdout.
 
-                # Handle stdout parameters
+                # Handle stdout parameters.
                 if pv_StdoutFile is not None:
                     if pv_StdoutFile.upper() == 'LOGFILE':
-                        # Get the file number of the current log file
+                        # Get the file number of the current log file.
                         logfile_handler: logging.FileHandler = log_util.get_logfile_handler()
                         if logfile_handler is not None:
                             stdout = logfile_handler.stream.fileno()
                     elif pv_StdoutFile.upper() == 'DEVNULL':
-                        # Special value that should be passed as is
+                        # Special value that should be passed as is:
                         # - will write standard output to /dev/null on Linux
                         stdout = subprocess.DEVNULL
                     else:
                         # Open the file to receive stdout output, perhaps the desired output of the program if it
-                        # does not create its own output file
+                        # does not create its own output file.
                         stdout = open(stdout_file_full, 'w')
 
-                # Handle stderr parameters
+                # Handle stderr parameters.
                 if pv_StderrFile is not None:
                     if pv_StderrFile.upper() == 'LOGFILE':
-                        # Get the file number of the current log file
+                        # Get the file number of the current log file.
                         logfile_handler: logging.FileHandler = log_util.get_logfile_handler()
                         if logfile_handler is not None:
                             stderr = logfile_handler.stream.fileno()
                     elif pv_StderrFile.upper() == 'DEVNULL':
-                        # Special value that should be passed as is
+                        # Special value that should be passed as is:
                         # - will write standard output to /dev/null on Linux
                         stderr = subprocess.DEVNULL
                     elif pv_StdoutFile.upper() == 'STDOUT':
-                        # Combine stderr with stdout
+                        # Combine stderr with stdout.
                         stderr = subprocess.STDOUT
                     else:
-                        # Open the file to receive stderr output, for example to isolate errors to a file
+                        # Open the file to receive stderr output, for example to isolate errors to a file.
                         stderr = open(stderr_file_full, 'w')
-                # Now run the process
+                # Now run the process.
                 completed_process = subprocess.run(args, shell=use_command_shell, env=env_dict, timeout=timeout,
                                                    stdout=stdout, stderr=stderr)
 
-                # Get the return information
+                # Get the return information.
                 return_status = completed_process.returncode
 
-                # Close any files that may have been opened
+                # Close any files that may have been opened:
                 # - this does not close the log file, which should remain open for other logging messages
                 if stdout is not None and isinstance(stdout, io.IOBase):
                     stdout.close()
                 if stdout is not None and isinstance(stderr, io.IOBase):
                     stderr.close()
             else:
-                # Older logic that will be phased out if the above 'run()' logic works
-                # Use subprocess.Popen
+                # Older logic that will be phased out if the above 'run()' logic works.
+                # Use subprocess.Popen.
                 p = subprocess.Popen(command_line_expanded, shell=use_command_shell, env=env_dict)
                 # Wait for the process to terminate since need it to be done before other commands do their work
                 # with the command output.
                 p.wait()
                 return_status = p.poll()
-                # Wait for the process to terminate since need it to be done before other commands do their work
+                # Wait for the process to terminate since need it to be done before other commands do their work.
 
             if pv_ExitCodeProperty is not None and pv_ExitCodeProperty != "":
-                # Set the exit code property
+                # Set the exit code property.
                 self.command_processor.set_property(pv_ExitCodeProperty, return_status)
             if return_status == 0:
                 logger.info("Return status of {} running program.".format(return_status))
@@ -615,11 +615,11 @@ class RunGdalProgram(AbstractCommand):
                 CommandLogRecord(CommandStatusType.FAILURE, message,
                                  "See the log file for details."))
 
-        # If any output files were indicated, add to the command output if they exist
+        # If any output files were indicated, add to the command output if they exist.
         if output_files_list is not None and len(output_files_list) > 0:
             for output_file in output_files_list:
                 if os.path.isfile(output_file):
-                    # Add the log file to output
+                    # Add the log file to output.
                     self.command_processor.add_output_file(output_file)
 
         if warning_count > 0:

@@ -1,18 +1,18 @@
 # ReadTableFromDelimitedFile - command to read a table from a delimited file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -57,7 +57,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         CommandParameterMetadata("RowCountProperty", str),
         CommandParameterMetadata("IfTableIDExists", str)]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = (
         "Read a table from a delimited file.\n"
@@ -73,7 +73,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         "  8  3  | 3,3.0,4.5\n")
     __command_metadata['EditorType'] = "Simple"
 
-    # Command Parameter Metadata
+    # Command Parameter Metadata.
     __parameter_input_metadata = dict()
     # InputFile
     __parameter_input_metadata['InputFile.Description'] = "delimited file to read"
@@ -152,18 +152,18 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ReadTableFromDelimitedFile"
         self.command_parameter_metadata = self.__command_parameter_metadata
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Command Parameter Metadata
+        # Command Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -244,7 +244,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
 
-        # Refresh the phase severity
+        # Refresh the phase severity.
         self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_file_abs: str, table_id: str) -> bool:
@@ -261,16 +261,17 @@ class ReadTableFromDelimitedFile(AbstractCommand):
            Boolean. If TRUE, the reading process should be run. If FALSE, it should not be run.
        """
 
-        # List of Boolean values. The Boolean values correspond to the results of the following tests. If TRUE, the
-        # test confirms that the command should be run.
+        # List of Boolean values.
+        # The Boolean values correspond to the results of the following tests.
+        # If TRUE, the test confirms that the command should be run.
         should_run_command = list()
 
         # If the input file is not a valid file path, raise a FAILURE.
         should_run_command.append(validator_util.run_check(self, "IsFilePathValid", "InputFile",
                                                            input_file_abs, "FAIL"))
 
-        # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE (depends on the
-        # value of the IfTableIDExists parameter.)
+        # If the TableID is the same as an already-existing TableID, raise a WARNING or FAILURE
+        # (depends on the value of the IfTableIDExists parameter).
         should_run_command.append(validator_util.run_check(self, "IsTableIdUnique", "TableID", table_id, None))
 
         # Return the Boolean to determine if the process should be run.
@@ -352,21 +353,21 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             csvreader = csv.reader(csvfile, delimiter=delimiter)
 
             for row in csvreader:
-                # Increment the counter
+                # Increment the counter.
                 line_count = line_count + 1
 
-                # Skip rows if requested
+                # Skip rows if requested.
                 if ReadTableFromDelimitedFile.need_to_skip_line(line_count, skip_lines):
                     continue
 
-                # Skip comment lines
+                # Skip comment lines.
                 if (len(row) > 0) and row[0].startswith(comment_char):
                     continue
 
-                # Save the parsed lines
+                # Save the parsed lines.
                 parsed_lines.append(row)
 
-                # Save the number of columns
+                # Save the number of columns:
                 # - should be the same for all rows and if not the final table may be string cell values with some
                 #   empty cells
                 # - add to problems if number of columns is different for any row
@@ -378,7 +379,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                     if len(row) > num_columns:
                         num_columns = len(row)
 
-        # Now have parsed lines
+        # Now have parsed lines.
         logger.info("Read {} header and data lines after skipping requested lines and comments".format(
             len(parsed_lines)))
         logger.info("Read {} columns".format(num_columns))
@@ -390,7 +391,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         float_count = [0]*num_columns
         str_count = [0]*num_columns
 
-        # Determine which row is the first data row.
+        # Determine which row is the first data row:
         # - depends on whether column names where specified
         first_data_row = 1  # 0-index
         num_data_rows = len(parsed_lines) - 1
@@ -399,30 +400,31 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             first_data_row = 0
             num_data_rows = len(parsed_lines)
 
-        # Only process data rows (not column heading) so that data types are properly determined
+        # Only process data rows (not column heading) so that data types are properly determined.
         for irow in range(first_data_row, len(parsed_lines)):
             row = parsed_lines[irow]
             icol = -1
             for cell in row:
-                # Trim surrounding whitespace
+                # Trim surrounding whitespace.
                 cell = cell.strip()
                 icol += 1
-                # Check whether the string can convert to a type.  Allow empty cell to be any type and set to
-                # None or NaN below when parsing actually occurs.
+                # Check whether the string can convert to a type.
+                # Allow empty cell to be any type and set to None or NaN below when parsing actually occurs.
                 if (len(cell) == 0) or string_util.is_bool(cell):
                     bool_count[icol] += 1
                 if (len(cell) == 0) or string_util.is_int(cell):
                     int_count[icol] += 1
                 if (len(cell) == 0) or string_util.is_float(cell):
                     float_count[icol] += 1
-                # Always count as string
+                # Always count as string.
                 str_count[icol] += 1
 
-        # Create a table object with columns of the correct type
+        # Create a table object with columns of the correct type.
         table = DataTable(table_id)
-        # Whether header row is in data rows and need to offset when processing data records
+
+        # Whether header row is in data rows and need to offset when processing data records.
         for icol in range(num_columns):
-            # Data type is based on counts of types from inspection.
+            # Data type is based on counts of types from inspection:
             # - use integer before float
             data_type = str
             if int_count[icol] == num_data_rows:
@@ -431,17 +433,17 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 data_type = float
             elif bool_count[icol] == num_data_rows:
                 data_type = bool
-            # TODO smalers 2020-11-14 need to enable date or date/time similar to Java code
+            # TODO smalers 2020-11-14 need to enable date or date/time similar to Java code.
 
-            # Column name is just the first row parsed
+            # Column name is just the first row parsed.
             if column_names is not None and (len(column_names) > 0):
-                # Column names were specified
+                # Column names were specified.
                 if len(column_names) > icol:
                     column_name = column_names[icol]
                 else:
                     column_name = "Column{}".format((icol + 1))
             else:
-                # Column names are taken from the first row of parsed data
+                # Column names are taken from the first row of parsed data.
                 column_name = parsed_lines[0][icol]
 
             # If data types were specified via column names, override the data type.
@@ -458,7 +460,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                     if text_column == column_name:
                         data_type = str
 
-            # Default is to set the description the same as the name
+            # Default is to set the description the same as the name.
             description = column_name
             # TODO smalers 2020-11-14 set the width and precision based on string length, etc.
             width = None
@@ -467,7 +469,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
             table.add_field(TableField(data_type, column_name, description=description, width=width,
                                        precision=precision, units=units))
 
-        # Log information so can check auto-typing
+        # Log information so can check auto-typing.
         for icol in range(num_columns):
             logger.info("Column [{}] '{}' data rows have {} bool, type is {}".format(
                 icol, table.table_fields[icol].name, bool_count[icol], table.table_fields[icol].data_type))
@@ -482,22 +484,22 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         for irow, row in enumerate(parsed_lines):
             if debug:
                 logger.info("Processing row [{}].".format(irow))
-            # Skip header
+            # Skip header.
             if irow < first_data_row:
                 continue
-            # Break if only reading top rows
+            # Break if only reading top rows.
             if top is not None and (irow == top):
                 break
             table_record = TableRecord()
             # Process each row in the table.
             for icol, cell in enumerate(row):
-                # Default value so scope is outside of try block
+                # Default value so scope is outside of try block.
                 value = None
                 # noinspection PyBroadException
                 try:
-                    # Strip off surrounding whitespace
+                    # Strip off surrounding whitespace.
                     cell = cell.strip()
-                    # Length is needed to check for msising for numbers (strings are allowed to be zero-length)
+                    # Length is needed to check for missing for numbers (strings are allowed to be zero-length).
                     cell_len = len(cell)
                     table_field_data_type = table.table_fields[icol].data_type
                     # Process each item in the row and add to the record.
@@ -519,11 +521,11 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                         else:
                             value = bool(cell)
                     else:
-                        # Treat as a string
+                        # Treat as a string.
                         value = "{}".format(cell)
                     # Add the value to the table record.
                 except Exception:
-                    # Likely a conversion error.
+                    # Likely a conversion error:
                     # - add a None for the value
                     logger.warning("Error converting parsed value '{}' to set in table".format(cell), exc_info=True)
                     value = None
@@ -533,7 +535,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                         logger.info("  Processing cell [{}] value '{}'.".format(icol, value))
                     table_record.add_field_value(value)
 
-            # Add the record to the table
+            # Add the record to the table.
             table.add_record(table_record)
 
         return table
@@ -581,7 +583,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
         # noinspection PyPep8Naming
         pv_RowCountProperty = self.get_parameter_value("RowCountProperty")
 
-        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax
+        # Convert the InputFile parameter value relative path to an absolute path and expand for ${Property} syntax.
         input_file_absolute = io_util.verify_path_for_os(
             io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                      self.command_processor.expand_parameter_value(pv_InputFile, self)))
@@ -619,7 +621,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 if pv_RowCountProperty is not None and (len(pv_RowCountProperty) > 0):
                     self.command_processor.set_property(pv_RowCountProperty, table.get_number_of_rows())
 
-            # Raise an exception if an unexpected error occurs during the process
+            # Raise an exception if an unexpected error occurs during the process.
             except Exception:
                 self.warning_count += 1
                 message = "Unexpected error reading table {} from delimited file ({}).".format(pv_TableID,
@@ -629,7 +631,7 @@ class ReadTableFromDelimitedFile(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             raise CommandError(message)

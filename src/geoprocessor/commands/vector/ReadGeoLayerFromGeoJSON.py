@@ -1,18 +1,18 @@
 # ReadGeoLayerFromGeoJSON - command to read a GeoLayer from a GeoJSON file
 # ________________________________________________________________NoticeStart_
 # GeoProcessor
-# Copyright (C) 2017-2020 Open Water Foundation
-# 
+# Copyright (C) 2017-2023 Open Water Foundation
+#
 # GeoProcessor is free software:  you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
 #     the Free Software Foundation, either version 3 of the License, or
 #     (at your option) any later version.
-# 
+#
 #     GeoProcessor is distributed in the hope that it will be useful,
 #     but WITHOUT ANY WARRANTY; without even the implied warranty of
 #     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #     GNU General Public License for more details.
-# 
+#
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
@@ -41,18 +41,21 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
     """
     Reads a GeoLayer from a GeoJSON spatial data file.
 
-    This command reads a layer from a GeoJSON file and creates a GeoLayer object within the geoprocessor. The
-    GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
+    This command reads a layer from a GeoJSON file and creates a GeoLayer object within the geoprocessor.
+    The GeoLayer can then be accessed in the geoprocessor by its identifier and further processed.
 
-    GeoLayers are stored on a computer or are available for download as a spatial data file (GeoJSON, shapefile,
-    feature class in a file geodatabase, etc.). Each GeoLayer has one feature type (point, line, polygon, etc.) and
-    other data (an identifier, a coordinate reference system, etc). This function reads a single GeoLayer from a single
-    GeoJSON file in GeoJSON format (consistent with the fact that GeoJSON files store one layer).
+    GeoLayers are stored on a computer or are available for download as a spatial data file
+    (GeoJSON, shapefile, feature class in a file geodatabase, etc.).
+    Each GeoLayer has one feature type (point, line, polygon, etc.) and other data (an identifier,
+    a coordinate reference system, etc).
+    This function reads a single GeoLayer from a single GeoJSON file in GeoJSON format
+    (consistent with the fact that GeoJSON files store one layer).
 
     In order for the geoprocessor to use and manipulate spatial data files, GeoLayers are instantiated as
     `QgsVectorLayer <https://qgis.org/api/classQgsVectorLayer.html>`_ objects.
 
-    Command Parameters
+    Command Parameters:
+
     * InputFile (str, required): the relative pathname to the spatial data file (GeoJSON format)
     * GeoLayerID (str, optional): the GeoLayer identifier. If None, the spatial data filename (without the .geojson
         extension) will be used as the GeoLayer identifier. For example: If GeoLayerID is None and the absolute
@@ -72,12 +75,12 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         CommandParameterMetadata("Properties", type("")),
         CommandParameterMetadata("IfGeoLayerIDExists", type(""))]
 
-    # Command metadata for command editor display
+    # Command metadata for command editor display.
     __command_metadata = dict()
     __command_metadata['Description'] = "Read a GeoLayer from a file in GeoJSON format."
     __command_metadata['EditorType'] = "Simple"
 
-    # Parameter Metadata
+    # Parameter Metadata.
     __parameter_input_metadata = dict()
 
     # InputFile
@@ -130,7 +133,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
     __parameter_input_metadata['IfGeoLayerIDExists.Values'] = ["", "Replace", "ReplaceAndWarn", "Warn", "Fail"]
     __parameter_input_metadata['IfGeoLayerIDExists.Value.Default'] = "Replace"
 
-    # Choices for IfGeoLayerIDExists, used to validate parameter and display in editor
+    # Choices for IfGeoLayerIDExists, used to validate parameter and display in editor.
     __choices_IfGeoLayerIDExists = ["Replace", "ReplaceAndWarn", "Warn", "Fail"]
 
     def __init__(self) -> None:
@@ -138,19 +141,19 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         Initialize the command.
         """
 
-        # AbstractCommand data
+        # AbstractCommand data.
         super().__init__()
         self.command_name = "ReadGeoLayerFromGeoJSON"
         self.command_parameter_metadata = self.__command_parameter_metadata
         self.choices_IfGeoLayerIDExists = self.__choices_IfGeoLayerIDExists
 
-        # Command metadata for command editor display
+        # Command metadata for command editor display.
         self.command_metadata = self.__command_metadata
 
-        # Parameter Metadata
+        # Parameter Metadata.
         self.parameter_input_metadata = self.__parameter_input_metadata
 
-        # Class data
+        # Class data.
         self.warning_count = 0
         self.logger = logging.getLogger(__name__)
 
@@ -180,13 +183,13 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.INITIALIZATION,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Properties - verify that the properties can be parsed
+        # Properties - verify that the properties can be parsed.
         # noinspection PyPep8Naming
         pv_Properties = self.get_parameter_value(parameter_name="Properties", command_parameters=command_parameters)
         try:
             command_util.parse_properties_from_parameter_string(pv_Properties)
         except ValueError as e:
-            # Use the exception
+            # Use the exception.
             message = str(e)
             recommendation = "Check the Properties string format."
             warning_message += "\n" + message
@@ -217,7 +220,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
             self.logger.warning(warning_message)
             raise CommandParameterError(warning_message)
         else:
-            # Refresh the phase severity
+            # Refresh the phase severity.
             self.command_status.refresh_phase_severity(CommandPhaseType.INITIALIZATION, CommandStatusType.SUCCESS)
 
     def check_runtime_data(self, input_file_absolute: str, input_is_url: bool, geolayer_id: str) -> bool:
@@ -240,7 +243,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         run_read = True
 
         if input_is_url:
-            # No checks because would be a performance hit to download a large file
+            # No checks because would be a performance hit to download a large file.
             pass
         else:
             # If the input spatial data file is not a valid file path, raise a FAILURE.
@@ -263,8 +266,8 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                     self.command_status.add_to_log(CommandPhaseType.RUN,
                                                    CommandLogRecord(CommandStatusType.WARNING, message, recommendation))
 
-        # If the GeoLayerID is the same as an already-registered GeoLayerID, react according to the
-        # py_IfGeoLayerIDExists value
+        # If the GeoLayerID is the same as an already-registered GeoLayerID,
+        # react according to the py_IfGeoLayerIDExists value
         if self.command_processor.get_geolayer(geolayer_id):
             # Get the IfGeoLayerIDExists parameter value.
             # noinspection PyPep8Naming
@@ -300,14 +303,14 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 # Default is "REPLACE"
                 pass
 
-        # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed. If FALSE,
-        # one or many checks failed.
+        # Return the Boolean to determine if the read process should be run. If TRUE, all checks passed.
+        # If FALSE, one or many checks failed.
         return run_read
 
     def run_command(self) -> None:
         """
-        Run the command. Read the layer file from a GeoJSON file, create a GeoLayer object, and add to the
-        GeoProcessor's geolayer list.
+        Run the command. Read the layer file from a GeoJSON file, create a GeoLayer object,
+        and add to the GeoProcessor's geolayer list.
 
         Returns: None.
 
@@ -344,22 +347,22 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
         # noinspection PyPep8Naming
         pv_Properties = self.command_processor.expand_parameter_value(pv_Properties, self)
 
-        # Convert the InputFile parameter value to an absolute path and expand for ${Property} syntax
+        # Convert the InputFile parameter value to an absolute path and expand for ${Property} syntax.
         input_is_url = False
         # noinspection PyPep8Naming
         pv_InputFile = self.command_processor.expand_parameter_value(pv_InputFile, self)
         if io_util.is_url(pv_InputFile):
-            # Input is a URL
+            # Input is a URL.
             input_file_absolute = pv_InputFile
             input_is_url = True
         else:
-            # Input is a local file
+            # Input is a local file.
             input_file_absolute = io_util.verify_path_for_os(
                 io_util.to_absolute_path(self.command_processor.get_property('WorkingDir'),
                                          self.command_processor.expand_parameter_value(pv_InputFile, self)))
 
         if pv_Name is None:
-            # Default is input file name without extension
+            # Default is input file name without extension.
             remove_extension = True
             # noinspection PyPep8Naming
             pv_Name = io_util.get_filename(input_file_absolute, remove_extension)
@@ -376,7 +379,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 # Create a QGSVectorLayer object with the GeoJSON InputFile.
                 qgs_vector_layer = qgis_util.read_qgsvectorlayer_from_file(input_file_absolute)
 
-                # Create a GeoLayer and add it to the geoprocessor's GeoLayers list.
+                # Create a GeoLayer and add it to the geoprocessor's GeoLayers list:
                 # - specify the input_format to ensure that downstream code knows the format because the
                 #   path may not descriptive enough
                 new_geolayer = VectorGeoLayer(geolayer_id=pv_GeoLayerID,
@@ -387,12 +390,13 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                                               input_path_full=input_file_absolute,
                                               input_path=pv_InputFile)
 
-                # Set the properties
+                # Set the properties.
                 properties = command_util.parse_properties_from_parameter_string(pv_Properties)
-                # Set the properties as additional properties (don't just reset the properties dictionary)
+
+                # Set the properties as additional properties (don't just reset the property dictionary).
                 new_geolayer.set_properties(properties)
 
-                # Add a history comment
+                # Add a history comment.
                 new_geolayer.append_to_history("Read GeoLayer from GeoJSON file:  '" + input_file_absolute + "'")
 
                 self.command_processor.add_geolayer(new_geolayer)
@@ -407,7 +411,7 @@ class ReadGeoLayerFromGeoJSON(AbstractCommand):
                 self.command_status.add_to_log(CommandPhaseType.RUN,
                                                CommandLogRecord(CommandStatusType.FAILURE, message, recommendation))
 
-        # Determine success of command processing. Raise Runtime Error if any errors occurred
+        # Determine success of command processing. Raise Runtime Error if any errors occurred.
         if self.warning_count > 0:
             message = "There were {} warnings processing the command.".format(self.warning_count)
             logger.warning(message)

@@ -1327,7 +1327,7 @@ class GeoProcessor(object):
             qgis_install_folder_path = Path(qgis_install_folder)
             gdal_bin_folder = qgis_install_folder_path.parent.parent.as_posix() + "/bin"
             gis_software = "QGIS"
-        # TODO smalers 2020-01-16 Add support for ArcGIS Pro.
+        # TODO smalers 2020-01-16 Add support for ArcGIS Pro?
         self.properties["GisSoftware"] = gis_software
         self.properties["GdalBinDir"] = gdal_bin_folder
         # TODO smalers 2017-12-30 need to figure out.
@@ -1339,12 +1339,21 @@ class GeoProcessor(object):
         self.properties["UserHomeDir"] = home_dir
         self.properties["UserHomeDirURL"] = "file:///" + home_dir.replace("\\", "/")
         self.properties["UserName"] = getpass.getuser()
-        # Set the program version as a property, useful for version-dependent command logic.
-        # Assume the version is xxx.xxx.xxx beta (date), with at least one period.
-        # Save the program version as a string.
-        # TODO smalers 2017-12-30 need to complete.
-        self.properties["ProgramVersionString"] = None  # programVersion )
-        self.properties["ProgramVersionNumber"] = None  # new Double(programVersionNumber) )
+        # Set the program version properties, useful for version-dependent command logic.
+        # Assume the version is of the Semantic form:
+        #   xxx.xxx.xxx
+        #   xxx.xxx.xxx.dev1
+        # Set the program version as a string property with value as shown above.
+        version_string: str = app_util.get_property("ProgramVersion")
+        self.properties["ProgramVersionString"] = version_string
+        self.properties["ProgramVersionDate"] = app_util.get_property("ProgramVersionDate")
+        # Set the program version as a floating point number property with value N.N (major and minor).
+        version_number = None
+        if version_string:
+            parts = version_string.split(".")
+            if len(parts) >= 2:
+                version_number = float(parts[0] + "." + parts[1])
+        self.properties["ProgramVersionNumber"] = version_number
 
     def run_commands(self, command_list: [AbstractCommand] = None, run_properties: dict = None,
                      env_properties: dict = None) -> None:

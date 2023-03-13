@@ -28,8 +28,9 @@ from typing import Any
 
 class AbstractCommand(object):
     """
-    Parent to all other command classes. Stores common data. Provides common functions,
-    which can (and in some casts should) be overloaded in child classes.
+    Parent to all other command classes.
+    Command common data such as the command string and parameter dictionary are stored in this class.
+    The class provides common functions, which can (and in some casts should) be overloaded in child classes.
     """
 
     def __init__(self) -> None:

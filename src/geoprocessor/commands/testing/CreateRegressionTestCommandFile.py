@@ -97,7 +97,7 @@ class CreateRegressionTestCommandFile(AbstractCommand):
         "Test results file for StartRegressionResultsReport, relative to the output command file, can use ${Property}.")
     __parameter_input_metadata['TestResultsFile.Required'] = False
     __parameter_input_metadata['TestResultsFile.FileSelector.Type'] = "Read"
-    __parameter_input_metadata['TestResultsFile.FileSelector.Filters'] = ["GP command file (*.gp)", "All files (*)"]
+    __parameter_input_metadata['TestResultsFile.FileSelector.Filters'] = ["Test results file (*.txt)", "All files (*)"]
     # EndCommandFile
     __parameter_input_metadata['EndCommandFile.Description'] = "command file to append"
     __parameter_input_metadata['EndCommandFile.Label'] = "End command file"

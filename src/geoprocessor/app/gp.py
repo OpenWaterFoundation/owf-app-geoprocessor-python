@@ -477,11 +477,12 @@ def set_global_data() -> None:
         # User documentation URL, without trailing slash:
         # - preferred documentation matches the version
         # - backup is the latest published, which may be older if in "dev" release, etc.
+        # - TODO smalers 2023-03-12 might put this in a configuration file similar to TSTool
         app_util.set_property('ProgramUserDocumentationUrl',
-                              "http://software.openwaterfoundation.org/geoprocessor/{}/doc-user".format(
+                              "https://software.openwaterfoundation.org/geoprocessor/{}/doc-user".format(
                                   version.app_version))
         app_util.set_property('ProgramUserDocumentationUrl2',
-                              "http://software.openwaterfoundation.org/geoprocessor/latest/doc-user")
+                              "https://software.openwaterfoundation.org/geoprocessor/latest/doc-user")
         # Program version, tracks with release notes.
         app_util.set_property('ProgramVersion', version.app_version)
         app_util.set_property('ProgramVersionDate', version.app_version_date)

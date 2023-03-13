@@ -16,7 +16,7 @@
 #     You should have received a copy of the GNU General Public License
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
-
+import httplib2
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from geoprocessor.commands.abstract.AbstractCommand import AbstractCommand
@@ -1094,6 +1094,9 @@ class AbstractCommandEditor(QtWidgets.QDialog):
         View the command's user documentation in the default browser.
         The GeoProcessor configuration file property 'ProgramUserDocumentationUrl' is used to
         form a URL for the current software version, using standard documentation location folders.
+        Documentation matching the GeoProcessor version is attempted first with a get.
+        If it exists, the version-specific documentation is displayed in the default browser.
+        If the get fails, a get is attempted for 'latest' and will be displayed if it exists.
 
         Args:
             ref_command_name (str):  Command name for command reference, defaults to the command name.
@@ -1117,61 +1120,72 @@ class AbstractCommandEditor(QtWidgets.QDialog):
             # command_name = ref_command_name
             pass
 
+        # Get the root URL for documentation, which allows two homes:
+        # - these locations are currently hard-coded in the 'gp.py' file
+        user_doc_url = app_util.get_property('ProgramUserDocumentationUrl')
+        user_doc_url2 = app_util.get_property('ProgramUserDocumentationUrl2')
+
+        # If neither of the URL options is available, display a warning.
+        if not user_doc_url and not user_doc_url2:
+            # This should not happen if geoprocessor.app.gp sets initial properties correctly.
+            qt_util.warning_message_box(
+                "Can't view documentation...no application configuration value for "
+                "'ProgramUserDocumentationUrl' or 'ProgramUserDocumentationUrl2'")
+            return
+
+        # Create a list of possible URLs:
+        # - use the first documentation URL root first
+        # - within each, use the version-specific documentation first, and then 'latest'
+        # - 'user_doc_url' as implemented already has the version
+        # - 'user_doc_url' as implemented already has 'latest'
+        # - if a configuration file is implemented in the future, will need to change the logic
+        command_doc_url_list = list()
+        if user_doc_url:
+            command_doc_url = "{}/command-ref/{}/{}/".format(user_doc_url, command_name, command_name)
+            command_doc_url_list.append(command_doc_url)
+            # logger.info("URL1 to try: " + command_doc_url)
+        if user_doc_url2:
+            command_doc_url = "{}/command-ref/{}/{}/".format(user_doc_url2, command_name, command_name)
+            command_doc_url_list.append(command_doc_url)
+            # logger.info("URL2 to try: " + command_doc_url)
+
         # Indicate whether documentation displayed OK.
         doc_displayed_ok = False
-        # noinspection PyBroadException
-        try:
-            # TODO smalers 2020-04-07 this code needs to check for the existence of the URL, like TSTool.
-            user_doc_url = app_util.get_property('ProgramUserDocumentationUrl')
-            user_doc_url2 = app_util.get_property('ProgramUserDocumentationUrl2')
-            if user_doc_url is None and user_doc_url2 is None:
-                # This should not happen if geoprocessor.app.gp sets initial properties correctly.
-                qt_util.warning_message_box(
-                    "Can't view documentation...no application configuration value for "
-                    "'ProgramUserDocumentationUrl' or 'ProgramUserDocumentationUrl2'")
-                return
-            # Else have at least one URL defined to try to append the command name to the documentation.
-            command_doc_url = "{}/command-ref/{}/{}/".format(user_doc_url, command_name, command_name)
-            # message = "Displaying command documentation using URL: " + command_doc_url
-            # logger.info(message)
-            # Open the command's user documentation in the default browser:
-            # - open in a new tab or if this fails open a new window
-            # noinspection PyBroadException
-            try:
-                webbrowser.open_new_tab(command_doc_url)
-                doc_displayed_ok = True
-            except Exception:
-                # Try the other variant, may work on different operating system.
-                webbrowser.open(command_doc_url)
-                doc_displayed_ok = True
-        except Exception:
-            doc_displayed_ok = False
 
-        if not doc_displayed_ok:
-            # Try the same logic with the second documentation URL.
-            # noinspection PyBroadException
-            try:
-                user_doc_url = app_util.get_property('ProgramUserDocumentationUrl2')
-                if user_doc_url is None:
-                    qt_util.warning_message_box("Can't view documentation...no application configuration value for"
-                                                 "'ProgramUserDocumentationUrl2'")
-                    return
-                # Append the command name to the documentation.
-                command_doc_url = "{}/command-ref/{}/{}/".format(user_doc_url, command_name, command_name)
-                # message = "Displaying command documentation using URL: " + command_doc_url
-                # logger.info(message)
-                # Open the command's user documentation in the default browser:
-                # - open in a new tab or if this fails open a new window
+        # Loop though the candidate URLs.
+        for command_doc_url in command_doc_url_list:
+            # Use a HEAD request, which should be faster than a GET.
+            h = httplib2.Http()
+            resp = h.request(command_doc_url, 'HEAD')
+            if int(resp[0]['status']) != 200:
+                # Website does not exist:
+                # - continue to the next URL
+                continue
+            else:
                 # noinspection PyBroadException
                 try:
                     webbrowser.open_new_tab(command_doc_url)
+                    doc_displayed_ok = True
+                    # Break out of the loop.
+                    break
                 except Exception:
-                    # Try the other variant, may work on different operating system.
-                    webbrowser.open(command_doc_url)
-            except Exception:
-                message = 'Error viewing command documentation using url "' + str(command_doc_url) + '"'
-                logger.warning(message, exc_info=True)
-                qt_util.warning_message_box(message)
+                    # Try the other call syntax, may work on different operating system.
+                    # noinspection PyBroadException
+                    try:
+                        webbrowser.open(command_doc_url)
+                        doc_displayed_ok = True
+                        # Break out of the loop.
+                        break
+                    except Exception:
+                        # Did not work.
+                        doc_displayed_ok = False
+
+        if not doc_displayed_ok:
+            message = 'Error viewing command documentation using URL(s):'
+            for command_doc_url in command_doc_url_list:
+                message += "\n  " + command_doc_url
+            logger.warning(message)
+            qt_util.warning_message_box(message)
 
     # TODO smalers 2020-01-14 This method does not seem to be used - need to remove?
     def x_are_required_parameters_specified(self, ui_command_parameter_list: []) -> bool:

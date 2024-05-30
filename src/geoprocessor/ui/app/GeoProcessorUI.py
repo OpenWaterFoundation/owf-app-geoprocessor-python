@@ -3525,7 +3525,7 @@ class GeoProcessorUI(QtWidgets.QMainWindow):  # , Ui_MainWindow):
         else:
             # Format the information similar to TSTool status:
             # - HTML formatting or other free-form format is preferred because content will fill table cells
-            show_all_log_messages = True   # False only shows warning and failure messages
+            show_all_log_messages = True   # False only shows warning and failure messages.
             # noinspection PyBroadException
             try:
                 command_status = selected_command.command_status

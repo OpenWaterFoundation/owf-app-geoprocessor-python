@@ -1064,7 +1064,8 @@ class CommandListWidget(object):
         # Get the error icon from path.
         icon_path = app_util.get_property("ProgramResourcesPath").replace('\\', '/')
         icon_path = icon_path + "/images/error.gif"
-        # Create icon.
+        # Create icon:
+        # - the size must be smaller than the font because otherwise the icons and commands are misaligned
         error_icon = QtGui.QIcon(icon_path)
         # Add icon to QListWidgetItem.
         item.setIcon(error_icon)

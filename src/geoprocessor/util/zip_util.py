@@ -178,7 +178,7 @@ def zip_files(list_of_files_to_archive: [str], output_filename: str, keep_origin
                 shutil.rmtree(to_archive_file)
 
 
-def zip_shapefile(output_file_abs: str, keep_archive_files: bool = False) -> None:
+def zip_shapefile(output_file_abs: str, keep_archive_files: bool = False) -> str or None:
     """
     Compresses a shapefile.
 
@@ -187,7 +187,7 @@ def zip_shapefile(output_file_abs: str, keep_archive_files: bool = False) -> Non
        keep_archive_files (boolean): If set to TRUE, the orginal files will be saved. If set to FALSE, the original
             files will be deleted (leaving only the zip file and its archived components). Default: False.
 
-    Return: None
+    Return: The path to the zip file.
     """
 
     # Get the output folder.
@@ -210,3 +210,6 @@ def zip_shapefile(output_file_abs: str, keep_archive_files: bool = False) -> Non
 
     # Zip the files to archive (the zip file will have the same name as the original file).
     zip_files(files_to_archive, output_file_abs, keep_archive_files)
+
+    # Return the zip file name.
+    return output_file_full_path

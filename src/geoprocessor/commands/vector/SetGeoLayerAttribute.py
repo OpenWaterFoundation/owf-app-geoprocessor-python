@@ -256,7 +256,7 @@ class SetGeoLayerAttribute(AbstractCommand):
                 # noinspection PyPep8Naming
                 pv_AttributeValue = self.command_processor.expand_parameter_value(pv_AttributeValue, self)
                 if pv_AttributeValue:
-                    input_geolayer.populate_attribute(pv_AttributeName, pv_AttributeValue)
+                    input_geolayer.set_attribute(pv_AttributeName, pv_AttributeValue)
 
             # Raise an exception if an unexpected error occurs during the process.
             except Exception:

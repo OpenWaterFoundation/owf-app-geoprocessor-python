@@ -295,39 +295,63 @@ class VectorGeoLayer(GeoLayer):
 
     def write_to_disk(self, output_path_full: str) -> GeoLayer:
         """
-        Write the GeoLayer to a file on disk. The in-memory GeoLayer will be replaced by the on-disk GeoLayer.
+        Write the GeoLayer to a file on disk, using GeoPackage (default) or shapefile.
+        The in-memory GeoLayer will be replaced by the on-disk GeoLayer.
         This utility method is useful when running a command that requires the input of a source path rather than a
         QgsVectorLayer object. For example, the "qgis:mergevectorlayers" requires source paths as inputs.
 
+        Currently, a GeoPackage file is always written.
+        In the past, a shapefile was used, but it results in loss of precision due to shapefile limitations.
+
         Args:
-            output_path_full: the full file path for the on-disk GeoLayer
+            output_path_full: the full file path for the on-disk GeoLayer, without extension
 
         Returns:
             geolayer_on_disk: GeoLayer object of on-disk file. The id of the returned GeoLayer in the same as the
             current GeoLayer.
         """
 
-        # Remove the shapefile (with its component files) from the temporary directory if it already exists.
+        # Indicate the output format for the temporary file:
+        # - TODO smalers 2024-05-30 figure out a better format, maybe "temporary scratch file"?
+
+        # Shapefile:
+        # - may truncate field names, etc.
+        # output_format_ext = ".shp"
+
+        # Geopackage:
+        # - should handle all complexities?
+        output_format_ext = ".gpkg"
+
+        # Possible file extensions for the file.
+        if output_format_ext == ".gpkg":
+            file_ext = ['.gpkg']
+        elif output_format_ext == ".shp":
+            file_ext = ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg', '.sbn', '.sbx', '.shp.xml']
+
+        # Remove the layer files from the temporary directory if it already exists.
         # This block of code was developed to see if it would fix the issue of tests failing when running
         # under suite mode and passing when running as a single test.
-        if os.path.exists(output_path_full + '.shp'):
+        for extension in file_ext:
 
-            # Iterate over the possible extensions of a shapefile.
-            for extension in ['.shx', '.shp', '.qpj', '.prj', '.dbf', '.cpg', '.sbn', '.sbx', '.shp.xml']:
+            # Get the full pathname of the shapefile component file.
+            output_path_full_tmp = os.path.join(output_path_full + extension)
 
-                # Get the full pathname of the shapefile component file.
-                output_path_full = os.path.join(output_path_full + extension)
+            # If the shapefile component file exists, add it' s absolute path to the files_to_archive list.
+            # Note that not all shapefile component files are required -- some may not exist.
+            if os.path.exists(output_path_full_tmp):
+                os.remove(output_path_full_tmp)
 
-                # If the shapefile component file exists, add it' s absolute path to the files_to_archive list.
-                # Note that not all shapefile component files are required -- some may not exist.
-                if os.path.exists(output_path_full):
-                    os.remove(output_path_full)
+        # Output path needs to have the extension appended.
+        output_path_full = os.path.join(output_path_full + output_format_ext)
 
-        # Write the GeoLayer (generally an in-memory GeoLayer) to a GeoJSON on disk (with the input absolute path).
-        qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_layer, output_path_full, self.get_crs_code())
+        # Write the layer to disk.
+        if output_format_ext == ".gpkg":
+            qgis_util.write_qgsvectorlayer_to_geopackage(self.qgs_layer, output_path_full, self.get_crs_code())
+        elif output_format_ext == ".shp":
+            qgis_util.write_qgsvectorlayer_to_shapefile(self.qgs_layer, output_path_full, self.get_crs_code())
 
         # Read a QgsVectorLayer object from the on disk spatial data file (GeoJSON).
-        qgs_vector_layer_disk = qgis_util.read_qgsvectorlayer_from_file(output_path_full + ".shp")
+        qgs_vector_layer_disk = qgis_util.read_qgsvectorlayer_from_file(output_path_full)
 
         # Create a new GeoLayer object with the same ID as the current object. The data however is not written to disk.
         # Return the new on-disk GeoLayer object.
@@ -336,5 +360,5 @@ class VectorGeoLayer(GeoLayer):
         geolayer_on_disk = VectorGeoLayer(geolayer_id=self.id,
                                           qgs_vector_layer=qgs_vector_layer_disk,
                                           name=qgs_vector_layer_disk_name,
-                                          input_path_full=output_path_full + ".shp")
+                                          input_path_full=output_path_full)
         return geolayer_on_disk

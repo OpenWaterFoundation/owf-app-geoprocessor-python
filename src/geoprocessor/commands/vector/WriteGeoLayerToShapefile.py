@@ -259,7 +259,12 @@ class WriteGeoLayerToShapefile(AbstractCommand):
 
                 # Zip the shapefiles, if configured to do so.
                 if zip_output_bool:
-                    zip_util.zip_shapefile(output_file_absolute)
+                    zip_path = zip_util.zip_shapefile(output_file_absolute)
+                    # Save the output file in the processor, used by the UI to list output files.
+                    self.command_processor.add_output_file(zip_path)
+                else:
+                    # Save the output file in the processor, used by the UI to list output files.
+                    self.command_processor.add_output_file(output_file_absolute)
 
             except Exception:
                 # Raise an exception if an unexpected error occurs during the process.

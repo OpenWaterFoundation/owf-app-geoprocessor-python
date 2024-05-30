@@ -560,22 +560,28 @@ if __name__ == '__main__':
     # - the --version option has special behavior, as documented in the argparse module documentation,
     #   but use a custom print_version() function so can include the license
     parser = argparse.ArgumentParser(description='GeoProcessor Application')
+
     # Assigns the command file to args.commands:
     # --commands CommandFile.gp
     parser.add_argument("-c", "--commands", help="Specify command file.")
+
     # Start the http server (will store True in the 'http' variable):
     # --http
     parser.add_argument("--http", action='store_true', help="Start the web server.")
+
     # Define processor properties on the command line, assumed to be str property:
     # -p PropertyName=PropertyValue
     # Evaluate later how to allow values with quotes but maybe shell will handle?
     parser.add_argument("-p", action='append', help="Set a processor property.")
+
     # Start the user interface (will store True in the 'ui' variable):
     # --ui
     parser.add_argument("--ui", action='store_true', help="Start the user interface.")
+
     # Print the version using (will store True in the 'version' variable):
     # --version
     parser.add_argument("--version", help="Print program version.", action="store_true")
+
     # The following will result in exit if unknown argument.
     # args = parser.parse_args()
     # TODO smalers 2020-03-27 Need to print out unknown arguments, but for move on:

@@ -30,12 +30,14 @@ from geoprocessor.core.QGISAlgorithmProcessingFeedbackHandler import QgisAlgorit
 from geoprocessor.core.VectorGeoLayer import VectorGeoLayer
 
 import geoprocessor.util.command_util as command_util
+import geoprocessor.util.io_util as io_util
 import geoprocessor.util.qgis_util as qgis_util
 import geoprocessor.util.string_util as string_util
 import geoprocessor.util.validator_util as validator_util
 
 import logging
 import os
+from datetime import datetime
 
 # from plugins.processing.tools import general
 
@@ -44,26 +46,26 @@ class IntersectGeoLayer(AbstractCommand):
     """
     Intersects the input GeoLayer with an intersecting GeoLayer.
 
-    This command intersects an input GeoLayer by the boundary of the intersect GeoLayer.
+    This command intersects an input GeoLayer by the boundary of the 'intersect' GeoLayer.
     The features of the input GeoLayer are retained in the output GeoLayer if they
-    intersect with the intersect GeoLayer.
+    intersect with the 'intersect' GeoLayer.
     The output intersected layer will become a new GeoLayer.
     The attribute fields and values of the input GeoLayer are retained within the output intersected GeoLayer.
     The features of the input GeoLayer are retained within the output intersected GeoLayer.
-    The attributes fields and values of the intersect GeoLayer are appended to the output intersected GeoLayer.
-    The features of the intersect GeoLayer are NOT retained within the output intersected GeoLayer.
+    The attributes fields and values of the 'intersect' GeoLayer are appended to the output intersected GeoLayer.
+    The features of the 'intersect' GeoLayer are NOT retained within the output intersected GeoLayer.
 
     Command Parameters
 
     * GeoLayerID (str, required): the ID of the input GeoLayer, the layer to be intersected
-    * IntersectGeoLayerID (str, required): the ID of the intersect GeoLayer.
-    * IncludeIntersectAttributes (str, optional): A list of glob-style patterns to determine the intersect GeoLayer
+    * IntersectGeoLayerID (str, required): the ID of the 'intersect' GeoLayer.
+    * IncludeIntersectAttributes (str, optional): A list of glob-style patterns to determine the 'intersect' GeoLayer
         attributes to include in the output intersected GeoLayer. Default: * (All attributes are included in the output
         GeoLayer).
-    * ExcludeIntersectAttributes (str, optional): A list of glob-style patterns to determine the intersect GeoLayer
+    * ExcludeIntersectAttributes (str, optional): A list of glob-style patterns to determine the 'intersect' GeoLayer
         attributes to exclude in the output intersected GeoLayer. Default: '' (All attributes are included in the
         output GeoLayer).
-    * OutputGeoLayerID (str, optional): the ID of the GeoLayer created as the output intersected layer. By default the
+    * OutputGeoLayerID (str, optional): the ID of the GeoLayer created as the output intersected layer. By default, the
         GeoLayerID of the output layer will be {}_intersectedBy_{} where the first variable is the GeoLayerID and
         the second variable is the IntersectGeoLayerID.
     * IfGeoLayerIDExists (str, optional): This parameter determines the action that occurs if the OutputGeoLayerID
@@ -518,6 +520,8 @@ class IntersectGeoLayer(AbstractCommand):
         qgis_method = True
         owf_method = False
 
+        error_found = False
+
         # Convert the IncludeIntersectAttributes and ExcludeIntersectAttributes to lists.
         attrs_to_include = string_util.delimited_string_to_list(pv_IncludeIntersectAttributes)
         attrs_to_exclude = string_util.delimited_string_to_list(pv_ExcludeIntersectAttributes)
@@ -530,41 +534,84 @@ class IntersectGeoLayer(AbstractCommand):
                 input_geolayer = self.command_processor.get_geolayer(pv_GeoLayerID)
                 intersect_geolayer = self.command_processor.get_geolayer(pv_IntersectGeoLayerID)
 
-                # Make a copy of the intersect GeoLayer.
-                # Manipulations will occur on this layer and the original should not be affected.
+                # Make a copy of the intersect GeoLayer:
+                # - manipulations will occur on this layer and the original should not be affected
+                # - because the intersect layer may be used multiple times, use a unique temporary file
+                #   because QGIS seems to lock the files
+                message = "Copying the intersect layer: {}".format(intersect_geolayer.name)
+                self.logger.info(message)
                 intersect_geolayer_copy = intersect_geolayer.deepcopy("intersect_geolayer_copy")
+                if not intersect_geolayer_copy.qgs_layer.isValid():
+                    # The copied layer is not valid.
+                    self.warning_count += 1
+                    message = "The copy of the intersect layer {} is not valid.".format(intersect_geolayer_copy.name)
+                    recommendation = "Check the log file for details."
+                    self.logger.warning(message, exc_info=True)
+                    self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                   CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                    recommendation))
+                    error_found = True
 
-                # Remove the attributes of the input intersect GeoLayer if configured to be excluded in the output
-                # intersected GeoLayer.
-                intersect_geolayer_copy.remove_attributes(attrs_to_include, attrs_to_exclude)
+                if not error_found:
+                    # Remove the attributes of the input intersect GeoLayer if configured to be excluded in the output
+                    # intersected GeoLayer.
+                    message = "Removing attributes from intersect layer copy."
+                    self.logger.info(message)
+                    intersect_geolayer_copy.remove_attributes(attrs_to_include, attrs_to_exclude)
 
-                if input_geolayer.input_path_full is None or input_geolayer.input_path_full.upper() in\
-                        ["", GeoLayer.SOURCE_MEMORY]:
-                    # If the input GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
+                    if input_geolayer.input_path_full is None or input_geolayer.input_path_full.upper() in\
+                            ["", GeoLayer.SOURCE_MEMORY]:
+                        # If the input GeoLayer is an in-memory GeoLayer:
+                        # - make it an on-disk GeoLayer as a temporary file
+                        # - use a unque name to avoid file locking/contention
 
-                    # Get the absolute path of the GeoLayer to write to disk.
-                    geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
-                                                          input_geolayer.id)
+                        # Get the absolute path of the GeoLayer to write to disk.
+                        now = datetime.now()
+                        now_string = now.strftime("-%m%d%YT%H%M%S")
+                        geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
+                                                              input_geolayer.id + now_string)
+                        message = "Writing in-memory input layer to file: {}".format(geolayer_disk_abs_path)
+                        self.logger.info(message)
 
-                    # Write the GeoLayer to disk.
-                    # Overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer.
-                    input_geolayer = input_geolayer.write_to_disk(geolayer_disk_abs_path)
-                    self.command_processor.add_geolayer(input_geolayer)
+                        # Write the GeoLayer to disk:
+                        # - overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer
+                        # - this by default writes a shapefile
+                        input_geolayer = input_geolayer.write_to_disk(geolayer_disk_abs_path)
+                        self.command_processor.add_geolayer(input_geolayer)
+                        # Indicate that the files should be removed later:
+                        # - TODO smalers 2024-05-29 could use a format other than shapefile
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".gpkg")
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".shp")
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".shx")
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".dbf")
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".prj")
 
-                if intersect_geolayer_copy.input_path_full is None or\
-                    intersect_geolayer_copy.input_path_full.upper() in \
-                        ["", GeoLayer.SOURCE_MEMORY]:
-                    # If the intersect GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
-                    # Get the absolute path of the GeoLayer to write to disk.
-                    geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
-                                                          intersect_geolayer_copy.id)
+                if not error_found:
+                    if intersect_geolayer_copy.input_path_full is None or\
+                        intersect_geolayer_copy.input_path_full.upper() in \
+                            ["", GeoLayer.SOURCE_MEMORY]:
+                        # If the 'intersect' GeoLayer is an in-memory GeoLayer, make it an on-disk GeoLayer.
+                        # Get the absolute path of the GeoLayer to write to disk.
+                        now = datetime.now()
+                        now_string = now.strftime("-%m%d%YT%H%M%S")
+                        geolayer_disk_abs_path = os.path.join(self.command_processor.get_property('TempDir'),
+                                                              intersect_geolayer_copy.id + now_string)
 
-                    # Write the GeoLayer to disk.
-                    # Overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer.
-                    intersect_geolayer_copy = intersect_geolayer_copy.write_to_disk(geolayer_disk_abs_path)
-                    self.command_processor.add_geolayer(intersect_geolayer_copy)
+                        # Write the GeoLayer to disk.
+                        # Overwrite the (memory) GeoLayer in the geoprocessor with the on-disk GeoLayer.
+                        message = "Writing in-memory intersect layer copy to file: {}".format(geolayer_disk_abs_path)
+                        self.logger.info(message)
+                        intersect_geolayer_copy = intersect_geolayer_copy.write_to_disk(geolayer_disk_abs_path)
+                        self.command_processor.add_geolayer(intersect_geolayer_copy)
+                        # Indicate that the files should be removed later:
+                        # - TODO smalers 2024-05-29 could use a format other than shapefile
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".gpkg")
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".shp")
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".shx")
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".dbf")
+                        io_util.add_tmp_file_to_remove(geolayer_disk_abs_path + ".prj")
 
-                if qgis_method:
+                if qgis_method and not error_found:
                     # If using QGIS version of intersect. Set to TRUE always until later notice.
                     # Perform the QGIS intersection function. Refer to the reference below for parameter descriptions.
                     # REF: https://docs.qgis.org/2.18/en/docs/user_manual/processing_algs/qgis/
@@ -575,24 +622,37 @@ class IntersectGeoLayer(AbstractCommand):
                         "OUTPUT": "memory:"
                     }
                     feedback_handler = QgisAlgorithmProcessingFeedbackHandler(self)
+                    message = "Running qgis:intersection algorithm."
+                    self.logger.info(message)
                     intersected_output = qgis_util.run_processing(processor=self.command_processor.qgis_processor,
                                                                   algorithm="qgis:intersection",
                                                                   algorithm_parameters=alg_parameters,
                                                                   feedback_handler=feedback_handler)
                     self.warning_count += feedback_handler.get_warning_count()
+                    if feedback_handler.get_warning_count() > 0:
+                        self.warning_count += 1
+                        message = "Error error intersecting GeoLayer {} with GeoLayer {}.".format(
+                            pv_GeoLayerID, pv_IntersectGeoLayerID)
+                        recommendation = "Check the log file for details."
+                        self.logger.warning(message, exc_info=True)
+                        self.command_status.add_to_log(CommandPhaseType.RUN,
+                                                       CommandLogRecord(CommandStatusType.FAILURE, message,
+                                                                        recommendation))
+                    else:
+                        # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
+                        # In QGIS3, intersected_output["OUTPUT"] returns the QGS vector layer object
+                        # see ClipGeoLayer.py for information about value in QGIS2 environment
+                        message = "Adding in-memory layer to output."
+                        self.logger.info(message)
+                        new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerID,
+                                                      qgs_vector_layer=intersected_output["OUTPUT"],
+                                                      name=pv_Name,
+                                                      description=pv_Description,
+                                                      input_path_full=GeoLayer.SOURCE_MEMORY,
+                                                      input_path=GeoLayer.SOURCE_MEMORY)
+                        self.command_processor.add_geolayer(new_geolayer)
 
-                    # Create a new GeoLayer and add it to the GeoProcessor's geolayers list.
-                    # In QGIS3, intersected_output["OUTPUT"] returns the QGS vector layer object
-                    # see ClipGeoLayer.py for information about value in QGIS2 environment
-                    new_geolayer = VectorGeoLayer(geolayer_id=pv_OutputGeoLayerID,
-                                                  qgs_vector_layer=intersected_output["OUTPUT"],
-                                                  name=pv_Name,
-                                                  description=pv_Description,
-                                                  input_path_full=GeoLayer.SOURCE_MEMORY,
-                                                  input_path=GeoLayer.SOURCE_MEMORY)
-                    self.command_processor.add_geolayer(new_geolayer)
-
-                elif owf_method:
+                elif owf_method and not error_found:
                     # If using OWF version of intersect. Set to FALSE always until later notice.
 
                     # TODO smalers 2020-01-16 argument types below are not consistent with method

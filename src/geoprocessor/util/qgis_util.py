@@ -28,6 +28,7 @@ import geoprocessor.util.qgis_version_util as qgis_version_util
 
 from qgis.core import QgsApplication
 from qgis.core import QgsCoordinateReferenceSystem
+from qgis.core import QgsCoordinateTransformContext
 from qgis.core import QgsExpression
 from qgis.core import QgsFeature
 from qgis.core import QgsField
@@ -1790,12 +1791,59 @@ def write_qgsvectorlayer_to_geojson(qgsvectorlayer: QgsVectorLayer,
                                             layerOptions=layer_options)
 
 
+def write_qgsvectorlayer_to_geopackage(qgsvectorlayer: QgsVectorLayer,
+                                       output_file_full: str,
+                                       crs_code: str) -> None:
+    """
+    Write the QgsVectorLayer object to a spatial data file in GeoPackage format.
+    REF: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
+
+    To use the QgsVectorFileWriter.writeAsVectorFormat tool, the following sequential arguments are defined:
+        1. vectorFileName: the QGSVectorLayer object that is to be written to a spatial data format
+        2. path to new file: the full pathname (including filename) of the output file
+        3. output text encoding: always set to "utf-8"
+        4. destination coordinate reference system
+        5. driver name for the output file
+
+    Args:
+        qgsvectorlayer (QgsVectorLayer): the QgsVectorLayer object
+        output_file_full (str): the full pathname to the output file (do not include .shp extension)
+        crs_code (str): the output coordinate reference system in EPSG code
+
+    Returns:
+        None
+    """
+    logger = logging.getLogger(__name__)
+    logger.info("Writing GeoPackage: {}".format(output_file_full))
+
+    # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
+    write_version = 2
+    if write_version == 2:
+        # As of QGIS 3.20 writeAsVectorFormatV2 function.
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.driverName = "GPKG"
+        options.fileEncoding = "utf-8"
+        transform_context=QgsCoordinateTransformContext()
+        # Transform provides the source and destination CRS:
+        # - allowFallback=False because want it to fail if cannot be done
+        transform_context.addCoordinateOperation(
+            sourceCrs=qgsvectorlayer.crs(),
+            destinationCrs=QgsCoordinateReferenceSystem(crs_code),
+            coordinateOperationProjString="",
+            allowFallback=False)
+        QgsVectorFileWriter.writeAsVectorFormatV2(layer=qgsvectorlayer,
+                                                  fileName=output_file_full,
+                                                  transformContext=transform_context,
+                                                  options=options)
+
+
 def write_qgsvectorlayer_to_kml(qgsvectorlayer: QgsVectorLayer,
                                 output_file_full: str,
                                 crs_code: str,
                                 name_field: str,
                                 desc_field: str,
                                 altitude_mode: str) -> None:
+
     """
     Write the QgsVectorLayer object to a spatial data file in KML format.
     REF: `QGIS API Documentation <https://qgis.org/api/classQgsVectorFileWriter.html>_`
@@ -1860,10 +1908,32 @@ def write_qgsvectorlayer_to_shapefile(qgsvectorlayer: QgsVectorLayer,
     Returns:
         None
     """
+    logger = logging.getLogger(__name__)
+    logger.info("Writing shapefile: {}".format(output_file_full))
 
     # Write the QgsVectorLayer object to a spatial data file in Shapefile format.
-    QgsVectorFileWriter.writeAsVectorFormat(qgsvectorlayer,
-                                            output_file_full,
-                                            "utf-8",
-                                            QgsCoordinateReferenceSystem(crs_code),
-                                            "ESRI Shapefile")
+    write_version = 2
+    if write_version == 2:
+        # As of QGIS 3.20 writeAsVectorFormatV2 function.
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.driverName = "ESRI Shapefile"
+        options.fileEncoding = "utf-8"
+        transform_context=QgsCoordinateTransformContext()
+        # Transform provides the source and destination CRS:
+        # - allowFallback=False because want it to fail if cannot be done
+        transform_context.addCoordinateOperation(
+            sourceCrs=qgsvectorlayer.crs(),
+            destinationCrs=QgsCoordinateReferenceSystem(crs_code),
+            coordinateOperationProjString="",
+            allowFallback=False)
+        QgsVectorFileWriter.writeAsVectorFormatV2(layer=qgsvectorlayer,
+                                                  fileName=output_file_full,
+                                                  transformContext=transform_context,
+                                                  options=options)
+    elif write_version == 1:
+        # Original writeAsVectorFormat function.
+        QgsVectorFileWriter.writeAsVectorFormat(layer=qgsvectorlayer,
+                                                fileName=output_file_full,
+                                                fileEncoding="utf-8",
+                                                destCRS=QgsCoordinateReferenceSystem(crs_code),
+                                                driverName="ESRI Shapefile")

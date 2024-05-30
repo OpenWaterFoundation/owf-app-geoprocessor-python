@@ -40,6 +40,7 @@ from pathlib import Path
 # The folder location should be set in the application.
 tmp_files_to_remove_folder = None
 
+
 def add_tmp_file_to_remove(tmp_file_path: str, comments: [str] = None) -> None:
     """
     Create a file in the application tmp-files-to-remove folder.

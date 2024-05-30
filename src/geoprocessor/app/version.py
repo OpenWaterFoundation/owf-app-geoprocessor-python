@@ -17,7 +17,7 @@
 #     along with GeoProcessor.  If not, see <https://www.gnu.org/licenses/>.
 # ________________________________________________________________NoticeEnd___
 
-# Put in separate file to minimize commits to main app.py when only version changes but no other app.py code changes.
+# Put in separate file to minimize commits to main gp.py when only version changes but no other gp.py code changes.
 app_name = "GeoProcessor"
 app_organization = "Open Water Foundation"
 app_organization_url = "https://openwaterfoundation.org"
